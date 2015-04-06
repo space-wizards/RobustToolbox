@@ -1,5 +1,7 @@
 ﻿using Lidgren.Network;
+using SS14.Server.GameObjects.Events;
 using SS14.Server.GameObjects.Item.ItemCapability;
+using SS14.Server.Interfaces.GameObject;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -9,7 +11,7 @@ using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
-    public class EquipmentComponent : Component
+    public class EquipmentComponent : Component, IEquipmentComponent
     {
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
         public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
@@ -32,36 +34,6 @@ namespace SS14.Server.GameObjects
                 case ComponentMessageType.DisassociateEntity:
                     UnEquipEntity((Entity) list[0]);
                     break;
-                case ComponentMessageType.EquipItemToPart: //Equip an entity straight up.
-                    EquipEntityToPart((EquipmentSlot) list[0], (Entity) list[1]);
-                    break;
-                case ComponentMessageType.EquipItem:
-                    EquipEntity((Entity) list[0]);
-                    break;
-                case ComponentMessageType.EquipItemInHand: //Move an entity from a hand to an equipment slot
-                    EquipEntityInHand();
-                    break;
-                case ComponentMessageType.UnEquipItemToFloor: //remove an entity from a slot and drop it on the floor
-                    UnEquipEntity((Entity) list[0]);
-                    break;
-                case ComponentMessageType.UnEquipItemToHand:
-                    //remove an entity from a slot and put it in the current hand slot.
-                    if (!Owner.HasComponent(ComponentFamily.Hands))
-                        break; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                    UnEquipEntityToHand((Entity) list[0]);
-                    break;
-                case ComponentMessageType.UnEquipItemToSpecifiedHand:
-                    //remove an entity from a slot and put it in the current hand slot.
-                    if (!Owner.HasComponent(ComponentFamily.Hands))
-                        break; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                    UnEquipEntityToHand((Entity) list[0], (Hand) list[1]);
-                    break;
-                case ComponentMessageType.GetHasInternals:
-                    if (HasInternals())
-                    {
-                        reply = new ComponentReplyMessage(ComponentMessageType.GetHasInternals, true);
-                    }
-                    break;
             }
 
             return reply;
@@ -69,56 +41,78 @@ namespace SS14.Server.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
+            // TODO change these things to flow to the server via a system instead of via this component
             if (message.ComponentFamily == ComponentFamily.Equipment)
             {
                 var type = (ComponentMessageType) message.MessageParameters[0];
-                var replies = new List<ComponentReplyMessage>();
                 switch (type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
-                        EquipEntity(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
+                        RaiseEquipItem(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.EquipItemInHand:
-                        EquipEntityInHand();
-                        break;
-                    case ComponentMessageType.EquipItemToPart:
-                        EquipEntityToPart((EquipmentSlot) message.MessageParameters[1],
-                                          Owner.EntityManager.GetEntity((int) message.MessageParameters[2]));
+                        RaiseEquipItemInHand();
                         break;
                     case ComponentMessageType.UnEquipItemToFloor:
-                        UnEquipEntity(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
+                        RaiseUnEquipItemToFloor(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToHand:
-                        if (!Owner.HasComponent(ComponentFamily.Hands))
-                            return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
+                        RaiseUnEquipItemToHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.UnEquipItemToSpecifiedHand:
-                        if (!Owner.HasComponent(ComponentFamily.Hands))
-                            return; //TODO REAL ERROR MESSAGE OR SOME FUCK SHIT
-                        UnEquipEntityToHand(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]),
-                                            (Hand) message.MessageParameters[2]);
+                        RaiseUnEquipItemToSpecifiedHand(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]), (InventoryLocation)message.MessageParameters[2]);
                         break;
                 }
             }
         }
 
-        public override void HandleInstantiationMessage(NetConnection netConnection)
+        public void RaiseEquipItem(Entity item)
         {
-            foreach (EquipmentSlot p in equippedEntities.Keys)
+            Owner.EntityManager.RaiseEvent(this, new InventoryEquipItemEventArgs
             {
-                if (!IsEmpty(p))
-                {
-                    Entity e = equippedEntities[p];
-                    e.SendMessage(this, ComponentMessageType.ItemEquipped, Owner);
-                    //Owner.SendDirectedComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, netConnection,
-                    //                                          EquipmentComponentNetMessage.ItemEquipped, p, e.Uid);
-                }
-            }
+                Actor = Owner,
+                Item = item
+            });
+        }
+
+        public void RaiseEquipItemInHand()
+        {
+            Owner.EntityManager.RaiseEvent(this, new InventoryEquipItemInHandEventArgs
+            {
+                Actor = Owner
+            });
+        }
+
+        public void RaiseUnEquipItemToFloor(Entity item)
+        {
+            Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToFloorEventArgs
+            {
+                Actor = Owner,
+                Item = item
+            });
+        }
+
+        public void RaiseUnEquipItemToHand(Entity item)
+        {
+            Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToHandEventArgs
+            {
+                Actor = Owner,
+                Item = item
+            });
+        }
+
+        public void RaiseUnEquipItemToSpecifiedHand(Entity item, InventoryLocation hand)
+        {
+            Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToSpecifiedHandEventArgs
+            {
+                Actor = Owner,
+                Item = item,
+                Hand = hand
+            });
         }
 
         // Equips Entity e to Part part
-        private void EquipEntityToPart(EquipmentSlot part, Entity e)
+        public void EquipEntityToPart(EquipmentSlot part, Entity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -135,7 +129,7 @@ namespace SS14.Server.GameObjects
         }
 
         // Equips Entity e and automatically finds the appropriate part
-        private void EquipEntity(Entity e)
+        public void EquipEntity(Entity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -153,7 +147,7 @@ namespace SS14.Server.GameObjects
         }
 
         // Equips whatever we currently have in our active hand
-        private void EquipEntityInHand()
+        public void EquipEntityInHand()
         {
             if (!Owner.HasComponent(ComponentFamily.Hands))
             {
@@ -171,7 +165,7 @@ namespace SS14.Server.GameObjects
         }
 
         // Unequips the entity from Part part
-        private void UnEquipEntity(EquipmentSlot part)
+        public void UnEquipEntity(EquipmentSlot part)
         {
             if (!IsEmpty(part)) //If the part is not empty
             {
@@ -183,14 +177,14 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        private void UnEquipEntityToHand(Entity e)
+        public void UnEquipEntityToHand(Entity e)
         {
             UnEquipEntity(e);
             //HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
             Owner.SendMessage(this, ComponentMessageType.PickUpItem, e);
         }
 
-        private void UnEquipEntityToHand(Entity e, Hand h)
+        public void UnEquipEntityToHand(Entity e, InventoryLocation h)
         {
             var hands = (HumanHandsComponent) Owner.GetComponent(ComponentFamily.Hands);
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
@@ -202,8 +196,13 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        public bool IsEquipped(Entity e)
+        {
+            return equippedEntities.ContainsValue(e);
+        }
+
         // Unequips entity e 
-        private void UnEquipEntity(Entity e)
+        public void UnEquipEntity(Entity e)
         {
             EquipmentSlot key;
             foreach (var kvp in equippedEntities)
@@ -217,28 +216,11 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        // Unequips all entites
-        private void UnEquipAllEntities()
-        {
-            foreach (Entity e in equippedEntities.Values)
-            {
-                UnEquipEntity(e);
-            }
-        }
-
         private bool IsItem(Entity e)
         {
             if (e.HasComponent(ComponentFamily.Item)) //We can only equip items derp
                 return true;
             return false;
-        }
-
-        private Entity GetEntity(EquipmentSlot part)
-        {
-            if (!IsEmpty(part))
-                return equippedEntities[part];
-            else
-                return null;
         }
 
         private bool IsEmpty(EquipmentSlot part)
@@ -293,7 +275,7 @@ namespace SS14.Server.GameObjects
             return caps;
         }
 
-        protected bool HasInternals()
+        public bool HasInternals()
         {
             List<ItemCapability> caps = GetEquipmentCapabilities();
             ItemCapability cap = caps.FirstOrDefault(c => c.GetType() == typeof (BreatherCapability));
@@ -311,13 +293,27 @@ namespace SS14.Server.GameObjects
                 if (eqCompo != null)
                     eqCompo.currentWearer = null;
 
-                equippedEntities[equippedEntities.First(x => x.Value == toRemove).Key] = null;
+                equippedEntities.Remove(equippedEntities.First(x => x.Value == toRemove).Key);
                 return true;
             }
             else
             {
                 return false;
             }
+        }
+
+        public bool CanAddEntity(Entity user, Entity toAdd)
+        {
+            if (equippedEntities.Any(x => x.Value == toAdd) || !toAdd.HasComponent(ComponentFamily.Equippable))
+            {
+                return false;
+            }
+            var eqCompo = toAdd.GetComponent<EquippableComponent>(ComponentFamily.Equippable);
+            if (!activeSlots.Contains(eqCompo.wearloc) || equippedEntities.ContainsKey(eqCompo.wearloc))
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool AddEntity(Entity user, Entity toAdd)

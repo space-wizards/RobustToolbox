@@ -24,7 +24,7 @@ namespace SS14.Client.Services.Tiles
         public Dictionary<GasType, int> gasAmounts;
 		public CluwneSprite gasSprite;
         public string name;
-        public byte surroundDirsNW, surroundDirsSE = 0; //north = 1 east = 2 south = 4 west = 8.
+        public DirectionFlags surroundDirsNW, surroundDirsSE = DirectionFlags.None;
         public TileState tileState = TileState.Healthy;
         public RectangleF bounds;
         public Direction _dir = Direction.North;
@@ -56,12 +56,12 @@ namespace SS14.Client.Services.Tiles
             get { return new Vector2(bounds.X, bounds.Y); }
         }
 
-        public virtual void Render(float xTopLeft, float yTopLeft, Batch batch)
+        public virtual void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             Sprite.Color = SFML.Graphics.Color.White;
             Sprite.SetPosition((float)Position.X - xTopLeft,
                                (float)Position.Y - yTopLeft);
-            batch.AddClone(Sprite);
+            batch.Draw(Sprite);
         }
 
 
@@ -76,7 +76,7 @@ namespace SS14.Client.Services.Tiles
         {
         }
 
-        public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
             foreach (TileDecal d in decals)
             {
@@ -84,7 +84,7 @@ namespace SS14.Client.Services.Tiles
             }
         }
 
-        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
+        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)
             {
@@ -112,12 +112,12 @@ namespace SS14.Client.Services.Tiles
                             gasSprite.Color = new Color(255 , 5 , 0); 
                             break;
                     }
-                    gasBatch.AddClone(gasSprite);
+                    gasBatch.Draw(gasSprite);
                 }
             }
         }
 
-        public virtual void RenderTop(float xTopLeft, float yTopLeft, Batch wallTopsBatch)
+        public virtual void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
             //FIXTHIS
         }
@@ -207,12 +207,12 @@ namespace SS14.Client.Services.Tiles
             sprite.Color = color;
         }
 
-        public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
             //Need to find a way to light it.
             sprite.SetPosition(tile.Position.X - xTopLeft + position.X,
                                tile.Position.Y - yTopLeft + position.Y);
-            decalBatch.AddClone(sprite);
+            decalBatch.Draw(sprite);
         }
     }
 }

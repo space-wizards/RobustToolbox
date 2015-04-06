@@ -29,19 +29,19 @@ namespace SS14.Client.Services.UserInterface.Components
         public string Sprite
         {
             get { return drawingSprite != null ? drawingSprite.Name : null; }
-            set { drawingSprite = _resourceManager.GetSprite(value); }
+            set { drawingSprite = _resourceManager.GetSprite(value); Update(0); }
         }
 
         public Color Color
         {
             get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
-            set { drawingSprite.Color = CluwneLib.SystemColorToSFML(value); }
+            set { drawingSprite.Color = CluwneLib.SystemColorToSFML (value); }
         }
 
         public BlendMode BlendingMode
         {
             get { return drawingSprite != null ? drawingSprite.BlendingMode : drawingSprite.BlendingMode; }
-            set { drawingSprite.BlendingMode = value; }
+            set { drawingSprite.BlendingMode = value;}
         }
 
         public override void Update(float frameTime)
@@ -52,7 +52,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            drawingSprite.Draw(ClientArea);
+            drawingSprite.Draw();
         }
 
         public override void Dispose()
@@ -61,6 +61,23 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
             GC.SuppressFinalize(this);
         }
+
+        public override Rectangle ClientArea {
+            get {
+                FloatRect fr = drawingSprite.GetLocalBounds ();
+                return new Rectangle ((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
+            }
+        }
+
+        public override Point Position {
+            get {
+                if (drawingSprite == null)
+                    return new Point (0, 0);
+                return new Point ((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
+            }
+            set { drawingSprite.Position = new SFML.System.Vector2f (value.X, value.Y); }
+        }
+
 
 		public override bool MouseDown(MouseButtonEventArgs e)
         {

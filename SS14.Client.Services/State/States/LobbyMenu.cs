@@ -413,10 +413,10 @@ namespace SS14.Client.Services.State.States
 
         public void Update(FrameEventArgs e)
         {
-            if (VideoMode.DesktopMode.Width != _prevScreenWidth || VideoMode.DesktopMode.Height != _prevScreenHeight)
+            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
 			{
-                _prevScreenHeight = (int)VideoMode.DesktopMode.Height;
-                _prevScreenWidth = (int)VideoMode.DesktopMode.Width;
+                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
 				UpdateGUIPosition();
 			}
 
@@ -432,8 +432,8 @@ namespace SS14.Client.Services.State.States
 		public void UpdateGUIPosition()
 		{
 			_imgMainBg.Position = new Point(
-                (int)((VideoMode.DesktopMode.Width / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
-                (int)((VideoMode.DesktopMode.Height / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
+                (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
+                (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
 			_imgMainBg.Update(0);
 
 			_recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
@@ -496,7 +496,7 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             //TODO .Draw
-           // _background.Draw(new Rectangle(0, 0,(int)VideoMode.DesktopMode.Width,(int)VideoMode.DesktopMode.Height));
+           // _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
             UserInterfaceManager.Render();
         }
 

@@ -20,7 +20,7 @@ namespace SS14.Client.Services.UserInterface.Components
     public struct UiHandInfo
     {
         public Entity Entity;
-        public Hand Hand;
+        public InventoryLocation Hand;
 		public CluwneSprite HeldSprite;
     }
 
@@ -69,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Components
             Entity entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
 
-            if (hands.CurrentHand == Hand.Left)
+            if (hands.CurrentHand == InventoryLocation.HandLeft)
             {
                 handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
                 handSlot.Draw(handL);
@@ -123,11 +123,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (hands == null) return;
 
-            if (hands.HandSlots.Keys.Contains(Hand.Left) && hands.HandSlots[Hand.Left] != null)
+            if (hands.HandSlots.Keys.Contains(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] != null)
             {
-                if (LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[Hand.Left].Uid)
+                if (LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[InventoryLocation.HandLeft].Uid)
                 {
-                    Entity entityL = hands.HandSlots[Hand.Left];
+                    Entity entityL = hands.HandSlots[InventoryLocation.HandLeft];
                     LeftHand.Entity = entityL;
                     LeftHand.HeldSprite = Utilities.GetIconSprite(entityL);
                 }
@@ -138,11 +138,11 @@ namespace SS14.Client.Services.UserInterface.Components
                 LeftHand.HeldSprite = null;
             }
 
-            if (hands.HandSlots.Keys.Contains(Hand.Right) && hands.HandSlots[Hand.Right] != null)
+            if (hands.HandSlots.Keys.Contains(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
             {
-                if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[Hand.Right].Uid)
+                if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[InventoryLocation.HandRight].Uid)
                 {
-                    Entity entityR = hands.HandSlots[Hand.Right];
+                    Entity entityR = hands.HandSlots[InventoryLocation.HandRight];
                     RightHand.Entity = entityR;
                     RightHand.HeldSprite = Utilities.GetIconSprite(entityR);
                 }
@@ -154,7 +154,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        private void SendSwitchHandTo(Hand hand)
+        private void SendSwitchHandTo(InventoryLocation hand)
         {
             var _playerManager = IoCManager.Resolve<IPlayerManager>();
 
@@ -170,12 +170,12 @@ namespace SS14.Client.Services.UserInterface.Components
                 case Mouse.Button.Right:
                     if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
-                        SendSwitchHandTo(Hand.Left);
+                        SendSwitchHandTo(InventoryLocation.HandLeft);
                         return true;
                     }
                     if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
-                        SendSwitchHandTo(Hand.Right);
+                        SendSwitchHandTo(InventoryLocation.HandRight);
                         return true;
                     }
                     break;
@@ -201,19 +201,19 @@ namespace SS14.Client.Services.UserInterface.Components
                 {
                     if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
-                        if (!hands.HandSlots.ContainsKey(Hand.Left))
+                        if (hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] == null)
                         {
                             if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
                             {
                                 if (
                                     hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key ==
-                                    Hand.Left) //From me to me, dropped back on same hand.
+                                    InventoryLocation.HandLeft) //From me to me, dropped back on same hand.
                                     return false;
 
                                 hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid,
-                                                                         Hand.Left);
+                                                                         InventoryLocation.HandLeft);
                         }
                         _userInterfaceManager.DragInfo.Reset();
                         return true;
@@ -221,19 +221,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
                     else if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
-                        if (!hands.HandSlots.ContainsKey(Hand.Right))
+                        if (hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] == null)
                         {
                             if (hands.HandSlots.ContainsValue(_userInterfaceManager.DragInfo.DragEntity))
                             {
                                 if (
                                     hands.HandSlots.First(x => x.Value == _userInterfaceManager.DragInfo.DragEntity).Key ==
-                                    Hand.Right) //From me to me, dropped back on same hand
+                                    InventoryLocation.HandRight) //From me to me, dropped back on same hand
                                     return false;
 
                                 hands.SendDropEntity(_userInterfaceManager.DragInfo.DragEntity); //Other hand to me.
                             }
                             equipment.DispatchUnEquipItemToSpecifiedHand(_userInterfaceManager.DragInfo.DragEntity.Uid,
-                                                                         Hand.Right);
+                                                                         InventoryLocation.HandRight);
                         }
                         _userInterfaceManager.DragInfo.Reset();
                         return true;
@@ -242,15 +242,15 @@ namespace SS14.Client.Services.UserInterface.Components
                 else
                 {
                     if (handL.Contains(new Point((int) e.X, (int) e.Y)) &&
-                        hands.HandSlots.ContainsKey(Hand.Left) && hands.HandSlots[Hand.Right] != null)
+                        hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
-                        hands.HandSlots[Hand.Left].SendMessage(this, ComponentMessageType.ClickedInHand,
+                        hands.HandSlots[InventoryLocation.HandLeft].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                _playerManager.ControlledEntity.Uid);
                     }
                     else if (handR.Contains(new Point((int) e.X, (int) e.Y)) &&
-                             hands.HandSlots.ContainsKey(Hand.Right) && hands.HandSlots[Hand.Right] != null)
+                             hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
-                        hands.HandSlots[Hand.Right].SendMessage(this, ComponentMessageType.ClickedInHand,
+                        hands.HandSlots[InventoryLocation.HandRight].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                 _playerManager.ControlledEntity.Uid);
                     }
                 }
@@ -269,17 +269,17 @@ namespace SS14.Client.Services.UserInterface.Components
                     case Mouse.Button.Left:
                         if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                         {
-                            if (hands.HandSlots.Keys.Contains(Hand.Left) && hands.HandSlots[Hand.Left] != null)
+                            if (hands.HandSlots.Keys.Contains(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] != null)
                             {
-                                Entity entityL = hands.HandSlots[Hand.Left];
+                                Entity entityL = hands.HandSlots[InventoryLocation.HandLeft];
                                 _userInterfaceManager.DragInfo.StartDrag(entityL);
                             }
                         }
                         if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                         {
-                            if (hands.HandSlots.Keys.Contains(Hand.Right) && hands.HandSlots[Hand.Right] != null)
+                            if (hands.HandSlots.Keys.Contains(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                             {
-                                Entity entityR = hands.HandSlots[Hand.Right];
+                                Entity entityR = hands.HandSlots[InventoryLocation.HandRight];
                                 _userInterfaceManager.DragInfo.StartDrag(entityR);
                             }
                         }

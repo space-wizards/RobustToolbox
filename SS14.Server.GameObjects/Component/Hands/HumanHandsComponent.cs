@@ -115,21 +115,15 @@ namespace SS14.Server.GameObjects
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
-                        var hand = (Hand) message.MessageParameters[1];
-                        if(hand == Hand.Left)
-                            SwitchHandsTo(InventoryLocation.HandLeft);
-                        else if(hand == Hand.Right)
-                            SwitchHandsTo(InventoryLocation.HandRight);
+                        var hand = (InventoryLocation)message.MessageParameters[1];
+                        SwitchHandsTo(hand);
                         break;
                     case ComponentMessageType.DropEntityInHand:
                         Drop(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
-                        var dhand = (Hand)message.MessageParameters[1];
-                        if (dhand == Hand.Left)
-                            Drop(InventoryLocation.HandLeft);
-                        else if (dhand == Hand.Right)
-                            Drop(InventoryLocation.HandRight);
+                        var dhand = (InventoryLocation)message.MessageParameters[1];
+                        Drop(dhand);
                         break;
                 }
             }
@@ -332,6 +326,15 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        public bool CanAddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        {
+            if (Handslots.Any(x => x.Value == toAdd) || (location == InventoryLocation.Any && Handslots[CurrentHand] != null) || !Handslots.ContainsKey(location) || Handslots[location] != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
             if (Handslots.Any(x => x.Value == toAdd))
@@ -375,6 +378,11 @@ namespace SS14.Server.GameObjects
             //Yes man, this!
             var entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int?>(x.Key, x.Value != null?(int?)x.Value.Uid:null)).ToDictionary(key => key.Key, va => va.Value);
             return new HandsComponentState(CurrentHand, entities);
+        }
+        
+        public bool IsInHand(Entity e)
+        {
+            return Handslots.ContainsValue(e);
         }
     }
 }

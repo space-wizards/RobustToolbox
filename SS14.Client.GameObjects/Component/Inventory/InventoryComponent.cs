@@ -59,35 +59,6 @@ namespace SS14.Client.GameObjects
                                               ComponentMessageType.InventoryAdd, ent.Uid);
         }
 
-        // TODO raise an event to be handled by a clientside InventorySystem, which will send the event through to the server?
-        public void SendInventoryRemove(Entity ent)
-        {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
-                                              ComponentMessageType.InventoryRemove, ent.Uid);
-        }
-
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-                case ComponentMessageType.InventoryAdd:
-                    SendInventoryAdd((Entity) list[0]);
-                    break;
-
-                case ComponentMessageType.InventoryRemove:
-                    SendInventoryRemove((Entity) list[0]);
-                    break;
-            }
-
-            return reply;
-        }
-
         public override void HandleComponentState(dynamic state)
         {
             var theState = state as InventoryComponentState;

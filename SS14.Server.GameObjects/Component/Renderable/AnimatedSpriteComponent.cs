@@ -40,13 +40,14 @@ namespace SS14.Server.GameObjects
             set { _loop = value; }
         }
         public DrawDepth DrawDepth = DrawDepth.FloorTiles;
-        public bool Visible = true;
+        public bool Visible { get; set; }
 
 
         public AnimatedSpriteComponent()
         {
             Family = ComponentFamily.Renderable;
             slaves = new List<IRenderableComponent>();
+            Visible = true;
         }
 
         public override ComponentState GetComponentState()

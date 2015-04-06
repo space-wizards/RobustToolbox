@@ -13,6 +13,11 @@ namespace SS14.Client.Graphics.CluwneLib.Event
     {
         private TimingData _timingData = null;
 
+        public FrameEventArgs(TimingData timingData)
+        {
+            _timingData = timingData;
+        }
+
         public TimingData TimingData
         {
             get { return _timingData; }

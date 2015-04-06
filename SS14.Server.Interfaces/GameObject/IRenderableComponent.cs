@@ -9,5 +9,6 @@ namespace SS14.Server.Interfaces.GOC
         void UnsetMaster();
         void AddSlave(IRenderableComponent slavecompo);
         void RemoveSlave(IRenderableComponent slavecompo);
+        bool Visible { get; set; }
     }
 }

@@ -101,9 +101,6 @@ namespace SS14.Client.Services.State.States
             //public Vertex(Vector2f position, Color color, Vector2f texCoords);
             RectangleShape test = new RectangleShape(new Vector2f(200, 200));
 
-
-            TextSprite test2 = new TextSprite("this",1,1,1,1);
-
             CluwneLib.CurrentRenderTarget.Clear();
             CluwneLib.CurrentRenderTarget.Draw(test);
            // CluwneLib.CurrentRenderTarget.Draw(625 , 5 , CluwneLib.CurrentRenderTarget.Size.X - 625 - 5 , CluwneLib.CurrentRenderTarget.Size.Y- 5 - 6, Color.SlateGray);

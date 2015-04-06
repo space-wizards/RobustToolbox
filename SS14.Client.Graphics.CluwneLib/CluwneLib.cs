@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Forms;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.CluwneLib.Event;
@@ -16,13 +15,20 @@ using System.Collections;
 
 namespace SS14.Client.Graphics.CluwneLib
 {
+    public class CluwneDebug {
+        public int RenderingDelay=0;
+        public bool TextBorders=false;
+        public uint Fontsize=0;
+    };
     public class CluwneLib
     {
         public static Viewport CurrentClippingViewport;
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
+        private static System.Threading.Mutex SFML_Threadlock;
         public static event FrameEventHandler Idle;
         private Color DEFAULTCOLOR;
+        public static CluwneDebug Debug;
 
         #region Accessors
         public static bool IsInitialized { get; set; }
@@ -33,7 +39,7 @@ namespace SS14.Client.Graphics.CluwneLib
         public static BlendingModes BlendingMode { get; set; }
         public Styles Style { get; set; }
         #endregion
-        
+
         #region CluwneEngine
         /// <summary>
         /// Start engine rendering.
@@ -41,11 +47,17 @@ namespace SS14.Client.Graphics.CluwneLib
         /// Shamelessly taken from Gorgon.
         public static void Go()
         {
+            SFML_Threadlock = new System.Threading.Mutex();
 
             if (!IsInitialized)
             {
                 Initialize();
             }
+            Idle += (delegate(object sender, FrameEventArgs e) {
+                SFML_Threadlock.ReleaseMutex();
+                System.Threading.Thread.Sleep(10); // maybe pickup vsync here?
+                SFML_Threadlock.WaitOne();
+            });
 
             if ((Screen != null) && (_currentTarget == null))
                 throw new InvalidOperationException("The render target is invalid.");
@@ -60,17 +72,13 @@ namespace SS14.Client.Graphics.CluwneLib
             {
                 for (int i = 0; i < _currentTarget.Length; i++)
                 {
-                    if (_currentTarget[0] != null)     
+                    if (_currentTarget[0] != null)
                     {
                        //update targets and viewport
                     }
                 }
-                
+
             }
-            
-           
-           
-            Application.Idle += new EventHandler(Run);
 
             IsRunning = true;
         }
@@ -80,15 +88,22 @@ namespace SS14.Client.Graphics.CluwneLib
             if (IsInitialized)
                 Terminate();
 
+            Debug = new CluwneDebug();
+
+            SFML_Threadlock.WaitOne();
+
             IsInitialized = true;
 
             _currentTarget = new RenderTarget[5];
-        
+
             _timer = new Clock();
             FrameStats = new TimingData(_timer);
+        }
 
-
-           
+        public static void RequestGC(Action action) {
+            SFML_Threadlock.WaitOne();
+            action.Invoke();
+            SFML_Threadlock.ReleaseMutex();
         }
 
         public static void SetMode(int displayWidth, int displayHeight)
@@ -107,30 +122,27 @@ namespace SS14.Client.Graphics.CluwneLib
             Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
         }
 
-
         public static void Clear(Color color)
         {
             CurrentRenderTarget.Clear(SystemColorToSFML(color));
         }
 
-        private static void Terminate()
+        public static void Terminate()
         {
-            Screen.Close();
+            SFML_Threadlock.ReleaseMutex();
         }
-        
-        public static void Run(object sender, EventArgs e)
+
+        public static void RunIdle(object sender, FrameEventArgs e)
         {
-               
-
-
+            Idle(sender, e);
         }
 
         public static void Stop()
         {
-            CurrentRenderTarget = null;
-            Screen.Dispose();
+            Console.WriteLine("CluwneLib: Stop() requested");
+            IsRunning=false;
         }
-       
+
         #endregion
 
         #region RenderTarget Stuff
@@ -141,7 +153,7 @@ namespace SS14.Client.Graphics.CluwneLib
             {
                 if (_currentTarget[0] == null)
                     _currentTarget[0] = Screen;
-                        
+
                 return _currentTarget[0];
             }
             set
@@ -162,7 +174,6 @@ namespace SS14.Client.Graphics.CluwneLib
         {
             return _currentTarget[index];
         }
-
 
         #endregion
 
@@ -187,11 +198,8 @@ namespace SS14.Client.Graphics.CluwneLib
             rectangle.FillColor = SystemColorToSFML(Color);
 
             CurrentRenderTarget.Draw(rectangle);
-
-
         }
 
-     
         /// <summary>
         /// Draws a Hollow Rectangle to the Current RenderTarget
         /// </summary>
@@ -256,7 +264,7 @@ namespace SS14.Client.Graphics.CluwneLib
         }
 
         /// <summary>
-        /// Draws a Filled Circle to the CurrentRenderTarget 
+        /// Draws a Filled Circle to the CurrentRenderTarget
         /// </summary>
         /// <param name="posX"> Pos X of Circle </param>
         /// <param name="posY"> Pos Y of Circle </param>
@@ -269,7 +277,7 @@ namespace SS14.Client.Graphics.CluwneLib
             Circle.Position = new Vector2(posX, posY);
             Circle.Radius = radius;
             Circle.FillColor = SystemColorToSFML(Color.Transparent);
-        
+
             CurrentRenderTarget.Draw(Circle);
         }
         #endregion
@@ -343,7 +351,7 @@ namespace SS14.Client.Graphics.CluwneLib
         /// </summary>
         /// <param name="color"> System.Drawing.Color to convert </param>
         /// <returns></returns>
-        public static SColor SystemColorToSFML(Color color) 
+        public static SColor SystemColorToSFML(Color color)
         {
             SColor temp = new SColor(color.R, color.G, color.B, color.A);
             return temp;
@@ -354,13 +362,19 @@ namespace SS14.Client.Graphics.CluwneLib
         /// </summary>
         /// <param name="color"> SFML.Graphics.Color to convert </param>
         /// <returns></returns>
-        public static Color SFMLColorToSystem(SColor color) 
+        public static Color SFMLColorToSystem(SColor color)
         {
             Color temp = Color.FromArgb(color.R,color.G,color.B,color.A);
-                      
             return temp;
         }
 
+        public static SColor ColorFromARGB(byte A, Color rgb) {
+            return new SColor(A, rgb.R, rgb.G, rgb.B);
+        }
+
+        public static SColor ColorFromARGB(byte A, SColor rgb) {
+            return new SColor(A, rgb.R, rgb.G, rgb.B);
+        }
         /// <summary>
         /// Converts a Point to a Vector2
         /// </summary>
@@ -370,9 +384,6 @@ namespace SS14.Client.Graphics.CluwneLib
         {
             return new Vector2(point.X, point.Y);
         }
-
         #endregion
-
-
     }
 }

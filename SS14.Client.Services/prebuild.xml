@@ -81,6 +81,7 @@
     <File buildAction="Compile">State/States/OptionsMenu.cs</File>
     <File buildAction="Compile">State/States/GameScreen.cs</File>
     <File buildAction="Compile">State/States/LobbyScreen.cs</File>
+    <File buildAction="Compile">State/States/TestState.cs</File>
     <File buildAction="Compile">GameTimer/GameTimer.cs</File>
     <File buildAction="Compile">UserInterface/Components/AdminPasswordDialog.cs</File>
     <File buildAction="Compile">UserInterface/Components/AdminPlayerPanel.cs</File>

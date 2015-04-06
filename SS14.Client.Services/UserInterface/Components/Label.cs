@@ -20,6 +20,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         public Color BackgroundColor = Color.Gray;
         public Color BorderColor = Color.Black;
+        public float BorderWidth = 2f;
         public int FixedHeight = -1;
         public int FixedWidth = -1;
         public Color HighlightColor = Color.Gray;
@@ -34,7 +35,6 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Update(0);
         }
-
 
         public Color TextColor 
         {
@@ -58,17 +58,12 @@ namespace SS14.Client.Services.UserInterface.Components
         // TODO Gorgon fix this
         public override void Render()
         {
-
-          
-            
-
-
             if (DrawBackground)
               CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle((int)(Text.Position.X + 1), (int)Text.Position.Y + 4, (int)Text.Width, (int)Text.Height - 9, BackgroundColor);
             if (DrawBorder)
-               //CluwneLib.createHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,borderColor);
+               CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
             Text.Draw();
         }
 

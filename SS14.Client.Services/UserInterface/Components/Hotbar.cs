@@ -1,19 +1,20 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.GOC;
+﻿using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class Hotbar : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
-        private readonly Sprite hotbarBG;
+		private readonly CluwneSprite hotbarBG;
 
         private readonly GuiComponent[] slots = new GuiComponent[10];
 
@@ -62,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            hotbarBG.Position = Position;
+            hotbarBG.Position = CluwneLib.PointToVector2(Position);
 
             int y_dist = 30;
             int x_pos = 175;
@@ -103,21 +104,21 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseDown(e)) return true;
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseUp(e)) return true;
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 comp.MouseMove(e);

@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
@@ -15,6 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -65,10 +65,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-        private readonly Sprite _comboBg;
+		private readonly CluwneSprite _comboBg;
         private readonly ImageButton _comboClose;
 
-        private readonly Sprite _equipBg;
+		private readonly CluwneSprite _equipBg;
 
         private readonly Color _inactiveColor = Color.FromArgb(255, 90, 90, 90);
 
@@ -183,7 +183,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
                                {
                                    ShadowColor = Color.DimGray,
-                                   ShadowOffset = new Vector2D(1, 1),
+                                   ShadowOffset = new Vector2(1, 1),
                                    Shadowed = true
                                };
 
@@ -291,9 +291,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _craftStatus.Color = Color.White;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Key == KeyboardKeys.I)
+            if (e.Code == Keyboard.Key.I)
             {
                 _showTabbedWindow = !_showTabbedWindow;
                 _craftStatus.Text = "Status";
@@ -434,7 +434,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 _tabEquip.Render();
                 _tabCraft.Render();
 
-                _txtDbg.Position = new Vector2D(Position.X + 20, Position.Y + 15);
+                _txtDbg.Position = new Vector2(Position.X + 20, Position.Y + 15);
                 _txtDbg.Color = Color.NavajoWhite;
                 if (_currentTab == 1) _txtDbg.Text = "Equipment";
                 if (_currentTab == 2) _txtDbg.Text = "Status";
@@ -515,12 +515,12 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         _inventory = new InventoryViewer(invComp, _userInterfaceManager, _resourceManager);
                     }
 
-            _comboBg.Position = Position;
+            _comboBg.Position = new Vector2 (Position.X, Position.Y);
 
             Point equipBgPos = Position;
-            _equipBg.Position = Position;
+            _equipBg.Position = new Vector2 (Position.X,Position.Y);
             equipBgPos.Offset((int) (_comboBg.AABB.Width/2f - _equipBg.AABB.Width/2f), 40);
-            _equipBg.Position = equipBgPos;
+            _equipBg.Position = new Vector2(equipBgPos.X,equipBgPos.Y);
 
             Point comboClosePos = Position;
             comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
@@ -530,19 +530,19 @@ namespace SS14.Client.Services.UserInterface.Inventory
             Point tabEquipPos = Position;
             tabEquipPos.Offset(-26, 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
-            _tabEquip.Color = _currentTab == 1 ? Color.White : _inactiveColor;
+            _tabEquip.Color = _currentTab == 1 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
             _tabEquip.Update(frameTime);
 
             Point tabHealthPos = tabEquipPos;
             tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
-            _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
+            _tabHealth.Color = _currentTab == 2 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
             _tabHealth.Update(frameTime);
 
             Point tabCraftPos = tabHealthPos;
             tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
-            _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
+            _tabCraft.Color = _currentTab == 3 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G,_inactiveColor.B);
             _tabCraft.Update(frameTime);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int) _comboBg.AABB.Width, (int) _comboBg.AABB.Height);
@@ -672,7 +672,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                                     Position.Y + 155);
 
                         _craftStatus.Position =
-                            new Vector2D(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
+                            new Vector2(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
                                          Position.Y + 40);
 
                         _blueprints.Position = new Point(Position.X + 40, Position.Y + 180);
@@ -700,7 +700,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (_showTabbedWindow)
             {
@@ -769,9 +769,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             equipComponent.SendSwitchHands(hand);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            var mouseAABB = new PointF(e.Position.X, e.Position.Y);
+            var mouseAABB = new PointF(e.X, e.Y);
 
             switch (_currentTab)
             {
@@ -849,7 +849,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             switch (_currentTab)
             {
@@ -901,7 +901,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             }
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_currentTab == 1 || _currentTab == 3)
             {

@@ -1,6 +1,7 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Collision
 {
@@ -15,7 +16,7 @@ namespace SS14.Client.Interfaces.Collision
         bool IsColliding(RectangleF collider);
 
         bool TryCollide(Entity collider);
-        bool TryCollide(Entity collider, Vector2D offset, bool bump = true);
+        bool TryCollide(Entity collider, Vector2 offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

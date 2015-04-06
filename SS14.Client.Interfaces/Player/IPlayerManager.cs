@@ -1,11 +1,11 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Graphics.CluwneLib.Render;
+using KeyboardKeys = SFML.Window.Keyboard.Key;
 
 namespace SS14.Client.Interfaces.Player
 {

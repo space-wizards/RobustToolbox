@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Collision;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -7,6 +6,7 @@ using SS14.Shared.GO.Component.Collidable;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -21,13 +21,13 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4D tweakAABB;
+        private Vector4 tweakAABB;
 
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
             DebugColor = Color.Red;
-            tweakAABB = new Vector4D(0,0,0,0);
+            tweakAABB = new Vector4(0,0,0,0);
         }
 
         public override Type StateType
@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects
             get { return typeof (CollidableComponentState); }
         }
 
-        private Vector4D TweakAABB
+        private Vector4 TweakAABB
         {
             get { return tweakAABB; }
             set { tweakAABB = value; }
@@ -155,7 +155,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// Parameter Setting
         /// Settable params:
-        /// TweakAABB - Vector4D
+        /// TweakAABB - Vector4
         /// </summary>
         /// <param name="parameter"></param>
         public override void SetParameter(ComponentParameter parameter)
@@ -165,7 +165,7 @@ namespace SS14.Client.GameObjects
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4D>();
+                    TweakAABB = parameter.GetValue<Vector4>();
                     break;
                 case "TweakAABBtop":
                     tweakAABB.X = parameter.GetValue<float>();

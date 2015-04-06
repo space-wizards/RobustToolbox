@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Placement
 {
@@ -32,7 +33,7 @@ namespace SS14.Client.Services.Placement
         public readonly IResourceManager ResourceManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
-        public Sprite CurrentBaseSprite;
+		public CluwneSprite CurrentBaseSprite;
         public PlacementMode CurrentMode;
         public PlacementInformation CurrentPermission;
         public EntityTemplate CurrentTemplate;
@@ -163,7 +164,7 @@ namespace SS14.Client.Services.Placement
                 PreparePlacement(info.EntityType);
         }
 
-        public void Update(Vector2D mouseScreen, IMapManager currentMap)
+        public void Update(Vector2 mouseScreen, IMapManager currentMap)
         {
             if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
 
@@ -177,14 +178,14 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                Gorgon.CurrentRenderTarget.Circle(
+                 CluwneLib.drawCircle(
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
                         X - ClientWindowData.Singleton.ScreenOrigin.X,
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
                         Y - ClientWindowData.Singleton.ScreenOrigin.Y,
                     CurrentPermission.Range,
                     Color.White,
-                    new Vector2D(2, 2));
+                    new Vector2(2, 2));
             }
         }
 
@@ -219,7 +220,7 @@ namespace SS14.Client.Services.Placement
             //if (spriteParam == null) return;
 
             var spriteName = spriteParam == null?"":spriteParam.GetValue<string>();
-            Sprite sprite = ResourceManager.GetSprite(spriteName);
+			CluwneSprite sprite = ResourceManager.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentTemplate = template;
@@ -266,9 +267,9 @@ namespace SS14.Client.Services.Placement
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public Sprite GetDirectionalSprite()
+		public CluwneSprite GetDirectionalSprite()
         {
-            Sprite spriteToUse = CurrentBaseSprite;
+			CluwneSprite spriteToUse = CurrentBaseSprite;
 
             if (CurrentBaseSprite == null) return null;
 

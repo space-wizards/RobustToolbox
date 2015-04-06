@@ -1,8 +1,9 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Mover;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -14,8 +15,8 @@ namespace SS14.Client.GameObjects
         private bool interpolating;
         private float movedtime; // Amount of time we've been moving since the last update packet.
         private float movetime = 0.05f; // Milliseconds it should take to move.
-        private Vector2D startPosition;
-        private Vector2D targetPosition;
+        private Vector2 startPosition;
+        private Vector2 targetPosition;
 
         public BasicMoverComponent()
         {
@@ -43,7 +44,7 @@ namespace SS14.Client.GameObjects
                 {
                     float X = Ease(movedtime, startPosition.X, targetPosition.X, movetime);
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2D(X, Y);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(X, Y);
                 }
 
             }

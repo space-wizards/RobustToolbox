@@ -6,6 +6,7 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Physics;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -34,7 +35,7 @@ namespace SS14.Server.GameObjects
             if (t == null)
                 return;
             Vector2 gasVel = t.GasCell.GasVelocity;
-            if (gasVel.Abs() > Mass) // Stop tiny wobbles
+            if (gasVel.Magnitude > Mass) // Stop tiny wobbles
             {
                 Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
                                   Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +

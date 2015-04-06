@@ -1,6 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.ClientWindow;
+﻿using SS14.Client.ClientWindow;
+using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -12,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -50,8 +50,8 @@ namespace SS14.Client.GameObjects
 
         public void OnMove(object sender, VectorEventArgs args)
         {
-            var offset = new Vector2D(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2D(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
+                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
@@ -95,26 +95,19 @@ namespace SS14.Client.GameObjects
             {
                 particleSystem.Value.Update(frameTime);
             }
-            //_emitter.Update(frameTime);
         }
 
-        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {            
-            var blend = Gorgon.CurrentRenderTarget.BlendingMode;
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive;
-            
-            Vector2D renderPos =
+            Vector2 renderPos =
                 ClientWindowData.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters.OrderBy(x => x.Value.ParticleSprite.Image.Name)) //Render sorted by atlas. Tiny performance improvement for entities with a bunch of particlesystems.
+            foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.Move(renderPos);
-                particleSystem.Value.Render();                
+                particleSystem.Value.Render();
             }
-            //_emitter.Move(renderPos);
-            //_emitter.Render();
-            Gorgon.CurrentRenderTarget.BlendingMode = blend;
         }
 
         public float Bottom
@@ -171,7 +164,7 @@ namespace SS14.Client.GameObjects
                 ParticleSettings toAdd = IoCManager.Resolve<IResourceManager>().GetParticles(name);
                 if (toAdd != null)
                 {
-                    _emitters.Add(name, new ParticleSystem(toAdd, Vector2D.Zero));
+                    _emitters.Add(name, new ParticleSystem(toAdd, Vector2.Zero));
                     _emitters[name].Emit = active;
                 }
             }

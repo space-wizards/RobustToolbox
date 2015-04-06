@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -51,7 +52,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             if (t == null)
                 return;
             var gasVel = t.GasCell.GasVelocity;
-            if (gasVel.Abs() > physics.Mass) // Stop tiny wobbles
+            if (gasVel.Magnitude > physics.Mass) // Stop tiny wobbles
             {
                 transform.Position = new Vector2(transform.X + (gasVel.X * frameTime), transform.Y + (gasVel.Y * frameTime));
             }

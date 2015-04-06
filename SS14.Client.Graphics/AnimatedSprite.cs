@@ -1,6 +1,6 @@
-﻿using GorgonLibrary.Graphics;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -86,10 +86,10 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Dictionary of animation names to directional sprite set
         /// </summary>
-        private Dictionary<string, Dictionary<Direction, Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, Sprite[]>>();
+        private Dictionary<string, Dictionary<Direction, CluwneSprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, CluwneSprite[]>>();
 
         private Dictionary<string, Dictionary<Direction, RectangleF>> _averageAABBs = new Dictionary<string, Dictionary<Direction, RectangleF>>();
-        private Sprite _currentSprite;
+        private CluwneSprite _currentSprite;
 
         private Direction _direction = Direction.South;
 
@@ -104,7 +104,7 @@ namespace SS14.Client.Graphics
             int t = 0;
             foreach (var info in collection.Animations)
             {
-                _sprites.Add(info.Name, new Dictionary<Direction, Sprite[]>());
+                _sprites.Add(info.Name, new Dictionary<Direction, CluwneSprite[]>());
 
                 //Because we have a shitload of frames, we're going to store the average size as the AABB for each direction and each animation
                 _averageAABBs.Add(info.Name, new Dictionary<Direction, RectangleF>());
@@ -114,7 +114,7 @@ namespace SS14.Client.Graphics
                 AnimationStates.Add(info.Name, new AnimationState(info));
                 foreach (var dir in Enum.GetValues(typeof(Direction)).Cast<Direction>())
                 {
-                    sprites.Add(dir, new Sprite[info.Frames]);
+                    sprites.Add(dir, new CluwneSprite[info.Frames]);
                     var thisDirSprites = sprites[dir];
                     for (var i = 0; i < info.Frames; i++)
                     {
@@ -137,7 +137,7 @@ namespace SS14.Client.Graphics
             }
         }
 
-        public Sprite GetCurrentSprite()
+        public CluwneSprite GetCurrentSprite()
         {
             return _currentSprite;
         }

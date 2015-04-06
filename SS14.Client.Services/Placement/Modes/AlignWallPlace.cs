@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
@@ -15,14 +16,14 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2D mouseS, IMapManager currentMap)
+        public override bool Update(Vector2 mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
+            mouseWorld = new Vector2(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
                                       mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
 
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width / 2f),
@@ -44,11 +45,11 @@ namespace SS14.Client.Services.Placement.Modes
                 pManager.Direction = Direction.East; // Don't ask
                 if (mouseWorld.Y > currentTile.Position.Y + (currentMap.GetTileSpacing() / 2f))
                 {
-                    mouseWorld = currentTile.Position + new Vector2D(0f, currentMap.GetTileSpacing() - (currentMap.GetWallThickness() / 2f));
+                    mouseWorld = currentTile.Position + new Vector2(0f, currentMap.GetTileSpacing() - (currentMap.GetWallThickness() / 2f));
                 }
                 else
                 {
-                    mouseWorld = currentTile.Position + new Vector2D(0f, -(currentMap.GetWallThickness() / 2f));
+                    mouseWorld = currentTile.Position + new Vector2(0f, -(currentMap.GetWallThickness() / 2f));
                 }
             }
             else
@@ -56,15 +57,15 @@ namespace SS14.Client.Services.Placement.Modes
                 pManager.Direction = Direction.North;
                 if (mouseWorld.X > currentTile.Position.X + (currentMap.GetTileSpacing() / 2f))
                 {
-                    mouseWorld = currentTile.Position + new Vector2D(currentMap.GetTileSpacing() - (currentMap.GetWallThickness() / 2f), 0f);
+                    mouseWorld = currentTile.Position + new Vector2(currentMap.GetTileSpacing() - (currentMap.GetWallThickness() / 2f), 0f);
                 }
                 else // Westside, yo
                 {
-                    mouseWorld = currentTile.Position + new Vector2D(-(currentMap.GetWallThickness() / 2f), 0f);
+                    mouseWorld = currentTile.Position + new Vector2(-(currentMap.GetWallThickness() / 2f), 0f);
                 }
             }
 
-            mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
+            mouseScreen = new Vector2(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
                                              mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
 
             return true;
@@ -74,12 +75,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X,
+                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML(Color.ForestGreen) : CluwneLib.SystemColorToSFML( Color.IndianRed);
+                spriteToDraw.Position = new Vector2(mouseScreen.X,
                                                      mouseScreen.Y);
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
             }
         }
     }

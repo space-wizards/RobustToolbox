@@ -1,8 +1,8 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,9 +16,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-        private Sprite _buttonLeft;
-        private Sprite _buttonMain;
-        private Sprite _buttonRight;
+		private CluwneSprite _buttonLeft;
+		private CluwneSprite _buttonMain;
+		private CluwneSprite _buttonRight;
 
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaMain;
@@ -63,17 +63,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonLeft.Color = drawColor;
-            _buttonMain.Color = drawColor;
-            _buttonRight.Color = drawColor;
+            _buttonLeft.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
+            _buttonMain.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G, drawColor.B);
+            _buttonRight.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
 
             _buttonLeft.Draw(_clientAreaLeft);
             _buttonMain.Draw(_clientAreaMain);
             _buttonRight.Draw(_clientAreaRight);
 
-            _buttonLeft.Color = Color.White;
-            _buttonMain.Color = Color.White;
-            _buttonRight.Color = Color.White;
+            _buttonLeft.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonMain.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonRight.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
 
             Label.Draw();
         }
@@ -89,18 +89,18 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
-                if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                     drawColor = mouseOverColor;
                 else
                     drawColor = Color.White;
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -108,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

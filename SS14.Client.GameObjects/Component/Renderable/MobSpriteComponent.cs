@@ -1,11 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.ClientWindow;
+﻿using SS14.Client.ClientWindow;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
-
+using SS14.Shared.Maths;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent
@@ -126,7 +125,7 @@ namespace SS14.Client.GameObjects
             SetSpriteByKey(_basename + "_front");
         }
 
-        public override void Render(Vector2D topLeft, Vector2D bottomRight)
+        public override void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             if (!visible) return;
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X < topLeft.X

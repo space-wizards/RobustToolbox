@@ -179,7 +179,7 @@ namespace SS14.Shared.GameStates
             // ... Then create a buffer and write into while reading from the GZIP stream.
             using (var stream = new GZipStream(new MemoryStream(compressedStateData), CompressionMode.Decompress))
             {
-                const int size = 4096;
+                const int size = 2048;
                 var buffer = new byte[size];
                 using (var memory = new MemoryStream())
                 {

@@ -6,6 +6,7 @@ using SS14.Server.Services.Tiles;
 using SS14.Shared;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.Services.Atmos
 {

@@ -6,6 +6,7 @@ using SS14.Server.Services.Map;
 using SS14.Shared;
 using System;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.Services.Tiles
 {

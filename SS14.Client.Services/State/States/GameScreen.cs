@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameTimer;
@@ -26,8 +23,18 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
+using Color = SFML.Graphics.Color;
+using ContextMenu = SS14.Client.Services.UserInterface.Components.ContextMenu;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
-using Image = GorgonLibrary.Graphics.Image;
+using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State.States
 {
@@ -37,35 +44,30 @@ namespace SS14.Client.Services.State.States
 
         //UI Vars
 
-        public bool BlendLightMap = true;
         public DateTime LastUpdate;
         public DateTime Now;
         public int ScreenHeightTiles = 12;
         public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
         public string SpawnType;
         private RenderImage _baseTarget;
-        private Sprite _baseTargetSprite;
-        private Batch _decalBatch;
+        private CluwneSprite _baseTargetSprite;
+        private SpriteBatch _decalBatch;
         private EntityManager _entityManager;
-        private Batch _floorBatch;
-        private Batch _gasBatch;
+        private SpriteBatch _floorBatch;
+        private SpriteBatch _gasBatch;
         private GaussianBlur _gaussianBlur;
-        private RenderImage _lightTarget;
-        private RenderImage _lightTargetIntermediate;
-        private Sprite _lightTargetIntermediateSprite;
-        private Sprite _lightTargetSprite;
         private float _realScreenHeightTiles;
         private float _realScreenWidthTiles;
         private bool _recalculateScene = true;
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
         private List<RenderTarget> _cleanupList = new List<RenderTarget>();
-        private List<Sprite> _cleanupSpriteList = new List<Sprite>();
+        private List<CluwneSprite> _cleanupSpriteList = new List<CluwneSprite>();
         private List<ITile> _visibleTiles;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
-        private Batch _wallBatch;
-        private Batch _wallTopsBatch;
+        private SpriteBatch _wallBatch;
+        private SpriteBatch _wallTopsBatch;
 
         #region gameState stuff
 
@@ -76,8 +78,8 @@ namespace SS14.Client.Services.State.States
 
         #region Mouse/Camera stuff
 
-        public Vector2D MousePosScreen = Vector2D.Zero;
-        public Vector2D MousePosWorld = Vector2D.Zero;
+        public Vector2 MousePosScreen = Vector2.Zero;
+        public Vector2 MousePosWorld = Vector2.Zero;
 
         #endregion
 
@@ -89,38 +91,43 @@ namespace SS14.Client.Services.State.States
         #endregion
 
         #region Lighting
-
+        // TODO Rewrite shader code and lighting shaders to re-enable this shit
         private RenderImage _composedSceneTarget;
-        private RenderImage _overlayTarget;
-        private RenderImage _sceneTarget;
-        private RenderImage _tilesTarget;
-        private bool bPlayerVision = true;
-        private bool bFullVision = false;
-        private FXShader finalBlendShader;
-        private LightArea lightArea1024;
-        private LightArea lightArea128;
-        private LightArea lightArea256;
-        private LightArea lightArea512;
-        private FXShader lightBlendShader;
-        private FXShader lightMapShader;
-        private RenderImage playerOcclusionTarget;
-        private ILight playerVision;
-        private RenderImage _occluderDebugTarget;
+         private RenderImage _overlayTarget;
+         private RenderImage _sceneTarget;
+         private RenderImage _tilesTarget;
+         private bool bPlayerVision = true;
+         private bool bFullVision = false;
+         private FXShader finalBlendShader;
+         private LightArea lightArea1024;
+         private LightArea lightArea128;
+         private LightArea lightArea256;
+         private LightArea lightArea512;
+         private FXShader lightBlendShader;
+         private FXShader lightMapShader;
+         private RenderImage playerOcclusionTarget;
+         private ILight playerVision;
+         private RenderImage _occluderDebugTarget;
+         private RenderImage _lightTarget;
+         private RenderImage _lightTargetIntermediate;
+         private CluwneSprite _lightTargetIntermediateSprite;
+         private CluwneSprite _lightTargetSprite;
+        public bool BlendLightMap = true;
 
-        private QuadRenderer quadRenderer;
-        private RenderImage screenShadows;
-        private RenderImage shadowBlendIntermediate;
-        private RenderImage shadowIntermediate;
-        private ShadowMapResolver shadowMapResolver;
-        private bool debugWallOccluders = false;
-        private bool debugHitboxes = false;
+         private QuadRenderer quadRenderer;
+         private RenderImage screenShadows;
+         private RenderImage shadowBlendIntermediate;
+         private RenderImage shadowIntermediate;
+         private ShadowMapResolver shadowMapResolver;
+         private bool debugWallOccluders = false;
+         private bool debugHitboxes = false;
 
         #endregion
 
         /// <summary>
         /// Center point of the current render window.
         /// </summary>
-        private Vector2D WindowOrigin
+        private Vector2 WindowOrigin
         {
             get { return ClientWindowData.Singleton.ScreenOrigin; }
         }
@@ -140,7 +147,7 @@ namespace SS14.Client.Services.State.States
             Now = DateTime.Now;
 
             _cleanupList = new List<RenderTarget>();
-            _cleanupSpriteList = new List<Sprite>();
+            _cleanupSpriteList = new List<CluwneSprite>();
 
             UserInterfaceManager.DisposeAllComponents();
 
@@ -162,70 +169,75 @@ namespace SS14.Client.Services.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
-            _baseTarget = new RenderImage("baseTarget", Gorgon.CurrentClippingViewport.Width,
-                                          Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            // Create new 
+            _baseTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
+                                          (uint)CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_baseTarget);
-            _baseTargetSprite = new Sprite("baseTargetSprite", _baseTarget) {DepthWriteEnabled = false};
+
+            _baseTargetSprite = new CluwneSprite(_baseTarget);
             _cleanupSpriteList.Add(_baseTargetSprite);
-            
-            _sceneTarget = new RenderImage("sceneTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+          
+            _sceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                          (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage("tilesTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _tilesTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                           (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_tilesTarget);
 
-            _overlayTarget = new RenderImage("overlayTarget", Gorgon.CurrentClippingViewport.Width,
-                                             Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _overlayTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                             (uint) CluwneLib.Screen.GetView().Size.Y, true);
             _cleanupList.Add(_overlayTarget);
-            _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+          //  _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+          //    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+          // _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+          //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _composedSceneTarget = new RenderImage("composedSceneTarget", Gorgon.CurrentClippingViewport.Width,
-                                                   Gorgon.CurrentClippingViewport.Height,
-                                                   ImageBufferFormats.BufferRGB888A8);
+           _composedSceneTarget = new RenderImage((uint) CluwneLib.Screen.GetView().Size.X,
+                                                 (uint) CluwneLib.Screen.GetView().Size.Y,
+                                                ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
-            _lightTarget = new RenderImage("lightTarget", Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+            _lightTarget = new RenderImage("lightTarget", CluwneLib.CurrentClippingViewport.Width,
+                                           CluwneLib.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+
             _cleanupList.Add(_lightTarget);
-            _lightTargetSprite = new Sprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+           _lightTargetSprite = new CluwneSprite("lightTargetSprite", _lightTarget) { DepthWriteEnabled = false };
+
             _cleanupSpriteList.Add(_lightTargetSprite);
-            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", Gorgon.CurrentClippingViewport.Width,
-                                                       Gorgon.CurrentClippingViewport.Height,
-                                                       ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(_lightTargetIntermediate);
-            _lightTargetIntermediateSprite = new Sprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
+
+           _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", CluwneLib.CurrentClippingViewport.Width,
+                                                     CluwneLib.CurrentClippingViewport.Height,
+                                                     ImageBufferFormats.BufferRGB888A8);
+           _cleanupList.Add(_lightTargetIntermediate);
+            _lightTargetIntermediateSprite = new CluwneSprite("lightTargetIntermediateSprite", _lightTargetIntermediate)
                                                  {DepthWriteEnabled = false};
-            _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
+           _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
 
-            _gasBatch = new Batch("gasBatch", 1);
-            _gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+           _gasBatch = new SpriteBatch();
+           //_gasBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+           //_gasBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_gasBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_gasBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _wallTopsBatch = new Batch("wallTopsBatch", 1);
-            _wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            _wallTopsBatch = new SpriteBatch();
+            //_wallTopsBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //_wallTopsBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_wallTopsBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_wallTopsBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _decalBatch = new Batch("decalBatch", 1);
-            _decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            _decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            _decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            _decalBatch = new SpriteBatch();
+            //_decalBatch.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //_decalBatch.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //_decalBatch.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //_decalBatch.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _floorBatch = new Batch("floorBatch", 1);
-            _wallBatch = new Batch("wallBatch", 1);
+            _floorBatch = new SpriteBatch();
+            _wallBatch = new SpriteBatch();
+            
+          _gaussianBlur = new GaussianBlur(ResourceManager);
 
-            _gaussianBlur = new GaussianBlur(ResourceManager);
-
-            _realScreenWidthTiles = (float) Gorgon.CurrentClippingViewport.Width/MapManager.GetTileSpacing();
-            _realScreenHeightTiles = (float) Gorgon.CurrentClippingViewport.Height/MapManager.GetTileSpacing();
+            _realScreenWidthTiles = (float) CluwneLib.Screen.Size.X/MapManager.GetTileSpacing();
+            _realScreenHeightTiles = (float) CluwneLib.Screen.Size.Y/MapManager.GetTileSpacing();
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -235,16 +247,20 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point(Gorgon.CurrentClippingViewport.Width - 800, 10);
+            statusBar.Position = new Point((int)CluwneLib.Screen.Size.X - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, Gorgon.CurrentClippingViewport.Height - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Point(5, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
             #region Lighting
-
+            // TODO: Convert all shaders to GLSL
+            // TODO: Convert QuadRenderer to use SFML
+            // TODO: Convert shadowMapResolver to use SFML
+            // TODO: Convert this shit right here to use SFML
+/*
             quadRenderer = new QuadRenderer();
             quadRenderer.LoadContent();
             shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size1024, ShadowmapSize.Size1024,
@@ -280,7 +296,8 @@ namespace SS14.Client.Services.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
             playerVision.SetRadius(1024);
-            playerVision.Move(Vector2D.Zero);
+            playerVision.Move(Vector2.Zero);
+ */
 
             #endregion
 
@@ -346,14 +363,15 @@ namespace SS14.Client.Services.State.States
         public void Shutdown()
         {
             IoCManager.Resolve<IPlayerManager>().Detach();
-            if(Gorgon.IsInitialized)
-            {
-                _cleanupSpriteList.ForEach(s => s.Image = null);
+          
+                /*
+                 _cleanupSpriteList.ForEach(s => s.Image = null);
                 _cleanupSpriteList.Clear();
                 _cleanupList.ForEach(t => {t.ForceRelease();t.Dispose();});
                 _cleanupList.Clear();
-            }
-            shadowMapResolver.Dispose();
+                */
+            // TODO: See Startup() for SFML todos
+            //shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
             _entityManager.Shutdown();
             MapManager.Shutdown();
@@ -377,14 +395,14 @@ namespace SS14.Client.Services.State.States
                 ClientWindowData.Singleton.UpdateViewPort(
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
+            MousePosWorld = new Vector2(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
         }
 
         private void ResetRendertargets()
         {
-            int w = Gorgon.CurrentClippingViewport.Width;
-            int h = Gorgon.CurrentClippingViewport.Height;
-
+            int w = (int)CluwneLib.Screen.Size.X;
+            int h = (int)CluwneLib.Screen.Size.Y;
+/*
             _baseTarget.Width = w;
             _baseTarget.Height = h;
             _sceneTarget.Width = w;
@@ -395,7 +413,9 @@ namespace SS14.Client.Services.State.States
             _overlayTarget.Height = h;
             _composedSceneTarget.Width = w;
             _composedSceneTarget.Height = h;
-            _lightTarget.Width = w;
+*/         
+            // TODO: See Startup for todos related to SFML
+            /*_lightTarget.Width = w;
             _lightTarget.Height = h;
             _lightTargetIntermediate.Width = w;
             _lightTargetIntermediate.Height = h;
@@ -410,7 +430,7 @@ namespace SS14.Client.Services.State.States
                                                     Gorgon.CurrentClippingViewport.Height,
                                                     ImageBufferFormats.BufferRGB888A8);
             playerOcclusionTarget.Width = w;
-            playerOcclusionTarget.Height = h;
+            playerOcclusionTarget.Height = h;*/
             //playerOcclusionTarget.DeviceReset();
             _gaussianBlur.Dispose();
             _gaussianBlur = new GaussianBlur(ResourceManager);
@@ -545,12 +565,12 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            Gorgon.CurrentRenderTarget = _baseTarget;
+            //CluwneLib.CurrentRenderTarget = _baseTarget;
 
-            _baseTarget.Clear(Color.Black);
-            Gorgon.Screen.Clear(Color.Black);
+            //_baseTarget.Clear(Color.Black);
+            //CluwneLib.Screen.Clear(Color.Black);
 
             //Gorgon.Screen.DefaultView.Left = 400;
             //Gorgon.Screen.DefaultView.Top = 400;
@@ -565,56 +585,59 @@ namespace SS14.Client.Services.State.States
                     IoCManager.Resolve<ILightManager>().LightsIntersectingRect(ClientWindowData.Singleton.ViewPort);
 
                 // Render the lightmap
-                RenderLightMap(lights);
+                //RenderLightMap(lights);
                 CalculateSceneBatches(ClientWindowData.Singleton.ViewPort);
 
-                if (_redrawTiles)
-                {
+                //if (_redrawTiles)
+                //{
                     //Set rendertarget to draw the rest of the scene
-                    Gorgon.CurrentRenderTarget = _tilesTarget;
-                    Gorgon.CurrentRenderTarget.Clear(Color.Black);
+                  //  CluwneLib.CurrentRenderTarget = _tilesTarget;
+                    //CluwneLib.CurrentRenderTarget.Clear(Color.Black);
 
                     if (_floorBatch.Count > 0)
-                        _floorBatch.Draw();
+                    {
+                        CluwneLib.CurrentRenderTarget.Draw(_floorBatch);
+                    }
 
                     if (_wallBatch.Count > 0)
-                        _wallBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_wallBatch);
 
-                    _redrawTiles = false;
-                }
+               //     _redrawTiles = false;
+                //}
 
 
-                Gorgon.CurrentRenderTarget = _sceneTarget;
-                _sceneTarget.Clear(Color.Black);
+              //  CluwneLib.CurrentRenderTarget = _sceneTarget;
+              // _sceneTarget.Clear(Color.Black);
 
-                _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
+
+              //  _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 //ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
                 RenderComponents(e.FrameDeltaTime, ClientWindowData.Singleton.ViewPort);
 
-                if (_redrawOverlay)
-                {
-                    Gorgon.CurrentRenderTarget = _overlayTarget;
-                    _overlayTarget.Clear(Color.Transparent);
+                //if (_redrawOverlay)
+                //{
+                    //CluwneLib.CurrentRenderTarget = _overlayTarget;
+                   // _overlayTarget.Clear(Color.Transparent);
 
                     // Render decal batch
 
                     if (_decalBatch.Count > 0)
-                        _decalBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_decalBatch);
 
                     if (_wallTopsBatch.Count > 0)
-                        _wallTopsBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_wallTopsBatch);
 
                     if (_gasBatch.Count > 0)
-                        _gasBatch.Draw();
+                        CluwneLib.CurrentRenderTarget.Draw(_gasBatch);
 
-                    Gorgon.CurrentRenderTarget = _sceneTarget;
-                    _redrawOverlay = false;
-                }
+                   // CluwneLib.CurrentRenderTarget = _sceneTarget;
+                 //   _redrawOverlay = false;
+                //}
 
-                _overlayTarget.Blit();
+             //   _overlayTarget.Blit();
 
-                LightScene();
+                //LightScene();
 
 
 
@@ -624,50 +647,52 @@ namespace SS14.Client.Services.State.States
             }
         }
 
+        
+
         private void RenderDebug()
-        {   
-            if(debugWallOccluders)
-                _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
+        {
+            /*  if(debugWallOccluders)
+                  _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
 
-            if (debugHitboxes) {
-                var corner = ClientWindowData.Singleton.ScreenOrigin;
+              if (debugHitboxes) {
+                  var corner = ClientWindowData.Singleton.ScreenOrigin;
 
-                var colliders =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
-                    .OfType<ColliderComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                  var colliders =
+                      _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
+                      .OfType<ColliderComponent>()
+                      .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
+                      .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
 
-                var collidables =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
-                    .OfType<CollidableComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                  var collidables =
+                      _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
+                      .OfType<CollidableComponent>()
+                      .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
+                      .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
 
-                var destAbo = _baseTarget.DestinationBlend;
-                var srcAbo = _baseTarget.SourceBlend;
-                _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-                _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
+                  var destAbo = _baseTarget.DestinationBlend;
+                  var srcAbo = _baseTarget.SourceBlend;
+                  _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+                  _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
 
-                foreach (var hitbox in colliders.Concat(collidables)) {
-                    _baseTarget.FilledRectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
-                    _baseTarget.Rectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
-                }
+                  foreach (var hitbox in colliders.Concat(collidables)) {
+                      _baseTarget.FilledRectangle(
+                          hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                          hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
+                      _baseTarget.Rectangle(
+                          hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
+                          hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
+                  }
 
-                _baseTarget.DestinationBlend = destAbo;
-                _baseTarget.SourceBlend = srcAbo;
-            
-            }
+                  _baseTarget.DestinationBlend = destAbo;
+                  _baseTarget.SourceBlend = srcAbo;
+          
+              } */
         }
 
         public void FormResize()
         {
-            Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                                          Gorgon.CurrentClippingViewport.Height);
+            //CluwneLib.CurrentClippingViewport = new Viewport(0, 0,CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+          
             ClientWindowData.Singleton.UpdateViewPort(
                 PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             UserInterfaceManager.ResizeComponents();
@@ -680,67 +705,82 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyPressed(KeyEventArgs e)
+        {
+            
+        }
+        public void MouseMoved( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed( MouseButtonEventArgs e )
+        {
+
+        }
+
+		public void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
 
-            if (e.Key == KeyboardKeys.F1)
+            //TODO Fix this
+            if (e.Code == Keyboard.Key.F1)
             {
-                Gorgon.FrameStatsVisible = !Gorgon.FrameStatsVisible;
+                //TODO FrameStats
+               //CluwneLib.FrameStatsVisible = !CluwneLib.FrameStatsVisible;
             }
-            if (e.Key == KeyboardKeys.F2)
+            if (e.Code == Keyboard.Key.F2)
             {
                 _showDebug = !_showDebug;
             }
-            if (e.Key == KeyboardKeys.F3)
+            if (e.Code == Keyboard.Key.F3)
             {
                 ToggleOccluderDebug();
             }
-            if (e.Key == KeyboardKeys.F4)
+            if (e.Code == Keyboard.Key.F4)
             {
-                debugHitboxes = !debugHitboxes;
+                // debugHitboxes = !debugHitboxes;
             }
-            if (e.Key == KeyboardKeys.F5)
+            if (e.Code == Keyboard.Key.F5)
             {
                 PlayerManager.SendVerb("save", 0);
             }
-            if (e.Key == KeyboardKeys.F6)
+            if (e.Code == Keyboard.Key.F6)
             {
-                bFullVision = !bFullVision;
+               // bFullVision = !bFullVision;
             }
-            if (e.Key == KeyboardKeys.F7)
+            if (e.Code == Keyboard.Key.F7)
             {
-                bPlayerVision = !bPlayerVision;
+                //bPlayerVision = !bPlayerVision;
             }
-            if (e.Key == KeyboardKeys.F8)
+            if (e.Code == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
                 message.Write((byte) NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.Key == KeyboardKeys.Escape)
+            if (e.Code == Keyboard.Key.Escape)
             {
                 UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F9)
+            if (e.Code == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
             }
-            if (e.Key == KeyboardKeys.F10)
+            if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new TileSpawnPanel(new Size(350, 410), ResourceManager,
                                                                      PlacementManager)); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F11)
+            if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Size(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
-            if (e.Key == KeyboardKeys.F12)
+            if (e.Code == Keyboard.Key.F12)
             {
                 UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
                 var actComp =
@@ -750,20 +790,20 @@ namespace SS14.Client.Services.State.States
                                                                               actComp)); //Create a new one.
             }
 
-            PlayerManager.KeyDown(e.Key);
+            PlayerManager.KeyDown(e.Code);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Key);
+            PlayerManager.KeyUp(e.Code);
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             if (PlayerManager.ControlledEntity == null)
                 return;
@@ -774,15 +814,15 @@ namespace SS14.Client.Services.State.States
 
             if (PlacementManager.IsActive && !PlacementManager.Eraser)
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         PlacementManager.HandlePlacement();
                         return;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         PlacementManager.Clear();
                         return;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         PlacementManager.Rotate();
                         return;
                 }
@@ -791,7 +831,7 @@ namespace SS14.Client.Services.State.States
             #region Object clicking
 
             // Convert our click from screen -> world coordinates
-            //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
+            //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             float checkDistance = MapManager.GetTileSpacing()*1.5f;
@@ -836,9 +876,9 @@ namespace SS14.Client.Services.State.States
                     return;
                 }
 
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         if (UserInterfaceManager.currentTargetingAction != null &&
                             (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
@@ -849,7 +889,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         }
                         break;
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         if (UserInterfaceManager.currentTargetingAction != null)
                             UserInterfaceManager.CancelTargeting();
                         else
@@ -858,7 +898,7 @@ namespace SS14.Client.Services.State.States
                             c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         }
                         break;
-                    case MouseButtons.Middle:
+                    case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager,
                                                                              entToClick));
@@ -867,9 +907,9 @@ namespace SS14.Client.Services.State.States
             }
             else
             {
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
+                    case Mouse.Button.Left:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null &&
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
@@ -891,7 +931,7 @@ namespace SS14.Client.Services.State.States
                             }
                             break;
                         }
-                    case MouseButtons.Right:
+                    case Mouse.Button.Right:
                         {
                             if (UserInterfaceManager.currentTargetingAction != null)
                                 UserInterfaceManager.CancelTargeting();
@@ -903,15 +943,15 @@ namespace SS14.Client.Services.State.States
             #endregion
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+		public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
-            MousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            MousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
+            float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
+            MousePosScreen = new Vector2(e.X, e.Y);
+            MousePosWorld = new Vector2(e.X + WindowOrigin.X, e.Y + WindowOrigin.Y);
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -1057,7 +1097,8 @@ namespace SS14.Client.Services.State.States
 
         private void ToggleOccluderDebug()
         {
-            if(debugWallOccluders)
+            // TODO: See Startup for SFML tasks
+            /*if(debugWallOccluders)
             {
                 debugWallOccluders = false;
                 _occluderDebugTarget.Dispose();
@@ -1067,7 +1108,7 @@ namespace SS14.Client.Services.State.States
             {
                 debugWallOccluders = true;
                 _occluderDebugTarget = new RenderImage("OccluderDebugTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            }
+            }*/
         }
 
         /// <summary>
@@ -1084,7 +1125,7 @@ namespace SS14.Client.Services.State.States
                                                                  where c.DrawDepth < DrawDepth.MobBase
                                                                  select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
@@ -1093,7 +1134,7 @@ namespace SS14.Client.Services.State.States
                                                                        c.DrawDepth < DrawDepth.WallTops
                                                                  select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
@@ -1101,11 +1142,11 @@ namespace SS14.Client.Services.State.States
                                                                    where c.DrawDepth >= DrawDepth.WallTops
                                                                    select c;
 
-            RenderList(new Vector2D(viewPort.Left, viewPort.Top), new Vector2D(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        ceilingRenderables);
         }
 
-        private void RenderList(Vector2D topleft, Vector2D bottomright, IEnumerable<IRenderableComponent> renderables)
+        private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
         {
             foreach (IRenderableComponent component in renderables)
             {
@@ -1140,13 +1181,18 @@ namespace SS14.Client.Services.State.States
             //Blur the player vision map
             BlurPlayerVision();
 
-            _decalBatch.Clear();
-            _wallTopsBatch.Clear();
-            _floorBatch.Clear();
-            _wallBatch.Clear();
-            _gasBatch.Clear();
+            _decalBatch.Begin();
+            _wallTopsBatch.Begin();
+            _floorBatch.Begin();
+            _wallBatch.Begin();
+            _gasBatch.Begin();
 
             DrawTiles(vision);
+            _floorBatch.End();
+            _decalBatch.End();
+            _wallTopsBatch.End();
+            _gasBatch.End();
+            _wallBatch.End();
             _recalculateScene = false;
             _redrawTiles = true;
             _redrawOverlay = true;
@@ -1159,23 +1205,26 @@ namespace SS14.Client.Services.State.States
 
         private void BlurShadowMap()
         {
-            _gaussianBlur.SetRadius(11);
+            // TODO: See Startup for SFML tasks
+            /*_gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Size(screenShadows.Width, screenShadows.Height));
-            _gaussianBlur.PerformGaussianBlur(screenShadows);
+            _gaussianBlur.PerformGaussianBlur(screenShadows);*/
         }
 
         private void BlurPlayerVision()
         {
-            _gaussianBlur.SetRadius(11);
+            // TODO: See Startup for SFML tasks
+           /* _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Size(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
-            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
+            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);*/
         }
 
         private void LightScene()
         {
-            //Blur the light/shadow map
+            // TODO: See Startup for SFML tasks
+            /*//Blur the light/shadow map
             BlurShadowMap();
 
             //Render the scene and lights together to compose the lit scene
@@ -1187,11 +1236,11 @@ namespace SS14.Client.Services.State.States
             finalBlendShader.Parameters["OutOfViewTexture"].SetValue(outofview.Image);
             float texratiox = Gorgon.CurrentClippingViewport.Width/outofview.Width;
             float texratioy = Gorgon.CurrentClippingViewport.Height/outofview.Height;
-            var maskProps = new Vector4D(texratiox, texratioy, 0, 0);
+            var maskProps = new Vector4(texratiox, texratioy, 0, 0);
             finalBlendShader.Parameters["MaskProps"].SetValue(maskProps);
             finalBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
             finalBlendShader.Parameters["SceneTexture"].SetValue(_sceneTarget);
-            finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4D(.05f, .05f, 0.05f, 1));
+            finalBlendShader.Parameters["AmbientLight"].SetValue(new Vector4(.05f, .05f, 0.05f, 1));
             screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
 
             // Blit the shadow image on top of the screen
@@ -1205,12 +1254,13 @@ namespace SS14.Client.Services.State.States
             _composedSceneTarget.Image.Blit(0, 0, Gorgon.CurrentClippingViewport.Width,
                                             Gorgon.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
             //screenShadows.Blit(0,0);
-            //playerOcclusionTarget.Blit(0,0);
+            //playerOcclusionTarget.Blit(0,0);*/
         }
 
         private void PlayerPostProcess()
         {
-            PlayerManager.ApplyEffects(_composedSceneTarget);
+            // TODO: See Startup for SFML tasks to re-enable shaders and shit
+            //PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
         private void OnPlayerMove(object sender, VectorEventArgs args)
@@ -1228,7 +1278,8 @@ namespace SS14.Client.Services.State.States
         /// <param name="lights">Array of lights</param>
         private void RenderLightMap(ILight[] lights)
         {
-            //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
+            // TODO: See Startup for SFML tasks to re-enable shader-based lighting
+            /*//Step 1 - Calculate lights that haven't been calculated yet or need refreshing
             foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
             {
                 if (l.LightState != LightState.On)
@@ -1248,8 +1299,8 @@ namespace SS14.Client.Services.State.States
             Gorgon.CurrentShader = lightMapShader.Techniques["PreLightBlend"];
 
             var lightTextures = new List<Image>();
-            var colors = new List<Vector4D>();
-            var positions = new List<Vector4D>();
+            var colors = new List<Vector4>();
+            var positions = new List<Vector4>();
 
             //Step 3 - Blend all the lights!
             foreach (ILight l in lights)
@@ -1261,12 +1312,12 @@ namespace SS14.Client.Services.State.States
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
                 var area = (LightArea) l.LightArea;
 
-                Vector2D blitPos;
+                Vector2 blitPos;
                 //Set the drawing position.
                 blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize*0.5f);
 
                 //Set shader parameters
-                var LightPositionData = new Vector4D(blitPos.X/source.Width,
+                var LightPositionData = new Vector4(blitPos.X/source.Width,
                                                      blitPos.Y/source.Height,
                                                      (float) source.Width/area.renderTarget.Width,
                                                      (float) source.Height/area.renderTarget.Height);
@@ -1280,8 +1331,8 @@ namespace SS14.Client.Services.State.States
             bool fill = false;
             Image black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Image;
             var r_img = new Image[num_lights];
-            var r_col = new Vector4D[num_lights];
-            var r_pos = new Vector4D[num_lights];
+            var r_col = new Vector4[num_lights];
+            var r_pos = new Vector4[num_lights];
             do
             {
                 if (fill)
@@ -1289,8 +1340,8 @@ namespace SS14.Client.Services.State.States
                     for (int j = i; j < num_lights - 1; j++)
                     {
                         r_img[j] = black;
-                        r_col[j] = Vector4D.Zero;
-                        r_pos[j] = new Vector4D(0, 0, 1, 1);
+                        r_col[j] = Vector4.Zero;
+                        r_pos[j] = new Vector4(0, 0, 1, 1);
                         j++;
                     }
                     i = num_lights;
@@ -1321,8 +1372,8 @@ namespace SS14.Client.Services.State.States
                     i = 0;
                     draw = false;
                     r_img = new Image[num_lights];
-                    r_col = new Vector4D[num_lights];
-                    r_pos = new Vector4D[num_lights];
+                    r_col = new Vector4[num_lights];
+                    r_pos = new Vector4[num_lights];
                 }
                 if (lightTextures.Count > 0)
                 {
@@ -1347,12 +1398,13 @@ namespace SS14.Client.Services.State.States
                 Gorgon.CurrentRenderTarget = screenShadows;
                 source.Image.Blit(0, 0, source.Width, source.Height, Color.White, BlitterSizeMode.Crop);
             }
-            Gorgon.CurrentRenderTarget = null;
+            Gorgon.CurrentRenderTarget = null;*/
         }
 
         private void RenderPlayerVisionMap()
         {
-            Vector2D blitPos;
+            // TODO: See Startup for SFML tasks to re-enable player vision
+            /*Vector2 blitPos;
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(Color.LightGray);
@@ -1371,7 +1423,7 @@ namespace SS14.Client.Services.State.States
                 if (t != null &&
                     t.Opaque)
                 {
-                    area.LightPosition = new Vector2D(area.LightPosition.X,
+                    area.LightPosition = new Vector2(area.LightPosition.X,
                                                       t.Position.Y +
                                                       MapManager.GetTileSpacing() + 1);
                 }
@@ -1394,7 +1446,7 @@ namespace SS14.Client.Services.State.States
 
                 shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false,
                                                  IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image,
-                                                 Vector4D.Zero, new Vector4D(1, 1, 1, 1)); // Calc shadows
+                                                 Vector4.Zero, new Vector4(1, 1, 1, 1)); // Calc shadows
 
                 Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
@@ -1409,12 +1461,13 @@ namespace SS14.Client.Services.State.States
             else
             {
                 playerOcclusionTarget.Clear(Color.Black);
-            }
+            }*/
         }
 
         private void CalculateLightArea(ILight l)
         {
-            ILightArea area = l.LightArea;
+            // TODO: See Startup for SFML tasks to re-enable lighting
+            /*ILightArea area = l.LightArea;
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
@@ -1423,7 +1476,7 @@ namespace SS14.Client.Services.State.States
                 return;
             if (MapManager.GetFloorAt(l.Position).Opaque)
             {
-                area.LightPosition = new Vector2D(area.LightPosition.X,
+                area.LightPosition = new Vector2(area.LightPosition.X,
                                                   MapManager.GetAllTilesAt(l.Position).FirstOrDefault().Position.Y +
                                                   MapManager.GetTileSpacing() + 1);
             }
@@ -1431,8 +1484,8 @@ namespace SS14.Client.Services.State.States
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
             shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, true,
-                                             area.Mask.Image, area.MaskProps, Vector4D.Unit); // Calc shadows
-            area.Calculated = true;
+                                             area.Mask.Image, area.MaskProps, Vector4.Unit); // Calc shadows
+            area.Calculated = true;*/
         }
 
         private ShadowmapSize RadiusToShadowMapSize(int Radius)
@@ -1452,22 +1505,23 @@ namespace SS14.Client.Services.State.States
             }
         }
 
-        private LightArea GetLightArea(ShadowmapSize size)
-        {
-            switch (size)
-            {
-                case ShadowmapSize.Size128:
-                    return lightArea128;
-                case ShadowmapSize.Size256:
-                    return lightArea256;
-                case ShadowmapSize.Size512:
-                    return lightArea512;
-                case ShadowmapSize.Size1024:
-                    return lightArea1024;
-                default:
-                    return lightArea1024;
-            }
-        }
+       // private LightArea GetLightArea(ShadowmapSize size)
+        //{
+            //switch (size)
+            //{
+            //    case ShadowmapSize.Size128:
+            //        return lightArea128;
+            //    case ShadowmapSize.Size256:
+            //        return lightArea256;
+            //    case ShadowmapSize.Size512:
+            //        return lightArea512;
+            //    case ShadowmapSize.Size1024:
+            //        return lightArea1024;
+            //    default:
+            //        return lightArea1024;
+            //}
+           
+       // }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
@@ -1479,7 +1533,7 @@ namespace SS14.Client.Services.State.States
 
             foreach (Tile t in tiles)
             {
-                Vector2D pos = area.ToRelativePosition(t.Position);
+                Vector2 pos = area.ToRelativePosition(t.Position);
                 t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
             }
         }
@@ -1498,7 +1552,7 @@ namespace SS14.Client.Services.State.States
             {
                 t.Render(WindowOrigin.X, WindowOrigin.Y, _floorBatch);
 
-                t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
+                //t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
             }
 
             

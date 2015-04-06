@@ -1,5 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Color = SFML.Graphics.Color;
+
 
 namespace SS14.Client.Services.Tiles
 {
@@ -16,11 +18,11 @@ namespace SS14.Client.Services.Tiles
     {
         protected readonly ILightManager _lightManager;
         protected readonly IResourceManager _resourceManager;
-        protected Sprite Sprite;
+		protected CluwneSprite Sprite;
         protected Random _random;
         public List<TileDecal> decals;
         public Dictionary<GasType, int> gasAmounts;
-        public Sprite gasSprite;
+		public CluwneSprite gasSprite;
         public string name;
         public DirectionFlags surroundDirsNW, surroundDirsSE = DirectionFlags.None;
         public TileState tileState = TileState.Healthy;
@@ -49,32 +51,32 @@ namespace SS14.Client.Services.Tiles
         public bool ConnectSprite { get; set; }
         //Should this tile cause things like walls to change their sprite to 'connect' to this tile?
 
-        public Vector2D Position
+        public Vector2 Position
         {
-            get { return new Vector2D(bounds.X, bounds.Y); }
+            get { return new Vector2(bounds.X, bounds.Y); }
         }
 
-        public virtual void Render(float xTopLeft, float yTopLeft, Batch batch)
+        public virtual void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
-            Sprite.Color = Color.White;
+            Sprite.Color = SFML.Graphics.Color.White;
             Sprite.SetPosition((float)Position.X - xTopLeft,
                                (float)Position.Y - yTopLeft);
-            batch.AddClone(Sprite);
+            batch.Draw(Sprite);
         }
 
 
         public virtual void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
-            Sprite.Color = Color.Transparent;
+            Sprite.Color = SFML.Graphics.Color.Transparent;
             Sprite.SetPosition(x, y);
             Sprite.Draw();
         }
 
-        public virtual void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition)
+        public virtual void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 
-        public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        public virtual void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
             foreach (TileDecal d in decals)
             {
@@ -82,7 +84,7 @@ namespace SS14.Client.Services.Tiles
             }
         }
 
-        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch)
+        public virtual void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch)
         {
             if (Visible && gasAmounts.Count > 0)
             {
@@ -104,18 +106,18 @@ namespace SS14.Client.Services.Tiles
                     switch (gasAmount.Key)
                     {
                         case GasType.Toxin:
-                            gasSprite.Color = Color.FromArgb(opacity, Color.Orange);
+                            gasSprite.Color = new Color(255,5,0); 
                             break;
                         case GasType.WVapor:
-                            gasSprite.Color = Color.FromArgb(opacity, Color.LightBlue);
+                            gasSprite.Color = new Color(255 , 5 , 0); 
                             break;
                     }
-                    gasBatch.AddClone(gasSprite);
+                    gasBatch.Draw(gasSprite);
                 }
             }
         }
 
-        public virtual void RenderTop(float xTopLeft, float yTopLeft, Batch wallTopsBatch)
+        public virtual void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
             //FIXTHIS
         }
@@ -166,8 +168,8 @@ namespace SS14.Client.Services.Tiles
                             break;
                     }
                     decals.Add(new TileDecal(_resourceManager.GetSprite(decalname),
-                                             new Vector2D(_random.Next(0, 64), _random.Next(0, 64)), this,
-                                             Color.FromArgb(165, 6, 6)));
+                                             new Vector2(_random.Next(0, 64), _random.Next(0, 64)), this,
+                                             new Color(165, 6, 6)));
                     break;
             }
         }
@@ -193,11 +195,11 @@ namespace SS14.Client.Services.Tiles
 
     public class TileDecal
     {
-        public Vector2D position; // Position relative to top left corner of tile
-        public Sprite sprite;
+        public Vector2 position; // Position relative to top left corner of tile
+		public CluwneSprite sprite;
         public Tile tile;
 
-        public TileDecal(Sprite _sprite, Vector2D _position, Tile _tile, Color color)
+		public TileDecal(CluwneSprite _sprite, Vector2 _position, Tile _tile, Color color)
         {
             sprite = _sprite;
             position = _position;
@@ -205,12 +207,12 @@ namespace SS14.Client.Services.Tiles
             sprite.Color = color;
         }
 
-        public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch)
+        public void Draw(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
             //Need to find a way to light it.
             sprite.SetPosition(tile.Position.X - xTopLeft + position.X,
                                tile.Position.Y - yTopLeft + position.Y);
-            decalBatch.AddClone(sprite);
+            decalBatch.Draw(sprite);
         }
     }
 }

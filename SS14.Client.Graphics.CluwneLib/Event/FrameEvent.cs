@@ -11,21 +11,16 @@ namespace SS14.Client.Graphics.CluwneLib.Event
 
     public class FrameEventArgs : EventArgs
     {
-        private TimingData _timingData = null;
+        private float _frameDeltaTime;
 
-        public FrameEventArgs(TimingData timingData)
+        public FrameEventArgs(float frameDeltaTime)
         {
-            _timingData = timingData;
-        }
-
-        public TimingData TimingData
-        {
-            get { return _timingData; }
+            _frameDeltaTime = frameDeltaTime;
         }
 
         public float FrameDeltaTime
         {
-            get { return (float) (_timingData.FrameDrawTime/1000.0); }
+            get { return _frameDeltaTime; }
         }
     }
 }

@@ -38,6 +38,8 @@ namespace SS14.Client
         private IUserInterfaceManager _userInterfaceManager;
         private IResourceManager _resourceManager;
 
+        private SFML.System.Clock _clock;
+
         #endregion
 
         #region Properties
@@ -71,10 +73,14 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<TestState> ();
 
-            FrameEventArgs _frameEvent = new FrameEventArgs (
-                                      new TimingData (new SFML.System.Clock ()));
+            FrameEventArgs _frameEvent;
+            _clock = new SFML.System.Clock();
+            
 
             while (CluwneLib.IsRunning == true) {
+                var lastFrameTime = _clock.ElapsedTime.AsSeconds();
+                _clock.Restart();
+                _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.Clear (Color.Black);
                 CluwneLib.Screen.DispatchEvents ();
                 CluwneLib.RunIdle (this, _frameEvent);

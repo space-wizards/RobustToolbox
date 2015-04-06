@@ -585,7 +585,7 @@ namespace SS14.Client.Services.State.States
                     IoCManager.Resolve<ILightManager>().LightsIntersectingRect(ClientWindowData.Singleton.ViewPort);
 
                 // Render the lightmap
-                RenderLightMap(lights);
+                //RenderLightMap(lights);
                 CalculateSceneBatches(ClientWindowData.Singleton.ViewPort);
 
                 //if (_redrawTiles)
@@ -1552,7 +1552,7 @@ namespace SS14.Client.Services.State.States
             {
                 t.Render(WindowOrigin.X, WindowOrigin.Y, _floorBatch);
 
-                t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
+                //t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
             }
 
             

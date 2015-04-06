@@ -149,6 +149,10 @@ namespace SS14.Client.Services.Map
             //Length of records in bits
             int lengthBits = message.ReadInt32();
             int lengthBytes = message.ReadInt32();
+            if (lengthBytes == 0)
+            {
+                return;
+            }
             var records = new byte[lengthBytes];
             message.ReadBytes(records, 0, lengthBytes);
             byte[] decompressed = Decompress(records);

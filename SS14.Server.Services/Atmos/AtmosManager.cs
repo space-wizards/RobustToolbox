@@ -186,6 +186,10 @@ namespace SS14.Server.Services.Atmos
 
         private byte[] Compress(BitStream rawStream)
         {
+            if (rawStream.Length == 0)
+            {
+                return new byte[0];
+            }
             rawStream.Position = 0;
             var raw = new byte[rawStream.Length8];
             for (int i = 0; i < rawStream.Length8; i++)

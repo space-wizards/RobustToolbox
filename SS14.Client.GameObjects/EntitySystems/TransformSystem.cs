@@ -98,7 +98,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         //Only for components with a keyboard input mover component, and a collider component
                         // Check for collision so we don't get shit stuck in objects
-                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        if (false && entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
                         {
                             //Check for collision
                             var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);

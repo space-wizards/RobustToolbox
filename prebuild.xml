@@ -36,7 +36,7 @@
 		<?include file="./SS14.Client.Graphics.CluwneLib/prebuild.xml" ?>
 		<?include file="./SS14.Shared/prebuild.xml" ?>                  <!-- Prerequisites: Lidgren.Network -->
 		<?include file="./SS14.Client.ClientWindow/prebuild.xml" ?>
-		<?include file="./SS14.Tools.MessagingProfiler/prebuild.xml" ?> <!-- Prerequisites: SS14.Shared -->
+		<!--<?include file="./SS14.Tools.MessagingProfiler/prebuild.xml" ?> <!-- Prerequisites: SS14.Shared -->-->
 		<?include file="./SS14.Shared.GameObjects/prebuild.xml" ?>      <!-- Prerequisites: Lidgren.Network, SS14.Shared -->
 		<?include file="./SS14.Server.Interfaces/prebuild.xml" ?> 		<!-- Prerequisites: SS14.Shared.GameObjects, Lidgren.Network, SS14.Shared -->
 		<?include file="./SS14.Shared.IoC/prebuild.xml" ?>        		<!-- Prerequisites: SS14.Server.Interfaces -->
@@ -46,7 +46,7 @@
 		<?include file="./SS14.Client.GameObjects/prebuild.xml" ?>      <!-- Prerequisites: SS14.Client.Interfaces, SS14.Client.ClientWindow, SS14.Shared.GameObjects, Lidgren.Network, SS14.Client.Graphics, SS14.Shared.IoC, SS14.Shared -->
 		<?include file="./SS14.Server.GameObjects/prebuild.xml" ?>      <!-- Prerequisites: SS14.Shared.GameObjects, Lidgren.Network, SS14.Shared.IoC, SS14.Shared, SS14.Server.Interfaces, SS14.Server.Services -->
 		<?include file="./SS14.Client.Services/prebuild.xml" ?>   		<!-- Prerequisites: SS14.Client.GameObjects, SS14.Client.Interfaces, SS14.Client.ClientWindow, SS14.Shared.GameObjects, Lidgren.Network, SS14.Client.Graphics, SS14.Shared.IoC, SS14.Shared -->
-		<?include file="./SS14.Tools.ParticleEditor/prebuild.xml" ?>   	<!-- Prerequisites: SS14.Client.GameObjects, SS14.Client.Interfaces, SS14.Client.Services, SS14.Shared.GameObjects, SS14.Shared.IoC, SS14.Shared -->
+		<!--<?include file="./SS14.Tools.ParticleEditor/prebuild.xml" ?>   	<!-- Prerequisites: SS14.Client.GameObjects, SS14.Client.Interfaces, SS14.Client.Services, SS14.Shared.GameObjects, SS14.Shared.IoC, SS14.Shared -->-->
 		<?include file="./SS14.Server/prebuild.xml" ?>      			<!-- Prerequisites: SS14.Shared.GameObjects, Lidgren.Network, SS14.Shared.IoC, SS14.Shared, SS14.Server.GameObjects, SS14.Server.Interfaces, SS14.Server.Services -->
 		<?include file="./SS14.Client/prebuild.xml" ?>      			<!-- Prerequisites: SS14.Client.GameObjects, SS14.Client.Interfaces, SS14.Client.Services, SS14.Client.ClientWindow, SS14.Shared.GameObjects, Lidgren.Network, SS14.Client.Graphics, SS14.Shared.IoC, SS14.Shared -->
 

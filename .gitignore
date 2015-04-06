@@ -4,14 +4,6 @@
 *.userosscache
 *.sln.docstates
 
-#sln/csproj
-*.sln
-*.csproj
-
-#MonoDevelop Project/Solution files
-*.mds
-*.mdp
-
 # Roslyn cache directories
 *.ide/
 

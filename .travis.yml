@@ -1,0 +1,4 @@
+language: csharp
+solution: SpaceStation14.sln
+before_script:
+  - ./prebuild-monodev.sh

@@ -43,7 +43,7 @@
 	  <PlatformTarget>x86</PlatformTarget>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	  <BaseAddress>285212672</BaseAddress>
 	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
 	  <ConfigurationOverrideFile>

@@ -1,6 +1,5 @@
 ﻿using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Map;
-using SS14.Server.Services.Tiles;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -128,52 +127,52 @@ namespace SS14.Server.GameObjects
         {
             if (disabled && !force) return;
 
-            var map = IoCManager.Resolve<IMapManager>();
-            Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            //var map = IoCManager.Resolve<IMapManager>();
+            //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Open = true;
             Owner.SendMessage(this, ComponentMessageType.DisableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, openSprite);
-            if(t != null)
-                t.GasPermeable = true;
+            //if(t != null)
+            //    t.GasPermeable = true; // Gotta find another way to do this.
         }
 
         private void CloseDoor(bool force = false)
         {
             if (disabled && !force) return;
 
-            var map = IoCManager.Resolve<IMapManager>();
-            Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            //var map = IoCManager.Resolve<IMapManager>();
+            //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             Open = true;
             Open = false;
             timeOpen = 0;
             Owner.SendMessage(this, ComponentMessageType.EnableCollision);
             Owner.SendMessage(this, ComponentMessageType.SetSpriteByKey, closedSprite);
-            if (t != null)
-                t.GasPermeable = false;
+            //if (t != null)
+            //    t.GasPermeable = false; // Gotta find another way to do this.
         }
 
         private void SetImpermeable()
         {
-            var map = IoCManager.Resolve<IMapManager>();
-            Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            if (t != null)
-                t.GasPermeable = false;
+            //var map = IoCManager.Resolve<IMapManager>();
+            //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            //if (t != null)
+            //    t.GasPermeable = false;
         }
 
         private void SetImpermeable(Vector2 position)
         {
-            var map = IoCManager.Resolve<IMapManager>();
-            Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            if (t != null)
-                t.GasPermeable = false;
+            //var map = IoCManager.Resolve<IMapManager>();
+            //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            //if (t != null)
+            //    t.GasPermeable = false;
         }
 
         private void SetPermeable(Vector2 position)
         {
-            var map = IoCManager.Resolve<IMapManager>();
-            Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            if (t != null)
-                t.GasPermeable = true;
+            //var map = IoCManager.Resolve<IMapManager>();
+            //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            //if (t != null)
+            //    t.GasPermeable = true;
         }
 
         public override void SetParameter(ComponentParameter parameter)

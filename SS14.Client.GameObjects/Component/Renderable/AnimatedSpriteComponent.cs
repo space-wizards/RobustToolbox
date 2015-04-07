@@ -3,6 +3,7 @@ using GorgonLibrary.Graphics;
 using SS14.Client.ClientWindow;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -51,7 +52,14 @@ namespace SS14.Client.GameObjects
 
         public RectangleF AverageAABB
         {
-            get { return sprite.AverageAABB; }
+            get {
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+                var aaabb = sprite.AverageAABB;
+                return new RectangleF(
+                    aaabb.X / tileSize, aaabb.Y / tileSize,
+                    aaabb.Width / tileSize, aaabb.Height / tileSize
+                    );
+            }
         }
 
         #region ISpriteComponent Members
@@ -60,8 +68,10 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return new RectangleF(0, 0, sprite.AABB.Width,
-                                      sprite.AABB.Height);
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+
+                return new RectangleF(0, 0, sprite.AABB.Width / tileSize,
+                                      sprite.AABB.Height / tileSize);
             }
         }
         
@@ -243,18 +253,15 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            Vector2D renderPos =
-                ClientWindowData.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            
+            Vector2D renderPos = ClientWindowData.Singleton.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + sprite.AABB.Right <
-                topLeft.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                ||
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                sprite.AABB.Bottom < topLeft.Y
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
+            if (ownerPos.X + sprite.AABB.Right < topLeft.X
+                || ownerPos.X > bottomRight.X
+                || ownerPos.Y + sprite.AABB.Bottom < topLeft.Y
+                || ownerPos.Y > bottomRight.Y)
                 return;
 
             sprite.HorizontalFlip = flip;
@@ -278,8 +285,8 @@ namespace SS14.Client.GameObjects
             //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
-                                   ClientWindowData.Singleton.ScreenOrigin, aabb);
+                _speechBubble.Draw(ClientWindowData.Singleton.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                                   Vector2D.Zero, aabb);
 
         }
 

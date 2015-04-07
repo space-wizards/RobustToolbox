@@ -138,8 +138,8 @@ namespace SS14.Client.GameObjects
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
-                                   ClientWindowData.Singleton.ScreenOrigin, currentBaseSprite);
+                _speechBubble.Draw(ClientWindowData.Singleton.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                                   Vector2D.Zero, currentBaseSprite);
         }
 
         public override void HandleComponentState(dynamic state)

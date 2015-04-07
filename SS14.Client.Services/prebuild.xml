@@ -43,6 +43,9 @@
     <File buildAction="Compile">Lighting/QuadRenderer.cs</File>
     <File buildAction="Compile">Lighting/ShadowMapResolver.cs</File>
     <File buildAction="Compile">Map/MapManager.cs</File>
+    <File buildAction="Compile">Map/HardcodedTileDefinitions.cs</File>
+    <File buildAction="Compile">Map/TileDefinition.cs</File>
+    <File buildAction="Compile">Map/TileDefinitionManager.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLoggerService.cs</File>
     <File buildAction="Compile">Network/NetworkGrapher.cs</File>
@@ -54,8 +57,6 @@
     <File buildAction="Compile">Placement/Modes/AlignTileSolid.cs</File>
     <File buildAction="Compile">Placement/Modes/AlignTileEmpty.cs</File>
     <File buildAction="Compile">Placement/Modes/AlignWall.cs</File>
-    <File buildAction="Compile">Placement/Modes/AlignWallPlace.cs</File>
-    <File buildAction="Compile">Placement/Modes/AlignWallTops.cs</File>
     <File buildAction="Compile">Placement/Modes/AlignFree.cs</File>
     <File buildAction="Compile">Placement/PlacementManager.cs</File>
     <File buildAction="Compile">Placement/PlacementMode.cs</File>
@@ -66,10 +67,6 @@
     <File buildAction="Compile">Player/PostProcessing/PostProcessingEffect.cs</File>
     <File buildAction="Compile">ResourceManagment/ResourceManagerZip.cs</File>
     <File buildAction="Compile">Properties/AssemblyInfo.cs</File>
-    <File buildAction="Compile">Map/Tiles/Floor/Floor.cs</File>
-    <File buildAction="Compile">Map/Tiles/Floor/Space.cs</File>
-    <File buildAction="Compile">Map/Tiles/Tile.cs</File>
-    <File buildAction="Compile">Map/Tiles/Wall/Wall.cs</File>
     <File buildAction="Compile">Serialization/SS14Serializer.cs</File>
     <File buildAction="Compile">State/State.cs</File>
     <File buildAction="Compile">State/StateManager.cs</File>

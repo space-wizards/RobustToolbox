@@ -1,8 +1,8 @@
 ﻿using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS14.Client.GameObjects;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Tiles;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
@@ -16,7 +16,7 @@ namespace SS14.Client.Services.Helpers
     {
         public static string GetObjectSpriteName(Type type)
         {
-            return type.IsSubclassOf(typeof (Tile)) ? "tilebuildoverlay" : "nosprite";
+            return type.IsSubclassOf(typeof (ITileDefinition)) ? "tilebuildoverlay" : "nosprite";
         }
 
         public static Sprite GetSpriteComponentSprite(Entity entity)

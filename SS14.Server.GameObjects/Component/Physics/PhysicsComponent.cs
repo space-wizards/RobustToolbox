@@ -1,10 +1,9 @@
 ﻿using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Tiles;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Physics;
-using SS14.Shared.IoC;
+
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
@@ -27,22 +26,22 @@ namespace SS14.Server.GameObjects
             GasEffect();*/
         }
 
-        private void GasEffect()
-        {
+        //private void GasEffect()
+        //{
 
-            ITile t = IoCManager.Resolve<IMapManager>().GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            if (t == null)
-                return;
-            Vector2 gasVel = t.GasCell.GasVelocity;
-            if (gasVel.Abs() > Mass) // Stop tiny wobbles
-            {
-                Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
-                                  Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +
-                                  gasVel.X,
-                                  Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                                  gasVel.Y);
-            }
-        }
+        //    ITile t = IoCManager.Resolve<IMapManager>().GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+        //    if (t == null)
+        //        return;
+        //    Vector2 gasVel = t.GasCell.GasVelocity;
+        //    if (gasVel.Abs() > Mass) // Stop tiny wobbles
+        //    {
+        //        Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
+        //                          Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +
+        //                          gasVel.X,
+        //                          Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
+        //                          gasVel.Y);
+        //    }
+        //}
 
         public override void SetParameter(ComponentParameter parameter)
         {

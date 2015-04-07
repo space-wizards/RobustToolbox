@@ -2,6 +2,7 @@
 using GorgonLibrary.Graphics;
 using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -102,9 +103,9 @@ namespace SS14.Client.GameObjects
         {            
             var blend = Gorgon.CurrentRenderTarget.BlendingMode;
             Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Additive;
-            
+
             Vector2D renderPos =
-                ClientWindowData.WorldToScreen(
+                ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters.OrderBy(x => x.Value.ParticleSprite.Image.Name)) //Render sorted by atlas. Tiny performance improvement for entities with a bunch of particlesystems.

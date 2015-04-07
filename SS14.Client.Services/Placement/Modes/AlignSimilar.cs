@@ -4,9 +4,11 @@ using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -30,21 +32,21 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            //Align to similar if nearby found else free
-            if (currentMap.IsSolidTile(mouseScreen))
-                return false; //HANDLE CURSOR OUTSIDE MAP
+            currentTile = currentMap.GetTileRef(mouseWorld);
 
-            currentTile = currentMap.GetFloorAt(mouseWorld);
+            //Align to similar if nearby found else free
+            if (currentTile.Tile.TileDef.IsWall)
+                return false; //HANDLE CURSOR OUTSIDE MAP
 
             if (pManager.CurrentPermission.Range > 0)
                 if (
@@ -100,8 +102,7 @@ namespace SS14.Client.Services.Placement.Modes
                         (from Vector2D side in sides orderby (side - mouseWorld).Length ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                                               closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+                    mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
                 }
             }
 

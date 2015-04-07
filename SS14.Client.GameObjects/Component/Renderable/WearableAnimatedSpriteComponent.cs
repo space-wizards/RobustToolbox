@@ -85,9 +85,9 @@ namespace SS14.Client.GameObjects
             if (NotWornSprite == null) return;
 
             Sprite spriteToRender = NotWornSprite;
-
+            
             Vector2D renderPos =
-                ClientWindowData.WorldToScreen(
+                ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             spriteToRender.SetPosition(renderPos.X - (spriteToRender.AABB.Width / 2),
                                renderPos.Y - (spriteToRender.AABB.Height / 2));

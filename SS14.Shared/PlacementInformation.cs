@@ -10,7 +10,7 @@ namespace SS14.Shared
         public string PlacementOption;
         public int Range; //Valid range from mob.
 
-        public string TileType = ""; //Tile Type if tile.
+        public ushort TileType; //Tile Type if tile.
         public int Uses = 1; //How many objects of this type may be placed.
     }
 }

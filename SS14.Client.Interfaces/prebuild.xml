@@ -43,7 +43,12 @@
     <File buildAction="Compile">Map/IMapManager.cs</File>
     <File buildAction="Compile">Player/IPlayerManager.cs</File>
     <File buildAction="Compile">Resource/IResourceManager.cs</File>
-    <File buildAction="Compile">Map/ITile.cs</File>
+    <File buildAction="Compile">Map/Chunk.cs</File>
+    <File buildAction="Compile">Map/ITileCollection.cs</File>
+    <File buildAction="Compile">Map/ITileDefinition.cs</File>
+    <File buildAction="Compile">Map/ITileDefinitionManager.cs</File>
+    <File buildAction="Compile">Map/Tile.cs</File>
+    <File buildAction="Compile">Map/TileRef.cs</File>
     <File buildAction="Compile">Serialization/ISS14Serializer.cs</File>
     <File buildAction="Compile">GameTimer/IGameTimer.cs</File>
     <File buildAction="Compile">UserInterface/IDragDropInfo.cs</File>

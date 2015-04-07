@@ -45,6 +45,12 @@
     <File buildAction="Compile">IClient.cs</File>
     <File buildAction="Compile">ISS14Server.cs</File>
     <File buildAction="Compile">Map/IMapManager.cs</File>
+    <File buildAction="Compile">Map/Chunk.cs</File>
+    <File buildAction="Compile">Map/ITileCollection.cs</File>
+    <File buildAction="Compile">Map/ITileDefinition.cs</File>
+    <File buildAction="Compile">Map/ITileDefinitionManager.cs</File>
+    <File buildAction="Compile">Map/Tile.cs</File>
+    <File buildAction="Compile">Map/TileRef.cs</File>
     <File buildAction="Compile">MessageLogging/IMessageLogger.cs</File>
     <File buildAction="Compile">Placement/IPlacementManager.cs</File>
     <File buildAction="Compile">Player/IPlayerSession.cs</File>

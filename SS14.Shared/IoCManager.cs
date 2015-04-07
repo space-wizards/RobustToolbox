@@ -1,10 +1,10 @@
-﻿using SS14.Shared.IoC.Exceptions;
+﻿using SS14.Shared.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SS14.Shared.IoC
+namespace SS14.Shared
 {
     public static class IoCManager
     {

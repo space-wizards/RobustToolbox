@@ -3,12 +3,12 @@ using GorgonLibrary.Graphics;
 using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
-using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -298,7 +298,7 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
             Vector2D renderPos =
-                ClientWindowData.WorldToScreen(
+                ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             SetSpriteCenter(spriteToRender, renderPos);
 

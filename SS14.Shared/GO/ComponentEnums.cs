@@ -196,7 +196,7 @@
         SetBaseName,
         SetLightMode,
         WallMountTile,
-        WallMountSearch,
+        //WallMountSearch,
         PhysicsMove,
         GetHasInternals,
         GetSVars,

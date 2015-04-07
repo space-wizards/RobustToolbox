@@ -2,7 +2,7 @@
 using GorgonLibrary.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
-using SS14.Shared.IoC;
+using SS14.Shared;
 using SS14.Shared.Utility;
 
 namespace SS14.Client.Services.Player.PostProcessing

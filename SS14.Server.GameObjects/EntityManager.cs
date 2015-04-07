@@ -100,8 +100,6 @@ namespace SS14.Server.GameObjects
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
-            ent.SendMessage(this, ComponentMessageType.WallMountSearch);
-            //Tell wall mounted compos to look for a tile to attach to. I hate to do this here but i have to.
         }
 
         private XElement ToXML(Entity e)

@@ -7,7 +7,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.IoC;
+
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;

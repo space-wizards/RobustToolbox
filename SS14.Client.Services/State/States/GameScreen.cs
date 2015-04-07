@@ -14,14 +14,13 @@ using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.Lighting;
-using SS14.Client.Services.Tiles;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Client.Services.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.GO;
-using SS14.Shared.IoC;
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -61,7 +60,7 @@ namespace SS14.Client.Services.State.States
         private bool _redrawTiles = true;
         private List<RenderTarget> _cleanupList = new List<RenderTarget>();
         private List<Sprite> _cleanupSpriteList = new List<Sprite>();
-        private List<ITile> _visibleTiles;
+        private SizeF _viewportSize;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
         private Batch _wallBatch;
@@ -117,14 +116,6 @@ namespace SS14.Client.Services.State.States
 
         #endregion
 
-        /// <summary>
-        /// Center point of the current render window.
-        /// </summary>
-        private Vector2D WindowOrigin
-        {
-            get { return ClientWindowData.Singleton.ScreenOrigin; }
-        }
-
         #endregion
 
         public GameScreen(IDictionary<Type, object> managers)
@@ -150,12 +141,10 @@ namespace SS14.Client.Services.State.States
             _entityManager = new EntityManager(NetworkManager);
             IoCManager.Resolve<IEntityManagerContainer>().EntityManager = _entityManager;
 
-            MapManager.Init();
-
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetworkManager.RequestMap();
-            IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
+            IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
 
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
@@ -224,8 +213,8 @@ namespace SS14.Client.Services.State.States
 
             _gaussianBlur = new GaussianBlur(ResourceManager);
 
-            _realScreenWidthTiles = (float) Gorgon.CurrentClippingViewport.Width/MapManager.GetTileSpacing();
-            _realScreenHeightTiles = (float) Gorgon.CurrentClippingViewport.Height/MapManager.GetTileSpacing();
+            _realScreenWidthTiles = (float)Gorgon.CurrentClippingViewport.Width / MapManager.TileSize;
+            _realScreenHeightTiles = (float)Gorgon.CurrentClippingViewport.Height / MapManager.TileSize;
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -356,10 +345,8 @@ namespace SS14.Client.Services.State.States
             shadowMapResolver.Dispose();
             _gaussianBlur.Dispose();
             _entityManager.Shutdown();
-            MapManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-            IoCManager.Resolve<IMapManager>().OnTileChanged -= OnTileChanged;
             //RenderTargetCache.DestroyAll();
             //GC.Collect();
         }
@@ -374,10 +361,10 @@ namespace SS14.Client.Services.State.States
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if (PlayerManager != null && PlayerManager.ControlledEntity != null)
-                ClientWindowData.Singleton.UpdateViewPort(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                ClientWindowData.Singleton.WorldCenter =
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-            MousePosWorld = new Vector2D(MousePosScreen.X + WindowOrigin.X, MousePosScreen.Y + WindowOrigin.Y);
+            MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
         }
 
         private void ResetRendertargets()
@@ -464,9 +451,9 @@ namespace SS14.Client.Services.State.States
                         case NetMessage.MapMessage:
                             MapManager.HandleNetworkMessage(message);
                             break;
-                        case NetMessage.AtmosDisplayUpdate:
-                            MapManager.HandleAtmosDisplayUpdate(message);
-                            break;
+                        //case NetMessage.AtmosDisplayUpdate:
+                        //    MapManager.HandleAtmosDisplayUpdate(message);
+                        //    break;
                         case NetMessage.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
@@ -555,18 +542,27 @@ namespace SS14.Client.Services.State.States
             //Gorgon.Screen.DefaultView.Left = 400;
             //Gorgon.Screen.DefaultView.Top = 400;
 
+            ClientWindowData.Singleton.TileSize = MapManager.TileSize;
+            ClientWindowData.Singleton.WorldCenter =
+                ClientWindowData.Singleton.GetNearestPixel( // Snapping view to pixels to prevent the blurring of tiles.
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            ClientWindowData.Singleton.ScreenViewportSize =
+                new SizeF(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+            
             //CalculateAllLights();
 
             if (PlayerManager.ControlledEntity != null)
             {
 
+                var vp = ClientWindowData.Singleton.WorldViewport;
+
                 // Get nearby lights
                 ILight[] lights =
-                    IoCManager.Resolve<ILightManager>().LightsIntersectingRect(ClientWindowData.Singleton.ViewPort);
+                    IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
 
                 // Render the lightmap
                 RenderLightMap(lights);
-                CalculateSceneBatches(ClientWindowData.Singleton.ViewPort);
+                CalculateSceneBatches(vp);
 
                 if (_redrawTiles)
                 {
@@ -590,7 +586,7 @@ namespace SS14.Client.Services.State.States
                 _tilesTarget.Image.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 //ComponentManager.Singleton.Render(0, ClientWindowData.Singleton.ViewPort);
-                RenderComponents(e.FrameDeltaTime, ClientWindowData.Singleton.ViewPort);
+                RenderComponents(e.FrameDeltaTime, vp);
 
                 if (_redrawOverlay)
                 {
@@ -618,44 +614,41 @@ namespace SS14.Client.Services.State.States
 
 
 
-                RenderDebug();
+                RenderDebug(vp);
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
         }
 
-        private void RenderDebug()
+        private void RenderDebug(RectangleF viewport)
         {   
             if(debugWallOccluders)
                 _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
 
             if (debugHitboxes) {
-                var corner = ClientWindowData.Singleton.ScreenOrigin;
-
                 var colliders =
                     _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
                     .OfType<ColliderComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(viewport));
 
                 var collidables =
                     _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
                     .OfType<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(ClientWindowData.Singleton.ViewPort));
+                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(viewport));
 
                 var destAbo = _baseTarget.DestinationBlend;
                 var srcAbo = _baseTarget.SourceBlend;
                 _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
                 _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
 
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+
                 foreach (var hitbox in colliders.Concat(collidables)) {
-                    _baseTarget.FilledRectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(64, hitbox.Color));
-                    _baseTarget.Rectangle(
-                        hitbox.AABB.Left - corner.X, hitbox.AABB.Top - corner.Y,
-                        hitbox.AABB.Width, hitbox.AABB.Height, Color.FromArgb(128, hitbox.Color));
+                    var box = ClientWindowData.Singleton.WorldToScreen(hitbox.AABB);
+                    _baseTarget.FilledRectangle(box.Left, box.Top, box.Width, box.Height, Color.FromArgb(64, hitbox.Color));
+                    _baseTarget.Rectangle(box.Left, box.Top, box.Width, box.Height, Color.FromArgb(128, hitbox.Color));
                 }
 
                 _baseTarget.DestinationBlend = destAbo;
@@ -668,8 +661,10 @@ namespace SS14.Client.Services.State.States
         {
             Gorgon.CurrentClippingViewport = new Viewport(0, 0, Gorgon.CurrentClippingViewport.Width,
                                                           Gorgon.CurrentClippingViewport.Height);
-            ClientWindowData.Singleton.UpdateViewPort(
-                PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+
+            ClientWindowData.Singleton.ScreenViewportSize =
+                new SizeF(Gorgon.CurrentClippingViewport.Width, Gorgon.CurrentClippingViewport.Height);
+
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
@@ -794,7 +789,7 @@ namespace SS14.Client.Services.State.States
             //Vector2D worldPosition = new Vector2D(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
-            float checkDistance = MapManager.GetTileSpacing()*1.5f;
+            float checkDistance = 1.5f;
             // Find all the entities near us we could have clicked
             Entity[] entities =
                 ((EntityManager) IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(
@@ -907,7 +902,7 @@ namespace SS14.Client.Services.State.States
         {
             float distanceToPrev = (MousePosScreen - new Vector2D(e.Position.X, e.Position.Y)).Length;
             MousePosScreen = new Vector2D(e.Position.X, e.Position.Y);
-            MousePosWorld = new Vector2D(e.Position.X + WindowOrigin.X, e.Position.Y + WindowOrigin.Y);
+            MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
         }
 
@@ -1226,7 +1221,7 @@ namespace SS14.Client.Services.State.States
         /// If a light hasn't been prerendered yet, it renders that light.
         /// </summary>
         /// <param name="lights">Array of lights</param>
-        private void RenderLightMap(ILight[] lights)
+        private void RenderLightMap(IEnumerable<ILight> lights)
         {
             //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
             foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
@@ -1263,7 +1258,7 @@ namespace SS14.Client.Services.State.States
 
                 Vector2D blitPos;
                 //Set the drawing position.
-                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize*0.5f);
+                blitPos = ClientWindowData.Singleton.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4D(blitPos.X/source.Width,
@@ -1366,14 +1361,13 @@ namespace SS14.Client.Services.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                ITile t = MapManager.GetFloorAt(playerVision.Position);
+                TileRef t = MapManager.GetTileRef(playerVision.Position);
 
-                if (t != null &&
-                    t.Opaque)
+                if (t.Tile.TileDef.IsOpaque)
                 {
                     area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                      t.Position.Y +
-                                                      MapManager.GetTileSpacing() + 1);
+                                                      t.Y +
+                                                      MapManager.TileSize + 1);
                 }
 
 
@@ -1381,7 +1375,7 @@ namespace SS14.Client.Services.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                blitPos = ClientWindowData.WorldToScreen(area.LightPosition - area.LightAreaSize * 0.5f);
+                blitPos = ClientWindowData.Singleton.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
                 if (debugWallOccluders)
                 {
                     RenderTarget previous = Gorgon.CurrentRenderTarget;
@@ -1418,14 +1412,14 @@ namespace SS14.Client.Services.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = l.Position; //mousePosWorld; // Set the light position
-            ITile t = MapManager.GetAllTilesAt(l.Position).FirstOrDefault();
-            if (t == null)
+            TileRef t = MapManager.GetTileRef(l.Position);
+            if (t.Tile.IsSpace)
                 return;
-            if (MapManager.GetFloorAt(l.Position).Opaque)
+            if (t.Tile.TileDef.IsOpaque)
             {
                 area.LightPosition = new Vector2D(area.LightPosition.X,
-                                                  MapManager.GetAllTilesAt(l.Position).FirstOrDefault().Position.Y +
-                                                  MapManager.GetTileSpacing() + 1);
+                                                  t.Y +
+                                                  MapManager.TileSize + 1);
             }
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
@@ -1475,12 +1469,12 @@ namespace SS14.Client.Services.State.States
             RectangleF lightArea = new RectangleF(area.LightPosition - (area.LightAreaSize / 2),
                 area.LightAreaSize);
 
-            ITile[] tiles = MapManager.GetAllWallIn(lightArea);
+            var tiles = MapManager.GetWallsIntersecting(lightArea);
 
-            foreach (Tile t in tiles)
+            foreach (TileRef t in tiles)
             {
-                Vector2D pos = area.ToRelativePosition(t.Position);
-                t.RenderPos(pos.X, pos.Y, MapManager.GetTileSpacing(), (int)area.LightAreaSize.X);
+                Vector2D pos = area.ToRelativePosition(new Vector2D(t.X, t.Y));
+                t.Tile.TileDef.RenderPos(pos.X, pos.Y, MapManager.TileSize, (int)area.LightAreaSize.X);
             }
         }
 
@@ -1489,31 +1483,41 @@ namespace SS14.Client.Services.State.States
         /// </summary>
         private void DrawTiles(RectangleF vision)
         {
-            int tilespacing = MapManager.GetTileSpacing();
+            var tiles = MapManager.GetTilesIntersecting(vision, false);
+            var walls = new List<TileRef>();
 
-            ITile[] floorTiles = MapManager.GetAllFloorIn(vision);
-            ITile[] wallTiles = MapManager.GetAllWallIn(vision);
-
-            foreach (Tile t in floorTiles)
+            foreach (TileRef tr in tiles)
             {
-                t.Render(WindowOrigin.X, WindowOrigin.Y, _floorBatch);
+                var t = tr.Tile;
+                var td = t.TileDef;
 
-                t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
+                if (td.IsWall)
+                    walls.Add(tr);
+                else
+                {
+                    var point = ClientWindowData.Singleton.WorldToScreen(new PointF(tr.X, tr.Y));
+                    td.Render(point.X, point.Y, _floorBatch);
+                    td.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
+                }
+
             }
 
+            walls.Sort((t1, t2) => t1.Y - t2.Y);
             
-            foreach (Tile t in wallTiles.OrderBy(x => x.Position.Y))
+            foreach (TileRef tr in walls)
             {
-                t.Render(WindowOrigin.X, WindowOrigin.Y, _wallBatch);
-                t.RenderTop(WindowOrigin.X, WindowOrigin.Y, _wallTopsBatch);
+                var t = tr.Tile;
+                var td = t.TileDef;
+
+                var point = ClientWindowData.Singleton.WorldToScreen(new PointF(tr.X, tr.Y));
+                td.Render(point.X, point.Y, _wallBatch);
+                td.RenderTop(point.X, point.Y, _wallTopsBatch);
             }
         }
 
-        public void OnTileChanged(PointF tileWorldPosition)
+        public void OnTileChanged(TileRef tileRef, Tile oldTile)
         {
-            int ts = IoCManager.Resolve<IMapManager>().GetTileSpacing();
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileWorldPosition,
-                                                                                       new SizeF(ts, ts)));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
             RecalculateScene();
         }

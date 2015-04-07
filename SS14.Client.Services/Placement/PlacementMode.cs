@@ -8,7 +8,7 @@ namespace SS14.Client.Services.Placement
     {
         public readonly PlacementManager pManager;
 
-        public ITile currentTile;
+        public TileRef currentTile;
         public Vector2D mouseScreen;
         public Vector2D mouseWorld;
         public Sprite spriteToDraw;

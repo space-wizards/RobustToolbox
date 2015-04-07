@@ -1,8 +1,8 @@
 ﻿using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

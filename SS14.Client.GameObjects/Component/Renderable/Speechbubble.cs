@@ -1,7 +1,7 @@
 ﻿using GorgonLibrary;
 using GorgonLibrary.Graphics;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared.IoC;
+using SS14.Shared;
 using System;
 using System.Drawing;
 using System.Text;

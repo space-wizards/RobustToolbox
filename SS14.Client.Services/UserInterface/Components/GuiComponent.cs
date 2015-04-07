@@ -2,7 +2,7 @@
 using Lidgren.Network;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
-using SS14.Shared.IoC;
+
 using System;
 using System.Drawing;
 

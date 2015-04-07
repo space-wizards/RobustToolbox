@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SS14.Shared.IoC.Exceptions
+namespace SS14.Shared.Exceptions
 {
     internal class MissingImplementationException : Exception
     {

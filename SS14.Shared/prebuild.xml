@@ -67,6 +67,8 @@
     <File buildAction="Compile">GO/MarshalComponentParameter.cs</File>
     <File buildAction="Compile">GO/Server/ServerDelegates.cs</File>
     <File buildAction="Compile">GO/StatusEffect/StatusEffectState.cs</File>
+    <File buildAction="Compile">Exceptions/MissingImplementationException.cs</File>
+    <File buildAction="Compile">Exceptions/NoPublicConstructorException.cs</File>
     <File buildAction="Compile">Lighting.cs</File>
     <File buildAction="Compile">Minidump/MiniDump.cs</File>
     <File buildAction="Compile">Objectives/ObjectiveParameterType.cs</File>
@@ -79,6 +81,7 @@
     <File buildAction="Compile">IncomingEntityComponentMessage.cs</File>
     <File buildAction="Compile">IncomingEntityMessage.cs</File>
     <File buildAction="Compile">IncomingNetworkMessageArgs.cs</File>
+    <File buildAction="Compile">IoCManager.cs</File>
     <File buildAction="Compile">PlacementInformation.cs</File>
     <File buildAction="Compile">GO/ComponentEnums.cs</File>
     <File buildAction="Compile">GO/ItemFlags.cs</File>

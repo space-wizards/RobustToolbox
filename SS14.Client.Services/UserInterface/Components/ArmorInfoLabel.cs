@@ -3,9 +3,9 @@ using GorgonLibrary.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 

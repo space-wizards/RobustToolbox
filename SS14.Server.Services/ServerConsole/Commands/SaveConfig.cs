@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.Configuration;
-using SS14.Shared.IoC;
+using SS14.Shared;
+
 
 namespace SS14.Server.Services.ServerConsole.Commands
 {

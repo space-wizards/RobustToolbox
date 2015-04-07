@@ -1,10 +1,11 @@
 ﻿using GorgonLibrary;
 using Lidgren.Network;
 using SS14.Client.Interfaces.Collision;
+using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Collidable;
-using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 
@@ -165,19 +166,19 @@ namespace SS14.Client.GameObjects
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4D>();
+                    TweakAABB = parameter.GetValue<Vector4D>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "TweakAABBtop":
-                    tweakAABB.X = parameter.GetValue<float>();
+                    tweakAABB.X = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "TweakAABBright":
-                    tweakAABB.Y = parameter.GetValue<float>();
+                    tweakAABB.Y = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "TweakAABBbottom":
-                    tweakAABB.Z = parameter.GetValue<float>();
+                    tweakAABB.Z = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "TweakAABBleft":
-                    tweakAABB.W = parameter.GetValue<float>();
+                    tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "DebugColor":
                     var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
@@ -216,7 +217,13 @@ namespace SS14.Client.GameObjects
                                                             ComponentMessageType.GetAABB);
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 currentAABB = (RectangleF) reply.ParamsList[0];
+                currentAABB = new RectangleF(
+                    currentAABB.X / tileSize,
+                    currentAABB.Y / tileSize,
+                    currentAABB.Width / tileSize,
+                    currentAABB.Height / tileSize);
             }
             else
                 return;

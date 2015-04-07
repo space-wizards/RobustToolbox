@@ -23,12 +23,12 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -36,7 +36,9 @@ namespace SS14.Client.Services.Placement.Modes
             //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
             //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
-            if (!currentMap.IsSolidTile(mouseWorld))
+            currentTile = currentMap.GetTileRef(mouseWorld);
+
+            if (!currentTile.Tile.TileDef.IsWall)
                 return false;
 
             if (pManager.CurrentPermission.Range > 0)
@@ -45,20 +47,19 @@ namespace SS14.Client.Services.Placement.Modes
                          .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
-            currentTile = currentMap.GetWallAt(mouseWorld);
             var nodes = new List<Vector2D>();
 
             if (pManager.CurrentTemplate.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentTemplate.MountingPoints.Select(
-                        current => new Vector2D(mouseWorld.X, currentTile.Position.Y + current)));
+                        current => new Vector2D(mouseWorld.X, currentTile.Y + current)));
             }
             else
             {
-                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Position.Y + 16));
-                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Position.Y + 32));
-                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Position.Y + 48));
+                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Y + 0.5f));
+                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Y + 1.0f));
+                nodes.Add(new Vector2D(mouseWorld.X, currentTile.Y + 1.5f));
             }
 
             Vector2D closestNode = (from Vector2D node in nodes
@@ -68,8 +69,7 @@ namespace SS14.Client.Services.Placement.Modes
             mouseWorld = Vector2D.Add(closestNode,
                                       new Vector2D(pManager.CurrentTemplate.PlacementOffset.Key,
                                                    pManager.CurrentTemplate.PlacementOffset.Value));
-            mouseScreen = new Vector2D(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                                       mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
 
             if (pManager.CurrentPermission.Range > 0)
                 if (

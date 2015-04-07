@@ -22,7 +22,6 @@
   <Reference name="System.Data"/>
   <Reference name="System.Xml"/>
   <Files>
-    <File buildAction="Compile">Atmos/AtmosManager.cs</File>
     <File buildAction="Compile">Chat/ChatManager.cs</File>
     <File buildAction="Compile">ClientConsoleHost/ClientConsoleHost.cs</File>
     <File buildAction="Compile">Configuration/ConfigurationManager.cs</File>
@@ -36,6 +35,9 @@
     <File buildAction="Compile">GameState/GameStateManager.cs</File>
     <File buildAction="Compile">Log/LogManager.cs</File>
     <File buildAction="Compile">Map/MapManager.cs</File>
+    <File buildAction="Compile">Map/HardcodedTileDefinitions.cs</File>
+    <File buildAction="Compile">Map/TileDefinition.cs</File>
+    <File buildAction="Compile">Map/TileDefinitionManager.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLogger.cs</File>
     <File buildAction="Compile">MessageLogging/MessageLoggerService.cs</File>
     <File buildAction="Compile">Configuration/PersistentConfiguration.cs</File>
@@ -47,13 +49,7 @@
     <File buildAction="Compile">Round/RoundManager.cs</File>
     <File buildAction="Compile">Network/SS14NetServer.cs</File>
     <File buildAction="Compile">Serialization/SS14Serializer.cs</File>
-    <File buildAction="Compile">Atmos/GasCell.cs</File>
-    <File buildAction="Compile">Atmos/GasMixture.cs</File>
     <File buildAction="Compile">SS14Server.cs</File>
-    <File buildAction="Compile">Tiles/Floor/Floor.cs</File>
-    <File buildAction="Compile">Tiles/Floor/Space.cs</File>
-    <File buildAction="Compile">Tiles/Tile.cs</File>
-    <File buildAction="Compile">Tiles/Wall/Wall.cs</File>
     <File buildAction="None">MessageLogging/messageLoggerService.config</File>
   </Files>
   <Reference name="SS14.Shared.GameObjects"/>

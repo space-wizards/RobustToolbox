@@ -19,9 +19,8 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
-            currentTile = currentMap.GetFloorAt(mouseWorld);
+            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
+            currentTile = currentMap.GetTileRef(mouseWorld);
 
             return true;
         }

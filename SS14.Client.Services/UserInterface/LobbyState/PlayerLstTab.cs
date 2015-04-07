@@ -3,7 +3,7 @@ using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
-using SS14.Shared.IoC;
+
 using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components

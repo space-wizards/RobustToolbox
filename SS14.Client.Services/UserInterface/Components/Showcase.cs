@@ -1,6 +1,6 @@
 ﻿using GorgonLibrary.InputDevices;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared.IoC;
+using SS14.Shared;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

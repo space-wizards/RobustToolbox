@@ -1,5 +1,5 @@
 ﻿using SS14.Server.Interfaces.Player;
-using SS14.Shared.IoC;
+using SS14.Shared;
 using System;
 
 namespace SS14.Server.Services.ServerConsole.Commands

@@ -12,8 +12,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.ClientWindow", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.GameObjects", "SS14.Client.GameObjects\SS14.Client.GameObjects.csproj", "{53369E66-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Graphics", "SS14.Client.Graphics.CluwneLib\SS14.Client.Graphics.csproj", "{302B877E-0000-0000-0000-000000000000}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Interfaces", "SS14.Client.Interfaces\SS14.Client.Interfaces.csproj", "{B8519348-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Services", "SS14.Client.Services\SS14.Client.Services.csproj", "{C61458B0-0000-0000-0000-000000000000}"
@@ -29,6 +27,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.GameObjects", "SS14.Shared.GameObjects\SS14.Shared.GameObjects.csproj", "{D7860944-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.IoC", "SS14.Shared.IoC\SS14.Shared.IoC.csproj", "{FEC26501-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Graphics", "SS14.Client.Graphics\SS14.Client.Graphics.csproj", "{302B877E-0000-0000-0000-000000000000}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,10 +56,6 @@ Global
 		{53369E66-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
 		{53369E66-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
 		{53369E66-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
-		{302B877E-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
-		{302B877E-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
-		{302B877E-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
-		{302B877E-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
 		{B8519348-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
 		{B8519348-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
 		{B8519348-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
@@ -92,6 +88,10 @@ Global
 		{FEC26501-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
 		{FEC26501-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
 		{FEC26501-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{302B877E-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{302B877E-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{302B877E-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{302B877E-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

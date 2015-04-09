@@ -111,12 +111,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SS14.Client.Graphics.CluwneLib\SS14.Client.Graphics.csproj">
-      <Name>SS14.Client.Graphics</Name>
-      <Project>{302B877E-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Name>SS14.Shared</Name>
       <Project>{0529F740-0000-0000-0000-000000000000}</Project>

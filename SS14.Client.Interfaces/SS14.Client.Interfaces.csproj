@@ -127,11 +127,9 @@
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.Graphics.CluwneLib\SS14.Client.Graphics.csproj">
+    <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
+      <Project>{302b877e-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Client.Graphics</Name>
-      <Project>{302B877E-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Shared.IoC\SS14.Shared.IoC.csproj">
       <Project>{fec26501-0000-0000-0000-000000000000}</Project>

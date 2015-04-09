@@ -122,6 +122,12 @@ namespace SS14.Client.Services.UserInterface.Components
                                                component.Position.Y - (int) scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
+                if (CluwneLib.Debug.RenderingDelay > 0)
+                {
+                    clippingRI.EndDrawing();
+                    clippingRI.Blit(Position, Color.White);
+                    clippingRI.BeginDrawing();
+                }
                 component.Position = oldPos;
                 component.Update(0);
             }

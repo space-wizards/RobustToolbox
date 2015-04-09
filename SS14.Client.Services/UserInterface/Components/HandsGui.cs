@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;

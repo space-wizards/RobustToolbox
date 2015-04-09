@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SFML.System;
 
-namespace SS14.Client.Graphics.CluwneLib.Timing
+namespace SS14.Client.Graphics.Timing
 {
     /// <summary>
     /// Handles TimingData

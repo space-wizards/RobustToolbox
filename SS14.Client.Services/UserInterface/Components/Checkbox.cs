@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;

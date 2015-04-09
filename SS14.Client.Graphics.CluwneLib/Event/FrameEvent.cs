@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SS14.Client.Graphics.CluwneLib.Timing;
+using SS14.Client.Graphics.Timing;
 
-namespace SS14.Client.Graphics.CluwneLib.Event
+namespace SS14.Client.Graphics.Event
 {
     public delegate void FrameEventHandler(object sender, FrameEventArgs e);
 

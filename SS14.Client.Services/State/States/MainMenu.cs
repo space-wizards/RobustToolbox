@@ -2,10 +2,10 @@
 using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;

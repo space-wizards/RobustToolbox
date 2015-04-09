@@ -5,7 +5,7 @@ using System.Text;
 using SS14.Shared;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.Graphics.CluwneLib.Sprite
+namespace SS14.Client.Graphics.Sprite
 {
     public struct SpriteInfo
     {

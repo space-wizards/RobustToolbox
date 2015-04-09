@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>SS14.Client.Graphics.CluwneLib</AssemblyName>
+    <AssemblyName>SS14.Client.Graphics</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -15,7 +15,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
-    <RootNamespace>SS14.Client.Graphics.CluwneLib</RootNamespace>
+    <RootNamespace>SS14.Client.Graphics</RootNamespace>
     <StartArguments>
     </StartArguments>
     <FileUpgradeFlags>
@@ -67,42 +67,14 @@
       <Name>sfmlnet-window-2</Name>
       <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
     </Reference>
-    <Reference Include="System">
-      <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Core">
-      <Name>System.Core</Name>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <Name>System.Xml.Linq</Name>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
-      <Name>SS14.Shared</Name>
-      <Project>{0529F740-0000-0000-0000-000000000000}</Project>
-      <Private>False</Private>
-    </ProjectReference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CluwneLib.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Collection\AnimationCollection.cs" />
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -112,6 +84,8 @@
     <Compile Include="Event\FrameEvent.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sprite\AnimationInfo.cs" />
+    <Compile Include="States\AnimationState.cs" />
     <Compile Include="TextureCache.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -128,9 +102,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Shader\FXShader.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sprite\Batch.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\SpriteBatch.cs">
@@ -163,6 +134,12 @@
     <Compile Include="Viewport.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
+      <Project>{0529f740-0000-0000-0000-000000000000}</Project>
+      <Name>SS14.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

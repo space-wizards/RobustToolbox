@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SS14.Client.Graphics.CluwneLib
+namespace SS14.Client.Graphics
 {
     public class Viewport
     {

@@ -1,6 +1,6 @@
 ﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
 using System;
 using System.Drawing;
 using SFML.Window;

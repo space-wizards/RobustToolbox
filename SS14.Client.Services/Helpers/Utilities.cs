@@ -1,5 +1,5 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
@@ -9,7 +9,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.Helpers

@@ -1,11 +1,12 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using System;
 using System.Drawing;
+using SFML.Window;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -18,7 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly TextSprite timeLeft;
 
         private readonly TextSprite tooltip;
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
 
         private bool showTooltip;
         private Point tooltipPos;
@@ -34,7 +35,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                       _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
             timeLeft.ShadowColor = Color.Gray;
-            timeLeft.ShadowOffset = new Vector2D(1, 1);
+            timeLeft.ShadowOffset = new Vector2(1, 1);
             timeLeft.Shadowed = true;
 
             tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "",
@@ -48,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = Position;
+            _buttonSprite.Position = new Vector2 (Position.X,Position.Y);
             if (assignedEffect.doesExpire)
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
@@ -58,7 +59,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
                 else timeLeft.Color = Color.ForestGreen;
 
-                timeLeft.Position = new Vector2D(Position.X + x_pos, Position.Y + 15);
+                timeLeft.Position = new Vector2(Position.X + x_pos, Position.Y + 15);
             }
 
             ClientArea = new Rectangle(Position,
@@ -67,10 +68,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonSprite.Color = Color;
-            _buttonSprite.Position = Position;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.R, Color.G, Color.B, Color.A);
+            _buttonSprite.Position =new Vector2( Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
 
             if (assignedEffect.doesExpire)
             {
@@ -94,14 +95,14 @@ namespace SS14.Client.Services.UserInterface.Components
                                          : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > Gorgon.CurrentClippingViewport.Width
+                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > CluwneLib.CurrentClippingViewport.Width
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
-                tooltip.Position = new Vector2D(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
-                Gorgon.CurrentRenderTarget.FilledRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+                tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
+              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
                                                            tooltip.Height + 5, Color.SteelBlue);
-                Gorgon.CurrentRenderTarget.Rectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
-                                                     tooltip.Height + 5, Color.DarkSlateBlue);
+              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
+                                                    tooltip.Height + 5, Color.DarkSlateBlue);
                 tooltip.Draw();
             }
         }
@@ -113,22 +114,22 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 showTooltip = true;
-                tooltipPos = new Point((int) e.Position.X, (int) e.Position.Y);
+                tooltipPos = new Point((int) e.X, (int) e.Y);
             }
             else
                 showTooltip = false;

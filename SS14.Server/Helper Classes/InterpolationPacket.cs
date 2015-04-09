@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.HelperClasses
 {

@@ -1,4 +1,5 @@
-﻿using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Shared.IoC;
@@ -25,7 +26,7 @@ namespace SS14.Client.Services.Player.PostProcessing
             else
                 _gaussianBlur.SetRadius(7);
 
-            _gaussianBlur.SetSize(new SizeF(image.Width, image.Height));
+            _gaussianBlur.SetSize(new SizeF(image.Height, image.Height));
             _gaussianBlur.SetAmount(Math.Min(_duration/2, 3f));
             _gaussianBlur.PerformGaussianBlur(image);
         }

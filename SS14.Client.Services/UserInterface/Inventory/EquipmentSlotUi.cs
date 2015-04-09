@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -12,6 +9,9 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -27,9 +27,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
         private readonly IResourceManager _resourceManager;
         private readonly TextSprite _textSprite;
         private readonly IUserInterfaceManager _userInterfaceManager;
-        private Sprite _buttonSprite;
+		private CluwneSprite _buttonSprite;
         private Color _color;
-        private Sprite _currentEntSprite;
+		private CluwneSprite _currentEntSprite;
 
         public EquipmentSlotUi(EquipmentSlot slot, IPlayerManager playerManager, IResourceManager resourceManager,
                                IUserInterfaceManager userInterfaceManager)
@@ -46,7 +46,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                                          _resourceManager.GetFont("CALIBRI"))
                               {
                                   ShadowColor = Color.Black,
-                                  ShadowOffset = new Vector2D(1, 1),
+                                  ShadowOffset = new Vector2(1, 1),
                                   Shadowed = true,
                                   Color = Color.White
                               };
@@ -60,7 +60,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = Position;
+            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             ClientArea = new Rectangle(Position,
                                        new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
 
@@ -89,10 +89,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _buttonSprite.Color = _color;
-            _buttonSprite.Position = Position;
+            _buttonSprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B);
+            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = Color.White;
+            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B); ;
 
             if (_currentEntSprite != null && CurrentEntity != null)
                 _currentEntSprite.Draw(
@@ -111,9 +111,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -129,9 +129,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -159,9 +159,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _color = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _color = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                          ? Color.LightSteelBlue
                          : Color.White;
         }

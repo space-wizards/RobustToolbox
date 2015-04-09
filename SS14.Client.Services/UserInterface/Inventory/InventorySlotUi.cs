@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.GameObjects;
+using SFML.Window;
 using System;
 using System.Drawing;
 
@@ -17,9 +17,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-        private readonly Sprite _entitySprite;
+		private readonly CluwneSprite _entitySprite;
         private readonly IResourceManager _resourceManager;
-        private readonly Sprite _slotSprite;
+		private readonly CluwneSprite _slotSprite;
 
         public Entity ContainingEntity;
         private Color _currentColor;
@@ -42,7 +42,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _slotSprite.Color = _currentColor;
+            _slotSprite.Color = new SFML.Graphics.Color(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A); ;
             _slotSprite.Draw(new Rectangle(Position,
                                            new Size((int) _slotSprite.AABB.Width, (int) _slotSprite.AABB.Height)));
             if (_entitySprite != null)
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     new Rectangle((int) (Position.X + _slotSprite.AABB.Width/2f - _entitySprite.AABB.Width/2f),
                                   (int) (Position.Y + _slotSprite.AABB.Height/2f - _entitySprite.AABB.Height/2f),
                                   (int) _entitySprite.Width, (int) _entitySprite.Height));
-            _slotSprite.Color = Color.White;
+            _slotSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
         }
 
         public override void Dispose()
@@ -59,9 +59,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -69,18 +69,18 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                                 ? Color.LightSteelBlue
                                 : Color.White;
         }

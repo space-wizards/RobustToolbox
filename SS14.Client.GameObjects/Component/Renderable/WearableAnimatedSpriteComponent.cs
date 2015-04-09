@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.ClientWindow;
+﻿using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
@@ -8,6 +6,8 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Render(Vector2D topLeft, Vector2D bottomRight)
+        public override void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             if (IsCurrentlyWorn && currentSprite == baseSprite)
             {
@@ -86,7 +86,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = NotWornSprite;
             
-            Vector2D renderPos =
+            Vector2 renderPos =
                 ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             spriteToRender.SetPosition(renderPos.X - (spriteToRender.AABB.Width / 2),

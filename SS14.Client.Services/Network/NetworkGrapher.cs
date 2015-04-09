@@ -1,10 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.Interfaces.Network;
+﻿using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Network
 {
@@ -14,7 +15,7 @@ namespace SS14.Client.Services.Network
         private readonly List<NetworkStatisticsDataPoint> _dataPoints;
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
-        private readonly TextSprite _textSprite;
+        private TextSprite _textSprite;
         private bool _enabled;
         private DateTime _lastDataPointTime;
         private int _lastRecievedBytes;
@@ -68,29 +69,28 @@ namespace SS14.Client.Services.Network
                 totalRecBytes += _dataPoints[i].RecievedBytes;
                 totalSentBytes += _dataPoints[i].SentBytes;
 
-                Gorgon.CurrentRenderTarget = null;
+                CluwneLib.CurrentRenderTarget = null;
 
                 //Draw recieved line
-                Gorgon.CurrentRenderTarget.Rectangle(Gorgon.CurrentRenderTarget.Width - (4*(MaxDataPoints - i)),
-                                                     Gorgon.CurrentRenderTarget.Height -
-                                                     (_dataPoints[i].RecievedBytes*0.1f), 2,
-                                                     (_dataPoints[i].RecievedBytes*0.1f),
-                                                     Color.FromArgb(180, Color.Red));
+                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)),
+                                        (int) CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].RecievedBytes* 0.1f), 
+                                        2,
+                                        (int) (_dataPoints[i].RecievedBytes*0.1f),
+                                        Color.FromArgb(180, Color.Red));
 
-                Gorgon.CurrentRenderTarget.Rectangle(Gorgon.CurrentRenderTarget.Width - (4*(MaxDataPoints - i)) + 2,
-                                                     Gorgon.CurrentRenderTarget.Height - (_dataPoints[i].SentBytes*0.1f),
-                                                     2, (_dataPoints[i].SentBytes*0.1f),
-                                                     Color.FromArgb(180, Color.Green));
+                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)) + 2,
+                                        (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
+                                        2,
+                                        (int)(_dataPoints[i].SentBytes*0.1f),
+                                        Color.FromArgb(180, Color.Green));
             }
 
             _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes/totalMilliseconds, 6));
-            _textSprite.SetPosition(Gorgon.CurrentRenderTarget.Width - (4*MaxDataPoints) - 100,
-                                    Gorgon.CurrentRenderTarget.Height - 30);
+            _textSprite.Position = new Vector2 (CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, CluwneLib.CurrentRenderTarget.Size.Y - 30);
             _textSprite.Draw();
 
             _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes/totalMilliseconds, 6));
-            _textSprite.SetPosition(Gorgon.CurrentRenderTarget.Width - (4*MaxDataPoints) - 100,
-                                    Gorgon.CurrentRenderTarget.Height - 60);
+            _textSprite.Position = new Vector2(CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, CluwneLib.CurrentRenderTarget.Size.Y - 60);
             _textSprite.Draw();
         }
 

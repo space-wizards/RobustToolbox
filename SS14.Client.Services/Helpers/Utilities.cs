@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -8,7 +9,8 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Client.Graphics.CluwneLib;
+
 
 namespace SS14.Client.Services.Helpers
 {
@@ -19,19 +21,19 @@ namespace SS14.Client.Services.Helpers
             return type.IsSubclassOf(typeof (ITileDefinition)) ? "tilebuildoverlay" : "nosprite";
         }
 
-        public static Sprite GetSpriteComponentSprite(Entity entity)
+		public static CluwneSprite GetSpriteComponentSprite(Entity entity)
         {
             ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
                                                              ComponentMessageType.GetSprite);
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                var sprite = (Sprite) reply.ParamsList[0];
+                var sprite = (CluwneSprite) reply.ParamsList[0];
                 return sprite;
             }
             return null;
         }
 
-        public static Sprite GetIconSprite(Entity entity)
+		public static CluwneSprite GetIconSprite(Entity entity)
         {
             if(entity.HasComponent(ComponentFamily.Icon))
             {
@@ -43,22 +45,22 @@ namespace SS14.Client.Services.Helpers
             return IoCManager.Resolve<IResourceManager>().GetNoSprite();
         }
 
-        public static bool SpritePixelHit(Sprite toCheck, Vector2D clickPos)
+		public static bool SpritePixelHit(CluwneSprite toCheck, Vector2 clickPos)
         {
             var clickPoint = new PointF(clickPos.X, clickPos.Y);
             if (!toCheck.AABB.Contains(clickPoint)) return false;
 
-            var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X + (int) toCheck.ImageOffset.X,
-                                           (int) clickPos.Y - (int) toCheck.Position.Y + (int) toCheck.ImageOffset.Y);
+            var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X ,//+ (int) toCheck.ImageOffset.X,
+                                           (int) clickPos.Y - (int) toCheck.Position.Y ); //+ (int) toCheck.ImageOffset.Y);
 
-            Image.ImageLockBox imgData = toCheck.Image.GetImageData();
+            //Image.ImageLockBox imgData = toCheck.Image.GetImageData();
 
-            imgData.Lock(false);
-            Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
-            imgData.Dispose();
-            imgData.Unlock();
+            //imgData.Lock(false);
+            //Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
+            //imgData.Dispose();
+            //imgData.Unlock();
 
-            return pixColour.A != 0;
+            return true; //pixColour.A != 0;
         }
     }
 

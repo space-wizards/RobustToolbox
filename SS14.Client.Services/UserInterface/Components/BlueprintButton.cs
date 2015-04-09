@@ -1,9 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -28,7 +29,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public string ResultName;
 
         private Color _bgcol = Color.Transparent;
-        private Sprite _icon;
+		private CluwneSprite _icon;
 
         public BlueprintButton(string c1, string c1N, string c2, string c2N, string res, string resname,
                                IResourceManager resourceManager)
@@ -50,7 +51,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         {
                             Color = Color.GhostWhite,
                             ShadowColor = Color.DimGray,
-                            ShadowOffset = new Vector2D(1, 1),
+                            ShadowOffset = new Vector2(1, 1),
                             Shadowed = true
                         };
 
@@ -65,14 +66,14 @@ namespace SS14.Client.Services.UserInterface.Components
                                        new Size((int) (Label.Width + _icon.Width),
                                                 (int) Math.Max(Label.Height, _icon.Height)));
             Label.Position = new Point(Position.X + (int) _icon.Width, Position.Y);
-            _icon.Position = new Vector2D(Position.X, Position.Y + (Label.Height/2f - _icon.Height/2f));
+            _icon.Position = new Vector2(Position.X, Position.Y + (Label.Height/2f - _icon.Height/2f));
             Label.Text = Compo1Name + " + " + Compo2Name + " = " + ResultName;
         }
 
         public override void Render()
         {
             if (_bgcol != Color.Transparent)
-                Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
+            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
                                                            ClientArea.Height, _bgcol);
             _icon.Draw();
             Label.Draw();
@@ -87,9 +88,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -97,14 +98,14 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
-            _bgcol = ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))
+            _bgcol = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
                          ? Color.SteelBlue
                          : Color.Transparent;
         }

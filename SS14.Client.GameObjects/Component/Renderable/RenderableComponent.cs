@@ -28,7 +28,7 @@ namespace CGO
             get { return 0f; }
         }
 
-        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
         }
 

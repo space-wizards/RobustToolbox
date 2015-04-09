@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Map
 {
@@ -19,11 +20,11 @@ namespace SS14.Client.Interfaces.Map
 
         Tile Create(ushort data = 0);
 
-        void Render(float xTopLeft, float yTopLeft, Batch batch);
+        void Render(float xTopLeft, float yTopLeft, SpriteBatch batch);
         void RenderPos(float x, float y, int tileSpacing, int lightSize);
-        void RenderPosOffset(float x, float y, int tileSpacing, Vector2D lightPosition);
-        void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, Batch decalBatch);
-        void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, Batch gasBatch);
-        void RenderTop(float xTopLeft, float yTopLeft, Batch wallTopsBatch);
+        void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition);
+        void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch);
+        void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch);
+        void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch);
     }
 }

@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.GOC;
+﻿using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Placement;
@@ -11,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -96,8 +96,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
             BuildEntityList();
 
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
@@ -125,7 +125,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _placementManager.ToggleEraser();
         }
 
-        private void ClearLabelClicked(Label sender, MouseInputEventArgs e)
+		private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildEntityList();
@@ -226,7 +226,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? Color.Tomato : Color.White;
+            _eraserButton.Color = _placementManager.Eraser ? CluwneLib.SystemColorToSFML(Color.Tomato) : CluwneLib.SystemColorToSFML(Color.White);
             base.Render();
         }
 
@@ -238,34 +238,34 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             if (base.KeyDown(e)) return true;
             return false;

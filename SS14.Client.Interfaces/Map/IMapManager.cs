@@ -1,33 +1,28 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using System.Collections.Generic;
 using System.Drawing;
+using SS14.Shared;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Map
 {
-    public delegate void TileChangeEvent(PointF tileWorldPosition);
+    public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
     public interface IMapManager
     {
-        event TileChangeEvent OnTileChanged;
-        int GetTileSpacing();
-        int GetWallThickness();
-        void Shutdown();
-        bool IsSolidTile(Vector2D pos);
+        event TileChangedEventHandler TileChanged;
+
         void HandleNetworkMessage(NetIncomingMessage message);
-        void HandleAtmosDisplayUpdate(NetIncomingMessage message);
 
+        int TileSize { get; }
 
-        ITile[] GetAllTilesIn(RectangleF Area);
-        ITile[] GetAllFloorIn(RectangleF Area);
-        ITile[] GetAllWallIn(RectangleF Area);
+        IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace);
+        IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area);
+        IEnumerable<TileRef> GetWallsIntersecting(RectangleF area);
+        IEnumerable<TileRef> GetAllTiles();
 
-        ITile GetWallAt(Vector2D pos);
-        ITile GetFloorAt(Vector2D pos);
-        ITile[] GetAllTilesAt(Vector2D pos);
-
-        int GetMapWidth();
-        int GetMapHeight();
-
-        void Init();
+        TileRef GetTileRef(Vector2 pos);
+        TileRef GetTileRef(int x, int y);
+        ITileCollection Tiles { get; }
     }
 }

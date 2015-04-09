@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared.Maths;
+using System;
 using System.Drawing;
 
 namespace SS14.Client.ClientWindow
@@ -24,32 +25,44 @@ namespace SS14.Client.ClientWindow
             get { return _singleton ?? (_singleton = new ClientWindowData()); }
         }
 
-        /// <summary>
-        /// The top left point of the screen in world coordinates.
-        /// </summary>
-        public Vector2D ScreenOrigin { get; private set; }
+        // WorldCenter, ScreenViewportSize, and TileSize are only here because this assembly cannot access them directly.
+        // Fix that when this is assembly is merged with the others.
 
         /// <summary>
-        /// Rectangle representing the viewable area in world coordinates
+        /// Gets the focal point of the viewport.
         /// </summary>
-        public RectangleF ViewPort { get; private set; }
+        public Vector2 WorldCenter { get; set; }
+        //public Vector2 WorldCenter
+        //{
+        //    get
+        //    {
+        //        return PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+        //    }
+        //}
+
+        public SizeF ScreenViewportSize { get; set; }
+        public int TileSize { get; set; }
 
         /// <summary>
-        /// Translates a world position to a screen position.
+        /// Gets the viewport in world (tile) coordinates.
         /// </summary>
-        /// <param name="position">position to translate</param>
-        public static Vector2D WorldToScreen(Vector2D position)
+        public RectangleF WorldViewport
         {
-            return position - Singleton.ScreenOrigin;
+            get
+            {
+                return ScreenToWorld(ScreenViewport);
+            }
         }
 
         /// <summary>
-        /// Translates a screen position to a world position
+        /// Gets the viewport in screen (pixel) coordinates.
         /// </summary>
-        /// <param name="position">position to translate</param>
-        public static Vector2D ScreenToWorld(Vector2D position)
+        public RectangleF ScreenViewport
         {
-            return position + Singleton.ScreenOrigin;
+            get
+            {
+                return new RectangleF(PointF.Empty, ScreenViewportSize);
+            }
         }
 
         #endregion
@@ -58,42 +71,145 @@ namespace SS14.Client.ClientWindow
 
         #region Constructors
 
-        private ClientWindowData()
-        {
-            ScreenOrigin = new Point(0, 0);
-            ViewPort = new RectangleF(ScreenOrigin, new Size(0, 0));
-        }
+        private ClientWindowData() { }
 
         #endregion
 
         #region Publics
 
+
         /// <summary>
-        /// Updates the ScreenTopLeft and Viewport variables given a center point.
-        /// WORLD POSITION
+        /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        /// <param name="x">Center point x</param>
-        /// <param name="y">Center point y</param>
-        public void UpdateViewPort(float x, float y)
+        public PointF WorldToScreen(PointF point)
         {
-            ScreenOrigin = new Vector2D
-                (
-                x - Gorgon.CurrentClippingViewport.Width/2.0f,
-                y - Gorgon.CurrentClippingViewport.Height/2.0f
+            var center = WorldCenter;
+            return new PointF(
+                (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+                (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
                 );
-            ViewPort = new RectangleF(ScreenOrigin,
-                                      new SizeF(Gorgon.CurrentClippingViewport.Width,
-                                                Gorgon.CurrentClippingViewport.Height));
+        }
+        /// <summary>
+        /// Transforms a point from the world (tile) space, to screen (pixel) space.
+        /// </summary>
+        public Vector2 WorldToScreen(Vector2 point)
+        {
+            var center = WorldCenter;
+            return new Vector2(
+                (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+                (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+                );
+        }
+        /// <summary>
+        /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
+        /// </summary>
+        public RectangleF WorldToScreen(RectangleF rect)
+        {
+            var center = WorldCenter;
+            return new RectangleF(
+                (rect.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+                (rect.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2,
+                rect.Width * TileSize,
+                rect.Height * TileSize
+                );
         }
 
         /// <summary>
-        /// Updates the ScreenTopLeft and Viewport variables given a center point.
+        /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        /// <param name="center">Center point</param>
-        public void UpdateViewPort(Vector2D center)
+        public PointF ScreenToWorld(PointF point)
         {
-            UpdateViewPort(center.X, center.Y);
+            var center = WorldCenter;
+            return new PointF(
+                (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+                (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+                );
         }
+        /// <summary>
+        /// Transforms a point from the screen (pixel) space, to world (tile) space.
+        /// </summary>
+        public Vector2 ScreenToWorld(Vector2 point)
+        {
+            var center = WorldCenter;
+            return new Vector2(
+                (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+                (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+                );
+        }
+        /// <summary>
+        /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
+        /// </summary>
+        public RectangleF ScreenToWorld(RectangleF rect)
+        {
+            var center = WorldCenter;
+            return new RectangleF(
+                (rect.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+                (rect.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y,
+                rect.Width / TileSize,
+                rect.Height / TileSize
+                );
+        }
+
+        /// <summary>
+        /// Scales a size from pixel coordinates to tile coordinates.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public SizeF PixelToTile(SizeF size)
+        {
+            return new SizeF(
+                size.Width / TileSize,
+                size.Height / TileSize
+                );
+        }
+        /// <summary>
+        /// Scales a vector from pixel coordinates to tile coordinates.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public Vector2 PixelToTile(Vector2 vec)
+        {
+            return new Vector2(
+                vec.X / TileSize,
+                vec.Y / TileSize
+                );
+        }
+        /// <summary>
+        /// Scales a rectangle from pixel coordinates to tile coordinates.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public RectangleF PixelToTile(RectangleF rect)
+        {
+            return new RectangleF(
+                rect.X / TileSize,
+                rect.Y / TileSize,
+                rect.Width / TileSize,
+                rect.Height / TileSize
+                );
+        }
+
+        /// <summary>
+        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
+        /// </summary>
+        public PointF GetNearestPixel(PointF worldPoint)
+        {
+            return new PointF(
+                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
+                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+                );
+        }
+        /// <summary>
+        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
+        /// </summary>
+        public Vector2 GetNearestPixel(Vector2 worldPoint)
+        {
+            return new Vector2(
+                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
+                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+                );
+        }
+
 
         #endregion
 

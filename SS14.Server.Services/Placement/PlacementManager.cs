@@ -5,7 +5,6 @@ using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Tiles;
 using SS14.Server.Services.Log;
 using SS14.Server.Services.Map;
 using SS14.Shared;
@@ -15,6 +14,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.Services.Placement
 {
@@ -59,13 +59,13 @@ namespace SS14.Server.Services.Placement
 
             Boolean isTile = msg.ReadBoolean();
 
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
 
-            string tileType = null;
+            ushort tileType = 0;
 
             string entityTemplateName = "";
 
-            if (isTile) tileType = mapMgr.GetTileString(msg.ReadByte());
+            if (isTile) tileType = msg.ReadUInt16();
             else entityTemplateName = msg.ReadString();
 
             float xRcv = msg.ReadFloat();
@@ -81,9 +81,9 @@ namespace SS14.Server.Services.Placement
                 IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.
                     isAdmin;
 
-            float a = (float)Math.Floor(xRcv / mapMgr.tileSpacing);
-            float b = (float)Math.Floor(yRcv / mapMgr.tileSpacing);
-            Vector2 tilePos = new Vector2(a * mapMgr.tileSpacing, b * mapMgr.tileSpacing);
+            float a = (float)Math.Floor(xRcv);
+            float b = (float)Math.Floor(yRcv);
+            Vector2 tilePos = new Vector2(a, b);
 
             if (permission != null || true)
                 //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
@@ -117,14 +117,12 @@ namespace SS14.Server.Services.Placement
                         if(created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
                         if(created.HasComponent(ComponentFamily.WallMounted))
-                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(tilePos);
+                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(mapMgr.GetTileRef(tilePos));
                     }
                 }
                 else
                 {
-                    Vector2 nearestPos = new Vector2(xRcv, yRcv);
-                    ITile t = mapMgr.ChangeTile(nearestPos, tileType, dirRcv);
-                    mapMgr.NetworkUpdateTile(t);
+                    mapMgr.Tiles[tilePos] = new Tile(tileType);
                 }
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
@@ -176,7 +174,7 @@ namespace SS14.Server.Services.Placement
             message.Write((byte) PlacementManagerMessage.StartPlacement);
             message.Write(range);
             message.Write(true); //Is a tile.
-            message.Write(mapMgr.GetTileIndex(tileType));
+            message.Write(tileType);
             message.Write(alignOption);
             if (mob.HasComponent(ComponentFamily.Actor))
             {
@@ -275,7 +273,7 @@ namespace SS14.Server.Services.Placement
                                         MobUid = mob.Uid,
                                         Range = range,
                                         IsTile = true,
-                                        TileType = tileType,
+                                        TileType = IoCManager.Resolve<ITileDefinitionManager>()[tileType].TileId,
                                         PlacementOption = alignOption
                                     };
 

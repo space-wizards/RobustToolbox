@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.GO;
 
@@ -26,7 +25,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// <param name="frametime"></param>
         public override void Update(float frametime)
         {
-            var entities = EntityManager.GetEntities(EntityQuery);
+            /*var entities = EntityManager.GetEntities(EntityQuery);
             return;
             foreach(var entity in entities)
             {
@@ -49,10 +48,10 @@ namespace SS14.Client.GameObjects.EntitySystems
                         bool collidedx, collidedy;
                         if(collided)
                         {
-                            collidedx = collider.TryCollision(new Vector2D(movement.X, 0));
+                            collidedx = collider.TryCollision(new Vector2(movement.X, 0));
                             if(collidedx)
                                 velocity.X = 0;
-                            collidedy = collider.TryCollision(new Vector2D(0, movement.Y));
+                            collidedy = collider.TryCollision(new Vector2(0, movement.Y));
                             if (collidedy)
                                 velocity.Y = 0;
                             movement = velocity.Velocity*frametime;
@@ -73,8 +72,8 @@ namespace SS14.Client.GameObjects.EntitySystems
                 {
                     //Apply velocity
                     transform.Position += movement;
-                }*/
-            }
+                }#1#
+            }*/
         }
 
     }

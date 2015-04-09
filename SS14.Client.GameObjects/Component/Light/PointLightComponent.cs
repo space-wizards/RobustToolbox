@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -7,6 +6,7 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Light;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -14,8 +14,8 @@ namespace SS14.Client.GameObjects
     {
         //Contains a standard light
         public ILight _light;
-        public Vector3D _lightColor = new Vector3D(190, 190, 190);
-        public Vector2D _lightOffset = new Vector2D(0, 0);
+        public Vector3 _lightColor = new Vector3(190, 190, 190);
+        public Vector2 _lightOffset = new Vector2(0, 0);
         public int _lightRadius = 512;
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;

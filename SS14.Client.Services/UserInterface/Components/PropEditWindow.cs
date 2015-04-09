@@ -1,12 +1,12 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -30,8 +30,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public PropEditWindow(Size size, IResourceManager resourceManager, Object obj)
             : base("Object Properties : " + obj, size, resourceManager)
         {
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
             search = new Textbox(150, resourceManager);
             search.Position = new Point(5, 5);
@@ -261,11 +261,11 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        private void LabelName_Clicked(Label sender, MouseInputEventArgs e)
+		private void LabelName_Clicked(Label sender, MouseButtonEventArgs e)
         {
-            switch (e.Buttons)
+            switch (e.Button)
             {
-                case MouseButtons.Left:
+                case Mouse.Button.Left:
                     {
                         PropWindowStruct? selected = null;
 

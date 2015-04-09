@@ -8,6 +8,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace SS14.Server.Services.Player
             //Spawn the player's entity. There's probably a much better place to do this.
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
             Entity human = a;
-            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(160, 160));
+            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(0, 0));
             if (s.assignedJob != null)
             {
                 foreach (

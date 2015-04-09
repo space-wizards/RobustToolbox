@@ -1,16 +1,21 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
+using SFML.Graphics;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -23,28 +28,28 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2D mouseS, IMapManager currentMap)
+        public override bool Update(Vector2 mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2D(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            //Align to similar if nearby found else free
-            if (currentMap.IsSolidTile(mouseScreen))
-                return false; //HANDLE CURSOR OUTSIDE MAP
+            currentTile = currentMap.GetTileRef(mouseWorld);
 
-            currentTile = currentMap.GetFloorAt(mouseWorld);
+            //Align to similar if nearby found else free
+            if (currentTile.Tile.TileDef.IsWall)
+                return false; //HANDLE CURSOR OUTSIDE MAP
 
             if (pManager.CurrentPermission.Range > 0)
                 if (
@@ -75,33 +80,32 @@ namespace SS14.Client.Services.Placement.Modes
 
                 if (reply.MessageType == ComponentMessageType.CurrentSprite)
                 {
-                    var closestSprite = (Sprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestSprite = (CluwneSprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
 
                     var closestRect =
                         new RectangleF(
                             closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            closestSprite.Width/2f,
+                            closestSprite.Size.X/2f,
                             closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            closestSprite.Height/2f, closestSprite.Width, closestSprite.Height);
+                            closestSprite.Size.Y/2f, closestSprite.Width, closestSprite.Height);
 
-                    var sides = new List<Vector2D>
+                    var sides = new List<Vector2>
                                     {
-                                        new Vector2D(closestRect.X + (closestRect.Width/2f),
+                                        new Vector2(closestRect.X + (closestRect.Width/2f),
                                                      closestRect.Top - spriteToDraw.Height/2f),
-                                        new Vector2D(closestRect.X + (closestRect.Width/2f),
+                                        new Vector2(closestRect.X + (closestRect.Width/2f),
                                                      closestRect.Bottom + spriteToDraw.Height/2f),
-                                        new Vector2D(closestRect.Left - spriteToDraw.Width/2f,
+                                        new Vector2(closestRect.Left - spriteToDraw.Width/2f,
                                                      closestRect.Y + (closestRect.Height/2f)),
-                                        new Vector2D(closestRect.Right + spriteToDraw.Width/2f,
+                                        new Vector2(closestRect.Right + spriteToDraw.Width/2f,
                                                      closestRect.Y + (closestRect.Height/2f))
                                     };
 
-                    Vector2D closestSide =
-                        (from Vector2D side in sides orderby (side - mouseWorld).Length ascending select side).First();
+                    Vector2 closestSide =
+                        (from Vector2 side in sides orderby (side - mouseWorld).Length ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = new Vector2D(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                                               closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+                    mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
                 }
             }
 
@@ -116,12 +120,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
+                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML( Color.ForestGreen) : CluwneLib.SystemColorToSFML( Color.IndianRed);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
             }
         }
     }

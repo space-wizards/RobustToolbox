@@ -1,0 +1,100 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{59250BAF-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceStation14", "SS14.Client\SpaceStation14.csproj", "{0C31DFDF-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceStation14_Server", "SS14.Server\SpaceStation14_Server.csproj", "{B04AAE71-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.ClientWindow", "SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj", "{A9E3FA31-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.GameObjects", "SS14.Client.GameObjects\SS14.Client.GameObjects.csproj", "{53369E66-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Graphics", "SS14.Client.Graphics\SS14.Client.Graphics.csproj", "{44FAD669-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Graphics.CluwneLib", "SS14.Client.Graphics.CluwneLib\SS14.Client.Graphics.CluwneLib.csproj", "{302B877E-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Interfaces", "SS14.Client.Interfaces\SS14.Client.Interfaces.csproj", "{B8519348-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Services", "SS14.Client.Services\SS14.Client.Services.csproj", "{C61458B0-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Server.GameObjects", "SS14.Server.GameObjects\SS14.Server.GameObjects.csproj", "{DE7A8232-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Server.Interfaces", "SS14.Server.Interfaces\SS14.Server.Interfaces.csproj", "{D4598C6C-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Server.Services", "SS14.Server.Services\SS14.Server.Services.csproj", "{CEA4F5DC-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared", "SS14.Shared\SS14.Shared.csproj", "{0529F740-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.GameObjects", "SS14.Shared.GameObjects\SS14.Shared.GameObjects.csproj", "{D7860944-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.IoC", "SS14.Shared.IoC\SS14.Shared.IoC.csproj", "{FEC26501-0000-0000-0000-000000000000}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{59250BAF-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{59250BAF-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{59250BAF-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{59250BAF-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{0C31DFDF-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{0C31DFDF-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{0C31DFDF-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{0C31DFDF-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{B04AAE71-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{B04AAE71-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{B04AAE71-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{B04AAE71-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{A9E3FA31-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{A9E3FA31-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{A9E3FA31-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{A9E3FA31-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{53369E66-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{53369E66-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{53369E66-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{53369E66-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{44FAD669-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{44FAD669-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{44FAD669-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{44FAD669-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{302B877E-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{302B877E-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{302B877E-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{302B877E-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{B8519348-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{B8519348-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{B8519348-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{B8519348-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{C61458B0-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{C61458B0-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{C61458B0-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{C61458B0-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{DE7A8232-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{DE7A8232-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{DE7A8232-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{DE7A8232-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{D4598C6C-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{D4598C6C-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{D4598C6C-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{D4598C6C-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{CEA4F5DC-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{CEA4F5DC-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{CEA4F5DC-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{CEA4F5DC-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{0529F740-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{0529F740-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{0529F740-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{0529F740-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{D7860944-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{D7860944-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{D7860944-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{D7860944-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+		{FEC26501-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
+		{FEC26501-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
+		{FEC26501-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
+		{FEC26501-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+EndGlobal

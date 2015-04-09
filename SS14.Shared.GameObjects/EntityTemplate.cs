@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.GameObjects
 {

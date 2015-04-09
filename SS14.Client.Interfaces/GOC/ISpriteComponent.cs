@@ -1,17 +1,17 @@
-﻿using GorgonLibrary.Graphics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Interfaces.GOC
 {
     public interface ISpriteComponent
     {
         RectangleF AABB { get; }
-        Sprite GetCurrentSprite();
-        Sprite GetSprite(string spriteKey);
-        List<Sprite> GetAllSprites();
+        CluwneSprite GetCurrentSprite();
+        CluwneSprite GetSprite(string spriteKey);
+        List<CluwneSprite> GetAllSprites();
         void SetSpriteByKey(string spriteKey);
         void AddSprite(string spriteKey);
-        void AddSprite(string key, Sprite spritetoadd);
+        void AddSprite(string key, CluwneSprite spritetoadd);
     }
 }

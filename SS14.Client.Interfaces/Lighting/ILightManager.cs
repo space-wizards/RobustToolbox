@@ -1,6 +1,6 @@
-﻿using GorgonLibrary;
-using SS14.Shared;
+﻿using SS14.Shared;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Lighting
 {
@@ -9,11 +9,11 @@ namespace SS14.Client.Interfaces.Lighting
         ILight CreateLight();
         void AddLight(ILight light);
         void RemoveLight(ILight light);
-        ILight[] lightsInRadius(Vector2D point, float radius);
+        ILight[] lightsInRadius(Vector2 point, float radius);
         void RecalculateLights();
-        void RecalculateLightsInView(Vector2D point);
+        void RecalculateLightsInView(Vector2 point);
         void RecalculateLightsInView(RectangleF rect);
-        ILight[] LightsIntersectingPoint(Vector2D point);
+        ILight[] LightsIntersectingPoint(Vector2 point);
         ILight[] LightsIntersectingRect(RectangleF rect);
         ILight[] GetLights();
         void SetLightMode(LightModeClass? mode, ILight light);

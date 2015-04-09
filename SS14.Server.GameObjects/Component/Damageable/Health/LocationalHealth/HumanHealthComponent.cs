@@ -1,7 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Tiles;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -10,6 +9,8 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Server.GameObjects.Organs;
+using Human = SS14.Server.GameObjects.Organs.Human;
 
 namespace SS14.Server.GameObjects
 {
@@ -20,19 +21,50 @@ namespace SS14.Server.GameObjects
     {
         private DateTime _lastUpdate;
         protected List<DamageLocation> damageZones = new List<DamageLocation>();
+        public List<ExternalOrgan> BodyParts = new List<ExternalOrgan>();
 
         public HumanHealthComponent()
         {
             damageZones.Add(new DamageLocation(BodyPart.Left_Arm, 50));
             damageZones.Add(new DamageLocation(BodyPart.Right_Arm, 50));
-            damageZones.Add(new DamageLocation(BodyPart.Groin, 50));
+            damageZones.Add(new DamageLocation(BodyPart.Groin, 50)); // Do we really need this?
             damageZones.Add(new DamageLocation(BodyPart.Head, 50));
             damageZones.Add(new DamageLocation(BodyPart.Left_Leg, 50));
             damageZones.Add(new DamageLocation(BodyPart.Right_Leg, 50));
             damageZones.Add(new DamageLocation(BodyPart.Torso, 100));
 
+            SetupHumanOrgans();
+
             maxHealth = damageZones.Sum(x => x.maxHealth);
             currentHealth = maxHealth;
+        }
+
+        private void SetupHumanOrgans()
+        {
+            ExternalOrgan _head, _torso, _rightarm, _leftarm, _leftleg, _rightleg;
+
+            _head = new Human.Head(this);
+            _torso = new Human.Torso(this);
+            _rightarm = new Human.RightArm(this);
+            _leftarm = new Human.LeftArm(this);
+            _rightleg = new Human.RightLeg(this);
+            _leftleg = new Human.LeftLeg(this);
+
+            _head.Children.Add(_torso);
+
+            _torso.Parent = _head;
+            _torso.Children.Add(_rightarm);
+            _torso.Children.Add(_leftarm);
+            _torso.Children.Add(_rightleg);
+            _torso.Children.Add(_leftleg);
+
+            _rightarm.Parent = _torso;
+            _leftarm.Parent = _torso;
+            _rightleg.Parent = _torso;
+            _leftleg.Parent = _torso;
+            
+
+
         }
 
         public override void Update(float frameTime)
@@ -47,28 +79,28 @@ namespace SS14.Server.GameObjects
             if (statuscomp == null)
                 return;
 
-            ITile t = map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            TileRef t = map.GetTileRef(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-            if (t == null)
+            if (t.Tile.IsSpace)
             {
-                statuscomp.AddEffect("Hypoxia", 5); //Out of map bounds, you is asphyxiatin to death bitch
+                statuscomp.AddEffect("Hypoxia", 5); //Y'all in space, you is asphyxiatin to death bitch
             }
-            else
-            {
-                bool hasInternals = HasInternals();
+            //else
+            //{
+            //    bool hasInternals = HasInternals();
 
-                if (t.GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals)
-                    //too much toxin in the air, bro
-                {
-                    statuscomp.AddEffect("ToxinInhalation", 20);
-                }
-                if (!hasInternals && t.GasCell.Pressure < 10 //Less than 10kPa
-                    ||
-                    (t.GasCell.GasAmount(GasType.Oxygen)/
-                     t.GasCell.TotalGas) < 0.10f) //less than 10% oxygen
-                    //Not enough oxygen in the mixture, or pressure is too low.
-                    statuscomp.AddEffect("Hypoxia", 5);
-            }
+            //    if (t.GasCell.GasAmount(GasType.Toxin) > 0.01 && !hasInternals)
+            //        //too much toxin in the air, bro
+            //    {
+            //        statuscomp.AddEffect("ToxinInhalation", 20);
+            //    }
+            //    if (!hasInternals && t.GasCell.Pressure < 10 //Less than 10kPa
+            //        ||
+            //        (t.GasCell.GasAmount(GasType.Oxygen)/
+            //         t.GasCell.TotalGas) < 0.10f) //less than 10% oxygen
+            //        //Not enough oxygen in the mixture, or pressure is too low.
+            //        statuscomp.AddEffect("Hypoxia", 5);
+            //}
         }
 
         // TODO use state system

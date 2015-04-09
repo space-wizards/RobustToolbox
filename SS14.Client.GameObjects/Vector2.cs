@@ -1,5 +1,6 @@
-﻿using GorgonLibrary;
-using SS14.Shared;
+﻿using SS14.Shared;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -47,7 +48,7 @@ namespace SS14.Client.GameObjects
             return new Vector2TypeConverter(vec.X, vec.Y);
         }
 
-        public static implicit operator Vector2TypeConverter(Vector2D vec)
+        public static implicit operator Vector2TypeConverter(Vector2f vec)
         {
             return new Vector2TypeConverter(vec.X, vec.Y);
         }
@@ -57,19 +58,19 @@ namespace SS14.Client.GameObjects
             return new Vector2(vec.X, vec.Y);
         }
 
-        public static implicit operator Vector2D(Vector2TypeConverter vec)
+        public static implicit operator Vector2f(Vector2TypeConverter vec)
         {
-            return new Vector2D(vec.X, vec.Y);
+            return new Vector2f(vec.X, vec.Y);
         }
 
-        public static Vector2 ToVector2(Vector2D vec)
+        public static Vector2 ToVector2(Vector2f vec)
         {
             return new Vector2(vec.X, vec.Y);
         }
 
-        public static Vector2D ToVector2D(Vector2 vec)
+        public static Vector2f ToVector2f(Vector2 vec)
         {
-            return new Vector2D(vec.X, vec.Y);
+            return new Vector2f(vec.X, vec.Y);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using GorgonLibrary;
-using SS14.Shared;
+﻿using SS14.Shared;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Lighting
 {
@@ -8,11 +8,11 @@ namespace SS14.Client.Interfaces.Lighting
     {
         int Radius { get; }
         Color Color { get; }
-        Vector2D Position { get; }
+        Vector2 Position { get; }
         LightState LightState { get; }
         ILightArea LightArea { get; }
         LightMode LightMode { get; set; }
-        void Move(Vector2D toPosition);
+        void Move(Vector2 toPosition);
         void SetRadius(int Radius);
         void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
@@ -20,7 +20,7 @@ namespace SS14.Client.Interfaces.Lighting
         void Update(float frametime);
 
         void SetMask(string _mask);
-        Vector4D GetColorVec();
+        Vector4 GetColorVec();
         void SetState(LightState state);
     }
 }

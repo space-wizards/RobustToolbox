@@ -1,7 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -13,6 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.State.States
 {
@@ -20,7 +22,7 @@ namespace SS14.Client.Services.State.States
     {
         #region Fields
 
-        private readonly Sprite _background;
+		private readonly CluwneSprite _background;
 
         private readonly SimpleImage _imgStatus;
 
@@ -77,7 +79,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-            _background.Smoothing = Smoothing.Smooth;
+           //TODO _background.Smoothing = Smoothing.Smooth;
 
             _imgMainBg = new SimpleImage
                           {
@@ -160,7 +162,7 @@ namespace SS14.Client.Services.State.States
 
             _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager)
                 {
-                    Size = new Vector2D(780,225),
+                    Size = new Vector2(780,225),
                 };
 
             _lobbyChat.Update(0);
@@ -176,7 +178,7 @@ namespace SS14.Client.Services.State.States
 			{
 				ImageNormal = "lobby_ready",
 				ImageHover = "lobby_ready_green",
-				BlendingMode = BlendingModes.None,
+				//BlendingMode = BlendingModes.None,
 				ZDepth = 1
 			};
 			_btnReady.Clicked += _btnReady_Clicked;
@@ -411,10 +413,10 @@ namespace SS14.Client.Services.State.States
 
         public void Update(FrameEventArgs e)
         {
-			if (Gorgon.Screen.Width != _prevScreenWidth || Gorgon.Screen.Height != _prevScreenHeight)
+            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
 			{
-				_prevScreenHeight = Gorgon.Screen.Height;
-				_prevScreenWidth = Gorgon.Screen.Width;
+                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
 				UpdateGUIPosition();
 			}
 
@@ -430,8 +432,8 @@ namespace SS14.Client.Services.State.States
 		public void UpdateGUIPosition()
 		{
 			_imgMainBg.Position = new Point(
-				(int)((Gorgon.Screen.Width / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
-				(int)((Gorgon.Screen.Height / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
+                (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
+                (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
 			_imgMainBg.Update(0);
 
 			_recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
@@ -491,10 +493,10 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height));
+            //TODO .Draw
+           // _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
             UserInterfaceManager.Render();
         }
 
@@ -506,34 +508,43 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown ( KeyEventArgs e )
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp ( KeyEventArgs e )
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+        public void MouseUp ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+        public void MouseDown ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+        public void MouseMoved ( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed ( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove ( MouseMoveEventArgs e )
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+        public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
+
 
         #endregion
     }

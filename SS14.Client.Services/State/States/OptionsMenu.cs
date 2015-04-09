@@ -1,14 +1,19 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.State;
+using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Event;
+using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
+using SS14.Client.Graphics.CluwneLib;
+
+
+
 
 namespace SS14.Client.Services.State.States
 {
@@ -17,7 +22,9 @@ namespace SS14.Client.Services.State.States
         #region Fields
 
         private readonly Label _btnApply;
-        private readonly Sprite _background;
+
+		private readonly CluwneSprite _background;
+        private readonly CluwneSprite _ticketBg;
 
         private readonly Checkbox _chkFullscreen;
         private readonly Checkbox _chkVsync;
@@ -25,8 +32,9 @@ namespace SS14.Client.Services.State.States
         private readonly Label _lblFullscreen;
         private readonly Label _lblVsync;
         private readonly Label _btnMainMenu;
+
         private readonly Listbox _lstResolution;
-        private readonly Sprite _ticketBg;
+	
 
         private readonly Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
 
@@ -40,7 +48,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-            _background.Smoothing = Smoothing.Smooth;
+          //  _background.Smoothing = Smoothing.Smooth;
 
             _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
 
@@ -57,13 +65,10 @@ namespace SS14.Client.Services.State.States
             _lstResolution = new Listbox(250, 150, ResourceManager);
             _lstResolution.ItemSelected += _reslistbox_ItemSelected;
 
-            IOrderedEnumerable<VideoMode> modes = from v in Gorgon.CurrentDriver.VideoModes
-                                                  where
-                                                      (v.Height > 748 && v.Width > 1024) &&
-                                                      v.Format == BackBufferFormats.BufferRGB888 && v.RefreshRate >= 59
-                                                  //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
-                                                  orderby v.Height*v.Width ascending
-                                                  select v;
+            IOrderedEnumerable<VideoMode> modes = from v in SFML.Window.VideoMode.FullscreenModes where 
+                                     (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
+                                         orderby v.Height*v.Width ascending 
+                                         select v;
 
             if (!modes.Any())
                 //No compatible videomodes at all. It is likely the game is being run on a calculator. TODO handle this.
@@ -79,21 +84,17 @@ namespace SS14.Client.Services.State.States
             }
 
             if (
-                vmList.Any(
-                    x =>
-                    x.Value.Width == Gorgon.CurrentVideoMode.Width && x.Value.Height == Gorgon.CurrentVideoMode.Height &&
-                    x.Value.RefreshRate ==
-                    (Gorgon.Screen.Windowed ? Gorgon.DesktopVideoMode.RefreshRate : Gorgon.CurrentVideoMode.RefreshRate)))
+                 vmList.Any(
+                    x=>
+                    x.Value.Width == CluwneLib.Screen.Size.X && x.Value.Height == CluwneLib.Screen.Size.Y ))
+                    
             {
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == Gorgon.CurrentVideoMode.Width &&
-                        x.Value.Height == Gorgon.CurrentVideoMode.Height &&
-                        x.Value.RefreshRate ==
-                        (Gorgon.Screen.Windowed
-                             ? Gorgon.DesktopVideoMode.RefreshRate
-                             : Gorgon.CurrentVideoMode.RefreshRate));
+                        x.Value.Width == CluwneLib.Screen.Size.X &&
+                        x.Value.Height == CluwneLib.Screen.Size.Y );
+                        
                 _lstResolution.SelectItem(curr.Key, false);
             }
             else
@@ -102,8 +103,8 @@ namespace SS14.Client.Services.State.States
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == Gorgon.CurrentVideoMode.Width &&
-                        x.Value.Height == Gorgon.CurrentVideoMode.Height);
+                        x.Value.Width == CluwneLib.Screen.Size.X &&
+                        x.Value.Height == CluwneLib.Screen.Size.Y);
                 _lstResolution.SelectItem(curr.Key, false);
             }
 
@@ -118,7 +119,7 @@ namespace SS14.Client.Services.State.States
             _btnApply.Clicked += _applybtt_Clicked;
 
 
-			_lstResolution.Position = new Point(45, (int)(Gorgon.CurrentClippingViewport.Height / 2.5f));
+            _lstResolution.Position = new Point(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
 			_lstResolution.Update(0);
 			_chkFullscreen.Position = new Point(_lstResolution.Position.X,
 												_lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
@@ -143,12 +144,12 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                           Gorgon.CurrentClippingViewport.Height));
-            _ticketBg.Draw(new Rectangle(0, (int) (Gorgon.CurrentClippingViewport.Height/2f - _ticketBg.Height/2f),
-                                         (int) _ticketBg.Width, (int) _ticketBg.Height));
+            //TODO .Draw Method
+            // _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+
+           //_ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
             UserInterfaceManager.Render();
         }
 
@@ -160,31 +161,39 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-        public void KeyDown(KeyboardInputEventArgs e)
+		public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+		public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+		public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+		public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+        public void MouseMoved( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+		public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -196,7 +205,7 @@ namespace SS14.Client.Services.State.States
             ConfigurationManager.SetVsync(newValue);
         }
 
-        private void _applybtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _applybtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             ApplyVideoMode();
         }
@@ -208,26 +217,18 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            Form owner = Gorgon.Screen.OwnerForm;
-            Gorgon.Stop();
+            
+            CluwneLib.Stop();
 
-            Gorgon.SetMode(owner, (int) ConfigurationManager.GetDisplayWidth(),
-                           (int) ConfigurationManager.GetDisplayHeight(), BackBufferFormats.BufferRGB888,
-                           !ConfigurationManager.GetFullscreen(), false, false,
-                           (int) ConfigurationManager.GetDisplayRefresh(),
-                           (ConfigurationManager.GetVsync() ? VSyncIntervals.IntervalOne : VSyncIntervals.IntervalNone));
+            CluwneLib.SetMode((int)ConfigurationManager.GetDisplayWidth(),
+                            (int)ConfigurationManager.GetDisplayHeight(),
+                            !ConfigurationManager.GetFullscreen(), false, false,
+                            (int)ConfigurationManager.GetDisplayRefresh());
+                           
 
-            if (!ConfigurationManager.GetFullscreen())
-            {
-                //Gee thanks gorgon for changing this stuff only when switching TO fullscreen.
-                owner.FormBorderStyle = FormBorderStyle.Sizable;
-                owner.WindowState = FormWindowState.Normal;
-                owner.ControlBox = true;
-                owner.MaximizeBox = true;
-                owner.MinimizeBox = true;
-            }
+           
 
-            Gorgon.Go();
+            CluwneLib.Go();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)
@@ -236,13 +237,13 @@ namespace SS14.Client.Services.State.States
             {
                 VideoMode sel = vmList[item.Text.Text];
                 ConfigurationManager.SetResolution((uint) sel.Width, (uint) sel.Height);
-                ConfigurationManager.SetDisplayRefresh((uint) sel.RefreshRate);
+               
             }
         }
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.RefreshRate + " hz";
+            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.BitsPerPixel+ " hz";
         }
 
         private void _exitbtt_Clicked(Label sender)
@@ -250,12 +251,12 @@ namespace SS14.Client.Services.State.States
             Environment.Exit(0);
         }
 
-        private void _mainmenubtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _mainmenubtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             StateManager.RequestStateChange<MainScreen>();
         }
 
-        private void _connectbtt_Clicked(Label sender, MouseInputEventArgs e)
+		private void _connectbtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
         }
 

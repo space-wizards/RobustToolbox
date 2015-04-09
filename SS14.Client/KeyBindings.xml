@@ -7,7 +7,7 @@
   <Binding Key="D" Function="MoveRight" />
   <Binding Key="Q" Function="Drop" />
   <Binding Key="Tab" Function="SwitchHands" />
-  <Binding Key="LShiftKey" Function="Run" />
-  <Binding Key="RShiftKey" Function="Run" />
+  <Binding Key="LShift" Function="Run" />
+  <Binding Key="RShift" Function="Run" />
   <Binding Key="F" Function="ActivateItemInHand" />
 </KeyBindings>

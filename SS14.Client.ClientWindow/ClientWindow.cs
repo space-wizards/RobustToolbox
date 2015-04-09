@@ -1,4 +1,4 @@
-﻿using GorgonLibrary;
+﻿using SS14.Shared.Maths;
 using System;
 using System.Drawing;
 
@@ -31,8 +31,8 @@ namespace SS14.Client.ClientWindow
         /// <summary>
         /// Gets the focal point of the viewport.
         /// </summary>
-        public Vector2D WorldCenter { get; set; }
-        //public Vector2D WorldCenter
+        public Vector2 WorldCenter { get; set; }
+        //public Vector2 WorldCenter
         //{
         //    get
         //    {
@@ -92,10 +92,10 @@ namespace SS14.Client.ClientWindow
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public Vector2D WorldToScreen(Vector2D point)
+        public Vector2 WorldToScreen(Vector2 point)
         {
             var center = WorldCenter;
-            return new Vector2D(
+            return new Vector2(
                 (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
                 (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
                 );
@@ -128,10 +128,10 @@ namespace SS14.Client.ClientWindow
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public Vector2D ScreenToWorld(Vector2D point)
+        public Vector2 ScreenToWorld(Vector2 point)
         {
             var center = WorldCenter;
-            return new Vector2D(
+            return new Vector2(
                 (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
                 (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
                 );
@@ -167,9 +167,9 @@ namespace SS14.Client.ClientWindow
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        public Vector2D PixelToTile(Vector2D vec)
+        public Vector2 PixelToTile(Vector2 vec)
         {
-            return new Vector2D(
+            return new Vector2(
                 vec.X / TileSize,
                 vec.Y / TileSize
                 );
@@ -202,9 +202,9 @@ namespace SS14.Client.ClientWindow
         /// <summary>
         /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
         /// </summary>
-        public PointF GetNearestPixel(Vector2D worldPoint)
+        public Vector2 GetNearestPixel(Vector2 worldPoint)
         {
-            return new Vector2D(
+            return new Vector2(
                 (float)Math.Round(worldPoint.X * TileSize) / TileSize,
                 (float)Math.Round(worldPoint.Y * TileSize) / TileSize
                 );

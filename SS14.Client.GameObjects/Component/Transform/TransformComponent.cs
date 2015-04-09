@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using SS14.Client.Interfaces.Configuration;
+﻿using SS14.Client.Interfaces.Configuration;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -8,12 +7,13 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
     public class TransformComponent : Component
     {
-        private Vector2D _position = Vector2D.Zero;
+        private Vector2 _position = Vector2.Zero;
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
         public TransformComponentState lerpStateFrom;
@@ -23,15 +23,15 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Transform;
         }
 
-        public Vector2D Position
+        public Vector2 Position
         {
             get { return _position; }
             set
             {
-                Vector2D oldPosition = _position;
+                Vector2 oldPosition = _position;
                 _position = value;
 
-                if (OnMove != null) OnMove(this, new VectorEventArgs(Vector2TypeConverter.ToVector2(oldPosition), Vector2TypeConverter.ToVector2(_position)));
+                if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 
@@ -43,28 +43,28 @@ namespace SS14.Client.GameObjects
         public float X
         {
             get { return Position.X; }
-            set { Position = new Vector2D(value, Position.Y); }
+            set { Position = new Vector2(value, Position.Y); }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2D(Position.X, value); }
+            set { Position = new Vector2(Position.X, value); }
         }
 
         public event EventHandler<VectorEventArgs> OnMove;
 
         public override void Shutdown()
         {
-            Position = Vector2D.Zero;
+            Position = Vector2.Zero;
         }
 
-        public void TranslateTo(Vector2D toPosition)
+        public void TranslateTo(Vector2 toPosition)
         {
             Position = toPosition;
         }
 
-        public void TranslateByOffset(Vector2D offset)
+        public void TranslateByOffset(Vector2 offset)
         {
             Position = Position + offset;
 
@@ -98,7 +98,7 @@ namespace SS14.Client.GameObjects
             }
             if(lastState.ForceUpdate)
             {
-                TranslateTo(new Vector2D(state.X, state.Y));
+                TranslateTo(new Vector2(state.X, state.Y));
             }
 
         }

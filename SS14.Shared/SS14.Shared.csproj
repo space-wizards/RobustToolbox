@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProjectGuid>{0529F740-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>SS14.Shared</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>SS14.Shared</RootNamespace>
+    <StartArguments>
+    </StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <BaseAddress>285212672</BaseAddress>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <BaseAddress>285212672</BaseAddress>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BsDiffLib">
+      <Name>BsDiffLib</Name>
+      <HintPath>..\Third-Party\BsDiffLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <Name>Microsoft.CSharp</Name>
+    </Reference>
+    <Reference Include="NetSerializer">
+      <Name>NetSerializer</Name>
+      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="sfmlnet-system-2">
+      <Name>sfmlnet-system-2</Name>
+      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Core">
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <Name>System.Data.DataSetExtensions</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <Name>System.Xml.Linq</Name>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Name>Lidgren.Network</Name>
+      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AdminPermissions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BoundKeyEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EntityEvents.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Equippable\EquippableComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Item\ItemComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Equipment\EquipmentComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Renderable\WearableAnimatedSpriteComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Events\InputEvents.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Hands\HandsComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Inventory\InventoryComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="InventoryLocEnum.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GameStateDelta.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GameStates\GameState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GameStates\PlayerState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\ComponentParameter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\ComponentReplyMessage.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Collidable\CollidableComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Damageable\DamageableComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Hitbox\HitboxComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Direction\DirectionComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Light\LightComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Mover\MoverComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Particles\ParticleSystemComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Physics\PhysicsComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Renderable\AnimatedSpriteComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Renderable\RenderableComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Renderable\SpriteComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\StatusEffect\StatusEffectComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Transform\TransformComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Component\Velocity\VelocityComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Crafting\CraftingEntry.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\ComponentState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\EntityState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\EntitySystemMessage\InventorySystemMessages.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\EntitySystemMessage\EntitySystemMessage.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\MarshalComponentParameter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\Server\ServerDelegates.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\StatusEffect\StatusEffectState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Lighting.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Objectives\ObjectiveParameterType.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Objectives\ObjectiveType.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlayerActionEnum.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EntityBaseClass.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Banlist.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CSharpExtensions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GlobalConstants.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IncomingEntityComponentMessage.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IncomingEntityMessage.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IncomingNetworkMessageArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PlacementInformation.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\ComponentEnums.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GO\ItemFlags.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="JobHandler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="KeyFunctions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PostProcessingEffects.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ProfilerEnums.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="QuadTree.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Serialization\SS14Serializer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Serialization\INetSerializableType.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ServerEnums\LogLevel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ServerEnums\RunLevel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ServicesEnum.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SessionStatusEnum.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BodypartEnum.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypeEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\BitStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\CommandParsing.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\NetParamsPacker.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\PlatformDetector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\PlatformTools.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\RandomString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\Range.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utility\unZipString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Maths\Vector2.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Maths\Vector3.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Maths\Vector4.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NetworkEnums.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ChatConfig.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="UIComponents.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="VectorEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <EmbeddedResource Include="Utility\BitStream.resx">
+      <DependentUpon>BitStream.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

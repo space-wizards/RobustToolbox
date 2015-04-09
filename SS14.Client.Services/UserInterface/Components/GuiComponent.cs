@@ -1,4 +1,4 @@
-﻿using GorgonLibrary.InputDevices;
+﻿using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
@@ -17,8 +17,8 @@ namespace SS14.Client.Services.UserInterface.Components
         #region IGuiComponent Members
 
         public GuiComponentType ComponentClass { get; protected set; }
-        public Point Position { get; set; }
-        public Rectangle ClientArea { get; set; }
+        public virtual Point Position { get; set; }
+        public virtual Rectangle ClientArea { get; set; }
 
         public int ZDepth { get; set; }
 
@@ -72,26 +72,26 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-        public virtual bool MouseDown(MouseInputEventArgs e)
+		public virtual bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public virtual bool MouseUp(MouseInputEventArgs e)
+		public virtual bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public virtual void MouseMove(MouseInputEventArgs e)
+		public virtual void MouseMove(MouseMoveEventArgs e)
         {
         }
 
-        public virtual bool MouseWheelMove(MouseInputEventArgs e)
+		public virtual bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-        public virtual bool KeyDown(KeyboardInputEventArgs e)
+		public virtual bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

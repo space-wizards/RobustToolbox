@@ -1,10 +1,11 @@
-﻿using GorgonLibrary;
-using SS14.Client.Interfaces.Collision;
+﻿using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -51,7 +52,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public bool TryCollision(Vector2D offset, bool bump = false)
+        public bool TryCollision(Vector2 offset, bool bump = false)
         {
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }

@@ -1,16 +1,16 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Input;
+﻿using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -34,7 +34,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
 
-        public Vector2D Size = new Vector2D(475, 175);
+        public Vector2 Size = new Vector2(475, 175);
 
         private bool _active;
         private bool _disposing;
@@ -49,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
 
-            Position = new Point(Gorgon.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
+            Position = new Point((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
@@ -206,9 +206,9 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Key == KeyboardKeys.T && !Active)
+            if (e.Code == Keyboard.Key.T && !Active)
             {
                 _userInterfaceManager.SetFocus(this);
                 Active = true;
@@ -218,7 +218,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (!Active)
                 return false;
 
-            if (e.Key == KeyboardKeys.Enter)
+            if (e.Code == Keyboard.Key.Return)
             {
                 if (TextSubmitted != null && !String.IsNullOrWhiteSpace(_currentInputText.ToString()))
                 {
@@ -238,7 +238,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Up)
+            if (e.Code == Keyboard.Key.Up)
             {
                 if (_inputIndex == -1 && _inputHistory.Any())
                 {
@@ -260,7 +260,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Down)
+            if (e.Code == Keyboard.Key.Down)
             {
                 if (_inputIndex == 0)
                 {
@@ -277,18 +277,14 @@ namespace SS14.Client.Services.UserInterface.Components
                 }
             }
 
-            if (e.Key == KeyboardKeys.Back)
+            if (e.Code == Keyboard.Key.BackSpace)
             {
                 if (_currentInputText.Length > 0)
                     _currentInputText.Remove(_currentInputText.Length - 1, 1);
                 return true;
             }
 
-            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character) ||
-                char.IsWhiteSpace(e.CharacterMapping.Character) || char.IsSymbol(e.CharacterMapping.Character))
-            {
-                _currentInputText.Append(e.Shift ? e.CharacterMapping.Shifted : e.CharacterMapping.Character);
-            }
+            
 
             return true;
         }
@@ -307,7 +303,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             base.Update(frameTime);
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
-            _textInputLabel.Text.Size = new Size(ClientArea.Width - 10, 12);
+            // _textInputLabel.Text.Scale = new SFML.System.Vector2f (ClientArea.Width - 10, 12);
             _textInputLabel.Update(frameTime);
             foreach (Label l in _entries) l.Update(frameTime);
         }
@@ -315,12 +311,10 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (_disposing || !IsVisible()) return;
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.Modulated;
-            Gorgon.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                       Color.FromArgb(100, Color.Black));
-            Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                 Color.FromArgb(100, Color.LightGray));
-            Gorgon.CurrentRenderTarget.BlendingMode = BlendingModes.None;
+            CluwneLib.BlendingMode = BlendingModes.Modulated;
+            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.Black));
+            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.LightGray));
+            CluwneLib.BlendingMode = BlendingModes.None;
             DrawLines();
         }
     }

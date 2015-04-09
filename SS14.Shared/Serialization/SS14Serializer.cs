@@ -14,11 +14,11 @@ namespace SS14.Shared.Serialization
         {
             if (!_initialized)
             {
-                Type[] types = {};
+                Type[] types = { };
                 foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     types =
-                        types.Concat(a.GetTypes().Where(t => typeof (INetSerializableType).IsAssignableFrom(t))).ToArray
+                        types.Concat(a.GetTypes().Where(t => typeof(INetSerializableType).IsAssignableFrom(t))).ToArray
                             ();
                 }
 

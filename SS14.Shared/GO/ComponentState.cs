@@ -6,7 +6,8 @@ namespace SS14.Shared.GO
     [Serializable]
     public class ComponentState : INetSerializableType
     {
-        [NonSerialized] public float ReceivedTime;
+        [NonSerialized]
+        public float ReceivedTime;
         public ComponentState(ComponentFamily family)
         {
             Family = family;

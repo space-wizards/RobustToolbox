@@ -9,7 +9,7 @@ namespace SS14.Shared.GO.Component.Item
         public InventoryLocation InventoryLocation;
 
         public ItemComponentState(int? holder, InventoryLocation inventoryLocation)
-            :base(ComponentFamily.Item)
+            : base(ComponentFamily.Item)
         {
             Holder = holder;
             InventoryLocation = inventoryLocation;

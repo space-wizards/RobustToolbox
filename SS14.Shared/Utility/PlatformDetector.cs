@@ -1,16 +1,21 @@
 using System;
 using System.IO;
 
-namespace SS14.Shared.Utility {
-    public enum Platform {
+namespace SS14.Shared.Utility
+{
+    public enum Platform
+    {
         Windows,
         Linux,
         Mac
     }
 
-    public class PlatformDetector {
-        public static Platform DetectPlatform() {
-            switch (Environment.OSVersion.Platform) {
+    public class PlatformDetector
+    {
+        public static Platform DetectPlatform()
+        {
+            switch (Environment.OSVersion.Platform)
+            {
                 case PlatformID.Unix:
                     // Well, there are chances MacOSX is reported as Unix instead of MacOSX.
                     // Instead of platform check, we'll do a feature checks (Mac specific root folders)

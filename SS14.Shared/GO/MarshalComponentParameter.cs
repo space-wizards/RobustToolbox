@@ -40,7 +40,7 @@ namespace SS14.Shared.GO
             var ms = new MemoryStream();
             //Thank you NetSerializer
             Serializer.Serialize(ms, this);
-            message.Write((int) ms.Length);
+            message.Write((int)ms.Length);
             message.Write(ms.ToArray());
         }
 
@@ -66,7 +66,7 @@ namespace SS14.Shared.GO
             var ms = new MemoryStream(bytes);
 
             //Thank you NetSerializer
-            return (MarshalComponentParameter) Serializer.Deserialize(ms);
+            return (MarshalComponentParameter)Serializer.Deserialize(ms);
         }
 
         public static MarshalComponentParameter Deserialize(byte[] bytes)
@@ -76,7 +76,7 @@ namespace SS14.Shared.GO
                 InitSerializer();
             }
             var ms = new MemoryStream(bytes);
-            return (MarshalComponentParameter) Serializer.Deserialize(ms);
+            return (MarshalComponentParameter)Serializer.Deserialize(ms);
         }
     }
 }

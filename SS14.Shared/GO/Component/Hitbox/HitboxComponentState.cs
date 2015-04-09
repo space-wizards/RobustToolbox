@@ -14,7 +14,7 @@ namespace SS14.Shared.GO.Component.Hitbox
         public RectangleF AABB;
 
         public HitboxComponentState(RectangleF aabb)
-            :base(ComponentFamily.Hitbox)
+            : base(ComponentFamily.Hitbox)
         {
             AABB = aabb;
         }

@@ -9,7 +9,7 @@ namespace SS14.Shared.GO.Component.EntityStats
         public Dictionary<DamageType, int> ArmorStats = new Dictionary<DamageType, int>();
 
         public EntityStatsComponentState(Dictionary<DamageType, int> armorStats)
-            :base(ComponentFamily.EntityStats)
+            : base(ComponentFamily.EntityStats)
         {
             ArmorStats = armorStats;
         }

@@ -12,7 +12,7 @@ namespace SS14.Shared.GO.Component.Mover
         public int? Master;
 
         public MoverComponentState(float x, float y, float velx, float vely)
-            :base(ComponentFamily.Mover)
+            : base(ComponentFamily.Mover)
         {
             X = x;
             Y = y;

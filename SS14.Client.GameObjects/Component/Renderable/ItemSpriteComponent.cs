@@ -6,7 +6,7 @@ using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {

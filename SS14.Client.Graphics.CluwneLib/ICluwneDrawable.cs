@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SS14.Client.Graphics.CluwneLib
+namespace SS14.Client.Graphics
 {
     public interface ICluwneDrawable
     {

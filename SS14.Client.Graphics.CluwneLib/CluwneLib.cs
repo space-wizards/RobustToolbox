@@ -1,19 +1,19 @@
 ﻿using System;
 using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Client.Graphics.CluwneLib.Timing;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Timing;
 using Color = System.Drawing.Color;
 using SColor = SFML.Graphics.Color;
-using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.Shader;
 using SS14.Shared.Maths;
 using System.Drawing;
 using SFML.Window;
 using System.Collections.Generic;
 using System.Collections;
 
-namespace SS14.Client.Graphics.CluwneLib
+namespace SS14.Client.Graphics
 {
     public class CluwneDebug {
         public int RenderingDelay=0;

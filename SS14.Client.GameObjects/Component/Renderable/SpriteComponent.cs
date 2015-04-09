@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
-using CluwneSprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using CluwneSprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {

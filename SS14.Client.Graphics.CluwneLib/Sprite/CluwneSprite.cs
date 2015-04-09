@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Color = SFML.Graphics.Color;
+using SColor = System.Drawing.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
 using BaseSprite = SFML.Graphics.Sprite;
 using Image = SFML.Graphics.Image;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.Render;
 using System.Drawing;
 
-namespace SS14.Client.Graphics.CluwneLib.Sprite
+namespace SS14.Client.Graphics.Sprite
 {
     public class CluwneSprite : BaseSprite, ICluwneDrawable
     {

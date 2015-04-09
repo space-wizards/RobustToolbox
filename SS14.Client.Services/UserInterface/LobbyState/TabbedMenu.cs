@@ -3,7 +3,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SFML.Window;
 

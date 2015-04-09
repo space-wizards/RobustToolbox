@@ -9,7 +9,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 using SS14.Shared.Maths;
 

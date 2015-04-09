@@ -9,7 +9,7 @@ using Color = System.Drawing.Color;
 
 
 
-namespace SS14.Client.Graphics.CluwneLib.Sprite
+namespace SS14.Client.Graphics.Sprite
 {
     /// <summary>
     /// Sprite that contains Text

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using SFML.Graphics;
 using Color = System.Drawing.Color;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.Graphics.CluwneLib.Render
+namespace SS14.Client.Graphics.Render
 {
     /// <summary>
     /// Creates RenderImages that can be rendered to

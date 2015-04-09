@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SS14.Client.Graphics.CluwneLib
+namespace SS14.Client.Graphics
 {
 	/// <summary>
 	/// Enumeration for primitive drawing style.

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace SS14.Client.Graphics.CluwneLib.Collection
+namespace SS14.Client.Graphics.Collection
 {
     /// <summary>
     /// An abstract class representing a standard collection of objects.

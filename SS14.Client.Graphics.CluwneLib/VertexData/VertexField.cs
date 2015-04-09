@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
-using SS14.Client.Graphics.CluwneLib.VertexData;
-using VertexFieldContext = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldType;
+using SS14.Client.Graphics.VertexData;
+using VertexFieldContext = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldContext;
+using VertexFieldType = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldType;
 
 
-namespace SS14.Client.Graphics.CluwneLib.VertexData
+namespace SS14.Client.Graphics.VertexData
 {
 	/// <summary>
 	/// VertexField

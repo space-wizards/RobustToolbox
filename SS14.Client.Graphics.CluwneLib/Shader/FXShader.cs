@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using SFML.Graphics;
 using BaseShader = SFML.Graphics.Shader;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.Render;
 
-namespace SS14.Client.Graphics.CluwneLib.Shader
+namespace SS14.Client.Graphics.Shader
 {
     public class FXShader : BaseShader
     {

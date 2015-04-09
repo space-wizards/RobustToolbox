@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using SS14.Client.Graphics.CluwneLib.Collection;
+using SS14.Client.Graphics.Collection;
 using SFML.Graphics;
 
 
-namespace SS14.Client.Graphics.CluwneLib
+namespace SS14.Client.Graphics
 {
     public class TextureList
         : BaseCollection<Texture>

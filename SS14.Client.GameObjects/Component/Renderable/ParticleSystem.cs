@@ -1,8 +1,8 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;

@@ -9,7 +9,7 @@ using Image = SFML.Graphics.Image;
 using SFML.System;
 using System.Diagnostics;
 
-namespace SS14.Client.Graphics.CluwneLib.Sprite
+namespace SS14.Client.Graphics.Sprite
 {
     /// <summary>
     /// Provides optimized drawing of sprites

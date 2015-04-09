@@ -1,5 +1,5 @@
 ﻿using SS14.Client.ClientWindow;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;

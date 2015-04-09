@@ -18,6 +18,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public Color BackgroundColor = Color.DarkGray;
         public bool DrawBackground = false;
         public bool DrawBorder = true;
+        public float BorderSize = 1.0f;
 
         protected Size Size;
         protected RenderImage clippingRI;
@@ -151,8 +152,8 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarV.Render();
 
             if (DrawBorder)
-             CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                     Color.Black);
+             CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+                                                     BorderSize, Color.Black);
         }
 
         public override void Dispose()

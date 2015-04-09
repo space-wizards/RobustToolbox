@@ -1,5 +1,4 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
@@ -13,6 +12,8 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using System.Linq;
+using SFML.Window;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -20,7 +21,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         public Entity Entity;
         public InventoryLocation Hand;
-        public Sprite HeldSprite;
+		public CluwneSprite HeldSprite;
     }
 
     public class HandsGui : GuiComponent
@@ -29,7 +30,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-        private readonly Sprite handSlot;
+		private readonly CluwneSprite handSlot;
         private readonly int spacing = 1;
 
         public UiHandInfo LeftHand;
@@ -70,18 +71,18 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (hands.CurrentHand == InventoryLocation.HandLeft)
             {
-                handSlot.Color = Color.White;
+                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
                 handSlot.Draw(handL);
 
-                handSlot.Color = _inactiveColor;
+                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
                 handSlot.Draw(handR);
             }
             else
             {
-                handSlot.Color = Color.White;
+                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A); ;
                 handSlot.Draw(handR);
 
-                handSlot.Color = _inactiveColor;
+                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
                 handSlot.Draw(handL);
             }
 
@@ -162,17 +163,17 @@ namespace SS14.Client.Services.UserInterface.Components
             equipComponent.SendSwitchHands(hand);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            switch (e.Buttons)
+            switch (e.Button)
             {
-                case MouseButtons.Right:
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                case Mouse.Button.Right:
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         SendSwitchHandTo(InventoryLocation.HandLeft);
                         return true;
                     }
-                    if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         SendSwitchHandTo(InventoryLocation.HandRight);
                         return true;
@@ -182,9 +183,9 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -198,7 +199,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         if (hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] == null)
                         {
@@ -218,7 +219,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         return true;
                     }
 
-                    else if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         if (hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] == null)
                         {
@@ -240,13 +241,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 }
                 else
                 {
-                    if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                    if (handL.Contains(new Point((int) e.X, (int) e.Y)) &&
                         hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
                         hands.HandSlots[InventoryLocation.HandLeft].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                _playerManager.ControlledEntity.Uid);
                     }
-                    else if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)) &&
                              hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
                         hands.HandSlots[InventoryLocation.HandRight].SendMessage(this, ComponentMessageType.ClickedInHand,
@@ -257,16 +258,16 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+        public void MouseMove(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 Entity entity = _playerManager.ControlledEntity;
                 var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
-                switch (e.Buttons)
+                switch (e.Button)
                 {
-                    case MouseButtons.Left:
-                        if (handL.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    case Mouse.Button.Left:
+                        if (handL.Contains(new Point((int) e.X, (int) e.Y)))
                         {
                             if (hands.HandSlots.Keys.Contains(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] != null)
                             {
@@ -274,7 +275,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                 _userInterfaceManager.DragInfo.StartDrag(entityL);
                             }
                         }
-                        if (handR.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                        if (handR.Contains(new Point((int) e.X, (int) e.Y)))
                         {
                             if (hands.HandSlots.Keys.Contains(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                             {
@@ -287,12 +288,12 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

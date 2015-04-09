@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using System;
@@ -71,29 +72,34 @@ namespace SS14.Client.Services.Lighting
             return _lights.ToArray();
         }
 
-        public ILight[] lightsInRadius(Vector2D point, float radius)
+        public ILight[] lightsInRadius(Vector2 point, float radius)
         {
             return _lights.FindAll(l => Math.Abs((l.Position - point).Length) <= radius).ToArray();
         }
 
         public ILight[] LightsIntersectingRect(RectangleF rect)
-        {
-            return
-                _lights.FindAll(
-                    l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > new Vector2D(rect.Left, rect.Top)
-                         &&
-                         l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < new Vector2D(rect.Right, rect.Bottom))
-                    .ToArray();
+        {   //TODO Rewrite this
+            //return
+            //    _lights.FindAll(
+            //        l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > new Vector2(rect.Left, rect.Top)
+            //             &&
+            //             l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < new Vector2(rect.Right, rect.Bottom))
+            //        .ToArray();
+            return null;
         }
 
-        public ILight[] LightsIntersectingPoint(Vector2D point)
+        public ILight[] LightsIntersectingPoint(Vector2 point)
         {
-            return
-                _lights.FindAll(
-                    l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > point
-                         &&
-                         l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < point)
-                    .ToArray();
+            //return
+            //    _lights.FindAll(
+            //        l => l.LightArea.LightPosition + l.LightArea.LightAreaSize/2 > point
+            //             &&
+            //             l.LightArea.LightPosition - l.LightArea.LightAreaSize/2 < point)
+            //        .ToArray();
+
+            return null;
+
+
         }
 
         public ILight CreateLight()
@@ -109,7 +115,7 @@ namespace SS14.Client.Services.Lighting
             }
         }
 
-        public void RecalculateLightsInView(Vector2D point)
+        public void RecalculateLightsInView(Vector2 point)
         {
             ILight[] lights = LightsIntersectingPoint(point);
             foreach (ILight l in lights)

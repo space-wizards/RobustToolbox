@@ -21,6 +21,9 @@ namespace SS14.Client.Services.Configuration
                 var config = (Configuration) configLoader.Deserialize(configReader);
                 configReader.Close();
                 Configuration = config;
+
+                config.ResourcePack=SS14.Shared.Utility.PlatformTools.SanePath(config.ResourcePack);
+
             }
             else
             {

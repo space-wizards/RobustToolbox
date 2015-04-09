@@ -1,8 +1,8 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using SS14.Client.ClientWindow;
+﻿using SS14.Client.ClientWindow;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -13,7 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -51,7 +52,14 @@ namespace SS14.Client.GameObjects
 
         public RectangleF AverageAABB
         {
-            get { return sprite.AverageAABB; }
+            get {
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+                var aaabb = sprite.AverageAABB;
+                return new RectangleF(
+                    aaabb.X / tileSize, aaabb.Y / tileSize,
+                    aaabb.Width / tileSize, aaabb.Height / tileSize
+                    );
+            }
         }
 
         #region ISpriteComponent Members
@@ -60,8 +68,10 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return new RectangleF(0, 0, sprite.AABB.Width,
-                                      sprite.AABB.Height);
+                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+
+                return new RectangleF(0, 0, sprite.AABB.Width / tileSize,
+                                      sprite.AABB.Height / tileSize);
             }
         }
         
@@ -182,7 +192,7 @@ namespace SS14.Client.GameObjects
         {
             if (sprite == null || !visible) return false;
 
-            Sprite spriteToCheck = sprite.GetCurrentSprite();
+            CluwneSprite spriteToCheck = sprite.GetCurrentSprite();
 
             var AABB =
                 new RectangleF(
@@ -192,17 +202,21 @@ namespace SS14.Client.GameObjects
                     (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
             if (!AABB.Contains(worldPos)) return false;
 
-            var spritePosition = new Point((int)(worldPos.X - AABB.X + spriteToCheck.ImageOffset.X),
-                                           (int)(worldPos.Y - AABB.Y + spriteToCheck.ImageOffset.Y));
+            // Get the sprite's position within the texture
+            var texRect = spriteToCheck.TextureRect;
 
-            Image.ImageLockBox imgData = spriteToCheck.Image.GetImageData();
-            imgData.Lock(false);
-            Color pixColour = Color.FromArgb((int)(imgData[spritePosition.X, spritePosition.Y]));
+            // Get the clicked position relative to the texture
+            var spritePosition = new Point((int)(worldPos.X - AABB.X + texRect.Left),
+                                           (int)(worldPos.Y - AABB.Y + texRect.Top));
+            
+            if (spritePosition.X < 0 || spritePosition.Y < 0)
+                return false;
 
-            imgData.Dispose();
-            imgData.Unlock();
-
-            if (pixColour.A == 0) return false;
+            // Copy the texture to image
+            var img = spriteToCheck.Texture.CopyToImage();
+            // Check if the clicked pixel is opaque
+            if (img.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A == 0)
+                return false;
 
             return true;
         }
@@ -223,7 +237,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2D topLeft, Vector2D bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             UpdateSlaves();
 
@@ -243,18 +257,15 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            Vector2D renderPos =
-                ClientWindowData.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            
+            Vector2 renderPos = ClientWindowData.Singleton.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + sprite.AABB.Right <
-                topLeft.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                ||
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                sprite.AABB.Bottom < topLeft.Y
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
+            if (ownerPos.X + sprite.AABB.Right < topLeft.X
+                || ownerPos.X > bottomRight.X
+                || ownerPos.Y + sprite.AABB.Bottom < topLeft.Y
+                || ownerPos.Y > bottomRight.Y)
                 return;
 
             sprite.HorizontalFlip = flip;
@@ -278,8 +289,8 @@ namespace SS14.Client.GameObjects
             //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
-                                   ClientWindowData.Singleton.ScreenOrigin, aabb);
+                _speechBubble.Draw(ClientWindowData.Singleton.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                                   Vector2.Zero, aabb);
 
         }
 
@@ -311,7 +322,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SetSpriteCenter(Vector2D center)
+        public void SetSpriteCenter(Vector2 center)
         {
             sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
                                center.Y - (sprite.AABB.Height / 2));

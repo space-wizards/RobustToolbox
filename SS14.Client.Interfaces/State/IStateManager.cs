@@ -1,5 +1,7 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿
+
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Event;
 
 namespace SS14.Client.Interfaces.State
 {
@@ -8,11 +10,12 @@ namespace SS14.Client.Interfaces.State
         IState CurrentState { get; }
         void RequestStateChange<T>() where T : IState;
         void Update(FrameEventArgs args);
-        void KeyDown(KeyboardInputEventArgs e);
-        void KeyUp(KeyboardInputEventArgs e);
-        void MouseUp(MouseInputEventArgs e);
-        void MouseDown(MouseInputEventArgs e);
-        void MouseMove(MouseInputEventArgs e);
-        void MouseWheelMove(MouseInputEventArgs e);
+        void KeyDown(KeyEventArgs e);
+        void KeyUp(KeyEventArgs e);
+        void MouseUp(MouseButtonEventArgs e);
+        void MouseDown(MouseButtonEventArgs e);
+        void MouseMove(MouseMoveEventArgs e);
+        void MouseWheelMove(MouseWheelEventArgs e);
+        void FormResize();
     }
 }

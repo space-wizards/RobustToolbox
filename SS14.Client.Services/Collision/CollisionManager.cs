@@ -1,12 +1,14 @@
-﻿using GorgonLibrary;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
+using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Collision
 {
@@ -77,7 +79,8 @@ namespace SS14.Client.Services.Collision
                     collided = true;
                 }
             }
-            return collided;
+
+            return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(collider, true).Any(t => t.Tile.TileDef.IsCollidable);
         }
 
         /// <summary>
@@ -87,7 +90,7 @@ namespace SS14.Client.Services.Collision
         /// <returns></returns>
         public bool TryCollide(Entity entity)
         {
-            return TryCollide(entity, Vector2D.Zero);
+            return TryCollide(entity, Vector2.Zero);
         }
 
         /// <summary>
@@ -95,7 +98,7 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(Entity entity, Vector2D offset, bool bump = true)
+        public bool TryCollide(Entity entity, Vector2 offset, bool bump = true)
         {
             var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
@@ -112,23 +115,18 @@ namespace SS14.Client.Services.Collision
                     new PointF(ColliderAABB.Left, ColliderAABB.Bottom)
                 };
 
-            //Get the buckets that correspond to the collider's points.
-            List<CollidableBucket> buckets = points.Select(GetBucket).Distinct().ToList(); // PERF: ToList() is absolutely unnecessary here.
-
-            //Get all of the points
-            var cpoints = new List<CollidablePoint>();
-            foreach (CollidableBucket bucket in buckets)
-            {
-                cpoints.AddRange(bucket.GetPoints());
-            }
-
-            //Expand points to distinct AABBs
-            List<CollidableAABB> aabBs = (cpoints.Select(cp => cp.ParentAABB)).Distinct().ToList(); // PERF: ToList() and Distinct() are absolutely unnecessary here.
+            var aabbs =
+                points
+                .Select(GetBucket) // Get the buckets that correspond to the collider's points.
+                .Distinct()
+                .SelectMany(b => b.GetPoints()) // Get all of the points
+                .Select(p => p.ParentAABB) // Expand points to distinct AABBs
+                .Distinct()
+                .Where(aabb => aabb.Collidable.AABB.IntersectsWith(ColliderAABB)); //try all of the AABBs against the target rect.
 
             //try all of the AABBs against the target rect.
             bool collided = false;
-            foreach (
-                CollidableAABB aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(ColliderAABB)))
+            foreach (var aabb in aabbs)
             {
                 if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                 {
@@ -137,7 +135,7 @@ namespace SS14.Client.Services.Collision
 
                 if(bump) aabb.Collidable.Bump(entity);
             }
-            return collided;
+            return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(ColliderAABB, true).Any(t => t.Tile.TileDef.IsCollidable);
         }
 
 

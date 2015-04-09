@@ -1,14 +1,19 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib;
+using SFML.Graphics;
+using SFML.System;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -52,9 +57,10 @@ namespace SS14.Client.Services.State.States
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))
                              {
                                  Color = Color.Black,
-                                 ShadowColor = Color.DimGray,
+                                 ShadowColor = Color.Transparent,
                                  Shadowed = true,
-                                 ShadowOffset = new Vector2D(1, 1)
+                                 //TODO CluwneSprite ShadowOffset
+                                 // ShadowOffset = new Vector2(1, 1)
                              };
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
@@ -73,7 +79,7 @@ namespace SS14.Client.Services.State.States
             jobListMsg.Write((byte) NetMessage.JobList); //Request Joblist.
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = Color.LightSteelBlue};
+            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = System.Drawing.Color.LightSteelBlue};
             joinButton.Position = new Point(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
@@ -87,36 +93,40 @@ namespace SS14.Client.Services.State.States
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
 
-            Gorgon.CurrentRenderTarget.Clear();
+            CluwneLib.CurrentRenderTarget.Clear();
         }
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            Gorgon.CurrentRenderTarget.Clear();
-            Gorgon.CurrentRenderTarget.FilledRectangle(5, 5, 600, 200, Color.SlateGray);
-            Gorgon.CurrentRenderTarget.FilledRectangle(625, 5, Gorgon.CurrentRenderTarget.Width - 625 - 5,
-                                                       Gorgon.CurrentRenderTarget.Height - 5 - 6, Color.SlateGray);
-            Gorgon.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
-            _lobbyText.Position = new Vector2D(10, 10);
+            //public Vertex(Vector2f position, Color color, Vector2f texCoords);
+            RectangleShape test = new RectangleShape(new Vector2f(200, 200));
+
+            CluwneLib.CurrentRenderTarget.Clear();
+            CluwneLib.CurrentRenderTarget.Draw(test);
+           // CluwneLib.CurrentRenderTarget.Draw(625 , 5 , CluwneLib.CurrentRenderTarget.Size.X - 625 - 5 , CluwneLib.CurrentRenderTarget.Size.Y- 5 - 6, Color.SlateGray);
+
+            // CluwneLib.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
+
+            _lobbyText.Position = new Vector2(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 30);
+            _lobbyText.Position = new Vector2(10, 30);
             _lobbyText.Text = "Server-Port: " + _serverPort;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 50);
+            _lobbyText.Position = new Vector2(10, 50);
             _lobbyText.Text = "Max Players: " + _serverMaxPlayers;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 70);
+            _lobbyText.Position = new Vector2(10, 70);
             _lobbyText.Text = "Gamemode: " + _gameType;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2D(10, 110);
+            _lobbyText.Position = new Vector2(10, 110);
             _lobbyText.Text = "MOTD: \n" + _welcomeString;
             _lobbyText.Draw();
 
             int pos = 225;
             foreach (string plrStr in _playerListStrings)
             {
-                _lobbyText.Position = new Vector2D(10, pos);
+                _lobbyText.Position = new Vector2(10, pos);
                 _lobbyText.Text = plrStr;
                 _lobbyText.Draw();
                 pos += 20;
@@ -134,7 +144,7 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.DisposeAllComponents();
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-            RenderTargetCache.DestroyAll();
+            //TODO RenderTargetCache.DestroyAll(); 
         }
 
         public void Update(FrameEventArgs e)
@@ -143,7 +153,7 @@ namespace SS14.Client.Services.State.States
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-                playerListMsg.Write((byte) NetMessage.PlayerList); //Request Playerlist.
+                playerListMsg.Write((byte) NetMessage.PlayerList); // Request Playerlist.
                 NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
                 _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
@@ -187,7 +197,7 @@ namespace SS14.Client.Services.State.States
                             AddChat(text);
                             break;
                         case NetMessage.PlayerCount:
-                            //var newCount = message.ReadByte();
+                            //TODO var newCount = message.ReadByte();
                             break;
                         case NetMessage.PlayerList:
                             HandlePlayerList(message);
@@ -307,32 +317,39 @@ namespace SS14.Client.Services.State.States
         }
 
         #region Input
-
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown ( KeyEventArgs e )
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp ( KeyEventArgs e )
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+        public void MouseUp ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+        public void MouseDown ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+        public void MouseMoved ( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed ( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove ( MouseMoveEventArgs e )
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+        public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

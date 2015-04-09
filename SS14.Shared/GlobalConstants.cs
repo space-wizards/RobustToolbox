@@ -23,7 +23,7 @@
         public const byte SOUTH = 4;
         public const byte WEST = 8;
 
-        public const float HumanWalkSpeed = 150f;
-        public const float HumanRunSpeed = 400f;
+        public const float HumanWalkSpeed = 4f;
+        public const float HumanRunSpeed = 10f;
     }
 }

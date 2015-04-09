@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using SS14.Client.Interfaces.Configuration;
+﻿using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
@@ -7,6 +6,7 @@ using SS14.Shared.GameObjects.System;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -25,7 +25,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
-            Vector2D newPosition;
+            Vector2 newPosition;
             foreach (var entity in entities)
             {
                 //Get transform component
@@ -48,14 +48,14 @@ namespace SS14.Client.GameObjects.EntitySystems
                     currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
                     // Fall back to setting the position to the "To" state
-                    newPosition = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    newPosition = new Vector2(transform.lerpStateTo.X, transform.lerpStateTo.Y);
                 }
                 else //OTHERWISE
                 {
                     //Interpolate
 
-                    var p1 = new Vector2D(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
-                    var p2 = new Vector2D(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    var p1 = new Vector2(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
+                    var p2 = new Vector2(transform.lerpStateTo.X, transform.lerpStateTo.Y);
                     var t1 = transform.lerpStateFrom.ReceivedTime;
                     var t2 = transform.lerpStateTo.ReceivedTime;
 
@@ -98,7 +98,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         //Only for components with a keyboard input mover component, and a collider component
                         // Check for collision so we don't get shit stuck in objects
-                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        if (false && entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
                         {
                             //Check for collision
                             var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
@@ -128,14 +128,14 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
         }
         
-        private Vector2D EaseExponential(float time, Vector2D v1, Vector2D v2, float duration)
+        private Vector2 EaseExponential(float time, Vector2 v1, Vector2 v2, float duration)
         {
             var dx = (v2.X - v1.X);
             var x = EaseExponential(time, v1.X, dx, duration);
             
             var dy = (v2.Y - v1.Y);
             var y = EaseExponential(time, v1.Y, dy, duration);
-            return new Vector2D(x,y);
+            return new Vector2(x,y);
         }
 
         private float EaseExponential(float t, float b, float c, float d)
@@ -143,7 +143,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             return c * ((float)-Math.Pow(2, -10 * t / d) + 1) + b;
         }
 
-        private Vector2D Interpolate(Vector2D v1, Vector2D v2, float control, bool allowExtrapolation)
+        private Vector2 Interpolate(Vector2 v1, Vector2 v2, float control, bool allowExtrapolation)
         {
             if (!allowExtrapolation && (control > 1 || control < 0))
             {
@@ -159,7 +159,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 return
                     (
-                        new Vector2D
+                        new Vector2
                             (
                             v1.X * (1 - control) + v2.X * control,
                             v1.Y * (1 - control) + v2.Y * control

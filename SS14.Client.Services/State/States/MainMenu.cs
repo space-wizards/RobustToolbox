@@ -1,14 +1,19 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
+using Color = System.Drawing.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.State.States
 {
@@ -19,7 +24,7 @@ namespace SS14.Client.Services.State.States
         private const float ConnectTimeOut = 5000.0f;
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
-        private readonly Sprite _background;
+		private readonly CluwneSprite _background;
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;
@@ -30,6 +35,9 @@ namespace SS14.Client.Services.State.States
         private DateTime _connectTime;
         private bool _isConnecting;
 
+        private int _Width;
+        private int _Height;
+
         #endregion
 
         #region Properties
@@ -39,8 +47,10 @@ namespace SS14.Client.Services.State.States
         public MainScreen(IDictionary<Type, object> managers)
             : base(managers)
         {
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
             _background = ResourceManager.GetSprite("mainbg_filler");
-            _background.Smoothing = Smoothing.Smooth;
+          //  _background.Smoothing = Smoothing.Smooth;
 
             _btnConnect = new ImageButton
                                {
@@ -71,14 +81,16 @@ namespace SS14.Client.Services.State.States
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
             _lblVersion.Text.Color = Color.WhiteSmoke;
-            _lblVersion.Position = new Point(Gorgon.Screen.Width - _lblVersion.ClientArea.Width - 3,
-                                             Gorgon.Screen.Height - _lblVersion.ClientArea.Height - 3);
+
+            _lblVersion.Position = new Point(_Width -  _lblVersion.ClientArea.Width  - 3,
+                                             _Height - _lblVersion.ClientArea.Height - 3);
+
 
             _imgTitle = new SimpleImage
-                              {
-                                  Sprite = "SpaceStationLogoColor",
-                                  Position = new Point(Gorgon.Screen.Width - 550, 100)
-                              };
+            {
+                Sprite = "SpaceStationLogoColor",
+                Position = new Point(_Width-550, 100),
+            };
 
 			_lblVersion.Update(0);
 			_imgTitle.Update(0);
@@ -94,44 +106,53 @@ namespace SS14.Client.Services.State.States
 
         #region IState Members
 
-        public void GorgonRender(FrameEventArgs e)
+        public void Render(FrameEventArgs e)
         {
-            _background.Draw(new Rectangle(0, 0, Gorgon.Screen.Width, Gorgon.Screen.Height));
+           _background.Draw(new Rectangle(0, 0,(int) _Width, (int) _Height));
         }
 
         public void FormResize()
         {
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
         }
 
         #endregion
 
         #region Input
-
-        public void KeyDown(KeyboardInputEventArgs e)
+        public void KeyDown ( KeyEventArgs e )
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyboardInputEventArgs e)
+        public void KeyUp ( KeyEventArgs e )
         {
         }
 
-        public void MouseUp(MouseInputEventArgs e)
+        public void MouseUp ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseInputEventArgs e)
+        public void MouseDown ( MouseButtonEventArgs e )
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseInputEventArgs e)
+        public void MouseMoved ( MouseMoveEventArgs e )
+        {
+
+        }
+        public void MousePressed ( MouseButtonEventArgs e )
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        public void MouseMove ( MouseMoveEventArgs e )
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseInputEventArgs e)
+        public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -140,7 +161,7 @@ namespace SS14.Client.Services.State.States
 
         private void _buttExit_Clicked(ImageButton sender)
         {
-            Environment.Exit(0);
+            CluwneLib.Stop();
         }
 
         private void _buttOptions_Clicked(ImageButton sender)
@@ -182,23 +203,23 @@ namespace SS14.Client.Services.State.States
                                    BounceRotate = false,
                                    BounceRotateAngle = 10,
                                    ParallaxScale = 0.001f,
-                                   SpriteLocation = new Vector2D(0, 0),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(0, 0),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = 0.0f
                                });
 
-            //            DrawSprite.Axis = new Vector2D(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
+            // DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
 /*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                              {
                                  BounceRotate = true,
                                  BounceRotateAngle = 10,
                                  ParallaxScale = 0.004f,
-                                 SpriteLocation = new Vector2D(-50, -50),
-                                 Velocity = new Vector2D(0, 0),
+                                 SpriteLocation = new Vector2(-50, -50),
+                                 Velocity = new Vector2(0, 0),
                                  RotationSpeed = 0.25f,
                              };*/
 
-            //clouds.DrawSprite.Axis = new Vector2D(clouds.DrawSprite.Width/2f, clouds.DrawSprite.Height/2f);
+            //clouds.DrawSprite.Axis = new Vector2(clouds.DrawSprite.Width/2f, clouds.DrawSprite.Height/2f);
 
            /* DecoFloats.Add(clouds);
 
@@ -207,8 +228,8 @@ namespace SS14.Client.Services.State.States
                                    BounceRotate = true,
                                    BounceRotateAngle = 10,
                                    ParallaxScale = 0.005f,
-                                   SpriteLocation = new Vector2D(125, 115),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(125, 115),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = 0.5f
                                });*/
 
@@ -217,8 +238,8 @@ namespace SS14.Client.Services.State.States
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
                                    ParallaxScale = 0.004f,
-                                   SpriteLocation = new Vector2D(325, 135),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(325, 135),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = -0.60f
                                });*/
 
@@ -227,8 +248,8 @@ namespace SS14.Client.Services.State.States
                                {
                                    BounceRotate = false,
                                    ParallaxScale = 0.003f,
-                                   SpriteLocation = new Vector2D(450, 400),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(450, 400),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = -0.20f
                                });
 */
@@ -238,8 +259,8 @@ namespace SS14.Client.Services.State.States
                                    BounceRotate = true,
                                    BounceRotateAngle = 20,
                                    ParallaxScale = 0.0032f,
-                                   SpriteLocation = new Vector2D(Gorgon.Screen.Width - 260, 415),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(Gorgon.Screen.Width - 260, 415),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = 0.1f
                                });*/
 
@@ -248,8 +269,8 @@ namespace SS14.Client.Services.State.States
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
                                    ParallaxScale = 0.018f,
-                                   SpriteLocation = new Vector2D(Gorgon.Screen.Width - 295, 415),
-                                   Velocity = new Vector2D(0, 0),
+                                   SpriteLocation = new Vector2(Gorgon.Screen.Width - 295, 415),
+                                   Velocity = new Vector2(0, 0),
                                    RotationSpeed = -0.36f
                                });*/
 
@@ -257,8 +278,8 @@ namespace SS14.Client.Services.State.States
                                {
                                    BounceRotate = false,
                                    ParallaxScale = 0.019f,
-                                   SpriteLocation = new Vector2D(0, 335),
-                                   Velocity = new Vector2D(6, 2),
+                                   SpriteLocation = new Vector2(0, 335),
+                                   Velocity = new Vector2(6, 2),
                                    RotationSpeed = 0.40f
                                });*/
 

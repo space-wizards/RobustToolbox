@@ -1,5 +1,4 @@
-﻿using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -10,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -111,9 +111,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y))) return false;
+            if (!ClientArea.Contains(new Point((int) e.X, (int) e.Y))) return false;
 
             TargetingDummyElement prevSelection = (from element in _elements
                                                    where element.IsSelected()
@@ -138,7 +138,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

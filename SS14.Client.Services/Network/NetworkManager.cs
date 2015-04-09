@@ -156,13 +156,13 @@ namespace SS14.Client.Services.Network
             _serverGameType = (GameType) msg.ReadByte();
         }
 
-        public void SendChangeTile(int x, int z, string newTile)
+        public void SendChangeTile(int x, int y, Tile newTile)
         {
             var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage netMessage = NetClient.CreateMessage();
-            netMessage.Write(x);
-            netMessage.Write(z);
-            netMessage.Write(mapMgr.GetTileIndex(newTile));
+            netMessage.Write((int)x);
+            netMessage.Write((int)y);
+            netMessage.Write((uint)newTile);
             NetClient.SendMessage(netMessage, NetDeliveryMethod.ReliableOrdered);
         }
 

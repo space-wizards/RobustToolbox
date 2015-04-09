@@ -1,9 +1,9 @@
-﻿using GorgonLibrary;
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Mover;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -49,12 +49,12 @@ namespace SS14.Client.GameObjects
 
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
-            Translate(Vector2TypeConverter.ToVector2D(args.VectorTo));
+            Translate(args.VectorTo);
         }
 
-        private void Translate(Vector2D toPosition)
+        private void Translate(Vector2 toPosition)
         {
-            Vector2D delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2 delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
             /*

@@ -1,9 +1,9 @@
-﻿using GorgonLibrary.InputDevices;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared.GameObjects;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -112,18 +112,18 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (_inventoryContainer.MouseDown(e))
                 return true;
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             //If dropped on container add to inventory.
             if (_inventoryContainer.MouseUp(e)) return true;
-            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)) &&
+            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
                 _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 if (!_inventoryComponent.ContainsEntity(_userInterfaceManager.DragInfo.DragEntity))
@@ -140,12 +140,12 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             _inventoryContainer.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return _inventoryContainer.MouseWheelMove(e);
         }

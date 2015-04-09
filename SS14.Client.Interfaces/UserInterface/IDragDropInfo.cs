@@ -1,4 +1,4 @@
-﻿using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 
@@ -8,7 +8,7 @@ namespace SS14.Client.Interfaces.UserInterface
     {
         Entity DragEntity { get; }
         IPlayerAction DragAction { get; }
-        Sprite DragSprite { get; }
+        CluwneSprite DragSprite { get; }
         bool IsEntity { get; }
         bool IsActive { get; }
 

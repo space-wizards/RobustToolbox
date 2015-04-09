@@ -1,207 +1,221 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
-using SS14.Server.Interfaces.Tiles;
-using SS14.Server.Services.Atmos;
 using SS14.Server.Services.Log;
-using SS14.Server.Services.Tiles;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 
 namespace SS14.Server.Services.Map
 {
     public class MapManager : IMapManager
     {
-        #region Variables
+        private Dictionary<Point, Chunk> chunks = new Dictionary<Point, Chunk>();
+        private static readonly int ChunkSize = Chunk.ChunkSize;
 
-        private DateTime lastAtmosDisplayPush;
-        private int mapHeight;
-        private int mapWidth;
-        public int tileSpacing = 64;
-        private const int wallThickness = 24;
-        private Dictionary<byte, string> tileStringTable = new Dictionary<byte, string>();
-        private QuadTree<Tile> _groundArray;
-        private QuadTree<Tile> _wallArray;
-        private RectangleF worldArea;
+        public event TileChangedEventHandler TileChanged;
+        private bool suppressNetworkUpdatesOnTileChanged = false;
 
-        #endregion
-
-        #region Startup
-
-        public bool InitMap(string mapName)
+        public MapManager()
         {
-            BuildTileTable();
-            if (!LoadMap(mapName))
-                NewMap();
-
-            return true;
+            tileIndexer = new TileCollection(this);
+            NewMap();
         }
 
-        #endregion
-
-        #region IMapManager Members
-
-        /// <summary>
-        /// This function takes the gas cell from one tile and moves it to another, reconnecting all of the references in adjacent tiles.
-        /// Use this when a new tile is generated at a map location.
-        /// </summary>
-        /// <param name="fromTile">Tile to move gas information/cell from</param>
-        /// <param name="toTile">Tile to move gas information/cell to</param>
-        public void MoveGasCell(ITile fromTile, ITile toTile)
+        public int TileSize
         {
-            if (fromTile == null)
-                return;
-            GasCell g = (fromTile as Tile).gasCell;
-            (toTile as Tile).gasCell = g;
-            g.AttachToTile((toTile as Tile));
+            get { return 32; }
         }
 
-        public void Shutdown()
+        #region Tile Enumerators
+
+        // If `ignoreSpace` is false, this will return tiles in chunks that don't even exist.
+        // This is to make the tile count predictable.  Is this appropriate behavior?
+        public IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace)
         {
-            //ServiceManager.Singleton.RemoveService(this);
-            _groundArray = null;
-        }
-
-        public int GetMapWidth()
-        {
-            return mapWidth;
-        }
-
-        public int GetMapHeight()
-        {
-            return mapHeight;
-        }
-
-        #endregion
-
-        #region Tile helper function
-
-        public int GetTileSpacing()
-        {
-            return tileSpacing;
-        }
-
-        public ITile[] GetAllTilesIn(RectangleF area)
-        {
-            List<Tile> tiles = _groundArray.Query(area);
-            tiles.AddRange(_wallArray.Query(area));
-            return tiles.ToArray();
-        }
-
-
-        public ITile[] GetAllFloorIn(RectangleF Area)
-        {
-            return _groundArray.Query(Area).ToArray();
-        }
-
-        public ITile[] GetAllWallIn(RectangleF Area)
-        {
-            return _wallArray.Query(Area).ToArray();
-        }
-
-        public ITile GetWallAt(Vector2 pos)
-        {
-            return GetAllWallIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
-        }
-
-        public ITile GetFloorAt(Vector2 pos)
-        {
-            return GetAllFloorIn(new RectangleF(pos.X, pos.Y, 2f, 2f)).FirstOrDefault();
-        }
-
-        public ITile[] GetAllTilesAt(Vector2 pos)
-        {
-            return GetAllTilesIn(new RectangleF(pos.X, pos.Y, 2f, 2f));
-        }
-
-        public ITile GetTypeAt(Type type, Vector2 pos)
-        {
-            ITile[] tiles = GetAllTilesAt(pos);
-            return tiles.FirstOrDefault(x => x.GetType() == type);
-        }
-
-        public ITile GetTypeAt(string type, Vector2 pos)
-        {
-            return GetTypeAt(Type.GetType("SS14.Server.Services.Tiles." + type, false), pos);
-        }
-
-
-        #endregion
-
-        #region Map altering
-
-        public Tile ChangeTile(Vector2 pos, string newType, Direction dir = Direction.North)
-        {
-            var tile = GenerateNewTile(pos, newType, dir) as Tile;
-            if (tile == null)
-                return null;
-            //Transfer the gas cell from the old tile to the new tile.
-            Tile t = (Tile)GetTypeAt(newType, pos);
-            if (t != null && t.GasPermeable && tile.GasPermeable)
+            int chunkLeft = (int)Math.Floor(area.X / ChunkSize);
+            int chunkTop = (int)Math.Floor(area.Y / ChunkSize);
+            int chunkRight = (int)Math.Floor(area.Right / ChunkSize);
+            int chunkBottom = (int)Math.Floor(area.Bottom / ChunkSize);
+            for (int chunkY = chunkTop; chunkY <= chunkBottom; ++chunkY)
             {
-                MoveGasCell(t, tile);
-            }
-            else
-            {
-                tile.GasCell = new GasCell((Tile)tile);
-            }
-
-            RemoveTile(t);
-            AddTile(tile);
-            UpdateTile(tile);
-            return tile;
-        }
-
-        public ITile GenerateNewTile(Vector2 pos, string typeName, Direction dir = Direction.North)
-        {
-            Type tileType = Type.GetType("SS14.Server.Services.Tiles." + typeName, false);
-
-            if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
-            RectangleF rect = new RectangleF();
-
-            Tile t = (Tile)GetTypeAt(tileType, pos);
-            Tile tile = null;
-            if (t != null && t.dir == dir)
-            {
-                t.RaiseChangedEvent(tileType);
-                rect = t.Bounds;
-            }
-            else
-            {
-                if (typeName != "Wall")
+                for (int chunkX = chunkLeft; chunkX <= chunkRight; ++chunkX)
                 {
-                    rect = new RectangleF(pos.X, pos.Y, tileSpacing, tileSpacing);
-                    tile = (Tile)Activator.CreateInstance(tileType, rect, this);
-                }
-                else
-                {
-                    if (dir == Direction.North) // NS (vertical) wall
+                    int xMin = 0;
+                    int yMin = 0;
+                    int xMax = 15;
+                    int yMax = 15;
+
+                    if (chunkX == chunkLeft)
+                        xMin = Mod(Math.Floor(area.Left), ChunkSize);
+                    if (chunkY == chunkTop)
+                        yMin = Mod(Math.Floor(area.Top), ChunkSize);
+
+                    if (chunkX == chunkRight)
+                        xMax = Mod(Math.Floor(area.Right), ChunkSize);
+                    if (chunkY == chunkBottom)
+                        yMax = Mod(Math.Floor(area.Bottom), ChunkSize);
+
+                    Chunk chunk;
+                    if (!chunks.TryGetValue(new Point(chunkX, chunkY), out chunk))
                     {
-                        rect = new RectangleF(pos.X, pos.Y, wallThickness, tileSpacing);
+                        if (ignoreSpace)
+                            continue;
+                        else
+                            for (int y = yMin; y <= yMax; ++y)
+                                for (int x = xMin; x <= xMax; ++x)
+                                    yield return new TileRef(this,
+                                        chunkX * ChunkSize + x,
+                                        chunkY * ChunkSize + y);
                     }
-                    else // EW (horizontal) wall
+                    else
                     {
-                        rect = new RectangleF(pos.X, pos.Y, tileSpacing, wallThickness);
+                        for (int y = yMin; y <= yMax; ++y)
+                        {
+                            int i = y * ChunkSize + xMin;
+                            for (int x = xMin; x <= xMax; ++x, ++i)
+                            {
+                                if (!ignoreSpace || chunk.Tiles[i].TileId != 0)
+                                    yield return new TileRef(this,
+                                        chunkX * ChunkSize + x,
+                                        chunkY * ChunkSize + y,
+                                        chunk, i);
+                            }
+                        }
                     }
-                    tile = (Tile)Activator.CreateInstance(tileType, rect, this, dir);
                 }
             }
-
-
-            return (ITile)tile;
         }
-
+        public IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area)
+        {
+            return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsGasVolume);
+        }
+        public IEnumerable<TileRef> GetWallsIntersecting(RectangleF area)
+        {
+            return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsWall);
+        }
+        // Unlike GetAllTilesIn(...), this skips non-existant chunks.
+        // It also does not return chunks in order.
+        public IEnumerable<TileRef> GetAllTiles()
+        {
+            foreach (var pair in chunks)
+            {
+                int i = 0;
+                for (int y = 0; y < ChunkSize; ++y)
+                {
+                    for (int x = 0; x < ChunkSize; ++x, ++i)
+                    {
+                        if (pair.Value.Tiles[i].TileId != 0)
+                            yield return new TileRef(this,
+                                pair.Key.X * ChunkSize + x,
+                                pair.Key.Y * ChunkSize + y,
+                                pair.Value, i);
+                    }
+                }
+            }
+        }
 
         #endregion
 
-        #region networking
+        #region Indexers
+
+        public TileRef GetTileRef(Vector2 pos)
+        {
+            return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
+        }
+        public TileRef GetTileRef(int x, int y)
+        {
+            Point chunkPos = new Point(
+                (int)Math.Floor((float)x / ChunkSize),
+                (int)Math.Floor((float)y / ChunkSize)
+            );
+            Chunk chunk;
+            if (chunks.TryGetValue(chunkPos, out chunk))
+                return new TileRef(this, x, y, chunk,
+                    (y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize));
+            else
+                return new TileRef(this, x, y);
+        }
+
+        private TileCollection tileIndexer;
+        public ITileCollection Tiles { get { return tileIndexer; } }
+
+        public sealed class TileCollection : ITileCollection
+        {
+            private readonly MapManager mm;
+
+            internal TileCollection(MapManager mm)
+            {
+                this.mm = mm;
+            }
+
+            public Tile this[Vector2 pos]
+            {
+                get
+                {
+                    return this[(int)Math.Floor(pos.X), (int)Math.Floor(pos.Y)];
+                }
+                set
+                {
+                    this[(int)Math.Floor(pos.X), (int)Math.Floor(pos.Y)] = value;
+                }
+            }
+            public Tile this[int x, int y]
+            {
+                get
+                {
+                    Point chunkPos = new Point(
+                        (int)Math.Floor((float)x / ChunkSize),
+                        (int)Math.Floor((float)y / ChunkSize)
+                    );
+                    Chunk chunk;
+                    if (mm.chunks.TryGetValue(chunkPos, out chunk))
+                        return chunk.Tiles[(y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize)];
+                    else
+                        return default(Tile); // SPAAAAAAAAAAAAAACE!!!
+                }
+                set
+                {
+                    Point chunkPos = new Point(
+                        (int)Math.Floor((float)x / ChunkSize),
+                        (int)Math.Floor((float)y / ChunkSize)
+                    );
+                    Chunk chunk;
+                    if (!mm.chunks.TryGetValue(chunkPos, out chunk))
+                    {
+                        if (value.IsSpace)
+                            return;
+                        else
+                            mm.chunks[chunkPos] = chunk = new Chunk();
+                    }
+
+                    int index = (y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize);
+                    Tile oldTile = chunk.Tiles[index];
+                    if (oldTile == value)
+                        return;
+
+                    chunk.Tiles[index] = value;
+                    var tileRef = new TileRef(mm, x, y, chunk, index);
+
+                    if (mm.TileChanged != null)
+                        mm.TileChanged(tileRef, oldTile);
+
+                    if (!mm.suppressNetworkUpdatesOnTileChanged)
+                        mm.NetworkUpdateTile(tileRef);
+                }
+            }
+        }
+
+        #endregion
+        
+        #region Networking
 
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
@@ -213,87 +227,32 @@ namespace SS14.Server.Services.Map
 
         public void SendMap(NetConnection connection)
         {
-            SendTileIndex(connection); //Send index of byte -> str to save space.
-
             LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
             NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileMap);
 
-            int mapWidth = GetMapWidth();
-            int mapHeight = GetMapHeight();
+            mapMessage.Write((int)1); // Format version.  Who knows, it could come in handy.
 
-            mapMessage.Write(mapWidth);
-            mapMessage.Write(mapHeight);
+            // Tile definition mapping
+            var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
+            mapMessage.Write((int)tileDefManager.Count);
+            for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
+                mapMessage.Write((string)tileDefManager[tileId].Name);
 
-            foreach (Tile t in GetAllTilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
+            // Map chunks
+            mapMessage.Write((int)chunks.Count);
+            foreach (var chunk in chunks)
             {
-                mapMessage.Write(t.WorldPosition.X);
-                mapMessage.Write(t.WorldPosition.Y);
-                mapMessage.Write(GetTileIndex((t.GetType().Name)));
-                mapMessage.Write((byte)t.TileState);
-                if (t.GetType().Name == "Wall") mapMessage.Write((byte)t.dir);
+                mapMessage.Write((int)chunk.Key.X);
+                mapMessage.Write((int)chunk.Key.Y);
+
+                foreach (var tile in chunk.Value.Tiles)
+                    mapMessage.Write((uint)tile);
             }
 
             IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
                            mapMessage.LengthBytes + " bytes");
         }
-
-        /// <summary>
-        /// Send message to all clients.
-        /// </summary>
-        /// <param name="message"></param>
-        public void SendMessage(NetOutgoingMessage message)
-        {
-            IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
-        }
-
-        public void SendTileIndex(NetConnection connection)
-        {
-            NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileIndex);
-
-            mapMessage.Write((byte) tileStringTable.Count);
-
-            foreach (var curr in tileStringTable)
-            {
-                mapMessage.Write(curr.Key);
-                mapMessage.Write(curr.Value);
-            }
-
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-        }
-
-        #endregion
-
-        public void BuildTileTable()
-        {
-            Type type = typeof (Tile);
-            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types =
-                asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
-
-            if (types.Count > 255)
-                throw new ArgumentOutOfRangeException("types.Count", "Can not load more than 255 types of tiles.");
-
-            tileStringTable = types.ToDictionary(x => (byte) types.FindIndex(y => y == x), x => x.Name);
-        }
-
-        public byte GetTileIndex(string typeName)
-        {
-            if (tileStringTable.Values.Any(x => x.ToLowerInvariant() == typeName.ToLowerInvariant()))
-                return tileStringTable.First(x => x.Value.ToLowerInvariant() == typeName.ToLowerInvariant()).Key;
-            else throw new ArgumentNullException("tileStringTable", "Can not find '" + typeName + "' type.");
-        }
-
-        public string GetTileString(byte index)
-        {
-            string typeStr = (from a in tileStringTable
-                              where a.Key == index
-                              select a.Value).First();
-
-            return typeStr;
-        }
-
-        #region Networking
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
@@ -338,161 +297,163 @@ namespace SS14.Server.Services.Map
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
 
-        public void DestroyTile(ITile t)
+        public void NetworkUpdateTile(TileRef tile)
         {
-            if (RemoveTile((Tile)t))
-            {
-                NetworkUpdateTile((Tile)t);
-                UpdateTile((Tile)t);
-            }
-        }
-
-        private void AddTile(Tile t)
-        {
-            if (t.GetType().Name == "Wall")
-            {
-                _wallArray.Insert(t);
-            }
-            else
-            {
-                _groundArray.Insert(t);
-            }
-        }
-
-        private bool RemoveTile(Tile t)
-        {
-            if (t == null)
-                return false;
-            if (t.GetType().Name == "Wall")
-            {
-                _wallArray.Remove(t);
-            }
-            else
-            {
-                _groundArray.Remove(t);
-            }
-
-            return true;
-        }
-
-        public void UpdateTile(Tile t)
-        {
-            if (t == null || t.gasCell == null)
-                return;
-            t.gasCell.SetNeighbours(this);
-            
-            foreach (Tile u in GetAllTilesIn(new RectangleF(t.WorldPosition.X - tileSpacing, t.WorldPosition.Y - tileSpacing, tileSpacing * 2, tileSpacing * 2)))
-            {
-                u.gasCell.SetNeighbours(this);
-            }
-
-        }
-
-
-        public void NetworkUpdateTile(ITile t)
-        {
-            if (t == null)
-                return;
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.MapMessage);
-            message.Write((byte) MapMessage.TurfUpdate);
-            message.Write(t.WorldPosition.X);
-            message.Write(t.WorldPosition.Y);
-            message.Write(GetTileIndex(t.GetType().Name));
-            message.Write((byte) t.TileState);
-            if (t.GetType().Name == "Wall") message.Write((byte)t.dir);
+            message.Write((byte)NetMessage.MapMessage);
+            message.Write((byte)MapMessage.TurfUpdate);
+
+            message.Write((int)tile.X);
+            message.Write((int)tile.Y);
+            message.Write((uint)tile.Tile);
             IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
         }
 
         #endregion
 
-        #region Map loading/sending
+        #region File Operations
 
-        public void SaveMap()
+        public void SaveMap(string mapName)
         {
-            string fileName = "SavedMap";
+            var badChars = Path.GetInvalidFileNameChars();
+            if (mapName.Any(c => badChars.Contains(c)))
+                throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-            var fs = new FileStream(fileName, FileMode.Create);
-            var sw = new StreamWriter(fs);
-            LogManager.Log("Saving map: W: " + mapWidth + " H: " + mapHeight);
+            string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
 
-            sw.WriteLine(mapWidth);
-            sw.WriteLine(mapHeight);
+            using (var fs = new FileStream(fileName, FileMode.Create)) {
+                var sw = new StreamWriter(fs);
+                var bw = new BinaryWriter(fs);
+                LogManager.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
 
-            foreach (Tile t in GetAllTilesIn(new Rectangle(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing)))
-            {
-                sw.WriteLine(t.WorldPosition.X);
-                sw.WriteLine(t.WorldPosition.Y);
-                sw.WriteLine(GetTileIndex(t.GetType().Name));
+                sw.Write("SS14 Map File Version ");
+                sw.WriteLine((int)1); // Format version.  Who knows, it could come in handy.
+
+                // Tile definition mapping
+                var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
+                bw.Write((int)tileDefManager.Count);
+                for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
+                {
+                    bw.Write((ushort)tileId);
+                    bw.Write((string)tileDefManager[tileId].Name);
+                }
+
+                // Map chunks
+                bw.Write((int)chunks.Count);
+                foreach (var chunk in chunks)
+                {
+                    bw.Write((int)chunk.Key.X);
+                    bw.Write((int)chunk.Key.Y);
+
+                    foreach (var tile in chunk.Value.Tiles)
+                        bw.Write((uint)tile);
+                }
+
+                bw.Write("End of Map");
             }
 
             LogManager.Log("Done saving map.");
-
-            sw.Close();
-            fs.Close();
         }
 
-        private Rectangle TilePos(Tile T)
+        public bool LoadMap(string mapName)
         {
-            return new Rectangle((int)(T.WorldPosition.X), (int)(T.WorldPosition.Y), (int)(tileSpacing), (int)(tileSpacing));
-        }
-
-        public RectangleF GetWorldArea()
-        {
-            return worldArea;
-        }
-
-        private bool LoadMap(string filename)
-        {
-            if (!File.Exists(filename))
-                return false;
-
-            var fs = new FileStream(filename, FileMode.Open);
-            var sr = new StreamReader(fs);
-
-            mapWidth = int.Parse(sr.ReadLine());
-            mapHeight = int.Parse(sr.ReadLine());
-
-            worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
-
-            _groundArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
-            _wallArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
-
-
-            while (!sr.EndOfStream)
+            suppressNetworkUpdatesOnTileChanged = true;
+            try
             {
-                float x = float.Parse(sr.ReadLine());
-                float y = float.Parse(sr.ReadLine());
-                byte i = byte.Parse(sr.ReadLine());
+                var badChars = Path.GetInvalidFileNameChars();
+                if (mapName.Any(c => badChars.Contains(c)))
+                    throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-                AddTile((Tile)GenerateNewTile(new Vector2(x, y), GetTileString(i)));
+                string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
+
+                if (!File.Exists(fileName))
+                    return false;
+
+                using (var fs = new FileStream(fileName, FileMode.Open))
+                {
+                    var sr = new StreamReader(fs);
+                    var br = new BinaryReader(fs);
+                    LogManager.Log(string.Format("Loading map: \"{0}\"", mapName));
+
+                    var versionString = sr.ReadLine();
+                    if (!versionString.StartsWith("SS14 Map File Version "))
+                        return false;
+
+                    int formatVersion;
+                    if (!int.TryParse(versionString.Substring(22), out formatVersion))
+                        return false;
+
+                    if (formatVersion != 1)
+                        return false; // Unsupported version.
+
+                    var tileDefMgr = IoCManager.Resolve<ITileDefinitionManager>();
+
+                    Dictionary<ushort, ITileDefinition> tileMapping = new Dictionary<ushort, ITileDefinition>();
+                    int tileDefCount = br.ReadInt32();
+                    for (int i = 0; i < tileDefCount; ++i)
+                    {
+                        ushort tileId = br.ReadUInt16();
+                        string tileName = br.ReadString();
+                        tileMapping[tileId] = tileDefMgr[tileName];
+                    }
+
+                    int chunkCount = br.ReadInt32();
+                    for (int i = 0; i < chunkCount; ++i)
+                    {
+                        int x = br.ReadInt32();
+                        int y = br.ReadInt32();
+                        Tile tile = (Tile)br.ReadUInt32();
+
+                        this.Tiles[x, y] = tile;
+                    }
+
+                    string ending = br.ReadString();
+                    Debug.Assert(ending == "End of Map");
+                }
+
+                LogManager.Log("Done loading map.");
+                return true;
             }
-
-            sr.Close();
-            fs.Close();
-
-            return true;
+            finally
+            {
+                suppressNetworkUpdatesOnTileChanged = false;
+            }
         }
 
         private void NewMap()
         {
-            LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
-            mapWidth = 50;
-            mapHeight = 50;
-            _groundArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
-            _wallArray = new QuadTree<Tile>(new SizeF(tileSpacing * 2f, tileSpacing * 2f), 4);
-
-            worldArea = new RectangleF(0, 0, mapWidth * tileSpacing, mapHeight * tileSpacing);
-
-            for (int y = 0; y < mapHeight; y++)
+            suppressNetworkUpdatesOnTileChanged = true;
+            try
             {
-                for (int x = 0; x < mapWidth; x++)
-                {
-                    AddTile(new Floor(new RectangleF(x * tileSpacing, y * tileSpacing, tileSpacing, tileSpacing), this));
-                }
+                LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
+                ushort floor = IoCManager.Resolve<ITileDefinitionManager>()["Floor"].TileId;
+                ushort wall = IoCManager.Resolve<ITileDefinitionManager>()["Wall"].TileId;
+
+                Debug.Assert(floor > 0); // This whole method should be removed once tiles become data driven.
+                Debug.Assert(wall > 0);
+
+                for (int y = -32; y <= 32; ++y)
+                    for (int x = -32; x <= 32; ++x)
+                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32)
+                            Tiles[x, y] = new Tile(wall);
+                        else
+                            Tiles[x, y] = new Tile(floor);
+            }
+            finally
+            {
+                suppressNetworkUpdatesOnTileChanged = false;
             }
         }
 
         #endregion
+
+        // An actual modulus implementation, because apparently % is not modulus.  Srsly
+        // Should probably stick this in some static class.
+        [System.Diagnostics.DebuggerStepThrough]
+        private static int Mod(double n, int d)
+        {
+            return (int)(n - (int)Math.Floor(n / d) * d);
+        }
+
     }
 }

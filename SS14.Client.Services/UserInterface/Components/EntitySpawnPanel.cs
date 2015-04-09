@@ -1,4 +1,6 @@
-﻿using SS14.Client.Interfaces.GOC;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Placement;
@@ -9,8 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

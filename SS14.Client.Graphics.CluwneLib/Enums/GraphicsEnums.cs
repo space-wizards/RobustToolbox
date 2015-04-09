@@ -1,7 +1,5 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SS14.Client.Graphics.CluwneLib
 {

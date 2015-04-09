@@ -21,12 +21,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
 
 namespace Lidgren.Network
 {

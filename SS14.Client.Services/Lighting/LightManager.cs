@@ -1,7 +1,6 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Shared.Maths;
-using SS14.Client.Interfaces.Lighting;
+﻿using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

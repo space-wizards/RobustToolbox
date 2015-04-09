@@ -33,7 +33,7 @@ namespace SS14.Shared.GO
             if (!(Parameter is T))
                 throw new ArgumentException("Parameter type specified does not match stored parameter's type.");
 
-            return (T) Parameter;
+            return (T)Parameter;
         }
 
         public object GetValue()

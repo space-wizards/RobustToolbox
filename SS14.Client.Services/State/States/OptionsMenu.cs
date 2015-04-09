@@ -1,16 +1,16 @@
-﻿using System;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.State;
+using SS14.Client.Services.UserInterface.Components;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
-using SS14.Client.Graphics.CluwneLib;
 
 
 

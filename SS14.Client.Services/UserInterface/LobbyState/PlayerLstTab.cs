@@ -1,9 +1,9 @@
 ﻿using Lidgren.Network;
+using SFML.Window;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using SFML.Window;
 using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SS14.Shared;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {

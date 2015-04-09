@@ -1,16 +1,15 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {

@@ -148,7 +148,7 @@
         West,
         NorthWest
     }
-    
+
     [System.Flags]
     public enum DirectionFlags
     {

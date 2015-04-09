@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Lidgren.Network
 {
 	internal sealed class NetUnreliableUnorderedReceiver : NetReceiverChannelBase

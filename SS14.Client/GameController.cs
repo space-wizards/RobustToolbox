@@ -1,4 +1,7 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -7,20 +10,9 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib.Render;
 using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Timing;
 
-using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {

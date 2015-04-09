@@ -2,8 +2,8 @@
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using System;
 using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.Interfaces.Placement
 {

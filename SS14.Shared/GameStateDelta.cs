@@ -46,7 +46,7 @@ namespace SS14.Shared
             BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()),
                                      toStream);
             toStream.Seek(0, SeekOrigin.Begin);
-            return (GameState) Serializer.Deserialize(toStream);
+            return (GameState)Serializer.Deserialize(toStream);
         }
 
         public static GameStateDelta ReadDelta(NetIncomingMessage message)

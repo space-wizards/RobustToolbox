@@ -21,9 +21,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Uncomment the line below to get statistics in RELEASE builds
 #define USE_RELEASE_STATISTICS
 
-using System;
 using System.Text;
-using System.Diagnostics;
 
 namespace Lidgren.Network
 {

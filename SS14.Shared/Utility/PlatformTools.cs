@@ -13,10 +13,10 @@ namespace SS14.Shared.Utility
             // they are the same.  Mono/linux has both as '/', for example.
             // Hardcode the only platforms we care about.
 
-            var separators = new char [] { '/', '\\' };
+            var separators = new char[] { '/', '\\' };
             string newpath = "";
             foreach (string tmp in pathname.Split(separators))
-                newpath = Path.Combine (newpath, tmp);
+                newpath = Path.Combine(newpath, tmp);
             return newpath;
         }
     }

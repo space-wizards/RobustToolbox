@@ -1,5 +1,5 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Window;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 

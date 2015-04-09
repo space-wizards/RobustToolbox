@@ -91,7 +91,7 @@ namespace SS14.Shared
             jobDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
             jobDef.Department = "Security";
 
-            JobSettingsTemplate.JobDefinitions = new List<JobDefinition> {jobDef};
+            JobSettingsTemplate.JobDefinitions = new List<JobDefinition> { jobDef };
 
             DepartmentDefinition depDef = new DepartmentDefinition();
             depDef.DepartmentIcon = "department_security";
@@ -99,7 +99,7 @@ namespace SS14.Shared
             depDef.Name = "Security";
             depDef.DepartmentColor = Color.FromArgb(255, 125, 125, 125);
 
-            JobSettingsTemplate.DepartmentDefinitions = new List<DepartmentDefinition>() {depDef};
+            JobSettingsTemplate.DepartmentDefinitions = new List<DepartmentDefinition>() { depDef };
 
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;

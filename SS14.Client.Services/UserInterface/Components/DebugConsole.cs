@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.Window;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
@@ -12,8 +13,6 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 
 
 namespace SS14.Client.Services.UserInterface.Components

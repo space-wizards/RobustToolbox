@@ -1,13 +1,13 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
-using SFML.Window;
-using SFML.Graphics;
+using SS14.Shared.Maths;
 using System;
-using Color = System.Drawing.Color;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
+using Color = System.Drawing.Color;
 
 
 namespace SS14.Client.Services.UserInterface.Components

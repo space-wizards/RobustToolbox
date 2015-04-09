@@ -12,9 +12,12 @@ namespace SS14.Shared.GameStates
     [Serializable]
     public class GameState : INetSerializableType
     {
-        [NonSerialized] private bool _serialized;
-        [NonSerialized] private MemoryStream _serializedData;
-        [NonSerialized] public float GameTime;
+        [NonSerialized]
+        private bool _serialized;
+        [NonSerialized]
+        private MemoryStream _serializedData;
+        [NonSerialized]
+        public float GameTime;
 
         /// <summary>
         /// Constructor!
@@ -122,7 +125,7 @@ namespace SS14.Shared.GameStates
         /// <returns></returns>
         public static GameState Deserialize(byte[] data)
         {
-            return (GameState) Serializer.Deserialize(new MemoryStream(data));
+            return (GameState)Serializer.Deserialize(new MemoryStream(data));
         }
 
         /// <summary>
@@ -131,7 +134,7 @@ namespace SS14.Shared.GameStates
         /// <param name="message">NetOutgoingMessage to write to</param>
         public int WriteStateMessage(NetOutgoingMessage message)
         {
-            message.Write((byte) NetMessage.FullState);
+            message.Write((byte)NetMessage.FullState);
             byte[] stateData = Compress(GetSerializedDataBuffer());
             message.Write(Sequence);
             message.Write(stateData.Length);
@@ -150,7 +153,7 @@ namespace SS14.Shared.GameStates
             int length = message.ReadInt32();
             byte[] stateData = Decompress(message.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))
-                return (GameState) Serializer.Deserialize(stateStream);
+                return (GameState)Serializer.Deserialize(stateStream);
         }
 
         /// <summary>

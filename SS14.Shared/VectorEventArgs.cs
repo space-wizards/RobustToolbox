@@ -1,5 +1,5 @@
-﻿using System;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Shared
 {

@@ -1,6 +1,4 @@
-﻿using System;
-using SS14.Shared;
-
+﻿
 
 namespace SS14.Server.GameObjects.Organs.Human
 {

@@ -11,8 +11,8 @@ namespace SS14.Shared.GO.Component.Inventory
         // So it's an array. Sorry.
         public int[] ContainedEntities;
 
-        public InventoryComponentState(int maxSlots, List<int> containedEntities) 
-            : base (ComponentFamily.Inventory)
+        public InventoryComponentState(int maxSlots, List<int> containedEntities)
+            : base(ComponentFamily.Inventory)
         {
             MaxSlots = maxSlots;
             ContainedEntities = containedEntities.ToArray();

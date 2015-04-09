@@ -1,12 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

@@ -1,5 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Render;
+﻿using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Shared.IoC;

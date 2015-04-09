@@ -5,8 +5,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Light;
 using SS14.Shared.IoC;
-using System;
 using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.GameObjects
 {

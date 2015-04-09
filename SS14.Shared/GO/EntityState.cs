@@ -11,7 +11,7 @@ namespace SS14.Shared.GO
         [NonSerialized]
         public float ReceivedTime;
 
-        public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes )
+        public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes)
         {
             SetStateData(new EntityStateData(uid, templateName, name, synchedComponentTypes));
             ComponentStates = componentStates;
@@ -33,7 +33,7 @@ namespace SS14.Shared.GO
         public int Uid;
         public List<Tuple<ComponentFamily, string>> SynchedComponentTypes;
 
-        public EntityStateData(int uid, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes )
+        public EntityStateData(int uid, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes)
         {
             Uid = uid;
             TemplateName = templateName;

@@ -1,12 +1,12 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

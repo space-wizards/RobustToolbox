@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace Lidgren.Network
 {
 	// replace with BCL 4.0 Tuple<> when appropriate

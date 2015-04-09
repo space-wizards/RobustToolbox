@@ -1,8 +1,7 @@
-﻿using SS14.Shared;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Drawing;
 using SS14.Shared.Maths;
+using System.Drawing;
 
 namespace SS14.Client.Interfaces.GOC
 {

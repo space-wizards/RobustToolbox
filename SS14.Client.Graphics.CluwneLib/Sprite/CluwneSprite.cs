@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Color = SFML.Graphics.Color;
-using SFML.Graphics;
-using Drawing = System.Drawing;
-using BaseSprite = SFML.Graphics.Sprite;
-using Image = SFML.Graphics.Image;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared.Maths;
 using System.Drawing;
+using BaseSprite = SFML.Graphics.Sprite;
+using Drawing = System.Drawing;
+using Image = SFML.Graphics.Image;
 
 namespace SS14.Client.Graphics.CluwneLib.Sprite
 {

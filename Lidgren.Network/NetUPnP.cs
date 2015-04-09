@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Xml;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Xml;
 
 namespace Lidgren.Network
 {

@@ -1,13 +1,12 @@
-﻿using System;
-using System.Drawing;
-using System.Collections.Generic;
+﻿using SFML.Graphics;
 using SFML.Window;
-using SFML.Graphics;
 using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
+using System;
+using System.Collections.Generic;
 using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States

@@ -35,11 +35,11 @@ namespace SS14.Shared.Utility
 
         public Range()
         {
-            
+
         }
     }
 
-    
+
     public class RangeTypeConverter : ExpandableObjectConverter
     {
         private Type _genericInstanceType;
@@ -79,12 +79,12 @@ namespace SS14.Shared.Utility
             }
             return base.CanConvertTo(context, destinationType);
         }
-        
+
         public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
         {
             if (value is string)
             {
-                var strval = (string) value;
+                var strval = (string)value;
                 var strings = strval.Replace(" ", "").Split('-');
                 dynamic val1 = _innerTypeConverter.ConvertFromString(context, culture, strings[0]);
                 dynamic val2 = _innerTypeConverter.ConvertFromString(context, culture, strings[1]);
@@ -95,19 +95,19 @@ namespace SS14.Shared.Utility
         }
 
         public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
-   {
-      if (value != null && destinationType == typeof(System.String))
-      {
-          MethodInfo castMethod = GetType().GetMethod("Cast").MakeGenericMethod(_genericInstanceType);
-          dynamic val = castMethod.Invoke(null, new[] { value });
-         return _innerTypeConverter.ConvertTo(val.Start, destinationType) + "-" + _innerTypeConverter.ConvertTo(val.End, destinationType);
-      }   
-      return base.ConvertTo(context, culture, value, destinationType);
-   }
+        {
+            if (value != null && destinationType == typeof(System.String))
+            {
+                MethodInfo castMethod = GetType().GetMethod("Cast").MakeGenericMethod(_genericInstanceType);
+                dynamic val = castMethod.Invoke(null, new[] { value });
+                return _innerTypeConverter.ConvertTo(val.Start, destinationType) + "-" + _innerTypeConverter.ConvertTo(val.End, destinationType);
+            }
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
 
         public static T Cast<T>(object o)
         {
-            return (T) o;
+            return (T)o;
         }
     }
 }

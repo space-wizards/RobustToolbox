@@ -19,7 +19,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Security;
 
 namespace Lidgren.Network
 {

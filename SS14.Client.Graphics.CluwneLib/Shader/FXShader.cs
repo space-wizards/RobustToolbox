@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SS14.Client.Graphics.CluwneLib.Render;
+using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
 using BaseShader = SFML.Graphics.Shader;
-using SS14.Client.Graphics.CluwneLib.Render;
 
 namespace SS14.Client.Graphics.CluwneLib.Shader
 {

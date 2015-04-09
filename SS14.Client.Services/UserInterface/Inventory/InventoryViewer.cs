@@ -1,9 +1,9 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Window;
+using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared.GameObjects;
-using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

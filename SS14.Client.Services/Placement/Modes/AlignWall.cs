@@ -1,12 +1,12 @@
-﻿using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
+﻿using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Placement.Modes
 {

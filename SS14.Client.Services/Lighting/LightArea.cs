@@ -1,12 +1,10 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Shared.Maths;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
-using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Lighting
 {

@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Shared;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Lighting

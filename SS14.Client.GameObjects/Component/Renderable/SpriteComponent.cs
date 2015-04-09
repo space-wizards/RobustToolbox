@@ -1,18 +1,17 @@
 ﻿using Lidgren.Network;
 using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
-using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Shared.Maths;
 using CluwneSprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects

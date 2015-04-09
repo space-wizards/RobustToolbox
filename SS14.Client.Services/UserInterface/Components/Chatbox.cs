@@ -1,4 +1,6 @@
-﻿using SS14.Client.Interfaces.Input;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
@@ -9,8 +11,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

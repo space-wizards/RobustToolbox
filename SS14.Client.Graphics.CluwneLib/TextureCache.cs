@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.CluwneLib.Collection;
-using SFML.Graphics;
 
 
 namespace SS14.Client.Graphics.CluwneLib

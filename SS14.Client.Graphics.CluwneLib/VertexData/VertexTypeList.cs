@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SS14.Client.Graphics.CluwneLib.Collection;
+using SS14.Shared.Maths;
+using System;
 using System.Runtime.InteropServices;
 using Drawing = System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib.VertexData;
-using SS14.Client.Graphics.CluwneLib.Collection;
-using VertexFieldContext = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.CluwneLib.VertexData.VertexEnums.VertexFieldType;
 
 
 

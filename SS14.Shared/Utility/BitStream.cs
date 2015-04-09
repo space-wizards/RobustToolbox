@@ -140,12 +140,12 @@ namespace BKSystem.IO
             {
                 if (_resman == null)
                 {
-                    lock (typeof (BitStreamResources))
+                    lock (typeof(BitStreamResources))
                     {
                         if (_resman == null)
                         {
                             _oResManLock = new object();
-                            _resman = new ResourceManager("BKSystem.IO.BitStream", typeof (BitStream).Assembly);
+                            _resman = new ResourceManager("BKSystem.IO.BitStream", typeof(BitStream).Assembly);
                         }
                     }
                 }
@@ -607,7 +607,7 @@ namespace BKSystem.IO
                 if (!_blnIsOpen)
                     throw new ObjectDisposedException(BitStreamResources.GetString("ObjectDisposed_BitStreamClosed"));
 
-                return ((long) _auiBitBuffer.Length) << BitBuffer_SizeOfElement_Shift;
+                return ((long)_auiBitBuffer.Length) << BitBuffer_SizeOfElement_Shift;
             }
         }
 
@@ -650,7 +650,7 @@ namespace BKSystem.IO
                                                           BitStreamResources.GetString(
                                                               "ArgumentOutOfRange_NegativePosition"));
 
-                var uiRequestedPosition = (uint) value;
+                var uiRequestedPosition = (uint)value;
 
                 if (_uiBitBuffer_Length < uiRequestedPosition + 1)
                     throw new ArgumentOutOfRangeException("value",
@@ -813,7 +813,8 @@ namespace BKSystem.IO
         /// </param>
         /// <seealso cref="BitStream"/>
         /// <seealso cref="Stream"/>
-        public BitStream(Stream bits) : this()
+        public BitStream(Stream bits)
+            : this()
         {
             if (bits == null)
                 throw new ArgumentNullException("bits", BitStreamResources.GetString("ArgumentNull_BitBuffer"));
@@ -825,12 +826,12 @@ namespace BKSystem.IO
             long lCurrentPos = bits.Position;
             bits.Position = 0;
 
-            bits.Read(abytBits, 0, (int) bits.Length);
+            bits.Read(abytBits, 0, (int)bits.Length);
 
             bits.Position = lCurrentPos;
 
 
-            Write(abytBits, 0, (int) bits.Length);
+            Write(abytBits, 0, (int)bits.Length);
         }
 
         #endregion
@@ -882,13 +883,13 @@ namespace BKSystem.IO
             uint uiValue_EndIndex = bitIndex + count;
 
             // Clear out unwanted bits in value
-            var iValue_BitsToShift = (int) bitIndex;
+            var iValue_BitsToShift = (int)bitIndex;
             uint uiValue_BitMask = (BitMaskHelperLUT[count] << iValue_BitsToShift);
             bits &= uiValue_BitMask;
 
             // Position the bits in value
             uint uiBitBuffer_FreeBits = BitBuffer_SizeOfElement - _uiBitBuffer_BitIndex;
-            iValue_BitsToShift = (int) (uiBitBuffer_FreeBits - uiValue_EndIndex);
+            iValue_BitsToShift = (int)(uiBitBuffer_FreeBits - uiValue_EndIndex);
             uint uiValue_Indexed = 0;
             if (iValue_BitsToShift < 0)
                 uiValue_Indexed = bits >> Math.Abs(iValue_BitsToShift);
@@ -899,7 +900,7 @@ namespace BKSystem.IO
             // (only if overwriting)
             if (_uiBitBuffer_Length >= (uiBitBuffer_Position + 1))
             {
-                var iBitBuffer_BitsToShift = (int) (uiBitBuffer_FreeBits - count);
+                var iBitBuffer_BitsToShift = (int)(uiBitBuffer_FreeBits - count);
                 uint uiBitBuffer_BitMask = 0;
                 if (iBitBuffer_BitsToShift < 0)
                     uiBitBuffer_BitMask = uint.MaxValue ^ (BitMaskHelperLUT[count] >> Math.Abs(iBitBuffer_BitsToShift));
@@ -936,7 +937,7 @@ namespace BKSystem.IO
             if (uiBitBuffer_FreeBits >= count)
                 UpdateIndicesForWrite(count);
             else // Some bits in value did not fit
-                // in current bit buffer element
+            // in current bit buffer element
             {
                 UpdateIndicesForWrite(uiBitBuffer_FreeBits);
 
@@ -969,7 +970,7 @@ namespace BKSystem.IO
                 throw new ObjectDisposedException(BitStreamResources.GetString("ObjectDisposed_BitStreamClosed"));
 
             // Convert the bool to UInt32
-            var uiBit = (uint) (bit ? 1 : 0);
+            var uiBit = (uint)(bit ? 1 : 0);
             uint uiBitIndex = 0;
             uint uiCount = 1;
 
@@ -1129,8 +1130,8 @@ namespace BKSystem.IO
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_Byte"));
 
             uint uiBits = bits;
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
 
             Write(ref uiBits, ref uiBitIndex, ref uiCount);
         }
@@ -1263,7 +1264,7 @@ namespace BKSystem.IO
         public virtual void Write(sbyte bits, int bitIndex, int count)
         {
             // Convert the value to a byte
-            var bytBits = (byte) bits;
+            var bytBits = (byte)bits;
 
             Write(bytBits, bitIndex, count);
         }
@@ -1443,8 +1444,8 @@ namespace BKSystem.IO
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_Char"));
 
             uint uiBits = bits;
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
 
             Write(ref uiBits, ref uiBitIndex, ref uiCount);
         }
@@ -1602,8 +1603,8 @@ namespace BKSystem.IO
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_UInt16"));
 
             uint uiBits = bits;
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
 
             Write(ref uiBits, ref uiBitIndex, ref uiCount);
         }
@@ -1736,7 +1737,7 @@ namespace BKSystem.IO
         public virtual void Write(short bits, int bitIndex, int count)
         {
             // Convert the value to an UInt16
-            var usBits = (ushort) bits;
+            var usBits = (ushort)bits;
 
             Write(usBits, bitIndex, count);
         }
@@ -1896,8 +1897,8 @@ namespace BKSystem.IO
             if (count > (SizeOfUInt32 - bitIndex))
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_UInt32"));
 
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
 
             Write(ref bits, ref uiBitIndex, ref uiCount);
         }
@@ -2029,7 +2030,7 @@ namespace BKSystem.IO
         public virtual void Write(int bits, int bitIndex, int count)
         {
             // Convert the value to an UInt32
-            var uiBits = (uint) bits;
+            var uiBits = (uint)bits;
 
             Write(uiBits, bitIndex, count);
         }
@@ -2160,8 +2161,8 @@ namespace BKSystem.IO
         public virtual void Write(float bits, int bitIndex, int count)
         {
             byte[] abytBits = BitConverter.GetBytes(bits);
-            uint uiBits = abytBits[0] | ((uint) abytBits[1]) << 8 | ((uint) abytBits[2]) << 16 |
-                          ((uint) abytBits[3]) << 24;
+            uint uiBits = abytBits[0] | ((uint)abytBits[1]) << 8 | ((uint)abytBits[2]) << 16 |
+                          ((uint)abytBits[3]) << 24;
             Write(uiBits, bitIndex, count);
         }
 
@@ -2328,16 +2329,16 @@ namespace BKSystem.IO
 
             if (iCount1 > 0)
             {
-                var uiBits1 = (uint) bits;
-                var uiBitIndex1 = (uint) iBitIndex1;
-                var uiCount1 = (uint) iCount1;
+                var uiBits1 = (uint)bits;
+                var uiBitIndex1 = (uint)iBitIndex1;
+                var uiCount1 = (uint)iCount1;
                 Write(ref uiBits1, ref uiBitIndex1, ref uiCount1);
             }
             if (iCount2 > 0)
             {
-                var uiBits2 = (uint) (bits >> 32);
-                var uiBitIndex2 = (uint) iBitIndex2;
-                var uiCount2 = (uint) iCount2;
+                var uiBits2 = (uint)(bits >> 32);
+                var uiBitIndex2 = (uint)iBitIndex2;
+                var uiCount2 = (uint)iCount2;
                 Write(ref uiBits2, ref uiBitIndex2, ref uiCount2);
             }
         }
@@ -2470,7 +2471,7 @@ namespace BKSystem.IO
         public virtual void Write(long bits, int bitIndex, int count)
         {
             // Convert the value to an UInt64
-            var ulBits = (ulong) bits;
+            var ulBits = (ulong)bits;
 
             Write(ulBits, bitIndex, count);
         }
@@ -2602,10 +2603,10 @@ namespace BKSystem.IO
         public virtual void Write(double bits, int bitIndex, int count)
         {
             byte[] abytBits = BitConverter.GetBytes(bits);
-            ulong ulBits = abytBits[0] | ((ulong) abytBits[1]) << 8 | ((ulong) abytBits[2]) << 16 |
-                           ((ulong) abytBits[3]) << 24 |
-                           ((ulong) abytBits[4]) << 32 | ((ulong) abytBits[5]) << 40 | ((ulong) abytBits[6]) << 48 |
-                           ((ulong) abytBits[7]) << 56;
+            ulong ulBits = abytBits[0] | ((ulong)abytBits[1]) << 8 | ((ulong)abytBits[2]) << 16 |
+                           ((ulong)abytBits[3]) << 24 |
+                           ((ulong)abytBits[4]) << 32 | ((ulong)abytBits[5]) << 40 | ((ulong)abytBits[6]) << 48 |
+                           ((ulong)abytBits[7]) << 56;
 
             Write(ulBits, bitIndex, count);
         }
@@ -2787,7 +2788,7 @@ namespace BKSystem.IO
 
             // Get current bit buffer element value
             uint uiValue = _auiBitBuffer[_uiBitBuffer_Index];
-            var iValue_BitsToShift = (int) (BitBuffer_SizeOfElement - (_uiBitBuffer_BitIndex + uiActualCount));
+            var iValue_BitsToShift = (int)(BitBuffer_SizeOfElement - (_uiBitBuffer_BitIndex + uiActualCount));
 
             if (iValue_BitsToShift < 0)
             {
@@ -2797,7 +2798,7 @@ namespace BKSystem.IO
                 uiValue &= uiValue_BitMask;
                 uiValue <<= iValue_BitsToShift;
 
-                var uiRemainingCount = (uint) iValue_BitsToShift;
+                var uiRemainingCount = (uint)iValue_BitsToShift;
                 uint uiBitIndex = 0;
                 uint uiValueToAppend = 0;
 
@@ -2817,7 +2818,7 @@ namespace BKSystem.IO
                 UpdateIndicesForRead(uiActualCount);
             }
 
-            bits = uiValue << (int) bitIndex;
+            bits = uiValue << (int)bitIndex;
 
             return uiActualCount;
         }
@@ -2859,7 +2860,7 @@ namespace BKSystem.IO
 
             bit = Convert.ToBoolean(uiBit);
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -3057,14 +3058,14 @@ namespace BKSystem.IO
             if (count > (SizeOfByte - bitIndex))
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_Byte"));
 
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
             uint uiBits = 0;
             uint uiBitsRead = Read(ref uiBits, ref uiBitIndex, ref uiCount);
 
-            bits = (byte) uiBits;
+            bits = (byte)uiBits;
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -3239,7 +3240,7 @@ namespace BKSystem.IO
         {
             byte bytBits = 0;
             int iBitsRead = Read(out bytBits, bitIndex, count);
-            bits = (sbyte) bytBits;
+            bits = (sbyte)bytBits;
             return iBitsRead;
         }
 
@@ -3388,7 +3389,7 @@ namespace BKSystem.IO
             Position = 0;
 
             var abytBits = new byte[Length8];
-            Read(abytBits, 0, (int) Length8);
+            Read(abytBits, 0, (int)Length8);
 
             if (Position != lCurrentPos)
                 Position = lCurrentPos;
@@ -3484,14 +3485,14 @@ namespace BKSystem.IO
             if (count > (SizeOfChar - bitIndex))
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_Char"));
 
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
             uint uiBits = 0;
             uint uiBitsRead = Read(ref uiBits, ref uiBitIndex, ref uiCount);
 
-            bits = (char) uiBits;
+            bits = (char)uiBits;
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -3687,14 +3688,14 @@ namespace BKSystem.IO
             if (count > (SizeOfUInt16 - bitIndex))
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_UInt16"));
 
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
             uint uiBits = 0;
             uint uiBitsRead = Read(ref uiBits, ref uiBitIndex, ref uiCount);
 
-            bits = (ushort) uiBits;
+            bits = (ushort)uiBits;
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -3870,7 +3871,7 @@ namespace BKSystem.IO
             ushort usBits = 0;
             int iBitsRead = Read(out usBits, bitIndex, count);
 
-            bits = (short) usBits;
+            bits = (short)usBits;
 
             return iBitsRead;
         }
@@ -4072,14 +4073,14 @@ namespace BKSystem.IO
             if (count > (SizeOfUInt32 - bitIndex))
                 throw new ArgumentException(BitStreamResources.GetString("Argument_InvalidCountOrBitIndex_UInt32"));
 
-            var uiBitIndex = (uint) bitIndex;
-            var uiCount = (uint) count;
+            var uiBitIndex = (uint)bitIndex;
+            var uiCount = (uint)count;
             uint uiBits = 0;
             uint uiBitsRead = Read(ref uiBits, ref uiBitIndex, ref uiCount);
 
             bits = uiBits;
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -4253,7 +4254,7 @@ namespace BKSystem.IO
             uint uiBits = 0;
             int iBitsRead = Read(out uiBits, bitIndex, count);
 
-            bits = (int) uiBits;
+            bits = (int)uiBits;
 
             return iBitsRead;
         }
@@ -4641,20 +4642,20 @@ namespace BKSystem.IO
             uint uiBits2 = 0;
             if (iCount1 > 0)
             {
-                var uiBitIndex1 = (uint) iBitIndex1;
-                var uiCount1 = (uint) iCount1;
+                var uiBitIndex1 = (uint)iBitIndex1;
+                var uiCount1 = (uint)iCount1;
                 uiBitsRead = Read(ref uiBits1, ref uiBitIndex1, ref uiCount1);
             }
             if (iCount2 > 0)
             {
-                var uiBitIndex2 = (uint) iBitIndex2;
-                var uiCount2 = (uint) iCount2;
+                var uiBitIndex2 = (uint)iBitIndex2;
+                var uiCount2 = (uint)iCount2;
                 uiBitsRead += Read(ref uiBits2, ref uiBitIndex2, ref uiCount2);
             }
 
-            bits = ((ulong) uiBits2 << 32) | uiBits1;
+            bits = ((ulong)uiBits2 << 32) | uiBits1;
 
-            return (int) uiBitsRead;
+            return (int)uiBitsRead;
         }
 
         /// <summary>
@@ -4830,7 +4831,7 @@ namespace BKSystem.IO
             ulong ulBits = 0;
             int iBitsRead = Read(out ulBits, bitIndex, count);
 
-            bits = (long) ulBits;
+            bits = (long)ulBits;
 
             return iBitsRead;
         }
@@ -5174,7 +5175,7 @@ namespace BKSystem.IO
             if ((_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod) > 0)
             {
                 uint uiBitMask = uint.MaxValue <<
-                                 (int) (BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
+                                 (int)(BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
                 bstrmNew._auiBitBuffer[uiCounter] = _auiBitBuffer[uiCounter] & bits._auiBitBuffer[uiCounter] & uiBitMask;
             }
 
@@ -5231,7 +5232,7 @@ namespace BKSystem.IO
             if ((_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod) > 0)
             {
                 uint uiBitMask = uint.MaxValue <<
-                                 (int) (BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
+                                 (int)(BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
                 bstrmNew._auiBitBuffer[uiCounter] = _auiBitBuffer[uiCounter] | bits._auiBitBuffer[uiCounter] & uiBitMask;
             }
 
@@ -5288,7 +5289,7 @@ namespace BKSystem.IO
             if ((_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod) > 0)
             {
                 uint uiBitMask = uint.MaxValue <<
-                                 (int) (BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
+                                 (int)(BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
                 bstrmNew._auiBitBuffer[uiCounter] = _auiBitBuffer[uiCounter] ^ bits._auiBitBuffer[uiCounter] & uiBitMask;
             }
 
@@ -5328,7 +5329,7 @@ namespace BKSystem.IO
             if ((_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod) > 0)
             {
                 uint uiBitMask = uint.MaxValue <<
-                                 (int) (BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
+                                 (int)(BitBuffer_SizeOfElement - (_uiBitBuffer_Length & BitBuffer_SizeOfElement_Mod));
                 bstrmNew._auiBitBuffer[uiCounter] = ~_auiBitBuffer[uiCounter] & uiBitMask;
             }
 
@@ -5364,8 +5365,8 @@ namespace BKSystem.IO
             // Create a copy of the current stream
             BitStream bstrmNew = Copy();
 
-            var uiCount = (uint) count;
-            var uiLength = (uint) bstrmNew.Length;
+            var uiCount = (uint)count;
+            var uiLength = (uint)bstrmNew.Length;
 
             if (uiCount >= uiLength)
             {
@@ -5421,8 +5422,8 @@ namespace BKSystem.IO
             // Create a copy of the current stream
             BitStream bstrmNew = Copy();
 
-            var uiCount = (uint) count;
-            var uiLength = (uint) bstrmNew.Length;
+            var uiCount = (uint)count;
+            var uiLength = (uint)bstrmNew.Length;
 
             if (uiCount >= uiLength)
             {
@@ -5477,7 +5478,7 @@ namespace BKSystem.IO
             int iBitCounter = 0;
             uint ui1 = 1;
 
-            var sb = new StringBuilder((int) _uiBitBuffer_Length);
+            var sb = new StringBuilder((int)_uiBitBuffer_Length);
 
             for (uiCounter = 0; uiCounter < uiWholeUInt32Lengths; uiCounter++)
             {
@@ -5498,7 +5499,7 @@ namespace BKSystem.IO
             if ((_uiBitBuffer_Length & 31) > 0)
             {
                 sb.Append("[" + uiCounter.ToString(_ifp) + "]:{");
-                var iBitCounterMin = (int) (32 - (_uiBitBuffer_Length & 31));
+                var iBitCounterMin = (int)(32 - (_uiBitBuffer_Length & 31));
 
                 for (iBitCounter = 31; iBitCounter >= iBitCounterMin; iBitCounter--)
                 {
@@ -5596,7 +5597,7 @@ namespace BKSystem.IO
         [CLSCompliant(false)]
         public static string ToString(sbyte bits)
         {
-            var bytBits = (byte) bits;
+            var bytBits = (byte)bits;
 
             var sb = new StringBuilder(8);
             uint ui1 = 1;
@@ -5671,7 +5672,7 @@ namespace BKSystem.IO
         [CLSCompliant(false)]
         public static string ToString(ushort bits)
         {
-            var sBits = (short) bits;
+            var sBits = (short)bits;
 
             var sb = new StringBuilder(16);
             uint ui1 = 1;
@@ -5782,7 +5783,7 @@ namespace BKSystem.IO
         /// <seealso cref="Int32"/>
         public static string ToString(int bits)
         {
-            var uiBits = (uint) bits;
+            var uiBits = (uint)bits;
 
             var sb = new StringBuilder(32);
             uint ui1 = 1;
@@ -5857,7 +5858,7 @@ namespace BKSystem.IO
         /// <seealso cref="Int64"/>
         public static string ToString(long bits)
         {
-            var ulBits = (ulong) bits;
+            var ulBits = (ulong)bits;
 
             var sb = new StringBuilder(64);
             ulong ul1 = 1;
@@ -5896,8 +5897,8 @@ namespace BKSystem.IO
         public static string ToString(float bits)
         {
             byte[] abytBits = BitConverter.GetBytes(bits);
-            uint uiBits = abytBits[0] | ((uint) abytBits[1]) << 8 | ((uint) abytBits[2]) << 16 |
-                          ((uint) abytBits[3]) << 24;
+            uint uiBits = abytBits[0] | ((uint)abytBits[1]) << 8 | ((uint)abytBits[2]) << 16 |
+                          ((uint)abytBits[3]) << 24;
 
             var sb = new StringBuilder(32);
             uint ui1 = 1;
@@ -5936,10 +5937,10 @@ namespace BKSystem.IO
         public static string ToString(double bits)
         {
             byte[] abytBits = BitConverter.GetBytes(bits);
-            ulong ulBits = abytBits[0] | ((ulong) abytBits[1]) << 8 | ((ulong) abytBits[2]) << 16 |
-                           ((ulong) abytBits[3]) << 24 |
-                           ((ulong) abytBits[4]) << 32 | ((ulong) abytBits[5]) << 40 | ((ulong) abytBits[6]) << 48 |
-                           ((ulong) abytBits[7]) << 56;
+            ulong ulBits = abytBits[0] | ((ulong)abytBits[1]) << 8 | ((ulong)abytBits[2]) << 16 |
+                           ((ulong)abytBits[3]) << 24 |
+                           ((ulong)abytBits[4]) << 32 | ((ulong)abytBits[5]) << 40 | ((ulong)abytBits[6]) << 48 |
+                           ((ulong)abytBits[7]) << 56;
 
             var sb = new StringBuilder(64);
             ulong ul1 = 1;
@@ -6013,7 +6014,7 @@ namespace BKSystem.IO
 
                 // Redimension the bit buffer if necessary
                 if (_auiBitBuffer.Length == (_uiBitBuffer_Length >> BitBuffer_SizeOfElement_Shift))
-                    _auiBitBuffer = ReDimPreserve(_auiBitBuffer, (uint) _auiBitBuffer.Length << 1);
+                    _auiBitBuffer = ReDimPreserve(_auiBitBuffer, (uint)_auiBitBuffer.Length << 1);
             }
             else if (_uiBitBuffer_BitIndex > BitBuffer_SizeOfElement)
                 throw new InvalidOperationException(
@@ -6073,12 +6074,12 @@ namespace BKSystem.IO
         {
             var auiNewBuffer = new uint[newLength];
 
-            var uiBufferLength = (uint) buffer.Length;
+            var uiBufferLength = (uint)buffer.Length;
 
             if (uiBufferLength < newLength)
-                Buffer.BlockCopy(buffer, 0, auiNewBuffer, 0, (int) (uiBufferLength << 2));
+                Buffer.BlockCopy(buffer, 0, auiNewBuffer, 0, (int)(uiBufferLength << 2));
             else // buffer.Length >= newLength
-                Buffer.BlockCopy(buffer, 0, auiNewBuffer, 0, (int) (newLength << 2));
+                Buffer.BlockCopy(buffer, 0, auiNewBuffer, 0, (int)(newLength << 2));
 
             // Free the previously allocated buffer
             buffer = null;
@@ -6485,7 +6486,7 @@ namespace BKSystem.IO
             if (bits == null)
                 throw new ArgumentNullException("bits", BitStreamResources.GetString("ArgumentNull_BitStream"));
 
-            return new BufferedStream((MemoryStream) bits);
+            return new BufferedStream((MemoryStream)bits);
         }
 
         /// <summary>

@@ -1,9 +1,7 @@
 ﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System;
 using System.Diagnostics;
 
 namespace SS14.Client.Services.Map

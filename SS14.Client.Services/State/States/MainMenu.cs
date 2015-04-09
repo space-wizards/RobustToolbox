@@ -1,11 +1,10 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
@@ -13,7 +12,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using Color = System.Drawing.Color;
-using SFML.Graphics;
 
 namespace SS14.Client.Services.State.States
 {

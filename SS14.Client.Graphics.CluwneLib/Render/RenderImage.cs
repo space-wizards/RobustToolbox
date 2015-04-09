@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using Color = System.Drawing.Color;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.Maths;
+using System;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Graphics.CluwneLib.Render
 {

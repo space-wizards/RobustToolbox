@@ -1,8 +1,8 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

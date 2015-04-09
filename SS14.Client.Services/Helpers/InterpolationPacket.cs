@@ -1,6 +1,5 @@
-﻿using SS14.Client.Graphics.CluwneLib;
+﻿using Lidgren.Network;
 using SS14.Shared.Maths;
-using Lidgren.Network;
 
 namespace SS14.Client.Services.Helpers
 {

@@ -1,5 +1,4 @@
-﻿using SS14.Shared;
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects

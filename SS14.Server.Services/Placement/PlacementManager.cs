@@ -11,10 +11,10 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
 
 namespace SS14.Server.Services.Placement
 {

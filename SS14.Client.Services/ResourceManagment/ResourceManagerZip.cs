@@ -1,25 +1,24 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using SFML.Graphics;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using SS14.Client.Graphics.CluwneLib.Shader;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using TextureCache = SS14.Client.Graphics.CluwneLib.TextureCache;
-using Image = SFML.Graphics.Image;
-using Font = SFML.Graphics.Font;
 using Color = SFML.Graphics.Color;
-using SFML.Graphics;
+using Font = SFML.Graphics.Font;
+using Image = SFML.Graphics.Image;
+using TextureCache = SS14.Client.Graphics.CluwneLib.TextureCache;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Services.Resources
 {

@@ -1,10 +1,10 @@
-﻿using SS14.Client.Graphics.CluwneLib.Shader;
+﻿using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
 
 
 namespace SS14.Client.Services.Player.PostProcessing

@@ -1,7 +1,5 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Net;
-using System.Threading;
-using System.Diagnostics;
 
 namespace Lidgren.Network
 {

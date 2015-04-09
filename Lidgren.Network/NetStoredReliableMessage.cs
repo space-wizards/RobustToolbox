@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Lidgren.Network
 {
 	internal struct NetStoredReliableMessage

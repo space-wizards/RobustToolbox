@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using System.Collections.Generic;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 
 namespace SS14.Client.Interfaces.GOC
 {

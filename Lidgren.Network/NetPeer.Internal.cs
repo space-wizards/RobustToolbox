@@ -3,12 +3,12 @@
 #endif
 
 using System;
-using System.Net;
-using System.Threading;
-using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
+using System.Threading;
 
 namespace Lidgren.Network
 {

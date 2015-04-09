@@ -1,7 +1,6 @@
 #region Imports
 
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using SVector2f = SFML.System.Vector2f;

@@ -2,8 +2,8 @@
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
-using System;
 using SS14.Shared.Maths;
+using System;
 using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
 namespace SS14.Client.GameObjects
 {

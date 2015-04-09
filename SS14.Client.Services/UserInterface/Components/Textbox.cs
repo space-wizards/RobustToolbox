@@ -1,10 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
-using Color = System.Drawing.Color;
-using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SFML.Window;
+﻿using SFML.Window;
 using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
+using System;
+using System.Drawing;
+using Color = System.Drawing.Color;
 
 
 namespace SS14.Client.Services.UserInterface.Components

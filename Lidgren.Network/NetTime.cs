@@ -20,8 +20,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define IS_STOPWATCH_AVAILABLE
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 
 namespace Lidgren.Network

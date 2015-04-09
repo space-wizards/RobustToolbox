@@ -1,12 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Shared.GameObjects;
 using System;
 using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {

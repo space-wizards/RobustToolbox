@@ -18,8 +18,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 using System;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 // @TODO: examine performance characteristics of using SpinLock when using .Net 4.0
 

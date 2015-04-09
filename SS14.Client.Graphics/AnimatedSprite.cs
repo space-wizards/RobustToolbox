@@ -1,6 +1,6 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

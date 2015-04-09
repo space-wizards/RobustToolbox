@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.GameObject;
+using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Services.Log;
 using SS14.Shared;

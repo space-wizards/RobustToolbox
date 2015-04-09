@@ -1,9 +1,9 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 using System;
-using SFML.Window;
 using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components

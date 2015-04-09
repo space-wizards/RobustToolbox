@@ -1,9 +1,6 @@
 ﻿using SFML.Graphics;
 using SS14.Shared.Maths;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Color = System.Drawing.Color;
 
 

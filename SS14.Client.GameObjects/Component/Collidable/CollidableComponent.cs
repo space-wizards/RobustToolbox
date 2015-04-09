@@ -5,9 +5,9 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Collidable;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {

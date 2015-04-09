@@ -1,17 +1,11 @@
-﻿using BKSystem.IO;
-using Lidgren.Network;
-using SS14.Client.Interfaces.Collision;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.State;
-using SS14.Client.Services.State.States;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 
 namespace SS14.Client.Services.Map

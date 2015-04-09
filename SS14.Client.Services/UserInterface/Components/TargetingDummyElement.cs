@@ -1,12 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SFML.Window;
-using Image = SFML.Graphics.Image;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

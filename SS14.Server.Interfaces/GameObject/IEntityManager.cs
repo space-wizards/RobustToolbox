@@ -1,9 +1,8 @@
 ﻿using Lidgren.Network;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Collections.Generic;
 using SS14.Shared.Maths;
+using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.GOC
 {

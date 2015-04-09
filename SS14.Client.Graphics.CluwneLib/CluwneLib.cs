@@ -1,17 +1,15 @@
-﻿using System;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
 using SS14.Client.Graphics.CluwneLib.Event;
 using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.CluwneLib.Shader;
 using SS14.Client.Graphics.CluwneLib.Timing;
+using SS14.Shared.Maths;
+using System;
+using System.Drawing;
 using Color = System.Drawing.Color;
 using SColor = SFML.Graphics.Color;
-using SS14.Client.Graphics.CluwneLib.Shader;
-using SS14.Shared.Maths;
-using System.Drawing;
-using SFML.Window;
-using System.Collections.Generic;
-using System.Collections;
 
 namespace SS14.Client.Graphics.CluwneLib
 {

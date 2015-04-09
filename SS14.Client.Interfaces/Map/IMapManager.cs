@@ -1,8 +1,7 @@
 ﻿using Lidgren.Network;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Drawing;
-using SS14.Shared;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Map
 {

@@ -1,12 +1,12 @@
-﻿using SS14.Client.Interfaces.Input;
+﻿using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.Input
 {

@@ -1,5 +1,4 @@
 ﻿using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
 using SS14.Client.Graphics.CluwneLib.Event;
 
 

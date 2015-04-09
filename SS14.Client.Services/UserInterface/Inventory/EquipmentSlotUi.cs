@@ -1,4 +1,6 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -7,11 +9,9 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SFML.Window;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {

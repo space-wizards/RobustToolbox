@@ -1,10 +1,8 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Map;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using System;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects

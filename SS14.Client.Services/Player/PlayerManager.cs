@@ -1,7 +1,7 @@
-﻿using SS14.Client.Graphics.CluwneLib.Render;
+﻿using Lidgren.Network;
 using SFML.Window;
-using Lidgren.Network;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.CluwneLib.Render;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;

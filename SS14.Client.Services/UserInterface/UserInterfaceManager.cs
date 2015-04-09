@@ -1,6 +1,7 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Shared.Maths;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
@@ -10,12 +11,11 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
-using SFML.Window;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface
 {

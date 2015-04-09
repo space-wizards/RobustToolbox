@@ -1,9 +1,9 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Window;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

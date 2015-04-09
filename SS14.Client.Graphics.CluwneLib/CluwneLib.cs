@@ -198,6 +198,11 @@ namespace SS14.Client.Graphics.CluwneLib
             rectangle.FillColor = SystemColorToSFML(Color);
 
             CurrentRenderTarget.Draw(rectangle);
+            if (CluwneLib.Debug.RenderingDelay > 0)
+            {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
         }
 
         /// <summary>
@@ -219,6 +224,11 @@ namespace SS14.Client.Graphics.CluwneLib
             HollowRect.OutlineColor = SystemColorToSFML(OutlineColor);
 
             CurrentRenderTarget.Draw(HollowRect);
+            if (CluwneLib.Debug.RenderingDelay > 0)
+            {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
 
 
         }

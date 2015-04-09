@@ -74,17 +74,21 @@ namespace SS14.Client
             _stateManager.RequestStateChange<TestState> ();
 
             FrameEventArgs _frameEvent;
+            EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
             
 
-            while (CluwneLib.IsRunning == true) {
+            while (CluwneLib.IsRunning == true) 
+            {
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.Clear (Color.Black);
-                CluwneLib.Screen.DispatchEvents ();
+                CluwneLib.Screen.DispatchEvents();
+               
+
                 CluwneLib.RunIdle (this, _frameEvent);
-                CluwneLib.Screen.Display ();
+                CluwneLib.Screen.Display();
             }
             CluwneLib.Terminate();
             Console.WriteLine("Gameloop terminated.");
@@ -95,6 +99,7 @@ namespace SS14.Client
 
         private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
+
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
@@ -112,8 +117,15 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-	    _stateManager.FormResize();
+	        _stateManager.FormResize();
         }
+        private void MainWindowRequestClose(object sender, EventArgs e)
+        {
+            CluwneLib.Stop();
+        }
+
+
+
 
         #region Input Handling
 
@@ -233,13 +245,14 @@ namespace SS14.Client
             CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed += MainWindowRequestClose;
             CluwneLib.Idle += CluwneLibIdle;
         }
 
         private void SetupInput()
         {
 
-            //Cursor.Hide();
+            Cursor.Hide();
      
 
             CluwneLib.Screen.KeyPressed  += KeyDownEvent;

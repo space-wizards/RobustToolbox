@@ -1,11 +1,11 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
+using SFML.Window;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -56,7 +56,7 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 Sprite = "lobby_depgrad",
                 Color = Color.FromArgb(120, Color.White),
-                BlendingMode = BlendingModes.None
+             // BlendingMode = BlendingModes.None
             };
             _imgDepGrad.Update(0);
             _imgDepGrad.Position = new Point(_shwDepa.ClientArea.X + (int)(_shwDepa.ClientArea.Width / 2f - _imgDepGrad.ClientArea.Width / 2f), _shwDepa.ClientArea.Top);
@@ -92,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 Sprite = "lobby_jobgrad",
                 Color = Color.FromArgb(120, Color.White),
-                BlendingMode = BlendingModes.None
+               // BlendingMode = BlendingModes.None
             };
             _imgJobGrad.Update(0);
             _imgJobGrad.Position = new Point(_shwJobs.ClientArea.X + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);
@@ -162,17 +162,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

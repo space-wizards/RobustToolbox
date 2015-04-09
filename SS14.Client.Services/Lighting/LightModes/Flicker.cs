@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿
+using System.Diagnostics;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared;
@@ -9,7 +10,7 @@ namespace SS14.Client.GameObjects.Component.Light.LightModes
 {
     public class LightFlicker : LightMode
     {
-        private readonly PreciseTimer timer = new PreciseTimer();
+        private readonly Stopwatch timer = new Stopwatch();
         private Color _lightColorOriginal;
         private int flickerCount;
         private bool flickering;
@@ -44,7 +45,7 @@ namespace SS14.Client.GameObjects.Component.Light.LightModes
             {
                 if (lightOn == false)
                 {
-                    if (timer.Milliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
+                    if (timer.ElapsedMilliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                     {
                         flickerCount++;
                         lightOn = true;
@@ -55,7 +56,7 @@ namespace SS14.Client.GameObjects.Component.Light.LightModes
                             flickering = false;
                     }
                 }
-                else if (timer.Milliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
+                else if (timer.ElapsedMilliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                 {
                     owner.SetColor((_lightColorOriginal.A/2), (_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
                                    (_lightColorOriginal.B/2));
@@ -66,7 +67,7 @@ namespace SS14.Client.GameObjects.Component.Light.LightModes
             }
             else
             {
-                if (timer.Seconds >= 4 && IoCManager.Resolve<IRand>().Next(1, 5) == 2)
+                if (timer.Elapsed.Seconds >= 4 && IoCManager.Resolve<IRand>().Next(1, 5) == 2)
                 {
                     flickering = true;
                     flickerCount = 0;

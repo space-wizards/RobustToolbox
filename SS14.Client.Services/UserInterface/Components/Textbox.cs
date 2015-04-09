@@ -1,10 +1,11 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
+using Color = System.Drawing.Color;
 using System.Drawing;
-using System.Windows.Forms;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
+
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -36,9 +37,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private string _displayText = "";
         private string _text = "";
-        private Sprite _textboxLeft;
-        private Sprite _textboxMain;
-        private Sprite _textboxRight;
+		private CluwneSprite _textboxLeft;
+		private CluwneSprite _textboxMain;
+		private CluwneSprite _textboxRight;
 
         public Color drawColor = Color.White;
         public Color textColor = Color.Black;
@@ -54,7 +55,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color = Color.Black};
+            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color =  Color.Black};
 
             Update(0);
         }
@@ -96,9 +97,9 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = drawColor;
-                _textboxMain.Color = drawColor;
-                _textboxRight.Color = drawColor;
+                _textboxLeft.Color = CluwneLib.SystemColorToSFML(drawColor);
+                _textboxMain.Color = CluwneLib.SystemColorToSFML(drawColor);
+                _textboxRight.Color = CluwneLib.SystemColorToSFML(drawColor);
             }
 
             _textboxLeft.Draw(_clientAreaLeft);
@@ -106,15 +107,15 @@ namespace SS14.Client.Services.UserInterface.Components
             _textboxRight.Draw(_clientAreaRight);
 
             if (Focus && blinkCount <= 0.25f)
-                Gorgon.CurrentRenderTarget.FilledRectangle(_caretPos - _caretWidth,
-                                                           Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),
-                                                           _caretWidth, _caretHeight, Color.WhiteSmoke);
+                //Draw Textbox
+
+         // CluwneLib.CurrentRenderTarget.Draw(_caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
 
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = Color.White;
-                _textboxMain.Color = Color.White;
-                _textboxRight.Color = Color.White;
+                _textboxLeft.Color = CluwneLib.SystemColorToSFML(Color.White);
+                _textboxMain.Color = CluwneLib.SystemColorToSFML(Color.White);
+                _textboxRight.Color =CluwneLib.SystemColorToSFML( Color.White);
             }
 
             Label.Color = textColor;
@@ -133,9 +134,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
                 return true;
             }
@@ -143,53 +144,52 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+		public override bool KeyDown(KeyEventArgs e)
         {
             if (!Focus) return false;
 
-            if (e.Ctrl && e.CharacterMapping.Character == 'v')
+            if (e.Control && e.Code == Keyboard.Key.V)
             {
-                if (Clipboard.ContainsText())
-                {
-                    string ret = Clipboard.GetText();
+             
+                    string ret = System.Windows.Forms.Clipboard.GetText();
                     Text = Text.Insert(_caretIndex, ret);
                     if (_caretIndex < _text.Length) _caretIndex += ret.Length;
                     SetVisibleText();
                     return true;
-                }
             }
 
-            if (e.Ctrl && e.CharacterMapping.Character == 'c')
+            if (e.Control && e.Code == Keyboard.Key.C)
             {
-                Clipboard.SetText(Text);
+               
+                System.Windows.Forms.Clipboard.SetText(Text);
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Left)
+            if (e.Code == Keyboard.Key.Left)
             {
                 if (_caretIndex > 0) _caretIndex--;
                 SetVisibleText();
                 return true;
             }
-            else if (e.Key == KeyboardKeys.Right)
+            else if (e.Code == Keyboard.Key.Right)
             {
                 if (_caretIndex < _text.Length) _caretIndex++;
                 SetVisibleText();
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Return && Text.Length >= 1)
+            if (e.Code == Keyboard.Key.Return && Text.Length >= 1)
             {
                 Submit();
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Back && Text.Length >= 1)
+            if (e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
             {
                 if (_caretIndex == 0) return true;
 
@@ -199,7 +199,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (e.Key == KeyboardKeys.Delete && Text.Length >= 1)
+            if (e.Code == Keyboard.Key.Delete && Text.Length >= 1)
             {
                 if (_caretIndex >= Text.Length) return true;
                 Text = Text.Remove(_caretIndex, 1);
@@ -207,24 +207,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (char.IsLetterOrDigit(e.CharacterMapping.Character) || char.IsPunctuation(e.CharacterMapping.Character) ||
-                char.IsWhiteSpace(e.CharacterMapping.Character))
-            {
-                if (Text.Length == MaxCharacters) return false;
-                if (e.Shift)
-                {
-                    Text = Text.Insert(_caretIndex, e.CharacterMapping.Shifted.ToString());
-                    if (_caretIndex < _text.Length) _caretIndex++;
-                    SetVisibleText();
-                }
-                else
-                {
-                    Text = Text.Insert(_caretIndex, e.CharacterMapping.Character.ToString());
-                    if (_caretIndex < _text.Length) _caretIndex++;
-                    SetVisibleText();
-                }
-                return true;
-            }
+           
             return false;
         }
 

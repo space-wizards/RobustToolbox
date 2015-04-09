@@ -1,5 +1,5 @@
-﻿using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Render;
+using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
@@ -85,11 +85,11 @@ namespace SS14.Client.Services.Player
             ControlledEntity = null;
         }
 
-        public void KeyDown(KeyboardKeys key)
+        public void KeyDown(Keyboard.Key key)
         {
         }
 
-        public void KeyUp(KeyboardKeys key)
+        public void KeyUp(Keyboard.Key key)
         {
         }
 
@@ -174,11 +174,11 @@ namespace SS14.Client.Services.Player
                     e.OnExpired += EffectExpired;
                     _effects.Add(e);
                     break;
-                case PostProcessingEffectType.Acid:
-                    e = new AcidPostProcessingEffect(duration);
-                    e.OnExpired += EffectExpired;
-                    _effects.Add(e);
-                    break;
+                //case PostProcessingEffectType.Acid:
+                //    e = new AcidPostProcessingEffect(duration);
+                //    e.OnExpired += EffectExpired;
+                //    _effects.Add(e);
+                //    break;
             }
         }
 

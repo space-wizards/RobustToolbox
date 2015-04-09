@@ -1,12 +1,10 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.Sprites;
-using ICSharpCode.SharpZipLib.Core;
+﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using Vector2 = SS14.Shared.Maths.Vector2;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -15,8 +13,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Font = GorgonLibrary.Graphics.Font;
-using Image = GorgonLibrary.Graphics.Image;
+using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Sprite;
+using TextureCache = SS14.Client.Graphics.CluwneLib.TextureCache;
+using Image = SFML.Graphics.Image;
+using Font = SFML.Graphics.Font;
+using Color = SFML.Graphics.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.Resources
 {
@@ -29,7 +32,7 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
         private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
-        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, CluwneSprite> _sprites = new Dictionary<string, CluwneSprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
@@ -53,15 +56,15 @@ namespace SS14.Client.Services.Resources
 
             _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.bluehigh.ttf");
             if (_stream != null)
-                _fonts.Add("base_font", Font.FromStream("base_font", _stream, (int)_stream.Length, 10));
+                _fonts.Add("base_font", new Font( _stream));
             _stream = null;
 
             _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.noSprite.png");
             if (_stream != null)
             {
-                Image nospriteimage = Image.FromStream("nospriteimage", _stream, (int) _stream.Length);
+                Image nospriteimage = new Image( _stream);
                 _images.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite("nosprite", nospriteimage));  
+                _sprites.Add("nosprite", new CluwneSprite("nosprite", nospriteimage));  
             }
             _stream = null;
         }
@@ -123,18 +126,18 @@ namespace SS14.Client.Services.Resources
                             {
                                 Image loadedImg = LoadImageFrom(zipFile, texture);
                                 if (loadedImg == null) continue;
-                                else _images.Add(loadedImg.Name, loadedImg);
+                                else _images.Add(texture.Name, loadedImg);
                             }
                         }
                         break;
 
-                    case("tai/"):
+                    case("tai/"): // Tai? 
                         foreach (ZipEntry tai in current.Value)
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
                             {
-                                IEnumerable<Sprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
-                                foreach (Sprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Name)))
+                                IEnumerable<CluwneSprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
+                                foreach (CluwneSprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Name)))
                                     _sprites.Add(currentSprite.Name, currentSprite);                               
                             }
                         }
@@ -147,7 +150,8 @@ namespace SS14.Client.Services.Resources
                             {
                                 Font loadedFont = LoadFontFrom(zipFile, font);
                                 if (loadedFont == null) continue;
-                                else _fonts.Add(loadedFont.Name, loadedFont);
+                                string ResourceName = Path.GetFileNameWithoutExtension(font.Name).ToLowerInvariant();
+                                _fonts.Add(ResourceName, loadedFont);
                             }
                         }
                         break;
@@ -167,12 +171,13 @@ namespace SS14.Client.Services.Resources
                     case("shaders/"):
                         foreach (ZipEntry shader in current.Value)
                         {
-                            if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
-                            {
-                                FXShader loadedShader = LoadShaderFrom(zipFile, shader);
-                                if (loadedShader == null) continue;
-                                else _shaders.Add(loadedShader.Name, loadedShader);
-                            }
+                            //FIXME Throws Exception
+                            //if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
+                            //{
+                            //    FXShader loadedShader = LoadShaderFrom(zipFile, shader);
+                            //    if (loadedShader == null) continue;
+                            //    else _shaders.Add(shader.Name, loadedShader);
+                            //}
                         }
                         break;
 
@@ -219,27 +224,36 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
-            if (ImageCache.Images.Contains(ResourceName))
-                return null;
+            if (TextureCache.Textures.Contains(ResourceName))
+                return null; // ImageCache.Images[ResourceName];
 
             var byteBuffer = new byte[zipBufferSize];
 
-            Stream zipStream = zipFile.GetInputStream(imageEntry);
-            //Will throw exception is missing or wrong password. Handle this.
+            try
+            {
+                Stream zipStream = zipFile.GetInputStream(imageEntry);
+                var memStream = new MemoryStream();
 
-            var memStream = new MemoryStream();
+                StreamUtils.Copy(zipStream, memStream, byteBuffer);
+                memStream.Position = 0;
 
-            StreamUtils.Copy(zipStream, memStream, byteBuffer);
-            memStream.Position = 0;
+                Image loadedImg = new Image(memStream);
+                TextureCache.Add(ResourceName, loadedImg);
 
-            Image loadedImg = Image.FromStream(ResourceName, memStream, (int) memStream.Length);
+                memStream.Close();
+                zipStream.Close();
+                memStream.Dispose();
+                zipStream.Dispose();
+                return loadedImg;
 
-            memStream.Close();
-            zipStream.Close();
-            memStream.Dispose();
-            zipStream.Dispose();
+            }
+            catch(Exception I)
+            {
+                System.Console.WriteLine("Failed to load " + imageEntry.Name + ": " + I.ToString());
+            }
 
-            return loadedImg;
+            return null;
+          
         }
 
         /// <summary>
@@ -249,8 +263,7 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
 
-            if (ShaderCache.Shaders.Contains(ResourceName))
-                return null;
+          
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -262,8 +275,8 @@ namespace SS14.Client.Services.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            FXShader loadedShader = FXShader.FromStream(ResourceName, memStream, ShaderCompileOptions.Debug,
-                                                        (int) memStream.Length, false);
+            FXShader loadedShader = new FXShader(ResourceName,ResourceName);
+            loadedShader.memStream = memStream;
 
             memStream.Close();
             zipStream.Close();
@@ -278,11 +291,6 @@ namespace SS14.Client.Services.Resources
         /// </summary>
         private Font LoadFontFrom(ZipFile zipFile, ZipEntry fontEntry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(fontEntry.Name).ToLowerInvariant();
-
-            if (FontCache.Fonts.Contains(ResourceName))
-                return null;
-
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(fontEntry);
@@ -293,14 +301,12 @@ namespace SS14.Client.Services.Resources
             StreamUtils.Copy(zipStream, memStream, byteBuffer);
             memStream.Position = 0;
 
-            Font loadedFont = Font.FromStream(ResourceName, memStream, (int) memStream.Length, 9, false);
+            Font loadedFont = new Font(memStream);
 
-            loadedFont.AntiAlias = true;
-            loadedFont.Refresh();
 
-            memStream.Close();
+            // memStream.Close();
             zipStream.Close();
-            memStream.Dispose();
+            // memStream.Dispose();
             zipStream.Dispose();
 
             return loadedFont;
@@ -359,11 +365,11 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  <para>Loads TAI from given Zip-File and Entry and creates & loads Sprites from it.</para>
         /// </summary>
-        private IEnumerable<Sprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
+        private IEnumerable<CluwneSprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
 
-            var loadedSprites = new List<Sprite>();
+            var loadedSprites = new List<CluwneSprite>();
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -394,7 +400,9 @@ namespace SS14.Client.Services.Resources
                 string[] splitLine = line.Split(',');
                 string[] fullPath = Regex.Split(splitLine[0], "\t");
 
-                string originalName = Path.GetFileNameWithoutExtension(fullPath[0]).ToLowerInvariant();
+                string PlatformPathname = SS14.Shared.Utility.PlatformTools.SanePath(fullPath[0]);
+
+                string originalName = Path.GetFileNameWithoutExtension(PlatformPathname).ToLowerInvariant();
                 //The name of the original picture without extension, before it became part of the atlas. 
                 //This will be the name we can find this under in our Resource lists.
 
@@ -402,10 +410,10 @@ namespace SS14.Client.Services.Resources
 
                 string imageName = splitResourceName[0].ToLowerInvariant();
 
-                if (!ImageCache.Images.Contains(splitResourceName[0]))
+                if (!TextureCache.Textures.Contains(splitResourceName[0]))
                     continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-                Image atlasTex = ImageCache.Images[splitResourceName[0]];
+                Texture atlasTex = TextureCache.Textures[splitResourceName[0]];
                 //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();
@@ -431,14 +439,16 @@ namespace SS14.Client.Services.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2D((float) Math.Round(offsetX*atlasTex.Width, 1),
-                                            (float) Math.Round(offsetY*atlasTex.Height, 1));
-                info.Size = new Vector2D((float) Math.Round(sizeX*atlasTex.Width, 1),
-                                         (float) Math.Round(sizeY*atlasTex.Height, 1));
+                info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Size.X, 1),
+                    (float) Math.Round(offsetY*atlasTex.Size.Y, 1));
+                info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Size.X, 1),
+                    (float) Math.Round(sizeY*atlasTex.Size.Y, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
-                loadedSprites.Add(new Sprite(originalName, atlasTex, info.Offsets, info.Size));
+                loadedSprites.Add(new CluwneSprite(originalName, atlasTex,
+                    new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y)));
+
             }
 
             return loadedSprites;
@@ -460,7 +470,7 @@ namespace SS14.Client.Services.Resources
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
         ///  <para>If a sprite has been created before using this method, it will return that Sprite. Returns error Sprite if not found.</para>
         /// </summary>
-        public Sprite GetSpriteFromImage(string key)
+        public CluwneSprite GetSpriteFromImage(string key)
         {
             key = key.ToLowerInvariant();
             if (_images.ContainsKey(key))
@@ -471,7 +481,7 @@ namespace SS14.Client.Services.Resources
                 }
                 else
                 {
-                    var newSprite = new Sprite(key, _images[key]);
+                    var newSprite = new CluwneSprite(key, _images[key]);
                     _sprites.Add(key, newSprite);
                     return newSprite;
                 }
@@ -482,7 +492,7 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  Retrieves the Sprite with the given key from the Resource List. Returns error Sprite if not found.
         /// </summary>
-        public Sprite GetSprite(string key)
+        public CluwneSprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
             if (_sprites.ContainsKey(key))
@@ -493,7 +503,7 @@ namespace SS14.Client.Services.Resources
             else return GetSpriteFromImage(key);
         }
 
-        public List<Sprite> GetSprites()
+        public List<CluwneSprite> GetSprites()
         {
             return _sprites.Values.ToList();
         } 
@@ -513,7 +523,7 @@ namespace SS14.Client.Services.Resources
             return null;
         }
 
-        public Sprite GetNoSprite()
+        public CluwneSprite GetNoSprite()
         {
             return _sprites["nosprite"];
         }
@@ -575,7 +585,7 @@ namespace SS14.Client.Services.Resources
         /// </summary>
         public Image GetImage(string key)
         {
-            key = key.ToLowerInvariant();
+            //key = key.ToLowerInvariant(); FUCK THIS LINE OF CODE ESPECIALLY BROKENASFUCK
             if (_images.ContainsKey(key)) return _images[key];
             else return _images["nosprite"];
         }

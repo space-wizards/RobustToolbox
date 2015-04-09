@@ -1,10 +1,13 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
+using SS14.Client.Graphics.CluwneLib;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -67,13 +70,13 @@ namespace SS14.Client.Services.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] WeightsOffsetsX { get; private set; }
+        public Vector4[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4D[] WeightsOffsetsY { get; private set; }
+        public Vector4[] WeightsOffsetsY { get; private set; }
 
         public SizeF Size { get; private set; }
 
@@ -169,8 +172,8 @@ namespace SS14.Client.Services.Helpers
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector4D[Radius*2 + 1];
-            WeightsOffsetsY = new Vector4D[Radius*2 + 1];
+            WeightsOffsetsX = new Vector4[Radius*2 + 1];
+            WeightsOffsetsY = new Vector4[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -178,37 +181,38 @@ namespace SS14.Client.Services.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector4D(Kernel[index], i*xOffset, 0.0f, 0.0f);
-                WeightsOffsetsY[index] = new Vector4D(Kernel[index], i*yOffset, 0.0f, 0.0f);
+                WeightsOffsetsX[index] = new Vector4(Kernel[index], i*xOffset, 0.0f, 0.0f);
+                WeightsOffsetsY[index] = new Vector4(Kernel[index], i*yOffset, 0.0f, 0.0f);
             }
         }
 
         public void PerformGaussianBlur(RenderImage sourceImage)
         {
             // Perform horizontal Gaussian blur.
-            _intermediateTarget = new RenderImage(targetName, sourceImage.Width, sourceImage.Height, sourceImage.Format);
+            _intermediateTarget = new RenderImage(sourceImage.Width, sourceImage.Height);
+            _intermediateTarget.setName = targetName;
             _intermediateTarget.Clear(Color.Black);
 
-            Gorgon.CurrentRenderTarget = _intermediateTarget;
-            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurHorizontal"];
+            CluwneLib.CurrentRenderTarget = _intermediateTarget;
+            CluwneLib.CurrentShader = _shader; //TODO .Techniques["GaussianBlurHorizontal"];
 
-            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsX);
-            _shader.Parameters["colorMapTexture"].SetValue(sourceImage.Image);
+           // _shader.setParameter("weights_offsets").SetValue(WeightsOffsetsX);
+           // _shader.setParameters["colorMapTexture"].SetValue(sourceImage.Image);
 
-            sourceImage.Image.Blit(0, 0, sourceImage.Image.Width, sourceImage.Image.Height);
+            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
 
             // Perform vertical Gaussian blur.
-            Gorgon.CurrentRenderTarget = sourceImage;
-            Gorgon.CurrentShader = _shader.Techniques["GaussianBlurVertical"];
+          CluwneLib.CurrentRenderTarget = sourceImage;
+          CluwneLib.CurrentShader = _shader; //.Techniques["GaussianBlurVertical"];
 
-            _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget.Image);
-            _shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
+            //   _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget.Image);
+            //_shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
 
             //_intermediateTargetSprite.Draw();
-            _intermediateTarget.Image.Blit(0, 0, sourceImage.Image.Width, sourceImage.Image.Height);
+            _intermediateTarget.Blit(0, 0, sourceImage.Width, sourceImage.Height);
 
-            Gorgon.CurrentShader = null;
-            Gorgon.CurrentRenderTarget = null;
+            CluwneLib.CurrentShader = null;
+            CluwneLib.CurrentRenderTarget = null;
             _intermediateTarget.Dispose();
         }
     }

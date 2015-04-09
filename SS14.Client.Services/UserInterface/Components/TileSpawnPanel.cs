@@ -1,6 +1,4 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Map;
+﻿using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -10,6 +8,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using SFML.Window;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -51,12 +51,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
             BuildTileList();
 
-            Position = new Point((int) (Gorgon.CurrentRenderTarget.Width/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (Gorgon.CurrentRenderTarget.Height/2f) - (int) (ClientArea.Height/2f));
+            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
-        private void ClearLabelClicked(Label sender, MouseInputEventArgs e)
+		private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
             _clearLabel.BackgroundColor = Color.Gray;
             BuildTileList();
@@ -106,7 +106,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 ((Label) curr).FixedWidth = maxWidth;
         }
 
-        private void TileLabelClicked(Label sender, MouseInputEventArgs e)
+		private void TileLabelClicked(Label sender, MouseButtonEventArgs e)
         {
             foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).BackgroundColor = Color.Gray;
@@ -144,34 +144,34 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-        public override void MouseMove(MouseInputEventArgs e)
+		public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseInputEventArgs e)
+		public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_tileList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
             return false;
         }
 
-        public override bool KeyDown(KeyboardInputEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             if (base.KeyDown(e)) return true;
             return false;

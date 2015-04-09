@@ -1,5 +1,4 @@
-﻿using GorgonLibrary;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
@@ -9,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Collision
 {
@@ -90,7 +90,7 @@ namespace SS14.Client.Services.Collision
         /// <returns></returns>
         public bool TryCollide(Entity entity)
         {
-            return TryCollide(entity, Vector2D.Zero);
+            return TryCollide(entity, Vector2.Zero);
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(Entity entity, Vector2D offset, bool bump = true)
+        public bool TryCollide(Entity entity, Vector2 offset, bool bump = true)
         {
             var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;

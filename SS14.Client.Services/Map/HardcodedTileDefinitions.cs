@@ -1,7 +1,8 @@
-﻿using GorgonLibrary.Graphics;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,34 +30,34 @@ namespace SS14.Client.Services.Map
 
         public Tile Create(ushort data = 0) { return new Tile(0, data); }
 
-        Sprite tileSprite;
+        CluwneSprite tileSprite;
 
-        public void Render(float xTopLeft, float yTopLeft, GorgonLibrary.Graphics.Batch batch)
+        public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             if (tileSprite == null)
                 tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("space_texture");
             
             tileSprite.SetPosition(xTopLeft, yTopLeft);
-            batch.AddClone(tileSprite);
+            batch.Draw(tileSprite);
         }
 
         public void RenderPos(float x, float y, int tileSpacing, int lightSize)
         {
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, GorgonLibrary.Vector2D lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 
-        public void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, GorgonLibrary.Graphics.Batch decalBatch)
+        public void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
         }
 
-        public void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, GorgonLibrary.Graphics.Batch gasBatch)
+        public void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch)
         {
         }
 
-        public void RenderTop(float xTopLeft, float yTopLeft, GorgonLibrary.Graphics.Batch wallTopsBatch)
+        public void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
         }
     }

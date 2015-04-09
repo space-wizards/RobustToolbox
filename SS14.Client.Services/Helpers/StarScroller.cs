@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using System;
 using System.Drawing;
 
@@ -22,9 +23,9 @@ namespace SS14.Client.Services.Helpers
             {
                 for (int i = 0; i < _stars.Length/4; i++)
                 {
-                    _stars[i, layer].Position = new Vector2D((float) (_random.NextDouble()*Gorgon.Screen.Width),
+                    _stars[i, layer].Position = new Vector2((float) (_random.NextDouble()*CluwneLib.Screen.Size.X),
                                                              (float)
-                                                             (_random.NextDouble()*Gorgon.CurrentClippingViewport.Height));
+                                                             (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Height));
 
                     // Select magnitude.
                     switch (layer)
@@ -55,26 +56,26 @@ namespace SS14.Client.Services.Helpers
             // Draw the stars.
             for (int i = 0; i < _stars.Length/4; i++)
             {
-                Gorgon.CurrentRenderTarget.SetPoint((int) _stars[i, layer].Position.X, (int) _stars[i, layer].Position.Y,
+                CluwneLib.drawPoint((int) _stars[i, layer].Position.X, (int) _stars[i, layer].Position.Y,
                                                     _stars[i, layer].Magnitude);
 
                 // Move the stars down.
                 _stars[i, layer].Position.Y += _stars[i, layer].VDelta*deltaTime;
 
                 // Wrap around.
-                if (_stars[i, layer].Position.Y > Gorgon.CurrentClippingViewport.Height)
+                if (_stars[i, layer].Position.Y > CluwneLib.CurrentClippingViewport.Height)
                     _stars[i, layer].Position =
-                        new Vector2D((float) (_random.NextDouble()*Gorgon.CurrentClippingViewport.Width), 0);
+                        new Vector2((float) (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Width), 0);
             }
         }
 
         public void Render(float xTopleft, float yTopleft)
         {
-            Gorgon.CurrentRenderTarget.Clear(Color.Black);
-            DrawStars(3, (float) Gorgon.FrameStats.FrameDrawTime/2000);
-            DrawStars(2, (float) Gorgon.FrameStats.FrameDrawTime/2000);
+            CluwneLib.Clear(Color.Black);
+            DrawStars(3, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
+            DrawStars(2, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
             for (int layer = 1; layer >= 0; layer--)
-                DrawStars(layer, (float) Gorgon.FrameStats.FrameDrawTime/2000);
+                DrawStars(layer, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
         }
 
         #region Nested type: Star
@@ -89,7 +90,7 @@ namespace SS14.Client.Services.Helpers
             /// <summary>
             /// Position of the star.
             /// </summary>
-            public Vector2D Position;
+            public Vector2 Position;
 
             /// <summary>
             /// Vertical delta.

@@ -1,4 +1,5 @@
-﻿using GorgonLibrary;
+﻿using SS14.Client.Graphics.CluwneLib;
+using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
@@ -14,7 +15,7 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2D mouseS, IMapManager currentMap)
+        public override bool Update(Vector2 mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
@@ -41,19 +42,19 @@ namespace SS14.Client.Services.Placement.Modes
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new Vector2D(currentTile.X + 0.5f,
-                                            currentTile.Y + 0.5f);
+                mouseWorld = new Vector2(currentTile.X + 0.5f,
+                                         currentTile.Y + 0.5f);
                 mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
             }
             else
             {
-                mouseWorld = new Vector2D(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
-                                            currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
+                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
+                                         currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
                 mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
 
                 spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                    mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                    spriteToDraw.Height);
+                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
+                                                 spriteToDraw.Height);
                 if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                     return false;
                 //Since walls also have collisions, this means we can't place objects on walls with this mode.
@@ -66,12 +67,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2D(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML(Color.ForestGreen) : CluwneLib.SystemColorToSFML(Color.IndianRed);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
+                                                    mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
             }
         }
     }

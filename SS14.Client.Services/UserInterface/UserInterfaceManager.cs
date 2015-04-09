@@ -1,6 +1,5 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.Graphics;
-using GorgonLibrary.InputDevices;
+﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Shared.Maths;
 using Lidgren.Network;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GOC;
@@ -11,10 +10,12 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using SS14.Client.Graphics.CluwneLib;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -31,10 +32,10 @@ namespace SS14.Client.Services.UserInterface
         private readonly IConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
-        private Sprite _cursorSprite;
+		private CluwneSprite _cursorSprite;
         private DebugConsole _console;
 
-        private Vector2D dragOffset = Vector2D.Zero;
+        private Vector2 dragOffset = Vector2.Zero;
         private bool moveMode;
         private IGuiComponent movingComp;
 
@@ -49,11 +50,11 @@ namespace SS14.Client.Services.UserInterface
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
             _config = IoCManager.Resolve<IConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Size(Gorgon.Screen.Width, 400), resourceManager);
+            _console = new DebugConsole("dbgConsole", new Size((int) CluwneLib.Screen.Size.X, 400), resourceManager);
             _console.SetVisible(false);
         }
 
-        public Vector2D MousePos { get; private set; }
+        public Vector2 MousePos { get; private set; }
 
         #region IUserInterfaceManager Members
 
@@ -218,7 +219,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseDown event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool MouseDown(MouseInputEventArgs e)
+		public virtual bool MouseDown(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -229,11 +230,11 @@ namespace SS14.Client.Services.UserInterface
             {
                 foreach (IGuiComponent comp in _components)
                 {
-                    if (comp.ClientArea.Contains(new Point((int) e.Position.X, (int) e.Position.Y)))
+                    if (comp.ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                     {
                         movingComp = comp;
-                        dragOffset = (new Vector2D(e.Position.X, e.Position.Y)) -
-                                     new Vector2D(comp.ClientArea.X, comp.ClientArea.Y);
+                        dragOffset = (new Vector2(e.X, e.Y)) -
+                                     new Vector2(comp.ClientArea.X, comp.ClientArea.Y);
                         break;
                     }
                 }
@@ -262,7 +263,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseUp event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool MouseUp(MouseInputEventArgs e)
+		public virtual bool MouseUp(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -299,9 +300,9 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseMove event. Sent to all visible components.
         /// </summary>
-        public virtual void MouseMove(MouseInputEventArgs e)
+		public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            MousePos = e.Position;
+            MousePos = new Vector2( e.X, e.Y);
 
             if (_console.IsVisible())
             {
@@ -320,7 +321,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
         /// </summary>
-        public virtual void MouseWheelMove(MouseInputEventArgs e)
+		public virtual void MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -338,9 +339,9 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles KeyDown event. Returns true if a component accepted and handled the event.
         /// </summary>
-        public virtual bool KeyDown(KeyboardInputEventArgs e)
+        public virtual bool KeyDown(KeyEventArgs e)
         {
-            if ((e.Shift ? e.CharacterMapping.Shifted : e.CharacterMapping.Character) == _config.GetConsoleKey())
+            if (e.Equals(_config.GetConsoleKey()))
             {
                 _console.ToggleVisible();
                 return true;
@@ -482,15 +483,15 @@ namespace SS14.Client.Services.UserInterface
                 component.Render();
 
                 if (moveMode)
-                {
-                    Gorgon.Screen.BlendingMode = BlendingModes.Modulated;
-                    Gorgon.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
+                { /*
+                    CluwneLib.Screen.BlendingMode = BlendingModes.Modulated;
+                   CluwneLib.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
                                                   component.ClientArea.Width, component.ClientArea.Height,
                                                   Color.FromArgb(100, Color.Green));
-                    Gorgon.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
+                    CluwneLib.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
                                             component.ClientArea.Height, Color.LightGreen);
-                    Gorgon.Screen.BlendingMode = BlendingModes.None;
-                }
+                   CluwneLib.Screen.BlendingMode = BlendingModes.None;
+                */}
             }
 
             if (targetingAction != null)
@@ -512,4 +513,4 @@ namespace SS14.Client.Services.UserInterface
 
         #endregion
     }
-}
+} 

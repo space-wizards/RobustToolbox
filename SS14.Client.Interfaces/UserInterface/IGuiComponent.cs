@@ -1,4 +1,4 @@
-﻿using GorgonLibrary.InputDevices;
+﻿using SFML.Window;
 using Lidgren.Network;
 using SS14.Shared;
 using System;
@@ -33,11 +33,11 @@ namespace SS14.Client.Interfaces.UserInterface
         void SetVisible(bool vis);
         bool IsVisible();
 
-        bool MouseDown(MouseInputEventArgs e);
-        bool MouseUp(MouseInputEventArgs e);
-        void MouseMove(MouseInputEventArgs e);
-        bool MouseWheelMove(MouseInputEventArgs e);
-        bool KeyDown(KeyboardInputEventArgs e);
+        bool MouseDown(MouseButtonEventArgs e);
+        bool MouseUp(MouseButtonEventArgs e);
+        void MouseMove(MouseMoveEventArgs e);
+        bool MouseWheelMove(MouseWheelEventArgs e);
+		bool KeyDown(KeyEventArgs e);
 
         void ComponentUpdate(params object[] args);
     }

@@ -1,8 +1,8 @@
-﻿using GorgonLibrary;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Velocity;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -10,16 +10,16 @@ namespace SS14.Client.GameObjects
     {
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
-        private Vector2D _velocity = Vector2D.Zero;
+        private Vector2 _velocity = Vector2.Zero;
 
 
         public VelocityComponent()
         {
             Family = ComponentFamily.Velocity;
-            Velocity = new Vector2D(0,0);
+            Velocity = new Vector2(0,0);
         }
 
-        public Vector2D Velocity
+        public Vector2 Velocity
         {
             get { return _velocity; }
             set { _velocity = value; }
@@ -33,18 +33,18 @@ namespace SS14.Client.GameObjects
         public float X
         {
             get { return Velocity.X; }
-            set { Velocity = new Vector2D(value, Velocity.Y); }
+            set { Velocity = new Vector2(value, Velocity.Y); }
         }
 
         public float Y
         {
             get { return Velocity.Y; }
-            set { Velocity = new Vector2D(Velocity.X, value); }
+            set { Velocity = new Vector2(Velocity.X, value); }
         }
 
         public override void Shutdown()
         {
-            Velocity = Vector2D.Zero;
+            Velocity = Vector2.Zero;
         }
 
         public override void HandleComponentState(dynamic state)
@@ -58,7 +58,7 @@ namespace SS14.Client.GameObjects
             if (_lastState != null)
                 _previousState = _lastState;
             _lastState = state;
-            Velocity = new Vector2D(state.VelocityX, state.VelocityY);
+            Velocity = new Vector2(state.VelocityX, state.VelocityY);
         }
     }
 }

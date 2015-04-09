@@ -1,9 +1,9 @@
-﻿using GorgonLibrary;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Placement
 {
@@ -22,7 +22,7 @@ namespace SS14.Client.Interfaces.Placement
         void ToggleEraser();
         void Rotate();
 
-        void Update(Vector2D mouseScreen, IMapManager currentMap);
+        void Update(Vector2 mouseScreen, IMapManager currentMap);
         void HandleNetMessage(NetIncomingMessage msg);
     }
 }

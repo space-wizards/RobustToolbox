@@ -1,9 +1,9 @@
-﻿using GorgonLibrary;
-using SS14.Client.Interfaces.Network;
+﻿using SS14.Client.Interfaces.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -18,7 +18,7 @@ namespace SS14.Client.GameObjects
         }
 
 
-        public Entity[] GetEntitiesInRange(Vector2D position, float Range)
+        public Entity[] GetEntitiesInRange(Vector2 position, float Range)
         {
             IEnumerable<Entity> entities = from e in _entities.Values
                                            where

@@ -1,9 +1,9 @@
-﻿using GorgonLibrary;
-using GorgonLibrary.InputDevices;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -38,7 +38,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     DateTime.Now.AddSeconds(max - stopwatch.Elapsed.Seconds).Subtract(DateTime.Now).ToString(@"mm\:ss");
             }
 
-            Text.Position = new Vector2D(Position.X + (Size.Width/2f - Text.Width/2f),
+            Text.Position = new Vector2(Position.X + (Size.Width/2f - Text.Width/2f),
                                          Position.Y + (Size.Height/2f - Text.Height/2f));
             ClientArea = new Rectangle(Position, Size);
         }
@@ -52,12 +52,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseDown(MouseInputEventArgs e)
+		public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-        public override bool MouseUp(MouseInputEventArgs e)
+		public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

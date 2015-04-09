@@ -28,7 +28,7 @@ namespace SS14.Client.Graphics
         public void AddTime(float time)
         {
             CurrentTime += time;
-            if (CurrentTime >= MaxTime)
+            while (CurrentTime > MaxTime)
             {
                 if (Loop)
                     CurrentTime -= MaxTime;

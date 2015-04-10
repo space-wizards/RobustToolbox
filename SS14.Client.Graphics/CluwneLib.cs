@@ -4,8 +4,8 @@ using SFML.System;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Timing;
-using Color = System.Drawing.Color;
-using SColor = SFML.Graphics.Color;
+using SystemColor = System.Drawing.Color;
+using SFMLColor = SFML.Graphics.Color;
 using SS14.Client.Graphics.Shader;
 using SS14.Shared.Maths;
 using System.Drawing;
@@ -27,7 +27,7 @@ namespace SS14.Client.Graphics
         private static RenderTarget[] _currentTarget;
         private static System.Threading.Mutex SFML_Threadlock;
         public static event FrameEventHandler Idle;
-        private Color DEFAULTCOLOR;
+        private SystemColor DEFAULTCOLOR;
         public static CluwneDebug Debug;
 
         #region Accessors
@@ -53,10 +53,11 @@ namespace SS14.Client.Graphics
             {
                 Initialize();
             }
+
             Idle += (delegate(object sender, FrameEventArgs e) {
-                SFML_Threadlock.ReleaseMutex();
+               
                 System.Threading.Thread.Sleep(10); // maybe pickup vsync here?
-                SFML_Threadlock.WaitOne();
+               
             });
 
             if ((Screen != null) && (_currentTarget == null))
@@ -90,8 +91,6 @@ namespace SS14.Client.Graphics
 
             Debug = new CluwneDebug();
 
-            SFML_Threadlock.WaitOne();
-
             IsInitialized = true;
 
             _currentTarget = new RenderTarget[5];
@@ -100,10 +99,9 @@ namespace SS14.Client.Graphics
             FrameStats = new TimingData(_timer);
         }
 
-        public static void RequestGC(Action action) {
-            SFML_Threadlock.WaitOne();
-            action.Invoke();
-            SFML_Threadlock.ReleaseMutex();
+        public static void RequestGC(Action action)
+        {
+          action.Invoke();         
         }
 
         public static void SetMode(int displayWidth, int displayHeight)
@@ -122,14 +120,14 @@ namespace SS14.Client.Graphics
             Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
         }
 
-        public static void Clear(Color color)
+        public static void Clear(SystemColor color)
         {
-            CurrentRenderTarget.Clear(SystemColorToSFML(color));
+            CurrentRenderTarget.Clear(color.ToSFMLColor());
         }
 
         public static void Terminate()
         {
-            SFML_Threadlock.ReleaseMutex();
+            
         }
 
         public static void RunIdle(object sender, FrameEventArgs e)
@@ -190,12 +188,12 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
+        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, SystemColor Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
-            rectangle.FillColor = SystemColorToSFML(Color);
+            rectangle.FillColor = Color.ToSFMLColor();
 
             CurrentRenderTarget.Draw(rectangle);
             if (CluwneLib.Debug.RenderingDelay > 0)
@@ -214,14 +212,14 @@ namespace SS14.Client.Graphics
         /// <param name="heightY"> Height Y of rectangle </param>
         /// <param name="OutlineThickness"> Outline Thickness of rectangle </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
+        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, SystemColor OutlineColor)
         {
             RectangleShape HollowRect = new RectangleShape();
-            HollowRect.FillColor = SystemColorToSFML(Color.Transparent);
+            HollowRect.FillColor = SystemColor.Transparent.ToSFMLColor();
             HollowRect.Position = new Vector2f(posX, posY);
             HollowRect.Size = new Vector2f(widthX, heightY);
             HollowRect.OutlineThickness = OutlineThickness;
-            HollowRect.OutlineColor = SystemColorToSFML(OutlineColor);
+            HollowRect.OutlineColor = OutlineColor.ToSFMLColor();
 
             CurrentRenderTarget.Draw(HollowRect);
             if (CluwneLib.Debug.RenderingDelay > 0)
@@ -242,12 +240,12 @@ namespace SS14.Client.Graphics
         /// <param name="posY"> Pos Y of Circle </param>
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawCircle(int posX, int posY, int radius, Color color)
+        public static void drawCircle(int posX, int posY, int radius, SystemColor color)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = SystemColorToSFML(color);
+            Circle.FillColor = color.ToSFMLColor();
 
             CurrentRenderTarget.Draw(Circle);
 
@@ -261,14 +259,14 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
         /// <param name="OutlineColor"> Circle outline Color </param>
-        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness ,Color OutlineColor)
+        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness ,SystemColor OutlineColor)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = SystemColorToSFML(Color.Transparent);
+            Circle.FillColor = SystemColor.Transparent.ToSFMLColor();
             Circle.OutlineThickness = OutlineThickness;
-            Circle.OutlineColor = SystemColorToSFML(OutlineColor);
+            Circle.OutlineColor = OutlineColor.ToSFMLColor();
 
             CurrentRenderTarget.Draw(Circle);
         }
@@ -281,12 +279,12 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Cirle </param>
         /// <param name="color"> Fill Color </param>
         /// <param name="vector2"></param>
-        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2 vector2)
+        public static void drawCircle(float posX, float posY, int radius, SystemColor color, Vector2 vector2)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = SystemColorToSFML(Color.Transparent);
+            Circle.FillColor = SystemColor.Transparent.ToSFMLColor();
 
             CurrentRenderTarget.Draw(Circle);
         }
@@ -299,13 +297,12 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawPoint(int posX, int posY, Color color)
+        public static void drawPoint(int posX, int posY, SystemColor color)
         {
             RectangleShape Point = new RectangleShape();
             Point.Position = new Vector2(posX, posY);
             Point.Size = new Vector2(1, 1);
-            Point.FillColor = SystemColorToSFML(color);
-
+            Point.FillColor = color.ToSFMLColor();
 
             CurrentRenderTarget.Draw(Point);
         }
@@ -316,14 +313,14 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
+        public static void drawHollowPoint(int posX, int posY, SystemColor OutlineColor)
         {
             RectangleShape hollowPoint = new RectangleShape();
             hollowPoint.Position = new Vector2(posX, posY);
             hollowPoint.Size = new Vector2(1, 1);
-            hollowPoint.FillColor = SystemColorToSFML(Color.Transparent);
+            hollowPoint.FillColor = SystemColor.Transparent.ToSFMLColor();
             hollowPoint.OutlineThickness = .6f;
-            hollowPoint.OutlineColor = SystemColorToSFML(OutlineColor);
+            hollowPoint.OutlineColor = OutlineColor.ToSFMLColor();
 
             CurrentRenderTarget.Draw(hollowPoint);
         }
@@ -339,61 +336,50 @@ namespace SS14.Client.Graphics
         /// <param name="rotate"> Line Rotation </param>
         /// <param name="thickness"> Line Thickness </param>
         /// <param name="Color"> Line Color </param>
-        public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
+        public static void drawLine(int posX, int posY, int rotate,float thickness, SystemColor Color)
         {
             RectangleShape line = new RectangleShape();
             line.Position = new Vector2(posX,posY);
             line.Rotation = rotate;
             line.OutlineThickness = thickness;
-            line.FillColor = SystemColorToSFML(Color);
+            line.FillColor = Color.ToSFMLColor();
 
             CurrentRenderTarget.Draw(line);
         }
 
         #endregion
+        
+       public static SFMLColor ColorFromARGB(byte A, SystemColor Color)
+       {
+           return new SFMLColor(Color.R, Color.G, Color.B, A);
+       }
 
         #endregion
 
 
-        #region Helper Methods
-        /// <summary>
-        /// Converts a System.Drawing.Color to a SFML.Graphics.Color
-        /// </summary>
-        /// <param name="color"> System.Drawing.Color to convert </param>
-        /// <returns></returns>
-        public static SColor SystemColorToSFML(Color color)
+       
+    }
+
+
+    public static class Conversions
+    {
+        public static SFMLColor ToSFMLColor(this SystemColor SystemColor)
         {
-            SColor temp = new SColor(color.R, color.G, color.B, color.A);
+            return new SFMLColor(SystemColor.R,SystemColor.G,SystemColor.B,SystemColor.A);
+        }
+
+        public static SystemColor ToSystemColor(this SFMLColor SFMLColor)
+        {
+            SystemColor temp = SystemColor.FromArgb(SFMLColor.A, SFMLColor.R, SFMLColor.G, SFMLColor.B);
             return temp;
         }
 
-        /// <summary>
-        /// Converts a SFML.Graphics.Color to a System.Drawing.Color
-        /// </summary>
-        /// <param name="color"> SFML.Graphics.Color to convert </param>
-        /// <returns></returns>
-        public static Color SFMLColorToSystem(SColor color)
-        {
-            Color temp = Color.FromArgb(color.R,color.G,color.B,color.A);
-            return temp;
-        }
+      
 
-        public static SColor ColorFromARGB(byte A, Color rgb) {
-            return new SColor(A, rgb.R, rgb.G, rgb.B);
-        }
-
-        public static SColor ColorFromARGB(byte A, SColor rgb) {
-            return new SColor(A, rgb.R, rgb.G, rgb.B);
-        }
-        /// <summary>
-        /// Converts a Point to a Vector2
-        /// </summary>
-        /// <param name="point"> Point to convert </param>
-        /// <returns></returns>
-        public static Vector2 PointToVector2(Point point)
+       
+        public static Vector2 ToVector2(this Point point)
         {
             return new Vector2(point.X, point.Y);
         }
-        #endregion
     }
 }

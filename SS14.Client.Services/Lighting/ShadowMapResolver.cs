@@ -1,6 +1,6 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Shader;
-using SS14.Client.Graphics.CluwneLib.Render;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Render;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using System;

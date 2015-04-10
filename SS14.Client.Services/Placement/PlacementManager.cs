@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using Lidgren.Network;
 using SS14.Client.ClientWindow;
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Placement
 {

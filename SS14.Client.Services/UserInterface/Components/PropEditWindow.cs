@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

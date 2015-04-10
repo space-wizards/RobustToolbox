@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Render;
+﻿using SS14.Client.Graphics.Render;
 using SFML.Window;
 using Lidgren.Network;
 using SS14.Client.GameObjects;

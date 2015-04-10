@@ -1,6 +1,5 @@
 ﻿using SS14.Client.ClientWindow;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.CluwneLib.Sprite;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -13,8 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib;
 using SS14.Shared.Maths;
+using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.GameObjects
 {

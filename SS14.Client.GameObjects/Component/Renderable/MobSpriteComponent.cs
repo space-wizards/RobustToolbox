@@ -4,7 +4,7 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
 using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent

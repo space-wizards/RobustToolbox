@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Input
 {

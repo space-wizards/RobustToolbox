@@ -12,13 +12,13 @@ using System.IO;
 using System.Windows.Forms;
 using SFML.Graphics;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
 using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Timing;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Timing;
 
 using SS14.Client.Services.UserInterface.Components;
 
@@ -230,7 +230,7 @@ namespace SS14.Client
             CluwneLib.Go();
            
             CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
-            CluwneLib.Screen.BackgroundColor = CluwneLib.SystemColorToSFML(Color.Black);
+            CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
             CluwneLib.Idle += CluwneLibIdle;

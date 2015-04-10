@@ -91,7 +91,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        middle.Key.Color = CluwneLib.SystemColorToSFML(Color.White);
+                        middle.Key.Color = Color.White.ToSFMLColor();
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {

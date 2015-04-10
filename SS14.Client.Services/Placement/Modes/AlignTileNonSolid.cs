@@ -67,12 +67,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML(Color.ForestGreen) : CluwneLib.SystemColorToSFML(Color.IndianRed);
+                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen.ToSFMLColor() : Color.IndianRed.ToSFMLColor();
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
+                spriteToDraw.Color = Color.White.ToSFMLColor();
             }
         }
     }

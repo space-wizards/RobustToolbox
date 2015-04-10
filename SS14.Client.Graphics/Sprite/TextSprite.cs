@@ -60,7 +60,7 @@ namespace SS14.Client.Graphics.Sprite
             if (CluwneLib.Debug.Fontsize > 0)
                 _textSprite.CharacterSize=CluwneLib.Debug.Fontsize;
             _textSprite.Position = new Vector2(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
-            _textSprite.Color = CluwneLib.SystemColorToSFML(Color);
+            _textSprite.Color = Color.ToSFMLColor();
             target.Draw(_textSprite);
 
             if (CluwneLib.Debug.TextBorders) {

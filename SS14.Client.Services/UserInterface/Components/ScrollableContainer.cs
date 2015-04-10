@@ -112,7 +112,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? CluwneLib.SystemColorToSFML(BackgroundColor) : SFML.Graphics.Color.Transparent);
+            clippingRI.Clear(DrawBackground ? BackgroundColor.ToSFMLColor() : SFML.Graphics.Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)

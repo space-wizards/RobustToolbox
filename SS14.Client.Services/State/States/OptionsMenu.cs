@@ -147,7 +147,9 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             //TODO .Draw Method
+
              _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+
 
            _ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
             UserInterfaceManager.Render();

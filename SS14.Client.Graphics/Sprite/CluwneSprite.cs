@@ -149,7 +149,7 @@ namespace SS14.Client.Graphics.Sprite
             Vector2 oldScale=Scale;
             Vector2 oldPosition = base.Position;
             base.Position = new Vector2(rect.Left, rect.Top);
-            Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
+            Scale = new SFML.System.Vector2f( (float)rect.Width / (float)TextureRect.Width, (float)rect.Height / (float)TextureRect.Height );
 
             if (_renderTarget != null)
                 _renderTarget.Draw(this);

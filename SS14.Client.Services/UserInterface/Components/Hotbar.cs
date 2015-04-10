@@ -63,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            hotbarBG.Position = CluwneLib.PointToVector2(Position);
+            hotbarBG.Position = Position.ToVector2();
 
             int y_dist = 30;
             int x_pos = 175;

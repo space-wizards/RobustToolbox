@@ -13,13 +13,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using SS14.Client.Graphics.CluwneLib.Shader;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using TextureCache = SS14.Client.Graphics.CluwneLib.TextureCache;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprite;
+using TextureCache = SS14.Client.Graphics.TextureCache;
 using Image = SFML.Graphics.Image;
 using Font = SFML.Graphics.Font;
 using Color = SFML.Graphics.Color;
 using SFML.Graphics;
+using SS14.Client.Graphics.Collection;
 
 namespace SS14.Client.Services.Resources
 {

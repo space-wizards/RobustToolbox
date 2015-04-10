@@ -4,7 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using System;
 using System.Collections.Generic;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.Render;
 using KeyboardKeys = SFML.Window.Keyboard.Key;
 
 namespace SS14.Client.Interfaces.Player

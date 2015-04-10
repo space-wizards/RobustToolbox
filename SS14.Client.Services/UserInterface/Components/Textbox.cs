@@ -2,9 +2,9 @@
 using System;
 using Color = System.Drawing.Color;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.UserInterface.Components

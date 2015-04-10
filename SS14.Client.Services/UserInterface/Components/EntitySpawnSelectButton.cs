@@ -1,5 +1,5 @@
 ﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
 using System;
 using System.Drawing;
@@ -7,7 +7,7 @@ using System.Linq;
 using Font = SFML.Graphics.Font;
 using SFML.Window;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

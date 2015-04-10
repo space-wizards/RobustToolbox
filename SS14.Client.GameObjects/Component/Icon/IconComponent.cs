@@ -2,7 +2,7 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {

@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib;
+﻿using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
@@ -14,7 +14,7 @@ using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 using SFML.Graphics;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Placement.Modes

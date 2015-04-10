@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State

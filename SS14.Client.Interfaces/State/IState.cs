@@ -1,6 +1,5 @@
 ﻿using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Event;
+using  SS14.Client.Graphics.Event;
 
 
 namespace SS14.Client.Interfaces.State

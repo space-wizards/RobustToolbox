@@ -1,5 +1,5 @@
 ﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.IoC;
 using System;
 using Color = SFML.Graphics.Color;

@@ -1,12 +1,18 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.Window;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.Helpers;
@@ -18,20 +24,11 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using Color = SFML.Graphics.Color;
-using ContextMenu = SS14.Client.Services.UserInterface.Components.ContextMenu;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
@@ -644,10 +641,11 @@ namespace SS14.Client.Services.State.States
 
         private void RenderDebug(RectangleF viewport)
         {
-            /*  if(debugWallOccluders)
-                  _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
+            //if(debugWallOccluders)
+            //    _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
 
-            if (debugHitboxes) {
+            if (debugHitboxes)
+            {
                 var colliders =
                     _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
                     .OfType<ColliderComponent>()
@@ -660,23 +658,15 @@ namespace SS14.Client.Services.State.States
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
                     .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(viewport));
 
-                  var destAbo = _baseTarget.DestinationBlend;
-                  var srcAbo = _baseTarget.SourceBlend;
-                  _baseTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-                  _baseTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-
-                foreach (var hitbox in colliders.Concat(collidables)) {
+                foreach (var hitbox in colliders.Concat(collidables))
+                {
                     var box = ClientWindowData.Singleton.WorldToScreen(hitbox.AABB);
-                    _baseTarget.FilledRectangle(box.Left, box.Top, box.Width, box.Height, Color.FromArgb(64, hitbox.Color));
-                    _baseTarget.Rectangle(box.Left, box.Top, box.Width, box.Height, Color.FromArgb(128, hitbox.Color));
+                    CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
+                        System.Drawing.Color.FromArgb(64, hitbox.Color));
+                    CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
+                        System.Drawing.Color.FromArgb(128, hitbox.Color));
                 }
-
-                  _baseTarget.DestinationBlend = destAbo;
-                  _baseTarget.SourceBlend = srcAbo;
-          
-              } */
+            }
         }
 
         public void FormResize()
@@ -728,7 +718,7 @@ namespace SS14.Client.Services.State.States
             }
             if (e.Code == Keyboard.Key.F4)
             {
-                // debugHitboxes = !debugHitboxes;
+                debugHitboxes = !debugHitboxes;
             }
             if (e.Code == Keyboard.Key.F5)
             {

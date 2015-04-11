@@ -1,272 +1,284 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-	<PropertyGroup>
-	  <ProjectType>Local</ProjectType>
-	  <ProductVersion>12.0.31101.0</ProductVersion>
-	  <SchemaVersion>2.0</SchemaVersion>
-	  <ProjectGuid>{B04AAE71-0000-0000-0000-000000000000}</ProjectGuid>
-	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-	  <ApplicationIcon></ApplicationIcon>
-	  <AssemblyKeyContainerName>
-	  </AssemblyKeyContainerName>
-	  <AssemblyName>SpaceStation14_Server</AssemblyName>
-	  <DefaultClientScript>JScript</DefaultClientScript>
-	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
-	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
-	  <DelaySign>false</DelaySign>
-	  <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-	  <OutputType>Exe</OutputType>
-	  <AppDesignerFolder></AppDesignerFolder>
-	  <RootNamespace>SS14.Server</RootNamespace>
-	  <StartupObject></StartupObject>
-	  <StartArguments></StartArguments>
-	  <FileUpgradeFlags>
-	  </FileUpgradeFlags>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-	  <BaseAddress>285212672</BaseAddress>
-	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-	  <ConfigurationOverrideFile>
-	  </ConfigurationOverrideFile>
-	  <DefineConstants>TRACE;DEBUG</DefineConstants>
-	  <DocumentationFile></DocumentationFile>
-	  <DebugSymbols>True</DebugSymbols>
-	  <FileAlignment>4096</FileAlignment>
-	  <Optimize>False</Optimize>
-	  <OutputPath>..\bin\Server\</OutputPath>
-	  <RegisterForComInterop>False</RegisterForComInterop>
-	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
-	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-	  <WarningLevel>4</WarningLevel>
-	  <NoStdLib>False</NoStdLib>
-	  <NoWarn></NoWarn>
-	  <PlatformTarget>x86</PlatformTarget>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-	  <BaseAddress>285212672</BaseAddress>
-	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-	  <ConfigurationOverrideFile>
-	  </ConfigurationOverrideFile>
-	  <DefineConstants>TRACE</DefineConstants>
-	  <DocumentationFile></DocumentationFile>
-	  <DebugSymbols>False</DebugSymbols>
-	  <FileAlignment>4096</FileAlignment>
-	  <Optimize>True</Optimize>
-	  <OutputPath>..\bin\Server\</OutputPath>
-	  <RegisterForComInterop>False</RegisterForComInterop>
-	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
-	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-	  <WarningLevel>4</WarningLevel>
-	  <NoStdLib>False</NoStdLib>
-	  <NoWarn></NoWarn>
-	  <PlatformTarget>x86</PlatformTarget>
-	</PropertyGroup>
-	<ItemGroup>
-	  <Reference Include="CSScriptLibrary" >
-		  <Name>CSScriptLibrary</Name>
-		<HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
-		<Private>True</Private>
-	  </Reference>
-	  <Reference Include="System" >
-		  <Name>System</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Core" >
-		  <Name>System.Core</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Data" >
-		  <Name>System.Data</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Data.DataSetExtensions" >
-		  <Name>System.Data.DataSetExtensions</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Drawing" >
-		  <Name>System.Drawing</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Xml" >
-		  <Name>System.Xml</Name>
-		<Private>False</Private>
-	  </Reference>
-	  <Reference Include="System.Xml.Linq" >
-		  <Name>System.Xml.Linq</Name>
-		<Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-		<Name>Lidgren.Network</Name>
-		<Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Server.GameObjects\SS14.Server.GameObjects.csproj">
-		<Name>SS14.Server.GameObjects</Name>
-		<Project>{DE7A8232-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Server.Interfaces\SS14.Server.Interfaces.csproj">
-		<Name>SS14.Server.Interfaces</Name>
-		<Project>{D4598C6C-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Server.Services\SS14.Server.Services.csproj">
-		<Name>SS14.Server.Services</Name>
-		<Project>{CEA4F5DC-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
-		<Name>SS14.Shared</Name>
-		<Project>{0529F740-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Shared.GameObjects\SS14.Shared.GameObjects.csproj">
-		<Name>SS14.Shared.GameObjects</Name>
-		<Project>{D7860944-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Shared.IoC\SS14.Shared.IoC.csproj">
-		<Name>SS14.Shared.IoC</Name>
-		<Project>{FEC26501-0000-0000-0000-000000000000}</Project>
-		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-		<Private>True</Private>
-	  </ProjectReference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Compile Include="Helper Classes\InterpolationPacket.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Modules\Banlist.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Modules\Client\Client.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Program.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Properties\AssemblyInfo.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="SS14Server.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Timing\MainLoopTimer.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Timing\TimerMainLoopTimer.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <Compile Include="Timing\TimerQueueTimer.cs">
-		<SubType>Code</SubType>
-	  </Compile>
-	  <None Include="Timing\TimerQueueTimer_.cs">
-	  </None>
-	  <None Include="app.config">
-	  </None>
-	  <Content Include="atoms.ss13">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="ServerSettings.cfg">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="config.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="CraftingRecipes.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="emotes.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Clothing.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Containers.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Doors.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\GlassWalls.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\JanitorItems.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Lights.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Lockers.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\MedicalItems.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Mobs.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Tools.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Tables.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Wallmounted.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Misc.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Weapons.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="EntityTemplates\Internals.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="JobDefinitions.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="SavedEntities.xml">
-		<SubType>Code</SubType>
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>12.0.31101.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B04AAE71-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>SpaceStation14_Server</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>SS14.Server</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <StartArguments>
+    </StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\bin\Server\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\bin\Server\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CSScriptLibrary">
+      <Name>CSScriptLibrary</Name>
+      <HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Name>System.Core</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <Name>System.Data.DataSetExtensions</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <Name>System.Xml.Linq</Name>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
-	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
-	<PropertyGroup>
-	  <PreBuildEvent>
-	  </PreBuildEvent>
-	  <PostBuildEvent>
-	  </PostBuildEvent>
-	</PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Name>Lidgren.Network</Name>
+      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Server.GameObjects\SS14.Server.GameObjects.csproj">
+      <Name>SS14.Server.GameObjects</Name>
+      <Project>{DE7A8232-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Server.Interfaces\SS14.Server.Interfaces.csproj">
+      <Name>SS14.Server.Interfaces</Name>
+      <Project>{D4598C6C-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Server.Services\SS14.Server.Services.csproj">
+      <Name>SS14.Server.Services</Name>
+      <Project>{CEA4F5DC-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
+      <Name>SS14.Shared</Name>
+      <Project>{0529F740-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.GameObjects\SS14.Shared.GameObjects.csproj">
+      <Name>SS14.Shared.GameObjects</Name>
+      <Project>{D7860944-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.IoC\SS14.Shared.IoC.csproj">
+      <Name>SS14.Shared.IoC</Name>
+      <Project>{FEC26501-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helper Classes\InterpolationPacket.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Modules\Banlist.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Modules\Client\Client.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Program.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SS14Server.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timing\MainLoopTimer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timing\TimerMainLoopTimer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timing\TimerQueueTimer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <None Include="Timing\TimerQueueTimer_.cs">
+    </None>
+    <None Include="app.config">
+    </None>
+    <Content Include="atoms.ss13">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ServerSettings.cfg">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="CraftingRecipes.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="emotes.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Clothing.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Containers.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Doors.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\GlassWalls.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\JanitorItems.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Lights.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Lockers.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\MedicalItems.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Mobs.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tools.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tables.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Wallmounted.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Misc.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Weapons.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Internals.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="JobDefinitions.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SavedEntities.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>

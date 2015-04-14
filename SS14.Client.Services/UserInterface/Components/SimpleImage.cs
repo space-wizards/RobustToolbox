@@ -35,7 +35,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public Color Color
         {
             get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
-            set { drawingSprite.Color = CluwneLib.SystemColorToSFML (value); }
+            set { drawingSprite.Color = value.ToSFMLColor(); }
         }
 
         public BlendMode BlendingMode

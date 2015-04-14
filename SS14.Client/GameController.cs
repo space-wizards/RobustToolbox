@@ -74,17 +74,19 @@ namespace SS14.Client
             _stateManager.RequestStateChange<TestState> ();
 
             FrameEventArgs _frameEvent;
+            EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
             
 
-            while (CluwneLib.IsRunning == true) {
+            while (CluwneLib.IsRunning == true) 
+            {
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.Clear (Color.Black);
-                CluwneLib.Screen.DispatchEvents ();
+                CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
-                CluwneLib.Screen.Display ();
+                CluwneLib.Screen.Display();
             }
             CluwneLib.Terminate();
             Console.WriteLine("Gameloop terminated.");
@@ -95,6 +97,7 @@ namespace SS14.Client
 
         private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
+
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
@@ -112,8 +115,15 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-	    _stateManager.FormResize();
+	        _stateManager.FormResize();
         }
+        private void MainWindowRequestClose(object sender, EventArgs e)
+        {
+            CluwneLib.Stop();
+        }
+
+
+
 
         #region Input Handling
 
@@ -121,7 +131,7 @@ namespace SS14.Client
         /// Handles any keydown events.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The KeyArgsinstance containing the event data.</param>
         private void KeyDownEvent(object sender, KeyArgs e)
         {
             if(_stateManager!=null)
@@ -139,7 +149,7 @@ namespace SS14.Client
         /// Handles any keyup events.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The KeyArgs instance containing the event data.</param>
         private void KeyUpEvent(object sender, KeyArgs e)
         {
             if (_stateManager != null) 
@@ -150,7 +160,7 @@ namespace SS14.Client
         /// Handles mouse wheel input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseWheelEventArgs instance containing the event data.</param>
         private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
         {
             if (_stateManager != null) 
@@ -161,7 +171,7 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseMoveEventArgs instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseMoveEventArgs e)
         {
             if (_stateManager != null) 
@@ -172,7 +182,7 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
@@ -183,7 +193,7 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
@@ -224,22 +234,20 @@ namespace SS14.Client
             bool fullscreen = _configurationManager.GetFullscreen();
             var refresh = (int) _configurationManager.GetDisplayRefresh();
 
-          
-             
-
             CluwneLib.Go();
            
             CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
             CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed += MainWindowRequestClose;
             CluwneLib.Idle += CluwneLibIdle;
         }
 
         private void SetupInput()
         {
 
-            //Cursor.Hide();
+            Cursor.Hide();
      
 
             CluwneLib.Screen.KeyPressed  += KeyDownEvent;

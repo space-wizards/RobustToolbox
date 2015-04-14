@@ -84,7 +84,7 @@ namespace SS14.Client.Services.Lighting
             Vector2 renderTargetSize;
             renderTargetSize = new Vector2(baseSize, baseSize);
             CluwneLib.CurrentRenderTarget = destination;
-            CluwneLib.CurrentRenderTarget.Clear(CluwneLib.SystemColorToSFML(Color.White));
+            CluwneLib.CurrentRenderTarget.Clear(Color.White.ToSFMLColor());
 
            //CluwneLib.CurrentShader = resolveShadowsEffect.Techniques[techniqueName];
            // resolveShadowsEffect.Parameters["renderTargetSize"].SetValue(renderTargetSize);
@@ -124,7 +124,7 @@ namespace SS14.Client.Services.Lighting
             CluwneLib.CurrentRenderTarget = destination;
            // CluwneLib.CurrentShader = reductionEffect.Techniques["Copy"];
       //      reductionEffect.Parameters["SourceTexture"].SetValue(d);
-            CluwneLib.CurrentRenderTarget.Clear(CluwneLib.SystemColorToSFML(Color.White));
+            CluwneLib.CurrentRenderTarget.Clear(Color.White.ToSFMLColor());
             quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
 
        //     reductionEffect.Parameters["SourceTexture"].SetValue(reductionRT[reductionChainCount - 1]);

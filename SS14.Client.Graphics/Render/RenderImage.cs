@@ -99,7 +99,7 @@ namespace SS14.Client.Graphics.Render
             Display();
             CluwneSprite _blit = new CluwneSprite("_blit" + _key, base.Texture);
             _blit.Position=Position;
-            _blit.Color = CluwneLib.SystemColorToSFML(color);
+            _blit.Color = color.ToSFMLColor();
             _blit.Draw();
         }
         /// <summary>
@@ -115,7 +115,7 @@ namespace SS14.Client.Graphics.Render
                 _blit=new CluwneSprite("_blit" + _key, base.Texture);
             else
                 _blit=new CluwneSprite("_blit" + _key, base.Texture, optionalcrop);
-            _blit.Color=CluwneLib.SystemColorToSFML(color);
+            _blit.Color= color.ToSFMLColor();
             _blit.Draw(destination);
         }
 
@@ -133,7 +133,7 @@ namespace SS14.Client.Graphics.Render
             CluwneSprite _blit = new CluwneSprite("_blit" + _key, this);
             _blit.Position = new Vector2(posX, posY);
             _blit.Size = new Vector2(widthX, heightY);
-            _blit.Color = CluwneLib.SystemColorToSFML(Color.Transparent);
+            _blit.Color = Color.Transparent.ToSFMLColor();
             _blit.Draw();
         }
 
@@ -156,7 +156,7 @@ namespace SS14.Client.Graphics.Render
         /// <param name="Color"> Color used to cover everything </param>
         public void Clear(Color Color)
         {
-            this.Clear(CluwneLib.SystemColorToSFML(Color));
+            this.Clear(Color.ToSFMLColor());
         }
 
         public uint Width  { get { return Size.X; } }

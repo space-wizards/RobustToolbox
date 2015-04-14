@@ -97,9 +97,9 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = CluwneLib.SystemColorToSFML(drawColor);
-                _textboxMain.Color = CluwneLib.SystemColorToSFML(drawColor);
-                _textboxRight.Color = CluwneLib.SystemColorToSFML(drawColor);
+                _textboxLeft.Color = drawColor.ToSFMLColor();
+                _textboxMain.Color = drawColor.ToSFMLColor();
+                _textboxRight.Color = drawColor.ToSFMLColor();
             }
 
             _textboxLeft.Draw(_clientAreaLeft);
@@ -113,9 +113,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = CluwneLib.SystemColorToSFML(Color.White);
-                _textboxMain.Color = CluwneLib.SystemColorToSFML(Color.White);
-                _textboxRight.Color =CluwneLib.SystemColorToSFML( Color.White);
+                _textboxLeft.Color = Color.White.ToSFMLColor();
+                _textboxMain.Color = Color.White.ToSFMLColor();
+                _textboxRight.Color = Color.White.ToSFMLColor();
             }
 
             Label.Color = textColor;

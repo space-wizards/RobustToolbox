@@ -115,7 +115,7 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-	        _stateManager.FormResize();
+            _stateManager.FormResize();
         }
         private void MainWindowRequestClose(object sender, EventArgs e)
         {
@@ -200,6 +200,30 @@ namespace SS14.Client
                 _stateManager.MouseUp(e);
         }
 
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The EventArgs instance containing the event data.</param>
+        private void MouseEntered(object sender, EventArgs e)
+        {
+            Cursor.Hide();
+            if (_stateManager != null)
+                _stateManager.MouseEntered(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The EventArgs instance containing the event data.</param>
+        private void MouseLeft(object sender, EventArgs e)
+        {
+            Cursor.Show();
+            if (_stateManager != null)
+                _stateManager.MouseLeft(e);
+        }
+
         #endregion
 
         #endregion
@@ -246,10 +270,6 @@ namespace SS14.Client
 
         private void SetupInput()
         {
-
-            Cursor.Hide();
-     
-
             CluwneLib.Screen.KeyPressed  += KeyDownEvent;
             CluwneLib.Screen.KeyReleased += KeyUpEvent;
 
@@ -257,6 +277,8 @@ namespace SS14.Client
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
             CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
             CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered        += MouseEntered;
+            CluwneLib.Screen.MouseLeft           += MouseLeft;
 
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }

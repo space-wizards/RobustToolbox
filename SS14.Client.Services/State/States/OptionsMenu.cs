@@ -200,6 +200,15 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.MouseWheelMove(e);
         }
 
+        public void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+        public void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
+        }
+
         #endregion
 
         private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)

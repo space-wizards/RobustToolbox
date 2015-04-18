@@ -1,7 +1,8 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Window;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
+using System;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -32,6 +33,8 @@ namespace SS14.Client.Interfaces.UserInterface
         void MouseMove(MouseMoveEventArgs e);
         bool MouseUp(MouseButtonEventArgs e);
         bool MouseDown(MouseButtonEventArgs e);
+        void MouseEntered(EventArgs e);
+        void MouseLeft(EventArgs e);
 
         void HandleNetMessage(NetIncomingMessage msg);
     }

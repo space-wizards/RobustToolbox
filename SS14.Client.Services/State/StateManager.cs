@@ -94,6 +94,18 @@ namespace SS14.Client.Services.State
                 CurrentState.MouseWheelMove(e);
         }
 
+        public void MouseEntered(EventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.MouseEntered(e);
+        }
+
+        public void MouseLeft(EventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.MouseLeft(e);
+        }
+
         #endregion
 
         #region Updates & Statechanges

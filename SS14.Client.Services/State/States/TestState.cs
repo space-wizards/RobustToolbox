@@ -105,6 +105,8 @@ namespace SS14.Client.Services.State.States
         public void MouseMoved(MouseMoveEventArgs e) {}
         public void MouseMove(MouseMoveEventArgs e) {}
         public void MouseWheelMove(MouseWheelEventArgs e) {}
+        public void MouseEntered(EventArgs e) {}
+        public void MouseLeft(EventArgs e) {}
         public void FormResize() {}
     }
 }

@@ -121,7 +121,9 @@ namespace SS14.Client.Services.State.States
         }
         public void KeyUp(KeyEventArgs e) {}
         public void MousePressed(MouseButtonEventArgs e) {}
-        public void MouseUp(MouseButtonEventArgs e) {}
+        public void MouseUp(MouseButtonEventArgs e) {
+            StateManager.RequestStateChange<MainScreen>();
+        }
         public void MouseDown(MouseButtonEventArgs e) {}
         public void MouseMoved(MouseMoveEventArgs e) {}
         public void MouseMove(MouseMoveEventArgs e) {}

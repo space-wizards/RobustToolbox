@@ -29,6 +29,7 @@ namespace SS14.Client.Graphics.Sprite
 
         private QueueItem activeTexture;
         private List<QueueItem> textures = new List<QueueItem>();
+        private Queue<QueueItem> recycle = new Queue<QueueItem>();
 
         private readonly uint Max;
 
@@ -50,9 +51,16 @@ namespace SS14.Client.Graphics.Sprite
         {
             if (active) throw new Exception("Already active");
             count = 0;
+            // we use these a lot, and the overall number of textures
+            // remains stable, so recycle them to avoid excess calls into
+            // the native constructor.
+            foreach(var tex in textures) {
+                tex.vertices.Clear();
+                tex.Texture=null;
+                recycle.Enqueue(tex);
+            }
             textures.Clear();
             active = true;
-
             activeTexture = null;
         }
 
@@ -67,7 +75,11 @@ namespace SS14.Client.Graphics.Sprite
             if (!active) throw new Exception("Call Begin first.");
 
             if (activeTexture==null || activeTexture.Texture != texture) {
-                activeTexture=new QueueItem(texture);
+                if (recycle.Count > 0) {
+                    activeTexture=recycle.Dequeue();
+                    activeTexture.Texture=texture;
+                } else
+                    activeTexture=new QueueItem(texture);
                 textures.Add(activeTexture);
             }
         }

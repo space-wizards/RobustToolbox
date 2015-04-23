@@ -96,7 +96,7 @@ namespace SS14.Client.Graphics.Sprite
                  sprite.Rotation);
         }
 
-        public unsafe void Draw(Texture texture, Vector2f position, IntRect rec, Color color, Vector2f scale,
+        public void Draw(Texture texture, Vector2f position, IntRect rec, Color color, Vector2f scale,
                                 Vector2f origin, float rotation = 0)
         {
             count++;

@@ -362,6 +362,11 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.DisposeAllComponents(); //HerpDerp. This is probably bad. Should not remove them ALL.
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
             //RenderTargetCache.DestroyAll();
+            _decalBatch.Dispose();
+            _floorBatch.Dispose();
+            _gasBatch.Dispose();
+            _wallBatch.Dispose();
+            _wallTopsBatch.Dispose();
             //GC.Collect();
         }
 

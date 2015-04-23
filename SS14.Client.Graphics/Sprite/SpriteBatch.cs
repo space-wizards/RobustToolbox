@@ -14,7 +14,7 @@ namespace SS14.Client.Graphics.Sprite
     /// <summary>
     /// Provides optimized drawing of sprites
     /// </summary>
-    public class SpriteBatch : Drawable
+    public class SpriteBatch : Drawable,IDisposable
     {
         private class QueueItem
         {
@@ -26,6 +26,8 @@ namespace SS14.Client.Graphics.Sprite
                 vertices=new VertexArray(PrimitiveType.Quads);
             }
         }
+
+        bool disposed = false;
 
         private QueueItem activeTexture;
         private List<QueueItem> textures = new List<QueueItem>();
@@ -223,6 +225,33 @@ namespace SS14.Client.Graphics.Sprite
                     System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
                 }
             }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposed)
+                return;
+            if (disposing) {
+                foreach (var tex in textures) {
+                    tex.vertices.Dispose();
+                    tex.Texture=null;
+                }
+                textures.Clear();
+                while(recycle.Count > 0) {
+                    var tex=recycle.Dequeue();
+                    tex.vertices.Dispose();
+                    tex.Texture=null;
+                }
+            }
+            disposed=true;
+        }
+
+        ~SpriteBatch() {
+            Dispose(true);
         }
     }
 }

@@ -33,16 +33,9 @@ namespace SS14.Client.Graphics.Sprite
         private List<QueueItem> textures = new List<QueueItem>();
         private Queue<QueueItem> recycle = new Queue<QueueItem>();
 
-        private readonly uint Max;
-
         public int Count
         {
             get { return count; }
-        }
-
-        public SpriteBatch(uint maxCapacity = 100000)
-        {
-            Max = maxCapacity * 4;
         }
 
         private int count;

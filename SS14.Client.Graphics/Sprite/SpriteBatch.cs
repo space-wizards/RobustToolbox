@@ -14,31 +14,31 @@ namespace SS14.Client.Graphics.Sprite
     /// <summary>
     /// Provides optimized drawing of sprites
     /// </summary>
-    public class SpriteBatch : Drawable
+    public class SpriteBatch : Drawable,IDisposable
     {
-        private struct QueueItem
+        private class QueueItem
         {
-            public uint Count;
             public Texture Texture;
+            public VertexArray vertices;
+
+            public QueueItem(Texture tex) {
+                Texture=tex;
+                vertices=new VertexArray(PrimitiveType.Quads);
+            }
         }
 
-        private List<QueueItem> textures = new List<QueueItem>();
+        bool disposed = false;
 
-        private readonly int Max;
+        private QueueItem activeTexture;
+        private List<QueueItem> textures = new List<QueueItem>();
+        private Queue<QueueItem> recycle = new Queue<QueueItem>();
 
         public int Count
         {
             get { return count; }
         }
 
-        public SpriteBatch(int maxCapacity = 100000)
-        {
-            Max = maxCapacity * 4;
-        }
-
-        private Vertex[] vertices = new Vertex[100 * 4];
         private int count;
-        private Texture activeTexture;
         private bool active;
         private uint queueCount;
 
@@ -46,49 +46,37 @@ namespace SS14.Client.Graphics.Sprite
         {
             if (active) throw new Exception("Already active");
             count = 0;
+            // we use these a lot, and the overall number of textures
+            // remains stable, so recycle them to avoid excess calls into
+            // the native constructor.
+            foreach(var tex in textures) {
+                tex.vertices.Clear();
+                tex.Texture=null;
+                recycle.Enqueue(tex);
+            }
             textures.Clear();
             active = true;
-
             activeTexture = null;
         }
 
         public void End()
         {
             if (!active) throw new Exception("Call end first.");
-            Enqueue();
             active = false;
         }
 
-        private void Enqueue()
-        {
-            if (queueCount > 0)
-                textures.Add(new QueueItem
-                {
-                    Texture = activeTexture,
-                    Count = queueCount
-                });
-            queueCount = 0;
-        }
-
-        private int Create(Texture texture)
+        private void Using(Texture texture)
         {
             if (!active) throw new Exception("Call Begin first.");
 
-            if (texture != activeTexture)
-            {
-                Enqueue();
-                activeTexture = texture;
+            if (activeTexture==null || activeTexture.Texture != texture) {
+                if (recycle.Count > 0) {
+                    activeTexture=recycle.Dequeue();
+                    activeTexture.Texture=texture;
+                } else
+                    activeTexture=new QueueItem(texture);
+                textures.Add(activeTexture);
             }
-
-            if (count >= (vertices.Length / 4))
-            {
-                if (vertices.Length < Max)
-                    Array.Resize(ref vertices, Math.Min(vertices.Length * 2, Max));
-                else throw new Exception("Too many items");
-            }
-
-            queueCount += 4;
-            return 4 * count++;
         }
 
         public void Draw(IEnumerable<BaseSprite> sprites)
@@ -103,11 +91,11 @@ namespace SS14.Client.Graphics.Sprite
                  sprite.Rotation);
         }
 
-        public unsafe void Draw(Texture texture, Vector2f position, IntRect rec, Color color, Vector2f scale,
+        public void Draw(Texture texture, Vector2f position, IntRect rec, Color color, Vector2f scale,
                                 Vector2f origin, float rotation = 0)
         {
-
-            var index = Create(texture);
+            count++;
+            Using(texture);
             float sin = 0, cos = 1;
             //FloatMath.SinCos(rotation, out sin, out cos);
 
@@ -123,42 +111,40 @@ namespace SS14.Client.Graphics.Sprite
             scale.X *= rec.Width;
             scale.Y *= rec.Height;
 
-            fixed (Vertex* fptr = vertices)
-            {
-                var ptr = fptr + index;
+            activeTexture.vertices.Append(
+                new Vertex(
+                    new Vector2f(pX * cos - pY * sin + position.X,
+                        pX * sin + pY * cos + position.Y),
+                    color,
+                    new Vector2f(rec.Left, rec.Top)));
 
-                ptr->Position.X = pX * cos - pY * sin + position.X;
-                ptr->Position.Y = pX * sin + pY * cos + position.Y;
-                ptr->TexCoords.X = rec.Left;
-                ptr->TexCoords.Y = rec.Top;
-                ptr->Color = color;
-                ptr++;
 
-                pX += scale.X;
-                ptr->Position.X = pX * cos - pY * sin + position.X;
-                ptr->Position.Y = pX * sin + pY * cos + position.Y;
-                ptr->TexCoords.X = rec.Left + rec.Width;
-                ptr->TexCoords.Y = rec.Top;
-                ptr->Color = color;
-                ptr++;
+            pX += scale.X;
+            activeTexture.vertices.Append(
+                new Vertex(
+                    new Vector2f(pX * cos - pY * sin + position.X,
+                        pX * sin + pY * cos + position.Y),
+                    color,
+                    new Vector2f(rec.Left + rec.Width, rec.Top)));
 
-                pY += scale.Y;
-                ptr->Position.X = pX * cos - pY * sin + position.X;
-                ptr->Position.Y = pX * sin + pY * cos + position.Y;
-                ptr->TexCoords.X = rec.Left + rec.Width;
-                ptr->TexCoords.Y = rec.Top + rec.Height;
-                ptr->Color = color;
-                ptr++;
+            pY += scale.Y;
+            activeTexture.vertices.Append(
+                new Vertex(
+                    new Vector2f(pX * cos - pY * sin + position.X,
+                        pX * sin + pY * cos + position.Y),
+                    color,
+                    new Vector2f(rec.Left+rec.Width, rec.Top+rec.Height)));
 
-                pX -= scale.X;
-                ptr->Position.X = pX * cos - pY * sin + position.X;
-                ptr->Position.Y = pX * sin + pY * cos + position.Y;
-                ptr->TexCoords.X = rec.Left;
-                ptr->TexCoords.Y = rec.Top + rec.Height;
-                ptr->Color = color;
-            }
+            pX -= scale.X;
+
+            activeTexture.vertices.Append(
+                new Vertex(
+                    new Vector2f(pX * cos - pY * sin + position.X,
+                        pX * sin + pY * cos + position.Y),
+                    color,
+                    new Vector2f(rec.Left, rec.Top+rec.Height)));
         }
-
+/*
         public unsafe void Draw(Texture texture, FloatRect rec, IntRect src, Color color)
         {
             var index = Create(texture);
@@ -215,19 +201,50 @@ namespace SS14.Client.Graphics.Sprite
             Draw(texture, new FloatRect(pos.X, pos.Y, width, height), new IntRect(0, 0, width, height), color);
         }
 
+*/
         public void Draw(RenderTarget target, RenderStates states)
         {
             if (active) throw new Exception("Call End first.");
 
-            uint index = 0;
             foreach (var item in textures)
             {
-                Debug.Assert(item.Count > 0);
+                Debug.Assert(item.vertices.VertexCount > 0);
                 states.Texture = item.Texture;
 
-                target.Draw(vertices, index, item.Count, PrimitiveType.Quads, states);
-                index += item.Count;
+                item.vertices.Draw(target, states);
+
+                if (CluwneLib.Debug.RenderingDelay > 0) {
+                    CluwneLib.Screen.Display();
+                    System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+                }
             }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposed)
+                return;
+            if (disposing) {
+                foreach (var tex in textures) {
+                    tex.vertices.Dispose();
+                    tex.Texture=null;
+                }
+                textures.Clear();
+                while(recycle.Count > 0) {
+                    var tex=recycle.Dequeue();
+                    tex.vertices.Dispose();
+                    tex.Texture=null;
+                }
+            }
+            disposed=true;
+        }
+
+        ~SpriteBatch() {
+            Dispose(true);
         }
     }
 }

@@ -32,12 +32,13 @@ namespace SS14.Client.Services.UserInterface
         private readonly IConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
-		private CluwneSprite _cursorSprite;
+        private CluwneSprite _cursorSprite;
         private DebugConsole _console;
 
         private Vector2 dragOffset = Vector2.Zero;
         private bool moveMode;
         private IGuiComponent movingComp;
+        private bool showCursor = true;
 
         /// <summary>
         ///  Currently targeting action.
@@ -219,7 +220,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseDown event. Returns true if a component accepted and handled the event.
         /// </summary>
-		public virtual bool MouseDown(MouseButtonEventArgs e)
+        public virtual bool MouseDown(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -263,7 +264,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseUp event. Returns true if a component accepted and handled the event.
         /// </summary>
-		public virtual bool MouseUp(MouseButtonEventArgs e)
+        public virtual bool MouseUp(MouseButtonEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -300,7 +301,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseMove event. Sent to all visible components.
         /// </summary>
-		public virtual void MouseMove(MouseMoveEventArgs e)
+        public virtual void MouseMove(MouseMoveEventArgs e)
         {
             MousePos = new Vector2( e.X, e.Y);
 
@@ -321,7 +322,7 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
         /// </summary>
-		public virtual void MouseWheelMove(MouseWheelEventArgs e)
+        public virtual void MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -334,6 +335,22 @@ namespace SS14.Client.Services.UserInterface
                                      select comp).FirstOrDefault();
 
             if (inputTo != null) inputTo.MouseWheelMove(e);
+        }
+
+        /// <summary>
+        ///  Handles MouseEntered event. Not sent to Focused component.
+        /// </summary>
+        public virtual void MouseEntered(EventArgs e)
+        {
+            showCursor = true;
+        }
+
+        /// <summary>
+        ///  Handles MouseLeft event. Not sent to Focused component.
+        /// </summary>
+        public virtual void MouseLeft(EventArgs e)
+        {
+            showCursor = false;
         }
 
         /// <summary>
@@ -494,21 +511,24 @@ namespace SS14.Client.Services.UserInterface
                 */}
             }
 
-            if (targetingAction != null)
-            {
-                _cursorSprite = _resourceManager.GetSprite("cursor_target");
-            }
-            else
-            {
-                _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
-                                    ? DragInfo.DragSprite
-                                    : _resourceManager.GetSprite("cursor");
-            }
-
             if (_console.IsVisible()) _console.Render();
 
-            _cursorSprite.Position = MousePos;
-            _cursorSprite.Draw();
+            if (showCursor)
+            {
+                if (targetingAction != null)
+                {
+                    _cursorSprite = _resourceManager.GetSprite("cursor_target");
+                }
+                else
+                {
+                    _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
+                                        ? DragInfo.DragSprite
+                                        : _resourceManager.GetSprite("cursor");
+                }
+
+                _cursorSprite.Position = MousePos;
+                _cursorSprite.Draw();
+            }
         }
 
         #endregion

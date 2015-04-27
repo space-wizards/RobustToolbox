@@ -16,6 +16,9 @@ namespace SS14.Client.Services.State.States
     {
         private List<ICluwneDrawable> _sprites;
         private List<GuiComponent> _UI;
+        private SpriteBatch _testBatch;
+        private CluwneSprite _floorTile;
+        private uint updatecount=0;
         public TestState (IDictionary<Type, object> managers)
             : base(managers)
         {
@@ -82,13 +85,31 @@ namespace SS14.Client.Services.State.States
             _TilesDecals.Position = new SFML.System.Vector2f(1000, 0);
             _sprites.Add(_TilesDecals);
 
+            _floorTile = ResourceManager.GetSprite("floor_texture");
+            _testBatch = new SpriteBatch();
 }
          
         public void Startup() {}
         public void Shutdown() {}
 
-        public void Update(FrameEventArgs e) {}
+        public void Update(FrameEventArgs e) {
+            // draw a patch of floortile to test SpriteBatch()
+            if (++updatecount % 10==0) {
+                // but only every 10 frames, to test batch-reuse.
+                // The first 9 frames won't have it drawn, to test empty batches.
+                _testBatch.Begin();
+                for(int y=0;y<5; y++)
+                    for(int x=0;x<5;x++) {
+                        _floorTile.SetPosition(x*_floorTile.Width, y*_floorTile.Height);
+                        _testBatch.Draw(_floorTile);
+                    }
+                _testBatch.End();
+            }
+
+        }
         public void Render(FrameEventArgs e) {
+            if (_testBatch.Count>0)
+                CluwneLib.CurrentRenderTarget.Draw(_testBatch);
             foreach (ICluwneDrawable d in _sprites)
                 d.Draw();
             foreach (GuiComponent g in _UI)
@@ -100,7 +121,9 @@ namespace SS14.Client.Services.State.States
         }
         public void KeyUp(KeyEventArgs e) {}
         public void MousePressed(MouseButtonEventArgs e) {}
-        public void MouseUp(MouseButtonEventArgs e) {}
+        public void MouseUp(MouseButtonEventArgs e) {
+            StateManager.RequestStateChange<MainScreen>();
+        }
         public void MouseDown(MouseButtonEventArgs e) {}
         public void MouseMoved(MouseMoveEventArgs e) {}
         public void MouseMove(MouseMoveEventArgs e) {}

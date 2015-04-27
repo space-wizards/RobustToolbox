@@ -75,6 +75,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public void SelectItem(string str, bool raiseEvent = false)
         {
+	    if (str==null)
+		    str="";
             ListboxItem selLabel = (from a in _dropDown.components
                                     where a.GetType() == typeof (ListboxItem)
                                     let b = (ListboxItem) a

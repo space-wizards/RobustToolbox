@@ -13,6 +13,7 @@ using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.Helpers;
@@ -94,13 +95,13 @@ namespace SS14.Client.Services.State.States
         private RenderImage _tilesTarget;
         private bool bPlayerVision = true;
         private bool bFullVision = false;
-        private FXShader finalBlendShader;
+        private GLSLShader finalBlendShader;
         private LightArea lightArea1024;
         private LightArea lightArea128;
         private LightArea lightArea256;
         private LightArea lightArea512;
-        private FXShader lightBlendShader;
-        private FXShader lightMapShader;
+        private GLSLShader lightBlendShader;
+        private GLSLShader lightMapShader;
         private RenderImage playerOcclusionTarget;
         private ILight playerVision;
         private RenderImage _occluderDebugTarget;
@@ -245,7 +246,7 @@ namespace SS14.Client.Services.State.States
             // TODO: Convert QuadRenderer to use SFML
             // TODO: Convert shadowMapResolver to use SFML
             // TODO: Convert this shit right here to use SFML
-            /*
+            
                         quadRenderer = new QuadRenderer();
                         quadRenderer.LoadContent();
                         shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size1024, ShadowmapSize.Size1024,
@@ -255,22 +256,23 @@ namespace SS14.Client.Services.State.States
                         lightArea256 = new LightArea(ShadowmapSize.Size256);
                         lightArea512 = new LightArea(ShadowmapSize.Size512);
                         lightArea1024 = new LightArea(ShadowmapSize.Size1024);
-                        screenShadows = new RenderImage("screenShadows", Gorgon.CurrentClippingViewport.Width,
-                                                        Gorgon.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
+
+                        screenShadows = new RenderImage("screenShadows", CluwneLib.CurrentClippingViewport.Width,
+                                                        CluwneLib.CurrentClippingViewport.Height, ImageBufferFormats.BufferRGB888A8);
                         _cleanupList.Add(screenShadows);
                         screenShadows.UseDepthBuffer = false;
-                        shadowIntermediate = new RenderImage("shadowIntermediate", Gorgon.CurrentClippingViewport.Width,
-                                                             Gorgon.CurrentClippingViewport.Height,
+                        shadowIntermediate = new RenderImage("shadowIntermediate", CluwneLib.CurrentClippingViewport.Width,
+                                                             CluwneLib.CurrentClippingViewport.Height,
                                                              ImageBufferFormats.BufferRGB888A8);
                         _cleanupList.Add(shadowIntermediate);
                         shadowIntermediate.UseDepthBuffer = false;
-                        shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", Gorgon.CurrentClippingViewport.Width,
-                                                                  Gorgon.CurrentClippingViewport.Height,
+                        shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", CluwneLib.CurrentClippingViewport.Width,
+                                                                  CluwneLib.CurrentClippingViewport.Height,
                                                                   ImageBufferFormats.BufferRGB888A8);
                         _cleanupList.Add(shadowBlendIntermediate);
                         shadowBlendIntermediate.UseDepthBuffer = false;
-                        playerOcclusionTarget = new RenderImage("playerOcclusionTarget", Gorgon.CurrentClippingViewport.Width,
-                                                                Gorgon.CurrentClippingViewport.Height,
+                        playerOcclusionTarget = new RenderImage("playerOcclusionTarget", CluwneLib.CurrentClippingViewport.Width,
+                                                                CluwneLib.CurrentClippingViewport.Height,
                                                                 ImageBufferFormats.BufferRGB888A8);
                         _cleanupList.Add(playerOcclusionTarget);
                         playerOcclusionTarget.UseDepthBuffer = false;
@@ -279,10 +281,10 @@ namespace SS14.Client.Services.State.States
                         lightMapShader = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
 
                         playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
-                        playerVision.SetColor(Color.Transparent);
+                        playerVision.SetColor(0,0,0,0);
                         playerVision.SetRadius(1024);
                         playerVision.Move(Vector2.Zero);
-             */
+             
 
             #endregion
 
@@ -414,8 +416,8 @@ namespace SS14.Client.Services.State.States
             shadowBlendIntermediate.Width = w;
             shadowBlendIntermediate.Height = h;
             playerOcclusionTarget.Dispose();
-            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", Gorgon.CurrentClippingViewport.Width,
-                                                    Gorgon.CurrentClippingViewport.Height,
+            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", CluwneLib.CurrentClippingViewport.Width,
+                                                    CluwneLib.CurrentClippingViewport.Height,
                                                     ImageBufferFormats.BufferRGB888A8);
             playerOcclusionTarget.Width = w;
             playerOcclusionTarget.Height = h;*/
@@ -560,8 +562,8 @@ namespace SS14.Client.Services.State.States
             //_baseTarget.Clear(Color.Black);
             //CluwneLib.Screen.Clear(Color.Black);
 
-            //Gorgon.Screen.DefaultView.Left = 400;
-            //Gorgon.Screen.DefaultView.Top = 400;
+            //CluwneLib.Screen.DefaultView.Left = 400;
+            //CluwneLib.Screen.DefaultView.Top = 400;
 
             ClientWindowData.Singleton.TileSize = MapManager.TileSize;
 
@@ -1100,7 +1102,7 @@ namespace SS14.Client.Services.State.States
             else
             {
                 debugWallOccluders = true;
-                _occluderDebugTarget = new RenderImage("OccluderDebugTarget", Gorgon.Screen.Width, Gorgon.Screen.Height, ImageBufferFormats.BufferRGB888A8);
+                _occluderDebugTarget = new RenderImage("OccluderDebugTarget", CluwneLib.Screen.Width, CluwneLib.Screen.Height, ImageBufferFormats.BufferRGB888A8);
             }*/
         }
 
@@ -1221,14 +1223,14 @@ namespace SS14.Client.Services.State.States
             BlurShadowMap();
 
             //Render the scene and lights together to compose the lit scene
-            Gorgon.CurrentRenderTarget = _composedSceneTarget;
-            Gorgon.CurrentRenderTarget.Clear(Color.Black);
-            Gorgon.CurrentShader = finalBlendShader.Techniques["FinalLightBlend"];
+            CluwneLib.CurrentRenderTarget = _composedSceneTarget;
+            CluwneLib.CurrentRenderTarget.Clear(Color.Black);
+            CluwneLib.CurrentShader = finalBlendShader.Techniques["FinalLightBlend"];
             finalBlendShader.Parameters["PlayerViewTexture"].SetValue(playerOcclusionTarget);
             Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
             finalBlendShader.Parameters["OutOfViewTexture"].SetValue(outofview.Image);
-            float texratiox = Gorgon.CurrentClippingViewport.Width/outofview.Width;
-            float texratioy = Gorgon.CurrentClippingViewport.Height/outofview.Height;
+            float texratiox = CluwneLib.CurrentClippingViewport.Width/outofview.Width;
+            float texratioy = CluwneLib.CurrentClippingViewport.Height/outofview.Height;
             var maskProps = new Vector4(texratiox, texratioy, 0, 0);
             finalBlendShader.Parameters["MaskProps"].SetValue(maskProps);
             finalBlendShader.Parameters["LightTexture"].SetValue(screenShadows);
@@ -1237,15 +1239,15 @@ namespace SS14.Client.Services.State.States
             screenShadows.Image.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
 
             // Blit the shadow image on top of the screen
-            Gorgon.CurrentShader = null;
-            Gorgon.CurrentRenderTarget = null;
+            CluwneLib.CurrentShader = null;
+            CluwneLib.CurrentRenderTarget = null;
 
             
             playerOcclusionTarget.Blit(0,0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
             PlayerPostProcess();
 
-            _composedSceneTarget.Image.Blit(0, 0, Gorgon.CurrentClippingViewport.Width,
-                                            Gorgon.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
+            _composedSceneTarget.Image.Blit(0, 0, CluwneLib.CurrentClippingViewport.Width,
+                                            CluwneLib.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
             //screenShadows.Blit(0,0);
             //playerOcclusionTarget.Blit(0,0);*/
         }
@@ -1285,11 +1287,11 @@ namespace SS14.Client.Services.State.States
             RenderImage source = screenShadows;
             source.Clear(Color.FromArgb(0, 0, 0, 0));
             RenderImage destination = shadowIntermediate;
-            Gorgon.CurrentRenderTarget = destination;
+            CluwneLib.CurrentRenderTarget = destination;
             RenderImage copy;
 
             //Reset the shader and render target
-            Gorgon.CurrentShader = lightMapShader.Techniques["PreLightBlend"];
+            CluwneLib.CurrentShader = lightMapShader.Techniques["PreLightBlend"];
 
             var lightTextures = new List<Image>();
             var colors = new List<Vector4>();
@@ -1343,7 +1345,7 @@ namespace SS14.Client.Services.State.States
                 }
                 if (draw)
                 {
-                    Gorgon.CurrentRenderTarget = destination;
+                    CluwneLib.CurrentRenderTarget = destination;
 
                     lightMapShader.Parameters["LightPosData"].SetValue(r_pos);
                     lightMapShader.Parameters["Colors"].SetValue(r_col);
@@ -1385,13 +1387,13 @@ namespace SS14.Client.Services.State.States
                     fill = true;
             } while (lightTextures.Count > 0 || draw || fill);
 
-            Gorgon.CurrentShader = null;
+            CluwneLib.CurrentShader = null;
             if (source != screenShadows)
             {
-                Gorgon.CurrentRenderTarget = screenShadows;
+                CluwneLib.CurrentRenderTarget = screenShadows;
                 source.Image.Blit(0, 0, source.Width, source.Height, Color.White, BlitterSizeMode.Crop);
             }
-            Gorgon.CurrentRenderTarget = null;*/
+            CluwneLib.CurrentRenderTarget = null;*/
         }
 
         private void RenderPlayerVisionMap()
@@ -1428,19 +1430,19 @@ namespace SS14.Client.Services.State.States
                 blitPos = ClientWindowData.Singleton.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
                 if (debugWallOccluders)
                 {
-                    RenderTarget previous = Gorgon.CurrentRenderTarget;
-                    Gorgon.CurrentRenderTarget = _occluderDebugTarget;
+                    RenderTarget previous = CluwneLib.CurrentRenderTarget;
+                    CluwneLib.CurrentRenderTarget = _occluderDebugTarget;
                     _occluderDebugTarget.Clear(Color.White);
                     area.renderTarget.Blit(blitPos.X, blitPos.Y, area.renderTarget.Width, area.renderTarget.Height, Color.White,
                                            BlitterSizeMode.Crop);
-                    Gorgon.CurrentRenderTarget = previous;
+                    CluwneLib.CurrentRenderTarget = previous;
                 }
 
                 shadowMapResolver.ResolveShadows(area.renderTarget.Image, area.renderTarget, area.LightPosition, false,
                                                  IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Image,
                                                  Vector4.Zero, new Vector4(1, 1, 1, 1)); // Calc shadows
 
-                Gorgon.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
+                CluwneLib.CurrentRenderTarget = playerOcclusionTarget; // Set to shadow rendertarget
 
                 area.renderTarget.SourceBlend = AlphaBlendOperation.One; //Additive blending
                 area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero; //Additive blending

@@ -31,7 +31,7 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
         private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
         private readonly Dictionary<string, Image> _images = new Dictionary<string, Image>();
-        private readonly Dictionary<string, FXShader> _shaders = new Dictionary<string, FXShader>();
+        private readonly Dictionary<string, GLSLShader> _shaders = new Dictionary<string, GLSLShader>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, CluwneSprite> _sprites = new Dictionary<string, CluwneSprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
@@ -172,13 +172,13 @@ namespace SS14.Client.Services.Resources
                     case("shaders/"):
                         foreach (ZipEntry shader in current.Value)
                         {
-                            //FIXME Throws Exception
-                            //if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".fx")
-                            //{
-                            //    FXShader loadedShader = LoadShaderFrom(zipFile, shader);
-                            //    if (loadedShader == null) continue;
-                            //    else _shaders.Add(shader.Name, loadedShader);
-                            //}
+
+                            if (Path.GetExtension(shader.Name).ToLowerInvariant() == ".vert" || Path.GetExtension(shader.Name).ToLowerInvariant() == ".frag")
+                          {
+                              GLSLShader loadedShader = LoadShaderFrom(zipFile, shader);
+                              if (loadedShader == null) continue;
+                              else _shaders.Add(Path.GetFileNameWithoutExtension(shader.Name), loadedShader);
+                          }
                         }
                         break;
 
@@ -257,31 +257,52 @@ namespace SS14.Client.Services.Resources
           
         }
 
+        private MemoryStream VertexShader, FragmentShader;
+
         /// <summary>
         ///  <para>Loads Shader from given Zip-File and Entry.</para>
         /// </summary>
-        private FXShader LoadShaderFrom(ZipFile zipFile, ZipEntry shaderEntry)
+        private GLSLShader LoadShaderFrom(ZipFile zipFile, ZipEntry shaderEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
-
-          
+                      
 
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
+            GLSLShader loadedShader;
+            
             //Will throw exception is missing or wrong password. Handle this.
 
-            var memStream = new MemoryStream();
 
-            StreamUtils.Copy(zipStream, memStream, byteBuffer);
-            memStream.Position = 0;
+            if (shaderEntry.Name.Contains(".frag"))
+            {
+                FragmentShader = new MemoryStream();
+                StreamUtils.Copy(zipStream, FragmentShader, byteBuffer);
+                FragmentShader.Position = 0;
+            }
 
-            FXShader loadedShader = new FXShader(ResourceName,ResourceName);
-            loadedShader.memStream = memStream;
+            if (shaderEntry.Name.Contains(".vert"))
+            {
+                VertexShader = new MemoryStream();
+                StreamUtils.Copy(zipStream, VertexShader, byteBuffer);
+                VertexShader.Position = 0;
+            }
 
-            memStream.Close();
+            if (VertexShader != null && FragmentShader != null)
+            {
+                loadedShader = new GLSLShader(VertexShader, FragmentShader);
+                VertexShader = null;
+                FragmentShader = null;
+               
+            }
+            else
+                loadedShader = null;
+          
+           
+
+         
             zipStream.Close();
-            memStream.Dispose();
             zipStream.Dispose();
 
             return loadedShader;
@@ -564,7 +585,7 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  Retrieves the Shader with the given key from the Resource List. Returns null if not found.
         /// </summary>
-        public FXShader GetShader(string key)
+        public GLSLShader GetShader(string key)
         {
             key = key.ToLowerInvariant();
             if (_shaders.ContainsKey(key)) return _shaders[key];

@@ -83,7 +83,7 @@ namespace SS14.Client
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.Clear (Color.Black);
+                CluwneLib.ClearCurrentRendertarget (Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();
@@ -230,7 +230,7 @@ namespace SS14.Client
 
         #region Privates
 
-//        private void SetupGorgon()
+//        private void SetupCluwneLib()
 //        {
 //            uint displayWidth = _configurationManager.GetDisplayWidth();
 //            uint displayHeight = _configurationManager.GetDisplayHeight();
@@ -241,14 +241,14 @@ namespace SS14.Client
 //            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 //
 //            CluwneLib.Initialize();
-//            //Gorgon.SetMode(this);
+//            //CluwneLib.SetMode(this);
 //            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
 //                           false, false, refresh);
 //            CluwneLib.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
 //            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Width, CluwneLib.Screen.Height);
 //            CluwneLib.DeviceReset += MainWindowResizeEnd;
-//            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-//            CluwneLib.Idle += GorgonIdle;
+//            //CluwneLib.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+//            CluwneLib.Idle += CluwneLibIdle;
 //        }
 
         private void SetupCluwne()

@@ -134,7 +134,7 @@ namespace SS14.Client.GameObjects
         private void DrawBubbleSprite()
         {
             // TODO unfuck this
-            /*RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
+            /*RenderTarget originalTarget = CluwneLib.CurrentRenderTarget;
             Sprite cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
@@ -142,7 +142,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.SetSize(_textSprite.Size.X + 10, _textSprite.Size.Y + 10);
 
             //BEGIN RENDERING
-            Gorgon.CurrentRenderTarget = _bubbleRender;
+            CluwneLib.CurrentRenderTarget = _bubbleRender;
             _bubbleRender.Clear(Color.Transparent);
 
             //Draw black triangle at the bottom.
@@ -185,7 +185,7 @@ namespace SS14.Client.GameObjects
 
             _textSprite.Draw();
 
-            Gorgon.CurrentRenderTarget = originalTarget;
+            CluwneLib.CurrentRenderTarget = originalTarget;
 
             _buildTime = DateTime.Now;*/
         }

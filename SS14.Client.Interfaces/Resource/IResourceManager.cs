@@ -13,7 +13,7 @@ namespace SS14.Client.Interfaces.Resource
         CluwneSprite GetSprite(string key);
         bool SpriteExists(string key);
         bool ImageExists(string key);
-        FXShader GetShader(string key);
+        GLSLShader GetShader(string key);
         ParticleSettings GetParticles(string key);
         Image GetImage(string key);
         Font GetFont(string key);

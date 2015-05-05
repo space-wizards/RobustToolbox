@@ -173,5 +173,7 @@ namespace SS14.Client.Graphics.Render
             });
             System.Console.WriteLine("Render image destroyed");
         }
+
+        public bool UseDepthBuffer { get; set; }
     }
 }

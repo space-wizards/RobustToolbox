@@ -16,7 +16,7 @@ namespace SS14.Client.Services.Helpers
         private readonly IResourceManager _resourceManager;
         private readonly string targetName;
         private RenderImage _intermediateTarget;
-        private FXShader _shader;
+        private GLSLShader _shader;
 
         /// <summary>
         /// Default constructor for the GaussianBlur class. This constructor
@@ -37,7 +37,7 @@ namespace SS14.Client.Services.Helpers
             ComputeKernel();
             SetShader();
 
-            //ComputeOffsets(Gorgon.Screen.Width, Gorgon.Screen.Height);
+            //ComputeOffsets(CluwneLib.Screen.Width, CluwneLib.Screen.Height);
             ComputeOffsets();
         }
 

@@ -11,7 +11,7 @@ namespace SS14.Client.Services.Player.PostProcessing
 {
     public class DeathPostProcessingEffect : PostProcessingEffect
     {
-        private readonly FXShader _shader;
+        private readonly GLSLShader _shader;
 
         public DeathPostProcessingEffect(float duration): base(duration)
         {

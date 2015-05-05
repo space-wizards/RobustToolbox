@@ -20,10 +20,10 @@ namespace SS14.Client.Services.Lighting
 
         private RenderImage distortRT;
         private RenderImage processedShadowsRT;
-        private FXShader reductionEffect;
+        private GLSLShader reductionEffect;
 
         private RenderImage[] reductionRT;
-        private FXShader resolveShadowsEffect;
+        private GLSLShader resolveShadowsEffect;
         private RenderImage shadowMap;
         private RenderImage shadowsRT;
 

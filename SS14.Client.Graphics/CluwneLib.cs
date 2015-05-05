@@ -35,7 +35,7 @@ namespace SS14.Client.Graphics
         public static bool IsRunning { get; set; }
         public static CluwneWindow Screen {  get;  set; }
         public static TimingData FrameStats { get; set; }
-        public static FXShader CurrentShader { get; set; }
+        public static GLSLShader CurrentShader { get; set; }
         public static BlendingModes BlendingMode { get; set; }
         public Styles Style { get; set; }
         #endregion
@@ -120,7 +120,8 @@ namespace SS14.Client.Graphics
             Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
         }
 
-        public static void Clear(SystemColor color)
+
+        public static void ClearCurrentRendertarget(SystemColor color)
         {
             CurrentRenderTarget.Clear(color.ToSFMLColor());
         }

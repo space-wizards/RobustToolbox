@@ -104,7 +104,7 @@
     <Compile Include="Render\RenderImage.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Shader\FXShader.cs">
+    <Compile Include="Shader\GLSLShader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\SpriteBatch.cs">

@@ -27,7 +27,7 @@ namespace SS14.Client.Services.Lighting
         public void Render(Vector2 v1, Vector2 v2)
         {
             // Ok this is dumb. You have to draw a non existant filledrectangle so the verts will draw, as drawing
-            // one of these makes gorgon accept a TriangleList when you use the Draw() method, otherwise it will
+            // one of these makes CluwneLib accept a TriangleList when you use the Draw() method, otherwise it will
             // want a pointlist which is no good to us.
            CluwneLib.drawRectangle(0, 0, 0, 0, Color.Black);
          

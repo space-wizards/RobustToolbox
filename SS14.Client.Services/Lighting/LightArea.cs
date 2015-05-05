@@ -12,6 +12,8 @@ namespace SS14.Client.Services.Lighting
 {
     public class LightArea : ILightArea
     {
+        private ShadowmapSize shadowmapSize;
+
         public LightArea(int size)
         {
             int baseSize = 2 << (int) size;
@@ -20,6 +22,12 @@ namespace SS14.Client.Services.Lighting
 
 
             Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+        }
+
+        public LightArea(ShadowmapSize shadowmapSize)
+        {
+            // TODO: Complete member initialization
+            this.shadowmapSize = shadowmapSize;
         }
 
         #region ILightArea Members
@@ -69,8 +77,8 @@ namespace SS14.Client.Services.Lighting
         public void BeginDrawingShadowCasters()
         {
            CluwneLib.CurrentRenderTarget = renderTarget;
-            //TODO CluwneLib.Clear
-            //CluwneLib.CurrentRenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
+           
+           CluwneLib.ClearCurrentRendertarget(Color.FromArgb(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()

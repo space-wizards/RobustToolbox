@@ -88,7 +88,7 @@ namespace SS14.Client.Services.State.States
         #endregion
 
         #region Lighting
-        // TODO Rewrite shader code and lighting shaders to re-enable this shit
+      
         private RenderImage _composedSceneTarget;
         private RenderImage _overlayTarget;
         private RenderImage _sceneTarget;
@@ -96,6 +96,9 @@ namespace SS14.Client.Services.State.States
         private bool bPlayerVision = true;
         private bool bFullVision = false;
         private GLSLShader finalBlendShader;
+        private GLSLShader finalLightBlendShader;
+        private GLSLShader maskLight;
+        private GLSLShader DrawTilesInversePlayerView;
         private LightArea lightArea1024;
         private LightArea lightArea128;
         private LightArea lightArea256;
@@ -276,8 +279,10 @@ namespace SS14.Client.Services.State.States
                                                                 ImageBufferFormats.BufferRGB888A8);
                         _cleanupList.Add(playerOcclusionTarget);
                         playerOcclusionTarget.UseDepthBuffer = false;
-                        lightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("lightblend");
-                        finalBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("finallight");
+
+                        finalLightBlendShader = IoCManager.Resolve<IResourceManager>().GetShader("finalLightBlend");
+                        maskLight = IoCManager.Resolve<IResourceManager>().GetShader("maskLight");
+                        DrawTilesInversePlayerView = IoCManager.Resolve<IResourceManager>().GetShader("DrawTilesInversePlayerView"); 
                         lightMapShader = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
 
                         playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
@@ -392,35 +397,25 @@ namespace SS14.Client.Services.State.States
         {
             int w = (int)CluwneLib.Screen.Size.X;
             int h = (int)CluwneLib.Screen.Size.Y;
-            /*
-                        _baseTarget.Width = w;
-                        _baseTarget.Height = h;
-                        _sceneTarget.Width = w;
-                        _sceneTarget.Height = h;
-                        _tilesTarget.Width = w;
-                        _tilesTarget.Height = h;
-                        _overlayTarget.Width = w;
-                        _overlayTarget.Height = h;
-                        _composedSceneTarget.Width = w;
-                        _composedSceneTarget.Height = h;
-            */
+
+                        _baseTarget.Scale = new Vector2(w, h);
+                        _sceneTarget.Scale = new Vector2(w, h);
+                        _tilesTarget.Scale = new Vector2(w, h);
+                        _overlayTarget.Scale = new Vector2(w, h);
+                        _composedSceneTarget.Scale = new Vector2(w, h);
+                        
             // TODO: See Startup for todos related to SFML
-            /*_lightTarget.Width = w;
-            _lightTarget.Height = h;
-            _lightTargetIntermediate.Width = w;
-            _lightTargetIntermediate.Height = h;
-            screenShadows.Width = w;
-            screenShadows.Height = h;
-            shadowIntermediate.Width = w;
-            shadowIntermediate.Height = h;
-            shadowBlendIntermediate.Width = w;
-            shadowBlendIntermediate.Height = h;
+                        _lightTarget.Scale = new Vector2(w, h);
+                        _lightTargetIntermediate.Scale = new Vector2(w, h);
+                        screenShadows.Scale = new Vector2(w, h);
+                        shadowIntermediate.Scale = new Vector2(w, h);
+                        shadowBlendIntermediate.Scale = new Vector2(w, h);
+                     
             playerOcclusionTarget.Dispose();
             playerOcclusionTarget = new RenderImage("playerOcclusionTarget", CluwneLib.CurrentClippingViewport.Width,
                                                     CluwneLib.CurrentClippingViewport.Height,
                                                     ImageBufferFormats.BufferRGB888A8);
-            playerOcclusionTarget.Width = w;
-            playerOcclusionTarget.Height = h;*/
+            playerOcclusionTarget.Scale = new Vector2(w, h);
             //playerOcclusionTarget.DeviceReset();
             _gaussianBlur.Dispose();
             _gaussianBlur = new GaussianBlur(ResourceManager);
@@ -1092,8 +1087,8 @@ namespace SS14.Client.Services.State.States
 
         private void ToggleOccluderDebug()
         {
-            // TODO: See Startup for SFML tasks
-            /*if(debugWallOccluders)
+           
+            if(debugWallOccluders)
             {
                 debugWallOccluders = false;
                 _occluderDebugTarget.Dispose();
@@ -1102,8 +1097,8 @@ namespace SS14.Client.Services.State.States
             else
             {
                 debugWallOccluders = true;
-                _occluderDebugTarget = new RenderImage("OccluderDebugTarget", CluwneLib.Screen.Width, CluwneLib.Screen.Height, ImageBufferFormats.BufferRGB888A8);
-            }*/
+                _occluderDebugTarget = new RenderImage("OccluderDebugTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, ImageBufferFormats.BufferRGB888A8);
+            }
         }
 
         /// <summary>

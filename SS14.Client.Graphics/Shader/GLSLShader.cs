@@ -6,14 +6,16 @@ using System.Text;
 using SFML.Graphics;
 using ShaderClass = SFML.Graphics.Shader;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprite;
+using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Client.Graphics.Shader
 {
     public class GLSLShader : ShaderClass
     {
         private string _resourceName;
-        private MemoryStream _memStream;
-
+    
 
 
         public GLSLShader(string vertexShaderFilename, string fragmentShaderFilename) : base(vertexShaderFilename, fragmentShaderFilename)
@@ -23,9 +25,8 @@ namespace SS14.Client.Graphics.Shader
 
         public GLSLShader(Stream vertexShaderStream, Stream fragmentShaderStream) : base(vertexShaderStream, fragmentShaderStream)
         {
-        }
 
-    
+        }         
 
         public string ResourceName
         {
@@ -33,18 +34,45 @@ namespace SS14.Client.Graphics.Shader
             set { _resourceName = value; }
         }
 
-      
-
-      
-
-        public void setDuration(float duration)
-        { 
-        
+        public void setDuration(float duration) 
+        {
+            
         }
 
-        public void SetParameter(string Parameter, RenderImage Image)
+        public void SetParameter(string Parameter, RenderImage Image) 
         {
-            throw new NotImplementedException();
+            base.SetParameter(Parameter, Image.Texture);
+        }
+
+        public void SetParameter(string Parameter, Vector2 vec2)
+        {
+           base.SetParameter(Parameter, vec2.X, vec2.Y);
+        }
+
+        public void SetParameter(string Parameter, Vector3 vec3)
+        {
+            base.SetParameter(Parameter, vec3.X, vec3.Y, vec3.Z);
+        }
+
+        public void SetParameter(string Parameter, Vector4 vec4)
+        {
+            base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z,vec4.W);
+        }
+
+        public void SetParameter(string Parameter, CluwneSprite Sprite)
+        {
+            base.SetParameter(Parameter, Sprite.Texture);
+        }
+
+        public void SetParameter(string Parameter, Transform mat4)
+        {            
+            base.SetParameter(Parameter,mat4);
+        }
+
+
+        public void SetParameter(string Parameter, Texture texture)
+        {
+            base.SetParameter(Parameter, texture);
         }
     }
 }

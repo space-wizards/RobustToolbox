@@ -292,6 +292,8 @@ namespace SS14.Client.Services.Resources
             if (VertexShader != null && FragmentShader != null)
             {
                 loadedShader = new GLSLShader(VertexShader, FragmentShader);
+                VertexShader.Dispose();
+                FragmentShader.Dispose();
                 VertexShader = null;
                 FragmentShader = null;
                

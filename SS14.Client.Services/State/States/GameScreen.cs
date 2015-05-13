@@ -310,8 +310,7 @@ namespace SS14.Client.Services.State.States
 
             var targetingUi = new TargetingGui();
             targetingUi.Update(0);
-            targetingUi.Position = new Point(healthPanel.ClientArea.Right - 1,
-                                             healthPanel.ClientArea.Bottom - targetingUi.ClientArea.Height);
+            targetingUi.Position = new Point(healthPanel.Position.X + healthPanel.ClientArea.Width,healthPanel.Position.Y - 40);
             UserInterfaceManager.AddComponent(targetingUi);
 
             var inventoryButton = new ImageButton
@@ -404,7 +403,7 @@ namespace SS14.Client.Services.State.States
                         _overlayTarget.Scale = new Vector2(w, h);
                         _composedSceneTarget.Scale = new Vector2(w, h);
                         
-            // TODO: See Startup for todos related to SFML
+           
                         _lightTarget.Scale = new Vector2(w, h);
                         _lightTargetIntermediate.Scale = new Vector2(w, h);
                         screenShadows.Scale = new Vector2(w, h);

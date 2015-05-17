@@ -2,6 +2,17 @@
 #define KERNEL_SIZE (RADIUS * 2 + 1)
  
 uniform vec2 weights_offsets[KERNEL_SIZE];
+uniform vec2 weights_offsets0;
+uniform vec2 weights_offsets1;
+uniform vec2 weights_offsets2;
+uniform vec2 weights_offsets3;
+uniform vec2 weights_offsets4;
+uniform vec2 weights_offsets5;
+uniform vec2 weights_offsets6;
+uniform vec2 weights_offsets7;
+uniform vec2 weights_offsets8;
+uniform vec2 weights_offsets9;
+uniform vec2 weights_offsets10;
 uniform sampler2D colorMap;
 
 varying vec2 TexCoord;
@@ -20,5 +31,20 @@ vec4 GaussianBlurVertical()
 
 void main()
 {
+
+	vec2 weights_offsets[KERNEL_SIZE] =
+    {
+		weights_offsets0,
+		weights_offsets1,
+		weights_offsets2,
+		weights_offsets3,
+		weights_offsets4,
+		weights_offsets5,
+		weights_offsets6,
+		weights_offsets7,
+		weights_offsets8,
+		weights_offsets9,
+		weights_offsets10
+	};
  	gl_FragColor = GaussianBlurVertical();
 }

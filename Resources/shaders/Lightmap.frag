@@ -2,7 +2,22 @@
 
 #define NUM_LIGHTS 6
 uniform vec4 LightPosData[NUM_LIGHTS];
+uniform vec4 LightPosData0;
+uniform vec4 LightPosData1;
+uniform vec4 LightPosData2;
+uniform vec4 LightPosData3;
+uniform vec4 LightPosData4;
+uniform vec4 LightPosData5;
+
 uniform vec4 Colors[NUM_LIGHTS];
+uniform vec4 Colors0;
+uniform vec4 Colors1;
+uniform vec4 Colors2;
+uniform vec4 Colors3;
+uniform vec4 Colors4;
+uniform vec4 Colors5;
+
+
 
 uniform sampler2D light1s;
 uniform sampler2D light2s;
@@ -54,6 +69,26 @@ vec4 PreLightBlendPS(vec2 TexCoord)
 
 void main()
 {
+	vec4 Colors[NUM_LIGHTS] = 
+	{
+		Colors0,
+		Colors1,
+		Colors2,
+		Colors3,
+		Colors4,
+		Colors5
+	};
+	
+	vec4 LightPosData[NUM_LIGHTS] = 
+	{
+		LightPosData0,
+		LightPosData1,
+		LightPosData2,
+		LightPosData3,
+		LightPosData4,
+		LightPosData5
+	};
+
 	gl_FragColor = PreLightBlendPS(a_texCoord0);
 }
 

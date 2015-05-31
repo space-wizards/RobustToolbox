@@ -37,7 +37,7 @@ namespace SS14.Client.Graphics
         {
             _textures = new TextureList();
         }
-        public static bool Add(string name, Image image) {
+        public static bool Add(string name, Texture image) {
             if (_textures.Contains(name))
                 return true;
 

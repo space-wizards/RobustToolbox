@@ -35,8 +35,6 @@ namespace SS14.Client.Graphics.Shader
             return _techniqueList[ShaderName];
         }
 
-
-
         public GLSLShader this[string key]
         {
             get { return _techniqueList[key]; }

@@ -53,12 +53,11 @@ namespace SS14.Client.Graphics.Shader
         {
             base.SetParameter(Parameter, vec3.X, vec3.Y, vec3.Z);
         }
-
         public void SetParameter(string Parameter, Vector4 vec4)
         {
-            base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z,vec4.W);
+            base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z, vec4.W);
         }
-
+        
         public void SetParameter(string Parameter, CluwneSprite Sprite)
         {
             base.SetParameter(Parameter, Sprite.Texture);
@@ -69,6 +68,29 @@ namespace SS14.Client.Graphics.Shader
             base.SetParameter(Parameter,mat4);
         }
 
+        public void SetParameter(string Parameter, Vector2[] vec2array)
+        {
+            for (int i = 0; i < vec2array.Length; i++)
+            {
+                this.SetParameter(Parameter + i, vec2array[i]);
+            }
+        }
+
+        public void SetParameter(string Parameter, Vector3[] vec3array)
+        {
+            for (int i = 0; i < vec3array.Length; i++)
+            {
+                this.SetParameter(Parameter + i, vec3array[i]);
+            }
+        }
+
+        public void SetParameter(string Parameter, Vector4[] vec4array)
+        {
+            for (int i = 0; i < vec4array.Length; i++)
+            {
+               this.SetParameter(Parameter + i, vec4array[i]);
+            }
+        }
 
         public void SetParameter(string Parameter, Texture texture)
         {

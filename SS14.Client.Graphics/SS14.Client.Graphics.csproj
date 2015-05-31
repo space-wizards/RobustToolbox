@@ -87,6 +87,7 @@
     <Compile Include="Event\FrameEvent.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
     <Compile Include="TextureCache.cs">

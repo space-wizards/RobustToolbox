@@ -193,6 +193,12 @@ namespace SS14.Client.Graphics.Sprite
             set { _key = value; }
 
         }
+
+        public bool Smoothing
+        {
+            get { return base.Texture.Smooth; }
+            set { base.Texture.Smooth = value; }
+        }
          
         public bool IsAABBUpdated = true;
 

@@ -24,5 +24,5 @@ vec4 DistortPS()
 }
 void main()
 {
-
+ gl_FragColor = DistortPS();
 }

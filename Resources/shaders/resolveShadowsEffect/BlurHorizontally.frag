@@ -1,7 +1,5 @@
-uniform vec4 MaskProps;
-uniform vec4 DiffuseColor;
 uniform vec2 renderTargetSize;
-uniform float AttenuateShadows;
+
 
 uniform sampler2D shadowMapSampler;
 uniform sampler2D inputSampler;

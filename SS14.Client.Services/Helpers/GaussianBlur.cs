@@ -8,6 +8,8 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics;
 using Color = System.Drawing.Color;
+using System.Collections.Generic;
+using SS14.Client.Services.Resources;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -16,7 +18,9 @@ namespace SS14.Client.Services.Helpers
         private readonly IResourceManager _resourceManager;
         private readonly string targetName;
         private RenderImage _intermediateTarget;
-        private GLSLShader _shader;
+        private TechniqueList GaussianBlurTechnique;
+        private bool done = false;
+        
 
         /// <summary>
         /// Default constructor for the GaussianBlur class. This constructor
@@ -34,11 +38,10 @@ namespace SS14.Client.Services.Helpers
             Radius = 7;
             Amount = 2.5f;
             Size = new SizeF(256.0f, 256.0f);
-            ComputeKernel();
-            SetShader();
 
-            //ComputeOffsets(CluwneLib.Screen.Width, CluwneLib.Screen.Height);
-            ComputeOffsets();
+            LoadShaders();
+            //ComputeOffsets(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+            
         }
 
         /// <summary>
@@ -82,25 +85,22 @@ namespace SS14.Client.Services.Helpers
 
         public void Dispose()
         {
+
         }
 
         public void SetAmount(float amount)
         {
-            Amount = amount;
-            ComputeKernel();
-            ComputeOffsets();
+            Amount = amount;            
         }
 
         public void SetSize(float size)
         {
-            Size = new SizeF(size, size);
-            ComputeOffsets();
+            Size = new SizeF(size, size);                  
         }
 
         public void SetSize(SizeF size)
         {
-            Size = size;
-            ComputeOffsets();
+            Size = size;        
         }
 
         public void SetRadius(int radius)
@@ -117,13 +117,17 @@ namespace SS14.Client.Services.Helpers
                 default:
                     throw new Exception("The blur radius must be 3, 5, 7, 9, or 11.");
             }
-            ComputeKernel();
-            SetShader();
+            done = false;
+            LoadShaders();
         }
 
-        private void SetShader()
+        private void LoadShaders()
         {
-            _shader = _resourceManager.GetShader("GaussianBlur" + Radius);
+            if (!done)
+            {
+                GaussianBlurTechnique = _resourceManager.GetTechnique(("GaussianBlur" + Radius));
+                done = true;
+            }            
         }
 
         /// <summary>
@@ -131,6 +135,8 @@ namespace SS14.Client.Services.Helpers
         /// ported from the original Java code appearing in chapter 16 of
         /// "Filthy Rich Clients: Developing Animated and Graphical Effects for
         /// Desktop Java".
+        /// 
+        /// Honk Java Honk
         /// </summary>
         public void ComputeKernel()
         {
@@ -188,28 +194,36 @@ namespace SS14.Client.Services.Helpers
 
         public void PerformGaussianBlur(RenderImage sourceImage)
         {
+            ComputeKernel();
+            ComputeOffsets();   
+
             // Perform horizontal Gaussian blur.
             _intermediateTarget = new RenderImage(sourceImage.Width, sourceImage.Height);
             _intermediateTarget.setName = targetName;
             _intermediateTarget.Clear(Color.Black);
 
-            CluwneLib.CurrentRenderTarget = _intermediateTarget;
-            CluwneLib.CurrentShader = _shader; //TODO .Techniques["GaussianBlurHorizontal"];
+            CluwneLib.CurrentRenderTarget = _intermediateTarget;   
 
-           // _shader.setParameter("weights_offsets").SetValue(WeightsOffsetsX);
-           // _shader.setParameters["colorMapTexture"].SetValue(sourceImage.Image);
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX);
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", sourceImage.Texture);
 
-            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
+            CluwneLib.CurrentShader = GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"]; //.Techniques["GaussianBlurHorizontal"];
 
+            sourceImage.BeginDrawing();
+            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height,Color.White, BlitterSizeMode.Crop);
+            sourceImage.EndDrawing();
             // Perform vertical Gaussian blur.
-          CluwneLib.CurrentRenderTarget = sourceImage;
-          CluwneLib.CurrentShader = _shader; //.Techniques["GaussianBlurVertical"];
+            CluwneLib.CurrentRenderTarget = sourceImage;
 
-            //   _shader.Parameters["colorMapTexture"].SetValue(_intermediateTarget.Image);
-            //_shader.Parameters["weights_offsets"].SetValue(WeightsOffsetsY);
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", _intermediateTarget.Texture);
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY);
 
-            //_intermediateTargetSprite.Draw();
+            CluwneLib.CurrentShader = GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"]; //.Techniques["GaussianBlurVertical"];
+
+
+            _intermediateTarget.BeginDrawing();
             _intermediateTarget.Blit(0, 0, sourceImage.Width, sourceImage.Height);
+            _intermediateTarget.EndDrawing();
 
             CluwneLib.CurrentShader = null;
             CluwneLib.CurrentRenderTarget = null;

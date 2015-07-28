@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
@@ -59,7 +60,6 @@ namespace SS14.Client.Services.State.States
         private bool _redrawTiles = true;
         private List<RenderTarget> _cleanupList = new List<RenderTarget>();
         private List<CluwneSprite> _cleanupSpriteList = new List<CluwneSprite>();
-        private SizeF _viewportSize;
 
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
         private SpriteBatch _wallBatch;
@@ -156,30 +156,30 @@ namespace SS14.Client.Services.State.States
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
             // Create new 
-            _baseTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
-                                          (uint)CluwneLib.Screen.GetView().Size.Y, true);
+            _baseTarget = new RenderImage((uint)CluwneLib.Camera.ViewSize.X,
+                                          (uint)CluwneLib.Camera.ViewSize.Y, true);
             _cleanupList.Add(_baseTarget);
 
             _baseTargetSprite = new CluwneSprite(_baseTarget);
             _cleanupSpriteList.Add(_baseTargetSprite);
 
-            _sceneTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
-                                          (uint)CluwneLib.Screen.GetView().Size.Y, true);
+            _sceneTarget = new RenderImage((uint)CluwneLib.Camera.ViewSize.X,
+                                          (uint)CluwneLib.Camera.ViewSize.Y, true);
             _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
-                                           (uint)CluwneLib.Screen.GetView().Size.Y, true);
+            _tilesTarget = new RenderImage((uint)CluwneLib.Camera.ViewSize.X,
+                                           (uint)CluwneLib.Camera.ViewSize.Y, true);
             _cleanupList.Add(_tilesTarget);
 
-            _overlayTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
-                                             (uint)CluwneLib.Screen.GetView().Size.Y, true);
+            _overlayTarget = new RenderImage((uint)CluwneLib.Camera.ViewSize.X,
+                                             (uint)CluwneLib.Camera.ViewSize.Y, true);
             _cleanupList.Add(_overlayTarget);
             //  _overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
             //    _overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
             // _overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
             //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
 
-            _composedSceneTarget = new RenderImage((uint)CluwneLib.Screen.GetView().Size.X,
-                                                  (uint)CluwneLib.Screen.GetView().Size.Y,
+            _composedSceneTarget = new RenderImage((uint)CluwneLib.Camera.ViewSize.X,
+                                                  (uint)CluwneLib.Camera.ViewSize.Y,
                                                  ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
@@ -221,8 +221,8 @@ namespace SS14.Client.Services.State.States
 
             _gaussianBlur = new GaussianBlur(ResourceManager);
 
-            _realScreenWidthTiles = (float)CluwneLib.Screen.Size.X / MapManager.TileSize;
-            _realScreenHeightTiles = (float)CluwneLib.Screen.Size.Y / MapManager.TileSize;
+            _realScreenWidthTiles = (float)CluwneLib.Camera.ViewSize.X / MapManager.TileSize;
+            _realScreenHeightTiles = (float)CluwneLib.Camera.ViewSize.Y / MapManager.TileSize;
 
             //Init GUI components
             _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
@@ -232,11 +232,11 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point((int)CluwneLib.Screen.Size.X - 800, 10);
+            statusBar.Position = new Point((int)CluwneLib.Camera.ViewSize.X - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point(5, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Point(5, (int)CluwneLib.Camera.ViewSize.Y - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
@@ -343,6 +343,8 @@ namespace SS14.Client.Services.State.States
             menuButton.Update(0);
             menuButton.Clicked += menuButton_Clicked;
             UserInterfaceManager.AddComponent(menuButton);
+
+            CluwneLib.Camera.SetWorldCenter( 0.0f, 0.0f);
         }
 
         public void Shutdown()
@@ -380,16 +382,21 @@ namespace SS14.Client.Services.State.States
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if (PlayerManager != null && PlayerManager.ControlledEntity != null)
+            {
                 ClientWindowData.Singleton.WorldCenter =
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                Vector2 playerPos = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                int tileSize = MapManager.TileSize;
+                CluwneLib.Camera.SetWorldCenter(playerPos.X * tileSize, playerPos.Y * tileSize);
+            }
 
             MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
         }
 
         private void ResetRendertargets()
         {
-            int w = (int)CluwneLib.Screen.Size.X;
-            int h = (int)CluwneLib.Screen.Size.Y;
+            int w = (int)CluwneLib.Camera.ViewSize.X;
+            int h = (int)CluwneLib.Camera.ViewSize.Y;
             /*
                         _baseTarget.Width = w;
                         _baseTarget.Height = h;
@@ -555,6 +562,8 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
+            CluwneLib.Camera.SetWorldView();
+
             //CluwneLib.CurrentRenderTarget = _baseTarget;
 
             //_baseTarget.Clear(Color.Black);
@@ -569,13 +578,17 @@ namespace SS14.Client.Services.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                ClientWindowData.Singleton.WorldCenter =
-                    ClientWindowData.Singleton.GetNearestPixel( // Snapping view to pixels to prevent the blurring of tiles.
-                        PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                int tileSize = MapManager.TileSize;
+                Vector2 playerPos =
+                ClientWindowData.Singleton.GetNearestPixel( 
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                playerPos.X -= CluwneLib.Camera.ViewSize.X / tileSize / 2.0f;
+                playerPos.Y -= CluwneLib.Camera.ViewSize.Y / tileSize / 2.0f;
                 ClientWindowData.Singleton.ScreenViewportSize =
-                    new SizeF(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                    new SizeF(CluwneLib.Camera.ViewSize.X, CluwneLib.Camera.ViewSize.Y);
 
-                var vp = ClientWindowData.Singleton.WorldViewport;
+                var vp = new RectangleF(playerPos.X, playerPos.Y,
+                    CluwneLib.Camera.ViewSize.X / tileSize, CluwneLib.Camera.ViewSize.Y / tileSize);
 
                 // Get nearby lights
                 ILight[] lights =
@@ -676,9 +689,6 @@ namespace SS14.Client.Services.State.States
 
         public void FormResize()
         {
-            ClientWindowData.Singleton.ScreenViewportSize =
-                new SizeF(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
@@ -929,7 +939,8 @@ namespace SS14.Client.Services.State.States
 
         public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
+
+            //float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
             MousePosScreen = new Vector2(e.X, e.Y);
             MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
@@ -1549,8 +1560,10 @@ namespace SS14.Client.Services.State.States
                 else
                 {
                     var point = ClientWindowData.Singleton.WorldToScreen(new PointF(tr.X, tr.Y));
-                    td.Render(point.X, point.Y, _floorBatch);
-                    td.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
+                    Vector2f pointF = new Vector2f(point.X, point.Y);
+                    pointF = CluwneLib.Camera.SnapToScreenPixels(pointF);
+                    td.Render(pointF.X, pointF.Y, _floorBatch);
+                    td.RenderGas(pointF.X, pointF.Y, MapManager.TileSize, _gasBatch);
                 }
 
             }

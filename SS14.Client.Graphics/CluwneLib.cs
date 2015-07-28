@@ -34,6 +34,7 @@ namespace SS14.Client.Graphics
         public static bool IsInitialized { get; set; }
         public static bool IsRunning { get; set; }
         public static CluwneWindow Screen {  get;  set; }
+        public static CluwneView Camera { get; set; }
         public static TimingData FrameStats { get; set; }
         public static FXShader CurrentShader { get; set; }
         public static BlendingModes BlendingMode { get; set; }
@@ -107,6 +108,7 @@ namespace SS14.Client.Graphics
         public static void SetMode(int displayWidth, int displayHeight)
         {
             Screen = new CluwneWindow(new VideoMode((uint)displayWidth, (uint)displayHeight), "Space station 14");
+            Camera = new CluwneView(Screen);
         }
 
         public static void SetMode(int width, int height, bool fullscreen, bool p4, bool p5, int refreshRate)
@@ -118,6 +120,7 @@ namespace SS14.Client.Graphics
             else stylesTemp = Styles.Default;
 
             Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
+            Camera = new CluwneView(Screen);
         }
 
         public static void Clear(SystemColor color)

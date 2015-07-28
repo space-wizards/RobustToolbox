@@ -40,7 +40,7 @@ namespace SS14.Client.ClientWindow
         //    }
         //}
 
-        public SizeF ScreenViewportSize { get; set; }
+        public SizeF ScreenViewportSize { get { return new SizeF(1280, 768); } set { } }
         public int TileSize { get; set; }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new PointF(
-                (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-                (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+                (point.X) * TileSize,
+                (point.Y) * TileSize
                 );
         }
         /// <summary>
@@ -96,8 +96,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new Vector2(
-                (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-                (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+                (point.X) * TileSize,
+                (point.Y) * TileSize
                 );
         }
         /// <summary>
@@ -107,8 +107,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new RectangleF(
-                (rect.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-                (rect.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2,
+                (rect.X) * TileSize,
+                (rect.Y) * TileSize,
                 rect.Width * TileSize,
                 rect.Height * TileSize
                 );
@@ -121,8 +121,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new PointF(
-                (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-                (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+                (point.X) / TileSize,
+                (point.Y) / TileSize
                 );
         }
         /// <summary>
@@ -132,8 +132,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new Vector2(
-                (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-                (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+                (point.X) / TileSize,
+                (point.Y) / TileSize
                 );
         }
         /// <summary>
@@ -143,8 +143,8 @@ namespace SS14.Client.ClientWindow
         {
             var center = WorldCenter;
             return new RectangleF(
-                (rect.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-                (rect.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y,
+                (rect.X) / TileSize,
+                (rect.Y) / TileSize,
                 rect.Width / TileSize,
                 rect.Height / TileSize
                 );

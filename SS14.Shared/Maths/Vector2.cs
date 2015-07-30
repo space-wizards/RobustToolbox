@@ -1,10 +1,14 @@
 #region Imports
 
+
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using SVector2f = SFML.System.Vector2f;
+using SFML.Window;
+using SFML.System;
+
 
 // for various Xml attributes
 
@@ -908,6 +912,36 @@ namespace SS14.Shared.Maths
         public static implicit operator Vector2(SVector2f vector)
         {
             return new Vector2(vector.X, vector.Y);
+        }
+
+        public static explicit operator Vector2i(Vector2 v)
+        {
+            return new Vector2i((int)v.X, (int)v.Y);
+        }
+
+        public static explicit operator Vector2u(Vector2 v)
+        {
+            return new Vector2u((uint)v.X, (uint)v.Y);
+        }
+
+        public static explicit operator Vector2(Vector2i v)
+        {
+            return new Vector2(v.X, v.Y);
+        }
+
+        public static explicit operator Vector2(Vector2u v)
+        {
+            return new Vector2(v.X, v.Y);
+        }
+
+        public static explicit operator Vector2(MouseButtonEventArgs e)
+        {
+            return new Vector2(e.X, e.Y);
+        }
+
+        public static explicit operator Vector2(MouseMoveEventArgs e)
+        {
+            return new Vector2(e.X, e.Y);
         }
 
         private const string ZERO_VECTOR_ANGLE = "Cannot find an angle from a zero vector.";

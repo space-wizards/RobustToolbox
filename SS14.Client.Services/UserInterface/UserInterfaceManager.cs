@@ -224,7 +224,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool MouseDown(MouseButtonEventArgs e)
         {
-            CluwneLib.Camera.ScaleEventToOriginalSize(e);
+            e = CluwneLib.Camera.EventToWindowPos(e);
 
             if (_console.IsVisible())
             {
@@ -270,7 +270,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool MouseUp(MouseButtonEventArgs e)
         {
-            CluwneLib.Camera.ScaleEventToOriginalSize(e);
+            e = CluwneLib.Camera.EventToWindowPos(e);
 
             if (_console.IsVisible())
             {
@@ -309,7 +309,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            CluwneLib.Camera.ScaleEventToOriginalSize(e);
+            e = CluwneLib.Camera.EventToWindowPos(e);
             MousePos = new Vector2(e.X, e.Y);
 
             if (_console.IsVisible())

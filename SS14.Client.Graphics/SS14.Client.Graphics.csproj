@@ -88,6 +88,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Render\CluwneView.cs" />
+    <Compile Include="MapUtil.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
     <Compile Include="TextureCache.cs">

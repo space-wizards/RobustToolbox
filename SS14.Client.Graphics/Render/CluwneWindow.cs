@@ -39,6 +39,6 @@ namespace SS14.Client.Graphics.Render
         {
             get;
             set;
-        }     
+        }
     }
 }

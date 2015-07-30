@@ -1,8 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
-using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -74,9 +72,9 @@ namespace SS14.Client.Services.State.States
 
         #region Mouse/Camera stuff
 
-        public Vector2 MousePosScreen = Vector2.Zero;
+        public Vector2 MousePosWindow = Vector2.Zero;
         public Vector2 MousePosWorld = Vector2.Zero;
-
+        public Vector2 ClickedPointDebug = Vector2.Zero;
         #endregion
 
         #region UI Variables
@@ -344,7 +342,7 @@ namespace SS14.Client.Services.State.States
             menuButton.Clicked += menuButton_Clicked;
             UserInterfaceManager.AddComponent(menuButton);
 
-            CluwneLib.Camera.SetWorldCenter( 0.0f, 0.0f);
+            CluwneLib.Camera.SetWorldCenter( new Vector2(0.0f, 0.0f));
         }
 
         public void Shutdown()
@@ -379,18 +377,13 @@ namespace SS14.Client.Services.State.States
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
             _entityManager.Update(e.FrameDeltaTime);
-            PlacementManager.Update(MousePosScreen, MapManager);
+            PlacementManager.Update(MousePosWindow, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
             if (PlayerManager != null && PlayerManager.ControlledEntity != null)
             {
-                ClientWindowData.Singleton.WorldCenter =
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
                 Vector2 playerPos = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-                int tileSize = MapManager.TileSize;
-                CluwneLib.Camera.SetWorldCenter(playerPos.X * tileSize, playerPos.Y * tileSize);
+                CluwneLib.Camera.SetWorldCenter(MapManager.TileSize * playerPos);
             }
-
-            MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
         }
 
         private void ResetRendertargets()
@@ -565,14 +558,8 @@ namespace SS14.Client.Services.State.States
             CluwneLib.Camera.SetWorldView();
 
             //CluwneLib.CurrentRenderTarget = _baseTarget;
-
             //_baseTarget.Clear(Color.Black);
             //CluwneLib.Screen.Clear(Color.Black);
-
-            //Gorgon.Screen.DefaultView.Left = 400;
-            //Gorgon.Screen.DefaultView.Top = 400;
-
-            ClientWindowData.Singleton.TileSize = MapManager.TileSize;
 
             //CalculateAllLights();
 
@@ -580,15 +567,11 @@ namespace SS14.Client.Services.State.States
             {
                 int tileSize = MapManager.TileSize;
                 Vector2 playerPos =
-                ClientWindowData.Singleton.GetNearestPixel( 
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                playerPos.X -= CluwneLib.Camera.ViewSize.X / tileSize / 2.0f;
-                playerPos.Y -= CluwneLib.Camera.ViewSize.Y / tileSize / 2.0f;
-                ClientWindowData.Singleton.ScreenViewportSize =
-                    new SizeF(CluwneLib.Camera.ViewSize.X, CluwneLib.Camera.ViewSize.Y);
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
-                var vp = new RectangleF(playerPos.X, playerPos.Y,
-                    CluwneLib.Camera.ViewSize.X / tileSize, CluwneLib.Camera.ViewSize.Y / tileSize);
+                Vector2 topLeft = playerPos - CluwneLib.Camera.ViewSize / tileSize / 2.0f;
+                Vector2 viewPortSize = CluwneLib.Camera.ViewSize / tileSize;
+                var vp = new RectangleF(topLeft, viewPortSize);
 
                 // Get nearby lights
                 ILight[] lights =
@@ -649,8 +632,6 @@ namespace SS14.Client.Services.State.States
 
                 //LightScene();
 
-
-
                 RenderDebug(vp);
                 //Render the placement manager shit
                 PlacementManager.Render();
@@ -661,7 +642,7 @@ namespace SS14.Client.Services.State.States
         {
             //if(debugWallOccluders)
             //    _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
-
+            
             if (debugHitboxes)
             {
                 var colliders =
@@ -678,12 +659,14 @@ namespace SS14.Client.Services.State.States
 
                 foreach (var hitbox in colliders.Concat(collidables))
                 {
-                    var box = ClientWindowData.Singleton.WorldToScreen(hitbox.AABB);
+                    var box = MapUtil.tileToWorldSize(hitbox.AABB);
                     CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
                         System.Drawing.Color.FromArgb(64, hitbox.Color));
                     CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
                         System.Drawing.Color.FromArgb(128, hitbox.Color));
                 }
+
+                CluwneLib.drawCircle((int)ClickedPointDebug.X, (int)ClickedPointDebug.Y, 5, System.Drawing.Color.Azure);
             }
         }
 
@@ -794,6 +777,7 @@ namespace SS14.Client.Services.State.States
 
         public void MouseUp(MouseButtonEventArgs e)
         {
+            ClickedPointDebug = MousePosWorld;
             UserInterfaceManager.MouseUp(e);
         }
 
@@ -939,10 +923,13 @@ namespace SS14.Client.Services.State.States
 
         public void MouseMove(MouseMoveEventArgs e)
         {
+            Vector2 mousePosPixel = (Vector2)e;
+            Vector2 prevMousePosWindow = MousePosWindow;
+            MousePosWorld = CluwneLib.Camera.PixelToWorldPos(mousePosPixel);
+            MousePosWindow = CluwneLib.Camera.PixelToWindowPos(mousePosPixel);
 
-            //float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
-            MousePosScreen = new Vector2(e.X, e.Y);
-            MousePosWorld = ClientWindowData.Singleton.ScreenToWorld(MousePosScreen);
+            float distanceToPrevWindow = (MousePosWindow - prevMousePosWindow).Length;
+
             UserInterfaceManager.MouseMove(e);
         }
 
@@ -1318,7 +1305,7 @@ namespace SS14.Client.Services.State.States
 
                 Vector2 blitPos;
                 //Set the drawing position.
-                blitPos = ClientWindowData.Singleton.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X/source.Width,
@@ -1436,7 +1423,7 @@ namespace SS14.Client.Services.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                blitPos = ClientWindowData.Singleton.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
                 if (debugWallOccluders)
                 {
                     RenderTarget previous = Gorgon.CurrentRenderTarget;
@@ -1559,11 +1546,10 @@ namespace SS14.Client.Services.State.States
                     walls.Add(tr);
                 else
                 {
-                    var point = ClientWindowData.Singleton.WorldToScreen(new PointF(tr.X, tr.Y));
-                    Vector2f pointF = new Vector2f(point.X, point.Y);
-                    pointF = CluwneLib.Camera.SnapToScreenPixels(pointF);
-                    td.Render(pointF.X, pointF.Y, _floorBatch);
-                    td.RenderGas(pointF.X, pointF.Y, MapManager.TileSize, _gasBatch);
+                    Vector2 tilePos = new Vector2(tr.X, tr.Y) * MapManager.TileSize;
+                    tilePos = CluwneLib.Camera.SnapToPixels(tilePos);
+                    td.Render(tilePos.X, tilePos.Y, _floorBatch);
+                    td.RenderGas(tilePos.X, tilePos.Y, MapManager.TileSize, _gasBatch);
                 }
 
             }
@@ -1575,7 +1561,7 @@ namespace SS14.Client.Services.State.States
                 var t = tr.Tile;
                 var td = t.TileDef;
 
-                var point = ClientWindowData.Singleton.WorldToScreen(new PointF(tr.X, tr.Y));
+                Vector2 point = new Vector2(tr.X, tr.Y) * MapManager.TileSize;
                 td.Render(point.X, point.Y, _wallBatch);
                 td.RenderTop(point.X, point.Y, _wallTopsBatch);
             }

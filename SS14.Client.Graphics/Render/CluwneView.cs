@@ -6,16 +6,23 @@ using System.Threading.Tasks;
 using SFML.Window;
 using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Render
 {
+    /// <summary>
+    /// Terminology:
+    ///     Pixel Position (SFML: Pixel): the pixel that was clicked physically, this is returned by the SFML MouseButton/MouseMove events
+    ///     Window Position: coordinates in original window size (not resized), this is used by the UI
+    ///     World Position (SFML: Coords): coordinates used by the gameplay
+    /// </summary>
     public class CluwneView
     {
         private CluwneWindow _window;
         private View _worldView;
         private View _interfaceView;
 
-        public Vector2f ViewSize
+        public Vector2 ViewSize
         {
             get
             {
@@ -41,51 +48,73 @@ namespace SS14.Client.Graphics.Render
             _window.SetView(_interfaceView);
         }
 
-        public void SetWorldCenter(float x, float y)
+        public void SetWorldCenter(Vector2 newCenter)
         {
-            Vector2f vect = new Vector2f(x, y);
-            _worldView.Center = CluwneLib.Camera.SnapToScreenPixels(vect);
+            _worldView.Center = CluwneLib.Camera.SnapToPixels(newCenter);
         }
 
         /// <summary>
-        /// Sets position of MouseButtonEvent where it would be if the window wasn't resized
+        /// Returns event position of MouseButtonEvent where it would be if the window wasn't resized
+        /// See Terminology above
         /// </summary>
-        public void ScaleEventToOriginalSize(MouseButtonEventArgs mouseButtonEvent)
+        public MouseButtonEventArgs EventToWindowPos(MouseButtonEventArgs mouseButtonEvent)
         {
-            Vector2f originalMousePos = _window.MapPixelToCoords(
+            Vector2i windowPos = (Vector2i)_window.MapPixelToCoords(
                 new Vector2i((int)mouseButtonEvent.X, (int)mouseButtonEvent.Y), _interfaceView);
-            mouseButtonEvent.X = (int)originalMousePos.X;
-            mouseButtonEvent.Y = (int)originalMousePos.Y;
+            MouseButtonEvent newMouseEvent = new MouseButtonEvent();
+            newMouseEvent.X = windowPos.X;
+            newMouseEvent.Y = windowPos.Y;
+            newMouseEvent.Button = mouseButtonEvent.Button;
+            MouseButtonEventArgs eventArgsWindowPos = new MouseButtonEventArgs(newMouseEvent);
+            return eventArgsWindowPos;
         }
 
         /// <summary>
-        /// Sets position of MouseMoveEvent where it would be if the window wasn't resized
+        /// Returns event position of MouseMoveEvent where it would be if the window wasn't resized
+        /// See Terminology above
         /// </summary>
-        public void ScaleEventToOriginalSize(MouseMoveEventArgs mouseMoveEvent)
+        public MouseMoveEventArgs EventToWindowPos(MouseMoveEventArgs mouseMoveEvent)
         {
-            Vector2f originalMousePos = _window.MapPixelToCoords(
+            Vector2i windowPos = (Vector2i)_window.MapPixelToCoords(
                 new Vector2i((int)mouseMoveEvent.X, (int)mouseMoveEvent.Y), _interfaceView);
-            mouseMoveEvent.X = (int)originalMousePos.X;
-            mouseMoveEvent.Y = (int)originalMousePos.Y;
+            mouseMoveEvent.X = (int)windowPos.X;
+            mouseMoveEvent.Y = (int)windowPos.Y;
+            MouseMoveEvent newMouseEvent = new MouseMoveEvent();
+            newMouseEvent.X = windowPos.X;
+            newMouseEvent.Y = windowPos.Y;
+            MouseMoveEventArgs eventArgsWindowPos = new MouseMoveEventArgs(newMouseEvent);
+            return eventArgsWindowPos;
         }
 
         /// <summary>
         /// Prevent flickering of tiles even if the window is resized
-        /// The real solution would be to render off-screen first but this is ok for now
+        /// The real solution would be to render off-screen first then scale that to screen size but this is ok for now
         /// </summary>
-        public Vector2f SnapToScreenPixels(Vector2f coords)
+        public Vector2 SnapToPixels(Vector2 worldCoords)
         {
-            float origW = _worldView.Size.X;
-            float origH = _worldView.Size.Y;
-            float w = _window.Size.X;
-            float h = _window.Size.Y;
-            //Scale to screen and round
-            float screenX = (float)Math.Floor(coords.X * w / origW);
-            float screenY = (float)Math.Floor(coords.Y * h / origH);
+            Vector2 origWindowSize = _worldView.Size;
+            Vector2 currentSize = (Vector2)_window.Size;
+            //Scale to screen and snap
+            Vector2 pixelPos = worldCoords * currentSize / origWindowSize;
+            pixelPos = pixelPos.Floor();
             //Scale back
-            Vector2f retVect = new Vector2f(screenX * origW / w, screenY * origH / h);
+            Vector2 worldVect = pixelPos * origWindowSize / currentSize;
+            return worldVect;
+        }
 
-            return retVect;
+        /// <summary>
+        /// See Terminology above
+        /// </summary>
+        public Vector2 PixelToWorldPos(Vector2 pixelPos)
+        {
+            Vector2 worldCoords = CluwneLib.Screen.MapPixelToCoords((Vector2i)pixelPos, _worldView);
+            return worldCoords;
+        }
+
+        public Vector2 PixelToWindowPos(Vector2 pixelPos)
+        {
+            Vector2 windowPos = _window.MapPixelToCoords((Vector2i)pixelPos, _interfaceView);
+            return windowPos;
         }
     }
 }

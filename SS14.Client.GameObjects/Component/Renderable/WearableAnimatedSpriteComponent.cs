@@ -1,8 +1,8 @@
-﻿using SS14.Client.ClientWindow;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
+using SS14.Client.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,7 +87,7 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = NotWornSprite;
             
             Vector2 renderPos =
-                ClientWindowData.Singleton.WorldToScreen(
+                MapUtil.tileToWorldSize(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             spriteToRender.SetPosition(renderPos.X - (spriteToRender.AABB.Width / 2),
                                renderPos.Y - (spriteToRender.AABB.Height / 2));

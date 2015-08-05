@@ -22,7 +22,6 @@ namespace SS14.Client.Graphics
     };
     public class CluwneLib
     {
-        public static Viewport CurrentClippingViewport;
         private static Clock _timer;
         private static RenderTarget[] _currentTarget;
         private static System.Threading.Mutex SFML_Threadlock;

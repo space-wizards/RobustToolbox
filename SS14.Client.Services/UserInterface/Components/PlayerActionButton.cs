@@ -100,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                          : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5 + offset.X) > CluwneLib.CurrentClippingViewport.Width
+                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5 + offset.X) > CluwneLib.Camera.ViewSize.X
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
                 tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5 + offset.X, tooltipPos.Y + 5 + 10 + offset.Y);

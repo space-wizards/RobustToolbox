@@ -49,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
 
-            Position = new Point((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
+            Position = new Point((int)CluwneLib.Camera.ViewSize.X - (int)Size.X - 10, 10);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 

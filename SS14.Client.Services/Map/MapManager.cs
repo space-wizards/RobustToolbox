@@ -1,5 +1,6 @@
 ﻿using BKSystem.IO;
 using Lidgren.Network;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.State;
@@ -30,7 +31,7 @@ namespace SS14.Client.Services.Map
 
         public int TileSize
         {
-            get { return 32; }
+            get { return MapUtil.TileSize; }
         }
 
         #region Tile Enumerators

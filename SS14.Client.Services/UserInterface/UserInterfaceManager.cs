@@ -16,6 +16,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -222,6 +224,8 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool MouseDown(MouseButtonEventArgs e)
         {
+            e = CluwneLib.Camera.EventToWindowPos(e);
+
             if (_console.IsVisible())
             {
                 if (_console.MouseDown(e)) return true;
@@ -266,6 +270,8 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool MouseUp(MouseButtonEventArgs e)
         {
+            e = CluwneLib.Camera.EventToWindowPos(e);
+
             if (_console.IsVisible())
             {
                 if (_console.MouseUp(e)) return true;
@@ -303,7 +309,8 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            MousePos = new Vector2( e.X, e.Y);
+            e = CluwneLib.Camera.EventToWindowPos(e);
+            MousePos = new Vector2(e.X, e.Y);
 
             if (_console.IsVisible())
             {
@@ -489,6 +496,8 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void Render()
         {
+            CluwneLib.Camera.SetInterfaceView();
+
             IOrderedEnumerable<IGuiComponent> renderList = from IGuiComponent comp in _components
                                                            where comp.IsVisible()
                                                            orderby comp.Focus ascending

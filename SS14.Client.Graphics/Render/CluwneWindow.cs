@@ -5,6 +5,7 @@ using System.Text;
 using SFML.Graphics;
 using SFML.Window;
 using System.Drawing;
+using SFML.System;
 
 
 namespace SS14.Client.Graphics.Render
@@ -39,7 +40,5 @@ namespace SS14.Client.Graphics.Render
             get;
             set;
         }
-
-     
     }
 }

@@ -666,7 +666,9 @@ namespace SS14.Client.Services.State.States
                         System.Drawing.Color.FromArgb(128, hitbox.Color));
                 }
 
-                CluwneLib.drawCircle((int)ClickedPointDebug.X, (int)ClickedPointDebug.Y, 5, System.Drawing.Color.Azure);
+                Vector2 clickedPoint = ClickedPointDebug * MapManager.TileSize;
+                const int circleR = 5;
+                CluwneLib.drawCircle((int)clickedPoint.X - circleR, (int)clickedPoint.Y - circleR, circleR, System.Drawing.Color.Azure);
             }
         }
 
@@ -808,8 +810,6 @@ namespace SS14.Client.Services.State.States
 
             #region Object clicking
 
-            // Convert our click from screen -> world coordinates
-            //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             float checkDistance = 1.5f;
@@ -925,7 +925,7 @@ namespace SS14.Client.Services.State.States
         {
             Vector2 mousePosPixel = (Vector2)e;
             Vector2 prevMousePosWindow = MousePosWindow;
-            MousePosWorld = CluwneLib.Camera.PixelToWorldPos(mousePosPixel);
+            MousePosWorld = CluwneLib.Camera.PixelToWorldPos(mousePosPixel) / MapManager.TileSize;
             MousePosWindow = CluwneLib.Camera.PixelToWindowPos(mousePosPixel);
 
             float distanceToPrevWindow = (MousePosWindow - prevMousePosWindow).Length;

@@ -31,7 +31,7 @@ namespace SS14.Client.Services.Map
 
         public int TileSize
         {
-            get { return MapUtil.TileSize; }
+            get { return 32; }
         }
 
         #region Tile Enumerators

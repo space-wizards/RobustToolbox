@@ -659,7 +659,9 @@ namespace SS14.Client.Services.State.States
 
                 foreach (var hitbox in colliders.Concat(collidables))
                 {
-                    var box = MapUtil.tileToWorldSize(hitbox.AABB);
+                    int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+                    var box = new RectangleF(hitbox.AABB.Left * tileSize, hitbox.AABB.Top * tileSize,
+                        hitbox.AABB.Width * tileSize, hitbox.AABB.Height * tileSize);
                     CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
                         System.Drawing.Color.FromArgb(64, hitbox.Color));
                     CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
@@ -1305,7 +1307,7 @@ namespace SS14.Client.Services.State.States
 
                 Vector2 blitPos;
                 //Set the drawing position.
-                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = area.LightPosition * tileSize - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X/source.Width,
@@ -1423,7 +1425,7 @@ namespace SS14.Client.Services.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = area.LightPosition * tileSize - area.LightAreaSize * 0.5f;
                 if (debugWallOccluders)
                 {
                     RenderTarget previous = Gorgon.CurrentRenderTarget;

@@ -1,4 +1,4 @@
-﻿using SS14.Client.Interfaces.Resource;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Interfaces.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -85,10 +86,10 @@ namespace SS14.Client.GameObjects
             if (NotWornSprite == null) return;
 
             Sprite spriteToRender = NotWornSprite;
-            
+
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
             Vector2 renderPos =
-                MapUtil.tileToWorldSize(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position * tileSize;
             spriteToRender.SetPosition(renderPos.X - (spriteToRender.AABB.Width / 2),
                                renderPos.Y - (spriteToRender.AABB.Height / 2));
 

@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
@@ -301,9 +301,9 @@ namespace SS14.Client.GameObjects
 
             CluwneSprite spriteToRender = GetActiveDirectionalSprite();
 
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
             Vector2 renderPos =
-                MapUtil.tileToWorldSize(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position * tileSize;
             SetSpriteCenter(spriteToRender, renderPos);
 
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <

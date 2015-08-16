@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -98,10 +98,11 @@ namespace SS14.Client.GameObjects
         }
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
-        {            
+        {
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+
             Vector2 renderPos =
-                MapUtil.tileToWorldSize(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position * tileSize;
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {

@@ -37,8 +37,15 @@ namespace SS14.Client.Graphics.Shader
 
         public GLSLShader this[string key]
         {
-            get { return _techniqueList[key]; }
+
+            get { return _techniqueList[key.ToLowerInvariant()]; }
             private set{}
+        }
+
+        public Dictionary<string, GLSLShader> Dictonary
+        {
+            get { return _techniqueList; }
+            private set { }
         }
 
         public string Name

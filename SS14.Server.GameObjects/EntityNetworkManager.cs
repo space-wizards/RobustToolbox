@@ -24,7 +24,7 @@ namespace SS14.Server.GameObjects
         public EntityNetworkManager(ISS14NetServer netServer)
         {
             m_netServer = netServer;
-            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().MessageLogging;
+            _messageProfiling = IoCManager.Resolve<IServerConfigurationManager>().MessageLogging;
         }
 
         #region IEntityNetworkManager Members

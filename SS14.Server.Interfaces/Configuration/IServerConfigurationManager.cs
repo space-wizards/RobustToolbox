@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace SS14.Server.Interfaces.Configuration
 {
-    public interface IConfigurationManager
+    public interface IServerConfigurationManager
     {
         bool MessageLogging { get; set; }
         string ServerName { get; set; }

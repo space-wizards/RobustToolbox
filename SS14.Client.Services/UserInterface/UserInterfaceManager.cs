@@ -29,7 +29,7 @@ namespace SS14.Client.Services.UserInterface
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         private readonly List<IGuiComponent> _components;
-        private readonly IConfigurationManager _config;
+        private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
         private CluwneSprite _cursorSprite;
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
-            _config = IoCManager.Resolve<IConfigurationManager>();
+            _config = IoCManager.Resolve<IPlayerConfigurationManager>();
             _console = new DebugConsole("dbgConsole", new Size((int) CluwneLib.Screen.Size.X, 400), resourceManager);
             _console.SetVisible(false);
         }

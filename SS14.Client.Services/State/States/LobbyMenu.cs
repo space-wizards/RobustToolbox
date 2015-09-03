@@ -79,7 +79,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-           //TODO _background.Smoothing = Smoothing.Smooth;
+            _background.Smoothing = true;
 
             _imgMainBg = new SimpleImage
                           {
@@ -495,8 +495,8 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            //TODO .Draw
-           // _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
+            
+           _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
             UserInterfaceManager.Render();
         }
 

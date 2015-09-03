@@ -13,7 +13,7 @@ using SS14.Client.Services.Resources;
 
 namespace SS14.Client.Services.Helpers
 {
-    internal class GaussianBlur
+    public class GaussianBlur
     {
         private readonly IResourceManager _resourceManager;
         private readonly string targetName;
@@ -73,13 +73,13 @@ namespace SS14.Client.Services.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4[] WeightsOffsetsX { get; private set; }
+        public Vector2[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector4[] WeightsOffsetsY { get; private set; }
+        public Vector2[] WeightsOffsetsY { get; private set; }
 
         public SizeF Size { get; private set; }
 
@@ -90,17 +90,21 @@ namespace SS14.Client.Services.Helpers
 
         public void SetAmount(float amount)
         {
-            Amount = amount;            
+            Amount = amount;
+            ComputeKernel();
+            ComputeOffsets();
         }
 
         public void SetSize(float size)
         {
-            Size = new SizeF(size, size);                  
+            Size = new SizeF(size, size);
+            ComputeOffsets();
         }
 
         public void SetSize(SizeF size)
         {
-            Size = size;        
+            Size = size;
+            ComputeOffsets();
         }
 
         public void SetRadius(int radius)
@@ -118,7 +122,8 @@ namespace SS14.Client.Services.Helpers
                     throw new Exception("The blur radius must be 3, 5, 7, 9, or 11.");
             }
             done = false;
-            LoadShaders();
+            ComputeKernel();
+            LoadShaders();            
         }
 
         private void LoadShaders()
@@ -178,8 +183,8 @@ namespace SS14.Client.Services.Helpers
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector4[Radius*2 + 1];
-            WeightsOffsetsY = new Vector4[Radius*2 + 1];
+            WeightsOffsetsX = new Vector2[Radius*2 + 1];
+            WeightsOffsetsY = new Vector2[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -187,46 +192,45 @@ namespace SS14.Client.Services.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector4(Kernel[index], i*xOffset, 0.0f, 0.0f);
-                WeightsOffsetsY[index] = new Vector4(Kernel[index], i*yOffset, 0.0f, 0.0f);
+                WeightsOffsetsX[index] = new Vector2(Kernel[index], i*xOffset);
+                WeightsOffsetsY[index] = new Vector2(Kernel[index], i*yOffset);
             }
         }
 
         public void PerformGaussianBlur(RenderImage sourceImage)
-        {
-            ComputeKernel();
-            ComputeOffsets();   
+        { 
 
-            // Perform horizontal Gaussian blur.
-            _intermediateTarget = new RenderImage(sourceImage.Width, sourceImage.Height);
-            _intermediateTarget.setName = targetName;
-            _intermediateTarget.Clear(Color.Black);
-
-            CluwneLib.CurrentRenderTarget = _intermediateTarget;   
-
+            // Blur the source horizontally
+            _intermediateTarget = new RenderImage("intermediateTarget",sourceImage.Width, sourceImage.Height);
+            _intermediateTarget.Key = targetName;
+            
+            _intermediateTarget.BeginDrawing(); //stores screen, makes current
+                     
+            
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
             GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX);
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", sourceImage.Texture);
 
-            CluwneLib.CurrentShader = GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"]; //.Techniques["GaussianBlurHorizontal"];
-
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];
+            
+            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
+            _intermediateTarget.EndDrawing();
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].ResetCurrentShader();
+           
+            
+            //// blur the blur vertically
             sourceImage.BeginDrawing();
-            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height,Color.White, BlitterSizeMode.Crop);
-            sourceImage.EndDrawing();
-            // Perform vertical Gaussian blur.
-            CluwneLib.CurrentRenderTarget = sourceImage;
 
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", _intermediateTarget.Texture);
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
             GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY);
 
-            CluwneLib.CurrentShader = GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"]; //.Techniques["GaussianBlurVertical"];
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ; //.Techniques["GaussianBlurVertical"];
 
-
-            _intermediateTarget.BeginDrawing();
-            _intermediateTarget.Blit(0, 0, sourceImage.Width, sourceImage.Height);
-            _intermediateTarget.EndDrawing();
+            _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
+            sourceImage.EndDrawing();
+            
 
             CluwneLib.CurrentShader = null;
-            CluwneLib.CurrentRenderTarget = null;
+           
             _intermediateTarget.Dispose();
         }
     }

@@ -5,6 +5,7 @@ float blurAmount = 0.0135;
 // Our texture sampler.
 uniform sampler2D sourceSampler;
 
+
 // Function to perform the sampling for the blur.
 vec4 psBlurSample(vec2 Tex , vec4 baseColor, float offX, float offY)
 {
@@ -35,11 +36,14 @@ vec4 Blur()
   	if (blurAmount > 10)
   	   blurValue = 0.01;
 
+
 	Color = texture2D(sourceSampler, gl_TexCoord[0]);	
+
 	// Store the alpha for later, we don't want to blur that.
 	Alpha = Color.a;
 	
 	// Sample eight directions + the center.
+<<<<<<< HEAD
   	Color = psBlurSample(gl_TexCoord[0], Color, -blurValue, -blurValue);
   	Color = psBlurSample(gl_TexCoord[0], Color, 0, -blurValue);
   	Color = psBlurSample(gl_TexCoord[0], Color, blurValue, -blurValue);  	
@@ -60,4 +64,7 @@ vec4 Blur()
 void main()
 {
 	gl_FragColor = Blur();
+
 }
+
+

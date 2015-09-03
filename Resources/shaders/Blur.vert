@@ -1,3 +1,4 @@
+
 void main()
 {
    // transform the vertex position
@@ -9,3 +10,4 @@ void main()
     // forward the vertex color
    gl_FrontColor = gl_Color;
 }
+

@@ -11,7 +11,7 @@ copy Fonts\* ResourcePack\Fonts > nul
 copy textures\*.png ResourcePack\Textures > nul
 copy textures\Unatlased\*.png ResourcePack\Textures > nul
 copy textures\*.TAI ResourcePack\TAI > nul
-copy shaders\* ResourcePack\Shaders > nul
+copy Shaders\* ResourcePack\Shaders > nul
 copy ParticleSystems\*.xml ResourcePack\ParticleSystems > nul
 copy textures\Animations\*.xml ResourcePack\Animations > nul
 echo Compressing...

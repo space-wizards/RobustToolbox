@@ -9,7 +9,7 @@ using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Configuration
 {
-    public sealed class ConfigurationManager : IConfigurationManager, IService
+    public sealed class ConfigurationManager : IServerConfigurationManager, IService
     {
         private string ConfigFile;
         public PersistentConfiguration Configuration;

@@ -58,6 +58,10 @@
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\extlibs\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -144,6 +148,13 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="csfml-graphics-2.dll" />
+    <Content Include="csfml-network-2.dll" />
+    <Content Include="csfml-system-2.dll" />
+    <Content Include="csfml-window-2.dll" />
+    <Content Include="OpenTK.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

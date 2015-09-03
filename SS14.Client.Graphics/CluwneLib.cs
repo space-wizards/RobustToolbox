@@ -205,6 +205,30 @@ namespace SS14.Client.Graphics
         }
 
         /// <summary>
+        /// Draws a Rectangle to the current RenderTarget
+        /// </summary>
+        /// <param name="posX">Pos X of rectangle </param>
+        /// <param name="posY"> Pos Y of rectangle </param>
+        /// <param name="WidthX"> Width X of rectangle </param>
+        /// <param name="HeightY"> Height Y of rectangle </param>
+        /// <param name="Color"> Fill Color </param>
+        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, SystemColor Color)
+        {
+            RectangleShape rectangle = new RectangleShape();
+            rectangle.Position = new SFML.System.Vector2f(posX, posY);
+            rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
+            rectangle.FillColor = Color.ToSFMLColor();
+
+            CurrentRenderTarget.Draw(rectangle);
+            if (CluwneLib.Debug.RenderingDelay > 0)
+            {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
+        }
+
+
+        /// <summary>
         /// Draws a Hollow Rectangle to the Current RenderTarget
         /// </summary>
         /// <param name="posX"> Pos X of rectangle </param>
@@ -358,7 +382,9 @@ namespace SS14.Client.Graphics
         #endregion
 
 
-       
+
+
+       public static bool FrameStatsVisible { get; set; }
     }
 
 

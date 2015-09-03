@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
 using CluwneSprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -217,7 +218,7 @@ namespace SS14.Client.GameObjects
             CluwneSprite sprite = currentBaseSprite;
 
             string dirName =
-                (currentBaseSprite.Name + "_" +
+                (currentBaseSprite.Key + "_" +
                  Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).
                     ToLowerInvariant();
 
@@ -334,7 +335,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            CluwneLib.drawRectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

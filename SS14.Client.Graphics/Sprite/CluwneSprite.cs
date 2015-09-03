@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Color = SFML.Graphics.Color;
 using SColor = System.Drawing.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
@@ -12,197 +11,21 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Render;
 using System.Drawing;
+using SFML.System;
+using System.Diagnostics;
+using SS14.Client.Graphics.Shader;
 
 namespace SS14.Client.Graphics.Sprite
 {
+    [DebuggerDisplay("[CluwneSprite] Key: {key} | X: {Position.X} Y: {Position.Y} W: {Size.X} H: {Size.Y} SX: {Scale.X} SY: {Scale.Y} | RenderTarget = {renderTarget} ")]
     public class CluwneSprite : BaseSprite, ICluwneDrawable
-    {
-        private Drawing.RectangleF _AABB;
-        private BlendMode _blendingMode = BlendMode.None;
-
-        private string _key;
-        private Image _image;
-        private Vector2 _imageOffset;
-        private RenderTarget _renderTarget;
-        private Vector2 _size;
-
-        #region Constructors
- 
-        /// <summary>
-        /// Creates a new CluwneSprite with a specified RenderTarget
-        /// </summary>
-        /// <param name="target"> Target to draw this sprite </param>
-        public CluwneSprite(RenderTarget target) 
-        {
-            this._renderTarget = target;
-        }
-
-        /// <summary>
-        /// Creates a new CluwneSprite with a specified Texture
-        /// </summary>
-        /// <param name="texture"></param>
-        public CluwneSprite(Texture texture)  : base (texture)
-        {
- 
-        }
-        public CluwneSprite(string name, Texture texture) : base(texture)
-        {
-            _key=name;
-        }
-        /// <summary>
-        /// Creates a new CluwneSprite with a specified portion of the Texture
-        /// </summary>
-        /// <param name="texture"> Texture to draw </param>
-        /// <param name="rectangle"> What part of the Texture to use </param>
-        public CluwneSprite(string name, Texture texture, IntRect rectangle)  : base(texture,rectangle)
-        {
-            _key=name;
-        }
-
-        /// <summary>
-        /// Creates a new CluwneSprite from a copy of a sprite
-        /// </summary>
-        /// <param name="copy"> Sprite to copy </param>
-        public CluwneSprite(BaseSprite copy) : base(copy)
-        {
-         
-        }
-        /// <summary>
-        /// Creates a new CluwneSprite With a key and a Image
-        /// </summary>
-        /// <param name="key"> Key </param>
-        /// <param name="image"> Image </param>
-        public CluwneSprite(string key, Image image)
-        {       
-            this._key = key;
-            this._image = image;
-        }
-
-        /// <summary>
-        /// Creates a new CluwneSprite with a key and a specific renderTarget
-        /// </summary>
-        /// <param name="key"> Key </param>
-        /// <param name="_renderImage"> RenderTarget to use </param>
-        public CluwneSprite(string key, RenderTarget target)
-        {
-            this._key = key;
-            this._renderTarget = target;
-        }
-
-        public CluwneSprite(RenderImage image) {}
-
-        #endregion
-
-
-        private void UpdateAABB()
-        {
-            FloatRect _fr = GetLocalBounds();
-            _AABB = new RectangleF(new PointF(_fr.Left, _fr.Top), new SizeF(_fr.Width, _fr.Height));
-        }
-
-       
-        /// <summary>
-        /// sets the position of the Sprite
-        /// </summary>
-        /// <param name="X"> X Pos </param>
-        /// <param name="Y"> Y Pos </param>
-        public void SetPosition(float X, float Y)
-        {
-            Vector2 temp = new Vector2(X, Y);
-            base.Position = temp;
-            
-        }
-
-        /// <summary>
-        /// Draws this instance to the current renderTarget
-        /// </summary>
-        public void Draw()
-        {
-            if (_renderTarget != null)
-                _renderTarget.Draw(this);
-            else
-                CluwneLib.CurrentRenderTarget.Draw(this);
-
-            if (CluwneLib.Debug.RenderingDelay > 0) {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
-        }
-        /// <summary>
-        /// Draws a specific CluwneSprite to the current RenderTarget
-        /// </summary>
-        /// <param name="CS1"> CluwneSprite to draw </param>
-        public void Draw (CluwneSprite CS1 )
-        {
-            if (_renderTarget != null)
-                _renderTarget.Draw(CS1);
-            else
-                CluwneLib.CurrentRenderTarget.Draw(CS1);
-        }
-        /// <summary>
-        /// Draws a Rectangle 
-        /// </summary>
-        /// <param name="rect"> Rectangle to draw </param>
-        public void Draw(Rectangle rect)
-        {
-            // scale the sprite to fit in the given rectangle.
-            Vector2 oldScale=Scale;
-            Vector2 oldPosition = base.Position;
-            base.Position = new Vector2(rect.Left, rect.Top);
-            Scale = new SFML.System.Vector2f( (float)rect.Width / (float)TextureRect.Width, (float)rect.Height / (float)TextureRect.Height );
-
-            if (_renderTarget != null)
-                _renderTarget.Draw(this);
-            else
-                CluwneLib.CurrentRenderTarget.Draw(this);
-            if (CluwneLib.Debug.RenderingDelay > 0)
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
-
-            base.Position = oldPosition;
-            Scale=oldScale;
-        }
-
-        public void Draw(IntRect rect)
-        {
-            // scale the sprite to fit in the given rectangle.
-            Vector2 oldScale=Scale;
-            Vector2 oldPosition = base.Position;
-            base.Position = new Vector2(rect.Left, rect.Top);
-            Scale = new SFML.System.Vector2f( rect.Width / TextureRect.Width, rect.Height / TextureRect.Height );
-
-            if (_renderTarget != null)
-                _renderTarget.Draw(this);
-            else
-                CluwneLib.CurrentRenderTarget.Draw(this);
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
-            base.Position = oldPosition;
-            Scale=oldScale;
-        }
-
-        #region Accessors
-
-        public string Name
-        {
-            get {return _key;}
-            set { _key = value; }
-
-        }
-
-        public bool Smoothing
-        {
-            get { return base.Texture.Smooth; }
-            set { base.Texture.Smooth = value; }
-        }
-         
-        public bool IsAABBUpdated = true;
-
-        public bool HorizontalFlip;
+    {     
+      
+        private string key;
+        private RectangleF _AABB;
+        private Vector2 size;
+      
+        #region Accessors     
 
         public float Width
         {
@@ -214,30 +37,94 @@ namespace SS14.Client.Graphics.Sprite
             get { return GetLocalBounds().Height; }
         }
 
+        public float X
+        {
+            get { return GetLocalBounds().Left; }
+        }
+
+        public float Y
+        {
+            get { return GetLocalBounds().Top; }
+        }
+
+        public string Key
+        {
+            get
+            {
+                return key;
+            }
+            private set
+            {
+                CheckIfKeyIsNull(value);               
+                key = value;
+            }
+        }
+
+        public bool Smoothing
+        {
+            get 
+            {
+                return Texture.Smooth; 
+            }
+            set 
+            { 
+                Texture.Smooth = value; 
+            }
+        }
+
+        public bool IsAABBUpdated = true;
+
+        public bool HorizontalFlip;
+       
+        public RenderTarget renderTarget
+        {
+            get;
+            private set;
+        }
+
+        public BlitterSizeMode Mode
+        {
+            get;
+            set;
+        }
+
         public BlendMode BlendingMode
         {
-            get { return _blendingMode; }
-          set { _blendingMode = value; }
+            get;
+            set;
+        }
+
+        public Texture Texture
+        {
+            get { return base.Texture; }
+            set { base.Texture = value; }
         }
 
         public Vector2 ImageOffset
         {
-            get { return _imageOffset; }
-            set
-            {
-                _imageOffset = value;   
-            }
+            get;
+            set;
         }
 
-        public Image getImage
+        public Vector2 Position
         {
-            get { return _image; }
-            set { _image = value;  }
+            get { return base.Position; }
+            set { base.Position = value; }
         }
 
-        public Vector2 Size { get { return _size; } set { _size = value; } } 
+        public Vector2 Size
+        {
+            get { return size; }
+            set { size = value; }
+        }
 
-        public Drawing.RectangleF AABB
+        public Vector2 Scale
+        {
+            get { return base.Scale;}
+            set { base.Scale = value; }
+        }       
+
+        public RectangleF AABB 
         {
             get
             {
@@ -247,7 +134,199 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        public bool DepthWriteEnabled { get; set; }
+        public bool DepthWriteEnabled 
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
+        #region Constructors
+        
+        /// <summary>
+        /// Creates a new CluwneSprite with a key and a specific renderTarget
+        /// </summary>
+        /// <param name="key"> key </param>
+        /// <param name="_renderImage"> RenderTarget to use </param>
+        public CluwneSprite(string key, RenderTarget target)
+        {           
+            Key = key;          
+            renderTarget = target;
+            Position = new Vector2(X, Y);
+            Size = new Vector2(Width, Height);
+        }
+
+        /// <summary>
+        /// Creates a new CluwneSprite with a key and a specific renderTarget
+        /// </summary>
+        /// <param name="key"> key </param>
+        /// <param name="_renderImage"> RenderTarget to use </param>
+        public CluwneSprite(string key, RenderImage target)
+        {
+            Key = key;           
+            renderTarget = target;
+            Position = new Vector2(X,Y);
+            Size = new Vector2(Width, Height);
+        }
+
+        /// <summary>
+        /// Creates a new CluwneSprite With a key and a texture
+        /// </summary>
+        /// <param name="key"> key </param>
+        /// <param name="image"> Image </param>
+        public CluwneSprite(string key, Texture texture) : base (texture)
+        {           
+            Key = key;           
+            Position = new Vector2(X, Y);
+            Size = new Vector2(Width, Height);
+        }
+
+        /// <summary>
+        /// Creates a new CluwneSprite with a specified portion of the Texture
+        /// </summary>
+        /// <param name="texture"> Texture to draw </param>
+        /// <param name="rectangle"> What part of the Texture to use </param>
+        public CluwneSprite(string key, Texture texture, IntRect rectangle)  : base(texture,rectangle)
+        {
+            Key = key;           
+            Position = new Vector2(X, Y);
+            Size = new Vector2(Width, Height);
+        }
+
+        /// <summary>
+        /// Creates a new CluwneSprite from a copy of a sprite
+        /// </summary>
+        /// <param name="copy"> Sprite to copy </param>
+        public CluwneSprite(CluwneSprite copy) : base(copy)
+        {
+           Key = copy.Key + "Copy";         
+           Position = new Vector2(X, Y);
+           Size = new Vector2(Width, Height);
+        }
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Enforce no null keys
+        /// </summary>
+        /// <param name="key"></param>
+        private void CheckIfKeyIsNull(string key)
+        {
+            if (key.Equals(null))
+            {
+                throw new Exception("key Cannot be null!");
+            }
+        }
+
+        /// <summary>
+        /// Update Boundaries
+        /// </summary>
+        private void UpdateAABB()
+        {
+            IntRect _fr = (IntRect) GetGlobalBounds();
+            _AABB = new RectangleF(new PointF(_fr.Left, _fr.Top), new SizeF(_fr.Width, _fr.Height));
+        }
+       
+        /// <summary>
+        /// sets the position of the Sprite
+        /// </summary>
+        /// <param name="X"> X Pos </param>
+        /// <param name="Y"> Y Pos </param>
+        public void SetPosition(float X, float Y)
+        {
+            Position = new Vector2(X, Y);
+        }
+
+        #endregion
+
+        #region Draw methods
+
+        /// <summary>
+        /// Scale the sprite
+        /// </summary>
+        /// <param name="rect"> Rectangle of new scale / size </param>
+        public void Draw(IntRect rect)
+        {        
+            Scale = new Vector2((float)rect.Width / (float)TextureRect.Width, (float)rect.Height / (float)TextureRect.Height);
+            Draw();
+        }
+
+        /// <summary>
+        /// Scale the sprite
+        /// </summary>
+        /// <param name="rect"> new Scale </param>
+        public void Draw(Rectangle rect)
+        {           
+            Scale = new Vector2f((float)rect.Width / (float)TextureRect.Width, (float)rect.Height / (float)TextureRect.Height);
+            Draw();
+        }
+
+        /// <summary>
+        /// Draw to a specific RenderImage
+        /// </summary>
+        /// <param name="target"> RenderImage to draw to </param>
+        public void DrawTo(RenderImage target)
+        {
+            renderTarget = target;
+            Draw();
+        }
+
+        /// <summary>
+        /// Draws the sprite to the current renderTarget
+        /// </summary>
+        public void Draw()
+        {
+            RenderStates states = new RenderStates(CluwneLib.CurrentShader);
+            
+
+            if (CluwneLib.CurrentShader == null)
+            {
+                if
+                    (renderTarget != null) 
+                    renderTarget.Draw(this);
+                else
+                    CluwneLib.CurrentRenderTarget.Draw(this);
+            }
+            else
+            {
+                if (renderTarget != null)
+                    renderTarget.Draw(this, states);
+                else
+                    CluwneLib.CurrentRenderTarget.Draw(this,states);
+            }
+
+
+            if (CluwneLib.Debug.RenderingDelay > 0) 
+            {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
+        }
+
+        /// <summary>
+        /// Draw Sprite to screen with a shader
+        /// </summary>
+        /// <param name="shader"> Shader to use when drawing </param>
+        public void Draw(GLSLShader shader)
+        {
+            RenderStates states = new RenderStates(shader);
+  
+            
+            if (renderTarget != null)
+                renderTarget.Draw(this, states);
+            else
+                CluwneLib.CurrentRenderTarget.Draw(this, states);
+            
+
+
+            if (CluwneLib.Debug.RenderingDelay > 0)
+            {
+                CluwneLib.Screen.Display();
+                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
+            }
+        }
 
         #endregion
     }

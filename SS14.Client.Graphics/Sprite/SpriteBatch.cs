@@ -49,7 +49,8 @@ namespace SS14.Client.Graphics.Sprite
             // we use these a lot, and the overall number of textures
             // remains stable, so recycle them to avoid excess calls into
             // the native constructor.
-            foreach(var tex in textures) {
+            foreach(var tex in textures) 
+            {
                 tex.vertices.Clear();
                 tex.Texture=null;
                 recycle.Enqueue(tex);
@@ -211,7 +212,7 @@ namespace SS14.Client.Graphics.Sprite
                 Debug.Assert(item.vertices.VertexCount > 0);
                 states.Texture = item.Texture;
 
-                item.vertices.Draw(target, states);
+                //item.vertices.Draw(target,states);
 
                 if (CluwneLib.Debug.RenderingDelay > 0) {
                     CluwneLib.Screen.Display();

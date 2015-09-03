@@ -135,7 +135,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _overallHealth.Position = new Vector2(Position.X + 86, Position.Y + 29);
 
-            ClientArea = new Rectangle(Position, new Size((int) _background.AABB.Width, (int) _background.AABB.Height));
+            ClientArea = new Rectangle(Position, new Size((int) _background.Width, (int) _background.Height));
         }
 
         public override void Render()

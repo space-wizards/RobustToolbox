@@ -57,7 +57,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		{
 			get
 			{
-				if (_buttonNormal != null) return _buttonNormal.Name;
+				if (_buttonNormal != null) return _buttonNormal.Key;
 				else return "";
 			}
 			set { _buttonNormal = _resourceManager.GetSprite(value); }
@@ -67,7 +67,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		{
 			get
 			{
-				if (_buttonHover != null) return _buttonHover.Name;
+				if (_buttonHover != null) return _buttonHover.Key;
 				else return "";
 			}
 			set { _buttonHover = _resourceManager.GetSprite(value); }
@@ -77,7 +77,7 @@ namespace SS14.Client.Services.UserInterface.Components
 		{
 			get
 			{
-				if (_buttonClick != null) return _buttonClick.Name;
+				if (_buttonClick != null) return _buttonClick.Key;
 				else return "";
 			}
 			set { _buttonClick = _resourceManager.GetSprite(value); }
@@ -94,7 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
 			{
 				_drawSprite.Position = new Vector2( Position.X,Position.Y);
 				ClientArea = new Rectangle(Position,
-										   new Size((int)_drawSprite.AABB.Width, (int)_drawSprite.AABB.Height));
+										   new Size((int)_drawSprite.Width, (int)_drawSprite.Height));
 			}
 		}
 
@@ -104,6 +104,7 @@ namespace SS14.Client.Services.UserInterface.Components
 			{
 				_drawSprite.Color = Color;
 				_drawSprite.Position = new Vector2 (Position.X,Position.Y);
+                _drawSprite.Smoothing = true;
 				_drawSprite.Draw();
 				_drawSprite.Color = Color.White;
 			}

@@ -63,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
+                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
         }
 
         public override void Render()

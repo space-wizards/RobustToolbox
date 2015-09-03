@@ -60,8 +60,8 @@ namespace SS14.Client.Services.UserInterface.Components
             float barWidth = Size.Width*percent;
 
            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,    backgroundColor);
-           //TODO : CluwneLib.DrawHollowRectangle (ClientArea.X, ClientArea.Y, (int)barWidth, ClientArea.Height, barColor);
-          CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawHollowRectangle (ClientArea.X, ClientArea.Y, ClientArea.Width,ClientArea.Height, barWidth, barColor);
+           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                  borderColor);
 
             Text.Draw();

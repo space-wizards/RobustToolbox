@@ -33,19 +33,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string TopSprite
         {
-            get { return topSprite != null ? topSprite.Name : null; }
+            get { return topSprite != null ? topSprite.Key : null; }
             set { topSprite = _resourceManager.GetSprite(value); }
         }
 
         public string MidSprite
         {
-            get { return midSprite != null ? midSprite.Name : null; }
+            get { return midSprite != null ? midSprite.Key : null; }
             set { midSprite = _resourceManager.GetSprite(value); }
         }
 
         public string BotSprite
         {
-            get { return botSprite != null ? botSprite.Name : null; }
+            get { return botSprite != null ? botSprite.Key : null; }
             set { botSprite = _resourceManager.GetSprite(value); }
         }
 

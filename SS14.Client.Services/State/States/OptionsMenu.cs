@@ -48,7 +48,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-          //  _background.Smoothing = Smoothing.Smooth;
+            _background.Smoothing = true;
 
             _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
 
@@ -146,7 +146,7 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            //TODO .Draw Method
+          
 
              _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
 

@@ -20,7 +20,7 @@ namespace SS14.Client.Services.Player.PostProcessing
 
         public override void ProcessImage(RenderImage image)
         {
-            var OstafLikesTheCock = new RenderImage(image.Height, image.Height);
+            var OstafLikesTheCock = new RenderImage("CockLoverOstaf", image.Height, image.Height);
 
             CluwneLib.CurrentRenderTarget = OstafLikesTheCock;
 

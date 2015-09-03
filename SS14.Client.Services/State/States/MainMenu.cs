@@ -44,13 +44,12 @@ namespace SS14.Client.Services.State.States
 
         #endregion
 
-        public MainScreen(IDictionary<Type, object> managers)
-            : base(managers)
+        public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background = ResourceManager.GetSprite("mainbg_filler");
-          //  _background.Smoothing = Smoothing.Smooth;
+            _background = ResourceManager.GetSprite("coderart");            
+            _background.Smoothing = false;
 
             _btnConnect = new ImageButton
                                {
@@ -108,7 +107,7 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-           _background.Draw(new Rectangle(0, 0,(int) _Width, (int) _Height));
+            _background.Draw();
         }
 
         public void FormResize()
@@ -206,8 +205,8 @@ namespace SS14.Client.Services.State.States
         {
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
-
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "mainbg")
+            /*
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "coderart")
                                {
                                    BounceRotate = false,
                                    BounceRotateAngle = 10,
@@ -216,7 +215,7 @@ namespace SS14.Client.Services.State.States
                                    Velocity = new Vector2(0, 0),
                                    RotationSpeed = 0.0f
                                });
-
+*/
             // DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
 /*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                              {

@@ -271,7 +271,7 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSprite.Name + "_" + Direction.ToString()).ToLowerInvariant();
+            string dirName = (CurrentBaseSprite.Key + "_" + Direction.ToString()).ToLowerInvariant();
             if (ResourceManager.SpriteExists(dirName))
                 spriteToUse = ResourceManager.GetSprite(dirName);
 

@@ -16,9 +16,9 @@ namespace SS14.Client.Services.Lighting
 
         public LightArea(int size)
         {
-            int baseSize = 2 << (int) size;
+            int baseSize = 2 << (int)size;
             LightAreaSize = new Vector2(baseSize, baseSize);
-            renderTarget = new RenderImage((uint)baseSize, (uint)baseSize);
+            renderTarget = new RenderImage("LightArea"+ size, (uint)baseSize, (uint)baseSize);
 
 
             Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
@@ -26,8 +26,13 @@ namespace SS14.Client.Services.Lighting
 
         public LightArea(ShadowmapSize shadowmapSize)
         {
-            // TODO: Complete member initialization
-            this.shadowmapSize = shadowmapSize;
+            int baseSize = 2 << (int)shadowmapSize;
+            LightAreaSize = new Vector2(baseSize, baseSize);
+            renderTarget = new RenderImage("LightArea"+ shadowmapSize,(uint)baseSize, (uint)baseSize);
+
+
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+         
         }
 
         #region ILightArea Members
@@ -100,15 +105,15 @@ namespace SS14.Client.Services.Lighting
 
            
         //TODO Mask
-        SFML.Graphics.Sprite ILightArea.Mask
+        CluwneSprite ILightArea.Mask
         {
             get
             {
-                throw new System.NotImplementedException();
+                return Mask;
             }
             set
             {
-                throw new System.NotImplementedException();
+                Mask = value;
             }
         }
     }

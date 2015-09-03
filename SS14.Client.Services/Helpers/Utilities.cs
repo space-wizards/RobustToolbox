@@ -10,7 +10,9 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using SS14.Client.Graphics;
-
+using Image = SFML.Graphics.Image;
+using Color = SFML.Graphics.Color;
+using SColor = System.Drawing.Color;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -53,14 +55,14 @@ namespace SS14.Client.Services.Helpers
             var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X ,//+ (int) toCheck.ImageOffset.X,
                                            (int) clickPos.Y - (int) toCheck.Position.Y ); //+ (int) toCheck.ImageOffset.Y);
 
-            //Image.ImageLockBox imgData = toCheck.Image.GetImageData();
+            Image imgData = toCheck.Texture.CopyToImage();
 
             //imgData.Lock(false);
-            //Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
-            //imgData.Dispose();
+            Color pixColour = imgData.GetPixel((uint)spritePosition.X,(uint) spritePosition.Y);
+            imgData.Dispose();
             //imgData.Unlock();
 
-            return true; //pixColour.A != 0;
+            return pixColour.A != 0;
         }
     }
 
@@ -69,38 +71,56 @@ namespace SS14.Client.Services.Helpers
         private static readonly ComponentSelector RedSelector = color => color.R;
         private static readonly ComponentSelector GreenSelector = color => color.G;
         private static readonly ComponentSelector BlueSelector = color => color.B;
+  
 
-        public static Color InterpolateBetween(
-            Color endPoint1,
-            Color endPoint2,
-            double lambda)
+
+        public static Color InterpolateBetween( Color endPoint1, Color endPoint2, double lambda)
         {
             if (lambda < 0 || lambda > 1)
             {
                 throw new ArgumentOutOfRangeException("lambda");
             }
-            Color color = Color.FromArgb(
-                InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
-                InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
-                InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
+            Color color = new Color
+                (
+                    InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
                 );
 
             return color;
         }
 
-        private static byte InterpolateComponent(
-            Color endPoint1,
-            Color endPoint2,
-            double lambda,
-            ComponentSelector selector)
+        public static SColor InterpolateBetween(SColor endPoint1, SColor endPoint2, double lambda)
         {
-            return (byte) (selector(endPoint1)
-                           + (selector(endPoint2) - selector(endPoint1))*lambda);
+            if (lambda < 0 || lambda > 1)
+            {
+                throw new ArgumentOutOfRangeException("lambda");
+            }
+            SColor color = SColor.FromArgb
+                (
+                    InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
+                );
+
+            return color;
         }
+
+        private static byte InterpolateComponent(Color endPoint1, Color endPoint2, double lambda, ComponentSelector selector)
+        {
+            return (byte)(selector(endPoint1) + (selector(endPoint2) - selector(endPoint1)) * lambda);
+        }
+
+        private static byte InterpolateComponent(SColor endPoint1, SColor endPoint2, double lambda, ComponentSelector selector)
+        {
+            return (byte)(selector(endPoint1.ToSFMLColor()) + (selector(endPoint2.ToSFMLColor()) - selector(endPoint1.ToSFMLColor())) * lambda);
+        }
+
 
         #region Nested type: ComponentSelector
 
         private delegate byte ComponentSelector(Color color);
+        
 
         #endregion
     }

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics;
+using System.Drawing;
 
 namespace SS14.Client.GameObjects
 {
@@ -89,8 +91,8 @@ namespace SS14.Client.GameObjects
             Vector2 renderPos =
                 ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            spriteToRender.SetPosition(renderPos.X - (spriteToRender.AABB.Width / 2),
-                               renderPos.Y - (spriteToRender.AABB.Height / 2));
+            spriteToRender.SetPosition(renderPos.X - (spriteToRender.Width / 2),
+                               renderPos.Y - (spriteToRender.Height / 2));
 
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <
                 topLeft.X
@@ -120,7 +122,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            CluwneLib.drawRectangle((renderPos.X - aabb.Width / 2),(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color.Lime);
         }
 
     }

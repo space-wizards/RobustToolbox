@@ -9,6 +9,7 @@ using System.Text;
 using SS14.Shared.Maths;
 using Color = System.Drawing.Color;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -32,7 +33,7 @@ namespace SS14.Client.GameObjects
         /// Holder for built bubble sprite.
         /// Rebuilt upon text change.
         /// </summary>
-        private readonly Sprite _bubbleSprite;
+        private readonly CluwneSprite _bubbleSprite;
 
         /// <summary>
         /// Owner mob unique name.
@@ -79,8 +80,8 @@ namespace SS14.Client.GameObjects
             _textSprite.Position = new Vector2(5, 3);
             _stringBuilder = new StringBuilder();
 
-            _bubbleRender = new RenderImage(1, 1);
-            _bubbleSprite = new Sprite(_bubbleRender);
+            _bubbleRender = new RenderImage("bubble ",1, 1);
+            _bubbleSprite = new CluwneSprite("_bubbleRender",_bubbleRender);
         }
 
         #endregion

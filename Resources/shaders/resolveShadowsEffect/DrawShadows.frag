@@ -72,7 +72,7 @@ vec4 MaskLight(vec4 inColor, vec2 TexCoord)
 vec4 DrawShadowsPS()
 {
 	  // distance of this pixel from the center
-	  float Distance = length(TexCoord - 0.5);
+	  float Distance = length(gl_TexCoord[0] - 0.5);
 	  Distance *= renderTargetSize.x;
 	  //apply a 2-pixel bias
 	  Distance -=2;
@@ -81,30 +81,30 @@ vec4 DrawShadowsPS()
 	  float shadowMapDistance;
 	  
 	  //coords in [-1,1]
-	  float nY = 2.0*( TexCoord.y - 0.5);
-	  float nX = 2.0*( TexCoord.x - 0.5);
+	  float nY = 2.0*( gl_TexCoord[0].y - 0.5);
+	  float nX = 2.0*( gl_TexCoord[0].x - 0.5);
 
 	  //we use these to determine which quadrant we are in
 	  if(abs(nY)<abs(nX))
 	  {
-		shadowMapDistance = GetShadowDistanceH(TexCoord,0);
+		shadowMapDistance = GetShadowDistanceH(gl_TexCoord[0],0);
 	  }
 	  else
 	  {
-	    shadowMapDistance = GetShadowDistanceV(TexCoord,0);
+	    shadowMapDistance = GetShadowDistanceV(gl_TexCoord[0],0);
 	  }
 		
 	  //if distance to this pixel is lower than distance from shadowMap, 
 	  //then we are not in shadow
 	  float light = Distance <= shadowMapDistance ? 1:0;
 
-	  float d = 2 * length(TexCoord - 0.5);
+	  float d = 2 * length(gl_TexCoord[0] - 0.5);
 	  float attenuation = max(pow(clamp(1 - d, 0,1),1), AttenuateShadows); //If AttenuateShadows is true, attenuation 
 	  
 	  vec4 result = light * attenuation;
-	  result = MaskLight(result, TexCoord);
+	  result = MaskLight(result, gl_TexCoord[0]);
 	  result.rgb = mul(result.rgb, 0.5);
-	  //result.b = length(TexCoord - 0.5f);
+	  //result.b = length(gl_TexCoord[0] - 0.5f);
 	  result.a = 1;
       return result;
 }

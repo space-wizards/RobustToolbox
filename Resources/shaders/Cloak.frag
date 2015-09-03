@@ -2,7 +2,6 @@
 uniform sampler2D backgroundSampler;
 uniform sampler2D spriteSampler;
 
-varying vec2 texCoords;
 vec2 spriteDimensions;
 vec2 backbufferSize;
 
@@ -21,11 +20,11 @@ vec4 simplePS()
   vec4 spriteColor;
   vec4 newColor; 
 
-  spriteColor = texture2D(spriteSampler, texCoords);
+  spriteColor = texture2D(spriteSampler, gl_TexCoord[0]);
     
   if (spriteColor.a > 0)
   {  	
-	backPos = ((texCoords) * scaler);
+	backPos = ((gl_TexCoord[0]) * scaler);
 
 	if ((spriteColor.r >= 0) && (spriteColor.r < 0.5))
 		backPos.x += (spriteColor.r * cloakAmount) * (scaler.x / refractionIndex);

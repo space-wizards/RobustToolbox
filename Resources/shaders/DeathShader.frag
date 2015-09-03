@@ -1,5 +1,3 @@
-varying vec2 TexCoord;
-
 uniform sampler2D sceneSampler;
 
 
@@ -14,7 +12,7 @@ vec3 ColorScale = vec3(6, 5, 4);
 
 vec4 DeathShaderPS()
 {
-	vec4 c = texture2D(sceneSampler, TexCoord);
+	vec4 c = texture2D(sceneSampler, gl_TexCoord[0]);
 	c.bg = 0;
 	return c;
 }

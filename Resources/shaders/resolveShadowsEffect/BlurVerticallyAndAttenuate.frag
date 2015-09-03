@@ -25,19 +25,17 @@ const vec2 OffsetAndWeight[g_cKernelSize] =
     {  6, 0.002216 },
 };
 
-varying vec2 TexCoord;
-
 vec4 BlurVerticallyPS()
 {
 	  float sum=0;
-	  float Distance = texture2D( inputSampler, TexCoord).b;
+	  float Distance = texture2D( inputSampler, gl_TexCoord[0]).b;
 	  
       for (int i = 0; i < g_cKernelSize; i++)
 	  {    
-        sum += texture2D( inputSampler, TexCoord + OffsetAndWeight[i].x * mix(minBlur, maxBlur , Distance)/renderTargetSize.x * vec2(0,1) ).r * OffsetAndWeight[i].y;
+        sum += texture2D( inputSampler, gl_TexCoord[0] + OffsetAndWeight[i].x * mix(minBlur, maxBlur , Distance)/renderTargetSize.x * vec2(0,1) ).r * OffsetAndWeight[i].y;
       }
 	  
-	  float d = 2 * length(TexCoord - 0.5f);
+	  float d = 2 * length(gl_TexCoord[0] - 0.5f);
 	  float attenuation = pow(clamp(1.0f - d,0,1),1.0f);
 	  
 	  vec4 result = sum * attenuation;

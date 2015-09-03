@@ -89,7 +89,7 @@ void main()
 		LightPosData5
 	};
 
-	gl_FragColor = PreLightBlendPS(a_texCoord0);
+	gl_FragColor = PreLightBlendPS(gl_TexCoord[0]);
 }
 
 

@@ -1,6 +1,6 @@
 ﻿namespace SS14.Client.Interfaces.Configuration
 {
-    public interface IConfigurationManager
+    public interface IPlayerConfigurationManager
     {
         void Initialize(string configFile);
         void SetPlayerName(string name);

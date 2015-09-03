@@ -161,7 +161,7 @@
     <Compile Include="Collision\ICollisionManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Configuration\IConfigurationManager.cs">
+    <Compile Include="Configuration\IPlayerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GameStates\IGameStateManager.cs">

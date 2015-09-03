@@ -30,7 +30,7 @@ namespace SS14.Client
 
         #region Fields
 
-        private IConfigurationManager _configurationManager;
+        private IPlayerConfigurationManager _configurationManager;
       //  private Input _input;
         private INetworkGrapher _netGrapher;
         private INetworkManager _networkManager;
@@ -52,8 +52,8 @@ namespace SS14.Client
 
         public GameController()
         {
-            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-            _configurationManager.Initialize("./config.xml");
+            _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
+            _configurationManager.Initialize("./player_config.xml");
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
@@ -109,7 +109,6 @@ namespace SS14.Client
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
-
             _stateManager.RequestStateChange<MainScreen>();
         }
 

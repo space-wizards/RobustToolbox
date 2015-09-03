@@ -15,7 +15,7 @@ namespace SS14.Client.Services.MessageLogging
         private readonly MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger(IConfigurationManager _configurationManager)
+        public MessageLogger(IPlayerConfigurationManager _configurationManager)
         {
             _logging = _configurationManager.GetMessageLogging();
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");

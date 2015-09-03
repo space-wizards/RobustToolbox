@@ -30,7 +30,7 @@ namespace SS14.Client.Services.State
 
         #region Constructor
 
-        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager,
+        public StateManager(IPlayerConfigurationManager configurationManager, INetworkManager networkManager,
                             IUserInterfaceManager userInterfaceManager,
                             IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
                             IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
@@ -42,7 +42,7 @@ namespace SS14.Client.Services.State
                                 {typeof (IResourceManager), resourceManager},
                                 {typeof (IMapManager), mapManager},
                                 {typeof (IPlayerManager), playerManager},
-                                {typeof (IConfigurationManager), configurationManager},
+                                {typeof (IPlayerConfigurationManager), configurationManager},
                                 {typeof (IPlacementManager), placementManager},
                                 {typeof (IKeyBindingManager), keyBindingManager},
                                 {typeof (IStateManager), this}

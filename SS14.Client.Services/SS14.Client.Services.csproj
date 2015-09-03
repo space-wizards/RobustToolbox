@@ -177,7 +177,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Configuration\Configuration.cs">
+    <Compile Include="Configuration\PlayerConfiguration.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GameStates\GameStateManager.cs">

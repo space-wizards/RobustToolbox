@@ -3,7 +3,7 @@
 namespace SS14.Client.Services.Configuration
 {
     [Serializable]
-    public class Configuration
+    public class PlayerConfiguration
     {
         public uint DisplayHeight = 768;
         public uint DisplayRefresh = 60;

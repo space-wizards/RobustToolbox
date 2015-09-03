@@ -88,15 +88,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
                 LeftHand.HeldSprite.Draw(
-                    new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.AABB.Width/2f),
-                                  handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.AABB.Height/2f),
-                                  (int) LeftHand.HeldSprite.AABB.Width, (int) LeftHand.HeldSprite.AABB.Height));
+                    new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.Width/2f),
+                                  handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.Height/2f),
+                                  (int) LeftHand.HeldSprite.Width, (int) LeftHand.HeldSprite.Height));
 
             if (RightHand.Entity != null && RightHand.HeldSprite != null)
                 RightHand.HeldSprite.Draw(
-                    new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.AABB.Width/2f),
-                                  handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.AABB.Height/2f),
-                                  (int) RightHand.HeldSprite.AABB.Width, (int) RightHand.HeldSprite.AABB.Height));
+                    new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.Width/2f),
+                                  handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.Height/2f),
+                                  (int) RightHand.HeldSprite.Width, (int) RightHand.HeldSprite.Height));
         }
 
         public override void Resize()

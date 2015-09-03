@@ -19,7 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string tabSpriteName
         {
-            get { return tabSprite != null ? tabSprite.Name : ""; }
+            get { return tabSprite != null ? tabSprite.Key : ""; }
             set { tabSprite = _resourceManager.GetSprite(value); }
         }
 

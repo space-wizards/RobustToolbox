@@ -42,9 +42,8 @@ namespace SS14.Client.Services.UserInterface.Components
             //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
             //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage((uint)Size.Width,(uint) Size.Height);
-                clippingRI.setName = uniqueName;
-                clippingRI.setImageBuffer = ImageBufferFormats.BufferRGB888A8;
+            clippingRI = new RenderImage(uniqueName,(uint)Size.Width,(uint) Size.Height);          
+             
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
@@ -124,10 +123,8 @@ namespace SS14.Client.Services.UserInterface.Components
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
                 if (CluwneLib.Debug.RenderingDelay > 0)
-                {
-                    clippingRI.EndDrawing();
+                {                   
                     clippingRI.Blit(Position, Color.White);
-                    clippingRI.BeginDrawing();
                 }
                 component.Position = oldPos;
                 component.Update(0);
@@ -145,15 +142,15 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position, Color.White);
-            // clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.Crop);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.Crop);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-             CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
                                                      BorderSize, Color.Black);
+            clippingRI.EndDrawing();
         }
 
         public override void Dispose()

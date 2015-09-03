@@ -28,7 +28,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string Sprite
         {
-            get { return drawingSprite != null ? drawingSprite.Name : null; }
+            get { return drawingSprite != null ? drawingSprite.Key : null; }
             set { drawingSprite = _resourceManager.GetSprite(value); Update(0); }
         }
 

@@ -62,7 +62,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
         {
             _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
+                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
 
             _textSprite.Position = Position;
 
@@ -96,8 +96,8 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
             if (_currentEntSprite != null && CurrentEntity != null)
                 _currentEntSprite.Draw(
-                    new Rectangle((int) (Position.X + _buttonSprite.AABB.Width/2f - _currentEntSprite.AABB.Width/2f),
-                                  (int) (Position.Y + _buttonSprite.AABB.Height/2f - _currentEntSprite.AABB.Height/2f),
+                    new Rectangle((int) (Position.X + _buttonSprite.Width/2f - _currentEntSprite.Width/2f),
+                                  (int) (Position.Y + _buttonSprite.Height/2f - _currentEntSprite.Height/2f),
                                   (int) _currentEntSprite.Width, (int) _currentEntSprite.Height));
 
             _textSprite.Draw();

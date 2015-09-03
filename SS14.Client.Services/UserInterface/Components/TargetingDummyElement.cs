@@ -56,7 +56,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _elementSprite.Position = new Vector2(Position.X,Position.Y);
             ClientArea = new Rectangle(Position,
-                                       new Size((int)_elementSprite.AABB.Width, (int)_elementSprite.AABB.Height));
+                                       new Size((int)_elementSprite.Width, (int)_elementSprite.Height));
         }
 
         public override void Render()

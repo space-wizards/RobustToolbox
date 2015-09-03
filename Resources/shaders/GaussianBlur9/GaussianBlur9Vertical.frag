@@ -22,26 +22,13 @@ uniform vec2 weights_offsets16;
 uniform vec2 weights_offsets17;
 uniform vec2 weights_offsets18;
 
-
-uniform sampler2D colorMap;
-
-varying vec2 TexCoord;
+uniform sampler2D colorMapTexture;
 
 vec4 GaussianBlurVertical()
 {
     vec4 color = vec4(0,0,0,0);
     
-    for (int i = 0; i < KERNEL_SIZE; ++i)
-        color += texture2D(colorMap, vec2(TexCoord.x, TexCoord.y + weights_offsets[i].y)) * weights_offsets[i].x;
-        
-    return color;
-}
-
-
-
-void main()
-{
-	vec2 weights_offsets[KERNEL_SIZE] =
+    vec2 weights_offsets[KERNEL_SIZE] =
     {
 		weights_offsets0,
 		weights_offsets1,
@@ -63,5 +50,16 @@ void main()
 		weights_offsets17,
 		weights_offsets18
 	};
+        
+    for (int i = 0; i < KERNEL_SIZE; ++i)
+        color += mul(texture2D(colorMapTexture, vec2(gl_TexCoord[0].x, gl_TexCoord[0].y + weights_offsets[i].y)) ,weights_offsets[i].x);
+        
+    return color;
+}
+
+
+
+void main()
+{
  	gl_FragColor = GaussianBlurVertical();
 }

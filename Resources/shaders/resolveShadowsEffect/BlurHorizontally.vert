@@ -1,13 +1,11 @@
-attribute vec4 a_color;
-attribute vec3 a_position;
-attribute vec2 a_texCoord0;
-
-varying vec2 TexCoord;
-
-uniform vec2 renderTargetSize;
-
 void main()
 {
-	TexCoord = a_texCoord0;
-	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex + 0.5 * vec4(-1/renderTargetSize.x,1/renderTargetSize.y,0,0);
+   // transform the vertex position
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+
+    // transform the texture coordinates
+    gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+
+    // forward the vertex color
+   gl_FrontColor = gl_Color;
 }

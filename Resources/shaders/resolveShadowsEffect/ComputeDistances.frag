@@ -1,13 +1,12 @@
-varying vec2 v_texCoord0;
 uniform sampler2D inputSampler;
 uniform vec2 renderTargetSize;
 
 vec4 ComputeDistancesPS()
 {
-	vec4 color = texture2D(inputSampler,v_texCoord0);
+	vec4 color = texture2D(inputSampler,gl_TexCoord[0]);
 	float Distance;
 	if (color.a > .3)
-		Distance = length(v_texCoord0 - .5);
+		Distance = length(gl_TexCoord[0] - .5);
 	else 
 		Distance = 1.0;
 	

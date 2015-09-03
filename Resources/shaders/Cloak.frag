@@ -26,6 +26,7 @@ vec4 simplePS()
   {  	
 	backPos = ((gl_TexCoord[0]) * scaler);
 
+
 	if ((spriteColor.r >= 0) && (spriteColor.r < 0.5))
 		backPos.x += (spriteColor.r * cloakAmount) * (scaler.x / refractionIndex);
 	else

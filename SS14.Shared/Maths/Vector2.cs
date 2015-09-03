@@ -771,6 +771,61 @@ namespace SS14.Shared.Maths
             return vector;
         }
 
+        /// <summary>Compares two vectors, returns true if vec1 is less than vec 2 </summary>
+        /// <param name="value1">Source vector.</param>
+        /// <param name="divider">The divisor.</param>
+        public static bool operator <(Vector2 value1, Vector2 value2)
+        {
+            bool result = false;
+
+            if (value1.X < value2.X && value1.Y < value2.Y)
+                result = true;
+
+            return result;
+        }
+
+        /// <summary>Compares two vectors, returns true if vec1 is less than vec 2.</summary>
+        /// <param name="value1">Source vector.</param>
+        /// <param name="divider">The divisor.</param>
+        public static bool operator >(Vector2 value1, Vector2 value2)
+        {
+            bool result = false;
+
+            if (value1.X > value2.X && value1.Y > value2.Y)
+                result = true;
+
+            return result;
+        }
+
+
+        /// <summary>Compares two vectors, returns true if vec1 is less than vec 2 </summary>
+        /// <param name="value1">Source vector.</param>
+        /// <param name="divider">The divisor.</param>
+        public static bool operator <=(Vector2 value1, Vector2 value2)
+        {
+            bool result = false;
+
+            if (value1.X <= value2.X && value1.Y <= value2.Y)
+                result = true;
+
+            return result;
+        }
+
+        /// <summary>Compares two vectors, returns true if vec1 is less than vec 2.</summary>
+        /// <param name="value1">Source vector.</param>
+        /// <param name="divider">The divisor.</param>
+        public static bool operator >=(Vector2 value1, Vector2 value2)
+        {
+            bool result = false;
+
+            if (value1.X >= value2.X && value1.Y >= value2.Y)
+                result = true;
+
+            return result;
+        }
+
+
+
         /// <summary>
         /// Operator to convert a 3d vector into a 2d vector. 
         /// </summary>

@@ -7,7 +7,7 @@ varying vec4 Color;
 
 vec2 ATXC(int i)
 {
-	return vec2(mul((gl_TexCoord[0].x - decalParms1[i].x), decalParms2[i].x) + decalParms2[i].z, (mul((gl_TexCoord[0].y - decalParms1[i].y) , decalParms2[i].y) + decalParms2[i].w);
+	return vec2(mul((gl_TexCoord[0].x - decalParms1[i].x), decalParms2[i].x) + decalParms2[i].z, (mul((gl_TexCoord[0].y - decalParms1[i].y) , decalParms2[i].y) + decalParms2[i].w));
 }
 
 vec4 DecalColor(vec2 coor)

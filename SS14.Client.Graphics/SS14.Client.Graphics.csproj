@@ -154,7 +154,6 @@
     <Content Include="csfml-network-2.dll" />
     <Content Include="csfml-system-2.dll" />
     <Content Include="csfml-window-2.dll" />
-    <Content Include="OpenTK.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

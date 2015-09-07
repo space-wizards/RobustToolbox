@@ -24,7 +24,7 @@ vec4 simplePS()
     
   if (spriteColor.a > 0)
   {  	
-	backPos = ((gl_TexCoord[0]) * scaler);
+	backPos = (gl_TexCoord[0].xy * scaler);
 
 
 	if ((spriteColor.r >= 0) && (spriteColor.r < 0.5))

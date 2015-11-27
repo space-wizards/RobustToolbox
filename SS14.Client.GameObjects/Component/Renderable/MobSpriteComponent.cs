@@ -1,10 +1,11 @@
-﻿using SS14.Client.ClientWindow;
+﻿
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
 using SS14.Shared.Maths;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics;
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent
@@ -137,7 +138,7 @@ namespace SS14.Client.GameObjects
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(ClientWindowData.Singleton.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
                                    Vector2.Zero, currentBaseSprite);
         }
 

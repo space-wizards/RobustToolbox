@@ -1,6 +1,6 @@
 ﻿using SS14.Client.Graphics;
 using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
+
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
@@ -22,9 +22,9 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
+            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
+            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
@@ -43,13 +43,13 @@ namespace SS14.Client.Services.Placement.Modes
             {
                 mouseWorld = new Vector2(currentTile.X + 0.5f,
                                          currentTile.Y + 0.5f);
-                mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
             }
             else
             {
                 mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
                                          currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
-                mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
 
                 spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
                                                  mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
@@ -66,12 +66,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen.ToSFMLColor() : Color.IndianRed.ToSFMLColor();
+                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White.ToSFMLColor();
+                spriteToDraw.Color = Color.White;
             }
         }
     }

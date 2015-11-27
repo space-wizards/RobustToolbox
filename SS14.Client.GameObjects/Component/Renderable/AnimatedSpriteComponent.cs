@@ -1,5 +1,4 @@
-﻿using SS14.Client.ClientWindow;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -258,7 +257,7 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
             
-            Vector2 renderPos = ClientWindowData.Singleton.WorldToScreen(ownerPos);
+            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
 
             if (ownerPos.X + sprite.AABB.Right < topLeft.X
@@ -288,7 +287,7 @@ namespace SS14.Client.GameObjects
             //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(ClientWindowData.Singleton.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
                                    Vector2.Zero, aabb);
 
         }

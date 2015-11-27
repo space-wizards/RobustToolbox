@@ -3,6 +3,7 @@ using SFML.System;
 using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using Color = System.Drawing.Color;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -606,7 +607,8 @@ namespace SS14.Client.GameObjects
         private Color ToColor(Vector4 color)
         {
             color = Limit(color);
-            return new Color((byte)color.X, (byte)color.Y, (byte)color.Z, (byte)color.W);
+
+            return Color.FromArgb((int)color.W,(int)color.X, (int)color.Y, (int)color.Z);
         }
 
         public void Start()

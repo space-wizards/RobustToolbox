@@ -135,11 +135,6 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj">
-      <Name>SS14.Client.ClientWindow</Name>
-      <Project>{A9E3FA31-0000-0000-0000-000000000000}</Project>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Client.GameObjects\SS14.Client.GameObjects.csproj">
       <Name>SS14.Client.GameObjects</Name>
       <Project>{53369E66-0000-0000-0000-000000000000}</Project>

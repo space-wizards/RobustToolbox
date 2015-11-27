@@ -1,5 +1,4 @@
 ﻿using Lidgren.Network;
-using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -302,9 +301,7 @@ namespace SS14.Client.GameObjects
 
             CluwneSprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos =
-                ClientWindowData.Singleton.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Vector2 renderPos = CluwneLib.WorldToScreen( Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             SetSpriteCenter(spriteToRender, renderPos);
 
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <

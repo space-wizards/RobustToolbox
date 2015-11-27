@@ -15,6 +15,8 @@ using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics;
+using SFML.Graphics;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -178,7 +180,7 @@ namespace SS14.Client.Services.State.States
 			{
 				ImageNormal = "lobby_ready",
 				ImageHover = "lobby_ready_green",
-				//BlendingMode = BlendingModes.None,
+				BlendSettings = BlendMode.Alpha,
 				ZDepth = 1
 			};
 			_btnReady.Clicked += _btnReady_Clicked;
@@ -496,7 +498,7 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             
-           _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
+           _background.Draw();
             UserInterfaceManager.Render();
         }
 

@@ -50,6 +50,7 @@ namespace SS14.Client.Services.State.States
             _Height = (int) CluwneLib.Screen.Size.Y;
             _background = ResourceManager.GetSprite("coderart");            
             _background.Smoothing = false;
+        
 
             _btnConnect = new ImageButton
                                {
@@ -114,8 +115,14 @@ namespace SS14.Client.Services.State.States
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-        }
+            _lblVersion.Update(0);
+            _imgTitle.Update(0);
+            _btnExit.Update(0); 
+            _btnOptions.Update(0);
+            _btnConnect.Update(0);
+            _txtConnect.Update(0);
 
+        }	
         #endregion
 
         #region Input

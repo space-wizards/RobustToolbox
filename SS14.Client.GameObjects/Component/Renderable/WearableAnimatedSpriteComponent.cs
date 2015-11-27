@@ -1,5 +1,4 @@
-﻿using SS14.Client.ClientWindow;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
@@ -87,9 +86,8 @@ namespace SS14.Client.GameObjects
             if (NotWornSprite == null) return;
 
             Sprite spriteToRender = NotWornSprite;
-            
-            Vector2 renderPos =
-                ClientWindowData.Singleton.WorldToScreen(
+
+            Vector2 renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             spriteToRender.SetPosition(renderPos.X - (spriteToRender.Width / 2),
                                renderPos.Y - (spriteToRender.Height / 2));

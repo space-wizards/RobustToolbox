@@ -18,7 +18,7 @@ using SS14.Client.Graphics.Sprite;
 using TextureCache = SS14.Client.Graphics.TextureCache;
 using Image = SFML.Graphics.Image;
 using Font = SFML.Graphics.Font;
-using Color = SFML.Graphics.Color;
+using Color = System.Drawing.Color;
 using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
 

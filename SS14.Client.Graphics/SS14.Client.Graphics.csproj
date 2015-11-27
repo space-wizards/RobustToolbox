@@ -24,15 +24,15 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>False</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Graphics\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
@@ -85,6 +85,7 @@
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DebugSettings.cs" />
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -93,6 +94,7 @@
     </Compile>
     <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
+    <Compile Include="Sprite\SpriteInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
     <Compile Include="TextureCache.cs">
       <SubType>Code</SubType>
@@ -118,9 +120,6 @@
     <Compile Include="Sprite\CluwneSprite.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sprite\SpriteInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Sprite\TextSprite.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -139,6 +138,7 @@
     <Compile Include="VertexData\VertexTypeList.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="VideoSettings.cs" />
     <Compile Include="Viewport.cs">
       <SubType>Code</SubType>
     </Compile>

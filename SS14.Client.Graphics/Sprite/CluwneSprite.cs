@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SColor = System.Drawing.Color;
+using SystemColor = System.Drawing.Color;
+using SFMLColor = SFML.Graphics.Color;
 using SFML.Graphics;
 using Drawing = System.Drawing;
 using BaseSprite = SFML.Graphics.Sprite;
@@ -24,6 +25,7 @@ namespace SS14.Client.Graphics.Sprite
         private string key;
         private RectangleF _AABB;
         private Vector2 size;
+        
       
         #region Accessors     
 
@@ -88,11 +90,8 @@ namespace SS14.Client.Graphics.Sprite
             set;
         }
 
-        public BlendMode BlendingMode
-        {
-            get;
-            set;
-        }
+        public BlendMode BlendSettings;
+     
 
         public Texture Texture
         {
@@ -118,6 +117,19 @@ namespace SS14.Client.Graphics.Sprite
             set { size = value; }
         }
 
+        public new SystemColor Color
+        {
+            get { return SFMLColor.ToSystemColor(); }
+            set { SFMLColor = value.ToSFMLColor(); }
+        }
+
+        public SFMLColor SFMLColor
+        {
+            get { return base.Color; }
+            set { base.Color = value; }
+
+        }
+
         public Vector2 Scale
         {
             get { return base.Scale;}
@@ -139,35 +151,21 @@ namespace SS14.Client.Graphics.Sprite
             get;
             set;
         }
-
         #endregion
 
         #region Constructors
         
         /// <summary>
-        /// Creates a new CluwneSprite with a key and a specific renderTarget
+        /// Creates a new CluwneSprite with a specific renderTarget texture
         /// </summary>
         /// <param name="key"> key </param>
-        /// <param name="_renderImage"> RenderTarget to use </param>
-        public CluwneSprite(string key, RenderTarget target)
-        {           
-            Key = key;          
-            renderTarget = target;
-            Position = new Vector2(X, Y);
-            Size = new Vector2(Width, Height);
-        }
-
-        /// <summary>
-        /// Creates a new CluwneSprite with a key and a specific renderTarget
-        /// </summary>
-        /// <param name="key"> key </param>
-        /// <param name="_renderImage"> RenderTarget to use </param>
-        public CluwneSprite(string key, RenderImage target)
+        /// <param name="_renderImage"> RenderImage Texture to use</param>
+        public CluwneSprite(string key, RenderImage target) : base (target.Texture)
         {
             Key = key;           
-            renderTarget = target;
             Position = new Vector2(X,Y);
             Size = new Vector2(Width, Height);
+            BlendSettings = BlendMode.Alpha;
         }
 
         /// <summary>
@@ -180,6 +178,7 @@ namespace SS14.Client.Graphics.Sprite
             Key = key;           
             Position = new Vector2(X, Y);
             Size = new Vector2(Width, Height);
+            BlendSettings = BlendMode.Alpha;
         }
 
         /// <summary>
@@ -192,6 +191,7 @@ namespace SS14.Client.Graphics.Sprite
             Key = key;           
             Position = new Vector2(X, Y);
             Size = new Vector2(Width, Height);
+            BlendSettings = BlendMode.Alpha;
         }
 
         /// <summary>
@@ -203,6 +203,7 @@ namespace SS14.Client.Graphics.Sprite
            Key = copy.Key + "Copy";         
            Position = new Vector2(X, Y);
            Size = new Vector2(Width, Height);
+           BlendSettings = BlendMode.Alpha;
         }
         #endregion
 
@@ -225,8 +226,7 @@ namespace SS14.Client.Graphics.Sprite
         /// </summary>
         private void UpdateAABB()
         {
-            IntRect _fr = (IntRect) GetGlobalBounds();
-            _AABB = new RectangleF(new PointF(_fr.Left, _fr.Top), new SizeF(_fr.Width, _fr.Height));
+          
         }
        
         /// <summary>
@@ -278,31 +278,15 @@ namespace SS14.Client.Graphics.Sprite
         /// </summary>
         public void Draw()
         {
-            RenderStates states = new RenderStates(CluwneLib.CurrentShader);
-            
-
-            if (CluwneLib.CurrentShader == null)
-            {
-                if
-                    (renderTarget != null) 
-                    renderTarget.Draw(this);
-                else
-                    CluwneLib.CurrentRenderTarget.Draw(this);
-            }
-            else
-            {
+            RenderStates states = RenderStates.Default;
+            states.BlendMode = BlendSettings;
+            states.Shader = CluwneLib.CurrentShader;
+            states.Texture = this.Texture;
+       
                 if (renderTarget != null)
                     renderTarget.Draw(this, states);
                 else
-                    CluwneLib.CurrentRenderTarget.Draw(this,states);
-            }
-
-
-            if (CluwneLib.Debug.RenderingDelay > 0) 
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
+                    CluwneLib.CurrentRenderTarget.Draw(this,states);   
         }
 
         /// <summary>
@@ -321,11 +305,7 @@ namespace SS14.Client.Graphics.Sprite
             
 
 
-            if (CluwneLib.Debug.RenderingDelay > 0)
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
+          
         }
 
         #endregion

@@ -91,7 +91,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        middle.Key.Color = Color.White.ToSFMLColor();
+                        middle.Key.Color = Color.White;
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
@@ -123,7 +123,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currLeft.Key.Color = CluwneLib.ColorFromARGB ((byte)(baseAlpha / alphaAdj), Color.White);
+                                currLeft.Key.Color = Color.FromArgb ((byte)(baseAlpha / alphaAdj), Color.White);
 
                             currLeft.Key.Render();
                         }
@@ -142,7 +142,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currRight.Key.Color = CluwneLib.ColorFromARGB((byte) (baseAlpha/alphaAdj), Color.White);
+                                currRight.Key.Color = Color.FromArgb((byte) (baseAlpha/alphaAdj), Color.White);
 
                             currRight.Key.Render();
                         }

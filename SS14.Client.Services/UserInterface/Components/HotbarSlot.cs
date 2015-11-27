@@ -44,10 +44,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.R,Color.G,Color.B,Color.A);
+            _buttonSprite.Color = Color;
             _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R,Color.White.G,Color.White.B,Color.White.A);
+            _buttonSprite.Color = Color;
         }
 
         public override void Dispose()

@@ -111,7 +111,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? BackgroundColor.ToSFMLColor() : SFML.Graphics.Color.Transparent);
+            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -122,10 +122,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                component.Position.Y - (int) scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
-                if (CluwneLib.Debug.RenderingDelay > 0)
-                {                   
-                    clippingRI.Blit(Position, Color.White);
-                }
+             
                 component.Position = oldPos;
                 component.Update(0);
             }
@@ -148,8 +145,7 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarV.Render();
 
             if (DrawBorder)
-            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                     BorderSize, Color.Black);
+            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  BorderSize, Color.Black);
             clippingRI.EndDrawing();
         }
 

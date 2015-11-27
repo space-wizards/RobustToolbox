@@ -226,7 +226,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? Color.Tomato.ToSFMLColor() : Color.White.ToSFMLColor();
+            _eraserButton.Color = _placementManager.Eraser ? Color.Tomato : Color.White;
             base.Render();
         }
 

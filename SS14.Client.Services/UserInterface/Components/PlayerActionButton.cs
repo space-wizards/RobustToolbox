@@ -79,10 +79,10 @@ namespace SS14.Client.Services.UserInterface.Components
             if (cooldownLeft > 0) Color = Color.DarkGray;
             else Color = Color.White;
 
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.R,Color.G,Color.B,Color.A);
+            _buttonSprite.Color = Color;
             _buttonSprite.Position = new Vector2( Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R,Color.White.G,Color.White.B);
+            _buttonSprite.Color = Color.White;
 
             timeLeft.Draw();
         }

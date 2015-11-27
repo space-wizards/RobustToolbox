@@ -64,15 +64,15 @@ namespace SS14.Client.Services.UserInterface.Components
             //elementSprite.Color = selected ? Color.DarkRed : Color.White;
             float healthPct = CurrentHealth / MaxHealth;
 
-            if (healthPct > 0.75) _elementSprite.Color = new SFML.Graphics.Color(Color.DarkGreen.R,Color.DarkGreen.G,Color.DarkGreen.B,Color.DarkGreen.A);
-            else if (healthPct > 0.50) _elementSprite.Color = new SFML.Graphics.Color(Color.Yellow.R, Color.Yellow.G, Color.Yellow.B, Color.Yellow.A);
-            else if (healthPct > 0.25) _elementSprite.Color = new SFML.Graphics.Color(Color.DarkOrange.R, Color.DarkOrange.G, Color.DarkOrange.B, Color.DarkOrange.A);
-            else if (healthPct > 0) _elementSprite.Color = new SFML.Graphics.Color(Color.Red.R, Color.Red.G, Color.Red.B, Color.Red.A);
-            else _elementSprite.Color = new SFML.Graphics.Color(Color.Black.R,Color.Black.G,Color.Black.B,Color.Black.R);
+            if (healthPct > 0.75) _elementSprite.Color      = Color.DarkGreen;
+            else if (healthPct > 0.50) _elementSprite.Color = Color.Yellow;
+            else if (healthPct > 0.25) _elementSprite.Color = Color.DarkOrange;
+            else if (healthPct > 0) _elementSprite.Color    = Color.Red;
+            else _elementSprite.Color = Color.Black;
 
             _elementSprite.Position = new Vector2(Position.X,Position.Y);
             _elementSprite.Draw();
-            _elementSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.R);
+            _elementSprite.Color = Color.White;
 
             if (!_selected) return;
 

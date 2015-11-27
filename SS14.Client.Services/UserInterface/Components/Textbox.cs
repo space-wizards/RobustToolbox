@@ -97,9 +97,9 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = drawColor.ToSFMLColor();
-                _textboxMain.Color = drawColor.ToSFMLColor();
-                _textboxRight.Color = drawColor.ToSFMLColor();
+                _textboxLeft.Color = drawColor;
+                _textboxMain.Color = drawColor;
+                _textboxRight.Color = drawColor;
             }
 
             _textboxLeft.Draw(_clientAreaLeft);
@@ -113,9 +113,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = Color.White.ToSFMLColor();
-                _textboxMain.Color = Color.White.ToSFMLColor();
-                _textboxRight.Color = Color.White.ToSFMLColor();
+                _textboxLeft.Color = Color.White;
+                _textboxMain.Color = Color.White;
+                _textboxRight.Color = Color.White;
             }
 
             Label.Color = textColor;

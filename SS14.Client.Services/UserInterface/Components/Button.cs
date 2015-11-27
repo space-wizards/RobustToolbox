@@ -63,17 +63,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            _buttonLeft.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
-            _buttonMain.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G, drawColor.B);
-            _buttonRight.Color = new SFML.Graphics.Color(drawColor.R, drawColor.G,drawColor.B);
+            _buttonLeft.Color = drawColor;
+            _buttonMain.Color = drawColor;
+            _buttonRight.Color = drawColor;
 
             _buttonLeft.Draw(_clientAreaLeft);
             _buttonMain.Draw(_clientAreaMain);
             _buttonRight.Draw(_clientAreaRight);
 
-            _buttonLeft.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
-            _buttonMain.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
-            _buttonRight.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonLeft.Color = Color.White;
+            _buttonMain.Color = Color.White;
+            _buttonRight.Color = Color.White;
 
             Label.Draw();
         }

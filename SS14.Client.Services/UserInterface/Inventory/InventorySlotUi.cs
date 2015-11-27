@@ -42,15 +42,16 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _slotSprite.Color = new SFML.Graphics.Color(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A); ;
-            _slotSprite.Draw(new Rectangle(Position,
-                                           new Size((int) _slotSprite.Width, (int) _slotSprite.Height)));
+            _slotSprite.Color = _currentColor;
+            _slotSprite.Position = Position;
+            _slotSprite.Draw();
+
             if (_entitySprite != null)
                 _entitySprite.Draw(
                     new Rectangle((int) (Position.X + _slotSprite.Width/2f - _entitySprite.Width/2f),
                                   (int) (Position.Y + _slotSprite.Height/2f - _entitySprite.Height/2f),
                                   (int) _entitySprite.Width, (int) _entitySprite.Height));
-            _slotSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+            _slotSprite.Color = Color.White;
         }
 
         public override void Dispose()

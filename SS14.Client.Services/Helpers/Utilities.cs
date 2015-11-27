@@ -11,8 +11,8 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics;
 using Image = SFML.Graphics.Image;
-using Color = SFML.Graphics.Color;
-using SColor = System.Drawing.Color;
+using Color = System.Drawing.Color;
+using SColor = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -58,7 +58,7 @@ namespace SS14.Client.Services.Helpers
             Image imgData = toCheck.Texture.CopyToImage();
 
             //imgData.Lock(false);
-            Color pixColour = imgData.GetPixel((uint)spritePosition.X,(uint) spritePosition.Y);
+            SColor pixColour = imgData.GetPixel((uint)spritePosition.X,(uint) spritePosition.Y);
             imgData.Dispose();
             //imgData.Unlock();
 
@@ -80,8 +80,9 @@ namespace SS14.Client.Services.Helpers
             {
                 throw new ArgumentOutOfRangeException("lambda");
             }
-            Color color = new Color
+            Color color = Color.FromArgb
                 (
+                    
                     InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
                     InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
                     InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
@@ -90,32 +91,12 @@ namespace SS14.Client.Services.Helpers
             return color;
         }
 
-        public static SColor InterpolateBetween(SColor endPoint1, SColor endPoint2, double lambda)
-        {
-            if (lambda < 0 || lambda > 1)
-            {
-                throw new ArgumentOutOfRangeException("lambda");
-            }
-            SColor color = SColor.FromArgb
-                (
-                    InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
-                    InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
-                    InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
-                );
-
-            return color;
-        }
+       
 
         private static byte InterpolateComponent(Color endPoint1, Color endPoint2, double lambda, ComponentSelector selector)
         {
             return (byte)(selector(endPoint1) + (selector(endPoint2) - selector(endPoint1)) * lambda);
         }
-
-        private static byte InterpolateComponent(SColor endPoint1, SColor endPoint2, double lambda, ComponentSelector selector)
-        {
-            return (byte)(selector(endPoint1.ToSFMLColor()) + (selector(endPoint2.ToSFMLColor()) - selector(endPoint1.ToSFMLColor())) * lambda);
-        }
-
 
         #region Nested type: ComponentSelector
 

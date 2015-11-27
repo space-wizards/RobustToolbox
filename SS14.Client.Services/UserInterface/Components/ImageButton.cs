@@ -2,11 +2,11 @@
 using SS14.Client.Graphics.Sprite;
 using SS14.Shared.IoC;
 using System;
-using Color = SFML.Graphics.Color;
 using SFML.Window;
 using SFML.Graphics;
 using System.Drawing;
 using SS14.Shared.Maths;
+using SColor = System.Drawing.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -28,28 +28,28 @@ namespace SS14.Client.Services.UserInterface.Components
 		public ImageButton()
 		{
 			_resourceManager = IoCManager.Resolve<IResourceManager>();
-			Color = Color.White;
+            Color = SColor.White;
 			Update(0);
 		}
 
-		public Color Color { get; set; }
+        public SColor Color { get; set; }
 
-		public BlendMode BlendingMode
+		public BlendMode BlendSettings
 		{
 			get
 			{
-				return _buttonNormal != null ? _buttonNormal.BlendingMode : BlendMode.None;
+				return _buttonNormal != null ? _buttonNormal.BlendSettings: BlendMode.Alpha;
 			}
 			set
 			{
 				if (_buttonNormal != null)
-					_buttonNormal.BlendingMode = value;
+                    _buttonNormal.BlendSettings = value;
 
 				if (_buttonHover != null)
-					_buttonHover.BlendingMode = value;
+                    _buttonHover.BlendSettings = value;
 
 				if (_buttonClick != null)
-					_buttonClick.BlendingMode = value;
+                    _buttonClick.BlendSettings = value;
 			}
 		}
 
@@ -106,7 +106,7 @@ namespace SS14.Client.Services.UserInterface.Components
 				_drawSprite.Position = new Vector2 (Position.X,Position.Y);
                 _drawSprite.Smoothing = true;
 				_drawSprite.Draw();
-				_drawSprite.Color = Color.White;
+                _drawSprite.Color = Color;
 			}
 		}
 

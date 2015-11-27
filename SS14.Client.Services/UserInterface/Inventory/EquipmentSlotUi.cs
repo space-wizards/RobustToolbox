@@ -89,10 +89,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Render()
         {
-            _buttonSprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B);
+            _buttonSprite.Color = _color;
             _buttonSprite.Position = new Vector2(Position.X,Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B); ;
+            _buttonSprite.Color = Color.White;
 
             if (_currentEntSprite != null && CurrentEntity != null)
                 _currentEntSprite.Draw(

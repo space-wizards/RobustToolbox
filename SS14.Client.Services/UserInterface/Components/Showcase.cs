@@ -187,7 +187,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
                         ctemp = Color.FromArgb(255, Color.White);
-                    selected.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
+                    selected.Key.Color = ctemp;
                     selected.Key.Render();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
@@ -211,7 +211,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                             if (FadeItems)
                                 ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
-                                selectedLeft.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
+                            selectedLeft.Key.Color = ctemp;
 
                             selectedLeft.Key.Render();
                         }
@@ -229,7 +229,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                             if (FadeItems)
                                 ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
-                            selectedRight.Key.Color = new SFML.Graphics.Color(ctemp.R, ctemp.G, ctemp.B, ctemp.A);
+                            selectedRight.Key.Color = ctemp;
                             selectedRight.Key.Render();
                         }
                     }

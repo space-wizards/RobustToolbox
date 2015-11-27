@@ -71,18 +71,18 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (hands.CurrentHand == InventoryLocation.HandLeft)
             {
-                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+                handSlot.Color = Color.White;
                 handSlot.Draw(handL);
 
-                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
+                handSlot.Color = _inactiveColor;
                 handSlot.Draw(handR);
             }
             else
             {
-                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A); ;
+                handSlot.Color = Color.White;
                 handSlot.Draw(handR);
 
-                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
+                handSlot.Color = _inactiveColor;
                 handSlot.Draw(handL);
             }
 

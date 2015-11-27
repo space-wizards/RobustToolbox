@@ -5,6 +5,7 @@ using System.Text;
 using SFML.Graphics;
 using SFML.Window;
 using System.Drawing;
+using Color = System.Drawing.Color;
 
 
 namespace SS14.Client.Graphics.Render
@@ -39,7 +40,11 @@ namespace SS14.Client.Graphics.Render
             get;
             set;
         }
-
+        
+        public void Clear(Color color)
+        {
+            base.Clear(color.ToSFMLColor());
+        }
      
     }
 }

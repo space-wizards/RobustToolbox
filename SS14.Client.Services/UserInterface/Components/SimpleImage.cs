@@ -35,13 +35,13 @@ namespace SS14.Client.Services.UserInterface.Components
         public Color Color
         {
             get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
-            set { drawingSprite.Color = value.ToSFMLColor(); }
+            set { drawingSprite.Color = value; }
         }
 
         public BlendMode BlendingMode
         {
-            get { return drawingSprite != null ? drawingSprite.BlendingMode : drawingSprite.BlendingMode; }
-            set { drawingSprite.BlendingMode = value;}
+            get { return drawingSprite != null ? drawingSprite.BlendSettings: drawingSprite.BlendSettings; }
+            set { drawingSprite.BlendSettings = value; }
         }
 
         public override void Update(float frameTime)

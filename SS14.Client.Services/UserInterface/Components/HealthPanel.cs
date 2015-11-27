@@ -133,7 +133,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 float alpha =
                     Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea/2f) - i)/(blipMaxArea/2f)))*(300f*sweepPct), 0f), 255f);
                Color temp = Color.FromArgb((int) alpha,ColorInterpolator.InterpolateBetween(Color.Orange,  Color.LawnGreen, healthPct));
-               _backgroundSprite.Color = new SFML.Graphics.Color(temp.R, temp.G, temp.B, temp.A);
+               _backgroundSprite.Color = temp;
 
                 float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i))/(float) blipUp) - 0.80f, 0f);
                 float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i))/(float) blipDown) - 0.93f, 0f);

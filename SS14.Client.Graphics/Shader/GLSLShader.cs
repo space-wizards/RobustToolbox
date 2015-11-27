@@ -67,18 +67,16 @@ namespace SS14.Client.Graphics.Shader
         public void SetParameter(string Parameter, Vector2 vec2)
         {
             base.SetParameter(Parameter, vec2.X, vec2.Y);
-            Debug.Write("Setting Parameter " + Parameter + " with value: " + vec2.X + " " + vec2.Y);
         }
 
         public void SetParameter(string Parameter, Vector3 vec3)
         {
             base.SetParameter(Parameter, vec3.X, vec3.Y, vec3.Z);
-            Debug.Write("Setting Parameter " + Parameter + " with value: " + vec3.X + " " + vec3.Y + " " + vec3.Z);
+         
         }
         public void SetParameter(string Parameter, Vector4 vec4)
         {
             base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z, vec4.W);
-            Debug.Write("Setting Parameter " + Parameter + " with value: " + vec4.X + " " + vec4.Y + " " + vec4.Z + " " + vec4.W);
         }
 
         public void SetParameter(string Parameter, CluwneSprite Sprite)

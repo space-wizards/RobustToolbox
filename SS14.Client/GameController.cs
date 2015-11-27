@@ -61,7 +61,7 @@ namespace SS14.Client
             _resourceManager.LoadLocalResources();
 
             //Setup Cluwne first, as the rest depends on it.
-            SetupCluwne ();
+            SetupCluwne();
 
             //Initialization of private members
             _networkManager = IoCManager.Resolve<INetworkManager>();
@@ -69,7 +69,7 @@ namespace SS14.Client
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-            SetupInput ();
+          
 
             _stateManager.RequestStateChange<TestState> ();
 
@@ -249,38 +249,49 @@ namespace SS14.Client
 //            //CluwneLib.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
 //            CluwneLib.Idle += CluwneLibIdle;
 //        }
+        bool onetime = true;
 
         private void SetupCluwne()
         {
-            uint displayWidth = _configurationManager.GetDisplayWidth();
+            uint displayWidth  = _configurationManager.GetDisplayWidth();
             uint displayHeight = _configurationManager.GetDisplayHeight();
-            bool fullscreen = _configurationManager.GetFullscreen();
-            var refresh = (int) _configurationManager.GetDisplayRefresh();
+            bool isFullscreen  = _configurationManager.GetFullscreen();
+            var refresh        = _configurationManager.GetDisplayRefresh();
 
-            CluwneLib.Go();
-           
-            CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
+          
+
+            CluwneLib.Video.SetFullscreen(isFullscreen);
+            CluwneLib.Video.SetRefreshRate(refresh);
+            CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
+            CluwneLib.Initialize();
+            if (onetime)
+            {
+                //every time the video settings change we close the old screen and create a new one
+                //SetupCluwne Gets called to reset the event handlers to the new screen
+                CluwneLib.FrameEvent += CluwneLibIdle;
+                CluwneLib.RefreshVideoSettings += SetupCluwne;
+                onetime = false;
+            }
             CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
             CluwneLib.Screen.Closed += MainWindowRequestClose;
-            CluwneLib.Idle += CluwneLibIdle;
-        }
-
-        private void SetupInput()
-        {
-            CluwneLib.Screen.KeyPressed  += KeyDownEvent;
+            CluwneLib.Screen.KeyPressed += KeyDownEvent;
             CluwneLib.Screen.KeyReleased += KeyUpEvent;
-
-            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
+            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
-            CluwneLib.Screen.MouseEntered        += MouseEntered;
-            CluwneLib.Screen.MouseLeft           += MouseLeft;
+            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered += MouseEntered;
+            CluwneLib.Screen.MouseLeft += MouseLeft;
 
+          
+
+
+            CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
+
+  
 
         #endregion
 

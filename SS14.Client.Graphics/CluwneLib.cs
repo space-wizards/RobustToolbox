@@ -15,30 +15,76 @@ using System.Collections;
 
 namespace SS14.Client.Graphics
 {
-    public class CluwneDebug {
-        public int RenderingDelay=0;
-        public bool TextBorders=false;
-        public uint Fontsize=0;
-    };
     public class CluwneLib
     {
-        public static Viewport CurrentClippingViewport;
+
+        private static RenderTarget[] renderTargetArray;
         private static Clock _timer;
-        private static RenderTarget[] _currentTarget;
-        private static System.Threading.Mutex SFML_Threadlock;
-        public static event FrameEventHandler Idle;
-        private SystemColor DEFAULTCOLOR;
-        public static CluwneDebug Debug;
+  
+        public static event FrameEventHandler FrameEvent;
+        public static Viewport CurrentClippingViewport;
+
+        public delegate void EventHandler();
+        public static event EventHandler RefreshVideoSettings;
 
         #region Accessors
+        public static Vector2 WorldCenter { get; set; }
+        public static SizeF ScreenViewportSize { get; set; }
+        public static int TileSize { get; set; }
+        public static RectangleF WorldViewport
+        {
+            get
+            {
+                return ScreenToWorld(ScreenViewport);
+            }
+        }      
+        public static RectangleF ScreenViewport
+        {
+            get
+            {
+                return new RectangleF(PointF.Empty, ScreenViewportSize);
+            }
+        }     
+
         public static bool IsInitialized { get; set; }
         public static bool IsRunning { get; set; }
-        public static CluwneWindow Screen {  get;  set; }
-        public static TimingData FrameStats { get; set; }
-        public static GLSLShader CurrentShader { get; set; }
-        public static BlendingModes BlendingMode { get; set; }
-        public Styles Style { get; set; }
+        public static bool FrameStatsVisible { get; set; }
+        
+        public static CluwneWindow  Screen        { get; set; }
+        public static TimingData    FrameStats    { get; set; }
+        public static VideoSettings Video         { get; private set; }
+        public static DebugSettings Debug         { get; private set; }
+        public static GLSLShader    CurrentShader { get; internal set; }
+
+        public static BlendingModes BlendingMode { get; set; }    
+        public static RenderTarget CurrentRenderTarget
+        {
+            get
+            {
+                if (renderTargetArray[0] == null)
+                    renderTargetArray[0] = Screen;
+
+                return renderTargetArray[0];
+            }
+            internal set
+            {
+                if (value == null)
+                    value = Screen;
+
+                setAdditionalRenderTarget(0, value);
+            }
+        }
+      
         #endregion
+
+
+
+
+        static CluwneLib()
+        {
+            Video = new VideoSettings();
+            Debug = new DebugSettings();        
+        }
 
         #region CluwneEngine
         /// <summary>
@@ -46,22 +92,23 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// Shamelessly taken from Gorgon.
         public static void Go()
-        {
-            SFML_Threadlock = new System.Threading.Mutex();
+        {        
+            
+            
 
             if (!IsInitialized)
             {
                 Initialize();
             }
 
-            Idle += (delegate(object sender, FrameEventArgs e) {
+            FrameEvent += (delegate(object sender, FrameEventArgs e) {
                
                 System.Threading.Thread.Sleep(10); // maybe pickup vsync here?
                
             });
 
-            if ((Screen != null) && (_currentTarget == null))
-                throw new InvalidOperationException("The render target is invalid.");
+            if ((Screen != null) && (renderTargetArray == null))
+                throw new InvalidOperationException("Something has gone terribly wrong!");
 
             if (IsRunning)
                 return;
@@ -69,13 +116,13 @@ namespace SS14.Client.Graphics
             _timer.Restart();
             FrameStats.Reset();
 
-            if (_currentTarget != null)
+            if (renderTargetArray != null)
             {
-                for (int i = 0; i < _currentTarget.Length; i++)
+                for (int i = 0; i < renderTargetArray.Length; i++)
                 {
-                    if (_currentTarget[0] != null)
+                    if (renderTargetArray[0] == null)
                     {
-                       //update targets and viewport
+                        renderTargetArray[0] = Screen;
                     }
                 }
 
@@ -83,43 +130,28 @@ namespace SS14.Client.Graphics
 
             IsRunning = true;
         }
-
+                        
         public static void Initialize()
         {
             if (IsInitialized)
                 Terminate();
-
-            Debug = new CluwneDebug();
-
-            IsInitialized = true;
-
-            _currentTarget = new RenderTarget[5];
+           
+            Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
 
             _timer = new Clock();
             FrameStats = new TimingData(_timer);
-        }
+            renderTargetArray = new RenderTarget[5];
+            CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
+            IsInitialized = true;
 
+        }
+       
         public static void RequestGC(Action action)
         {
           action.Invoke();         
-        }
+        }           
 
-        public static void SetMode(int displayWidth, int displayHeight)
-        {
-            Screen = new CluwneWindow(new VideoMode((uint)displayWidth, (uint)displayHeight), "Space station 14");
-        }
-
-        public static void SetMode(int width, int height, bool fullscreen, bool p4, bool p5, int refreshRate)
-        {
-            Styles stylesTemp = new Styles();
-
-            if(fullscreen)
-                stylesTemp = Styles.Fullscreen;
-            else stylesTemp = Styles.Default;
-
-            Screen = new CluwneWindow(new VideoMode((uint)width, (uint)height),"Space Station 14",stylesTemp);
-        }
-
+  
 
         public static void ClearCurrentRendertarget(SystemColor color)
         {
@@ -127,13 +159,15 @@ namespace SS14.Client.Graphics
         }
 
         public static void Terminate()
-        {
-            
+        {                   
+            CurrentClippingViewport = null;
+            IsInitialized = false;
+            Screen.Close();
         }
 
         public static void RunIdle(object sender, FrameEventArgs e)
         {
-            Idle(sender, e);
+            FrameEvent(sender, e);
         }
 
         public static void Stop()
@@ -142,40 +176,48 @@ namespace SS14.Client.Graphics
             IsRunning=false;
         }
 
+
+        public static void UpdateVideoSettings()
+        {
+           RefreshVideoSettings();
+        }
+
         #endregion
 
         #region RenderTarget Stuff
 
-        public static RenderTarget CurrentRenderTarget
-        {
-            get
-            {
-                if (_currentTarget[0] == null)
-                    _currentTarget[0] = Screen;
-
-                return _currentTarget[0];
-            }
-            set
-            {
-                if (value == null)
-                    value = Screen;
-
-                setAdditionalRenderTarget(0, value);
-            }
-        }
+     
 
         public static void setAdditionalRenderTarget(int index, RenderTarget _target)
         {
-           _currentTarget[index] = _target;
+           renderTargetArray[index] = _target;
         }
 
         public static RenderTarget getAdditionalRenderTarget(int index)
         {
-            return _currentTarget[index];
+            return renderTargetArray[index];
         }
 
-        #endregion
 
+        /// <summary>
+        /// resets the Current Render Target back to the screen
+        /// </summary>
+        public static void ResetRenderTarget()
+        {
+            CurrentRenderTarget = null; //sets it back to the screen
+        }
+
+        /// <summary>
+        /// Clears the Shader
+        /// </summary>
+        public static void ResetShader()
+        {
+            CurrentShader = null;
+        }
+
+
+
+        #endregion
 
         #region Drawing Methods
 
@@ -196,12 +238,7 @@ namespace SS14.Client.Graphics
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
             rectangle.FillColor = Color.ToSFMLColor();
 
-            CurrentRenderTarget.Draw(rectangle);
-            if (CluwneLib.Debug.RenderingDelay > 0)
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
+            CurrentRenderTarget.Draw(rectangle);           
         }
 
         /// <summary>
@@ -220,11 +257,6 @@ namespace SS14.Client.Graphics
             rectangle.FillColor = Color.ToSFMLColor();
 
             CurrentRenderTarget.Draw(rectangle);
-            if (CluwneLib.Debug.RenderingDelay > 0)
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
         }
 
 
@@ -247,11 +279,7 @@ namespace SS14.Client.Graphics
             HollowRect.OutlineColor = OutlineColor.ToSFMLColor();
 
             CurrentRenderTarget.Draw(HollowRect);
-            if (CluwneLib.Debug.RenderingDelay > 0)
-            {
-                CluwneLib.Screen.Display();
-                System.Threading.Thread.Sleep(CluwneLib.Debug.RenderingDelay);
-            }
+           
 
 
         }
@@ -373,22 +401,151 @@ namespace SS14.Client.Graphics
         }
 
         #endregion
-        
-       public static SFMLColor ColorFromARGB(byte A, SystemColor Color)
-       {
-           return new SFMLColor(Color.R, Color.G, Color.B, A);
-       }
-
+   
         #endregion
 
+        #region Client Window Data  
+   
+       /// <summary>
+       /// Transforms a point from the world (tile) space, to screen (pixel) space.
+       /// </summary>
+       public static PointF WorldToScreen(PointF point)
+       {
+           var center = WorldCenter;
+           return new PointF(
+               (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+               (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+               );
+       }
+       /// <summary>
+       /// Transforms a point from the world (tile) space, to screen (pixel) space.
+       /// </summary>
+       public static Vector2 WorldToScreen(Vector2 point)
+       {
+           var center = WorldCenter;
+           return new Vector2(
+               (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+               (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+               );
+       }
+       /// <summary>
+       /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
+       /// </summary>
+       public static RectangleF WorldToScreen(RectangleF rect)
+       {
+           var center = WorldCenter;
+           return new RectangleF(
+               (rect.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
+               (rect.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2,
+               rect.Width * TileSize,
+               rect.Height * TileSize
+               );
+       }
+
+       /// <summary>
+       /// Transforms a point from the screen (pixel) space, to world (tile) space.
+       /// </summary>
+       public static PointF ScreenToWorld(PointF point)
+       {
+           var center = WorldCenter;
+           return new PointF(
+               (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+               (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+               );
+       }
+       /// <summary>
+       /// Transforms a point from the screen (pixel) space, to world (tile) space.
+       /// </summary>
+       public static Vector2 ScreenToWorld(Vector2 point)
+       {
+           var center = WorldCenter;
+           return new Vector2(
+               (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+               (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+               );
+       }
+       /// <summary>
+       /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
+       /// </summary>
+       public static RectangleF ScreenToWorld(RectangleF rect)
+       {
+           var center = WorldCenter;
+           return new RectangleF(
+               (rect.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
+               (rect.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y,
+               rect.Width / TileSize,
+               rect.Height / TileSize
+               );
+       }
+
+       /// <summary>
+       /// Scales a size from pixel coordinates to tile coordinates.
+       /// </summary>
+       /// <param name="size"></param>
+       /// <returns></returns>
+       public static SizeF PixelToTile(SizeF size)
+       {
+           return new SizeF(
+               size.Width / TileSize,
+               size.Height / TileSize
+               );
+       }
+       /// <summary>
+       /// Scales a vector from pixel coordinates to tile coordinates.
+       /// </summary>
+       /// <param name="size"></param>
+       /// <returns></returns>
+       public static Vector2 PixelToTile(Vector2 vec)
+       {
+           return new Vector2(
+               vec.X / TileSize,
+               vec.Y / TileSize
+               );
+       }
+       /// <summary>
+       /// Scales a rectangle from pixel coordinates to tile coordinates.
+       /// </summary>
+       /// <param name="size"></param>
+       /// <returns></returns>
+       public static RectangleF PixelToTile(RectangleF rect)
+       {
+           return new RectangleF(
+               rect.X / TileSize,
+               rect.Y / TileSize,
+               rect.Width / TileSize,
+               rect.Height / TileSize
+               );
+       }
+
+       /// <summary>
+       /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
+       /// </summary>
+       public static PointF GetNearestPixel(PointF worldPoint)
+       {
+           return new PointF(
+               (float)Math.Round(worldPoint.X * TileSize) / TileSize,
+               (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+               );
+       }
+       /// <summary>
+       /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
+       /// </summary>
+       public static Vector2 GetNearestPixel(Vector2 worldPoint)
+       {
+           return new Vector2(
+               (float)Math.Round(worldPoint.X * TileSize) / TileSize,
+               (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+               );
+       }
+       
+       #endregion
 
 
-
-       public static bool FrameStatsVisible { get; set; }
+       
     }
 
 
-    public static class Conversions
+    internal static class Conversions
     {
         public static SFMLColor ToSFMLColor(this SystemColor SystemColor)
         {
@@ -400,10 +557,7 @@ namespace SS14.Client.Graphics
             SystemColor temp = SystemColor.FromArgb(SFMLColor.A, SFMLColor.R, SFMLColor.G, SFMLColor.B);
             return temp;
         }
-
       
-
-       
         public static Vector2 ToVector2(this Point point)
         {
             return new Vector2(point.X, point.Y);

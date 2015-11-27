@@ -8,10 +8,12 @@ namespace SS14.Client.Graphics
 {
     public class DebugSettings
     {
-        public static bool DebugTextboxes { get; private set; }
-        public static bool DebugWalls     { get; private set; }
-        public static bool DebugAtmos     { get; private set; }
-        public static bool DebugEntities  { get; private set; }
+        public bool DebugTextboxes { get; private set; }
+        public bool DebugWalls     { get; private set; }
+        public bool DebugAtmos     { get; private set; }
+        public bool DebugEntities  { get; private set; }
+        public bool DebugSprite    { get; private set; }
+        public bool DebugColliders { get; private set; }
 
         public DebugSettings()
         {
@@ -21,22 +23,22 @@ namespace SS14.Client.Graphics
             DebugWalls = false;
         }
 
-        public static void ToggleAtmosDebug()
+        public void ToggleAtmosDebug()
         {
             DebugAtmos = true;
         }
 
-        public static void ToggleWallDebug()
+        public void ToggleWallDebug()
         {
             DebugWalls = true;
         }
 
-        public static void ToggleTextboxDebug()
+        public void ToggleTextboxDebug()
         {
             DebugTextboxes = true;
         }
 
-        public static void ToggleEntitiesDebug()
+        public void ToggleEntitiesDebug()
         {
             DebugEntities= true;
         }

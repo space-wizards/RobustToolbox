@@ -231,6 +231,7 @@
     <Compile Include="Lighting.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs">
       <SubType>Code</SubType>
     </Compile>

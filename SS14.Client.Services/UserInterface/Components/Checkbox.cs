@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,10 +17,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-		private CluwneSprite  checkbox;
+		private CluwneSprite checkbox;
 		private CluwneSprite checkboxCheck;
 
         private Boolean value;
+
 
         public Checkbox(IResourceManager resourceManager)
         {
@@ -27,6 +29,7 @@ namespace SS14.Client.Services.UserInterface.Components
             checkbox = _resourceManager.GetSprite("checkbox0");
             checkboxCheck = _resourceManager.GetSprite("checkbox1");
             Update(0);
+
         }
 
         public Boolean Value
@@ -43,13 +46,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) checkbox.Width, (int) checkbox.Height));
+            checkbox.Position = Position;          
         }
 
         public override void Render()
-        {
-            checkbox.Draw(ClientArea);
-            if (Value) checkboxCheck.Draw(ClientArea);
+        {           
+            checkbox.Draw();
+            if (Value) checkboxCheck.Draw();
         }
 
         public override void Dispose()

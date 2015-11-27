@@ -228,18 +228,7 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            
-            CluwneLib.Stop();
-
-            CluwneLib.SetMode((int)ConfigurationManager.GetDisplayWidth(),
-                            (int)ConfigurationManager.GetDisplayHeight(),
-                            !ConfigurationManager.GetFullscreen(), false, false,
-                            (int)ConfigurationManager.GetDisplayRefresh());
-                           
-
-           
-
-            CluwneLib.Go();
+          CluwneLib.UpdateVideoSettings();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)

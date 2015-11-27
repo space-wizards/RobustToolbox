@@ -40,7 +40,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\client\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -124,12 +124,6 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj">
-      <Name>SS14.Client.ClientWindow</Name>
-      <Project>{A9E3FA31-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>False</Private>
     </ProjectReference>

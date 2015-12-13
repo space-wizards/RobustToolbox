@@ -74,6 +74,7 @@ namespace SS14.Client.Services.State.States
             _btnExit.Clicked += _buttExit_Clicked;
 
             _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
+            _txtConnect.Position = new Point(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 
             Assembly assembly = Assembly.GetExecutingAssembly();

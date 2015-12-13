@@ -64,22 +64,61 @@ namespace SS14.Client.Services.Lighting
                                                  ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(Texture shadowCastersTexture, RenderImage result, Vector2 lightPosition,
-                                   bool attenuateShadows, Texture mask, Vector4 maskProps, Vector4 diffuseColor)
+        public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask)
         {
+            Texture shadowCastersTexture = Area.RenderTarget.Texture;
+            RenderImage Result = Area.RenderTarget;
+            Vector2 LightPosition = Area.LightPosition;
+            Texture Mask = mask;
+            Vector4 MaskProps = Vector4.Zero;
+            Vector4 diffuseColor = Vector4.One;
+
+
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", maskProps);
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
 
-          // CluwneLib.CurrentRenderTarget.BlendingMode = BlendingModes.None;
+
             ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
             ExecuteTechnique(distancesRT.Texture, distortRT, "Distort");
+
             ApplyHorizontalReduction(distortRT, shadowMap);
-            ExecuteTechnique(mask, result, "DrawShadows", shadowMap);
+
+            ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
             ExecuteTechnique(shadowsRT.Texture, processedShadowsRT, "BlurHorizontally");
-            ExecuteTechnique(processedShadowsRT.Texture, result, "BlurVerticallyAndAttenuate");
-            CluwneLib.CurrentShader = null;
+            ExecuteTechnique(processedShadowsRT.Texture, Result, "BlurVerticallyAndAttenuate");
+
+            resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
+        }
+
+
+        public void ResolveShadows(LightArea Area, bool attenuateShadows)
+        {
+            Texture shadowCastersTexture = Area.RenderTarget.Texture;
+            RenderImage Result = Area.RenderTarget;
+            Vector2 LightPosition = Area.LightPosition;
+            Texture Mask = Area.Mask.Texture;
+            Vector4 MaskProps = Area.MaskProps;
+            Vector4 diffuseColor = Vector4.One;
+
+
+            //only DrawShadows needs these vars
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
+
+
+            ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
+            ExecuteTechnique(distancesRT.Texture, distortRT, "Distort");
+
+            ApplyHorizontalReduction(distortRT, shadowMap);
+
+            ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
+            ExecuteTechnique(shadowsRT.Texture, processedShadowsRT, "BlurHorizontally");
+            ExecuteTechnique(processedShadowsRT.Texture, Result, "BlurVerticallyAndAttenuate");
+
+            resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
 
         private void ExecuteTechnique(Texture source, RenderImage destination, string techniqueName)
@@ -87,15 +126,15 @@ namespace SS14.Client.Services.Lighting
             ExecuteTechnique(source, destination, techniqueName, null);
         }
 
-        private void ExecuteTechnique(Texture source, RenderImage destination, string techniqueName, RenderImage shadowMap)
+        private void ExecuteTechnique(Texture source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
             Vector2 renderTargetSize;
             renderTargetSize = new Vector2(baseSize, baseSize);
-          
-            CluwneLib.CurrentRenderTarget = destination;
-            CluwneLib.CurrentRenderTarget.Clear(Color.White);
 
-            CluwneLib.CurrentShader = resolveShadowsEffectTechnique[techniqueName];
+            destinationTarget.BeginDrawing();
+            destinationTarget.Clear(Color.White);
+
+            resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
 
                 resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize);
             if (source != null)
@@ -103,45 +142,48 @@ namespace SS14.Client.Services.Lighting
             if (shadowMap != null)
                 resolveShadowsEffectTechnique[techniqueName].SetParameter("ShadowMapTexture", shadowMap);
 
-            quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
 
-            CluwneLib.CurrentRenderTarget = null;
+        
+
+           destinationTarget.EndDrawing();
         }
 
         private void ApplyHorizontalReduction(RenderImage source, RenderImage destination)
         {
             int step = reductionChainCount - 1;
-            RenderImage s = source;
-            RenderImage d = reductionRT[step];
-            CluwneLib.CurrentShader = reductionEffectTechnique["HorizontalReduction"];
+            RenderImage src = source;
+            RenderImage HorizontalReduction= reductionRT[step];
+            reductionEffectTechnique["HorizontalReduction"].setAsCurrentShader();
 
             while (step >= 0)
             {
-                d = reductionRT[step];
+                HorizontalReduction = reductionRT[step];
 
-                CluwneLib.CurrentRenderTarget = d;
-                d.Clear(Color.White);
+                HorizontalReduction.BeginDrawing();
+                HorizontalReduction.Clear(Color.White);
             
-                var textureDim = new Vector2(1.0f/s.Width, 1.0f/s.Height);
-                reductionEffectTechnique["HorizontalReduction"].SetParameter("SourceTexture", s);
-                reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",textureDim);
-                quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
-                s = d;
+                    var textureDim = new Vector2(1.0f/src.Width, 1.0f/src.Height);
+                    reductionEffectTechnique["HorizontalReduction"].SetParameter("SourceTexture", GLSLShader.CurrentTexture);
+                    reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",textureDim);
+                    src.Blit(HorizontalReduction);
+
+                HorizontalReduction.EndDrawing();
+
+                src = HorizontalReduction;
                 step--;
             }
 
             //copy to destination
-            CluwneLib.CurrentRenderTarget = destination;
+            destination.BeginDrawing();
+            destination.Clear(Color.White);
            
-            reductionEffectTechnique["Copy"].SetParameter("SourceTexture",d);
-            reductionEffectTechnique["Copy"].SetParameter("SourceTexture", reductionRT[reductionChainCount - 1]);
-            CluwneLib.CurrentShader = reductionEffectTechnique["Copy"];
+                reductionEffectTechnique["Copy"].SetParameter("SourceTexture", GLSLShader.CurrentTexture);
+                reductionEffectTechnique["Copy"].setAsCurrentShader();
 
-            CluwneLib.CurrentRenderTarget.Clear(Color.White);
-            quadRender.Render(new Vector2(1, 1)*-1, new Vector2(1, 1));
+                HorizontalReduction.Blit(destination);
 
-          
-            CluwneLib.CurrentRenderTarget = null;
+
+            CluwneLib.ResetRenderTarget();
         }
 
         public void Dispose()

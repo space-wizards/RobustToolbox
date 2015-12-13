@@ -1,7 +1,7 @@
-uniform sampler2D lightSampler;
-uniform sampler2D sceneSampler;
-uniform sampler2D playerViewSampler;
-uniform sampler2D maskSampler;
+uniform sampler2D LightTexture;
+uniform sampler2D SceneTexture;
+uniform sampler2D PlayerViewTexture;
+uniform sampler2D OutOfViewTexture;
 
 uniform vec4 AmbientLight;
 uniform vec4 MaskProps;
@@ -10,16 +10,16 @@ uniform vec4 MaskProps;
 vec4 LightBlendPS(vec2 TexCoord)
 {
 	vec4 a = AmbientLight;
-	vec4 l = texture2D(lightSampler, TexCoord); //Sample light/shadows
+	vec4 l = texture2D(LightTexture, TexCoord); //Sample light/shadows
 	l = max(l,a); // Set a minimum level of light
-	vec4 c = texture2D(sceneSampler, TexCoord); //Sample scene color
-	vec4 pv = texture2D(playerViewSampler, TexCoord); // Sample player view
+	vec4 c = texture2D(SceneTexture, TexCoord); //Sample scene color
+	vec4 pv = texture2D(PlayerViewTexture, TexCoord); // Sample player view
 	
 	vec2 masktc = TexCoord;
 	masktc.x = masktc.x * MaskProps.x * MaskProps.z;
 	masktc.y = masktc.y * MaskProps.y * MaskProps.w;
 	
-	vec4 t = texture2D(maskSampler, masktc); // Sample mask
+	vec4 t = texture2D(OutOfViewTexture, masktc); // Sample mask
 	
 	//Generate scuzz for occluded areas
 	/*float4 t;	

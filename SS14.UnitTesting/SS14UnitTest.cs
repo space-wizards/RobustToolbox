@@ -9,10 +9,17 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
+
 namespace SS14.UnitTesting
 {
+
+  
     public class SS14UnitTest
-    {      
+    {
+
+        private Clock clock;
+        private FrameEventArgs frameEvent;
+        public event EventHandler InjectedMethods;
 
         public SS14UnitTest()
         {
@@ -42,24 +49,45 @@ namespace SS14.UnitTesting
 
             //ResourceManager Setup
             GetResourceManager = IoCManager.Resolve<IResourceManager>();
-            GetResourceManager.LoadBaseResources();
-            GetResourceManager.LoadLocalResources();
-
+            InitializeResources();
 
         }
 
         #region Setup 
+        public void InitializeResources()
+        {
+            GetResourceManager.LoadBaseResources();
+            GetResourceManager.LoadLocalResources();
+
+        }
 
         public void InitializeCluwneLib()
-        {
-            CluwneLib.Go();
+        {           
 
-            CluwneLib.SetMode((int)1280, (int)768, false, false, false, 60);
+            CluwneLib.Initialize((int)1280, (int)768, false, false, false, 60);
             CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.CurrentClippingViewport = new Viewport(0, 0, 1280, 768);
             CluwneLib.Screen.Closed += MainWindowRequestClose;
+         
+            CluwneLib.Go();         
+
         }
-   
+
+
+        public void StartCluwneLibLoop()
+        {
+            while (CluwneLib.IsRunning)
+           {
+               var lastFrameTime = clock.ElapsedTime.AsSeconds();
+               clock.Restart();
+               frameEvent = new FrameEventArgs(lastFrameTime);
+               CluwneLib.ClearCurrentRendertarget(Color.Black);
+               CluwneLib.Screen.DispatchEvents();
+               InjectedMethods.Invoke(this, frameEvent);
+               CluwneLib.Screen.Display();
+           }
+        }
+
         private void MainWindowRequestClose(object sender, EventArgs e)
         {
             CluwneLib.Stop();

@@ -25,6 +25,10 @@ namespace SS14.Client.Graphics.Render
 
 
         /// <summary>
+        /// BlendMode.Alpha == Alpha Blending (default)
+        /// 
+        /// 
+        /// Custom BlendMode
         /// SourceBlend           == Color Source Factor 
         /// DestinationBlend      == Color Destination Factor
         /// SourceBlendAlpha      == Alpha Source Factor

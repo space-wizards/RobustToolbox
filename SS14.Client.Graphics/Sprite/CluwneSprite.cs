@@ -260,6 +260,8 @@ namespace SS14.Client.Graphics.Sprite
         public void Draw(Rectangle rect)
         {           
             Scale = new Vector2f((float)rect.Width / (float)TextureRect.Width, (float)rect.Height / (float)TextureRect.Height);
+            Position = new Vector2(rect.X, rect.Y);
+            Size = new Vector2(rect.Width, rect.Height);
             Draw();
         }
 

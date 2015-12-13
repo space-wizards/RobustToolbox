@@ -25,15 +25,14 @@ namespace SS14.Client.Graphics.Render
 
 
         /// <summary>
-        /// SourceBlend == Color Source Factor 
-        /// DestinationBlend == Color Destination Factor
-        /// SourceBlendAlpha == Alpha Source Factor
+        /// SourceBlend           == Color Source Factor 
+        /// DestinationBlend      == Color Destination Factor
+        /// SourceBlendAlpha      == Alpha Source Factor
         /// DestinationBlendAlpha == Alpha Destionation Factor
         /// 
-        /// SourceAlpha == SrcAlpha
-        /// InverseSourceAlpha == OneMinusSrcAlpha
-        /// </summary>
-        
+        /// SourceAlpha           == SrcAlpha 
+        /// InverseSourceAlpha    == OneMinusSrcAlpha
+        /// </summary>        
         public BlendMode BlendSettings;
 
         #region Accessors
@@ -343,7 +342,15 @@ namespace SS14.Client.Graphics.Render
         public void Blit(float posX, float posY, uint widthX, uint heightY)
         {        
             Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), SystemColor.White);
-        }     
+        }
+
+
+        public void Blit(RenderImage target)
+        {
+            Blit(Vector2.Zero, new Vector2(target.Size.X, target.Size.Y), SystemColor.White);
+        }
+
+
 
         /// <summary>
         /// Creates a Sprite from RenderImage Texture and draws it to the screen
@@ -381,32 +388,7 @@ namespace SS14.Client.Graphics.Render
 
         }
 
-        /// <summary>
-        /// Draws the entire Renderimage to the named position.
-        /// </summary>
-        public void Blit(Vector2 Position, SystemColor color)
-        {
-            isStillDrawing();
-            blitsprite = new CluwneSprite("_blit " + _key, Texture);
-            blitsprite.Position = Position;
-            blitsprite.Color = color;
-
-            if (Mode == BlitterSizeMode.Scale)
-            {
-                Vector2 scale = new Vector2((Size.X / blitsprite.Width), (Size.Y / blitsprite.Height));
-                blitsprite.Scale = scale;
-            }
-            if (Mode == BlitterSizeMode.Crop)
-            {
-                IntRect crop = new IntRect((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
-                blitsprite.TextureRect = crop;
-            }
-
-            if (CluwneLib.CurrentRenderTarget == this)
-                return;
-
-            blitsprite.Draw();
-        }
+        
 
         /// <summary>
         /// Scale & optionally crop

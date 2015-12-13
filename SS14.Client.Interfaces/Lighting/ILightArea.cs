@@ -8,7 +8,7 @@ namespace SS14.Client.Interfaces.Lighting
 {
     public interface ILightArea
     {
-        RenderImage renderTarget { get; }
+        RenderImage RenderTarget { get; }
         Vector2 LightPosition { get; set; }
         Vector2 LightAreaSize { get; set; }
         bool Calculated { get; set; }

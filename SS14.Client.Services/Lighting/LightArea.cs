@@ -12,32 +12,8 @@ namespace SS14.Client.Services.Lighting
 {
     public class LightArea : ILightArea
     {
-        private ShadowmapSize shadowmapSize;
 
-        public LightArea(int size)
-        {
-            int baseSize = 2 << (int)size;
-            LightAreaSize = new Vector2(baseSize, baseSize);
-            renderTarget = new RenderImage("LightArea"+ size, (uint)baseSize, (uint)baseSize);
-
-
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
-        }
-
-        public LightArea(ShadowmapSize shadowmapSize)
-        {
-            int baseSize = 2 << (int)shadowmapSize;
-            LightAreaSize = new Vector2(baseSize, baseSize);
-            renderTarget = new RenderImage("LightArea"+ shadowmapSize,(uint)baseSize, (uint)baseSize);
-
-
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
-         
-        }
-
-        #region ILightArea Members
-
-        public RenderImage renderTarget { get; private set; }
+        public RenderImage RenderTarget { get; private set; }
 
         /// <summary>
         /// World position coordinates of the light's center
@@ -46,10 +22,11 @@ namespace SS14.Client.Services.Lighting
 
         public Vector2 LightAreaSize { get; set; }
         public bool Calculated { get; set; }
-		public CluwneSprite Mask { get; set; }
+        public CluwneSprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
+
 
         public Vector4 MaskProps
         {
@@ -74,6 +51,32 @@ namespace SS14.Client.Services.Lighting
             }
         }
 
+
+
+        public LightArea(int size)
+        {
+            int baseSize = 2 << (int) size;
+            LightAreaSize = new Vector2(baseSize, baseSize);
+            RenderTarget = new RenderImage("LightArea"+ size, (uint)baseSize, (uint)baseSize);
+
+
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+        }
+
+        public LightArea(ShadowmapSize shadowmapSize)
+        {
+            int baseSize = 2 << (int)shadowmapSize;
+            LightAreaSize = new Vector2(baseSize, baseSize);
+            RenderTarget = new RenderImage("LightArea"+ shadowmapSize,(uint)baseSize, (uint)baseSize);
+
+
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+         
+        }
+
+        #region ILightArea Members
+
+       
         public Vector2 ToRelativePosition(Vector2 worldPosition)
         {
             return worldPosition - (LightPosition - LightAreaSize*0.5f);
@@ -81,14 +84,14 @@ namespace SS14.Client.Services.Lighting
 
         public void BeginDrawingShadowCasters()
         {
-           CluwneLib.CurrentRenderTarget = renderTarget;
-           
-           CluwneLib.ClearCurrentRendertarget(Color.FromArgb(0, 0, 0, 0));
+           RenderTarget.BeginDrawing();
+
+           RenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()
         {
-            CluwneLib.CurrentRenderTarget = null;
+            RenderTarget.EndDrawing();
         }
 
         public void SetMask(string mask)
@@ -104,17 +107,6 @@ namespace SS14.Client.Services.Lighting
         }
 
            
-        //TODO Mask
-        CluwneSprite ILightArea.Mask
-        {
-            get
-            {
-                return Mask;
-            }
-            set
-            {
-                Mask = value;
-            }
-        }
+      
     }
 }

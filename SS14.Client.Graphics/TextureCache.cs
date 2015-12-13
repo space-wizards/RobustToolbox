@@ -6,8 +6,7 @@ using SFML.Graphics;
 
 namespace SS14.Client.Graphics
 {
-    public class TextureList
-        : BaseCollection<Texture>
+    public class TextureList  : BaseCollection<Texture>
     {
         public Texture this[int index]
         {
@@ -22,8 +21,7 @@ namespace SS14.Client.Graphics
         {
             AddItem(name, tex);
         }
-        internal TextureList()
-            : base(16, false) {}
+        internal TextureList() : base(16, false) {}
     }
     public static class TextureCache
     {

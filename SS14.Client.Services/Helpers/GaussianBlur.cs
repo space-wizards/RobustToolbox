@@ -202,34 +202,24 @@ namespace SS14.Client.Services.Helpers
 
             // Blur the source horizontally
             _intermediateTarget = new RenderImage("intermediateTarget",sourceImage.Width, sourceImage.Height);
-            _intermediateTarget.Key = targetName;
-            
-            _intermediateTarget.BeginDrawing(); //stores screen, makes current
-                     
-            
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX);
-
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];
-            
-            sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
+            _intermediateTarget.Key = targetName;            
+            _intermediateTarget.BeginDrawing();               
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];            
+                sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
             _intermediateTarget.EndDrawing();
             GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].ResetCurrentShader();
            
             
             //// blur the blur vertically
             sourceImage.BeginDrawing();
-
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY);
-
-            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ; //.Techniques["GaussianBlurVertical"];
-
-            _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ; //.Techniques["GaussianBlurVertical"];
+                _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
             sourceImage.EndDrawing();
-            
-
-            CluwneLib.CurrentShader = null;
+            GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].ResetCurrentShader();
            
             _intermediateTarget.Dispose();
         }

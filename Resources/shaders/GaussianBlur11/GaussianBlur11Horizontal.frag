@@ -33,8 +33,8 @@ vec4 GaussianBlurHorizontal()
 {
    vec4 color = vec4(0,0,0,0);
    
-   vec2 weights_offsets[KERNEL_SIZE] = 
-    {
+   vec2 weights_offsets[KERNEL_SIZE] = vec2[KERNEL_SIZE]
+    (
     	weights_offsets0,
 		weights_offsets1,
 		weights_offsets2,
@@ -58,7 +58,7 @@ vec4 GaussianBlurHorizontal()
 		weights_offsets20,
 		weights_offsets21,
 		weights_offsets22
- 	};   
+ 	);   
    
     
     for (int i = 0; i < KERNEL_SIZE; ++i)

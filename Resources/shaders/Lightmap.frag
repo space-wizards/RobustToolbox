@@ -1,5 +1,3 @@
-// Honk. :0) 
-
 #define NUM_LIGHTS 6
 uniform vec4 LightPosData[NUM_LIGHTS];
 uniform vec4 LightPosData0;
@@ -28,25 +26,25 @@ uniform sampler2D sceneTexture;
 
 vec4 PreLightBlendPS() 
 {
-	vec4 Colors[NUM_LIGHTS] = 
-	{
+  vec4 Colors[NUM_LIGHTS] = vec4[NUM_LIGHTS]
+	(
 		Colors0,
 		Colors1,
 		Colors2,
 		Colors3,
 		Colors4,
 		Colors5
-	};
+	);
 	
-	vec4 LightPosData[NUM_LIGHTS] = 
-	{
+	vec4 LightPosData[NUM_LIGHTS] = vec4[NUM_LIGHTS]
+	(
 		LightPosData0,
 		LightPosData1,
 		LightPosData2,
 		LightPosData3,
 		LightPosData4,
 		LightPosData5
-	};
+	);
 
 	vec4 l[NUM_LIGHTS];
 	vec2 ltc[NUM_LIGHTS];
@@ -78,14 +76,10 @@ vec4 PreLightBlendPS()
 	vec4 c = vec4(r,g,b, 1);
 		
 	//Return the light color
-	return vec4(c.rgb,min(1, 1/max(c.r, max(c.g,c.b)))) * 1);
+	return vec4(c.rgb,min(1, 1/max(c.r, max(c.g,c.b))));
 }
 
 void main()
 {
-
-
 	gl_FragColor = PreLightBlendPS();
 }
-
-

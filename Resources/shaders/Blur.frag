@@ -1,4 +1,3 @@
-
 // Amount to blur.
 float blurAmount = 0.0135;
 
@@ -43,7 +42,6 @@ vec4 Blur()
 	Alpha = Color.a;
 	
 	// Sample eight directions + the center.
-<<<<<<< HEAD
   	Color = psBlurSample(gl_TexCoord[0], Color, -blurValue, -blurValue);
   	Color = psBlurSample(gl_TexCoord[0], Color, 0, -blurValue);
   	Color = psBlurSample(gl_TexCoord[0], Color, blurValue, -blurValue);  	

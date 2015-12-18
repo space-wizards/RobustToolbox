@@ -32,7 +32,7 @@ namespace SS14.Client.Graphics.Sprite
         public SpriteBatch(uint maxCapacity = 100000)
         {
             Max = maxCapacity * 4;
-            BlendingSettings = new BlendMode();
+            BlendingSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
 
         public void BeginDrawing()
@@ -87,7 +87,7 @@ namespace SS14.Client.Graphics.Sprite
         {
             count++;
             Using(S.Key,S.Texture);
-            Vector2 Scale = new Vector2();
+            Vector2 Scale = new Vector2(S.Scale.X, S.Scale.Y);
             float sin = 0, cos = 1;
             //FloatMath.SinCos(rotation, out sin, out cos);
 

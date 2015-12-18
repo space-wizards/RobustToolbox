@@ -121,7 +121,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             this._key = key;
-            BlendSettings = new BlendMode();
+            BlendSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             _key = key;
-            BlendSettings = new BlendMode();
+            BlendSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             _key = key;
-            BlendSettings = new BlendMode();
+            BlendSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(Key);
             _key = Key;
-            BlendSettings = new BlendMode();
+            BlendSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(Key);
             _key = Key;
-            BlendSettings = new BlendMode();
+            BlendSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
         }
         
         #endregion

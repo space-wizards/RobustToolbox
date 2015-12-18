@@ -412,8 +412,6 @@ namespace SS14.Client.Services.State.States
         bool onetime = true;
         public void Render(FrameEventArgs e)
         {
-            
-
             CluwneLib.Screen.Clear(Color.Black);
 
            // CluwneLib.Screen.DefaultView.Reset(new FloatRect(new Vector2(0,0), new Vector2(400, 400)));
@@ -435,9 +433,6 @@ namespace SS14.Client.Services.State.States
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);
-
-                
-              
 
                 //Draw all rendertargets to the scenetarget
                _sceneTarget.BeginDrawing();
@@ -464,9 +459,9 @@ namespace SS14.Client.Services.State.States
 
                     onetime = false;
                 }
-               // LightScene();
+                //LightScene();
                 
-                //RenderDebug(vp);
+                RenderDebug(vp);
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
@@ -1331,8 +1326,6 @@ namespace SS14.Client.Services.State.States
 
         private void RenderPlayerVisionMap()
         {
-           
-           
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(Color.LightGray);
@@ -1396,14 +1389,15 @@ namespace SS14.Client.Services.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-            RectangleF lightArea = new RectangleF(area.LightPosition , area.LightAreaSize);
+            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
+            RectangleF lightArea = new RectangleF(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
             var tiles = MapManager.GetWallsIntersecting(lightArea);
 
             foreach (TileRef t in tiles)
             {
-                Vector2 pos = area.ToRelativePosition(new Vector2(t.X, t.Y));
-                t.Tile.TileDef.RenderPos(pos.X, pos.Y, MapManager.TileSize, (int)area.LightAreaSize.X);
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2(t.X, t.Y)));
+                t.Tile.TileDef.RenderPos(pos.X, pos.Y);
             }
         }
 

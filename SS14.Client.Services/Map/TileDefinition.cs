@@ -50,7 +50,7 @@ namespace SS14.Client.Services.Map
             }
         }
 
-        public void RenderPos(float x, float y, int tileSpacing, int lightSize)
+        public virtual void RenderPos(float x, float y)
         {
         }
 

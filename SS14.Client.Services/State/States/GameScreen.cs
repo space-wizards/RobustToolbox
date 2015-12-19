@@ -103,6 +103,7 @@ namespace SS14.Client.Services.State.States
         private bool bPlayerVision = true;
         private bool bFullVision = false;
         private bool debugWallOccluders = false;
+        private bool debugPlayerShadowMap = false;
         private bool debugHitboxes = false;
         public bool BlendLightMap = true;
 
@@ -347,9 +348,7 @@ namespace SS14.Client.Services.State.States
 
         private void InitalizeLighting()
         {
-            quadRenderer = new QuadRenderer();
-            quadRenderer.LoadContent();
-            shadowMapResolver = new ShadowMapResolver(quadRenderer, ShadowmapSize.Size1024, ShadowmapSize.Size1024,
+            shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024,
                                                       ResourceManager);
             shadowMapResolver.LoadContent();
             lightArea128 = new LightArea(ShadowmapSize.Size128);
@@ -386,7 +385,8 @@ namespace SS14.Client.Services.State.States
             playerVision.Move(Vector2.Zero);
 
 
-            _occluderDebugTarget = new RenderImage("debug", 1920, 1080);
+            _occluderDebugTarget = new RenderImage("debug", CluwneLib.CurrentClippingViewport.Width,
+                CluwneLib.CurrentClippingViewport.Height);
         
         }
 
@@ -519,8 +519,8 @@ namespace SS14.Client.Services.State.States
 
         private void RenderDebug(RectangleF viewport)
         {
-            if(debugWallOccluders)
-                _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width, _occluderDebugTarget.Height, Color.White, BlitterSizeMode.Crop);
+            if(debugWallOccluders || debugPlayerShadowMap)
+                _occluderDebugTarget.Blit(0,0,_occluderDebugTarget.Width/4, _occluderDebugTarget.Height/4, Color.White, BlitterSizeMode.Scale);
 
             if (CluwneLib.Debug.DebugColliders)
             {
@@ -1333,7 +1333,9 @@ namespace SS14.Client.Services.State.States
             }
             if (bPlayerVision)
             {
-                playerOcclusionTarget.Clear(Color.Black);
+                // I think this should be transparent? Maybe it should be black for the player occlusion...
+                // I don't remember. --volundr
+                playerOcclusionTarget.Clear(SFML.Graphics.Color.Transparent);
                 playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
@@ -1352,16 +1354,27 @@ namespace SS14.Client.Services.State.States
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
                 Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                var tmpBlitPos = CluwneLib.WorldToScreen(area.LightPosition) -
+                                 new Vector2(area.RenderTarget.Width, area.RenderTarget.Height)*0.5f;
+           
                 if (debugWallOccluders)
                 {
                     _occluderDebugTarget.BeginDrawing();
                     _occluderDebugTarget.Clear(Color.White);
-                    area.RenderTarget.Blit(blitPos.X, blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
-                   _occluderDebugTarget.EndDrawing();
+                    area.RenderTarget.Blit(tmpBlitPos.X, tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
+                        Color.White, BlitterSizeMode.Crop);
+                    _occluderDebugTarget.EndDrawing();
                 }
 
-
                 shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
+
+                if (debugPlayerShadowMap)
+                {
+                    _occluderDebugTarget.BeginDrawing();
+                    _occluderDebugTarget.Clear(Color.White);
+                    area.RenderTarget.Blit(tmpBlitPos.X, tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
+                    _occluderDebugTarget.EndDrawing();
+                }
 
                 playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 

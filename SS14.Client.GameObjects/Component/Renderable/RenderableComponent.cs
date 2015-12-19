@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ClientInterfaces.GOC;
 using GameObject;
 using GorgonLibrary;

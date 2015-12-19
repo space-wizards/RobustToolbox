@@ -1,9 +1,10 @@
-﻿using SS14.Shared.Maths;
+using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
 using System.Drawing;
 using SS14.Client.Graphics;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -19,10 +20,11 @@ namespace SS14.Client.Services.Placement.Modes
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
             mouseScreen = mouseS;
-            mouseWorld = MapUtil.worldToTileSize(mouseScreen);
+            mouseWorld = mouseScreen / tileSize;
 
-            var spriteSize = MapUtil.worldToTileSize(spriteToDraw.Size);
+            var spriteSize = spriteToDraw.Size / tileSize;
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);

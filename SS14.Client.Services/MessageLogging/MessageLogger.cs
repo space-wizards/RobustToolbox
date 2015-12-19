@@ -1,4 +1,4 @@
-﻿using SS14.Client.Interfaces.Configuration;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.MessageLogging;
 using SS14.Shared;
 using SS14.Shared.GO;

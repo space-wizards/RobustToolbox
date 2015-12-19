@@ -1,8 +1,8 @@
-﻿using SS14.Shared.Maths;
+using SS14.Shared.Maths;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using System.Drawing;
-using SS14.Client.Graphics;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -19,8 +19,9 @@ namespace SS14.Client.Services.Placement.Modes
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
             mouseScreen = mouseS;
-            mouseWorld = MapUtil.worldToTileSize(mouseScreen);
+            mouseWorld = mouseScreen / tileSize;
             currentTile = currentMap.GetTileRef(mouseWorld);
 
             return true;

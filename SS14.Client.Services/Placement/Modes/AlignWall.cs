@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Maths;
+using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -22,10 +23,11 @@ namespace SS14.Client.Services.Placement.Modes
 
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
             mouseScreen = mouseS;
-            mouseWorld = MapUtil.worldToTileSize(mouseScreen);
+            mouseWorld = mouseScreen / tileSize;
 
-            var spriteSize = MapUtil.worldToTileSize(spriteToDraw.Size);
+            var spriteSize = spriteToDraw.Size / tileSize;
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
@@ -69,7 +71,7 @@ namespace SS14.Client.Services.Placement.Modes
             mouseWorld = Vector2.Add(closestNode,
                                       new Vector2(pManager.CurrentTemplate.PlacementOffset.Key,
                                                    pManager.CurrentTemplate.PlacementOffset.Value));
-            mouseScreen = MapUtil.tileToWorldSize(mouseWorld);
+            mouseScreen = mouseWorld * tileSize;
 
             if (pManager.CurrentPermission.Range > 0)
                 if (

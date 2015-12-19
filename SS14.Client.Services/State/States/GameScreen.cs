@@ -659,14 +659,18 @@ namespace SS14.Client.Services.State.States
 
                 foreach (var hitbox in colliders.Concat(collidables))
                 {
-                    var box = MapUtil.tileToWorldSize(hitbox.AABB);
+                    int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+                    var box = new RectangleF(hitbox.AABB.Left * tileSize, hitbox.AABB.Top * tileSize,
+                        hitbox.AABB.Width * tileSize, hitbox.AABB.Height * tileSize);
                     CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
                         System.Drawing.Color.FromArgb(64, hitbox.Color));
                     CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
                         System.Drawing.Color.FromArgb(128, hitbox.Color));
                 }
 
-                CluwneLib.drawCircle((int)ClickedPointDebug.X, (int)ClickedPointDebug.Y, 5, System.Drawing.Color.Azure);
+                Vector2 clickedPoint = ClickedPointDebug * MapManager.TileSize;
+                const int circleR = 5;
+                CluwneLib.drawCircle((int)clickedPoint.X - circleR, (int)clickedPoint.Y - circleR, circleR, System.Drawing.Color.Azure);
             }
         }
 
@@ -808,8 +812,6 @@ namespace SS14.Client.Services.State.States
 
             #region Object clicking
 
-            // Convert our click from screen -> world coordinates
-            //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             // A bounding box for our click
             var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             float checkDistance = 1.5f;
@@ -925,7 +927,7 @@ namespace SS14.Client.Services.State.States
         {
             Vector2 mousePosPixel = (Vector2)e;
             Vector2 prevMousePosWindow = MousePosWindow;
-            MousePosWorld = CluwneLib.Camera.PixelToWorldPos(mousePosPixel);
+            MousePosWorld = CluwneLib.Camera.PixelToWorldPos(mousePosPixel) / MapManager.TileSize;
             MousePosWindow = CluwneLib.Camera.PixelToWindowPos(mousePosPixel);
 
             float distanceToPrevWindow = (MousePosWindow - prevMousePosWindow).Length;
@@ -1305,7 +1307,7 @@ namespace SS14.Client.Services.State.States
 
                 Vector2 blitPos;
                 //Set the drawing position.
-                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = area.LightPosition * tileSize - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X/source.Width,
@@ -1423,7 +1425,7 @@ namespace SS14.Client.Services.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                blitPos = MapUtil.tileToWorldSize(area.LightPosition) - area.LightAreaSize * 0.5f;
+                blitPos = area.LightPosition * tileSize - area.LightAreaSize * 0.5f;
                 if (debugWallOccluders)
                 {
                     RenderTarget previous = Gorgon.CurrentRenderTarget;

@@ -1,10 +1,11 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
 using SS14.Shared.Maths;
 using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Shared.IoC;
+using SS14.Client.Interfaces.Map;
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent
@@ -137,8 +138,11 @@ namespace SS14.Client.GameObjects
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(MapUtil.tileToWorldSize(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+            {
+                int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position * tileSize,
                                    Vector2.Zero, currentBaseSprite);
+            }
         }
 
         public override void HandleComponentState(dynamic state)

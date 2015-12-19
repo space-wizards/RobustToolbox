@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -256,8 +256,9 @@ namespace SS14.Client.GameObjects
             if (sprite == null) return;
 
             var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-            
-            Vector2 renderPos = MapUtil.tileToWorldSize(ownerPos);
+
+            int tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+            Vector2 renderPos = ownerPos * tileSize;
             SetSpriteCenter(renderPos);
 
             if (ownerPos.X + sprite.AABB.Right < topLeft.X
@@ -287,7 +288,7 @@ namespace SS14.Client.GameObjects
             //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(MapUtil.tileToWorldSize(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                _speechBubble.Draw(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position * tileSize,
                                    Vector2.Zero, aabb);
 
         }

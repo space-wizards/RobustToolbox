@@ -13,7 +13,6 @@ using System.Diagnostics;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector3 = SS14.Shared.Maths.Vector3;
 using Vector4 = SS14.Shared.Maths.Vector4;
-using OpenTK;
 
 
 namespace SS14.Client.Graphics.Shader

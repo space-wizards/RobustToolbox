@@ -8,6 +8,8 @@ using System.Drawing;
 using SFML.Graphics;
 using Color = SFML.Graphics.Color;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
+using SFML.System;
 
 namespace SS14.Client.Services.Lighting
 {
@@ -25,27 +27,26 @@ namespace SS14.Client.Services.Lighting
         private RenderImage processedShadowsRT;
         private RenderImage shadowMap;
         private RenderImage shadowsRT;    
+        private RenderImage debugRt;    
         private RenderImage[] reductionRT;
 
         private TechniqueList resolveShadowsEffectTechnique;
         private TechniqueList reductionEffectTechnique;
-        
 
-        public ShadowMapResolver(QuadRenderer quad, ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize,
+
+        public ShadowMapResolver(ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize,
                                  IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-            quadRender = quad;
+            //quadRender = quad;
 
             reductionChainCount = (int) maxShadowmapSize;
             baseSize = 2 << reductionChainCount;
             depthBufferSize = 2 << (int) maxDepthBufferSize;
-
         }
 
         public void LoadContent()
         {
-
             reductionEffectTechnique = _resourceManager.GetTechnique("reductionEffect");
             resolveShadowsEffectTechnique = _resourceManager.GetTechnique("resolveShadowsEffect"); 
              
@@ -73,25 +74,33 @@ namespace SS14.Client.Services.Lighting
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
 
+            ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
+            ExecuteTechnique(distancesRT, distortRT, "Distort");
+            // These first 2 steps are working pretty much.
+            
+            // This next step needs fixing
+            ApplyHorizontalReduction(distortRT, shadowMap);
 
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
 
-
-            ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
-            ExecuteTechnique(distancesRT.Texture, distortRT, "Distort");
-
-            ApplyHorizontalReduction(distortRT, shadowMap);
-
-            ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
-            ExecuteTechnique(shadowsRT.Texture, processedShadowsRT, "BlurHorizontally");
-            ExecuteTechnique(processedShadowsRT.Texture, Result, "BlurVerticallyAndAttenuate");
+            // TODO make a sprite for Mask so it can be drawn
+            //ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
+            ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
+            ExecuteTechnique(processedShadowsRT, Result, "BlurVerticallyAndAttenuate");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
 
+        private void DebugTex(RenderImage src, RenderImage dst)
+        {
+            CluwneLib.ResetShader();
+            dst.BeginDrawing();
+            src.Blit(0, 0, dst.Width, dst.Height, BlitterSizeMode.Scale);
+            dst.EndDrawing();
+        }
 
         public void ResolveShadows(LightArea Area, bool attenuateShadows)
         {
@@ -109,24 +118,24 @@ namespace SS14.Client.Services.Lighting
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
 
 
-            ExecuteTechnique(shadowCastersTexture, distancesRT, "ComputeDistances");
-            ExecuteTechnique(distancesRT.Texture, distortRT, "Distort");
+            ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
+            ExecuteTechnique(distancesRT, distortRT, "Distort");
 
             ApplyHorizontalReduction(distortRT, shadowMap);
 
-            ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
-            ExecuteTechnique(shadowsRT.Texture, processedShadowsRT, "BlurHorizontally");
-            ExecuteTechnique(processedShadowsRT.Texture, Result, "BlurVerticallyAndAttenuate");
+            //ExecuteTechnique(Mask, Result, "DrawShadows", shadowMap);
+            ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
+            ExecuteTechnique(processedShadowsRT, Result, "BlurVerticallyAndAttenuate");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
 
-        private void ExecuteTechnique(Texture source, RenderImage destination, string techniqueName)
+        private void ExecuteTechnique(RenderImage source, RenderImage destination, string techniqueName)
         {
             ExecuteTechnique(source, destination, techniqueName, null);
         }
 
-        private void ExecuteTechnique(Texture source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
+        private void ExecuteTechnique(RenderImage source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
             Vector2 renderTargetSize;
             renderTargetSize = new Vector2(baseSize, baseSize);
@@ -136,17 +145,19 @@ namespace SS14.Client.Services.Lighting
 
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
 
-                resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize);
+            resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize);
             if (source != null)
                 resolveShadowsEffectTechnique[techniqueName].SetParameter("InputTexture", source);
             if (shadowMap != null)
                 resolveShadowsEffectTechnique[techniqueName].SetParameter("ShadowMapTexture", shadowMap);
 
-
-        
+            // Blit and use normal sampler instead of doing that weird InputTexture bullshit
+            source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
 
            destinationTarget.EndDrawing();
         }
+
+
 
         private void ApplyHorizontalReduction(RenderImage source, RenderImage destination)
         {
@@ -162,10 +173,10 @@ namespace SS14.Client.Services.Lighting
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
             
-                    var textureDim = new Vector2(1.0f/src.Width, 1.0f/src.Height);
-                    reductionEffectTechnique["HorizontalReduction"].SetParameter("SourceTexture", GLSLShader.CurrentTexture);
-                    reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",textureDim);
-                    src.Blit(HorizontalReduction);
+                var textureDim = new Vector2(1.0f/src.Width, 1.0f/src.Height);
+                reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",textureDim);
+                // Sourcetexture not needed... just blit!
+                src.Blit(HorizontalReduction);
 
                 HorizontalReduction.EndDrawing();
 
@@ -181,8 +192,8 @@ namespace SS14.Client.Services.Lighting
                 reductionEffectTechnique["Copy"].setAsCurrentShader();
 
                 HorizontalReduction.Blit(destination);
-
-
+            destination.EndDrawing();
+            
             CluwneLib.ResetRenderTarget();
         }
 

@@ -11,10 +11,10 @@ varying vec2 TexCoord;
 
 float GetShadowDistanceH(vec2 TexCoord,float displacementV)
 {
-		float u = TexCoord.x;
+  	float u = TexCoord.x;
 		float v = TexCoord.y;
 
-		u = abs(u-0.5f) * 2;
+		u = abs(u-0.5) * 2;
 		v = v * 2 - 1;
 		float v0 = v/u;
 		v0+=displacementV;
@@ -101,11 +101,11 @@ vec4 DrawShadowsPS()
 	  float d = 2 * length(gl_TexCoord[0] - 0.5);
 	  float attenuation = max(pow(clamp(1 - d, 0,1),1), AttenuateShadows); //If AttenuateShadows is true, attenuation 
 	  
-	  vec4 result = light * attenuation;
+	  vec4 result = (light * attenuation);
 	  result = MaskLight(result, gl_TexCoord[0]);
-	  result.rgb = mul(result.rgb, 0.5);
+	  result.rgb = result.rgb * 0.5;
 	  //result.b = length(gl_TexCoord[0] - 0.5f);
-	  result.a = 1;
+	  result.a = 1.;
       return result;
 }
 

@@ -12,6 +12,10 @@ copy textures\*.png ResourcePack\Textures > nul
 copy textures\Unatlased\*.png ResourcePack\Textures > nul
 copy textures\*.TAI ResourcePack\TAI > nul
 copy Shaders\* ResourcePack\Shaders > nul
+for /D %%d in (Shaders\*) do (
+	mkdir ResourcePack\Shaders\%%~nd > nul
+	copy %%d\* ResourcePack\Shaders\%%~nd > nul
+)
 copy ParticleSystems\*.xml ResourcePack\ParticleSystems > nul
 copy textures\Animations\*.xml ResourcePack\Animations > nul
 echo Compressing...

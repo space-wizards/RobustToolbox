@@ -37,7 +37,7 @@ namespace SS14.Client.Graphics.Render
         /// SourceAlpha           == SrcAlpha 
         /// InverseSourceAlpha    == OneMinusSrcAlpha
         /// </summary>        
-        public BlendMode BlendSettings;
+        public BlendMode BlendSettings = BlendMode.Alpha;
 
         #region Accessors
 
@@ -121,8 +121,10 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             this._key = key;
-            BlendSettings = new BlendMode();
         }
+
+        public RenderImage(string key, int width, int height): this(key, (uint)width, (uint)height)
+        {}
 
         /// <summary>
         /// Constructs a new RenderImage that can be rendered to 
@@ -135,7 +137,6 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             _key = key;
-            BlendSettings = new BlendMode();
         }
 
         /// <summary>
@@ -149,7 +150,6 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(key);
             _key = key;
-            BlendSettings = new BlendMode();
         }
 
         /// <summary>
@@ -163,7 +163,6 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(Key);
             _key = Key;
-            BlendSettings = new BlendMode();
         }
 
         /// <summary>
@@ -177,7 +176,7 @@ namespace SS14.Client.Graphics.Render
         {
             CheckIfKeyIsNull(Key);
             _key = Key;
-            BlendSettings = new BlendMode();
+            BlendSettings = BlendMode.Alpha;
         }
         
         #endregion

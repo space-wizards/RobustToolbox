@@ -1,3 +1,4 @@
+#version 120
 uniform sampler2D LightTexture;
 uniform sampler2D SceneTexture;
 uniform sampler2D PlayerViewTexture;
@@ -51,6 +52,6 @@ vec4 LightBlendPS(vec2 TexCoord)
 void main()
 {
 
- gl_FragColor = LightBlendPS(gl_TexCoord[0]);
+ gl_FragColor = LightBlendPS(gl_TexCoord[0].xy);
 
 }

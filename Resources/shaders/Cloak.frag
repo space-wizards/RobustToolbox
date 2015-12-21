@@ -1,4 +1,4 @@
-
+#version 120
 uniform sampler2D backgroundSampler;
 uniform sampler2D spriteSampler;
 
@@ -20,7 +20,7 @@ vec4 simplePS()
   vec4 spriteColor;
   vec4 newColor; 
 
-  spriteColor = texture2D(spriteSampler, gl_TexCoord[0]);
+  spriteColor = texture2D(spriteSampler, gl_TexCoord[0].xy);
     
   if (spriteColor.a > 0)
   {  	

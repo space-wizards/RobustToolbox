@@ -1,3 +1,4 @@
+#version 120
 uniform vec4 MaskProps;
 uniform vec4 DiffuseColor;
 uniform vec2 renderTargetSize;
@@ -87,11 +88,11 @@ vec4 DrawShadowsPS()
 	  //we use these to determine which quadrant we are in
 	  if(abs(nY)<abs(nX))
 	  {
-		shadowMapDistance = GetShadowDistanceH(gl_TexCoord[0],0);
+		shadowMapDistance = GetShadowDistanceH(gl_TexCoord[0].xy,0);
 	  }
 	  else
 	  {
-	    shadowMapDistance = GetShadowDistanceV(gl_TexCoord[0],0);
+	    shadowMapDistance = GetShadowDistanceV(gl_TexCoord[0].xy,0);
 	  }
 		
 	  //if distance to this pixel is lower than distance from shadowMap, 
@@ -101,10 +102,10 @@ vec4 DrawShadowsPS()
 	  float d = 2 * length(gl_TexCoord[0] - 0.5);
 	  float attenuation = max(pow(clamp(1 - d, 0,1),1), AttenuateShadows); //If AttenuateShadows is true, attenuation 
 	  
-	  vec4 result = (light * attenuation);
-	  result = MaskLight(result, gl_TexCoord[0]);
+	  vec4 result = vec4(light * attenuation);
+	  result = MaskLight(result, gl_TexCoord[0].xy);
 	  result.rgb = result.rgb * 0.5;
-	  //result.b = length(gl_TexCoord[0] - 0.5f);
+	  //result.b = length(gl_TexCoord[0].xy - 0.5f);
 	  result.a = 1.;
       return result;
 }

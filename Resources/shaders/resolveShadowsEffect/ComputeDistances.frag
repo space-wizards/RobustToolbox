@@ -1,9 +1,10 @@
+#version 120
 uniform sampler2D sourceSampler;
 uniform vec2 renderTargetSize;
 
 vec4 ComputeDistancesPS()
 {
-	vec4 color = texture2D(sourceSampler,gl_TexCoord[0]);
+	vec4 color = texture2D(sourceSampler,gl_TexCoord[0].xy);
 	
 	float Distance;
 	if (color.a > .3)

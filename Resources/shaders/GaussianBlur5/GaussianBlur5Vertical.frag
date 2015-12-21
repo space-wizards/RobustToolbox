@@ -1,3 +1,4 @@
+#version 120
 #define RADIUS 5
 #define KERNEL_SIZE (RADIUS * 2 + 1)
  

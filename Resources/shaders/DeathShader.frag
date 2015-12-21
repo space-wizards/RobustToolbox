@@ -1,3 +1,4 @@
+#version 120
 uniform sampler2D sceneSampler;
 
 
@@ -12,9 +13,9 @@ vec3 ColorScale = vec3(6, 5, 4);
 
 vec4 DeathShaderPS()
 {
-	vec4 c = texture2D(sceneSampler, gl_TexCoord[0]);
+	vec4 c = texture2D(sceneSampler, gl_TexCoord[0].xy);
 
-	c.bg = 0;
+	c.b = c.g = 0;
 	return c;
 }
 

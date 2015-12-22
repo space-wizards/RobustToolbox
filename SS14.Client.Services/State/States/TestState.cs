@@ -22,9 +22,12 @@ namespace SS14.Client.Services.State.States
         private SpriteBatch _testBatch;
         private CluwneSprite _floorTile;
         private List<TextSprite> _text;
-        private uint updatecount=0;
+        private uint updatecount=10;
         private GaussianBlur blur;
-        private RenderImage test; 
+        private RenderImage test;
+
+        private TextSprite FPS;
+
 
         public TestState (IDictionary<Type, object> managers) : base(managers)
         {
@@ -47,6 +50,12 @@ namespace SS14.Client.Services.State.States
             VersionText.Color = Color.Gold;
             VersionText.Text = "( Running SFML v2.0 ) " ;
             _text.Add(VersionText);
+
+
+            FPS = new TextSprite("FPSTEST", "X", ResourceManager.GetFont("CALIBRI"));
+            FPS.Position = new Vector2(600, 600);
+            FPS.Color = Color.White;
+            _text.Add(FPS);
 
             TextSprite ProjNotDeadText = new TextSprite("TEST", "ProjNoDed", ResourceManager.GetFont("CALIBRI"));
             ProjNotDeadText.Position = new Shared.Maths.Vector2(512, 700);
@@ -116,24 +125,27 @@ namespace SS14.Client.Services.State.States
             if (++updatecount % 10==0) {
                 // but only every 10 frames, to test batch-reuse.
                 // The first 9 frames won't have it drawn, to test empty batches.
-                _testBatch.Begin();
-                for(int y=0;y<5; y++)
-                    for (int x = 0; x < 5; x++)
+                _testBatch.BeginDrawing();
+                for(int y = 0; y < 50; y++)
+                    for (int x = 0; x < 50; x++)
                     {
                         _floorTile.SetPosition(x * _floorTile.Width, y * _floorTile.Height);
                         _testBatch.Draw(_floorTile);
                     }
-                _testBatch.End();
+                _testBatch.EndDrawing();
               
             }
-          
 
+           
         }
+
         public void Render(FrameEventArgs e)
         {
             IntRect rect = new IntRect(0, 0, 1280,768 );
+
+            test.BeginDrawing();
            if (_testBatch.Count > 0)
-            CluwneLib.CurrentRenderTarget.Draw(_testBatch);
+               test.Draw(_testBatch);
            foreach (CluwneSprite d in _sprites)
            {               
                d.Draw();
@@ -146,7 +158,7 @@ namespace SS14.Client.Services.State.States
            {
                g.Render();
            }
-
+           test.EndDrawing();
           test.Blit(0, 0, test.Width, test.Height ,Color.White, BlitterSizeMode.Crop);
             
            

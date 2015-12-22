@@ -8,8 +8,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceStation14", "SS14.Clie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceStation14_Server", "SS14.Server\SpaceStation14_Server.csproj", "{B04AAE71-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.ClientWindow", "SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj", "{A9E3FA31-0000-0000-0000-000000000000}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.GameObjects", "SS14.Client.GameObjects\SS14.Client.GameObjects.csproj", "{53369E66-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Interfaces", "SS14.Client.Interfaces\SS14.Client.Interfaces.csproj", "{B8519348-0000-0000-0000-000000000000}"
@@ -72,16 +70,6 @@ Global
 		{B04AAE71-0000-0000-0000-000000000000}.Release|Mixed Platforms.Build.0 = Release|x86
 		{B04AAE71-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
 		{B04AAE71-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Debug|x86.ActiveCfg = Debug|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Debug|x86.Build.0 = Debug|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Release|Any CPU.ActiveCfg = Release|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Release|Mixed Platforms.Build.0 = Release|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Release|x86.ActiveCfg = Release|x86
-		{A9E3FA31-0000-0000-0000-000000000000}.Release|x86.Build.0 = Release|x86
 		{53369E66-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{53369E66-0000-0000-0000-000000000000}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{53369E66-0000-0000-0000-000000000000}.Debug|Mixed Platforms.Build.0 = Debug|x86

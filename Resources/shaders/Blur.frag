@@ -1,4 +1,4 @@
-
+#version 120
 // Amount to blur.
 float blurAmount = 0.0135;
 
@@ -24,7 +24,7 @@ vec4 psBlurSample(vec2 Tex , vec4 baseColor, float offX, float offY)
 
 vec4 Blur()
 {
-  	vec4 Color = 0;				// Output.
+  	vec4 Color = vec4(0);				// Output.
   	float Alpha = 0;				// Alpha component.
   	float blurValue = 0;				// Blur value.
   	
@@ -37,21 +37,20 @@ vec4 Blur()
   	   blurValue = 0.01;
 
 
-	Color = texture2D(sourceSampler, gl_TexCoord[0]);	
+	Color = texture2D(sourceSampler, gl_TexCoord[0].xy);	
 
 	// Store the alpha for later, we don't want to blur that.
 	Alpha = Color.a;
 	
 	// Sample eight directions + the center.
-<<<<<<< HEAD
-  	Color = psBlurSample(gl_TexCoord[0], Color, -blurValue, -blurValue);
-  	Color = psBlurSample(gl_TexCoord[0], Color, 0, -blurValue);
-  	Color = psBlurSample(gl_TexCoord[0], Color, blurValue, -blurValue);  	
-  	Color = psBlurSample(gl_TexCoord[0], Color, -blurValue, blurValue);
-  	Color = psBlurSample(gl_TexCoord[0], Color, 0, blurValue);
-  	Color = psBlurSample(gl_TexCoord[0], Color, blurValue, blurValue);  	
-  	Color = psBlurSample(gl_TexCoord[0], Color, -blurValue, 0);
-  	Color = psBlurSample(gl_TexCoord[0], Color, blurValue, 0);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, -blurValue, -blurValue);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, 0, -blurValue);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, blurValue, -blurValue);  	
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, -blurValue, blurValue);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, 0, blurValue);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, blurValue, blurValue);  	
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, -blurValue, 0);
+  	Color = psBlurSample(gl_TexCoord[0].xy, Color, blurValue, 0);
   	
   	// Calculate final color.
    	Color.rgb = clamp((Color.rgb / 9) * vec3(.8,.8,.8),0,1);

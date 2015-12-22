@@ -1,3 +1,4 @@
+#version 120
 uniform sampler2D maskSampler;
 uniform sampler2D lightSampler;
 
@@ -34,6 +35,6 @@ vec4 MaskLightPS(vec2 TexCoord)
 
 void main()
 {
-	gl_FragColor = MaskLightPS(gl_TexCoord[0]);
+	gl_FragColor = MaskLightPS(gl_TexCoord[0].xy);
 
 }

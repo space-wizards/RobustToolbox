@@ -2,28 +2,27 @@
 using System.Collections.Generic;
 using SS14.Client.Graphics.Collection;
 using SFML.Graphics;
+using SFMLTexture = SFML.Graphics.Texture;
 
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.texture
 {
-    public class TextureList
-        : BaseCollection<Texture>
+    public class TextureList : BaseCollection<SFMLTexture>
     {
-        public Texture this[int index]
+        public SFMLTexture this[int index]
         {
             get { return GetItem(index); }
         }
 
-        public Texture this[string key]
+        public SFMLTexture this[string key]
         {
             get { return GetItem(key); }
         }
-        public void Add(string name, Texture tex)
+        public void Add(string name, SFMLTexture tex)
         {
             AddItem(name, tex);
         }
-        internal TextureList()
-            : base(16, false) {}
+        internal TextureList() : base(16, false) {}
     }
     public static class TextureCache
     {
@@ -37,11 +36,12 @@ namespace SS14.Client.Graphics
         {
             _textures = new TextureList();
         }
-        public static bool Add(string name, Texture image) {
+        public static bool Add(string name, SFMLTexture image)
+        {
             if (_textures.Contains(name))
                 return true;
 
-            _textures.Add(name, new Texture(image));
+            _textures.Add(name, new SFMLTexture(image));
 
             return true;
         }

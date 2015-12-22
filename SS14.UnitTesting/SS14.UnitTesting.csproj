@@ -71,7 +71,11 @@
   </Choose>
   <ItemGroup>
     <Compile Include="SS14.Client\Graphics\Shaders\TestShader_Test.cs" />
+    <Compile Include="SS14.Client\Graphics\Shaders\Lightblend_Test.cs" />
+    <Compile Include="SS14.Client\Graphics\Shaders\UnitTest1.cs" />
+    <Compile Include="SS14.Client\Graphics\Vertex\VertexArrayPlayground.cs" />
     <Compile Include="SS14.Client\Services\Helpers\GaussianBlur_Test.cs" />
+    <Compile Include="SS14.Client\Services\Helpers\StarScroller_Test.cs" />
     <Compile Include="SS14.Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
     <Compile Include="SS14.Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="SS14.Shared\IoC\IoCManagerExceptions_Test.cs" />
@@ -82,10 +86,6 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{59250baf-0000-0000-0000-000000000000}</Project>
       <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj">
-      <Project>{a9e3fa31-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.ClientWindow</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Client.GameObjects\SS14.Client.GameObjects.csproj">
       <Project>{53369e66-0000-0000-0000-000000000000}</Project>
@@ -137,6 +137,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="SS14.Client\Lighting\" />
     <Folder Include="SS14.Server\" />
   </ItemGroup>
   <ItemGroup>

@@ -15,7 +15,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
-using TextureCache = SS14.Client.Graphics.TextureCache;
+using TextureCache = SS14.Client.Graphics.texture.TextureCache;
 using Image = SFML.Graphics.Image;
 using Font = SFML.Graphics.Font;
 using Color = System.Drawing.Color;

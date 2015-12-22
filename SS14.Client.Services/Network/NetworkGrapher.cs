@@ -69,7 +69,7 @@ namespace SS14.Client.Services.Network
                 totalRecBytes += _dataPoints[i].RecievedBytes;
                 totalSentBytes += _dataPoints[i].SentBytes;
 
-                CluwneLib.CurrentRenderTarget = null;
+                CluwneLib.ResetRenderTarget();
 
                 //Draw recieved line
                 CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)),

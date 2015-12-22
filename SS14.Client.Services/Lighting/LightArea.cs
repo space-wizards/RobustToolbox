@@ -79,7 +79,7 @@ namespace SS14.Client.Services.Lighting
        
         public Vector2 ToRelativePosition(Vector2 worldPosition)
         {
-            return worldPosition - (LightPosition - CluwneLib.PixelToTile(LightAreaSize*0.5f));
+            return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightAreaSize*0.5f);
         }
 
         public void BeginDrawingShadowCasters()

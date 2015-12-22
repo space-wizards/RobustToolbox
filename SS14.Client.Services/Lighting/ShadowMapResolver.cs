@@ -79,34 +79,32 @@ namespace SS14.Client.Services.Lighting
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
 
+            Debug.DebugRendertarget(Area.RenderTarget);
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
+            Debug.DebugRendertarget(distancesRT);
             ExecuteTechnique(distancesRT, distortRT, "Distort");
-            // These first 2 steps are working pretty much.
-            
-            // This next step needs fixing
+            Debug.DebugRendertarget(distortRT);
+
+            // Working now
             ApplyHorizontalReduction(distortRT, shadowMap);
 
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
-            
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);            
             
             CluwneSprite Sprite = new CluwneSprite("Maskspritetorendergarget", MaskTexture);
             RenderImage MaskTarget = new RenderImage("MaskTarget", (uint)Sprite.Size.X, (uint)Sprite.Size.Y);
+            Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
-            ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
+            Debug.DebugRendertarget(Result, "DrawShadowsResult");
+            // Note: BlurHorizontally and BlurVerticallyAndAttenuate are still fucked up somehow
+            /*ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
+            Debug.DebugRendertarget(processedShadowsRT, "BlurHorizontallyResult");
             ExecuteTechnique(processedShadowsRT, Result, "BlurVerticallyAndAttenuate");
+            Debug.DebugRendertarget(Result, "BlurVerticallyAndAttenuateResult");*/
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
-        }
-
-        private void DebugTex(RenderImage src, RenderImage dst)
-        {
-            CluwneLib.ResetShader();
-            dst.BeginDrawing();
-            src.Blit(0, 0, dst.Width, dst.Height, BlitterSizeMode.Scale);
-            dst.EndDrawing();
         }
 
         public void ResolveShadows(LightArea Area, bool attenuateShadows)
@@ -141,6 +139,14 @@ namespace SS14.Client.Services.Lighting
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
 
+        private void DebugTex(RenderImage src, RenderImage dst)
+        {
+            CluwneLib.ResetShader();
+            dst.BeginDrawing();
+            src.Blit(0, 0, dst.Width, dst.Height, BlitterSizeMode.Scale);
+            dst.EndDrawing();
+        }
+
         private void ExecuteTechnique(RenderImage source, RenderImage destination, string techniqueName)
         {
             ExecuteTechnique(source, destination, techniqueName, null);
@@ -158,14 +164,15 @@ namespace SS14.Client.Services.Lighting
 
             resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize);
             if (source != null)
-                resolveShadowsEffectTechnique[techniqueName].SetParameter("InputTexture", source);
+                resolveShadowsEffectTechnique[techniqueName].SetParameter("inputSampler", source);
             if (shadowMap != null)
-                resolveShadowsEffectTechnique[techniqueName].SetParameter("ShadowMapTexture", shadowMap);
+                resolveShadowsEffectTechnique[techniqueName].SetParameter("shadowMapSampler", shadowMap);
 
             // Blit and use normal sampler instead of doing that weird InputTexture bullshit
-            source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
+            // Use destination width/height otherwise you can see some cropping result erroneously.
+            source.Blit(0, 0, destinationTarget.Width, destinationTarget.Height, BlitterSizeMode.Scale);
 
-           destinationTarget.EndDrawing();
+            destinationTarget.EndDrawing();
         }
 
 
@@ -176,10 +183,11 @@ namespace SS14.Client.Services.Lighting
             RenderImage src = source;
             RenderImage HorizontalReduction= reductionRT[step];
             reductionEffectTechnique["HorizontalReduction"].setAsCurrentShader();
-
-            GLTexture GLHorizontalReduction = new GLTexture("desto", (int)source.Width, (int)source.Height, ImageBufferFormats.BufferGR1616F);
-           
-
+            // Disabled GLTexture stuff for now just to get the pipeline working.
+            // The only side effect is that floating point precision will be low,
+            // making light borders and shit have jaggy edges.
+            //GLTexture GLHorizontalReduction = new GLTexture("desto", (int)source.Width, (int)source.Height, ImageBufferFormats.BufferGR1616F);
+            //Debug.DebugRendertarget(source);
             while (step >= 0)
             {
                 HorizontalReduction = reductionRT[step]; // next step
@@ -187,36 +195,30 @@ namespace SS14.Client.Services.Lighting
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
             
-                var textureDim = new Vector2(1.0f/src.Width, 1.0f/src.Height);
-                reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",textureDim);
-
+                //reductionEffectTechnique["HorizontalReduction"].SetParameter("secondTexture", src);
+                reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",1.0f/src.Width);
 
                 // Sourcetexture not needed... just blit!
-                src.Blit(HorizontalReduction); // draw SRC to HR
-                
-                
-                //fix
-                GLHorizontalReduction.Blit(src.Texture, CluwneLib.CurrentShader);
+                src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR   
+                                                                                                              //fix
+                                                                                                              //GLHorizontalReduction.Blit(src.Texture, CluwneLib.CurrentShader);
 
                 HorizontalReduction.EndDrawing();
-
                 src = HorizontalReduction; // hr becomes new src 
+                Debug.DebugRendertarget(HorizontalReduction);
                 step--;
             }
 
 
-
+            CluwneLib.ResetShader();
             //copy to destination
             destination.BeginDrawing();
             destination.Clear(Color.White);
-           
-                reductionEffectTechnique["Copy"].SetParameter("SourceTexture", GLSLShader.CurrentTexture);
-                reductionEffectTechnique["Copy"].setAsCurrentShader();
 
-                GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader); 
+            HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
+                //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader); 
             destination.EndDrawing();
-
-            //destination.Texture.CopyToImage().SaveToFile("..\\GLTexture.png");
+            Debug.DebugRendertarget(destination);
             CluwneLib.ResetRenderTarget();
         }
 

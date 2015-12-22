@@ -1,7 +1,7 @@
 ﻿using SFML.Window;
 
 
-namespace SS14.Client.Graphics
+namespace SS14.Client.Graphics.Settings
 {
     public class VideoSettings
     {

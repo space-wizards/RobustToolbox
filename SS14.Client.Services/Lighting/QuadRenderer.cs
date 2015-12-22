@@ -9,7 +9,7 @@ namespace SS14.Client.Services.Lighting
 {
     public class QuadRenderer
     {
-        private VertexTypeList.PositionDiffuse2DTexture1[] verts;
+       // private VertexTypeList.PositionDiffuse2DTexture1[] verts;
         private VertexArray vertex;
 
         public void LoadContent()

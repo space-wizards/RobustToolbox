@@ -60,7 +60,7 @@
     </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Third-Party\extlibs\OpenTK.dll</HintPath>
+      <HintPath>..\..\..\OpenTK\1.1\Binaries\OpenTK\Release\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
@@ -85,7 +85,8 @@
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DebugSettings.cs" />
+    <Compile Include="OpenGL\GLTexture.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -96,10 +97,10 @@
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="Sprite\SpriteInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
-    <Compile Include="TextureCache.cs">
+    <Compile Include="texture\TextureCache.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ICluwneDrawable.cs">
+    <Compile Include="Interface\ICluwneDrawable.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -138,8 +139,8 @@
     <Compile Include="VertexData\VertexTypeList.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VideoSettings.cs" />
-    <Compile Include="Viewport.cs">
+    <Compile Include="Settings\VideoSettings.cs" />
+    <Compile Include="View\Viewport.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -150,10 +151,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="csfml-graphics-2.dll" />
-    <Content Include="csfml-network-2.dll" />
-    <Content Include="csfml-system-2.dll" />
-    <Content Include="csfml-window-2.dll" />
+    <Content Include="SFMLLibs\csfml-graphics-2.dll" />
+    <Content Include="SFMLLibs\csfml-network-2.dll" />
+    <Content Include="SFMLLibs\csfml-system-2.dll" />
+    <Content Include="SFMLLibs\csfml-window-2.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

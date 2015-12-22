@@ -15,6 +15,7 @@ using System.Drawing;
 using SFML.System;
 using System.Diagnostics;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Interface;
 
 namespace SS14.Client.Graphics.Sprite
 {

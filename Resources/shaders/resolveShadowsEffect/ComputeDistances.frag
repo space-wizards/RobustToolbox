@@ -12,7 +12,7 @@ vec4 ComputeDistancesPS()
 	else 
 		Distance = 1.0;
 		
-	return vec4 (Distance, 0,0,1);
+	return vec4 (Distance, Distance,Distance,1);
 		
 }
 

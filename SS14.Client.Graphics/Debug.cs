@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics.Render;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SS14.Client.Graphics
 {
-    public class DebugSettings
+    public class Debug
     {
         public bool DebugTextboxes { get; private set; }
         public bool DebugWalls     { get; private set; }
@@ -15,7 +17,7 @@ namespace SS14.Client.Graphics
         public bool DebugSprite    { get; private set; }
         public bool DebugColliders { get; private set; }
 
-        public DebugSettings()
+        public Debug()
         {
             DebugAtmos = false;
             DebugEntities = false;
@@ -43,7 +45,18 @@ namespace SS14.Client.Graphics
             DebugEntities= true;
         }
 
-        
+        public static void DebugRendertarget(RenderImage Rendertarget)
+        {
+            DebugRendertarget(Rendertarget, Rendertarget.Key);
+
+        }
+
+        public static void DebugRendertarget(RenderImage Rendertarget, string fileName)
+        {
+            string path = "..\\DEBUGTEXTURE\\" + fileName + ".png";
+
+            Rendertarget.Texture.CopyToImage().SaveToFile(path);
+        }
 
 
 

@@ -12,6 +12,10 @@ using System.Drawing;
 using SFML.Window;
 using System.Collections.Generic;
 using System.Collections;
+using SS14.Client.Graphics.Settings;
+using SS14.Client.Graphics.View;
+
+using OpenTK.Graphics;
 
 namespace SS14.Client.Graphics
 {
@@ -53,7 +57,7 @@ namespace SS14.Client.Graphics
         public static CluwneWindow  Screen        { get; set; }
         public static TimingData    FrameStats    { get; set; }
         public static VideoSettings Video         { get; private set; }
-        public static DebugSettings Debug         { get; private set; }
+        public static Debug Debug         { get; private set; }
         public static GLSLShader    CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }    
@@ -83,7 +87,7 @@ namespace SS14.Client.Graphics
         static CluwneLib()
         {
             Video = new VideoSettings();
-            Debug = new DebugSettings();        
+            Debug = new Debug();        
         }
 
         #region CluwneEngine
@@ -144,6 +148,13 @@ namespace SS14.Client.Graphics
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
             IsInitialized = true;
 
+
+
+            //Hook OpenTK into SFMLs Opengl 
+            var wi = OpenTK.Platform.Utilities.CreateWindowsWindowInfo(Screen.SystemHandle);
+            var ctx = new OpenTK.Graphics.GraphicsContext(OpenTK.Graphics.GraphicsMode.Default, wi);
+            ctx.MakeCurrent(wi);
+            ctx.LoadAll();
         }
        
         public static void RequestGC(Action action)

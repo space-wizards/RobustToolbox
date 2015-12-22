@@ -7,6 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Map
 {
@@ -41,8 +44,9 @@ namespace SS14.Client.Services.Map
             batch.Draw(tileSprite);
         }
 
-        public void RenderPos(float x, float y, int tileSpacing, int lightSize)
+        public void RenderPos(float x, float y)
         {
+
         }
 
         public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
@@ -81,6 +85,8 @@ namespace SS14.Client.Services.Map
 
     public sealed class WallTileDefinition : TileDefinition
     {
+        private RectangleShape shape;
+
         public WallTileDefinition()
         {
             Name = "Wall";
@@ -93,6 +99,15 @@ namespace SS14.Client.Services.Map
             IsWall = true;
 
             tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("wall_texture");
+            
+            shape = new RectangleShape(tileSprite.Size);
+        }
+        
+        public override void RenderPos(float x, float y)
+        {
+            shape.FillColor = Color.Black;
+            shape.Position = new Vector2f(x, y);
+            shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
     }
 }

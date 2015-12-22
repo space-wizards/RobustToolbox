@@ -1,3 +1,4 @@
+#version 120
 void main()
 {
    // transform the vertex position
@@ -7,5 +8,5 @@ void main()
     gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
 
     // forward the vertex color
-   gl_FrontColor = gl_Color;
+    gl_FrontColor = gl_Color;
 }

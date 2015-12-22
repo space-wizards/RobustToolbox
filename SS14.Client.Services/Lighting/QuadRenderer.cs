@@ -3,13 +3,13 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.VertexData;
 using SS14.Shared.Maths;
 using System.Drawing;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Lighting
 {
     public class QuadRenderer
     {
-        private VertexTypeList.PositionDiffuse2DTexture1[] verts;
+       // private VertexTypeList.PositionDiffuse2DTexture1[] verts;
         private VertexArray vertex;
 
         public void LoadContent()
@@ -23,10 +23,10 @@ namespace SS14.Client.Services.Lighting
             //            };
 
             vertex = new VertexArray(PrimitiveType.Lines, 4);
-            vertex[0] = new Vertex(new Vector2(1,-1), Color.Transparent.ToSFMLColor(),new Vector2(1,1));
-            vertex[1] = new Vertex(new Vector2(-1, -1), Color.Transparent.ToSFMLColor(), new Vector2(0, 1));
-            vertex[2] = new Vertex(new Vector2(-1, 1), Color.Transparent.ToSFMLColor(), new Vector2(0, 0));
-            vertex[3] = new Vertex(new Vector2(1, 1), Color.Transparent.ToSFMLColor(), new Vector2(1, 0));
+            vertex[0] = new Vertex(new Vector2( 1,-1),   Color.Transparent, new Vector2(1, 1));
+            vertex[1] = new Vertex(new Vector2(-1,-1), Color.Transparent, new Vector2(0, 1));
+            vertex[2] = new Vertex(new Vector2(-1, 1),  Color.Transparent, new Vector2(0, 0));
+            vertex[3] = new Vertex(new Vector2( 1, 1),   Color.Transparent, new Vector2(1, 0));
             
 
 
@@ -38,7 +38,7 @@ namespace SS14.Client.Services.Lighting
 
 
             // What is the purpose of Quadrenderer? all it is doing is drawing transparent verts.
-            CluwneLib.CurrentRenderTarget.Draw(vertex);
+           // CluwneLib.CurrentRenderTarget.Draw(vertex);
          
            
             

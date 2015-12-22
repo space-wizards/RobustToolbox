@@ -19,34 +19,22 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
         private IResourceManager resources;
         private RenderImage testRenderImage;
         private CluwneSprite testsprite;
-        private Clock clock;
-        private FrameEventArgs frameEvent;
-
+    
         public TestShader_Test()
         {
             base.InitializeCluwneLib();
-            clock = new Clock();
-                      
+                     
             resources = base.GetResourceManager;
             testRenderImage = new RenderImage("TestShaders",1000,1000);
             testsprite = resources.GetSprite("ChatBubble");
-         
+          
+            base.StartCluwneLibLoop();      
         }    
 
         [TestMethod]
         public void LoadTestShader_ShouldDrawAllRed()
         {
            
-
-           while (CluwneLib.IsRunning)
-           {
-               var lastFrameTime = clock.ElapsedTime.AsSeconds();
-               clock.Restart();
-               frameEvent = new FrameEventArgs(lastFrameTime);
-               CluwneLib.ClearCurrentRendertarget(Color.Black);
-               CluwneLib.Screen.DispatchEvents();
-               
-
                testRenderImage.BeginDrawing();
                
                testsprite.SetPosition(0, 0);
@@ -57,14 +45,8 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
                testRenderImage.EndDrawing();
                currshader.ResetCurrentShader();
                testRenderImage.Blit(0,0, 1000,1000); 
+  
            
-
-
-
-
-               CluwneLib.Screen.Display();
-
-           }
         }
             
 

@@ -16,7 +16,7 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
     <RootNamespace>SS14.Client</RootNamespace>

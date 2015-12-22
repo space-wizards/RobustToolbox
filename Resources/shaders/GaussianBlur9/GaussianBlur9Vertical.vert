@@ -1,3 +1,4 @@
+#version 120
 void main()
 {
  	// transform the vertex position

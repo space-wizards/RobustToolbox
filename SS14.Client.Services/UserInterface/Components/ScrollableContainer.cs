@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics;
-
+using SFML.Graphics;
+using Color = System.Drawing.Color;
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
@@ -42,8 +43,19 @@ namespace SS14.Client.Services.UserInterface.Components
             //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
             //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage(uniqueName,(uint)Size.Width,(uint) Size.Height);          
-             
+            clippingRI = new RenderImage(uniqueName,(uint)Size.Width,(uint) Size.Height);
+            
+            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            clippingRI.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            clippingRI.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            clippingRI.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+        
+
+
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
@@ -51,11 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.Update(0);
             scrollbarV.Update(0);
 
-            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-
-            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+       
 
             Update(0);
         }
@@ -139,7 +147,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.Crop);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
 
             scrollbarH.Render();
             scrollbarV.Render();

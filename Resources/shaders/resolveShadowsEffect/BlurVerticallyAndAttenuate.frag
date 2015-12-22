@@ -1,10 +1,6 @@
 #version 120
-uniform vec4 MaskProps;
-uniform vec4 DiffuseColor;
 uniform vec2 renderTargetSize;
-uniform float AttenuateShadows;
 
-uniform sampler2D shadowMapSampler;
 uniform sampler2D inputSampler;
 const float minBlur = 1.0;
 const float maxBlur = 20.0;
@@ -52,9 +48,7 @@ vec4 BlurVerticallyPS()
 	  float d = 2 * length(gl_TexCoord[0].xy - 0.5f);
 	  float attenuation = pow(clamp(1.0f - d,0,1),1.0f);
 	  
-	  vec4 result = vec4(sum * attenuation);
-	  result.a = 1;
-      return result;
+	  return vec4(vec3(sum * attenuation), 1);
 }
 
 void main()

@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SS14.Client.Graphics.Interface;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;

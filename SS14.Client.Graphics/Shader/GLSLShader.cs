@@ -60,7 +60,7 @@ namespace SS14.Client.Graphics.Shader
 
         public void SetParameter(string Parameter, RenderImage Image)
         {
-            base.SetParameter(Parameter, GLSLShader.CurrentTexture);
+            base.SetParameter(Parameter, Image.Texture);
         }
 
         public void SetParameter(string Parameter, Vector2 vec2)
@@ -106,16 +106,6 @@ namespace SS14.Client.Graphics.Shader
                 this.SetParameter(Parameter + i, vec4array[i]);
             }
 
-        }
-
-        public void SetParameter(string Parameter, Texture texture)
-        {
-            base.SetParameter(Parameter, texture);
-        }
-
-        public void SetParameter(string Parameter, CurrentTextureType texture)
-        {
-            base.SetParameter(Parameter, texture);
         }
 
     }

@@ -1,7 +1,6 @@
 #version 120
 uniform vec2 renderTargetSize;
 
-uniform sampler2D shadowMapSampler;
 uniform sampler2D inputSampler;
 const float minBlur = 1.0;
 const float maxBlur = 20.0;
@@ -46,11 +45,7 @@ vec4 BlurHorizontallyPS()
         sum += texture2D( inputSampler, gl_TexCoord[0].xy + OffsetAndWeight[i].x * mix(minBlur, maxBlur , Distance)/renderTargetSize.x * vec2(1,0) ).r * OffsetAndWeight[i].y;
       }
 	  
-	  vec4 result = vec4(sum);
-	  result.b = Distance;
-	  
-	  result.a = 1.;
-      return result;
+	  return vec4(sum, sum, Distance, 1);
 }
 
 void main()

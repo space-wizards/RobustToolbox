@@ -1389,6 +1389,7 @@ namespace SS14.Client.Services.State.States
      
                 
                 playerOcclusionTarget.EndDrawing();
+                Debug.DebugRendertarget(playerOcclusionTarget);
             }
             else
             {

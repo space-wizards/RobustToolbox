@@ -418,7 +418,7 @@ namespace SS14.Client.Services.State.States
 
             CluwneLib.TileSize = MapManager.TileSize;
 
-           // CalculateAllLights();
+            CalculateAllLights();
 
             if (PlayerManager.ControlledEntity != null)
             {
@@ -451,15 +451,8 @@ namespace SS14.Client.Services.State.States
                 _sceneTarget.ResetCurrentRenderTarget();
                 _sceneTarget.Blit(0,0,CluwneLib.Screen.Size.X,CluwneLib.Screen.Size.Y);
 
-                if (onetime)
-                {
-                    _sceneTarget.Texture.CopyToImage().SaveToFile("..\\scenetarget.png");
-                    _overlayTarget.Texture.CopyToImage().SaveToFile("..\\overlaytarget.png");
-                    _tilesTarget.Texture.CopyToImage().SaveToFile("..\\tilesTarget.png");
-
-                    onetime = false;
-                }
-                //LightScene();
+              
+                LightScene();
                 
                 RenderDebug(vp);
                 //Render the placement manager shit
@@ -1292,6 +1285,10 @@ namespace SS14.Client.Services.State.States
 
             Lightmap.ResetCurrentShader();
             shadowIntermediate.ResetCurrentRenderTarget(); // back to screen
+
+            Debug.DebugRendertarget(shadowIntermediate);
+            
+          
         }
 
         private void CalculateSceneBatches(RectangleF vision)
@@ -1335,7 +1332,7 @@ namespace SS14.Client.Services.State.States
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
-                playerOcclusionTarget.Clear(SFML.Graphics.Color.Transparent);
+                playerOcclusionTarget.Clear(Color.Transparent);
                 playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
@@ -1517,6 +1514,7 @@ namespace SS14.Client.Services.State.States
                 LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", GLSLShader.CurrentTexture);
                 LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
                 LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
+          
 
                  // Blit the shadow image on top of the screen
                  screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
@@ -1531,7 +1529,7 @@ namespace SS14.Client.Services.State.States
             PlayerPostProcess();
 
             //redraw composed scene
-           // _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.CurrentClippingViewport.Width, (uint)CluwneLib.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
+            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.CurrentClippingViewport.Width, (uint)CluwneLib.CurrentClippingViewport.Height, Color.White, BlitterSizeMode.Crop);
 
 
 

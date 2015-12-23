@@ -70,12 +70,12 @@ namespace SS14.Client.Services.Lighting
                                                  ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask)
+        public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
         {
             Texture shadowCastersTexture = Area.RenderTarget.Texture;
             RenderImage Result = Area.RenderTarget;
             Vector2 LightPosition = Area.LightPosition;
-            Texture MaskTexture = Area.Mask.Texture;
+            Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
 
@@ -98,43 +98,6 @@ namespace SS14.Client.Services.Lighting
             Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
             Debug.DebugRendertarget(Result, "DrawShadowsResult");
-            // Note: BlurHorizontally and BlurVerticallyAndAttenuate are still fucked up somehow
-            /*ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
-            Debug.DebugRendertarget(processedShadowsRT, "BlurHorizontallyResult");
-            ExecuteTechnique(processedShadowsRT, Result, "BlurVerticallyAndAttenuate");
-            Debug.DebugRendertarget(Result, "BlurVerticallyAndAttenuateResult");*/
-
-            resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
-        }
-
-        public void ResolveShadows(LightArea Area, bool attenuateShadows)
-        {
-            Texture shadowCastersTexture = Area.RenderTarget.Texture;
-            RenderImage Result = Area.RenderTarget;
-            Vector2 LightPosition = Area.LightPosition;
-            Texture MaskTexture = Area.Mask.Texture;
-            Vector4 MaskProps = Area.MaskProps;
-            Vector4 diffuseColor = Vector4.One;
-
-
-            //only DrawShadows needs these vars
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
-
-
-            ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
-            ExecuteTechnique(distancesRT, distortRT, "Distort");
-            //fix
-            ApplyHorizontalReduction(distortRT, shadowMap);
-
-            CluwneSprite Sprite = new CluwneSprite("Maskspritetorendergarget", MaskTexture);
-            RenderImage MaskTarget = new RenderImage("MaskTarget", (uint)Sprite.Size.X, (uint)Sprite.Size.Y);
-
-
-            ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
-            ExecuteTechnique(shadowsRT, processedShadowsRT, "BlurHorizontally");
-            ExecuteTechnique(processedShadowsRT, Result, "BlurVerticallyAndAttenuate");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }

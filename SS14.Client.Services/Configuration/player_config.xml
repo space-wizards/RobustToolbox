@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PlayerConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DisplayWidth>1280</DisplayWidth>
+  <DisplayHeight>768</DisplayHeight>
+  <Fullscreen>false</Fullscreen>
+  <VSync>true</VSync>
+  <ResourcePack>..\..\Resources\ResourcePack.zip</ResourcePack>
+  <PlayerName>Joe Genero</PlayerName>
+  <ServerAddress>127.0.0.1</ServerAddress>
+  <MessageLogging>false</MessageLogging>
+  <SimulateLatency>false</SimulateLatency>
+  <SimulatedLoss>0.05</SimulatedLoss>
+  <SimulatedMinimumLatency>0.040</SimulatedMinimumLatency>
+  <SimulatedRandomLatency>0.010</SimulatedRandomLatency>
+</PlayerConfiguration>

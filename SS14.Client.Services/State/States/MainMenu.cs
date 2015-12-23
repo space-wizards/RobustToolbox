@@ -2,10 +2,10 @@
 using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Render;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
@@ -44,13 +44,13 @@ namespace SS14.Client.Services.State.States
 
         #endregion
 
-        public MainScreen(IDictionary<Type, object> managers)
-            : base(managers)
+        public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background = ResourceManager.GetSprite("mainbg_filler");
-          //  _background.Smoothing = Smoothing.Smooth;
+            _background = ResourceManager.GetSprite("coderart");            
+            _background.Smoothing = false;
+        
 
             _btnConnect = new ImageButton
                                {
@@ -74,6 +74,7 @@ namespace SS14.Client.Services.State.States
             _btnExit.Clicked += _buttExit_Clicked;
 
             _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
+            _txtConnect.Position = new Point(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 
             Assembly assembly = Assembly.GetExecutingAssembly();
@@ -108,15 +109,21 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-           _background.Draw(new Rectangle(0, 0,(int) _Width, (int) _Height));
+            _background.Draw();
         }
 
         public void FormResize()
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-        }
+            _lblVersion.Update(0);
+            _imgTitle.Update(0);
+            _btnExit.Update(0); 
+            _btnOptions.Update(0);
+            _btnConnect.Update(0);
+            _txtConnect.Update(0);
 
+        }	
         #endregion
 
         #region Input
@@ -155,6 +162,15 @@ namespace SS14.Client.Services.State.States
         public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
+        }
+
+        public void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+        public void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
         }
 
         #endregion
@@ -197,8 +213,8 @@ namespace SS14.Client.Services.State.States
         {
             NetworkManager.Disconnect();
             NetworkManager.Connected += OnConnected;
-
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "mainbg")
+            /*
+            DecoFloats.Add(new FloatingDecoration(ResourceManager, "coderart")
                                {
                                    BounceRotate = false,
                                    BounceRotateAngle = 10,
@@ -207,7 +223,7 @@ namespace SS14.Client.Services.State.States
                                    Velocity = new Vector2(0, 0),
                                    RotationSpeed = 0.0f
                                });
-
+*/
             // DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
 /*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
                              {

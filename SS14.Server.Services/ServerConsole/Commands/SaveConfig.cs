@@ -22,7 +22,7 @@ namespace SS14.Server.Services.ServerConsole.Commands
 
         public override void Execute(params string[] args)
         {
-            IoCManager.Resolve<IConfigurationManager>().Save();
+            IoCManager.Resolve<IServerConfigurationManager>().Save();
         }
     }
 }

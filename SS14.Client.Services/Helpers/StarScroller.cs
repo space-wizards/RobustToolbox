@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib;
+﻿using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using System;
 using System.Drawing;
@@ -71,7 +71,7 @@ namespace SS14.Client.Services.Helpers
 
         public void Render(float xTopleft, float yTopleft)
         {
-            CluwneLib.Clear(Color.Black);
+            CluwneLib.ClearCurrentRendertarget(Color.Black);
             DrawStars(3, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
             DrawStars(2, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
             for (int layer = 1; layer >= 0; layer--)

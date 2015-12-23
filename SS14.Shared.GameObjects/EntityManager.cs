@@ -287,7 +287,7 @@ namespace SS14.Shared.GameObjects
             {
                 e.Uid = uid;
                 _entities.Add(e.Uid, e);
-                if (Initialized)
+                if (!Initialized)
                     e.Initialize();
                 if (!e.HasComponent(ComponentFamily.SVars))
                     e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVarsComponent"));

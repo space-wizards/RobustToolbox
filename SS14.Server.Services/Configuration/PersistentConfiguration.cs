@@ -9,7 +9,7 @@ namespace SS14.Server.Services.Configuration
     public class PersistentConfiguration
     {
         public const int _Version = 1;
-        public string AdminPassword = "admin123";
+        public string AdminPassword = "admin123"; // so secure very wow
         public Size ConsoleSize = new Size(120, 60);
         public LogLevel LogLevel = LogLevel.Information;
 

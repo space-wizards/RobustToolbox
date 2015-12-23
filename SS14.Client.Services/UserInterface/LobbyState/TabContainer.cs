@@ -1,5 +1,5 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System.Drawing;
 using SFML.Window;
@@ -19,7 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string tabSpriteName
         {
-            get { return tabSprite != null ? tabSprite.Name : ""; }
+            get { return tabSprite != null ? tabSprite.Key : ""; }
             set { tabSprite = _resourceManager.GetSprite(value); }
         }
 

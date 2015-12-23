@@ -35,7 +35,7 @@ namespace SS14.Server.Services.Network
         public static NetPeerConfiguration LoadNetPeerConfig()
         {
             var _config = new NetPeerConfiguration("SS13_NetTag");
-            _config.Port = IoCManager.Resolve<IConfigurationManager>().Port;
+            _config.Port = IoCManager.Resolve<IServerConfigurationManager>().Port;
 #if DEBUG
             _config.ConnectionTimeout = 30000f;
 #endif

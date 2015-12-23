@@ -97,9 +97,9 @@
     {
         TurfUpdate = 0,
         TurfClick,
-        TurfAddDecal,
-        TurfRemoveDecal,
-        SendTileIndex,
+        //TurfAddDecal,
+        //TurfRemoveDecal,
+        //SendTileIndex,
         SendTileMap
     }
 

@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib;
+﻿using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
@@ -34,7 +34,7 @@ namespace SS14.Client.Services.Lighting
             if (Radius != radius)
             {
                 Radius = radius;
-                LightArea = new LightArea(Radius);
+                LightArea = new LightArea(RadiusToShadowMapSize(radius));
             }
         }
 

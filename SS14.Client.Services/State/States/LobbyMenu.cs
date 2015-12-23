@@ -10,11 +10,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
+using SFML.Graphics;
+using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -79,7 +81,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-           //TODO _background.Smoothing = Smoothing.Smooth;
+            _background.Smoothing = true;
 
             _imgMainBg = new SimpleImage
                           {
@@ -178,7 +180,7 @@ namespace SS14.Client.Services.State.States
 			{
 				ImageNormal = "lobby_ready",
 				ImageHover = "lobby_ready_green",
-				//BlendingMode = BlendingModes.None,
+				BlendSettings = BlendMode.Alpha,
 				ZDepth = 1
 			};
 			_btnReady.Clicked += _btnReady_Clicked;
@@ -495,8 +497,8 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            //TODO .Draw
-           // _background.Draw(new Rectangle(0, 0,(int)CluwneLib.Screen.Size.X,(int)CluwneLib.Screen.Size.Y));
+            
+           _background.Draw();
             UserInterfaceManager.Render();
         }
 
@@ -543,6 +545,15 @@ namespace SS14.Client.Services.State.States
         public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
+        }
+
+        public void MouseEntered ( EventArgs e )
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+        public void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
         }
 
 

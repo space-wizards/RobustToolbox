@@ -1,7 +1,7 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using System;
 using SFML.Window;
 using System.Drawing;
@@ -39,15 +39,15 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
             ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
+                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
         }
 
         public override void Render()
         {
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.R,Color.G,Color.B,Color.A);
+            _buttonSprite.Color = Color;
             _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R,Color.White.G,Color.White.B,Color.White.A);
+            _buttonSprite.Color = Color;
         }
 
         public override void Dispose()

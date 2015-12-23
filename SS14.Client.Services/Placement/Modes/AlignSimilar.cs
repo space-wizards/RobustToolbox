@@ -1,18 +1,20 @@
-﻿using SS14.Client.Graphics.CluwneLib;
+﻿using SS14.Client.Graphics;
 using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
+
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 using SFML.Graphics;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Placement.Modes
@@ -33,21 +35,21 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            //Align to similar if nearby found else free
-            if (currentMap.IsSolidTile(mouseScreen))
-                return false; //HANDLE CURSOR OUTSIDE MAP
+            currentTile = currentMap.GetTileRef(mouseWorld);
 
-            currentTile = currentMap.GetFloorAt(mouseWorld);
+            //Align to similar if nearby found else free
+            if (currentTile.Tile.TileDef.IsWall)
+                return false; //HANDLE CURSOR OUTSIDE MAP
 
             if (pManager.CurrentPermission.Range > 0)
                 if (
@@ -103,8 +105,7 @@ namespace SS14.Client.Services.Placement.Modes
                         (from Vector2 side in sides orderby (side - mouseWorld).Length ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = new Vector2(closestSide.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                                               closestSide.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+                    mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
                 }
             }
 
@@ -119,12 +120,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML( Color.ForestGreen) : CluwneLib.SystemColorToSFML( Color.IndianRed);
+                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
+                spriteToDraw.Color = Color.White;
             }
         }
     }

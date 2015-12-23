@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -7,7 +7,7 @@ using SFML.Graphics;
 using System;
 using Color = System.Drawing.Color;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -28,20 +28,20 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string Sprite
         {
-            get { return drawingSprite != null ? drawingSprite.Name : null; }
+            get { return drawingSprite != null ? drawingSprite.Key : null; }
             set { drawingSprite = _resourceManager.GetSprite(value); Update(0); }
         }
 
         public Color Color
         {
             get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
-            set { drawingSprite.Color = CluwneLib.SystemColorToSFML (value); }
+            set { drawingSprite.Color = value; }
         }
 
         public BlendMode BlendingMode
         {
-            get { return drawingSprite != null ? drawingSprite.BlendingMode : drawingSprite.BlendingMode; }
-            set { drawingSprite.BlendingMode = value;}
+            get { return drawingSprite != null ? drawingSprite.BlendSettings: drawingSprite.BlendSettings; }
+            set { drawingSprite.BlendSettings = value; }
         }
 
         public override void Update(float frameTime)

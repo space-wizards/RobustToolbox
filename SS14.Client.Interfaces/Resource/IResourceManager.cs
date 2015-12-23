@@ -1,6 +1,6 @@
 ﻿using SFML.Graphics;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Shader;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Shader;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.Interfaces.Resource
@@ -12,10 +12,11 @@ namespace SS14.Client.Interfaces.Resource
         CluwneSprite GetSpriteFromImage(string key);
         CluwneSprite GetSprite(string key);
         bool SpriteExists(string key);
-        bool ImageExists(string key);
-        FXShader GetShader(string key);
+        bool TextureExists(string key);
+        GLSLShader GetShader(string key);
+        TechniqueList GetTechnique(string key);
         ParticleSettings GetParticles(string key);
-        Image GetImage(string key);
+        Texture GetTexture(string key);
         Font GetFont(string key);
         SpriteInfo? GetSpriteInfo(string key);
         object GetAnimatedSprite(string key);

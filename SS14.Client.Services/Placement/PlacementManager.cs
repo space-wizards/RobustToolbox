@@ -1,7 +1,7 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using Lidgren.Network;
-using SS14.Client.ClientWindow;
+
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Placement
 {
@@ -159,7 +159,7 @@ namespace SS14.Client.Services.Placement
             CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
 
             if (info.IsTile)
-                PreparePlacementTile(info.TileType);
+                PreparePlacementTile((Tile)info.TileType);
             else
                 PreparePlacement(info.EntityType);
         }
@@ -178,11 +178,9 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                 CluwneLib.drawCircle(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
-                        X - ClientWindowData.Singleton.ScreenOrigin.X,
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
-                        Y - ClientWindowData.Singleton.ScreenOrigin.Y,
+                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                CluwneLib.drawCircle(                    pos.X,
+                    pos.Y,
                     CurrentPermission.Range,
                     Color.White,
                     new Vector2(2, 2));
@@ -201,7 +199,7 @@ namespace SS14.Client.Services.Placement
 
             var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
 
-            if (CurrentPermission.IsTile) CurrentPermission.TileType = mapMgr.GetTileString(msg.ReadByte());
+            if (CurrentPermission.IsTile) CurrentPermission.TileType = msg.ReadUInt16();
             else CurrentPermission.EntityType = msg.ReadString();
             CurrentPermission.PlacementOption = msg.ReadString();
 
@@ -228,9 +226,9 @@ namespace SS14.Client.Services.Placement
             IsActive = true;
         }
 
-        private void PreparePlacementTile(string tileType)
+        private void PreparePlacementTile(Tile tileType)
         {
-            if (tileType == "Wall")
+            if (tileType.TileDef.IsWall)
             {
                 CurrentBaseSprite = ResourceManager.GetSprite("wall");
             }
@@ -256,7 +254,7 @@ namespace SS14.Client.Services.Placement
 
             message.Write(CurrentPermission.IsTile);
 
-            if (CurrentPermission.IsTile) message.Write(mapMgr.GetTileIndex(CurrentPermission.TileType));
+            if (CurrentPermission.IsTile) message.Write(CurrentPermission.TileType);
             else message.Write(CurrentPermission.EntityType);
 
             message.Write(CurrentMode.mouseWorld.X);
@@ -273,7 +271,7 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSprite.Name + "_" + Direction.ToString()).ToLowerInvariant();
+            string dirName = (CurrentBaseSprite.Key + "_" + Direction.ToString()).ToLowerInvariant();
             if (ResourceManager.SpriteExists(dirName))
                 spriteToUse = ResourceManager.GetSprite(dirName);
 

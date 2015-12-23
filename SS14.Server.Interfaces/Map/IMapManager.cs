@@ -1,38 +1,33 @@
 using Lidgren.Network;
-using SS14.Server.Interfaces.Tiles;
 using SS14.Shared;
+using System.Collections.Generic;
 using System.Drawing;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.Interfaces.Map
 {
+    public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
+
     public interface IMapManager
     {
-        bool InitMap(string mapName);
+        bool LoadMap(string mapName);
+        void SaveMap(string mapName);
+
+        event TileChangedEventHandler TileChanged;
+
         void HandleNetworkMessage(NetIncomingMessage message);
-        //void NetworkUpdateTile(ITile t);
-        void SaveMap();
-
-        void MoveGasCell(ITile fromTile, ITile toTile);
-
         NetOutgoingMessage CreateMapMessage(MapMessage messageType);
-        void SendMessage(NetOutgoingMessage message);
-        void Shutdown();
-        int GetMapWidth();
-        int GetMapHeight();
         void SendMap(NetConnection connection);
-        int GetTileSpacing();
 
-        ITile[] GetAllTilesIn(RectangleF Area);
-        ITile[] GetAllFloorIn(RectangleF Area);
-        ITile[] GetAllWallIn(RectangleF Area);
+        int TileSize { get; }
 
-        ITile GetWallAt(Vector2 pos);
-        ITile GetFloorAt(Vector2 pos);
-        ITile[] GetAllTilesAt(Vector2 pos);
+        IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace);
+        IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area);
+        IEnumerable<TileRef> GetWallsIntersecting(RectangleF area);
+        IEnumerable<TileRef> GetAllTiles();
 
-        ITile GenerateNewTile(Vector2 pos, string type, Direction dir = Direction.North);
-        void DestroyTile(ITile s);
-        RectangleF GetWorldArea();
+        TileRef GetTileRef(Vector2 pos);
+        TileRef GetTileRef(int x, int y);
+        ITileCollection Tiles { get; }
     }
 }

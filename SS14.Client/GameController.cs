@@ -12,13 +12,13 @@ using System.IO;
 using System.Windows.Forms;
 using SFML.Graphics;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Event;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
 using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib.Timing;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Timing;
 
 using SS14.Client.Services.UserInterface.Components;
 
@@ -30,7 +30,7 @@ namespace SS14.Client
 
         #region Fields
 
-        private IConfigurationManager _configurationManager;
+        private IPlayerConfigurationManager _configurationManager;
       //  private Input _input;
         private INetworkGrapher _netGrapher;
         private INetworkManager _networkManager;
@@ -52,8 +52,8 @@ namespace SS14.Client
 
         public GameController()
         {
-            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-            _configurationManager.Initialize("./config.xml");
+            _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
+            _configurationManager.Initialize("./player_config.xml");
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
@@ -61,7 +61,7 @@ namespace SS14.Client
             _resourceManager.LoadLocalResources();
 
             //Setup Cluwne first, as the rest depends on it.
-            SetupCluwne ();
+            SetupCluwne();
 
             //Initialization of private members
             _networkManager = IoCManager.Resolve<INetworkManager>();
@@ -69,22 +69,24 @@ namespace SS14.Client
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-            SetupInput ();
+          
 
             _stateManager.RequestStateChange<TestState> ();
 
             FrameEventArgs _frameEvent;
+            EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
             
 
-            while (CluwneLib.IsRunning == true) {
+            while (CluwneLib.IsRunning == true) 
+            {
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.Clear (Color.Black);
-                CluwneLib.Screen.DispatchEvents ();
+                CluwneLib.ClearCurrentRendertarget (Color.Black);
+                CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
-                CluwneLib.Screen.Display ();
+                CluwneLib.Screen.Display();
             }
             CluwneLib.Terminate();
             Console.WriteLine("Gameloop terminated.");
@@ -95,6 +97,7 @@ namespace SS14.Client
 
         private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
+
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
@@ -106,14 +109,20 @@ namespace SS14.Client
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
-
             _stateManager.RequestStateChange<MainScreen>();
         }
 
         private void MainWindowResizeEnd(object sender, EventArgs e)
         {
-	    _stateManager.FormResize();
+            _stateManager.FormResize();
         }
+        private void MainWindowRequestClose(object sender, EventArgs e)
+        {
+            CluwneLib.Stop();
+        }
+
+
+
 
         #region Input Handling
 
@@ -121,7 +130,7 @@ namespace SS14.Client
         /// Handles any keydown events.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The KeyArgsinstance containing the event data.</param>
         private void KeyDownEvent(object sender, KeyArgs e)
         {
             if(_stateManager!=null)
@@ -139,7 +148,7 @@ namespace SS14.Client
         /// Handles any keyup events.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.KeyboardInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The KeyArgs instance containing the event data.</param>
         private void KeyUpEvent(object sender, KeyArgs e)
         {
             if (_stateManager != null) 
@@ -150,7 +159,7 @@ namespace SS14.Client
         /// Handles mouse wheel input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseWheelEventArgs instance containing the event data.</param>
         private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
         {
             if (_stateManager != null) 
@@ -161,7 +170,7 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseMoveEventArgs instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseMoveEventArgs e)
         {
             if (_stateManager != null) 
@@ -172,7 +181,7 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
@@ -183,11 +192,35 @@ namespace SS14.Client
         /// Handles any mouse input.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GorgonLibrary.InputDevices.MouseInputEventArgs"/> instance containing the event data.</param>
+        /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseButtonEventArgs e)
         {
             if (_stateManager != null) 
                 _stateManager.MouseUp(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The EventArgs instance containing the event data.</param>
+        private void MouseEntered(object sender, EventArgs e)
+        {
+            Cursor.Hide();
+            if (_stateManager != null)
+                _stateManager.MouseEntered(e);
+        }
+
+        /// <summary>
+        /// Handles any mouse input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The EventArgs instance containing the event data.</param>
+        private void MouseLeft(object sender, EventArgs e)
+        {
+            Cursor.Show();
+            if (_stateManager != null)
+                _stateManager.MouseLeft(e);
         }
 
         #endregion
@@ -196,7 +229,7 @@ namespace SS14.Client
 
         #region Privates
 
-//        private void SetupGorgon()
+//        private void SetupCluwneLib()
 //        {
 //            uint displayWidth = _configurationManager.GetDisplayWidth();
 //            uint displayHeight = _configurationManager.GetDisplayHeight();
@@ -207,51 +240,58 @@ namespace SS14.Client
 //            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 //
 //            CluwneLib.Initialize();
-//            //Gorgon.SetMode(this);
+//            //CluwneLib.SetMode(this);
 //            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
 //                           false, false, refresh);
 //            CluwneLib.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
 //            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Width, CluwneLib.Screen.Height);
 //            CluwneLib.DeviceReset += MainWindowResizeEnd;
-//            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-//            CluwneLib.Idle += GorgonIdle;
+//            //CluwneLib.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+//            CluwneLib.Idle += CluwneLibIdle;
 //        }
+        bool onetime = true;
 
         private void SetupCluwne()
         {
-            uint displayWidth = _configurationManager.GetDisplayWidth();
+            uint displayWidth  = _configurationManager.GetDisplayWidth();
             uint displayHeight = _configurationManager.GetDisplayHeight();
-            bool fullscreen = _configurationManager.GetFullscreen();
-            var refresh = (int) _configurationManager.GetDisplayRefresh();
+            bool isFullscreen  = _configurationManager.GetFullscreen();
+            var refresh        = _configurationManager.GetDisplayRefresh();
 
           
-             
+
+            CluwneLib.Video.SetFullscreen(isFullscreen);
+            CluwneLib.Video.SetRefreshRate(refresh);
+            CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
+            CluwneLib.Initialize();
+            if (onetime)
+            {
+                //every time the video settings change we close the old screen and create a new one
+                //SetupCluwne Gets called to reset the event handlers to the new screen
+                CluwneLib.FrameEvent += CluwneLibIdle;
+                CluwneLib.RefreshVideoSettings += SetupCluwne;
+                onetime = false;
+            }
+            CluwneLib.Screen.BackgroundColor = Color.Black;
+            CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed += MainWindowRequestClose;
+            CluwneLib.Screen.KeyPressed += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased += KeyUpEvent;
+            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
+            CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
+            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered += MouseEntered;
+            CluwneLib.Screen.MouseLeft += MouseLeft;
+
+          
+
 
             CluwneLib.Go();
-           
-            CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
-            CluwneLib.Screen.BackgroundColor = CluwneLib.SystemColorToSFML(Color.Black);
-            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
-            CluwneLib.Idle += CluwneLibIdle;
-        }
-
-        private void SetupInput()
-        {
-
-            //Cursor.Hide();
-     
-
-            CluwneLib.Screen.KeyPressed  += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased += KeyUpEvent;
-
-            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
-            CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
-
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
+
+  
 
         #endregion
 

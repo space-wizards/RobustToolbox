@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
-            var interpolation = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
+            var interpolation = IoCManager.Resolve<IPlayerConfigurationManager>().GetInterpolation();
             Vector2 newPosition;
             foreach (var entity in entities)
             {
@@ -98,7 +98,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         //Only for components with a keyboard input mover component, and a collider component
                         // Check for collision so we don't get shit stuck in objects
-                        if (false && entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
                         {
                             //Check for collision
                             var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);

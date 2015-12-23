@@ -1,12 +1,12 @@
 #version 120
 #define NUM_LIGHTS 6
-uniform vec4 LightPosData[NUM_LIGHTS];
 uniform vec4 LightPosData0;
 uniform vec4 LightPosData1;
 uniform vec4 LightPosData2;
 uniform vec4 LightPosData3;
 uniform vec4 LightPosData4;
 uniform vec4 LightPosData5;
+uniform vec4 LightPosData[NUM_LIGHTS];
 
 uniform vec4 Colors[NUM_LIGHTS];
 uniform vec4 Colors0;
@@ -67,7 +67,6 @@ vec4 PreLightBlendPS()
 	l[4].rgb = l[4].rgb * Colors[4].rgb;
 	l[5].rgb = l[5].rgb * Colors[5].rgb;
 	
-	
 	vec4 s = texture2D(sceneTexture, gl_TexCoord[0].xy); // sample existing lights
 	
 	//Add the lights together	
@@ -75,7 +74,7 @@ vec4 PreLightBlendPS()
 	float g = sqrt(pow(l[0].g, 2) + pow(l[1].g, 2) + pow(l[2].g, 2) + pow(l[3].g, 2) + pow(l[4].g, 2) + pow(l[5].g, 2) + pow(s.g, 2));
 	float b = sqrt(pow(l[0].b, 2) + pow(l[1].b, 2) + pow(l[2].b, 2) + pow(l[3].b, 2) + pow(l[4].b, 2) + pow(l[5].b, 2) + pow(s.b, 2));
 	vec4 c = vec4(r,g,b, 1);
-		
+	return c;
 	//Return the light color
 	return vec4(c.rgb,min(1, 1/max(c.r, max(c.g,c.b))));
 }

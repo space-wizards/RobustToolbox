@@ -1239,14 +1239,14 @@ namespace SS14.Client.Services.State.States
                         Lightmap.setAsCurrentShader();
                         Lightmap.SetParameter("LightPosData", r_pos);
                         Lightmap.SetParameter("Colors", r_col);
-                        Lightmap.SetParameter("light1", r_img[0]);
-                        Lightmap.SetParameter("light2", r_img[1]);
-                        Lightmap.SetParameter("light3", r_img[2]);
-                        Lightmap.SetParameter("light4", r_img[3]);
-                        Lightmap.SetParameter("light5", r_img[4]);
-                        Lightmap.SetParameter("light6", r_img[5]);
-                        Lightmap.SetParameter("SceneTexture", GLSLShader.CurrentTexture);
-                        screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
+                        Lightmap.SetParameter("light0", r_img[0]);
+                        Lightmap.SetParameter("light1", r_img[1]);
+                        Lightmap.SetParameter("light2", r_img[2]);
+                        Lightmap.SetParameter("light3", r_img[3]);
+                        Lightmap.SetParameter("light4", r_img[4]);
+                        Lightmap.SetParameter("light5", r_img[5]);
+                        Lightmap.SetParameter("sceneTexture", screenShadows);
+                        screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, BlitterSizeMode.Crop);
 
                     shadowIntermediate.EndDrawing();
                     // Blit the shadow image on top of the screen

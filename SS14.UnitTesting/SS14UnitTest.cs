@@ -64,9 +64,8 @@ namespace SS14.UnitTesting
         public void InitializeCluwneLib()
         {           
 
-            CluwneLib.Initialize((int)1280, (int)768, false, false, false, 60);
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, 1280, 768);
+            CluwneLib.Initialize();
+            CluwneLib.Screen.BackgroundColor = Color.Black;          
             CluwneLib.Screen.Closed += MainWindowRequestClose;
          
             CluwneLib.Go();         

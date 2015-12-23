@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -9,8 +9,8 @@ using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using Color = System.Drawing.Color;
@@ -99,14 +99,10 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             //public Vertex(Vector2f position, Color color, Vector2f texCoords);
-            RectangleShape test = new RectangleShape(new Vector2f(200, 200));
+        
 
             CluwneLib.CurrentRenderTarget.Clear();
-            CluwneLib.CurrentRenderTarget.Draw(test);
-           // CluwneLib.CurrentRenderTarget.Draw(625 , 5 , CluwneLib.CurrentRenderTarget.Size.X - 625 - 5 , CluwneLib.CurrentRenderTarget.Size.Y- 5 - 6, Color.SlateGray);
-
-            // CluwneLib.CurrentRenderTarget.FilledRectangle(5, 220, 600, _lobbyChat.Position.Y - 250 - 5, Color.SlateGray);
-
+        
             _lobbyText.Position = new Vector2(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
@@ -352,6 +348,15 @@ namespace SS14.Client.Services.State.States
         public void MouseWheelMove ( MouseWheelEventArgs e )
         {
             UserInterfaceManager.MouseWheelMove(e);
+        }
+
+        public void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+        public void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
         }
 
         #endregion

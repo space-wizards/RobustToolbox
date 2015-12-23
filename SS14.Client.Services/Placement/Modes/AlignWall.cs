@@ -1,12 +1,11 @@
 ﻿using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -24,12 +23,12 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = new Vector2(mouseScreen.X + ClientWindowData.Singleton.ScreenOrigin.X,
-                                      mouseScreen.Y + ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
+            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -37,7 +36,9 @@ namespace SS14.Client.Services.Placement.Modes
             //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
             //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
-            if (!currentMap.IsSolidTile(mouseWorld))
+            currentTile = currentMap.GetTileRef(mouseWorld);
+
+            if (!currentTile.Tile.TileDef.IsWall)
                 return false;
 
             if (pManager.CurrentPermission.Range > 0)
@@ -46,20 +47,19 @@ namespace SS14.Client.Services.Placement.Modes
                          .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
                     return false;
 
-            currentTile = currentMap.GetWallAt(mouseWorld);
             var nodes = new List<Vector2>();
 
             if (pManager.CurrentTemplate.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentTemplate.MountingPoints.Select(
-                        current => new Vector2(mouseWorld.X, currentTile.Position.Y + current)));
+                        current => new Vector2(mouseWorld.X, currentTile.Y + current)));
             }
             else
             {
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Position.Y + 16));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Position.Y + 32));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Position.Y + 48));
+                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 0.5f));
+                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.0f));
+                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.5f));
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
@@ -69,8 +69,7 @@ namespace SS14.Client.Services.Placement.Modes
             mouseWorld = Vector2.Add(closestNode,
                                       new Vector2(pManager.CurrentTemplate.PlacementOffset.Key,
                                                    pManager.CurrentTemplate.PlacementOffset.Value));
-            mouseScreen = new Vector2(mouseWorld.X - ClientWindowData.Singleton.ScreenOrigin.X,
-                                       mouseWorld.Y - ClientWindowData.Singleton.ScreenOrigin.Y);
+            mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
 
             if (pManager.CurrentPermission.Range > 0)
                 if (
@@ -85,12 +84,12 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? CluwneLib.SystemColorToSFML(Color.ForestGreen) : CluwneLib.SystemColorToSFML(Color.IndianRed);
+                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen: Color.IndianRed;
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
                                                      mouseScreen.Y - (spriteToDraw.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = CluwneLib.SystemColorToSFML(Color.White);
+                spriteToDraw.Color = Color.White;
             }
         }
     }

@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State
@@ -30,7 +30,7 @@ namespace SS14.Client.Services.State
 
         #region Constructor
 
-        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager,
+        public StateManager(IPlayerConfigurationManager configurationManager, INetworkManager networkManager,
                             IUserInterfaceManager userInterfaceManager,
                             IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
                             IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
@@ -42,7 +42,7 @@ namespace SS14.Client.Services.State
                                 {typeof (IResourceManager), resourceManager},
                                 {typeof (IMapManager), mapManager},
                                 {typeof (IPlayerManager), playerManager},
-                                {typeof (IConfigurationManager), configurationManager},
+                                {typeof (IPlayerConfigurationManager), configurationManager},
                                 {typeof (IPlacementManager), placementManager},
                                 {typeof (IKeyBindingManager), keyBindingManager},
                                 {typeof (IStateManager), this}
@@ -92,6 +92,18 @@ namespace SS14.Client.Services.State
         {
             if (CurrentState != null)
                 CurrentState.MouseWheelMove(e);
+        }
+
+        public void MouseEntered(EventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.MouseEntered(e);
+        }
+
+        public void MouseLeft(EventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.MouseLeft(e);
         }
 
         #endregion

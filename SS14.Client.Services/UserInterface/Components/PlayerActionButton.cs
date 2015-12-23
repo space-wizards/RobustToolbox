@@ -4,10 +4,10 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using System.Drawing;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -71,7 +71,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 showTooltip = true;
 
             ClientArea = new Rectangle(Position,
-                                       new Size((int)_buttonSprite.AABB.Width, (int)_buttonSprite.AABB.Height));
+                                       new Size((int)_buttonSprite.Width, (int)_buttonSprite.Height));
         }
 
         public override void Render()
@@ -79,10 +79,10 @@ namespace SS14.Client.Services.UserInterface.Components
             if (cooldownLeft > 0) Color = Color.DarkGray;
             else Color = Color.White;
 
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.R,Color.G,Color.B,Color.A);
+            _buttonSprite.Color = Color;
             _buttonSprite.Position = new Vector2( Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R,Color.White.G,Color.White.B);
+            _buttonSprite.Color = Color.White;
 
             timeLeft.Draw();
         }

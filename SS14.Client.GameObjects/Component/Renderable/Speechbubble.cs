@@ -1,6 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
@@ -8,7 +8,8 @@ using System.Drawing;
 using System.Text;
 using SS14.Shared.Maths;
 using Color = System.Drawing.Color;
-using Sprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -32,7 +33,7 @@ namespace SS14.Client.GameObjects
         /// Holder for built bubble sprite.
         /// Rebuilt upon text change.
         /// </summary>
-        private readonly Sprite _bubbleSprite;
+        private readonly CluwneSprite _bubbleSprite;
 
         /// <summary>
         /// Owner mob unique name.
@@ -79,8 +80,8 @@ namespace SS14.Client.GameObjects
             _textSprite.Position = new Vector2(5, 3);
             _stringBuilder = new StringBuilder();
 
-            _bubbleRender = new RenderImage(1, 1);
-            _bubbleSprite = new Sprite(_bubbleRender);
+            _bubbleRender = new RenderImage("bubble ",1, 1);
+            _bubbleSprite = new CluwneSprite("_bubbleRender",_bubbleRender);
         }
 
         #endregion
@@ -134,7 +135,7 @@ namespace SS14.Client.GameObjects
         private void DrawBubbleSprite()
         {
             // TODO unfuck this
-            /*RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
+            /*RenderTarget originalTarget = CluwneLib.CurrentRenderTarget;
             Sprite cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
@@ -142,7 +143,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.SetSize(_textSprite.Size.X + 10, _textSprite.Size.Y + 10);
 
             //BEGIN RENDERING
-            Gorgon.CurrentRenderTarget = _bubbleRender;
+            CluwneLib.CurrentRenderTarget = _bubbleRender;
             _bubbleRender.Clear(Color.Transparent);
 
             //Draw black triangle at the bottom.
@@ -185,7 +186,7 @@ namespace SS14.Client.GameObjects
 
             _textSprite.Draw();
 
-            Gorgon.CurrentRenderTarget = originalTarget;
+            CluwneLib.CurrentRenderTarget = originalTarget;
 
             _buildTime = DateTime.Now;*/
         }

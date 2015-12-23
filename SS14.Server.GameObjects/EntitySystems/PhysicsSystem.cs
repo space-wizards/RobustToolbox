@@ -1,5 +1,4 @@
 ﻿using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Tiles;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
@@ -27,7 +26,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach(var entity in entities)
             {
-                GasEffect(entity, frametime);
+                //GasEffect(entity, frametime);
 
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
@@ -43,19 +42,19 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
         }
 
-        private void GasEffect(Entity entity, float frameTime)
-        {
-            var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
-            var physics = entity.GetComponent<PhysicsComponent>(ComponentFamily.Physics);
-            ITile t =
-                IoCManager.Resolve<IMapManager>().GetFloorAt(transform.Position);
-            if (t == null)
-                return;
-            var gasVel = t.GasCell.GasVelocity;
-            if (gasVel.Magnitude > physics.Mass) // Stop tiny wobbles
-            {
-                transform.Position = new Vector2(transform.X + (gasVel.X * frameTime), transform.Y + (gasVel.Y * frameTime));
-            }
-        }
+        //private void GasEffect(Entity entity, float frameTime)
+        //{
+        //    var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+        //    var physics = entity.GetComponent<PhysicsComponent>(ComponentFamily.Physics);
+        //    ITile t =
+        //        IoCManager.Resolve<IMapManager>().GetFloorAt(transform.Position);
+        //    if (t == null)
+        //        return;
+        //    var gasVel = t.GasCell.GasVelocity;
+        //    if (gasVel.Abs() > physics.Mass) // Stop tiny wobbles
+        //    {
+        //        transform.Position = new Vector2(transform.X + (gasVel.X * frameTime), transform.Y + (gasVel.Y * frameTime));
+        //    }
+        //}
     }
 }

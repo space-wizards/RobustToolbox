@@ -1,7 +1,7 @@
 ﻿using System;
 using ClientInterfaces.GOC;
 using GameObject;
-using GorgonLibrary;
+using CluwneLibLibrary;
 using SS13_Shared.GO;
 using SS13_Shared.GO.Component.Renderable;
 

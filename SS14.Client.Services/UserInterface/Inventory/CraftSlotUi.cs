@@ -2,7 +2,7 @@
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
 using System;
 using System.Drawing;
@@ -48,18 +48,18 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) _sprite.AABB.Width, (int) _sprite.AABB.Height));
+            ClientArea = new Rectangle(Position, new Size((int) _sprite.Width, (int) _sprite.Height));
         }
 
         public override void Render()
         {
-            _sprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B, _color.A); ;
-            _sprite.Draw(new Rectangle(Position, new Size((int) _sprite.AABB.Width, (int) _sprite.AABB.Height)));
+            _sprite.Color = _color;
+            _sprite.Draw(new Rectangle(Position, new Size((int) _sprite.Width, (int) _sprite.Height)));
             if (_entSprite != null)
-                _entSprite.Draw(new Rectangle((int) (Position.X + _sprite.AABB.Width/2f - _entSprite.AABB.Width/2f),
-                                              (int) (Position.Y + _sprite.AABB.Height/2f - _entSprite.AABB.Height/2f),
+                _entSprite.Draw(new Rectangle((int) (Position.X + _sprite.Width/2f - _entSprite.Width/2f),
+                                              (int) (Position.Y + _sprite.Height/2f - _entSprite.Height/2f),
                                               (int) _entSprite.Width, (int) _entSprite.Height));
-            _sprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+            _sprite.Color = Color.White;
         }
 
         public override void Dispose()

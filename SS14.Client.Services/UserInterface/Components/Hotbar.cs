@@ -5,9 +5,10 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -63,7 +64,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            hotbarBG.Position = CluwneLib.PointToVector2(Position);
+            hotbarBG.Position = new Vector2(Position.X, Position.Y);
 
             int y_dist = 30;
             int x_pos = 175;

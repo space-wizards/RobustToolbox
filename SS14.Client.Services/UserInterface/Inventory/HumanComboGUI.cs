@@ -12,8 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
+using Color = System.Drawing.Color;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Inventory
@@ -530,19 +531,19 @@ namespace SS14.Client.Services.UserInterface.Inventory
             Point tabEquipPos = Position;
             tabEquipPos.Offset(-26, 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
-            _tabEquip.Color = _currentTab == 1 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
+            _tabEquip.Color = _currentTab == 1 ? Color.White :_inactiveColor;
             _tabEquip.Update(frameTime);
 
             Point tabHealthPos = tabEquipPos;
             tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
-            _tabHealth.Color = _currentTab == 2 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B);
+            _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
             _tabHealth.Update(frameTime);
 
             Point tabCraftPos = tabHealthPos;
             tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
-            _tabCraft.Color = _currentTab == 3 ? new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B) : new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G,_inactiveColor.B);
+            _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
             _tabCraft.Update(frameTime);
 
             ClientArea = new Rectangle(Position.X, Position.Y, (int) _comboBg.AABB.Width, (int) _comboBg.AABB.Height);

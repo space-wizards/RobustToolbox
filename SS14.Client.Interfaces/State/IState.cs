@@ -1,6 +1,6 @@
 ﻿using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
+using System;
 
 
 namespace SS14.Client.Interfaces.State
@@ -19,6 +19,8 @@ namespace SS14.Client.Interfaces.State
         void MouseMoved(MouseMoveEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
         void MouseWheelMove(MouseWheelEventArgs e);
+        void MouseEntered(EventArgs e);
+        void MouseLeft(EventArgs e);
         void FormResize();
     }
 }

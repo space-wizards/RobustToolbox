@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Atmos;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Configuration;
@@ -15,7 +14,6 @@ using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Modules;
 using SS14.Server.Modules.Client;
-using SS14.Server.Services.Atmos;
 using SS14.Server.Services.Log;
 using SS14.Server.Services.Map;
 using SS14.Server.Services.Round;
@@ -98,11 +96,11 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
-            LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath,
-                                  IoCManager.Resolve<IConfigurationManager>().LogLevel);
+            IoCManager.Resolve<IServerConfigurationManager>().Initialize("./server_config.xml");
+            LogManager.Initialize(IoCManager.Resolve<IServerConfigurationManager>().LogPath,
+                                  IoCManager.Resolve<IServerConfigurationManager>().LogLevel);
 
-            TickRate = IoCManager.Resolve<IConfigurationManager>().TickRate;
+            TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
         }
         
@@ -135,7 +133,7 @@ namespace SS14.Server
 
         public void SaveMap()
         {
-            IoCManager.Resolve<IMapManager>().SaveMap();
+            IoCManager.Resolve<IMapManager>().SaveMap(_serverMapName);
         }
 
         public void SaveEntities()
@@ -293,7 +291,7 @@ namespace SS14.Server
                 EntityManager.ComponentManager.Update(frameTime);
                 EntityManager.Update(frameTime);
                 var start = stopWatch.ElapsedTicks;
-                ((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
+                //((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
                 var end = stopWatch.ElapsedTicks;
                 var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
@@ -391,7 +389,7 @@ namespace SS14.Server
 
         public void LoadSettings()
         {
-            var cfgmgr = IoCManager.Resolve<IConfigurationManager>();
+            var cfgmgr = IoCManager.Resolve<IServerConfigurationManager>();
             _serverPort = cfgmgr.Port;
             _serverName = cfgmgr.ServerName;
             _serverMapName = cfgmgr.ServerMapName;
@@ -423,9 +421,9 @@ namespace SS14.Server
             }
             else if (Runlevel == RunLevel.Game)
             {
-                IoCManager.Resolve<IMapManager>().InitMap(_serverMapName);
+                IoCManager.Resolve<IMapManager>().LoadMap(_serverMapName);
 
-                IoCManager.Resolve<IAtmosManager>().InitializeGasCells();
+                //IoCManager.Resolve<IAtmosManager>().InitializeGasCells();
 
                 EntityManager = new EntityManager(IoCManager.Resolve<ISS14NetServer>());
 
@@ -479,7 +477,6 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().DetachAll();
             EntityManager.Shutdown();
             EntityManager = null;
-            IoCManager.Resolve<IMapManager>().Shutdown();
             GC.Collect();
         }
 
@@ -665,7 +662,7 @@ namespace SS14.Server
                     break;
                 case NetMessage.RequestAdminLogin:
                     string password = messageBody.ReadString();
-                    if (password == IoCManager.Resolve<IConfigurationManager>().AdminPassword)
+                    if (password == IoCManager.Resolve<IServerConfigurationManager>().AdminPassword)
                     {
                         LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address);
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
@@ -830,21 +827,21 @@ namespace SS14.Server
             //EntityManager.SendEntities(connection);
 
             // Send atmos state to player
-            IoCManager.Resolve<IAtmosManager>().SendAtmosStateTo(connection);
+            //IoCManager.Resolve<IAtmosManager>().SendAtmosStateTo(connection);
 
             // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(
                 IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(connection)); //SPAWN PLAYER
         }
 
-        public void SendChangeTile(int x, int z, string newType)
+        public void SendChangeTile(int x, int y, Tile newTile)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
             var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
-            tileMessage.Write(z);
-            tileMessage.Write(mapMgr.GetTileIndex(newType));
+            tileMessage.Write(y);
+            tileMessage.Write((uint)newTile);
             foreach (NetConnection connection in ClientList.Keys)
             {
                 IoCManager.Resolve<ISS14NetServer>().SendMessage(tileMessage, connection,

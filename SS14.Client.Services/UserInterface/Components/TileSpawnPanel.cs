@@ -1,14 +1,15 @@
-﻿using SS14.Client.Interfaces.Placement;
+﻿using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Tiles;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -80,27 +81,15 @@ namespace SS14.Client.Services.UserInterface.Components
             _tileList.components.Clear();
             _tileList.ResetScrollbars();
 
-            Type type = typeof (Tile);
-            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types =
-                asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p) && !p.IsAbstract).ToList();
+            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>().Select(td => td.Name);
 
-            IEnumerable<string> rawNames = from a in types
-                                           select a.Name;
-
-            if (types.Count > 255)
+            if (!string.IsNullOrEmpty(searchStr))
             {
-                throw new ArgumentOutOfRangeException("types.Count", "Can not load more than 255 types of tiles.");
+                tileDefs = tileDefs.Where(s => s.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
+                _clearLabel.BackgroundColor = Color.LightGray;
             }
 
-
-            List<string> typeNames = (searchStr == null)
-                                         ? rawNames.ToList()
-                                         : rawNames.Where(x => x.ToLower().Contains(searchStr.ToLower())).ToList();
-
-            if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;
-
-            foreach (string entry in typeNames)
+            foreach (string entry in tileDefs)
             {
                 var tileLabel = new Label(entry, "CALIBRI", _resourceManager);
                 _tileList.components.Add(tileLabel);
@@ -125,15 +114,10 @@ namespace SS14.Client.Services.UserInterface.Components
             var newObjInfo = new PlacementInformation
                                  {
                                      PlacementOption = "AlignTileAny",
-                                     TileType = sender.Text.Text,
+                                     TileType = IoCManager.Resolve<ITileDefinitionManager>()[sender.Text.Text].TileId,
                                      Range = 400,
                                      IsTile = true
                                  };
-
-            if (sender.Text.Text == "Wall")
-            {
-                newObjInfo.PlacementOption = "AlignWallPlace";
-            }
 
             _placementManager.BeginPlacing(newObjInfo);
 

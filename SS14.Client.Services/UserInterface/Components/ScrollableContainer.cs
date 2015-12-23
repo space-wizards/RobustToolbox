@@ -1,13 +1,14 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Graphics.CluwneLib.Render;
+using SS14.Client.Graphics.Render;
 using SFML.Window;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.CluwneLib;
-
+using SS14.Client.Graphics;
+using SFML.Graphics;
+using Color = System.Drawing.Color;
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
@@ -18,6 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public Color BackgroundColor = Color.DarkGray;
         public bool DrawBackground = false;
         public bool DrawBorder = true;
+        public float BorderSize = 1.0f;
 
         protected Size Size;
         protected RenderImage clippingRI;
@@ -41,9 +43,19 @@ namespace SS14.Client.Services.UserInterface.Components
             //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
             //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage((uint)Size.Width,(uint) Size.Height);
-                clippingRI.setName = uniqueName;
-                clippingRI.setImageBuffer = ImageBufferFormats.BufferRGB888A8;
+            clippingRI = new RenderImage(uniqueName,(uint)Size.Width,(uint) Size.Height);
+            
+            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
+            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
+            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+            clippingRI.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            clippingRI.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            clippingRI.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+        
+
+
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
             scrollbarV.size = Size.Height;
@@ -51,11 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.Update(0);
             scrollbarV.Update(0);
 
-            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-
-            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
+       
 
             Update(0);
         }
@@ -111,7 +119,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? CluwneLib.SystemColorToSFML(BackgroundColor) : SFML.Graphics.Color.Transparent);
+            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -122,6 +130,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                component.Position.Y - (int) scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
+             
                 component.Position = oldPos;
                 component.Update(0);
             }
@@ -138,15 +147,14 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position, Color.White);
-            // clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.Crop);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-             CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                     Color.Black);
+            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  BorderSize, Color.Black);
+            clippingRI.EndDrawing();
         }
 
         public override void Dispose()

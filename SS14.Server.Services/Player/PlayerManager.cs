@@ -45,7 +45,7 @@ namespace SS14.Server.Services.Player
             //Spawn the player's entity. There's probably a much better place to do this.
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
             Entity human = a;
-            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(160, 160));
+            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(0, 0));
             if (s.assignedJob != null)
             {
                 foreach (

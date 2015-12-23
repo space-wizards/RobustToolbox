@@ -4,13 +4,13 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.CluwneLib.Event;
+using SS14.Client.Graphics.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 
 
@@ -48,7 +48,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-          //  _background.Smoothing = Smoothing.Smooth;
+            _background.Smoothing = true;
 
             _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
 
@@ -146,10 +146,12 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            //TODO .Draw Method
-            // _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+          
 
-           //_ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
+             _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+
+
+           _ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
             UserInterfaceManager.Render();
         }
 
@@ -198,6 +200,15 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.MouseWheelMove(e);
         }
 
+        public void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+        public void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
+        }
+
         #endregion
 
         private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
@@ -217,18 +228,7 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            
-            CluwneLib.Stop();
-
-            CluwneLib.SetMode((int)ConfigurationManager.GetDisplayWidth(),
-                            (int)ConfigurationManager.GetDisplayHeight(),
-                            !ConfigurationManager.GetFullscreen(), false, false,
-                            (int)ConfigurationManager.GetDisplayRefresh());
-                           
-
-           
-
-            CluwneLib.Go();
+          CluwneLib.UpdateVideoSettings();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)

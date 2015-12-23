@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
-using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -12,7 +12,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
-using CluwneSprite = SS14.Client.Graphics.CluwneLib.Sprite.CluwneSprite;
+using CluwneSprite = SS14.Client.Graphics.Sprite.CluwneSprite;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -216,7 +217,7 @@ namespace SS14.Client.GameObjects
             CluwneSprite sprite = currentBaseSprite;
 
             string dirName =
-                (currentBaseSprite.Name + "_" +
+                (currentBaseSprite.Key + "_" +
                  Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).
                     ToLowerInvariant();
 
@@ -300,9 +301,7 @@ namespace SS14.Client.GameObjects
 
             CluwneSprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos =
-                ClientWindowData.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Vector2 renderPos = CluwneLib.WorldToScreen( Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             SetSpriteCenter(spriteToRender, renderPos);
 
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <
@@ -333,7 +332,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            //Gorgon.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            CluwneLib.drawRectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

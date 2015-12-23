@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -75,6 +75,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public void SelectItem(string str, bool raiseEvent = false)
         {
+	    if (str==null)
+		    str="";
             ListboxItem selLabel = (from a in _dropDown.components
                                     where a.GetType() == typeof (ListboxItem)
                                     let b = (ListboxItem) a

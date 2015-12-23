@@ -79,7 +79,7 @@ namespace SS14.Client.GameObjects
         {
             lastState = state;
             states.Add(state);
-            var interp = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
+            var interp = IoCManager.Resolve<IPlayerConfigurationManager>().GetInterpolation();
             //Remove all states older than the one just before the interp time.
             lerpStateFrom = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
             if (lerpStateFrom != null)

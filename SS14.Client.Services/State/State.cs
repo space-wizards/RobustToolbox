@@ -14,7 +14,7 @@ namespace SS14.Client.Services.State
 {
     public abstract class State
     {
-        protected readonly IConfigurationManager ConfigurationManager;
+        protected readonly IPlayerConfigurationManager ConfigurationManager;
         protected readonly IKeyBindingManager KeyBindingManager;
         protected readonly IMapManager MapManager;
         protected readonly INetworkManager NetworkManager;
@@ -32,7 +32,7 @@ namespace SS14.Client.Services.State
             UserInterfaceManager = (IUserInterfaceManager) managers[typeof (IUserInterfaceManager)];
             MapManager = (IMapManager) managers[typeof (IMapManager)];
             PlayerManager = (IPlayerManager) managers[typeof (IPlayerManager)];
-            ConfigurationManager = (IConfigurationManager) managers[typeof (IConfigurationManager)];
+            ConfigurationManager = (IPlayerConfigurationManager) managers[typeof (IPlayerConfigurationManager)];
             PlacementManager = (IPlacementManager) managers[typeof (IPlacementManager)];
             KeyBindingManager = (IKeyBindingManager) managers[typeof (IKeyBindingManager)];
         }

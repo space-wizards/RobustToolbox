@@ -4,10 +4,10 @@ using System.Xml.Serialization;
 
 namespace SS14.Client.Services.Configuration
 {
-    public sealed class ConfigurationManager : IConfigurationManager
+    public sealed class ConfigurationManager : IPlayerConfigurationManager
     {
         private string _configFile;
-        public Configuration Configuration { get; private set; }
+        public PlayerConfiguration Configuration { get; private set; }
 
         #region IConfigurationManager Members
 
@@ -16,9 +16,9 @@ namespace SS14.Client.Services.Configuration
             if (File.Exists(configFile))
             {
                 _configFile = configFile;
-                var configLoader = new XmlSerializer(typeof (Configuration));
+                var configLoader = new XmlSerializer(typeof (PlayerConfiguration));
                 StreamReader configReader = File.OpenText(configFile);
-                var config = (Configuration) configLoader.Deserialize(configReader);
+                var config = (PlayerConfiguration) configLoader.Deserialize(configReader);
                 configReader.Close();
                 Configuration = config;
 
@@ -174,7 +174,7 @@ namespace SS14.Client.Services.Configuration
             }
             else
             {
-                var configSaver = new XmlSerializer(typeof (Configuration));
+                var configSaver = new XmlSerializer(typeof (PlayerConfiguration));
                 StreamWriter configWriter = File.CreateText(_configFile);
                 configSaver.Serialize(configWriter, Configuration);
                 configWriter.Flush();

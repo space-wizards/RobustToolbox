@@ -1,16 +1,18 @@
-﻿using SS14.Client.Graphics.CluwneLib;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.GameObjects;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Tiles;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib;
-
+using SS14.Client.Graphics;
+using Image = SFML.Graphics.Image;
+using Color = System.Drawing.Color;
+using SColor = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -18,7 +20,7 @@ namespace SS14.Client.Services.Helpers
     {
         public static string GetObjectSpriteName(Type type)
         {
-            return type.IsSubclassOf(typeof (Tile)) ? "tilebuildoverlay" : "nosprite";
+            return type.IsSubclassOf(typeof (ITileDefinition)) ? "tilebuildoverlay" : "nosprite";
         }
 
 		public static CluwneSprite GetSpriteComponentSprite(Entity entity)
@@ -53,14 +55,14 @@ namespace SS14.Client.Services.Helpers
             var spritePosition = new Point((int) clickPos.X - (int) toCheck.Position.X ,//+ (int) toCheck.ImageOffset.X,
                                            (int) clickPos.Y - (int) toCheck.Position.Y ); //+ (int) toCheck.ImageOffset.Y);
 
-            //Image.ImageLockBox imgData = toCheck.Image.GetImageData();
+            Image imgData = toCheck.Texture.CopyToImage();
 
             //imgData.Lock(false);
-            //Color pixColour = Color.FromArgb((int) (imgData[spritePosition.X, spritePosition.Y]));
-            //imgData.Dispose();
+            SColor pixColour = imgData.GetPixel((uint)spritePosition.X,(uint) spritePosition.Y);
+            imgData.Dispose();
             //imgData.Unlock();
 
-            return true; //pixColour.A != 0;
+            return pixColour.A != 0;
         }
     }
 
@@ -69,38 +71,37 @@ namespace SS14.Client.Services.Helpers
         private static readonly ComponentSelector RedSelector = color => color.R;
         private static readonly ComponentSelector GreenSelector = color => color.G;
         private static readonly ComponentSelector BlueSelector = color => color.B;
+  
 
-        public static Color InterpolateBetween(
-            Color endPoint1,
-            Color endPoint2,
-            double lambda)
+
+        public static Color InterpolateBetween( Color endPoint1, Color endPoint2, double lambda)
         {
             if (lambda < 0 || lambda > 1)
             {
                 throw new ArgumentOutOfRangeException("lambda");
             }
-            Color color = Color.FromArgb(
-                InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
-                InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
-                InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
+            Color color = Color.FromArgb
+                (
+                    
+                    InterpolateComponent(endPoint1, endPoint2, lambda, RedSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, GreenSelector),
+                    InterpolateComponent(endPoint1, endPoint2, lambda, BlueSelector)
                 );
 
             return color;
         }
 
-        private static byte InterpolateComponent(
-            Color endPoint1,
-            Color endPoint2,
-            double lambda,
-            ComponentSelector selector)
+       
+
+        private static byte InterpolateComponent(Color endPoint1, Color endPoint2, double lambda, ComponentSelector selector)
         {
-            return (byte) (selector(endPoint1)
-                           + (selector(endPoint2) - selector(endPoint1))*lambda);
+            return (byte)(selector(endPoint1) + (selector(endPoint2) - selector(endPoint1)) * lambda);
         }
 
         #region Nested type: ComponentSelector
 
         private delegate byte ComponentSelector(Color color);
+        
 
         #endregion
     }

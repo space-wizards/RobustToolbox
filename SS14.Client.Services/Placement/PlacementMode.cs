@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Map;
 
@@ -8,7 +8,7 @@ namespace SS14.Client.Services.Placement
     {
         public readonly PlacementManager pManager;
 
-        public ITile currentTile;
+        public TileRef currentTile;
         public Vector2 mouseScreen;
         public Vector2 mouseWorld;
 		public CluwneSprite spriteToDraw;
@@ -38,7 +38,7 @@ namespace SS14.Client.Services.Placement
 
             if (baseSprite == null) return null;
 
-            string dirName = (baseSprite.Name + "_" + pManager.Direction.ToString()).ToLowerInvariant();
+            string dirName = (baseSprite.Key + "_" + pManager.Direction.ToString()).ToLowerInvariant();
             if (pManager.ResourceManager.SpriteExists(dirName))
                 spriteToUse = pManager.ResourceManager.GetSprite(dirName);
 

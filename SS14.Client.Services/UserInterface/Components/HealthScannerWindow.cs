@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -82,37 +82,37 @@ namespace SS14.Client.Services.UserInterface.Components
             Color temp = GetColor((int) reply.ParamsList[1], (int) reply.ParamsList[2]);
 
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _head.Color =new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _head.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Torso);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _chest.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _chest.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Left_Arm);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _arml.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _arml.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Right_Arm);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _armr.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _armr.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Groin);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _groin.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _groin.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Left_Leg);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _legl.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _legl.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Right_Leg);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _legr.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _legr.Color = temp;
 
             if (assigned.HasComponent(ComponentFamily.Damageable))
             {
@@ -135,7 +135,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _overallHealth.Position = new Vector2(Position.X + 86, Position.Y + 29);
 
-            ClientArea = new Rectangle(Position, new Size((int) _background.AABB.Width, (int) _background.AABB.Height));
+            ClientArea = new Rectangle(Position, new Size((int) _background.Width, (int) _background.Height));
         }
 
         public override void Render()

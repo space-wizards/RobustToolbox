@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -226,7 +226,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? CluwneLib.SystemColorToSFML(Color.Tomato) : CluwneLib.SystemColorToSFML(Color.White);
+            _eraserButton.Color = _placementManager.Eraser ? Color.Tomato : Color.White;
             base.Render();
         }
 

@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.CluwneLib.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
 using Lidgren.Network;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Player;
@@ -71,32 +71,32 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (hands.CurrentHand == InventoryLocation.HandLeft)
             {
-                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+                handSlot.Color = Color.White;
                 handSlot.Draw(handL);
 
-                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
+                handSlot.Color = _inactiveColor;
                 handSlot.Draw(handR);
             }
             else
             {
-                handSlot.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A); ;
+                handSlot.Color = Color.White;
                 handSlot.Draw(handR);
 
-                handSlot.Color = new SFML.Graphics.Color(_inactiveColor.R, _inactiveColor.G, _inactiveColor.B, _inactiveColor.A);
+                handSlot.Color = _inactiveColor;
                 handSlot.Draw(handL);
             }
 
             if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
                 LeftHand.HeldSprite.Draw(
-                    new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.AABB.Width/2f),
-                                  handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.AABB.Height/2f),
-                                  (int) LeftHand.HeldSprite.AABB.Width, (int) LeftHand.HeldSprite.AABB.Height));
+                    new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.Width/2f),
+                                  handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.Height/2f),
+                                  (int) LeftHand.HeldSprite.Width, (int) LeftHand.HeldSprite.Height));
 
             if (RightHand.Entity != null && RightHand.HeldSprite != null)
                 RightHand.HeldSprite.Draw(
-                    new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.AABB.Width/2f),
-                                  handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.AABB.Height/2f),
-                                  (int) RightHand.HeldSprite.AABB.Width, (int) RightHand.HeldSprite.AABB.Height));
+                    new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.Width/2f),
+                                  handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.Height/2f),
+                                  (int) RightHand.HeldSprite.Width, (int) RightHand.HeldSprite.Height));
         }
 
         public override void Resize()

@@ -2,9 +2,9 @@
 using System;
 using Color = System.Drawing.Color;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
-using SS14.Client.Graphics.CluwneLib;
+using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -75,6 +75,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             _clientAreaLeft = new Rectangle(Position, new Size((int) _textboxLeft.Width, (int) _textboxLeft.Height));
+         
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
                                             new Size(Width, (int) _textboxMain.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
@@ -85,6 +86,8 @@ namespace SS14.Client.Services.UserInterface.Components
                                                          _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right,
                                        Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
+
+            _caretPos = Label.Text.Length;
 
             if (Focus)
             {
@@ -97,9 +100,9 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = CluwneLib.SystemColorToSFML(drawColor);
-                _textboxMain.Color = CluwneLib.SystemColorToSFML(drawColor);
-                _textboxRight.Color = CluwneLib.SystemColorToSFML(drawColor);
+                _textboxLeft.Color = drawColor;
+                _textboxMain.Color = drawColor;
+                _textboxRight.Color = drawColor;
             }
 
             _textboxLeft.Draw(_clientAreaLeft);
@@ -107,15 +110,15 @@ namespace SS14.Client.Services.UserInterface.Components
             _textboxRight.Draw(_clientAreaRight);
 
             if (Focus && blinkCount <= 0.25f)
-                //Draw Textbox
+                      CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, Color.FromArgb(255,255,250));
 
-         // CluwneLib.CurrentRenderTarget.Draw(_caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
+       
 
             if (drawColor != Color.White)
             {
-                _textboxLeft.Color = CluwneLib.SystemColorToSFML(Color.White);
-                _textboxMain.Color = CluwneLib.SystemColorToSFML(Color.White);
-                _textboxRight.Color =CluwneLib.SystemColorToSFML( Color.White);
+                _textboxLeft.Color = Color.White;
+                _textboxMain.Color = Color.White;
+                _textboxRight.Color = Color.White;
             }
 
             Label.Color = textColor;

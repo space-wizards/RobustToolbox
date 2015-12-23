@@ -1,7 +1,7 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.CluwneLib.Sprite;
+using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
@@ -58,17 +58,17 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!Available)
             {
-                _buttonSprite.Color = new SFML.Graphics.Color(Color.DarkRed.R, Color.DarkRed.G, Color.DarkRed.B, Color.DarkRed.A); 
+                _buttonSprite.Color = Color.DarkRed; 
             }
             else if (Selected)
             {
-                _buttonSprite.Color = new SFML.Graphics.Color(Color.DarkSeaGreen.R, Color.DarkSeaGreen.G, Color.DarkSeaGreen.B, Color.DarkSeaGreen.A);
+                _buttonSprite.Color = Color.DarkSeaGreen;
              
             }
             _buttonSprite.Draw(_buttonArea);
             _jobSprite.Draw(_buttonArea);
             _descriptionTextSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+            _buttonSprite.Color = Color.White;
         }
 
         public override void Dispose()

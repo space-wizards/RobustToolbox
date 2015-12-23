@@ -214,14 +214,14 @@ namespace SS14.Server.Services.Map
         }
 
         #endregion
-        
+
         #region Networking
 
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.MapMessage);
-            message.Write((byte) messageType);
+            message.Write((byte)NetMessage.MapMessage);
+            message.Write((byte)messageType);
             return message;
         }
 
@@ -256,7 +256,7 @@ namespace SS14.Server.Services.Map
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (MapMessage) message.ReadByte();
+            var messageType = (MapMessage)message.ReadByte();
             switch (messageType)
             {
                 case MapMessage.TurfClick:
@@ -321,13 +321,16 @@ namespace SS14.Server.Services.Map
 
             string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
 
-            using (var fs = new FileStream(fileName, FileMode.Create)) {
+            using (var fs = new FileStream(fileName, FileMode.Create))
+            {
                 var sw = new StreamWriter(fs);
                 var bw = new BinaryWriter(fs);
                 LogManager.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
 
                 sw.Write("SS14 Map File Version ");
-                sw.WriteLine((int)1); // Format version.  Who knows, it could come in handy.
+                sw.Write((int)1); // Format version.  Who knows, it could come in handy.
+                sw.Write("\r\n"); // Doing this instead of using WriteLine to keep things platform-agnostic.
+                sw.Flush();
 
                 // Tile definition mapping
                 var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
@@ -350,6 +353,7 @@ namespace SS14.Server.Services.Map
                 }
 
                 bw.Write("End of Map");
+                bw.Flush();
             }
 
             LogManager.Log("Done saving map.");
@@ -379,6 +383,8 @@ namespace SS14.Server.Services.Map
                     if (!versionString.StartsWith("SS14 Map File Version "))
                         return false;
 
+                    fs.Seek(versionString.Length + 2, SeekOrigin.Begin);
+
                     int formatVersion;
                     if (!int.TryParse(versionString.Substring(22), out formatVersion))
                         return false;
@@ -400,11 +406,15 @@ namespace SS14.Server.Services.Map
                     int chunkCount = br.ReadInt32();
                     for (int i = 0; i < chunkCount; ++i)
                     {
-                        int x = br.ReadInt32();
-                        int y = br.ReadInt32();
-                        Tile tile = (Tile)br.ReadUInt32();
+                        int cx = br.ReadInt32() * ChunkSize;
+                        int cy = br.ReadInt32() * ChunkSize;
 
-                        this.Tiles[x, y] = tile;
+                        for (int y = cy; y < cy + ChunkSize; ++y)
+                            for (int x = cx; x < cx + ChunkSize; ++x)
+                            {
+                                Tile tile = (Tile)br.ReadUInt32();
+                                this.Tiles[x, y] = tile;
+                            }
                     }
 
                     string ending = br.ReadString();
@@ -434,7 +444,7 @@ namespace SS14.Server.Services.Map
 
                 for (int y = -32; y <= 32; ++y)
                     for (int x = -32; x <= 32; ++x)
-                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3)) 
+                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
                             Tiles[x, y] = new Tile(wall);
                         else
                             Tiles[x, y] = new Tile(floor);

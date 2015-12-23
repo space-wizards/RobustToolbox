@@ -102,9 +102,8 @@ vec4 DrawShadowsPS()
 	  float d = 2 * length(gl_TexCoord[0].xy - 0.5);
 	  float attenuation = max(pow(clamp(1 - d, 0,1),1), AttenuateShadows); //If AttenuateShadows is true, attenuation 
 	  
-	  vec4 result = vec4(light * attenuation);
+	  vec4 result = vec4(1 - (light * attenuation) / 2);
 	  result = MaskLight(result, gl_TexCoord[0].xy);
-	  result = result / 2;
 	  return result;
 }
 

@@ -34,7 +34,7 @@ namespace SS14.Client.Services.Lighting
             if (Radius != radius)
             {
                 Radius = radius;
-                LightArea = new LightArea(Radius);
+                LightArea = new LightArea(RadiusToShadowMapSize(radius));
             }
         }
 

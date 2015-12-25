@@ -112,8 +112,13 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
         }
 
-        private void MainWindowResizeEnd(object sender, EventArgs e)
+        private void MainWindowResizeEnd(object sender, SizeEventArgs e)
         {
+            var view = new SFML.Graphics.View(
+                new SFML.System.Vector2f(e.Width / 2, e.Height / 2),
+                new SFML.System.Vector2f(e.Width, e.Height)
+                );
+            CluwneLib.Screen.SetView(view);
             _stateManager.FormResize();
         }
         private void MainWindowRequestClose(object sender, EventArgs e)

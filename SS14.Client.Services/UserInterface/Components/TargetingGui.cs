@@ -19,7 +19,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
 
         private readonly TargetingDummy _targetArea;
-		private readonly CluwneSprite background;
+        private readonly CluwneSprite background;
         private IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
         public TargetingGui()
@@ -66,14 +66,14 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 return _targetArea.MouseDown(e);
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -82,11 +82,11 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }

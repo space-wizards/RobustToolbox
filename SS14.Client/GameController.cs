@@ -71,7 +71,7 @@ namespace SS14.Client
 
           
 
-            _stateManager.RequestStateChange<TestState> ();
+            _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
             EventArgs _frameEventArgs;

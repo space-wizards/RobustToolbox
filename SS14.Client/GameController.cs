@@ -277,6 +277,7 @@ namespace SS14.Client
                 CluwneLib.RefreshVideoSettings += SetupCluwne;
                 onetime = false;
             }
+            CluwneLib.Screen.SetMouseCursorVisible(false);
             CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
             CluwneLib.Screen.Closed += MainWindowRequestClose;

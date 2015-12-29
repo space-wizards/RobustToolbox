@@ -1,9 +1,9 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace SS14.UnitTesting.SS14.Shared.IoC
 {
-    [TestClass]
+    [TestFixture]
     public class IoCManagerExceptions_Test
     {
       

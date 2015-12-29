@@ -88,7 +88,7 @@
   <ItemGroup>
     <Compile Include="SS14.Client\Graphics\Shaders\TestShader_Test.cs" />
     <Compile Include="SS14.Client\Graphics\Shaders\Lightblend_Test.cs" />
-    <Compile Include="SS14.Client\Graphics\Sprite\UnitTest1.cs" />
+    <Compile Include="SS14.Client\Graphics\Sprite\CluwneSprite_Test.cs" />
     <Compile Include="SS14.Client\Services\Helpers\GaussianBlur_Test.cs" />
     <Compile Include="SS14.Client\Services\Helpers\StarScroller_Test.cs" />
     <Compile Include="SS14.Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />

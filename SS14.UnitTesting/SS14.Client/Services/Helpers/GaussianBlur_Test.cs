@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using SS14.Shared.IoC;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
@@ -11,10 +11,11 @@ using System.Windows.Forms;
 using SFML.System;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Graphics.Render;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 {
-    [TestClass]
+    [TestFixture]
     public class GaussianBlur_Test : SS14UnitTest
     {
 
@@ -29,23 +30,24 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
         private EventArgs _frameEventArgs;
         private Clock clock;
 
+        private CluwneSprite sprite;
+        
         public GaussianBlur_Test()
-        {
+        {  
             //PreTest Setup
+            base.InitializeCluwneLib(1280, 720, false, 60);
+        
             _resourceManager = base.GetResourceManager;
-            _configurationManager = base.GetConfigurationManager;
-            clock = new Clock();
-            base.InitializeCluwneLib();
-
+            _configurationManager = base.GetConfigurationManager;         
+            clock = base.GetClock;
         }
 
 
-        [TestMethod]
+        [Test]
         public void GaussianBlurRadius11_ShouldBlur()
         {
 
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
-            blur = new RenderImage("testGaussianBlur1", 1280, 768);
             _gaussianBlur = new GaussianBlur(_resourceManager);
         
            
@@ -65,16 +67,18 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                
                 
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
-                preblur.Clear();       //Clear 
-                _resourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
+                //preblur.Clear();       //Clear 
+                sprite = _resourceManager.GetSprite("flashlight_mask");
+                sprite.Position = Vector2.Zero;
+                sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
               
                 
 
-                _gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
-             
-                
-                preblur.Blit(0,0, 1280, 768); // draw blurred nosprite logo
+                //_gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
+
+           
+                preblur.Blit(0,0, preblur.Width, preblur.Height,Color.White, BlitterSizeMode.Crop ); // draw blurred nosprite logo
              
 
                 
@@ -84,7 +88,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
        
         }
 
-        [TestMethod]
+        [Test]
         public void GaussianBlurRadius9_ShouldBlur()
         {
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
@@ -126,7 +130,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
         }
 
-        [TestMethod]
+        [Test]
         public void GaussianBlurRadius7_ShouldBlur()
         {
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
@@ -167,8 +171,8 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
             }
 
         }
-        
-        [TestMethod]
+
+        [Test]
         public void GaussianBlurRadius5_ShouldBlur()
         {
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
@@ -209,8 +213,8 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
             }
 
         }
-        
-        [TestMethod]
+
+        [Test]
         public void GaussianBlurRadius3_ShouldBlur()
         {
             preblur = new RenderImage("testGaussianBlur", 1280, 768);

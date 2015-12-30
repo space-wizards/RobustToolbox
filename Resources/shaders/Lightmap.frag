@@ -67,8 +67,6 @@ vec4 PreLightBlendPS()
 	l[4].rgb = l[4].rgb * Colors[4].rgb;
 	l[5].rgb = l[5].rgb * Colors[5].rgb;
 	
-	return l[0];
-	
 	vec4 s = texture2D(sceneTexture, gl_TexCoord[0].xy); // sample existing lights
 	
 	//Add the lights together	

@@ -216,7 +216,6 @@ namespace SS14.Client.Graphics.Render
         /// </summary>
         public void BeginDrawing()
         {
-            base.SetActive(true);
             DrawingToThis = true;
             temp = CluwneLib.CurrentRenderTarget;
             CluwneLib.CurrentRenderTarget = this; 
@@ -227,7 +226,6 @@ namespace SS14.Client.Graphics.Render
         /// </summary>
         public void EndDrawing()
         {
-            base.SetActive(false);
             DrawingToThis = false;
             base.Display();
             CluwneLib.CurrentRenderTarget = temp;

@@ -17,9 +17,35 @@ namespace SS14.UnitTesting
     public class SS14UnitTest
     {
 
-        private Clock clock;
+       
         private FrameEventArgs frameEvent;
-        public event EventHandler InjectedMethods;
+        public delegate void EventHandler();
+        public static event EventHandler InjectedMethod;
+
+
+        #region Accessors
+
+        public IPlayerConfigurationManager GetConfigurationManager
+        {
+            get;
+            private set;
+        }
+
+        public IResourceManager GetResourceManager
+        {
+            get;
+            private set;
+        }
+
+        public Clock GetClock
+        {
+            get;
+            set;
+        }
+
+
+        #endregion
+
 
         public SS14UnitTest()
         {
@@ -62,15 +88,33 @@ namespace SS14.UnitTesting
         }
 
         public void InitializeCluwneLib()
-        {           
+        {
+            GetClock = new Clock();
 
-            CluwneLib.Initialize((int)1280, (int)768, false, false, false, 60);
+            CluwneLib.Video.SetWindowSize(1280,720);
+            CluwneLib.Video.SetFullscreen(false);
+            CluwneLib.Video.SetRefreshRate(60);
+
+            CluwneLib.Initialize();
             CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, 1280, 768);
+            CluwneLib.Screen.Closed += MainWindowRequestClose;
+
+            CluwneLib.Go();            
+        }
+
+        public void InitializeCluwneLib(uint width, uint height, bool fullscreen, uint refreshrate)
+        {
+            GetClock = new Clock();
+
+            CluwneLib.Video.SetWindowSize(width, height);
+            CluwneLib.Video.SetFullscreen(fullscreen);
+            CluwneLib.Video.SetRefreshRate(refreshrate);
+
+            CluwneLib.Initialize();
+            CluwneLib.Screen.BackgroundColor = Color.Black;          
             CluwneLib.Screen.Closed += MainWindowRequestClose;
          
-            CluwneLib.Go();         
-
+            CluwneLib.Go();           
         }
 
 
@@ -78,12 +122,12 @@ namespace SS14.UnitTesting
         {
             while (CluwneLib.IsRunning)
            {
-               var lastFrameTime = clock.ElapsedTime.AsSeconds();
-               clock.Restart();
+               var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
+               GetClock.Restart();
                frameEvent = new FrameEventArgs(lastFrameTime);
                CluwneLib.ClearCurrentRendertarget(Color.Black);
                CluwneLib.Screen.DispatchEvents();
-               InjectedMethods.Invoke(this, frameEvent);
+               InjectedMethod();
                CluwneLib.Screen.Display();
            }
         }
@@ -93,23 +137,6 @@ namespace SS14.UnitTesting
             CluwneLib.Stop();
             Application.Exit();
         }    
-
-        #endregion
-
-        #region Accessors
-
-        public IPlayerConfigurationManager GetConfigurationManager
-        {
-            get;
-            private set;
-        }
-
-        public IResourceManager GetResourceManager
-        {
-            get;
-            private set;
-        }
-
 
         #endregion
 

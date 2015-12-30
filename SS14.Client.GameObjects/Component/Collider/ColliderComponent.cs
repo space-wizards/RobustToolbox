@@ -11,7 +11,7 @@ namespace SS14.Client.GameObjects
 {
     public class ColliderComponent : Component
     {
-        public Color DebugColor { get; set; }
+        public SFML.Graphics.Color DebugColor { get; set; }
 
         private RectangleF AABB
         {
@@ -29,7 +29,7 @@ namespace SS14.Client.GameObjects
         public ColliderComponent()
         {
             Family = ComponentFamily.Collider;
-            DebugColor = Color.Lime;
+            DebugColor = SFML.Graphics.Color.Blue;
         }
 
         public RectangleF WorldAABB
@@ -60,9 +60,7 @@ namespace SS14.Client.GameObjects
         public override void SetParameter(ComponentParameter parameter) {
             switch (parameter.MemberName) {
                 case "DebugColor":
-                    var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
-                    if (!color.IsEmpty)
-                        DebugColor = color;
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), SFML.Graphics.Color.Blue);
                     break;
             }
         }

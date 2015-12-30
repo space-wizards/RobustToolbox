@@ -7,6 +7,9 @@ using SS14.Shared.IoC;
 using System.Drawing;
 using SS14.Client.Graphics;
 using BlendMode = SFML.Graphics.BlendMode;
+using Color = SFML.Graphics.Color;
+using SS14.Client.Services.Helpers;
+using SS14.Client.GameObjects;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -56,17 +59,16 @@ namespace SS14.Client.Services.UserInterface.Components
             _imgDepGrad = new SimpleImage()
             {
                 Sprite = "lobby_depgrad",
-                Color = Color.FromArgb(120, Color.White),
-                BlendingMode = BlendMode.Alpha
+                Color = Color.White.WithAlpha(120)
             };
             _imgDepGrad.Update(0);
             _imgDepGrad.Position = new Point(_shwDepa.ClientArea.X + (int)(_shwDepa.ClientArea.Width / 2f - _imgDepGrad.ClientArea.Width / 2f), _shwDepa.ClientArea.Top);
 
             _lblDep = new Label("DEPARTMENT", "MICROGBE", resourceManager)
             {
-                BackgroundColor = Color.WhiteSmoke,
+                BackgroundColor = new Color(245, 245, 245),
                 DrawBackground = true,
-                TextColor = Color.FromArgb(53,57,66)
+                TextColor = new Color(53,57,66)
             };
 
             _lblDep.Update(0);
@@ -92,8 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _imgJobGrad = new SimpleImage()
             {
                 Sprite = "lobby_jobgrad",
-                Color = Color.FromArgb(120, Color.White),
-                BlendingMode = BlendMode.Alpha
+                Color = Color.White.WithAlpha(120)
             };
             _imgJobGrad.Update(0);
             _imgJobGrad.Position = new Point(_shwJobs.ClientArea.X + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);
@@ -104,7 +105,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _lbljobName = new Label(" ", "MICROGBE", resourceManager)
             {
-                TextColor = Color.WhiteSmoke
+                TextColor = new Color(245, 245, 245)
             };
             _lbljobName.Position = new Point(3, _imgJobDesc.Position.Y + 4);
 
@@ -112,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _lbljobDesc = new Label(" ", "MICROGME", resourceManager)
             {
-                TextColor = Color.WhiteSmoke
+                TextColor = new Color(245, 245, 245)
             };
             _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
 
@@ -163,17 +164,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

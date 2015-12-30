@@ -28,10 +28,10 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             input = new Textbox(size.Width, resourceManager);
             input.ClearFocusOnSubmit = false;
-            input.drawColor = Color.FromArgb(100, Color.Gray);
-            input.textColor = Color.FloralWhite;
+            input.drawColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            input.textColor = new SFML.Graphics.Color(255, 250, 240);
             input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
-            this.BackgroundColor = Color.FromArgb(100, Color.Gray);
+            this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
             this.DrawBackground = true;
             this.DrawBorder = true;
             Update(0);
@@ -39,11 +39,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
         void input_OnSubmit(string text, Textbox sender)
         {
-            AddLine(text, Color.FloralWhite);
+            AddLine(text, new SFML.Graphics.Color(255, 250, 240));
             ProcessCommand(text);
         }
 
-        public void AddLine(string text, Color color)
+        public void AddLine(string text, SFML.Graphics.Color color)
         {
             Label newLabel = new Label(text, "MICROGBE", this._resourceManager);
             newLabel.Position = new Point(5, last_y);
@@ -85,7 +85,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (e.Message.MessageType == NetIncomingMessageType.Data && (NetMessage)e.Message.PeekByte() == NetMessage.ConsoleCommandReply)
             {
                 e.Message.ReadByte();
-                AddLine("Server: " + e.Message.ReadString(), Color.RoyalBlue);
+                AddLine("Server: " + e.Message.ReadString(), new SFML.Graphics.Color(65, 105, 225));
             }
             //Again, make sure we reset the position - we might get it before the gamestate and then that would break.
             e.Message.Position = 0;
@@ -103,7 +103,7 @@ namespace SS14.Client.Services.UserInterface.Components
             input.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!base.MouseDown(e))
                 if (input.MouseDown(e))
@@ -114,20 +114,20 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (!base.MouseUp(e))
                 return input.MouseUp(e);
             else return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
             input.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (!base.MouseWheelMove(e))
                 return input.MouseWheelMove(e);

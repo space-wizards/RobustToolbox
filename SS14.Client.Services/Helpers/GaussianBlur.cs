@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Drawing;
 using SS14.Client.Graphics;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using System.Collections.Generic;
 using SS14.Client.Services.Resources;
 

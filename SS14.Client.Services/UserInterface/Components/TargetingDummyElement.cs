@@ -7,6 +7,8 @@ using SFML.Window;
 using Image = SFML.Graphics.Image;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -24,8 +26,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public float MaxHealth;
         private Point _clickPoint;
 
-        private CluwneSprite _elementSprite;
-        private Boolean _selected;
+        private Sprite _elementSprite;
+        private bool _selected;
 
         public TargetingDummyElement(string spriteName, BodyPart part, IResourceManager resourceManager)
         {
@@ -55,8 +57,9 @@ namespace SS14.Client.Services.UserInterface.Components
         public override sealed void Update(float frameTime)
         {
             _elementSprite.Position = new Vector2(Position.X,Position.Y);
+            var bounds = _elementSprite.GetLocalBounds();
             ClientArea = new Rectangle(Position,
-                                       new Size((int)_elementSprite.Width, (int)_elementSprite.Height));
+                                       new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -64,9 +67,9 @@ namespace SS14.Client.Services.UserInterface.Components
             //elementSprite.Color = selected ? Color.DarkRed : Color.White;
             float healthPct = CurrentHealth / MaxHealth;
 
-            if (healthPct > 0.75) _elementSprite.Color      = Color.DarkGreen;
+            if (healthPct > 0.75) _elementSprite.Color      = new Color(0, 128, 0);
             else if (healthPct > 0.50) _elementSprite.Color = Color.Yellow;
-            else if (healthPct > 0.25) _elementSprite.Color = Color.DarkOrange;
+            else if (healthPct > 0.25) _elementSprite.Color = new Color(128, 64, 0);
             else if (healthPct > 0) _elementSprite.Color    = Color.Red;
             else _elementSprite.Color = Color.Black;
 
@@ -77,7 +80,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (!_selected) return;
 
            CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 5, Color.Black);
-           CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, Color.DarkRed);
+           CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, new Color(139, 0, 0));
            CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 3, Color.Black);
         }
 
@@ -91,10 +94,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int)e.X, (int)e.Y))) return false;
+            if (!ClientArea.Contains(new Point(e.X, e.Y))) return false;
 
-            var spritePosition = new Point((int)e.X - Position.X + (int)_elementSprite.ImageOffset.X,
-                                           (int)e.Y - Position.Y + (int)_elementSprite.ImageOffset.Y);
+            var spritePosition = new Point(e.X - Position.X, e.Y - Position.Y);
 
             // Image.ImageLockBox imgData = _elementSprite.Image.GetImageData();
             //imgData.Lock(false);
@@ -106,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (pixColour.A != 0)
             {
                 if (Clicked != null) Clicked(this);
-                _clickPoint = new Point((int)e.X - Position.X, (int)e.Y - Position.Y);
+                _clickPoint = new Point(e.X - Position.X, e.Y - Position.Y);
                 _selected = true;
                 return true;
             }

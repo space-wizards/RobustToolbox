@@ -3,13 +3,14 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System.Drawing;
 using SFML.Window;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class TabContainer : ScrollableContainer
     {
         public string tabName = "";
-		public CluwneSprite tabSprite = null;
+        public Sprite tabSprite = null;
 
         public TabContainer(string uniqueName, Size size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
@@ -19,7 +20,6 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string tabSpriteName
         {
-            get { return tabSprite != null ? tabSprite.Key : ""; }
             set { tabSprite = _resourceManager.GetSprite(value); }
         }
 
@@ -43,17 +43,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

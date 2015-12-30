@@ -7,6 +7,8 @@ using System.Drawing;
 using SFML.Window;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics;
+using SFML.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,7 +21,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly TextSprite timeLeft;
 
         private readonly TextSprite tooltip;
-		private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
 
         private bool showTooltip;
         private Point tooltipPos;
@@ -34,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
             timeLeft = new TextSprite("timeleft" + _assigned.uid.ToString() + _assigned.name, "",
                                       _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
-            timeLeft.ShadowColor = Color.Gray;
+            timeLeft.ShadowColor = new Color(128, 128, 128);
             timeLeft.ShadowOffset = new Vector2(1, 1);
             timeLeft.Shadowed = true;
 
@@ -57,13 +59,14 @@ namespace SS14.Client.Services.UserInterface.Components
                 int x_pos = 16 - (int) (timeLeft.Width/2f);
 
                 if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
-                else timeLeft.Color = Color.ForestGreen;
+                else timeLeft.Color = new Color(0, 128, 0);
 
                 timeLeft.Position = new Vector2(Position.X + x_pos, Position.Y + 15);
             }
 
+            var bounds = _buttonSprite.GetLocalBounds();
             ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
+                                       new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -100,9 +103,9 @@ namespace SS14.Client.Services.UserInterface.Components
                                   : 10 + 5;
                 tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
               CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
-                                                           tooltip.Height + 5, Color.SteelBlue);
+                                                           tooltip.Height + 5, System.Drawing.Color.SteelBlue);
               CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
-                                                    tooltip.Height + 5, Color.DarkSlateBlue);
+                                                    tooltip.Height + 5, System.Drawing.Color.DarkSlateBlue);
                 tooltip.Draw();
             }
         }
@@ -114,17 +117,17 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {

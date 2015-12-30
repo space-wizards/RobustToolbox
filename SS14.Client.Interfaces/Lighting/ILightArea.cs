@@ -1,7 +1,5 @@
 ﻿using SFML.Graphics;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Lighting
@@ -12,7 +10,7 @@ namespace SS14.Client.Interfaces.Lighting
         Vector2 LightPosition { get; set; }
         Vector2 LightAreaSize { get; set; }
         bool Calculated { get; set; }
-        CluwneSprite Mask { get; set; }
+        Sprite Mask { get; set; }
         bool MaskFlipX { get; set; }
         bool MaskFlipY { get; set; }
         bool Rot90 { get; set; }

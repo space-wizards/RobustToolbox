@@ -27,8 +27,8 @@ namespace SS14.Client.Services.UserInterface.Components
             _message = new Label(message, "CALIBRI", _resourceManager);
             _mainMenuButton = new Button("Main Menu", _resourceManager);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
-            _mainMenuButton.Label.Color = Color.WhiteSmoke;
-            _message.Text.Color = Color.WhiteSmoke;
+            _mainMenuButton.Label.Color = new SFML.Graphics.Color(245, 245, 245);
+            _message.Text.Color = new SFML.Graphics.Color(245, 245, 245);
         }
 
         private void MainMenuButtonClicked(Button sender)
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color.Black);
+            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, SFML.Graphics.Color.Black);
             _message.Render();
             _mainMenuButton.Render();
         }
@@ -62,29 +62,29 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             _mainMenuButton.MouseDown(e);
             return true;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             _mainMenuButton.MouseUp(e);
             return true;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _mainMenuButton.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return true;
         }
 
-		public override bool KeyDown(KeyEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             _mainMenuButton.KeyDown(e);
             return true;

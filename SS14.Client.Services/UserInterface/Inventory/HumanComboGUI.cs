@@ -14,8 +14,10 @@ using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -66,12 +68,12 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-		private readonly CluwneSprite _comboBg;
+        private readonly Sprite _comboBg;
         private readonly ImageButton _comboClose;
 
-		private readonly CluwneSprite _equipBg;
+        private readonly Sprite _equipBg;
 
-        private readonly Color _inactiveColor = Color.FromArgb(255, 90, 90, 90);
+        private readonly Color _inactiveColor = new Color(90, 90, 90);
 
         private readonly INetworkManager _networkManager;
         private readonly IPlayerManager _playerManager;
@@ -183,7 +185,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
             _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
                                {
-                                   ShadowColor = Color.DimGray,
+                                   ShadowColor = new Color(105, 105, 105),
                                    ShadowOffset = new Vector2(1, 1),
                                    Shadowed = true
                                };
@@ -205,7 +207,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         if (invComp.ContainedEntities.Count >= invComp.MaxSlots)
                         {
                             _craftStatus.Text = "Status: Not enough Space";
-                            _craftStatus.Color = Color.DarkRed;
+                            _craftStatus.Color = new Color(139, 0, 0);
                             return;
                         }
                     }
@@ -318,17 +320,17 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         _craftTimer = null;
                     }
                     _craftStatus.Text = "Status: Canceled."; //Temp to debug.
-                    _craftStatus.Color = Color.DarkRed;
+                    _craftStatus.Color = new SFML.Graphics.Color(139, 0, 0);
                     break;
                 case ComboGuiMessage.ShowCraftBar:
                     int seconds = message.ReadInt32();
                     _craftTimer = new Timer_Bar(new Size(210, 15), new TimeSpan(0, 0, 0, seconds), _resourceManager);
                     _craftStatus.Text = "Status: Crafting...";
-                    _craftStatus.Color = Color.LightSteelBlue;
+                    _craftStatus.Color = new SFML.Graphics.Color(176, 196, 222);
                     break;
                 case ComboGuiMessage.CraftNoRecipe:
                     _craftStatus.Text = "Status: There is no such Recipe.";
-                    _craftStatus.Color = Color.DarkRed;
+                    _craftStatus.Color = new Color(139, 0, 0);
                     break;
                 case ComboGuiMessage.CraftNeedInventorySpace:
                     if (_craftTimer != null)
@@ -337,7 +339,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         _craftTimer = null;
                     }
                     _craftStatus.Text = "Status: Not enough Space";
-                    _craftStatus.Color = Color.DarkRed;
+                    _craftStatus.Color = new Color(139, 0, 0);
                     break;
                 case ComboGuiMessage.CraftItemsMissing:
                     if (_craftTimer != null)
@@ -348,7 +350,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     _craftSlot1.ResetEntity();
                     _craftSlot2.ResetEntity();
                     _craftStatus.Text = "Status: Items missing.";
-                    _craftStatus.Color = Color.DarkRed;
+                    _craftStatus.Color = new Color(139, 0, 0);
                     break;
                 case ComboGuiMessage.CraftSuccess:
                     if (_craftTimer != null)
@@ -362,7 +364,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     break;
                 case ComboGuiMessage.CraftAlreadyCrafting:
                     _craftStatus.Text = "Status: You are already working on an item.";
-                    _craftStatus.Color = Color.DarkRed;
+                    _craftStatus.Color = new Color(139, 0, 0);
                     break;
             }
         }
@@ -377,7 +379,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             string resultName = message.ReadString();
 
             _craftStatus.Text = "Status: You successfully create '" + resultName + "'";
-            _craftStatus.Color = Color.Green;
+            _craftStatus.Color = new Color(0, 128, 0);
 
             foreach (BlueprintButton bpbutt in _blueprints.components)
             {
@@ -413,7 +415,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         if (!invComp.ContainsEntity(sender.Compo1) || !invComp.ContainsEntity(sender.Compo2))
                         {
                             _craftStatus.Text = "Status: You do not have the required items.";
-                            _craftStatus.Color = Color.DarkRed;
+                            _craftStatus.Color = new Color(139, 0, 0);
                         }
                         else
                         {
@@ -436,7 +438,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 _tabCraft.Render();
 
                 _txtDbg.Position = new Vector2(Position.X + 20, Position.Y + 15);
-                _txtDbg.Color = Color.NavajoWhite;
+                _txtDbg.Color = new SFML.Graphics.Color(255, 222, 173);
                 if (_currentTab == 1) _txtDbg.Text = "Equipment";
                 if (_currentTab == 2) _txtDbg.Text = "Status";
                 if (_currentTab == 3) _txtDbg.Text = "Crafting";
@@ -518,9 +520,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
             _comboBg.Position = new Vector2 (Position.X, Position.Y);
 
+            var bounds = _comboBg.GetLocalBounds();
             Point equipBgPos = Position;
             _equipBg.Position = new Vector2 (Position.X,Position.Y);
-            equipBgPos.Offset((int) (_comboBg.AABB.Width/2f - _equipBg.AABB.Width/2f), 40);
+            equipBgPos.Offset((int) (bounds.Width/2f - bounds.Width/2f), 40);
             _equipBg.Position = new Vector2(equipBgPos.X,equipBgPos.Y);
 
             Point comboClosePos = Position;
@@ -546,7 +549,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
             _tabCraft.Update(frameTime);
 
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) _comboBg.AABB.Width, (int) _comboBg.AABB.Height);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int)bounds.Width, (int)bounds.Height);
 
             switch (_currentTab)
             {
@@ -559,9 +562,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         slotLeftStart.Offset(28, 40);
                         _slotHead.Position = slotLeftStart;
                         _slotHead.Update(frameTime);
-
+                        
                         Point slotRightStart = Position;
-                        slotRightStart.Offset((int) (_comboBg.AABB.Width - _slotMask.ClientArea.Width - 28), 40);
+                        slotRightStart.Offset((int) (bounds.Width - _slotMask.ClientArea.Width - 28), 40);
                         _slotMask.Position = slotRightStart;
                         _slotMask.Update(frameTime);
 
@@ -701,7 +704,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (_showTabbedWindow)
             {
@@ -770,7 +773,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             equipComponent.SendSwitchHands(hand);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             var mouseAABB = new PointF(e.X, e.Y);
 
@@ -796,7 +799,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
                         if (_inventory != null) if (_inventory.MouseUp(e)) return true;
 
-                        if (_comboBg.AABB.Contains(mouseAABB) && _userInterfaceManager.DragInfo.IsEntity &&
+                        if (_comboBg.GetLocalBounds().Contains(mouseAABB.X, mouseAABB.Y) && _userInterfaceManager.DragInfo.IsEntity &&
                             _userInterfaceManager.DragInfo.IsActive)
                         {
                             //Should be refined to only trigger in the equip area. Equip it if they drop it anywhere on the thing. This might make the slots obsolete if we keep it.
@@ -850,7 +853,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             switch (_currentTab)
             {
@@ -902,7 +905,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             }
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_currentTab == 1 || _currentTab == 3)
             {

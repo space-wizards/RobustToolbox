@@ -4,8 +4,9 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
 using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 using SS14.Client.Graphics;
+using SFML.Graphics;
+
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent

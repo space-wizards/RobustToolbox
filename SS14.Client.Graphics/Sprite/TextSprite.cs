@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using Font = SFML.Graphics.Font;
 
 
@@ -63,7 +63,7 @@ namespace SS14.Client.Graphics.Sprite
         public void Draw() 
         {                
             _textSprite.Position = new Vector2(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
-            _textSprite.Color = Color.ToSFMLColor();
+            _textSprite.Color = Color;
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
             if (CluwneLib.Debug.DebugTextboxes)//CluwneLib.Debug()

@@ -5,7 +5,7 @@ using SS14.Shared.IoC;
 using SFML.Window;
 using SFML.Graphics;
 using System;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using System.Drawing;
 using SS14.Client.Graphics;
 
@@ -16,9 +16,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private readonly IResourceManager _resourceManager; //TODO Make simpleimagebutton and other ui classes use this.
 
-		private CluwneSprite drawingSprite;
-
-        public Vector2 size;
+        private Sprite drawingSprite;
 
         public SimpleImage()
         {
@@ -28,31 +26,28 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string Sprite
         {
-            get { return drawingSprite != null ? drawingSprite.Key : null; }
+            //get { return drawingSprite != null ? drawingSprite.Key : null; }
             set { drawingSprite = _resourceManager.GetSprite(value); Update(0); }
         }
 
         public Color Color
         {
-            get { return (drawingSprite != null ? System.Drawing.Color.White : System.Drawing.Color.White); }
+            get { return (drawingSprite != null ? drawingSprite.Color : Color.White); }
             set { drawingSprite.Color = value; }
-        }
-
-        public BlendMode BlendingMode
-        {
-            get { return drawingSprite != null ? drawingSprite.BlendSettings: drawingSprite.BlendSettings; }
-            set { drawingSprite.BlendSettings = value; }
         }
 
         public override void Update(float frameTime)
         {
-            size = drawingSprite != null ? drawingSprite.Size : Vector2.Zero;
-            ClientArea = new Rectangle(Position, new Size((int) size.X, (int) size.Y));
+            if (drawingSprite != null)
+            {
+                var bounds = drawingSprite.GetLocalBounds();
+                ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+            }
         }
 
         public override void Render()
         {
-            drawingSprite.Draw();
+            drawingSprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 
         public override void Dispose()
@@ -79,12 +74,12 @@ namespace SS14.Client.Services.UserInterface.Components
         }
 
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

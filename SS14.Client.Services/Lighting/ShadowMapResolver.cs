@@ -79,11 +79,11 @@ namespace SS14.Client.Services.Lighting
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
 
-            Debug.DebugRendertarget(Area.RenderTarget);
+            //Debug.DebugRendertarget(Area.RenderTarget);
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
-            Debug.DebugRendertarget(distancesRT);
+            //Debug.DebugRendertarget(distancesRT);
             ExecuteTechnique(distancesRT, distortRT, "Distort");
-            Debug.DebugRendertarget(distortRT);
+            //Debug.DebugRendertarget(distortRT);
 
             // Working now
             ApplyHorizontalReduction(distortRT, shadowMap);
@@ -95,9 +95,9 @@ namespace SS14.Client.Services.Lighting
             
             CluwneSprite Sprite = new CluwneSprite("Maskspritetorendergarget", MaskTexture);
             RenderImage MaskTarget = new RenderImage("MaskTarget", (uint)Sprite.Size.X, (uint)Sprite.Size.Y);
-            Debug.DebugRendertarget(shadowMap, "ShadowMap");
+            //Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
-            Debug.DebugRendertarget(Result, "DrawShadowsResult");
+            //Debug.DebugRendertarget(Result, "DrawShadowsResult");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
@@ -168,7 +168,7 @@ namespace SS14.Client.Services.Lighting
 
                 HorizontalReduction.EndDrawing();
                 src = HorizontalReduction; // hr becomes new src 
-                Debug.DebugRendertarget(HorizontalReduction);
+                //Debug.DebugRendertarget(HorizontalReduction);
                 step--;
             }
 
@@ -181,7 +181,7 @@ namespace SS14.Client.Services.Lighting
             HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
                 //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader); 
             destination.EndDrawing();
-            Debug.DebugRendertarget(destination);
+            //Debug.DebugRendertarget(destination);
             CluwneLib.ResetRenderTarget();
         }
 

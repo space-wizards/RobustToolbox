@@ -7,6 +7,9 @@ using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
+using SFML.Graphics;
+using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -26,9 +29,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private Rectangle _clientAreaRight;
         private ScrollableContainer _dropDown;
 
-		private CluwneSprite _listboxLeft;
-		private CluwneSprite _listboxMain;
-		private CluwneSprite _listboxRight;
+        private Sprite _listboxLeft;
+        private Sprite _listboxMain;
+        private Sprite _listboxRight;
         private TextSprite _selectedLabel;
 
         public Listbox(int dropDownLength, int width, IResourceManager resourceManager,
@@ -75,8 +78,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public void SelectItem(string str, bool raiseEvent = false)
         {
-	    if (str==null)
-		    str="";
+        if (str==null)
+            str="";
             ListboxItem selLabel = (from a in _dropDown.components
                                     where a.GetType() == typeof (ListboxItem)
                                     let b = (ListboxItem) a
@@ -103,7 +106,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		private void NewEntryClicked(Label sender, MouseButtonEventArgs e)
+        private void NewEntryClicked(Label sender, MouseButtonEventArgs e)
         {
             SetItem(sender, true);
         }
@@ -125,11 +128,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _clientAreaLeft = new Rectangle(Position, new Size((int) _listboxLeft.Width, (int) _listboxLeft.Height));
+            var listboxLeftBounds = _listboxLeft.GetLocalBounds();
+            var listboxMainBounds = _listboxMain.GetLocalBounds();
+            var listboxRightBounds = _listboxRight.GetLocalBounds();
+            _clientAreaLeft = new Rectangle(Position, new Size((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size(_width, (int) _listboxMain.Height));
+                                            new Size(_width, (int)listboxMainBounds.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int) _listboxRight.Width, (int) _listboxRight.Height));
+                                             new Size((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
             ClientArea = new Rectangle(Position,
                                        new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
@@ -145,9 +151,12 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             _dropDown.Render();
-            _listboxLeft.Draw(_clientAreaLeft);
-            _listboxMain.Draw(_clientAreaMain);
-            _listboxRight.Draw(_clientAreaRight);
+            _listboxLeft.SetTransformToRect(_clientAreaLeft);
+            _listboxMain.SetTransformToRect(_clientAreaMain);
+            _listboxRight.SetTransformToRect(_clientAreaRight);
+            _listboxLeft.Draw();
+            _listboxMain.Draw();
+            _listboxRight.Draw();
             _selectedLabel.Draw();
         }
 
@@ -165,7 +174,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
                 //change to clientAreaRight when theres a proper skin with an arrow to the right.
@@ -179,12 +188,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return _dropDown.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return _dropDown.MouseUp(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _dropDown.MouseMove(e);
         }
@@ -207,7 +216,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             Text.Position = Position;
             ClientArea = new Rectangle(Position, new Size(_width, (int) Text.Height));
-            BackgroundColor = Selected ? Color.DarkSlateGray : Color.Gray;
+            BackgroundColor = Selected ? new Color(47, 79, 79) : new Color(128, 128, 128);
         }
     }
 }

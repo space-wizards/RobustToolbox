@@ -78,11 +78,6 @@ namespace SS14.Client.Graphics.Shader
             base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z, vec4.W);
         }
 
-        public void SetParameter(string Parameter, CluwneSprite Sprite)
-        {
-            base.SetParameter(Parameter, Sprite.Texture);
-        }
-
         public void SetParameter(string Parameter, Vector2[] vec2array)
         {
             for (int i = 0; i < vec2array.Length; i++)

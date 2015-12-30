@@ -36,7 +36,7 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, GLSLShader> _shaders = new Dictionary<string, GLSLShader>();
         private readonly Dictionary<string, TechniqueList> _TechniqueList = new Dictionary<string, TechniqueList>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
-        private readonly Dictionary<string, CluwneSprite> _sprites = new Dictionary<string, CluwneSprite>();
+        private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
@@ -69,7 +69,7 @@ namespace SS14.Client.Services.Resources
             {
                 Texture nospriteimage = new Texture( _stream);
                 _textures.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new CluwneSprite("nosprite", nospriteimage));  
+                _sprites.Add("nosprite", new Sprite(nospriteimage));  
             }
             _stream = null;
         }
@@ -153,9 +153,9 @@ namespace SS14.Client.Services.Resources
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
                             {
-                                IEnumerable<CluwneSprite> loadedSprites = LoadSpritesFrom(zipFile, tai);
-                                foreach (CluwneSprite currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Key)))
-                                    _sprites.Add(currentSprite.Key, currentSprite);                               
+                                IEnumerable<KeyValuePair<string, Sprite>> loadedSprites = LoadSpritesFrom(zipFile, tai);
+                                foreach (var currentSprite in loadedSprites.Where(currentSprite => !_sprites.ContainsKey(currentSprite.Key)))
+                                    _sprites.Add(currentSprite.Key, currentSprite.Value);
                             }
                         }
                         break;
@@ -438,11 +438,11 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  <para>Loads TAI from given Zip-File and Entry and creates & loads Sprites from it.</para>
         /// </summary>
-        private IEnumerable<CluwneSprite> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
+        private IEnumerable<KeyValuePair<string, Sprite>> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
 
-            var loadedSprites = new List<CluwneSprite>();
+            var loadedSprites = new List<KeyValuePair<string,Sprite>>();
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -519,8 +519,8 @@ namespace SS14.Client.Services.Resources
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
-                loadedSprites.Add(new CluwneSprite(originalName, atlasTex,
-                    new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y)));
+                loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
+                    new Sprite(atlasTex, new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
 
             }
 
@@ -534,7 +534,7 @@ namespace SS14.Client.Services.Resources
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
         ///  <para>If a sprite has been created before using this method, it will return that Sprite. Returns error Sprite if not found.</para>
         /// </summary>
-        public CluwneSprite GetSpriteFromImage(string key)
+        public Sprite GetSpriteFromImage(string key)
         {
             key = key.ToLowerInvariant();
             if (_textures.ContainsKey(key))
@@ -545,7 +545,7 @@ namespace SS14.Client.Services.Resources
                 }
                 else
                 {
-                    var newSprite = new CluwneSprite(key, _textures[key]);
+                    var newSprite = new Sprite(_textures[key]);
                     _sprites.Add(key, newSprite);
                     return newSprite;
                 }
@@ -556,18 +556,18 @@ namespace SS14.Client.Services.Resources
         /// <summary>
         ///  Retrieves the Sprite with the given key from the Resource List. Returns error Sprite if not found.
         /// </summary>
-        public CluwneSprite GetSprite(string key)
+        public Sprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
             if (_sprites.ContainsKey(key))
             {
-                _sprites[key].Color = Color.White;
+                _sprites[key].Color = SFML.Graphics.Color.White;
                 return _sprites[key];
             }
             else return GetSpriteFromImage(key);
         }
 
-        public List<CluwneSprite> GetSprites()
+        public List<Sprite> GetSprites()
         {
             return _sprites.Values.ToList();
         } 
@@ -587,7 +587,7 @@ namespace SS14.Client.Services.Resources
             return null;
         }
 
-        public CluwneSprite GetNoSprite()
+        public Sprite GetNoSprite()
         {
             return _sprites["nosprite"];
         }

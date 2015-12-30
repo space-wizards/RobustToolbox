@@ -7,6 +7,7 @@ using System;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -17,7 +18,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public bool BounceRotate = false; //Rotation inverts after hitting a certain angle?
         public float BounceRotateAngle = 0; //Angle at which to change rotation direction.
 
-		public CluwneSprite DrawSprite;
+        public Sprite DrawSprite;
 
         public bool MouseParallax = true; //Move with mouse?
         public bool MouseParallaxHorizontal = true;
@@ -54,18 +55,20 @@ namespace SS14.Client.Services.UserInterface.Components
             if (BounceRotate && Math.Abs(spriteRotation) > BounceRotateAngle)
                 RotationSpeed = -RotationSpeed;
 
+            var bounds = DrawSprite.GetLocalBounds();
+
             ClientArea = new Rectangle(new Point((int) SpriteLocation.X, (int) SpriteLocation.Y),
-                                       new Size((int) DrawSprite.Width, (int) DrawSprite.Height));
+                                       new Size((int)bounds.Width, (int)bounds.Height));
 
             //Outside screen. Does not respect rotation. FIX.
             if (ClientArea.X >CluwneLib.Screen.Size.X)
-                SpriteLocation = new Vector2((0 - DrawSprite.Width), SpriteLocation.Y);
-            else if (ClientArea.X < (0 - DrawSprite.Width))
+                SpriteLocation = new Vector2((0 - bounds.Width), SpriteLocation.Y);
+            else if (ClientArea.X < (0 - bounds.Width))
                 SpriteLocation = new Vector2(CluwneLib.Screen.Size.X, SpriteLocation.Y);
 
             if (ClientArea.Y > CluwneLib.Screen.Size.Y)
-                SpriteLocation = new Vector2(SpriteLocation.X, (0 - DrawSprite.Height));
-            else if (ClientArea.Y < (0 - DrawSprite.Height))
+                SpriteLocation = new Vector2(SpriteLocation.X, (0 - bounds.Height));
+            else if (ClientArea.Y < (0 - bounds.Height))
                 SpriteLocation = new Vector2(SpriteLocation.X, CluwneLib.Screen.Size.Y);
 
             if (MouseParallax)
@@ -99,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             DrawSprite.Rotation = spriteRotation;
             DrawSprite.Position = (SpriteLocation + ParallaxOffset);
-            DrawSprite.Draw();
+            DrawSprite.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 
         public override void Dispose()
@@ -109,12 +112,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

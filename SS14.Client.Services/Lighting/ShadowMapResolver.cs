@@ -91,10 +91,10 @@ namespace SS14.Client.Services.Lighting
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);            
-            
-            CluwneSprite Sprite = new CluwneSprite("Maskspritetorendergarget", MaskTexture);
-            RenderImage MaskTarget = new RenderImage("MaskTarget", (uint)Sprite.Size.X, (uint)Sprite.Size.Y);
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
+
+            var maskSize = MaskTexture.Size;
+            RenderImage MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
             //Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
             //Debug.DebugRendertarget(Result, "DrawShadowsResult");

@@ -9,13 +9,14 @@ using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class Hotbar : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite hotbarBG;
+        private readonly Sprite hotbarBG;
 
         private readonly GuiComponent[] slots = new GuiComponent[10];
 
@@ -81,8 +82,8 @@ namespace SS14.Client.Services.UserInterface.Components
                 x_pos += comp.ClientArea.Width + 1;
             }
 
-            //ClientArea = new Rectangle(Position, new Size((int)max_x - Position.X + 5, (int)max_y - Position.Y + 5));
-            ClientArea = Rectangle.Round(hotbarBG.AABB);
+            var bounds = hotbarBG.GetLocalBounds();
+            ClientArea = Rectangle.Round(new RectangleF(bounds.Left, bounds.Top, bounds.Width, bounds.Height));
         }
 
         public override void Render()
@@ -105,21 +106,21 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseDown(e)) return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseUp(e)) return true;
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 comp.MouseMove(e);

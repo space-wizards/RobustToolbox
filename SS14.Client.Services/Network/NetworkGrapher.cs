@@ -6,6 +6,8 @@ using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
+using SS14.Client.Services.Helpers;
+using SS14.Client.GameObjects;
 
 namespace SS14.Client.Services.Network
 {
@@ -72,17 +74,17 @@ namespace SS14.Client.Services.Network
                 CluwneLib.ResetRenderTarget();
 
                 //Draw recieved line
-                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)),
-                                        (int) CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].RecievedBytes* 0.1f), 
+                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * (MaxDataPoints - i)),
+                                        (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].RecievedBytes * 0.1f),
                                         2,
-                                        (int) (_dataPoints[i].RecievedBytes*0.1f),
-                                        Color.FromArgb(180, Color.Red));
+                                        (int)(_dataPoints[i].RecievedBytes * 0.1f),
+                                        SFML.Graphics.Color.Red.WithAlpha(180));
 
                 CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)) + 2,
                                         (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
                                         2,
                                         (int)(_dataPoints[i].SentBytes*0.1f),
-                                        Color.FromArgb(180, Color.Green));
+                                        new SFML.Graphics.Color(0, 128, 0).WithAlpha(180));
             }
 
             _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes/totalMilliseconds, 6));

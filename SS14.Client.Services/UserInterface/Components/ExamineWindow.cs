@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -10,7 +11,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private readonly Label _entityDescription;
         private readonly IResourceManager _resourceManager;
-		private CluwneSprite _entitySprite;
+        private Sprite _entitySprite;
 
         public ExamineWindow(Size size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
@@ -27,9 +28,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                _entitySprite = (CluwneSprite) reply.ParamsList[0];
+                _entitySprite = (Sprite) reply.ParamsList[0];
                 _entityDescription.Position = new Point(10,
-                                                        (int) _entitySprite.Height +
+                                                        (int)_entitySprite.GetLocalBounds().Height +
                                                         _entityDescription.ClientArea.Height + 10);
             }
             else
@@ -41,9 +42,10 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             if (_entitySprite == null) return;
 
-            var spriteRect = new Rectangle((int) (ClientArea.Width/2f - _entitySprite.Width/2f) + ClientArea.X,
-                                           10 + ClientArea.Y, (int) _entitySprite.Width, (int) _entitySprite.Height);
-            _entitySprite.Draw(spriteRect);
+            // TODO: Implement!
+            //var spriteRect = new Rectangle((int) (ClientArea.Width/2f - _entitySprite.Width/2f) + ClientArea.X,
+            //                               10 + ClientArea.Y, (int) _entitySprite.Width, (int) _entitySprite.Height);
+            //_entitySprite.Draw(spriteRect);
         }
 
         public override void Dispose()

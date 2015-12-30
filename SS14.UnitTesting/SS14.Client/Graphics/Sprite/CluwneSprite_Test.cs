@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Graphics.Render;
-
+using Color = SFML.Graphics.Color;
 using SS14.Client.Graphics;
 using System.Drawing;
 

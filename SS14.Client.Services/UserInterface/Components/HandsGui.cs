@@ -13,7 +13,8 @@ using System;
 using System.Drawing;
 using System.Linq;
 using SFML.Window;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -21,16 +22,16 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         public Entity Entity;
         public InventoryLocation Hand;
-		public CluwneSprite HeldSprite;
+        public Sprite HeldSprite;
     }
 
     public class HandsGui : GuiComponent
     {
-        private readonly Color _inactiveColor = Color.FromArgb(255, 90, 90, 90);
+        private readonly Color _inactiveColor = new Color(90, 90, 90);
 
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-		private readonly CluwneSprite handSlot;
+        private readonly Sprite handSlot;
         private readonly int spacing = 1;
 
         public UiHandInfo LeftHand;
@@ -54,11 +55,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            handL = new Rectangle(Position.X, Position.Y, (int) handSlot.Width, (int) handSlot.Height);
-            handR = new Rectangle(Position.X + (int) handSlot.Width + spacing, Position.Y, (int) handSlot.Width,
-                                  (int) handSlot.Height);
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) ((handSlot.Width*2) + spacing),
-                                       (int) handSlot.Height);
+            var slotBounds = handSlot.GetLocalBounds();
+            handL = new Rectangle(Position.X, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
+            handR = new Rectangle(Position.X + (int)slotBounds.Width + spacing, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
+            ClientArea = new Rectangle(Position.X, Position.Y, (int) ((slotBounds.Width * 2) + spacing), (int)slotBounds.Height);
         }
 
         public override void Render()
@@ -69,34 +69,35 @@ namespace SS14.Client.Services.UserInterface.Components
             Entity entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
 
-            if (hands.CurrentHand == InventoryLocation.HandLeft)
-            {
-                handSlot.Color = Color.White;
-                handSlot.Draw(handL);
-
-                handSlot.Color = _inactiveColor;
-                handSlot.Draw(handR);
-            }
-            else
-            {
-                handSlot.Color = Color.White;
-                handSlot.Draw(handR);
-
-                handSlot.Color = _inactiveColor;
-                handSlot.Draw(handL);
-            }
-
-            if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
-                LeftHand.HeldSprite.Draw(
-                    new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.Width/2f),
-                                  handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.Height/2f),
-                                  (int) LeftHand.HeldSprite.Width, (int) LeftHand.HeldSprite.Height));
-
-            if (RightHand.Entity != null && RightHand.HeldSprite != null)
-                RightHand.HeldSprite.Draw(
-                    new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.Width/2f),
-                                  handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.Height/2f),
-                                  (int) RightHand.HeldSprite.Width, (int) RightHand.HeldSprite.Height));
+            // TODO: Implement!
+            //if (hands.CurrentHand == InventoryLocation.HandLeft)
+            //{
+            //    handSlot.Color = Color.White;
+            //    handSlot.Draw(handL);
+            //
+            //    handSlot.Color = _inactiveColor;
+            //    handSlot.Draw(handR);
+            //}
+            //else
+            //{
+            //    handSlot.Color = Color.White;
+            //    handSlot.Draw(handR);
+            //
+            //    handSlot.Color = _inactiveColor;
+            //    handSlot.Draw(handL);
+            //}
+            //
+            //if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
+            //    LeftHand.HeldSprite.Draw(
+            //        new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.Width/2f),
+            //                      handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.Height/2f),
+            //                      (int) LeftHand.HeldSprite.Width, (int) LeftHand.HeldSprite.Height));
+            //
+            //if (RightHand.Entity != null && RightHand.HeldSprite != null)
+            //    RightHand.HeldSprite.Draw(
+            //        new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.Width/2f),
+            //                      handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.Height/2f),
+            //                      (int) RightHand.HeldSprite.Width, (int) RightHand.HeldSprite.Height));
         }
 
         public override void Resize()
@@ -163,7 +164,7 @@ namespace SS14.Client.Services.UserInterface.Components
             equipComponent.SendSwitchHands(hand);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             switch (e.Button)
             {
@@ -183,7 +184,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -288,12 +289,12 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-		public override bool KeyDown(KeyEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

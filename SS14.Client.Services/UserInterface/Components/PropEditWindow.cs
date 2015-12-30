@@ -51,9 +51,9 @@ namespace SS14.Client.Services.UserInterface.Components
             foreach (PropWindowStruct struc in ObjPropList)
             {
                 if (struc.VarName.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
-                    struc.LabelName.BackgroundColor = Color.Bisque;
+                    struc.LabelName.BackgroundColor = new SFML.Graphics.Color(255, 228, 196);
                 else
-                    struc.LabelName.BackgroundColor = Color.Gray;
+                    struc.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
             }
         }
 
@@ -182,8 +182,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
                     newEntry.LabelName.Position = new Point(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = Color.Honeydew;
-                    newEntry.LabelName.BackgroundColor = Color.Gray;
+                    newEntry.LabelName.BorderColor = new SFML.Graphics.Color(240, 255, 240);
+                    newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Update(0);
 
@@ -205,8 +205,8 @@ namespace SS14.Client.Services.UserInterface.Components
                         newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceManager);
                         newEntry.LabelName.Position = new Point(15, pos);
                         newEntry.LabelName.DrawBorder = true;
-                        newEntry.LabelName.BorderColor = Color.DeepSkyBlue;
-                        newEntry.LabelName.BackgroundColor = Color.Gray;
+                        newEntry.LabelName.BorderColor = new SFML.Graphics.Color(0, 191, 255);
+                        newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
                         newEntry.LabelName.DrawBackground = true;
                         newEntry.LabelName.Clicked += LabelName_Clicked;
                         newEntry.LabelName.Update(0);
@@ -230,8 +230,8 @@ namespace SS14.Client.Services.UserInterface.Components
                                                    _resourceManager);
                     newEntry.LabelName.Position = new Point(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? Color.Chartreuse : Color.IndianRed;
-                    newEntry.LabelName.BackgroundColor = Color.Gray;
+                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? new SFML.Graphics.Color(127, 255, 0) : new SFML.Graphics.Color(205, 92, 92);
+                    newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Clicked += LabelName_Clicked;
                     newEntry.LabelName.Update(0);
@@ -261,7 +261,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		private void LabelName_Clicked(Label sender, MouseButtonEventArgs e)
+        private void LabelName_Clicked(Label sender, MouseButtonEventArgs e)
         {
             switch (e.Button)
             {

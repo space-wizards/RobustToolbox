@@ -16,7 +16,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         protected readonly IResourceManager _resourceManager;
 
-        public Color BackgroundColor = Color.DarkGray;
+        public SFML.Graphics.Color BackgroundColor = new SFML.Graphics.Color(169, 169, 169);
         public bool DrawBackground = false;
         public bool DrawBorder = true;
         public float BorderSize = 1.0f;
@@ -119,7 +119,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
+            clippingRI.Clear(DrawBackground ? BackgroundColor : SFML.Graphics.Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -147,13 +147,13 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, SFML.Graphics.Color.White, BlitterSizeMode.None);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  BorderSize, Color.Black);
+            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  BorderSize, SFML.Graphics.Color.Black);
             clippingRI.EndDrawing();
         }
 
@@ -193,7 +193,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
 
@@ -231,7 +231,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (scrollbarH.MouseUp(e)) return true;
@@ -254,7 +254,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             scrollbarH.MouseMove(e);
@@ -271,7 +271,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return;
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
            
 

@@ -5,6 +5,9 @@ using SS14.Client.Graphics.Sprite;
 using System;
 using SFML.Window;
 using System.Drawing;
+using SFML.Graphics;
+using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,7 +22,7 @@ namespace SS14.Client.Services.UserInterface.Components
         #endregion
 
         private readonly IResourceManager _resourceManager;
-		private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
 
         public HotbarSlot(IResourceManager resourceManager)
         {
@@ -38,8 +41,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public override sealed void Update(float frameTime)
         {
             _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
-            ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
+            var bounds = _buttonSprite.GetLocalBounds();
+            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -58,7 +61,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -68,7 +71,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
                 IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)

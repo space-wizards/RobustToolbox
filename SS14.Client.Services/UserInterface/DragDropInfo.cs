@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
@@ -14,7 +15,7 @@ namespace SS14.Client.Services.UserInterface
         #region IDragDropInfo Members
 
         public Entity DragEntity { get; private set; }
-		public CluwneSprite DragSprite { get; private set; }
+        public Sprite DragSprite { get; private set; }
         public IPlayerAction DragAction { get; private set; }
         public bool IsEntity { get; private set; }
 

@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using SFML.Graphics;
+using System.Collections.Generic;
 using System.Drawing;
-using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Interfaces.GOC
 {
     public interface ISpriteComponent
     {
         RectangleF AABB { get; }
-        CluwneSprite GetCurrentSprite();
-        CluwneSprite GetSprite(string spriteKey);
-        List<CluwneSprite> GetAllSprites();
+        Sprite GetCurrentSprite();
+        Sprite GetSprite(string spriteKey);
+        List<Sprite> GetAllSprites();
         void SetSpriteByKey(string spriteKey);
         void AddSprite(string spriteKey);
-        void AddSprite(string key, CluwneSprite spritetoadd);
+        void AddSprite(string key, Sprite spritetoadd);
     }
 }

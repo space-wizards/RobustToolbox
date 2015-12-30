@@ -1,8 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
 using System;
 using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SFML.Window;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,9 +18,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-		private CluwneSprite _buttonLeft;
-		private CluwneSprite _buttonMain;
-		private CluwneSprite _buttonRight;
+        private Sprite _buttonLeft;
+        private Sprite _buttonMain;
+        private Sprite _buttonRight;
 
         private Rectangle _clientAreaLeft;
         private Rectangle _clientAreaMain;
@@ -48,15 +50,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _clientAreaLeft = new Rectangle(Position, new Size((int) _buttonLeft.Width, (int) _buttonLeft.Height));
+            var boundsLeft = _buttonLeft.GetLocalBounds();
+            var boundsMain = _buttonMain.GetLocalBounds();
+            var boundsRight = _buttonRight.GetLocalBounds();
+            _clientAreaLeft = new Rectangle(Position, new Size((int)boundsLeft.Width, (int)boundsLeft.Height));
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size((int) Label.Width, (int) _buttonMain.Height));
+                                            new Size((int) Label.Width, (int)boundsMain.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int) _buttonRight.Width, (int) _buttonRight.Height));
+                                             new Size((int)boundsRight.Width, (int)boundsRight.Height));
             ClientArea = new Rectangle(Position,
                                        new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
-                                                Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
-                                                         _clientAreaMain.Height)));
+                                                Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Point(_clientAreaLeft.Right,
                                        Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
         }
@@ -67,9 +71,10 @@ namespace SS14.Client.Services.UserInterface.Components
             _buttonMain.Color = drawColor;
             _buttonRight.Color = drawColor;
 
-            _buttonLeft.Draw(_clientAreaLeft);
-            _buttonMain.Draw(_clientAreaMain);
-            _buttonRight.Draw(_clientAreaRight);
+            // TODO: Implement this!
+            //_buttonLeft.Draw(_clientAreaLeft);
+            //_buttonMain.Draw(_clientAreaMain);
+            //_buttonRight.Draw(_clientAreaRight);
 
             _buttonLeft.Color = Color.White;
             _buttonMain.Color = Color.White;
@@ -89,7 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
                 if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
@@ -98,7 +103,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     drawColor = Color.White;
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -108,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

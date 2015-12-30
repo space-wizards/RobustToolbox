@@ -1,12 +1,11 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System.Drawing;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Lighting
 {
@@ -22,7 +21,7 @@ namespace SS14.Client.Services.Lighting
 
         public Vector2 LightAreaSize { get; set; }
         public bool Calculated { get; set; }
-        public CluwneSprite Mask { get; set; }
+        public Sprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
@@ -79,14 +78,14 @@ namespace SS14.Client.Services.Lighting
        
         public Vector2 ToRelativePosition(Vector2 worldPosition)
         {
-            return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightAreaSize*0.5f);
+            return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightAreaSize * 0.5f);
         }
 
         public void BeginDrawingShadowCasters()
         {
-           RenderTarget.BeginDrawing();
+            RenderTarget.BeginDrawing();
 
-           RenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
+            RenderTarget.Clear(new SFML.Graphics.Color(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()

@@ -79,7 +79,7 @@ namespace SS14.Client.Services.UserInterface.Components
             components.Add(_lstOverride);
 
             _clearLabel.Clicked += ClearLabelClicked;
-            _clearLabel.BackgroundColor = Color.Gray;
+            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
             components.Add(_clearLabel);
 
             _eraserButton = new ImageButton
@@ -125,9 +125,9 @@ namespace SS14.Client.Services.UserInterface.Components
             _placementManager.ToggleEraser();
         }
 
-		private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
+        private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            _clearLabel.BackgroundColor = Color.Gray;
+            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
             BuildEntityList();
         }
 
@@ -164,7 +164,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                                                      searchStr.ToLower())).ToList();
 
 
-            if (searchStr != null) _clearLabel.BackgroundColor = Color.LightGray;
+            if (searchStr != null) _clearLabel.BackgroundColor = new SFML.Graphics.Color(211, 211, 211);
 
             foreach (
                 EntitySpawnSelectButton newButton in
@@ -226,7 +226,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? Color.Tomato : Color.White;
+            _eraserButton.Color = _placementManager.Eraser ? new SFML.Graphics.Color(255, 99, 71) : SFML.Graphics.Color.White;
             base.Render();
         }
 
@@ -238,27 +238,27 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (_entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;

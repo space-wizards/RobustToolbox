@@ -6,6 +6,10 @@ using SS14.Shared.GameObjects;
 using SFML.Window;
 using System;
 using System.Drawing;
+using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -17,9 +21,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-		private readonly CluwneSprite _entitySprite;
+        private readonly Sprite _entitySprite;
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite _slotSprite;
+        private readonly Sprite _slotSprite;
 
         public Entity ContainingEntity;
         private Color _currentColor;
@@ -37,20 +41,26 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) _slotSprite.Width, (int) _slotSprite.Height));
+            var bounds = _slotSprite.GetLocalBounds();
+            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
             _slotSprite.Color = _currentColor;
-            _slotSprite.Position = Position;
+            _slotSprite.Position = new Vector2f(Position.X, Position.Y);
             _slotSprite.Draw();
 
             if (_entitySprite != null)
-                _entitySprite.Draw(
-                    new Rectangle((int) (Position.X + _slotSprite.Width/2f - _entitySprite.Width/2f),
-                                  (int) (Position.Y + _slotSprite.Height/2f - _entitySprite.Height/2f),
-                                  (int) _entitySprite.Width, (int) _entitySprite.Height));
+            {
+                var slotBounds = _slotSprite.GetLocalBounds();
+                var entBounds = _entitySprite.GetLocalBounds();
+                _entitySprite.SetTransformToRect (
+                    new Rectangle((int)(Position.X + slotBounds.Width / 2f - entBounds.Width / 2f),
+                                  (int)(Position.Y + slotBounds.Height / 2f - entBounds.Height / 2f),
+                                  (int)entBounds.Width, (int)entBounds.Height));
+                _entitySprite.Draw();
+            }
             _slotSprite.Color = Color.White;
         }
 
@@ -60,7 +70,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -70,7 +80,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -79,10 +89,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
-                                ? Color.LightSteelBlue
+                                ? new SFML.Graphics.Color(176, 196, 222)
                                 : Color.White;
         }
     }

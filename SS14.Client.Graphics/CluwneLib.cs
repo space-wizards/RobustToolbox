@@ -151,11 +151,12 @@ namespace SS14.Client.Graphics
 
 
             //Hook OpenTK into SFMLs Opengl 
-            var wi = OpenTK.Platform.Utilities.CreateWindowsWindowInfo(Screen.SystemHandle);
-            var ctx = new OpenTK.Graphics.GraphicsContext(OpenTK.Graphics.GraphicsMode.Default, wi);
-            ctx.MakeCurrent(wi);
-            ctx.LoadAll();
-        }
+	    OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+                // Non-Native backend doesn't have a default GetAddress method
+		Backend = OpenTK.PlatformBackend.PreferNative
+	    });
+	    new GraphicsContext(OpenTK.ContextHandle.Zero, null);
+	}
        
         public static void RequestGC(Action action)
         {

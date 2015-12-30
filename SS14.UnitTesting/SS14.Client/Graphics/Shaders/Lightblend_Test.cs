@@ -1,12 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
 {
-    [TestClass]
+    [TestFixture]
     public class Lightblend_Test : SS14UnitTest
     {
-        [TestMethod]
+        [Test]
         public void LightBlend_Test()
         {
 

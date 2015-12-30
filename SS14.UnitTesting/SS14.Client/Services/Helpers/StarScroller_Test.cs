@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Event;
@@ -9,29 +9,21 @@ using System.Drawing;
 
 namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 {
-    [TestClass]
+    [TestFixture]
     public class StarScroller : SS14UnitTest
     {
-
-
-    
         private RenderImage renderimage;
-
-
+        
         private FrameEventArgs _frameEvent;
         private EventArgs _frameEventArgs;
         private Clock clock;
 
         private StarScroller Stars;
 
-
-
-        [TestMethod]
+        [Test]
         public void CreateStarScroller_ShouldCreateStars()
         {
-
-
-            base.InitializeCluwneLib();
+            base.InitializeCluwneLib(1280, 720, false, 60);
             Stars = new StarScroller();
             renderimage = new RenderImage("StarScroller", 1920, 1080);
 
@@ -49,15 +41,9 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 base.GetResourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
     
                 renderimage.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
-                           
-
-
-
+                  
                 renderimage.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
-
-
-
-
+                
                 CluwneLib.Screen.Display();
 
             }    

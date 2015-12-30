@@ -1274,7 +1274,7 @@ namespace SS14.Client.Services.State.States
             Lightmap.ResetCurrentShader();
             shadowIntermediate.ResetCurrentRenderTarget(); // back to screen
 
-            Debug.DebugRendertarget(shadowIntermediate);
+            //Debug.DebugRendertarget(shadowIntermediate);
 
 
         }
@@ -1377,7 +1377,7 @@ namespace SS14.Client.Services.State.States
 
 
                 playerOcclusionTarget.EndDrawing();
-                Debug.DebugRendertarget(playerOcclusionTarget);
+                //Debug.DebugRendertarget(playerOcclusionTarget);
             }
             else
             {

@@ -21,7 +21,7 @@ namespace SS14.Client.GameObjects
         protected Sprite currentBaseSprite;
         protected string currentBaseSpriteKey;
         protected Dictionary<string, Sprite> dirSprites;
-        protected bool flip;
+        protected bool HorizontalFlip { get; set; }
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         protected Dictionary<string, Sprite> sprites;
@@ -311,8 +311,8 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new SFML.System.Vector2f(flip ? -1 : 1, 1);
-            spriteToRender.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Draw();
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -329,7 +329,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 0, 255));
+            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

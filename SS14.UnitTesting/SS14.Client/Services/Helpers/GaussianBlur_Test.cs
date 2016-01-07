@@ -12,6 +12,7 @@ using SFML.System;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Graphics.Render;
 using SS14.Shared.Maths;
+using SFML.Graphics;
 using Color = SFML.Graphics.Color;
 
 namespace SS14.UnitTesting.SS14.Client.Services.Helpers
@@ -31,7 +32,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
         private EventArgs _frameEventArgs;
         private Clock clock;
 
-        private SFML.Graphics.Sprite sprite;
+        private Sprite sprite;
         
         public GaussianBlur_Test()
         {  

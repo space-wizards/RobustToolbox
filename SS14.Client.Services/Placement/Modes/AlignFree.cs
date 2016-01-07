@@ -35,7 +35,7 @@ namespace SS14.Client.Services.Placement.Modes
                 spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
                                                      mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
-                spriteToDraw.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+                spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;
             }
         }

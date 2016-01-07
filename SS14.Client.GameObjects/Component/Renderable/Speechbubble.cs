@@ -8,7 +8,7 @@ using System.Drawing;
 using System.Text;
 using SS14.Shared.Maths;
 using Color = System.Drawing.Color;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -102,7 +102,7 @@ namespace SS14.Client.GameObjects
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
 
             _bubbleSprite.Position = new Vector2f(x, y);
-            _bubbleSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            _bubbleSprite.Draw();
         }
 
         public void Draw(Vector2 position, Vector2 windowOrigin, RectangleF boundingBox)
@@ -115,7 +115,7 @@ namespace SS14.Client.GameObjects
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
 
             _bubbleSprite.Position = new Vector2f(x, y);
-            _bubbleSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            _bubbleSprite.Draw();
         }
 
         public void SetText(string text)

@@ -53,8 +53,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {           
-            checkbox.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
-            if (Value) checkboxCheck.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            checkbox.Draw();
+            if (Value) checkboxCheck.Draw();
         }
 
         public override void Dispose()

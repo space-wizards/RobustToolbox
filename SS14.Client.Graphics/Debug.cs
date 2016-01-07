@@ -53,9 +53,9 @@ namespace SS14.Client.Graphics
 
         public static void DebugRendertarget(RenderImage Rendertarget, string fileName)
         {
-            //string path = "..\\DEBUGTEXTURE\\" + fileName + ".png";
+            string path = "..\\DEBUGTEXTURE\\" + fileName + ".png";
 
-            //Rendertarget.Texture.CopyToImage().SaveToFile(path);
+            Rendertarget.Texture.CopyToImage().SaveToFile(path);
         }
 
 

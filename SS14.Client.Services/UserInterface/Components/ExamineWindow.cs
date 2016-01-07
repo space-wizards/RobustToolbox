@@ -4,6 +4,7 @@ using SS14.Shared.GO;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SFML.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -42,10 +43,11 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             if (_entitySprite == null) return;
 
-            // TODO: Implement!
-            //var spriteRect = new Rectangle((int) (ClientArea.Width/2f - _entitySprite.Width/2f) + ClientArea.X,
-            //                               10 + ClientArea.Y, (int) _entitySprite.Width, (int) _entitySprite.Height);
-            //_entitySprite.Draw(spriteRect);
+            var bounds = _entitySprite.GetLocalBounds();
+            var spriteRect = new Rectangle((int) (ClientArea.Width/2f - bounds.Width/2f) + ClientArea.X,
+                                           10 + ClientArea.Y, (int)bounds.Width, (int)bounds.Height);
+            _entitySprite.SetTransformToRect(spriteRect);
+            _entitySprite.Draw();
         }
 
         public override void Dispose()

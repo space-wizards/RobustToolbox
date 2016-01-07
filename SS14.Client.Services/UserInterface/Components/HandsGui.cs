@@ -15,6 +15,7 @@ using System.Linq;
 using SFML.Window;
 using Color = SFML.Graphics.Color;
 using SFML.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -69,35 +70,46 @@ namespace SS14.Client.Services.UserInterface.Components
             Entity entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
 
-            // TODO: Implement!
-            //if (hands.CurrentHand == InventoryLocation.HandLeft)
-            //{
-            //    handSlot.Color = Color.White;
-            //    handSlot.Draw(handL);
-            //
-            //    handSlot.Color = _inactiveColor;
-            //    handSlot.Draw(handR);
-            //}
-            //else
-            //{
-            //    handSlot.Color = Color.White;
-            //    handSlot.Draw(handR);
-            //
-            //    handSlot.Color = _inactiveColor;
-            //    handSlot.Draw(handL);
-            //}
-            //
-            //if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
-            //    LeftHand.HeldSprite.Draw(
-            //        new Rectangle(handL.X + (int) (handL.Width/2f - LeftHand.HeldSprite.Width/2f),
-            //                      handL.Y + (int) (handL.Height/2f - LeftHand.HeldSprite.Height/2f),
-            //                      (int) LeftHand.HeldSprite.Width, (int) LeftHand.HeldSprite.Height));
-            //
-            //if (RightHand.Entity != null && RightHand.HeldSprite != null)
-            //    RightHand.HeldSprite.Draw(
-            //        new Rectangle(handR.X + (int) (handR.Width/2f - RightHand.HeldSprite.Width/2f),
-            //                      handR.Y + (int) (handR.Height/2f - RightHand.HeldSprite.Height/2f),
-            //                      (int) RightHand.HeldSprite.Width, (int) RightHand.HeldSprite.Height));
+            if (hands.CurrentHand == InventoryLocation.HandLeft)
+            {
+                handSlot.Color = Color.White;
+                handSlot.SetTransformToRect(handL);
+                handSlot.Draw();
+            
+                handSlot.Color = _inactiveColor;
+                handSlot.SetTransformToRect(handR);
+                handSlot.Draw();
+            }
+            else
+            {
+                handSlot.Color = Color.White;
+                handSlot.SetTransformToRect(handR);
+                handSlot.Draw();
+
+                handSlot.Color = _inactiveColor;
+                handSlot.SetTransformToRect(handL);
+                handSlot.Draw();
+            }
+
+            if (LeftHand.Entity != null && LeftHand.HeldSprite != null)
+            {
+                var bounds = LeftHand.HeldSprite.GetLocalBounds();
+                LeftHand.HeldSprite.SetTransformToRect(
+                    new Rectangle(handL.X + (int)(handL.Width / 2f - bounds.Width / 2f),
+                                  handL.Y + (int)(handL.Height / 2f - bounds.Height / 2f),
+                                  (int)bounds.Width, (int)bounds.Height));
+                LeftHand.HeldSprite.Draw();
+            }
+
+            if (RightHand.Entity != null && RightHand.HeldSprite != null)
+            {
+                var bounds = RightHand.HeldSprite.GetLocalBounds();
+                RightHand.HeldSprite.SetTransformToRect(
+                    new Rectangle(handR.X + (int)(handR.Width / 2f - bounds.Width / 2f),
+                                  handR.Y + (int)(handR.Height / 2f - bounds.Height / 2f),
+                                  (int)bounds.Width, (int)bounds.Height));
+                RightHand.HeldSprite.Draw();
+            }
         }
 
         public override void Resize()

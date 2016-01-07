@@ -77,7 +77,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (_bgcol != SFML.Graphics.Color.Transparent)
             CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
                                                            ClientArea.Height, _bgcol);
-            _icon.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            _icon.Draw();
             Label.Draw();
         }
 

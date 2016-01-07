@@ -15,7 +15,7 @@ namespace SS14.Client.Graphics
 
         public static void Draw(this SFML.Graphics.Sprite sprite)
         {
-            sprite.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            sprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(CluwneLib.CurrentShader));
         }
     }
 }

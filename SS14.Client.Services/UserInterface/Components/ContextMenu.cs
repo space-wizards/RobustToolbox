@@ -210,8 +210,8 @@ namespace SS14.Client.Services.UserInterface.Components
                                          (int)bounds.Width, (int)bounds.Height);
            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  _currentColor);
             _textLabel.Render();
-            // TODO: Implement
-            //_iconSprite.Draw(iconRect);
+            _iconSprite.SetTransformToRect(iconRect);
+            _iconSprite.Draw();
         }
 
         public override void Dispose()

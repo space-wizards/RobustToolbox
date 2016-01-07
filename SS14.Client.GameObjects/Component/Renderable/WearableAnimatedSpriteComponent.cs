@@ -99,8 +99,8 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new SFML.System.Vector2f(flip ? -1 : 1, 1);
-            spriteToRender.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Draw();
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves

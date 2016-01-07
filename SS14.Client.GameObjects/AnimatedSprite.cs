@@ -65,6 +65,8 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
+        public bool HorizontalFlip { get; set; }
+
         #endregion
 
         #endregion
@@ -133,6 +135,7 @@ namespace SS14.Client.Graphics.Sprite
 
         public void Draw()
         {
+            _currentSprite.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
             _currentSprite.Draw();
         }
 

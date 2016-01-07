@@ -102,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             DrawSprite.Rotation = spriteRotation;
             DrawSprite.Position = (SpriteLocation + ParallaxOffset);
-            DrawSprite.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+            DrawSprite.Draw();
         }
 
         public override void Dispose()

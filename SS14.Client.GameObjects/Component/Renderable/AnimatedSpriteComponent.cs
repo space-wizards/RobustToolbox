@@ -22,7 +22,6 @@ namespace SS14.Client.GameObjects
         protected string baseSprite;
         protected string currentSprite;
         protected AnimatedSprite sprite;
-        protected bool flip;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         protected bool visible = true;
@@ -73,7 +72,9 @@ namespace SS14.Client.GameObjects
                                       sprite.AABB.Height / tileSize);
             }
         }
-        
+
+        public bool HorizontalFlip { get; set; }
+
         #endregion
 
         public override void OnAdd(Entity owner)
@@ -268,11 +269,9 @@ namespace SS14.Client.GameObjects
                 || ownerPos.Y + bounds.Top + bounds.Height < topLeft.Y
                 || ownerPos.Y > bottomRight.Y)
                 return;
-
-            // TODO: Implement
-            //sprite.HorizontalFlip = flip;
+            
+            sprite.HorizontalFlip = HorizontalFlip;
             sprite.Draw();
-            //sprite.HorizontalFlip = false;
 
             //Render slaves above
             IEnumerable<IRenderableComponent> renderablesAbove = from IRenderableComponent c in slaves

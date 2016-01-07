@@ -1,5 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System;
@@ -70,11 +71,13 @@ namespace SS14.Client.Services.UserInterface.Components
             _buttonLeft.Color = drawColor;
             _buttonMain.Color = drawColor;
             _buttonRight.Color = drawColor;
-
-            // TODO: Implement this!
-            //_buttonLeft.Draw(_clientAreaLeft);
-            //_buttonMain.Draw(_clientAreaMain);
-            //_buttonRight.Draw(_clientAreaRight);
+            
+            _buttonLeft.SetTransformToRect(_clientAreaLeft);
+            _buttonMain.SetTransformToRect(_clientAreaMain);
+            _buttonRight.SetTransformToRect(_clientAreaRight);
+            _buttonLeft.Draw();
+            _buttonMain.Draw();
+            _buttonRight.Draw();
 
             _buttonLeft.Color = Color.White;
             _buttonMain.Color = Color.White;

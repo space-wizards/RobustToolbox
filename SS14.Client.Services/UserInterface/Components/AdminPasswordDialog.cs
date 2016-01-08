@@ -5,6 +5,7 @@ using SS14.Shared;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -13,23 +14,21 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly INetworkManager _networkManager;
 
         private readonly Button _okayButton;
-        private readonly IResourceManager _resourceManager;
         private readonly Textbox _textboxPassword;
 
-        public AdminPasswordDialog(Size size, INetworkManager networkManager, IResourceManager resourceManager)
+        public AdminPasswordDialog(Vector2i size, INetworkManager networkManager, IResourceManager resourceManager)
             : base("Admin Login", size, resourceManager)
         {
             _networkManager = networkManager;
-            _resourceManager = resourceManager;
 
-            _textboxPassword = new Textbox((int) (size.Width/2f), _resourceManager);
+            _textboxPassword = new Textbox((int) (size.X/2f), _resourceManager);
             _okayButton = new Button("Submit", _resourceManager);
             _okayButton.Clicked += OkayButtonClicked;
             _okayButton.mouseOverColor = new SFML.Graphics.Color(135, 206, 250);
             _textboxPassword.OnSubmit += textboxPassword_OnSubmit;
             components.Add(_textboxPassword);
             components.Add(_okayButton);
-            Position = new Point((int) ( CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) ( CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
         }
 
@@ -56,10 +55,9 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Update(frameTime);
             if (_okayButton == null || _textboxPassword == null) return;
 
-            _okayButton.Position = new Point((int) (Size.Width/2f) - (int) (_okayButton.ClientArea.Width/2f),
-                                             (Size.Height - _okayButton.ClientArea.Height - 5));
-            _textboxPassword.Position = new Point((int) (Size.Width/2f) - (int) (_textboxPassword.ClientArea.Width/2f),
-                                                  5);
+            _okayButton.Position = new Vector2i((int) (Size.X/2f) - (int) (_okayButton.ClientArea.Width/2f),
+                                             (Size.Y - _okayButton.ClientArea.Height - 5));
+            _textboxPassword.Position = new Vector2i((int) (Size.X/2f) - (int) (_textboxPassword.ClientArea.Width/2f), 5);
         }
 
         private void TryAdminLogin(string password)

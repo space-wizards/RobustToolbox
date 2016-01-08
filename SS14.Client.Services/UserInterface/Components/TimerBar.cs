@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using SFML.Window;
 using SS14.Shared.Maths;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -11,7 +13,7 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private Stopwatch stopwatch;
 
-        public Timer_Bar(Size size, TimeSpan countdownTime, IResourceManager resourceManager)
+        public Timer_Bar(Vector2i size, TimeSpan countdownTime, IResourceManager resourceManager)
             : base(size, resourceManager)
         {
             stopwatch = new Stopwatch();
@@ -38,9 +40,9 @@ namespace SS14.Client.Services.UserInterface.Components
                     DateTime.Now.AddSeconds(max - stopwatch.Elapsed.Seconds).Subtract(DateTime.Now).ToString(@"mm\:ss");
             }
 
-            Text.Position = new Vector2(Position.X + (Size.Width/2f - Text.Width/2f),
-                                         Position.Y + (Size.Height/2f - Text.Height/2f));
-            ClientArea = new Rectangle(Position, Size);
+            Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
+                                         Position.Y + (int)(Size.Y/2f - Text.Height/2f));
+            ClientArea = new IntRect(Position, Size);
         }
 
         public override void Dispose()
@@ -52,12 +54,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

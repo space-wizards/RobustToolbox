@@ -10,6 +10,9 @@ using BlendMode = SFML.Graphics.BlendMode;
 using Color = SFML.Graphics.Color;
 using SS14.Client.Services.Helpers;
 using SS14.Client.GameObjects;
+using SFML.System;
+using SS14.Shared.Maths;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -27,7 +30,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public SimpleImage _imgJobGrad;
 
 
-        public JobTab(string uniqueName, Size size, IResourceManager resourceManager)
+        public JobTab(string uniqueName, Vector2i size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
         {
             _imgWhatDep = new SimpleImage()
@@ -36,7 +39,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 };
 
             _imgWhatDep.Update(0);
-            _imgWhatDep.Position = new Point((int)(size.Width / 2f - _imgWhatDep.ClientArea.Width / 2f),  30);
+            _imgWhatDep.Position = new Vector2i((int)(size.X / 2f - _imgWhatDep.ClientArea.Width / 2f),  30);
             _imgWhatDep.Update(0);
 
             _imgJobDesc = new SimpleImage()
@@ -46,13 +49,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _shwDepa = new LobbyShowcase
             {
-                Position = new Point(60, _imgWhatDep.ClientArea.Bottom + 5),
-                Size = new Size(675, 80),
+                Position = new Vector2i(60, _imgWhatDep.ClientArea.Bottom() + 5),
+                Size = new Vector2i(675, 80),
                 ButtonLeft = "job_arrowleft",
                 ButtonRight = "job_arrowright",
                 SelectionBackground = "dep_glow",
                 ItemSpacing = 20,
-                //ItemOffsets = new Size(40, 0)
+                //ItemOffsets = new Vector2i(40, 0)
             };
             _shwDepa.Update(0);
 
@@ -62,7 +65,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 Color = Color.White.WithAlpha(120)
             };
             _imgDepGrad.Update(0);
-            _imgDepGrad.Position = new Point(_shwDepa.ClientArea.X + (int)(_shwDepa.ClientArea.Width / 2f - _imgDepGrad.ClientArea.Width / 2f), _shwDepa.ClientArea.Top);
+            _imgDepGrad.Position = new Vector2i(_shwDepa.ClientArea.Left + (int)(_shwDepa.ClientArea.Width / 2f - _imgDepGrad.ClientArea.Width / 2f), _shwDepa.ClientArea.Top);
 
             _lblDep = new Label("DEPARTMENT", "MICROGBE", resourceManager)
             {
@@ -72,19 +75,19 @@ namespace SS14.Client.Services.UserInterface.Components
             };
 
             _lblDep.Update(0);
-            _lblDep.Position = new Point((int)(size.Width / 2f - _lblDep.ClientArea.Width / 2f), _shwDepa.ClientArea.Bottom + 5);
+            _lblDep.Position = new Vector2i((int)(size.X / 2f - _lblDep.ClientArea.Width / 2f), _shwDepa.ClientArea.Bottom() + 5);
             _lblDep.Update(0);
 
             _imgJobFluff = new SimpleImage()
             {
                 Sprite = "lobby_jobfluff"
             };
-            _imgJobFluff.Position = new Point(_lblDep.ClientArea.X + (int)(_lblDep.ClientArea.Width / 2f - _imgJobFluff.ClientArea.Width / 2f), _lblDep.ClientArea.Bottom);
+            _imgJobFluff.Position = new Vector2i(_lblDep.ClientArea.Left + (int)(_lblDep.ClientArea.Width / 2f - _imgJobFluff.ClientArea.Width / 2f), _lblDep.ClientArea.Bottom());
 
             _shwJobs = new LobbyShowcase
             {
-                Position = new Point(60, _lblDep.ClientArea.Bottom + 25),
-                Size = new Size(675, 80),
+                Position = new Vector2i(60, _lblDep.ClientArea.Bottom() + 25),
+                Size = new Vector2i(675, 80),
                 ButtonLeft = "job_arrowleft",
                 ButtonRight = "job_arrowright",
                 SelectionBackground = "job_glow"
@@ -97,17 +100,17 @@ namespace SS14.Client.Services.UserInterface.Components
                 Color = Color.White.WithAlpha(120)
             };
             _imgJobGrad.Update(0);
-            _imgJobGrad.Position = new Point(_shwJobs.ClientArea.X + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);
+            _imgJobGrad.Position = new Vector2i(_shwJobs.ClientArea.Left + (int)(_shwJobs.ClientArea.Width / 2f - _imgJobGrad.ClientArea.Width / 2f), _shwJobs.ClientArea.Top);
 
             _imgJobDesc.Update(0);
-            _imgJobDesc.Position = new Point(0, _shwJobs.ClientArea.Bottom - 12);
+            _imgJobDesc.Position = new Vector2i(0, _shwJobs.ClientArea.Bottom() - 12);
             _imgJobDesc.Update(0);
 
             _lbljobName = new Label(" ", "MICROGBE", resourceManager)
             {
                 TextColor = new Color(245, 245, 245)
             };
-            _lbljobName.Position = new Point(3, _imgJobDesc.Position.Y + 4);
+            _lbljobName.Position = new Vector2i(3, _imgJobDesc.Position.Y + 4);
 
             _lbljobName.Update(0);
 
@@ -115,7 +118,7 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 TextColor = new Color(245, 245, 245)
             };
-            _lbljobDesc.Position = new Point(3, _lbljobName.ClientArea.Bottom + 5);
+            _lbljobDesc.Position = new Vector2i(3, _lbljobName.ClientArea.Bottom() + 5);
 
             components.Add(_lblDep);
             components.Add(_imgWhatDep);
@@ -139,17 +142,17 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, Size);
+            ClientArea = new IntRect(Position, Size);
 
             if (_lblDep != null)
             {
-                _lblDep.Position = new Point((int) (Size.Width/2f - _lblDep.ClientArea.Width/2f), _shwDepa.ClientArea.Bottom + 10);
+                _lblDep.Position = new Vector2i((int) (Size.X/2f - _lblDep.ClientArea.Width/2f), _shwDepa.ClientArea.Bottom() + 10);
                 if(_imgJobFluff != null)
-                    _imgJobFluff.Position = new Point(_lblDep.ClientArea.X + (int) (_lblDep.ClientArea.Width/2f - _imgJobFluff.ClientArea.Width/2f), _lblDep.ClientArea.Bottom);
+                    _imgJobFluff.Position = new Vector2i(_lblDep.ClientArea.Left + (int) (_lblDep.ClientArea.Width/2f - _imgJobFluff.ClientArea.Width/2f), _lblDep.ClientArea.Bottom());
             }
 
             //if(_shwJobs != null)
-            //    _shwJobs.Position = new Point(Position.X + (int)(ClientArea.Width / 2f - _shwJobs.ClientArea.Width / 2f), 5);
+            //    _shwJobs.Position = new Vector2i(Position.X + (int)(ClientArea.Width / 2f - _shwJobs.ClientArea.Width / 2f), 5);
 
             base.Update(frameTime);
         }

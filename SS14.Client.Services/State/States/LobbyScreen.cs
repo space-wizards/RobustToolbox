@@ -13,7 +13,6 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics;
 using SFML.Graphics;
 using SFML.System;
-using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -80,15 +79,15 @@ namespace SS14.Client.Services.State.States
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
             var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = new SFML.Graphics.Color(176, 222, 196)};
-            joinButton.Position = new Point(605 - joinButton.ClientArea.Width - 5,
+            joinButton.Position = new Vector2i(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
 
             UserInterfaceManager.AddComponent(joinButton);
 
-            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Size(375, 400), ResourceManager)
+            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Vector2i(375, 400), ResourceManager)
                                       {
-                                          Position = new Point(630, 10)
+                                          Position = new Vector2i(630, 10)
                                       };
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
@@ -102,27 +101,27 @@ namespace SS14.Client.Services.State.States
         
 
             CluwneLib.CurrentRenderTarget.Clear();
-        
-            _lobbyText.Position = new Vector2(10, 10);
+
+            _lobbyText.Position = new Vector2i(10, 10);
             _lobbyText.Text = "Server: " + _serverName;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2(10, 30);
+            _lobbyText.Position = new Vector2i(10, 30);
             _lobbyText.Text = "Server-Port: " + _serverPort;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2(10, 50);
+            _lobbyText.Position = new Vector2i(10, 50);
             _lobbyText.Text = "Max Players: " + _serverMaxPlayers;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2(10, 70);
+            _lobbyText.Position = new Vector2i(10, 70);
             _lobbyText.Text = "Gamemode: " + _gameType;
             _lobbyText.Draw();
-            _lobbyText.Position = new Vector2(10, 110);
+            _lobbyText.Position = new Vector2i(10, 110);
             _lobbyText.Text = "MOTD: \n" + _welcomeString;
             _lobbyText.Draw();
 
             int pos = 225;
             foreach (string plrStr in _playerListStrings)
             {
-                _lobbyText.Position = new Vector2(10, pos);
+                _lobbyText.Position = new Vector2i(10, pos);
                 _lobbyText.Text = plrStr;
                 _lobbyText.Draw();
                 pos += 20;
@@ -241,7 +240,7 @@ namespace SS14.Client.Services.State.States
                                                   ResourceManager)
                                   {
                                       Available = definition.Available,
-                                      Position = new Point(5, pos)
+                                      Position = new Vector2i(5, pos)
                                   };
 
                 current.Clicked += CurrentClicked;

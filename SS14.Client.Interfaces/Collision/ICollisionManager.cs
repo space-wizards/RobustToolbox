@@ -2,6 +2,8 @@
 using SS14.Shared.GameObjects;
 using System.Drawing;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Interfaces.Collision
 {
@@ -13,10 +15,10 @@ namespace SS14.Client.Interfaces.Collision
         /// </summary>
         /// <param name="collider">Collision rectangle to check</param>
         /// <returns>true if collides, false if not</returns>
-        bool IsColliding(RectangleF collider);
+        bool IsColliding(FloatRect collider);
 
         bool TryCollide(Entity collider);
-        bool TryCollide(Entity collider, Vector2 offset, bool bump = true);
+        bool TryCollide(Entity collider, Vector2f offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

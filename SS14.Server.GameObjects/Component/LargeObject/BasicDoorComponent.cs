@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Server.GameObjects
 {
@@ -160,7 +161,7 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = false;
         }
 
-        private void SetImpermeable(Vector2 position)
+        private void SetImpermeable(Vector2f position)
         {
             //var map = IoCManager.Resolve<IMapManager>();
             //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
@@ -168,7 +169,7 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = false;
         }
 
-        private void SetPermeable(Vector2 position)
+        private void SetPermeable(Vector2f position)
         {
             //var map = IoCManager.Resolve<IMapManager>();
             //Tile t = (Tile)map.GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);

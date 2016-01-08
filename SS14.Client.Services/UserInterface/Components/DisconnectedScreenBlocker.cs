@@ -5,6 +5,8 @@ using SS14.Client.Services.State.States;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -38,13 +40,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            _message.Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+            _message.Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
                                           (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f - _message.ClientArea.Height/2f) -
                                           50);
             _message.Update(frameTime);
             _mainMenuButton.Position =
-                new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
-                          _message.ClientArea.Bottom + 20);
+                new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+                          _message.ClientArea.Bottom() + 20);
             _mainMenuButton.Update(frameTime);
         }
 

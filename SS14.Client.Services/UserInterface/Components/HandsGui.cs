@@ -37,8 +37,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public UiHandInfo LeftHand;
         public UiHandInfo RightHand;
-        private Rectangle handL;
-        private Rectangle handR;
+        private IntRect handL;
+        private IntRect handR;
 
         public HandsGui()
         {
@@ -57,9 +57,9 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             var slotBounds = handSlot.GetLocalBounds();
-            handL = new Rectangle(Position.X, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
-            handR = new Rectangle(Position.X + (int)slotBounds.Width + spacing, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) ((slotBounds.Width * 2) + spacing), (int)slotBounds.Height);
+            handL = new IntRect(Position.X, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
+            handR = new IntRect(Position.X + (int)slotBounds.Width + spacing, Position.Y, (int)slotBounds.Width, (int)slotBounds.Height);
+            ClientArea = new IntRect(Position.X, Position.Y, (int) ((slotBounds.Width * 2) + spacing), (int)slotBounds.Height);
         }
 
         public override void Render()
@@ -95,8 +95,8 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 var bounds = LeftHand.HeldSprite.GetLocalBounds();
                 LeftHand.HeldSprite.SetTransformToRect(
-                    new Rectangle(handL.X + (int)(handL.Width / 2f - bounds.Width / 2f),
-                                  handL.Y + (int)(handL.Height / 2f - bounds.Height / 2f),
+                    new IntRect(handL.Left + (int)(handL.Width / 2f - bounds.Width / 2f),
+                                  handL.Top + (int)(handL.Height / 2f - bounds.Height / 2f),
                                   (int)bounds.Width, (int)bounds.Height));
                 LeftHand.HeldSprite.Draw();
             }
@@ -105,8 +105,8 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 var bounds = RightHand.HeldSprite.GetLocalBounds();
                 RightHand.HeldSprite.SetTransformToRect(
-                    new Rectangle(handR.X + (int)(handR.Width / 2f - bounds.Width / 2f),
-                                  handR.Y + (int)(handR.Height / 2f - bounds.Height / 2f),
+                    new IntRect(handR.Left + (int)(handR.Width / 2f - bounds.Width / 2f),
+                                  handR.Top + (int)(handR.Height / 2f - bounds.Height / 2f),
                                   (int)bounds.Width, (int)bounds.Height));
                 RightHand.HeldSprite.Draw();
             }
@@ -181,12 +181,12 @@ namespace SS14.Client.Services.UserInterface.Components
             switch (e.Button)
             {
                 case Mouse.Button.Right:
-                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
+                    if (handL.Contains(e.X, e.Y))
                     {
                         SendSwitchHandTo(InventoryLocation.HandLeft);
                         return true;
                     }
-                    if (handR.Contains(new Point((int) e.X, (int) e.Y)))
+                    if (handR.Contains(e.X, e.Y))
                     {
                         SendSwitchHandTo(InventoryLocation.HandRight);
                         return true;
@@ -198,7 +198,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -212,7 +212,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
-                    if (handL.Contains(new Point((int) e.X, (int) e.Y)))
+                    if (handL.Contains(e.X, e.Y))
                     {
                         if (hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] == null)
                         {
@@ -232,7 +232,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         return true;
                     }
 
-                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)))
+                    else if (handR.Contains(e.X, e.Y))
                     {
                         if (hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] == null)
                         {
@@ -254,13 +254,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 }
                 else
                 {
-                    if (handL.Contains(new Point((int) e.X, (int) e.Y)) &&
+                    if (handL.Contains(e.X, e.Y) &&
                         hands.HandSlots.ContainsKey(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
                         hands.HandSlots[InventoryLocation.HandLeft].SendMessage(this, ComponentMessageType.ClickedInHand,
                                                                _playerManager.ControlledEntity.Uid);
                     }
-                    else if (handR.Contains(new Point((int) e.X, (int) e.Y)) &&
+                    else if (handR.Contains(e.X, e.Y) &&
                              hands.HandSlots.ContainsKey(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                     {
                         hands.HandSlots[InventoryLocation.HandRight].SendMessage(this, ComponentMessageType.ClickedInHand,
@@ -273,14 +273,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public void MouseMove(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 Entity entity = _playerManager.ControlledEntity;
                 var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
                 switch (e.Button)
                 {
                     case Mouse.Button.Left:
-                        if (handL.Contains(new Point((int) e.X, (int) e.Y)))
+                        if (handL.Contains(e.X, e.Y))
                         {
                             if (hands.HandSlots.Keys.Contains(InventoryLocation.HandLeft) && hands.HandSlots[InventoryLocation.HandLeft] != null)
                             {
@@ -288,7 +288,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                 _userInterfaceManager.DragInfo.StartDrag(entityL);
                             }
                         }
-                        if (handR.Contains(new Point((int) e.X, (int) e.Y)))
+                        if (handR.Contains(e.X, e.Y))
                         {
                             if (hands.HandSlots.Keys.Contains(InventoryLocation.HandRight) && hands.HandSlots[InventoryLocation.HandRight] != null)
                             {

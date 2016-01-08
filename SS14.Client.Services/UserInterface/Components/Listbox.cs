@@ -10,6 +10,8 @@ using SFML.Window;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using Color = SFML.Graphics.Color;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -24,9 +26,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly List<string> _contentStrings = new List<string>();
         private readonly IResourceManager _resourceManager;
         private readonly int _width;
-        private Rectangle _clientAreaLeft;
-        private Rectangle _clientAreaMain;
-        private Rectangle _clientAreaRight;
+        private IntRect _clientAreaLeft;
+        private IntRect _clientAreaMain;
+        private IntRect _clientAreaRight;
         private ScrollableContainer _dropDown;
 
         private Sprite _listboxLeft;
@@ -47,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _selectedLabel = new TextSprite("ListboxLabel", "", _resourceManager.GetFont("CALIBRI"))
                                  {Color = Color.Black};
 
-            _dropDown = new ScrollableContainer("ListboxContents", new Size(width, dropDownLength), _resourceManager);
+            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceManager);
             _dropDown.SetVisible(false);
 
             if (initialOptions != null)
@@ -98,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
             foreach (
                 ListboxItem newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceManager)))
             {
-                newEntry.Position = new Point(0, offset);
+                newEntry.Position = new Vector2i(0, offset);
                 newEntry.Update(0);
                 newEntry.Clicked += NewEntryClicked;
                 _dropDown.components.Add(newEntry);
@@ -131,20 +133,20 @@ namespace SS14.Client.Services.UserInterface.Components
             var listboxLeftBounds = _listboxLeft.GetLocalBounds();
             var listboxMainBounds = _listboxMain.GetLocalBounds();
             var listboxRightBounds = _listboxRight.GetLocalBounds();
-            _clientAreaLeft = new Rectangle(Position, new Size((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
-            _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size(_width, (int)listboxMainBounds.Height));
-            _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
-            ClientArea = new Rectangle(Position,
-                                       new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
+            _clientAreaLeft = new IntRect(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
+            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+                                          _width, (int)listboxMainBounds.Height);
+            _clientAreaRight = new IntRect(new Vector2i(_clientAreaMain.Right(), Position.Y),
+                                             new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
+            ClientArea = new IntRect(Position,
+                                       new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
-            _selectedLabel.Position = new Point(_clientAreaLeft.Right,
+            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right(),
                                                 Position.Y + (int) (ClientArea.Height/2f) -
                                                 (int) (_selectedLabel.Height/2f));
-            _dropDown.Position = new Point(ClientArea.X + (int) ((ClientArea.Width - _dropDown.ClientArea.Width)/2f),
-                                           ClientArea.Bottom);
+            _dropDown.Position = new Vector2i(ClientArea.Left + (int) ((ClientArea.Width - _dropDown.ClientArea.Width)/2f),
+                                           ClientArea.Bottom());
             _dropDown.Update(frameTime);
         }
 
@@ -176,7 +178,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
                 //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
                 var UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
@@ -215,7 +217,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Position = Position;
-            ClientArea = new Rectangle(Position, new Size(_width, (int) Text.Height));
+            ClientArea = new IntRect(Position, new Vector2i(_width, (int) Text.Height));
             BackgroundColor = Selected ? new Color(47, 79, 79) : new Color(128, 128, 128);
         }
     }

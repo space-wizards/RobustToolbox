@@ -16,6 +16,7 @@ using SFML.Window;
 using SS14.Shared.Maths;
 using SFML.Graphics;
 using Color = SFML.Graphics.Color;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -37,7 +38,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private int blipSpeed = 60;
         private double blipTime;
         private int blipWidth = 20;
-        private Rectangle healthMeterInner;
+        private IntRect healthMeterInner;
 
         private float healthPct;
         private Color interpCol = Color.Transparent;
@@ -53,7 +54,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _backgroundSprite = _resMgr.GetSprite("blip");
 
             healthPc = new Label("100", "CALIBRI", _resMgr);
-            healthPc.Text.ShadowOffset = new Vector2(1, 1);
+            healthPc.Text.ShadowOffset = new Vector2f(1, 1);
             healthPc.Text.Shadowed = true;
             healthPc.Text.Color = new SFML.Graphics.Color(255, 250, 240);
         }
@@ -68,22 +69,22 @@ namespace SS14.Client.Services.UserInterface.Components
             const int y_inner = 25;
             const int dec_inner = 7;
 
-            panelBG.Position =new Vector2 (Position.X, Position.Y);
-            healthMeterBg.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
-            healthMeterOverlay.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
-            healthMeterGrid.Position = new Vector2(Position.X + x_inner, Position.Y + y_inner);
+            panelBG.Position =new Vector2f (Position.X, Position.Y);
+            healthMeterBg.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
+            healthMeterOverlay.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
+            healthMeterGrid.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
 
             var panelBounds = panelBG.GetLocalBounds();
-            ClientArea = Rectangle.Round(new RectangleF(panelBounds.Left, panelBounds.Top, panelBounds.Width, panelBounds.Height));
+            ClientArea = new FloatRect(panelBounds.Left, panelBounds.Top, panelBounds.Width, panelBounds.Height).Round();
 
             var healthMeterBounds = healthMeterOverlay.GetLocalBounds();
 
-            healthMeterInner = new Rectangle(Position.X + x_inner + dec_inner, Position.Y + y_inner + dec_inner,
+            healthMeterInner = new IntRect(Position.X + x_inner + dec_inner, Position.Y + y_inner + dec_inner,
                                              (int) (healthMeterBounds.Width - (2*dec_inner)),
                                              (int) (healthMeterBounds.Height - (2*dec_inner)));
-            healthPc.Position = new Point(healthMeterInner.X + 5,
+            healthPc.Position = new Vector2i(healthMeterInner.Left + 5,
                                           (int)
-                                          (healthMeterInner.Y + (healthMeterInner.Height/2f) -
+                                          (healthMeterInner.Top + (healthMeterInner.Height/2f) -
                                            (healthPc.ClientArea.Height/2f)) - 2);
             healthPc.Update(frameTime);
 
@@ -108,7 +109,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             panelBG.Draw();
             healthMeterBg.Draw();
-            CluwneLib.drawRectangle(healthMeterInner.X, healthMeterInner.Y, healthMeterInner.Width,  healthMeterInner.Height, interpCol);
+            CluwneLib.drawRectangle(healthMeterInner.Left, healthMeterInner.Top, healthMeterInner.Width,  healthMeterInner.Height, interpCol);
             healthPc.Render();
             healthMeterGrid.Draw();
             RenderBlip();
@@ -145,14 +146,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (i <= blipMaxArea)
                 {
-                    _backgroundSprite.SetTransformToRect(new Rectangle(healthMeterInner.X + x_off + i,
-                                                         healthMeterInner.Y + y_off -
-                                                         (int)
-                                                         ((blipHeightUp * 65) *
-                                                          ((healthPct > 0f) ? Math.Max(healthPct, 0.30f) : 0)) +
-                                                         (int)
-                                                         ((blipHeightDown * 65) *
-                                                          ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
+                    _backgroundSprite.SetTransformToRect(new IntRect(healthMeterInner.Left + x_off + i,
+                                                         healthMeterInner.Top + y_off -
+                                                         (int)((blipHeightUp * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.30f) : 0)) +
+                                                         (int)((blipHeightDown * 65) * ((healthPct > 0f) ? Math.Max(healthPct, 0.45f) : 0)),
                                                          3, 3));
                     _backgroundSprite.Draw();
                 }
@@ -176,7 +173,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }
@@ -185,7 +182,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }

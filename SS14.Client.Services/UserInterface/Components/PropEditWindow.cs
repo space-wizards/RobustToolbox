@@ -7,6 +7,8 @@ using System.Linq;
 using System.Reflection;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -27,14 +29,14 @@ namespace SS14.Client.Services.UserInterface.Components
         private Object assigned;
         private FieldInfo[] fields;
 
-        public PropEditWindow(Size size, IResourceManager resourceManager, Object obj)
+        public PropEditWindow(Vector2i size, IResourceManager resourceManager, Object obj)
             : base("Object Properties : " + obj, size, resourceManager)
         {
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
             search = new Textbox(150, resourceManager);
-            search.Position = new Point(5, 5);
+            search.Position = new Vector2i(5, 5);
             search.OnSubmit += search_OnSubmit;
             search.ClearOnSubmit = true;
             search.ClearFocusOnSubmit = false;
@@ -180,7 +182,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     newEntry.CanEdit = false;
                     newEntry.IsListItem = false;
 
-                    newEntry.LabelName.Position = new Point(5, pos);
+                    newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = new SFML.Graphics.Color(240, 255, 240);
                     newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
@@ -203,7 +205,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         newEntry.ListItem = item;
 
                         newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceManager);
-                        newEntry.LabelName.Position = new Point(15, pos);
+                        newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
                         newEntry.LabelName.BorderColor = new SFML.Graphics.Color(0, 191, 255);
                         newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
@@ -228,7 +230,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
                                                    _resourceManager);
-                    newEntry.LabelName.Position = new Point(5, pos);
+                    newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = newEntry.CanEdit ? new SFML.Graphics.Color(127, 255, 0) : new SFML.Graphics.Color(205, 92, 92);
                     newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
@@ -239,8 +241,8 @@ namespace SS14.Client.Services.UserInterface.Components
                     GuiComponent edit = CreateEditField(fieldVal, field);
                     if (edit != null && newEntry.CanEdit)
                     {
-                        edit.Position = new Point(newEntry.LabelName.ClientArea.Right + 5,
-                                                  newEntry.LabelName.ClientArea.Y);
+                        edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right() + 5,
+                                                  newEntry.LabelName.ClientArea.Top);
                         components.Add(edit);
                         edit.Update(0);
                         pos += newEntry.LabelName.ClientArea.Height > edit.ClientArea.Height

@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using SS14.Client.Graphics;
 using OpenTK;
-using Color = System.Drawing.Color;
 //OpenGL v4 or before?
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
@@ -128,7 +127,7 @@ namespace SS14.Client.Graphics.OpenGL
 
         public void Clear(Color clearcolor)
         {            
-            GL.ClearColor(clearcolor);
+            GL.ClearColor(clearcolor.R, clearcolor.G, clearcolor.B, clearcolor.A);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         }
 

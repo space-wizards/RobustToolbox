@@ -15,6 +15,7 @@ using SS14.Shared.Maths;
 using SFML.Graphics;
 using Color = SFML.Graphics.Color;
 using SS14.Client.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -49,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                                          _resourceManager.GetFont("CALIBRI"))
                               {
                                   ShadowColor = Color.Black,
-                                  ShadowOffset = new Vector2(1, 1),
+                                  ShadowOffset = new Vector2f(1, 1),
                                   Shadowed = true,
                                   Color = Color.White
                               };
@@ -63,10 +64,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X,Position.Y);
             var bounds = _buttonSprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position,
-                                       new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int)bounds.Width, (int)bounds.Height));
 
             _textSprite.Position = Position;
 
@@ -94,7 +95,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
         public override void Render()
         {
             _buttonSprite.Color = _color;
-            _buttonSprite.Position = new Vector2(Position.X,Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X,Position.Y);
             _buttonSprite.Draw();
             _buttonSprite.Color = Color.White;
 
@@ -103,7 +104,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 var btnBounds = _buttonSprite.GetLocalBounds();
                 var entBounds = _currentEntSprite.GetLocalBounds();
                 _currentEntSprite.SetTransformToRect(
-                    new Rectangle((int)(Position.X + btnBounds.Width / 2f - entBounds.Width / 2f),
+                    new IntRect((int)(Position.X + btnBounds.Width / 2f - entBounds.Width / 2f),
                                   (int)(Position.Y + btnBounds.Height / 2f - entBounds.Height / 2f),
                                   (int)entBounds.Width, (int)entBounds.Height));
                 _currentEntSprite.Draw();
@@ -122,7 +123,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -140,7 +141,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_playerManager.ControlledEntity == null)
                     return false;
@@ -170,7 +171,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _color = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
+            _color = ClientArea.Contains(e.X, e.Y)
                          ? new SFML.Graphics.Color(176, 196, 222)
                          : Color.White;
         }

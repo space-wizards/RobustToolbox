@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -14,13 +15,13 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly PlayerActionComp assignedComp;
         private IUserInterfaceManager uiMgr;
 
-        public PlayerActionsWindow(Size size, IResourceManager resourceManager, PlayerActionComp _assignedComp)
+        public PlayerActionsWindow(Vector2i size, IResourceManager resourceManager, PlayerActionComp _assignedComp)
             : base("Player Abilities", size, resourceManager)
         {
             uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             assignedComp = _assignedComp;
             assignedComp.Changed += assignedComp_Changed;
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             assignedComp.CheckActionList();
             PopulateList();
@@ -39,11 +40,11 @@ namespace SS14.Client.Services.UserInterface.Components
             foreach (PlayerAction act in assignedComp.Actions)
             {
                 var newButt = new PlayerActionButton(act, _resourceManager);
-                newButt.Position = new Point(10, pos_y);
+                newButt.Position = new Vector2i(10, pos_y);
                 newButt.Update(0);
                 var newLabel = new Label(act.Name, "CALIBRI", _resourceManager);
                 newLabel.Update(0);
-                newLabel.Position = new Point(10 + newButt.ClientArea.Width + 5,
+                newLabel.Position = new Vector2i(10 + newButt.ClientArea.Width + 5,
                                               pos_y + (int) (newButt.ClientArea.Height/2f) -
                                               (int) (newLabel.ClientArea.Height/2f));
                 components.Add(newButt);
@@ -73,27 +74,27 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (base.MouseWheelMove(e)) return true;
             return false;

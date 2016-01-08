@@ -17,6 +17,7 @@ using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics;
 using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -36,7 +37,7 @@ namespace SS14.Client.Services.UserInterface
         private Sprite _cursorSprite;
         private DebugConsole _console;
 
-        private Vector2 dragOffset = Vector2.Zero;
+        private Vector2i dragOffset = new Vector2i();
         private bool moveMode;
         private IGuiComponent movingComp;
         private bool showCursor = true;
@@ -52,11 +53,11 @@ namespace SS14.Client.Services.UserInterface
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
             _config = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Size((int) CluwneLib.Screen.Size.X, 400), resourceManager);
+            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Screen.Size.X, 400), resourceManager);
             _console.SetVisible(false);
         }
 
-        public Vector2 MousePos { get; private set; }
+        public Vector2i MousePos { get; private set; }
 
         #region IUserInterfaceManager Members
 
@@ -232,11 +233,11 @@ namespace SS14.Client.Services.UserInterface
             {
                 foreach (IGuiComponent comp in _components)
                 {
-                    if (comp.ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+                    if (comp.ClientArea.Contains(e.X, e.Y))
                     {
                         movingComp = comp;
-                        dragOffset = (new Vector2(e.X, e.Y)) -
-                                     new Vector2(comp.ClientArea.X, comp.ClientArea.Y);
+                        dragOffset = (new Vector2i(e.X, e.Y)) -
+                                     new Vector2i(comp.ClientArea.Left, comp.ClientArea.Top);
                         break;
                     }
                 }
@@ -304,7 +305,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            MousePos = new Vector2( e.X, e.Y);
+            MousePos = new Vector2i(e.X, e.Y);
 
             if (_console.IsVisible())
             {
@@ -479,7 +480,7 @@ namespace SS14.Client.Services.UserInterface
             if(_console.IsVisible()) _console.Update(frameTime);
 
             if (moveMode && movingComp != null)
-                movingComp.Position = (Point) (MousePos - dragOffset);
+                movingComp.Position = (MousePos - dragOffset);
 
             foreach (IGuiComponent component in _components)
                 component.Update(frameTime);
@@ -527,7 +528,7 @@ namespace SS14.Client.Services.UserInterface
                                         : _resourceManager.GetSprite("cursor");
                 }
 
-                _cursorSprite.Position = MousePos;
+                _cursorSprite.Position = MousePos.ToFloat();
                 _cursorSprite.Draw();
             }
         }

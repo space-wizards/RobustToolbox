@@ -6,7 +6,7 @@ namespace SS14.Client.Interfaces.GOC
 {
     public interface ISpriteComponent
     {
-        RectangleF AABB { get; }
+        FloatRect AABB { get; }
         Sprite GetCurrentSprite();
         Sprite GetSprite(string spriteKey);
         List<Sprite> GetAllSprites();

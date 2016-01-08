@@ -4,7 +4,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
-using Vector2 = SS14.Shared.Maths.Vector2;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -16,11 +15,9 @@ using System.Text.RegularExpressions;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using TextureCache = SS14.Client.Graphics.texture.TextureCache;
-using Image = SFML.Graphics.Image;
-using Font = SFML.Graphics.Font;
-using Color = System.Drawing.Color;
 using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
+using SFML.System;
 
 namespace SS14.Client.Services.Resources
 {
@@ -512,9 +509,9 @@ namespace SS14.Client.Services.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2((float) Math.Round(offsetX*atlasTex.Size.X, 1),
+                info.Offsets = new Vector2f((float) Math.Round(offsetX*atlasTex.Size.X, 1),
                     (float) Math.Round(offsetY*atlasTex.Size.Y, 1));
-                info.Size = new Vector2((float) Math.Round(sizeX*atlasTex.Size.X, 1),
+                info.Size = new Vector2f((float) Math.Round(sizeX*atlasTex.Size.X, 1),
                     (float) Math.Round(sizeY*atlasTex.Size.Y, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);

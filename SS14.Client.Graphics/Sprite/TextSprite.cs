@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics.Interface;
 using SS14.Shared.Maths;
 using System;
@@ -20,7 +21,7 @@ namespace SS14.Client.Graphics.Sprite
     public class TextSprite : ICluwneDrawable
     {
 
-        private Boolean _shadowed;                                 // Is the Text Shadowed
+        private bool _shadowed;                                    // Is the Text Shadowed
         private Color _shadowColor;                                // Shadow Color
         private Text _textSprite;
         private string Label;
@@ -62,7 +63,7 @@ namespace SS14.Client.Graphics.Sprite
      
         public void Draw() 
         {                
-            _textSprite.Position = new Vector2(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
+            _textSprite.Position = new Vector2f(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
             _textSprite.Color = Color;
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
@@ -82,13 +83,13 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Accessors
 
-        public Size Size;
+        public Vector2i Size;
 
         public Color Color;
 
-        public Vector2 ShadowOffset { get; set; }
+        public Vector2f ShadowOffset { get; set; }
 
-        public Boolean Shadowed
+        public bool Shadowed
         {
             get
             {
@@ -130,7 +131,7 @@ namespace SS14.Client.Graphics.Sprite
         }
     
 
-        public Vector2 Position;
+        public Vector2i Position;
 
         public int Width
         {

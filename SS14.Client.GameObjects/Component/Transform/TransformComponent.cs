@@ -8,12 +8,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Client.GameObjects
 {
     public class TransformComponent : Component
     {
-        private Vector2 _position = Vector2.Zero;
+        private Vector2f _position = new Vector2f();
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
         public TransformComponentState lerpStateFrom;
@@ -23,12 +24,12 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Transform;
         }
 
-        public Vector2 Position
+        public Vector2f Position
         {
             get { return _position; }
             set
             {
-                Vector2 oldPosition = _position;
+                Vector2f oldPosition = _position;
                 _position = value;
 
                 if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
@@ -43,28 +44,28 @@ namespace SS14.Client.GameObjects
         public float X
         {
             get { return Position.X; }
-            set { Position = new Vector2(value, Position.Y); }
+            set { Position = new Vector2f(value, Position.Y); }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2(Position.X, value); }
+            set { Position = new Vector2f(Position.X, value); }
         }
 
         public event EventHandler<VectorEventArgs> OnMove;
 
         public override void Shutdown()
         {
-            Position = Vector2.Zero;
+            Position = new Vector2f();
         }
 
-        public void TranslateTo(Vector2 toPosition)
+        public void TranslateTo(Vector2f toPosition)
         {
             Position = toPosition;
         }
 
-        public void TranslateByOffset(Vector2 offset)
+        public void TranslateByOffset(Vector2f offset)
         {
             Position = Position + offset;
 
@@ -98,7 +99,7 @@ namespace SS14.Client.GameObjects
             }
             if(lastState.ForceUpdate)
             {
-                TranslateTo(new Vector2(state.X, state.Y));
+                TranslateTo(new Vector2f(state.X, state.Y));
             }
 
         }

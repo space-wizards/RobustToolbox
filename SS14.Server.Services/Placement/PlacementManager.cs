@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Server.Services.Placement
 {
@@ -83,7 +84,7 @@ namespace SS14.Server.Services.Placement
 
             float a = (float)Math.Floor(xRcv);
             float b = (float)Math.Floor(yRcv);
-            Vector2 tilePos = new Vector2(a, b);
+            Vector2f tilePos = new Vector2f(a, b);
 
             if (permission != null || true)
                 //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
@@ -109,11 +110,11 @@ namespace SS14.Server.Services.Placement
 
                 if (!isTile)
                 {
-                    Entity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    Entity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
                     if (created != null)
                     {
                         created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
-                            new Vector2(xRcv, yRcv));
+                            new Vector2f(xRcv, yRcv));
                         if(created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
                         if(created.HasComponent(ComponentFamily.WallMounted))

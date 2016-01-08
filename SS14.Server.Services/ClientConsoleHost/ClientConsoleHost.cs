@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GOC;
@@ -27,7 +28,7 @@ namespace SS14.Server.Services.ClientConsoleHost
 
             string command = args[0];
 
-            Vector2 position;
+            Vector2f position;
             Entity player;
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();

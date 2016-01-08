@@ -6,6 +6,8 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System.Drawing;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.GameObjects
 {
@@ -13,7 +15,7 @@ namespace SS14.Client.GameObjects
     {
         public SFML.Graphics.Color DebugColor { get; set; }
 
-        private RectangleF AABB
+        private FloatRect AABB
         {
             get
             {
@@ -22,7 +24,7 @@ namespace SS14.Client.GameObjects
                 else if (Owner.HasComponent(ComponentFamily.Renderable))
                     return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
                 else
-                    return RectangleF.Empty;
+                    return new FloatRect();
             }
         }
 
@@ -32,7 +34,7 @@ namespace SS14.Client.GameObjects
             DebugColor = SFML.Graphics.Color.Blue;
         }
 
-        public RectangleF WorldAABB
+        public FloatRect WorldAABB
         {
             get
             {
@@ -42,17 +44,17 @@ namespace SS14.Client.GameObjects
                 if (trans == null)
                     return aabb;
                 else if (aabb != null)
-                    return new RectangleF(
+                    return new FloatRect(
                         aabb.Left + trans.X,
                         aabb.Top + trans.Y,
                         aabb.Width,
                         aabb.Height);
                 else
-                    return RectangleF.Empty;
+                    return new FloatRect();
             }
         }
 
-        public bool TryCollision(Vector2 offset, bool bump = false)
+        public bool TryCollision(Vector2f offset, bool bump = false)
         {
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }

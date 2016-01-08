@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -121,7 +122,7 @@ namespace SS14.Client.GameObjects
                     }
                 case PlayerActionTargetType.Point:
                     {
-                        var trg = (PointF) target;
+                        var trg = (Vector2f) target;
                         Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
                                                           ComponentMessageType.DoAction, action.Uid, action.TargetType,
                                                           trg.X, trg.Y);

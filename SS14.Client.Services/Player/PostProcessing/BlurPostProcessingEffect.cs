@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
@@ -26,7 +27,7 @@ namespace SS14.Client.Services.Player.PostProcessing
             else
                 _gaussianBlur.SetRadius(7);
 
-            _gaussianBlur.SetSize(new SizeF(image.Height, image.Height));
+            _gaussianBlur.SetSize(new Vector2f(image.Height, image.Height));
             _gaussianBlur.SetAmount(Math.Min(_duration/2, 3f));
             _gaussianBlur.PerformGaussianBlur(image);
         }

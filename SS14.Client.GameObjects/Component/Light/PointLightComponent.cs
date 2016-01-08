@@ -7,6 +7,7 @@ using SS14.Shared.GO.Component.Light;
 using SS14.Shared.IoC;
 using System;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Client.GameObjects
 {
@@ -14,8 +15,8 @@ namespace SS14.Client.GameObjects
     {
         //Contains a standard light
         public ILight _light;
-        public Vector3 _lightColor = new Vector3(190, 190, 190);
-        public Vector2 _lightOffset = new Vector2(0, 0);
+        public Vector3f _lightColor = new Vector3f(190, 190, 190);
+        public Vector2f _lightOffset = new Vector2f(0, 0);
         public int _lightRadius = 512;
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;

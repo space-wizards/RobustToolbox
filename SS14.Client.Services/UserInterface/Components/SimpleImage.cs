@@ -8,7 +8,7 @@ using System;
 using Color = SFML.Graphics.Color;
 using System.Drawing;
 using SS14.Client.Graphics;
-
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -41,7 +41,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (drawingSprite != null)
             {
                 var bounds = drawingSprite.GetLocalBounds();
-                ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+                ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }
 
@@ -57,20 +57,20 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override Rectangle ClientArea {
+        public override IntRect ClientArea {
             get {
-                FloatRect fr = drawingSprite.GetLocalBounds ();
-                return new Rectangle ((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
+                FloatRect fr = drawingSprite.GetLocalBounds();
+                return new IntRect((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
             }
         }
 
-        public override Point Position {
+        public override Vector2i Position {
             get {
                 if (drawingSprite == null)
-                    return new Point (0, 0);
-                return new Point ((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
+                    return new Vector2i(0, 0);
+                return new Vector2i((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
             }
-            set { drawingSprite.Position = new SFML.System.Vector2f (value.X, value.Y); }
+            set { drawingSprite.Position = new Vector2f (value.X, value.Y); }
         }
 
 

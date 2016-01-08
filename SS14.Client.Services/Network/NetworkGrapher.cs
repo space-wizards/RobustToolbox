@@ -8,6 +8,8 @@ using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SS14.Client.Services.Helpers;
 using SS14.Client.GameObjects;
+using SFML.System;
+using SS14.Shared;
 
 namespace SS14.Client.Services.Network
 {
@@ -88,11 +90,11 @@ namespace SS14.Client.Services.Network
             }
 
             _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2 (CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, CluwneLib.CurrentRenderTarget.Size.Y - 30);
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
             _textSprite.Draw();
 
             _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2(CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, CluwneLib.CurrentRenderTarget.Size.Y - 60);
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
             _textSprite.Draw();
         }
 

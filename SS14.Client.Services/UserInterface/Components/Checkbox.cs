@@ -68,7 +68,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 Value = !Value;
                 return true;

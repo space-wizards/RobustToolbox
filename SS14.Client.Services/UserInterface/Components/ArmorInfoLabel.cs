@@ -10,6 +10,7 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using SFML.Graphics;
 using SS14.Client.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -66,11 +67,11 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             var bounds = icon.GetLocalBounds();
-            icon.Position = new Vector2(Position.X,Position.Y);
-            text.Position = new Vector2(Position.X + bounds.Width + 5,
+            icon.Position = new Vector2f(Position.X,Position.Y);
+            text.Position = new Vector2i(Position.X + (int)bounds.Width + 5,
                                          Position.Y + (int) (bounds.Height/2f) - (int) (text.Height/2f));
-            ClientArea = new Rectangle(Position,
-                                       new Size((int) text.Width + (int)bounds.Width + 5,
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int) text.Width + (int)bounds.Width + 5,
                                                 (int) Math.Max(bounds.Height, text.Height)));
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();

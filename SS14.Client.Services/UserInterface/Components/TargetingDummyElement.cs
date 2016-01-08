@@ -9,6 +9,7 @@ using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SFML.Graphics;
 using Color = SFML.Graphics.Color;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -24,7 +25,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public BodyPart BodyPart;
         public float CurrentHealth;
         public float MaxHealth;
-        private Point _clickPoint;
+        private Vector2i _clickPoint;
 
         private Sprite _elementSprite;
         private bool _selected;
@@ -56,10 +57,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _elementSprite.Position = new Vector2(Position.X,Position.Y);
+            _elementSprite.Position = new Vector2f(Position.X,Position.Y);
             var bounds = _elementSprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position,
-                                       new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -73,7 +74,7 @@ namespace SS14.Client.Services.UserInterface.Components
             else if (healthPct > 0) _elementSprite.Color    = Color.Red;
             else _elementSprite.Color = Color.Black;
 
-            _elementSprite.Position = new Vector2(Position.X,Position.Y);
+            _elementSprite.Position = new Vector2f(Position.X,Position.Y);
             _elementSprite.Draw();
             _elementSprite.Color = Color.White;
 
@@ -94,9 +95,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point(e.X, e.Y))) return false;
-
-            var spritePosition = new Point(e.X - Position.X, e.Y - Position.Y);
+            if (!ClientArea.Contains(e.X, e.Y)) return false;
 
             // Image.ImageLockBox imgData = _elementSprite.Image.GetImageData();
             //imgData.Lock(false);
@@ -108,7 +107,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (pixColour.A != 0)
             {
                 if (Clicked != null) Clicked(this);
-                _clickPoint = new Point(e.X - Position.X, e.Y - Position.Y);
+                _clickPoint = new Vector2i(e.X - Position.X, e.Y - Position.Y);
                 _selected = true;
                 return true;
             }

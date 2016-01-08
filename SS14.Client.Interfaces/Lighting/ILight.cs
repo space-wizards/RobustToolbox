@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
-using System.Drawing;
 using SS14.Shared.Maths;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.Lighting
 {
@@ -8,11 +9,11 @@ namespace SS14.Client.Interfaces.Lighting
     {
         int Radius { get; }
         Color Color { get; }
-        Vector2 Position { get; }
+        Vector2f Position { get; }
         LightState LightState { get; }
         ILightArea LightArea { get; }
         LightMode LightMode { get; set; }
-        void Move(Vector2 toPosition);
+        void Move(Vector2f toPosition);
         void SetRadius(int Radius);
         void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
@@ -20,7 +21,7 @@ namespace SS14.Client.Interfaces.Lighting
         void Update(float frametime);
 
         void SetMask(string _mask);
-        Vector4 GetColorVec();
+        Vector4f GetColorVec();
         void SetState(LightState state);
     }
 }

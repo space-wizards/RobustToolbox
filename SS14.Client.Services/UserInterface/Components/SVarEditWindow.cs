@@ -1,8 +1,10 @@
-﻿using SS14.Client.Interfaces.GOC;
+﻿using SFML.System;
+using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,7 +16,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly Entity _owner;
         private List<MarshalComponentParameter> _sVars;
 
-        public SVarEditWindow(Size size, Entity owner)
+        public SVarEditWindow(Vector2i size, Entity owner)
             : base("Entity SVars : " + owner.Name, size, IoCManager.Resolve<IResourceManager>())
         {
             _owner = owner;
@@ -33,13 +35,13 @@ namespace SS14.Client.Services.UserInterface.Components
                                          _resourceManager);
                 newLabel.Update(0);
 
-                newLabel.Position = new Point(5, off_y);
+                newLabel.Position = new Vector2i(5, off_y);
                 newLabel.DrawBorder = true;
                 newLabel.DrawBackground = true;
 
                 GuiComponent newComp = CreateEditField(svar);
                 newComp.Update(0);
-                newComp.Position = new Point(newLabel.ClientArea.Right + 8, off_y);
+                newComp.Position = new Vector2i(newLabel.ClientArea.Right() + 8, off_y);
 
                 off_y += newLabel.ClientArea.Height + 5;
 

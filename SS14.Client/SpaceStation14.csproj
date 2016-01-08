@@ -170,7 +170,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RenderTextureVisualizer.cs" />
+    <Compile Include="TextureVisualizer.cs" />
     <None Include="app.config">
     </None>
     <Content Include="..\Third-Party\extlibs\csfml-audio-2.dll">

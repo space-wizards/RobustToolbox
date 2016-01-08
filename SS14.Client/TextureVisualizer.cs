@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.DebuggerVisualizers;
+﻿#if !__MonoCS__
+using Microsoft.VisualStudio.DebuggerVisualizers;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -109,3 +110,4 @@ namespace SS14.Client.Debug
         //}
     }
 }
+#endif

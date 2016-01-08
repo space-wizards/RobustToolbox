@@ -31,7 +31,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
 
-                if (velocity.Velocity.Magnitude < 0.001f)
+                if (velocity.Velocity.LengthSquared() < 0.00001f)
                     continue;
                 //Decelerate
                 velocity.Velocity -= (velocity.Velocity * (frametime * 0.01f));

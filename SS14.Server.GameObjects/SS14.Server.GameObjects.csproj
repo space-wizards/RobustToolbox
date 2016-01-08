@@ -84,6 +84,10 @@
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-system-2">
       <Name>sfmlnet-system-2</Name>
       <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
@@ -103,10 +107,6 @@
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml">

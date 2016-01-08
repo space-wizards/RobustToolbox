@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -33,8 +34,8 @@ namespace SS14.Server.GameObjects
                 var velComp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
                 var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
 
-                velComp.Velocity = new Vector2((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
-                transform.Position = new Vector2((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
+                velComp.Velocity = new Vector2f((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
+                transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
             }
         }
     }

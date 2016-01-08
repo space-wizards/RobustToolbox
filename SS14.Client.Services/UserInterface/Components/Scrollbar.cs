@@ -8,6 +8,7 @@ using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using Color = SFML.Graphics.Color;
 using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -36,7 +37,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private int actualSize; //Actual max value of bar.
 
         private float actualVal; //The actual value of the current button position.
-        private Rectangle clientAreaButton;
+        private IntRect clientAreaButton;
         private int currentPos; //The current button position in relation to location of scrollbar.
         private bool dragging; //Currently dragging the button?
         public bool drawBackground = true;
@@ -110,8 +111,8 @@ namespace SS14.Client.Services.UserInterface.Components
             if (dragging)
             {
                 if (Horizontal)
-                    currentPos = (int) e.X - ClientArea.Location.X - (int) (scrollbarButton.GetLocalBounds().Width/2f);
-                else currentPos = (int) e.Y - ClientArea.Location.Y - (int) (scrollbarButton.GetLocalBounds().Height/2f);
+                    currentPos = (int) e.X - ClientArea.Left - (int) (scrollbarButton.GetLocalBounds().Width/2f);
+                else currentPos = (int) e.Y - ClientArea.Top - (int) (scrollbarButton.GetLocalBounds().Height/2f);
                 currentPos = Math.Min(currentPos, actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
@@ -131,16 +132,16 @@ namespace SS14.Client.Services.UserInterface.Components
             var bounds = scrollbarButton.GetLocalBounds();
             if (Horizontal)
             {
-                ClientArea = new Rectangle(Position, new Size(size, (int)bounds.Height));
-                clientAreaButton = new Rectangle(new Point(Position.X + currentPos, Position.Y),
-                                                 new Size((int)bounds.Width, (int)bounds.Height));
+                ClientArea = new IntRect(Position, new Vector2i(size, (int)bounds.Height));
+                clientAreaButton = new IntRect(Position.X + currentPos, Position.Y,
+                                                 (int)bounds.Width, (int)bounds.Height);
                 actualSize = size - (int)bounds.Width;
             }
             else
             {
-                ClientArea = new Rectangle(Position, new Size((int)bounds.Width, size));
-                clientAreaButton = new Rectangle(new Point(Position.X, Position.Y + currentPos),
-                                                 new Size((int)bounds.Width, (int)bounds.Height));
+                ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, size));
+                clientAreaButton = new IntRect(Position.X, Position.Y + currentPos,
+                                                 (int)bounds.Width, (int)bounds.Height);
                 actualSize = size - (int)bounds.Height;
             }
 
@@ -158,13 +159,13 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!IsVisible()) return;
             if (drawBackground)
-              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(47, 79, 79));
+              CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color(47, 79, 79));
             scrollbarButton.SetTransformToRect(clientAreaButton);
             scrollbarButton.Draw();
-            DEBUG.Position = new Vector2(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
+            DEBUG.Position = new Vector2i(ClientArea.Left + 20, ClientArea.Top + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-           CluwneLib.drawRectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, SFML.Graphics.Color.Black);
+           CluwneLib.drawRectangle(ClientArea.Left + 0, ClientArea.Top + 0, ClientArea.Width - 0, ClientArea.Height - 0, Color.Black);
         }
     }
 }

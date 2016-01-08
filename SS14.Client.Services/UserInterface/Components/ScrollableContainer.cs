@@ -8,7 +8,8 @@ using System.Drawing;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics;
 using SFML.Graphics;
-using Color = System.Drawing.Color;
+using SFML.System;
+
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
@@ -21,7 +22,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public bool DrawBorder = true;
         public float BorderSize = 1.0f;
 
-        protected Size Size;
+        protected Vector2i Size;
         protected RenderImage clippingRI;
 
         public List<GuiComponent> components = new List<GuiComponent>();
@@ -33,7 +34,7 @@ namespace SS14.Client.Services.UserInterface.Components
         protected Scrollbar scrollbarH;
         protected Scrollbar scrollbarV;
 
-        public ScrollableContainer(string uniqueName, Size size, IResourceManager resourceManager)
+        public ScrollableContainer(string uniqueName, Vector2i size, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 
@@ -43,7 +44,7 @@ namespace SS14.Client.Services.UserInterface.Components
             //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
             //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage(uniqueName,(uint)Size.Width,(uint) Size.Height);
+            clippingRI = new RenderImage(uniqueName,(uint)Size.X,(uint) Size.Y);
             
             //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
             //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
@@ -58,7 +59,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
-            scrollbarV.size = Size.Height;
+            scrollbarV.size = Size.Y;
 
             scrollbarH.Update(0);
             scrollbarV.Update(0);
@@ -77,18 +78,18 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            ClientArea = new Rectangle(Position, new Size((int)clippingRI.Width, (int)clippingRI.Height));
+            ClientArea = new IntRect(Position, new Vector2i((int)clippingRI.Width, (int)clippingRI.Height));
 
             if (inner_focus != null && !components.Contains((GuiComponent) inner_focus)) ClearFocus();
 
-            scrollbarH.Position = new Point(ClientArea.X, ClientArea.Bottom - scrollbarH.ClientArea.Height);
-            scrollbarV.Position = new Point(ClientArea.Right - scrollbarV.ClientArea.Width, ClientArea.Y);
+            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom() - scrollbarH.ClientArea.Height);
+            scrollbarV.Position = new Vector2i(ClientArea.Right() - scrollbarV.ClientArea.Width, ClientArea.Top);
 
-            if (scrollbarV.IsVisible()) scrollbarH.size = Size.Width - scrollbarV.ClientArea.Width;
-            else scrollbarH.size = Size.Width;
+            if (scrollbarV.IsVisible()) scrollbarH.size = Size.X - scrollbarV.ClientArea.Width;
+            else scrollbarH.size = Size.X;
 
-            if (scrollbarH.IsVisible()) scrollbarV.size = Size.Height - scrollbarH.ClientArea.Height;
-            else scrollbarV.size = Size.Height;
+            if (scrollbarH.IsVisible()) scrollbarV.size = Size.Y - scrollbarH.ClientArea.Height;
+            else scrollbarV.size = Size.Y;
 
             max_x = 0;
             max_y = 0;
@@ -125,8 +126,8 @@ namespace SS14.Client.Services.UserInterface.Components
             foreach (GuiComponent component in components)
             {
                 if (inner_focus != null && component == inner_focus) continue;
-                Point oldPos = component.Position;
-                component.Position = new Point(component.Position.X - (int) scrollbarH.Value,
+                var oldPos = component.Position;
+                component.Position = new Vector2i(component.Position.X - (int) scrollbarH.Value,
                                                component.Position.Y - (int) scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
@@ -137,8 +138,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (inner_focus != null)
             {
-                Point oldPos = inner_focus.Position;
-                inner_focus.Position = new Point(inner_focus.Position.X - (int) scrollbarH.Value,
+                var oldPos = inner_focus.Position;
+                inner_focus.Position = new Vector2i(inner_focus.Position.X - (int) scrollbarH.Value,
                                                  inner_focus.Position.Y - (int) scrollbarV.Value);
                 inner_focus.Update(0); //2 Updates per frame D:
                 inner_focus.Render();
@@ -153,7 +154,7 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarV.Render();
 
             if (DrawBorder)
-            CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  BorderSize, SFML.Graphics.Color.Black);
+            CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  BorderSize, SFML.Graphics.Color.Black);
             clippingRI.EndDrawing();
         }
 
@@ -208,7 +209,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 MouseButtonEvent mbe= new MouseButtonEvent();
                 mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
@@ -237,7 +238,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (scrollbarH.MouseUp(e)) return true;
             if (scrollbarV.MouseUp(e)) return true;
 
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 MouseButtonEvent mbe= new MouseButtonEvent();
                 mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
@@ -279,13 +280,13 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 if (inner_focus.MouseWheelMove(e))
                     return true;
-                else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+                else if (scrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
                 {
                     scrollbarV.MouseWheelMove(e);
                     return true;
                 }
             }
-            else if (scrollbarV.IsVisible() && ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            else if (scrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
             {
                 scrollbarV.MouseWheelMove(e);
                 return true;

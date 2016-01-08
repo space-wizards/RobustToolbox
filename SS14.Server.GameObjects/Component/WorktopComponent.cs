@@ -4,6 +4,7 @@ using SS14.Shared.GO;
 using System;
 using System.Linq;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Server.GameObjects
 {
@@ -25,7 +26,7 @@ namespace SS14.Server.GameObjects
             item.GetComponent<SpriteComponent>(ComponentFamily.Renderable).drawDepth = DrawDepth.ItemsOnTables;
             //TODO Unsafe, fix.
             item.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateByOffset(
-                new Vector2(rnd.Next(-28, 28), rnd.Next(-28, 15)));
+                new Vector2f(rnd.Next(-28, 28), rnd.Next(-28, 15)));
         }
 
         protected override void RecieveItemInteraction(Entity actor, Entity item,

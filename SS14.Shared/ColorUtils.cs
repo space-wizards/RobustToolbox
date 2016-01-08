@@ -1,7 +1,7 @@
 ﻿using SFML.Graphics;
 using System;
 
-namespace SS14.Client.GameObjects
+namespace SS14.Shared
 {
     public static class ColorUtils
     {

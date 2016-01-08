@@ -14,6 +14,7 @@ using System.Linq;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Sprite;
 using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.GameObjects
 {
@@ -48,13 +49,13 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public RectangleF AverageAABB
+        public FloatRect AverageAABB
         {
             get {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
-                return new RectangleF(
-                    aaabb.X / tileSize, aaabb.Y / tileSize,
+                return new FloatRect(
+                    aaabb.Left / tileSize, aaabb.Top / tileSize,
                     aaabb.Width / tileSize, aaabb.Height / tileSize
                     );
             }
@@ -62,13 +63,13 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public RectangleF AABB
+        public FloatRect AABB
         {
             get
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-                return new RectangleF(0, 0, sprite.AABB.Width / tileSize,
+                return new FloatRect(0, 0, sprite.AABB.Width / tileSize,
                                       sprite.AABB.Height / tileSize);
             }
         }
@@ -121,7 +122,7 @@ namespace SS14.Client.GameObjects
             {
                 case ComponentMessageType.CheckSpriteClick:
                     reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((PointF)list[0]), DrawDepth);
+                                                      WasClicked((Vector2f)list[0]), DrawDepth);
                     break;
                 case ComponentMessageType.GetAABB:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
@@ -188,7 +189,7 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        protected virtual bool WasClicked(PointF worldPos)
+        protected virtual bool WasClicked(Vector2f worldPos)
         {
             if (sprite == null || !visible) return false;
 
@@ -196,19 +197,19 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new RectangleF(
+                new FloatRect(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
                     (bounds.Width / 2),
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
                     (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(worldPos)) return false;
+            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
             // Get the clicked position relative to the texture
-            var spritePosition = new Point((int)(worldPos.X - AABB.X + texRect.Left),
-                                           (int)(worldPos.Y - AABB.Y + texRect.Top));
+            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
+                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
             
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
@@ -238,7 +239,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
+        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             UpdateSlaves();
 
@@ -260,7 +261,7 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
             
-            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
+            Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
             var bounds = sprite.AABB;
 
@@ -291,7 +292,7 @@ namespace SS14.Client.GameObjects
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
-                                   Vector2.Zero, aabb);
+                                   new Vector2f(), aabb);
 
         }
 
@@ -323,7 +324,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SetSpriteCenter(Vector2 center)
+        public void SetSpriteCenter(Vector2f center)
         {
             sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
                                center.Y - (sprite.AABB.Height / 2));

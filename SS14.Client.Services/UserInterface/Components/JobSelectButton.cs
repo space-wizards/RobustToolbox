@@ -6,6 +6,8 @@ using SFML.Window;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using Color = SFML.Graphics.Color;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -20,7 +22,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         public bool Available = true;
         public bool Selected;
-        private Rectangle _buttonArea;
+        private IntRect _buttonArea;
 
         private Sprite _buttonSprite;
         private TextSprite _descriptionTextSprite;
@@ -50,12 +52,12 @@ namespace SS14.Client.Services.UserInterface.Components
         public override sealed void Update(float frameTime)
         {
             var bounds = _buttonSprite.GetLocalBounds();
-            _buttonArea = new Rectangle(new Point(Position.X, Position.Y),
-                                        new Size((int)bounds.Width, (int)bounds.Height));
-            ClientArea = new Rectangle(new Point(Position.X, Position.Y),
-                                       new Size((int)bounds.Width + (int) _descriptionTextSprite.Width + 2,
-                                                (int)bounds.Height));
-            _descriptionTextSprite.Position = new Point(_buttonArea.Right + 2, _buttonArea.Top);
+            _buttonArea = new IntRect(Position.X, Position.Y,
+                                        (int)bounds.Width, (int)bounds.Height);
+            ClientArea = new IntRect(Position.X, Position.Y,
+                                       (int)bounds.Width + (int) _descriptionTextSprite.Width + 2,
+                                                (int)bounds.Height);
+            _descriptionTextSprite.Position = new Vector2i(_buttonArea.Right() + 2, _buttonArea.Top);
         }
 
         public override void Render()
@@ -90,7 +92,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!Available) return false;
-            if (_buttonArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (_buttonArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 Selected = true;

@@ -3,6 +3,8 @@ using SS14.Shared;
 using System.Collections.Generic;
 using System.Drawing;
 using SS14.Shared.Maths;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Server.Interfaces.Map
 {
@@ -21,12 +23,12 @@ namespace SS14.Server.Interfaces.Map
 
         int TileSize { get; }
 
-        IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace);
-        IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area);
-        IEnumerable<TileRef> GetWallsIntersecting(RectangleF area);
+        IEnumerable<TileRef> GetTilesIntersecting(FloatRect area, bool ignoreSpace);
+        IEnumerable<TileRef> GetGasTilesIntersecting(FloatRect area);
+        IEnumerable<TileRef> GetWallsIntersecting(FloatRect area);
         IEnumerable<TileRef> GetAllTiles();
 
-        TileRef GetTileRef(Vector2 pos);
+        TileRef GetTileRef(Vector2f pos);
         TileRef GetTileRef(int x, int y);
         ITileCollection Tiles { get; }
     }

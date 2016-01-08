@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.Collision
 {
@@ -22,7 +24,7 @@ namespace SS14.Client.Services.Collision
         private const int BucketSize = 256;
         private readonly Dictionary<CollidableAABB, Entity> _aabbs;
 
-        private readonly Dictionary<Point, int> _bucketIndex;
+        private readonly Dictionary<Vector2i, int> _bucketIndex;
         //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
 
         private readonly Dictionary<int, CollidableBucket> _buckets;
@@ -35,7 +37,7 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         public CollisionManager()
         {
-            _bucketIndex = new Dictionary<Point, int>();
+            _bucketIndex = new Dictionary<Vector2i, int>();
             _buckets = new Dictionary<int, CollidableBucket>();
             _aabbs = new Dictionary<CollidableAABB, Entity>();
         }
@@ -47,14 +49,14 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool IsColliding(RectangleF collider)
+        public bool IsColliding(FloatRect collider)
         {
-            PointF[] points =
+            Vector2f[] points =
                 {
-                    new PointF(collider.Left, collider.Top),
-                    new PointF(collider.Right, collider.Top),
-                    new PointF(collider.Right, collider.Bottom),
-                    new PointF(collider.Left, collider.Bottom)
+                    new Vector2f(collider.Left, collider.Top),
+                    new Vector2f(collider.Right(), collider.Top),
+                    new Vector2f(collider.Right(), collider.Bottom()),
+                    new Vector2f(collider.Left, collider.Bottom())
                 };
 
             //Get the buckets that correspond to the collider's points.
@@ -72,7 +74,7 @@ namespace SS14.Client.Services.Collision
 
             //try all of the AABBs against the target rect.
             bool collided = false;
-            foreach (CollidableAABB aabb in aabBs.Where(aabb => aabb.Collidable.AABB.IntersectsWith(collider)))
+            foreach (CollidableAABB aabb in aabBs.Where(aabb => aabb.Collidable.AABB.Intersects(collider)))
             {
                 if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                 {
@@ -90,7 +92,7 @@ namespace SS14.Client.Services.Collision
         /// <returns></returns>
         public bool TryCollide(Entity entity)
         {
-            return TryCollide(entity, Vector2.Zero);
+            return TryCollide(entity, new Vector2f());
         }
 
         /// <summary>
@@ -98,21 +100,24 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(Entity entity, Vector2 offset, bool bump = true)
+        public bool TryCollide(Entity entity, Vector2f offset, bool bump = true)
         {
             var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
 
             var ColliderAABB = collider.WorldAABB;
-            if(offset.Length > 0)
-                ColliderAABB.Offset(offset.X, offset.Y);
+            if (offset.LengthSquared() > 0)
+            {
+                ColliderAABB.Left += offset.X;
+                ColliderAABB.Top += offset.Y;
+            }
 
-            PointF[] points =
+            Vector2f[] points =
                 {
-                    new PointF(ColliderAABB.Left, ColliderAABB.Top),
-                    new PointF(ColliderAABB.Right, ColliderAABB.Top),
-                    new PointF(ColliderAABB.Right, ColliderAABB.Bottom),
-                    new PointF(ColliderAABB.Left, ColliderAABB.Bottom)
+                    new Vector2f(ColliderAABB.Left, ColliderAABB.Top),
+                    new Vector2f(ColliderAABB.Right(), ColliderAABB.Top),
+                    new Vector2f(ColliderAABB.Right(), ColliderAABB.Bottom()),
+                    new Vector2f(ColliderAABB.Left, ColliderAABB.Bottom())
                 };
 
             var aabbs =
@@ -122,7 +127,7 @@ namespace SS14.Client.Services.Collision
                 .SelectMany(b => b.GetPoints()) // Get all of the points
                 .Select(p => p.ParentAABB) // Expand points to distinct AABBs
                 .Distinct()
-                .Where(aabb => aabb.Collidable.AABB.IntersectsWith(ColliderAABB)); //try all of the AABBs against the target rect.
+                .Where(aabb => aabb.Collidable.AABB.Intersects(ColliderAABB)); //try all of the AABBs against the target rect.
 
             //try all of the AABBs against the target rect.
             bool collided = false;
@@ -214,41 +219,24 @@ namespace SS14.Client.Services.Collision
         /// </summary>
         /// <param name="coordinate"></param>
         /// <returns></returns>
-        private CollidableBucket GetBucket(Point coordinate)
+        private CollidableBucket GetBucket(Vector2f coordinate)
         {
             return _bucketIndex.ContainsKey(GetBucketCoordinate(coordinate))
                        ? _buckets[_bucketIndex[GetBucketCoordinate(coordinate)]]
                        : CreateBucket(GetBucketCoordinate(coordinate));
         }
 
-        /// <summary>
-        /// Gets a bucket given a pointF coordinate
-        /// </summary>
-        /// <param name="coordinate"></param>
-        /// <returns></returns>
-        private CollidableBucket GetBucket(PointF coordinate)
-        {
-            return GetBucket(GetBucketCoordinate(coordinate));
-        }
-
-        private static Point GetBucketCoordinate(PointF coordinate)
+        private static Vector2i GetBucketCoordinate(Vector2f coordinate)
         {
             var x = (int) Math.Floor(coordinate.X/BucketSize);
             var y = (int) Math.Floor(coordinate.Y/BucketSize);
-            return new Point(x, y);
+            return new Vector2i(x, y);
         }
 
-        private static Point GetBucketCoordinate(Point coordinate)
-        {
-            var x = (int) Math.Floor((decimal) coordinate.X/BucketSize);
-            var y = (int) Math.Floor((decimal) coordinate.Y/BucketSize);
-            return new Point(x, y);
-        }
-
-        private CollidableBucket CreateBucket(Point coordinate)
+        private CollidableBucket CreateBucket(Vector2i coordinate)
         {
             if (_bucketIndex.ContainsKey(coordinate))
-                return _buckets[_bucketIndex[GetBucketCoordinate(coordinate)]];
+                return _buckets[_bucketIndex[coordinate]];
 
             var b = new CollidableBucket(_lastIndex, coordinate);
             _buckets.Add(_lastIndex, b);
@@ -264,10 +252,10 @@ namespace SS14.Client.Services.Collision
     internal class CollidableBucket
     {
         private readonly List<CollidablePoint> _points;
-        private Point _coordinates;
+        private Vector2i _coordinates;
         private int _index;
 
-        public CollidableBucket(int index, Point coordinates)
+        public CollidableBucket(int index, Vector2i coordinates)
         {
             _index = index;
             _coordinates = coordinates;
@@ -304,11 +292,11 @@ namespace SS14.Client.Services.Collision
     /// </summary>
     internal struct CollidablePoint
     {
-        public PointF Coordinates;
+        public Vector2f Coordinates;
         public CollidablePointIndex Index;
         public CollidableAABB ParentAABB;
 
-        public CollidablePoint(CollidablePointIndex index, PointF coordinates, CollidableAABB parentAABB)
+        public CollidablePoint(CollidablePointIndex index, Vector2f coordinates, CollidableAABB parentAABB)
         {
             Index = index;
             Coordinates = coordinates;
@@ -339,13 +327,13 @@ namespace SS14.Client.Services.Collision
             IsHardCollider = Collidable.IsHardCollidable;
             Points = new CollidablePoint[4];
             float top = Collidable.AABB.Top;
-            float bottom = Collidable.AABB.Bottom;
+            float bottom = Collidable.AABB.Bottom();
             float left = Collidable.AABB.Left;
-            float right = Collidable.AABB.Right;
-            Points[0] = new CollidablePoint(CollidablePointIndex.TopLeft, new PointF(left, top), this);
-            Points[1] = new CollidablePoint(CollidablePointIndex.TopRight, new PointF(right, top), this);
-            Points[2] = new CollidablePoint(CollidablePointIndex.BottomRight, new PointF(right, bottom), this);
-            Points[3] = new CollidablePoint(CollidablePointIndex.BottomLeft, new PointF(left, bottom), this);
+            float right = Collidable.AABB.Right();
+            Points[0] = new CollidablePoint(CollidablePointIndex.TopLeft, new Vector2f(left, top), this);
+            Points[1] = new CollidablePoint(CollidablePointIndex.TopRight, new Vector2f(right, top), this);
+            Points[2] = new CollidablePoint(CollidablePointIndex.BottomRight, new Vector2f(right, bottom), this);
+            Points[3] = new CollidablePoint(CollidablePointIndex.BottomLeft, new Vector2f(left, bottom), this);
         }
     }
 }

@@ -3,6 +3,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
 using SS14.Shared.Maths;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.GOC
 {
@@ -10,9 +12,9 @@ namespace SS14.Client.Interfaces.GOC
     {
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
-        void Render(Vector2 topLeft, Vector2 bottomRight);
-        RectangleF AABB { get; }
-        RectangleF AverageAABB { get; }
+        void Render(Vector2f topLeft, Vector2f bottomRight);
+        FloatRect AABB { get; }
+        FloatRect AverageAABB { get; }
         bool IsSlaved();
         void SetMaster(Entity m);
         void UnsetMaster();

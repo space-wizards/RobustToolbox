@@ -1,4 +1,5 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
@@ -31,7 +32,7 @@ namespace SS14.Server.GameObjects
 
         public void Translate(float x, float y)
         {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2(x, y);
+            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2f(x, y);
         }
 
     }

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -21,20 +22,20 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly ScrollableContainer _tileList;
         private readonly Textbox _tileSearchTextbox;
 
-        public TileSpawnPanel(Size size, IResourceManager resourceManager, IPlacementManager placementManager)
+        public TileSpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
             : base("Tile Spawn Panel", size, resourceManager)
         {
             _resourceManager = resourceManager;
             _placementManager = placementManager;
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Size(200, 400), _resourceManager)
-                            {Position = new Point(5, 5)};
+            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceManager)
+                            {Position = new Vector2i(5, 5)};
             components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) {Position = new Point(210, 0)};
+            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) {Position = new Vector2i(210, 0)};
             components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceManager) {Position = new Point(210, 20)};
+            _tileSearchTextbox = new Textbox(125, _resourceManager) {Position = new Vector2i(210, 20)};
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
@@ -42,7 +43,7 @@ namespace SS14.Client.Services.UserInterface.Components
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
-                                  Position = new Point(210, 55)
+                                  Position = new Vector2i(210, 55)
                               };
 
             _clearLabel.Clicked += ClearLabelClicked;
@@ -51,7 +52,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             BuildTileList();
 
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
@@ -93,7 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 var tileLabel = new Label(entry, "CALIBRI", _resourceManager);
                 _tileList.components.Add(tileLabel);
-                tileLabel.Position = new Point(5, yOffset);
+                tileLabel.Position = new Vector2i(5, yOffset);
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
                 tileLabel.Update(0);

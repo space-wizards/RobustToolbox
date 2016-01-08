@@ -5,6 +5,8 @@ using SS14.Shared;
 using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -13,7 +15,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
 
-        public AdminPlayerPanel(Size size, INetworkManager networkManager, IResourceManager resourceManager,
+        public AdminPlayerPanel(Vector2i size, INetworkManager networkManager, IResourceManager resourceManager,
                                 NetIncomingMessage message)
             : base("Admin Player Panel", size, resourceManager)
         {
@@ -21,16 +23,16 @@ namespace SS14.Client.Services.UserInterface.Components
             _resourceManager = resourceManager;
 
             BuildList(message);
-            var closeButton = new Button("Close", _resourceManager) {Position = new Point(5, 5)};
+            var closeButton = new Button("Close", _resourceManager) {Position = new Vector2i(5, 5)};
             closeButton.Clicked += CloseButtonClicked;
             components.Add(closeButton);
 
             var unbanButton = new Button("Unban", _resourceManager)
-                                  {Position = new Point(closeButton.ClientArea.Right + 10, 5)};
+                                  {Position = new Vector2i(closeButton.ClientArea.Right() + 10, 5)};
             unbanButton.Clicked += UnbanButtonClicked;
             components.Add(unbanButton);
 
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
         }
 
@@ -62,7 +64,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 var line = new Label("Name: " + name + "    Status: " + status + "    Job: " + job + "    IP: " + ip,
                                      "CALIBRI", _resourceManager)
                                {
-                                   Position = new Point(5, yOffset + 5),
+                                   Position = new Vector2i(5, yOffset + 5),
                                    Text = {Color = isAdmin ? new SFML.Graphics.Color(0, 139, 139) : SFML.Graphics.Color.Black}
                                };
 
@@ -71,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 var kickButton = new Button("Kick", _resourceManager)
                                      {
                                          Position =
-                                             new Point(line.ClientArea.Right + 10,
+                                             new Vector2i(line.ClientArea.Right() + 10,
                                                        yOffset + (int) (line.ClientArea.Height/3f))
                                      };
                 components.Add(kickButton);
@@ -82,7 +84,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 var banButt = new Button("Ban", _resourceManager)
                                   {
                                       Position =
-                                          new Point(kickButton.ClientArea.Right + 5,
+                                          new Vector2i(kickButton.ClientArea.Right() + 5,
                                                     yOffset + (int) (line.ClientArea.Height/3f))
                                   };
                 components.Add(banButt);

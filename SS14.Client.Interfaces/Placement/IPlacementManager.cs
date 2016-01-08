@@ -4,6 +4,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Client.Interfaces.Placement
 {
@@ -22,7 +23,7 @@ namespace SS14.Client.Interfaces.Placement
         void ToggleEraser();
         void Rotate();
 
-        void Update(Vector2 mouseScreen, IMapManager currentMap);
+        void Update(Vector2i mouseScreen, IMapManager currentMap);
         void HandleNetMessage(NetIncomingMessage msg);
     }
 }

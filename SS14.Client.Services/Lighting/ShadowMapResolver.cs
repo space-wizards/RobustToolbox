@@ -74,10 +74,10 @@ namespace SS14.Client.Services.Lighting
         {
             Texture shadowCastersTexture = Area.RenderTarget.Texture;
             RenderImage Result = Area.RenderTarget;
-            Vector2 LightPosition = Area.LightPosition;
+            SFML.System.Vector2f LightPosition = Area.LightPosition;
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
-            Vector4 MaskProps = Vector4.Zero;
-            Vector4 diffuseColor = Vector4.One;
+            Vector4f MaskProps = Vector4f.Zero;
+            Vector4f diffuseColor = Vector4f.One;
 
             //Debug.DebugRendertarget(Area.RenderTarget);
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
@@ -117,8 +117,8 @@ namespace SS14.Client.Services.Lighting
 
         private void ExecuteTechnique(RenderImage source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
-            Vector2 renderTargetSize;
-            renderTargetSize = new Vector2(baseSize, baseSize);
+            Vector2f renderTargetSize;
+            renderTargetSize = new Vector2f(baseSize, baseSize);
 
             destinationTarget.BeginDrawing();
             destinationTarget.Clear(Color.White);

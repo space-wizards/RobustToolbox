@@ -5,6 +5,7 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Direction;
 using System;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Server.GameObjects
 {
@@ -38,15 +39,15 @@ namespace SS14.Server.GameObjects
 
         public void HandleOnMove(object sender, VectorEventArgs args)
         {
-            if ((args.VectorTo - args.VectorFrom).Magnitude < 0.1f)
+            if ((args.VectorTo - args.VectorFrom).Length() < 0.1f)
                 return;
             SetMoveDir(DetermineDirection(args.VectorFrom, args.VectorTo));
         }
 
-        private Direction DetermineDirection(Vector2 from, Vector2 to)
+        private Direction DetermineDirection(Vector2f from, Vector2f to)
         {
-            Vector2 delta = to - from;
-            if (delta.Magnitude < 0.1f)
+            Vector2f delta = to - from;
+            if (delta.Length() < 0.1f)
                 return _lastDeterminedDirection;
 
             if (delta.X > 0 && delta.Y > 0)

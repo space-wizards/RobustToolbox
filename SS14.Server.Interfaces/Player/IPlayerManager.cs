@@ -3,6 +3,7 @@ using SS14.Shared;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
 using SS14.Shared.Maths;
+using SFML.System;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -27,7 +28,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         IPlayerSession[] GetPlayersInLobby();
-        IPlayerSession[] GetPlayersInRange(Vector2 position, int range);
+        IPlayerSession[] GetPlayersInRange(Vector2f position, int range);
         IPlayerSession[] GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

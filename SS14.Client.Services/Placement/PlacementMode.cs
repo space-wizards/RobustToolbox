@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.Maths;
 
@@ -9,8 +10,8 @@ namespace SS14.Client.Services.Placement
         public readonly PlacementManager pManager;
 
         public TileRef currentTile;
-        public Vector2 mouseScreen;
-        public Vector2 mouseWorld;
+        public Vector2i mouseScreen;
+        public Vector2f mouseWorld;
         public Sprite spriteToDraw;
 
         public PlacementMode(PlacementManager pMan)
@@ -23,7 +24,7 @@ namespace SS14.Client.Services.Placement
             get { return GetType().Name; }
         }
 
-        public virtual bool Update(Vector2 mouseScreen, IMapManager currentMap) //Return valid position?
+        public virtual bool Update(Vector2i mouseScreen, IMapManager currentMap) //Return valid position?
         {
             return false;
         }

@@ -55,7 +55,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
            
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)preblur.Width, (int)preblur.Height));
+            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
             
        
 
@@ -71,7 +71,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
                 //preblur.Clear();       //Clear 
                 sprite = _resourceManager.GetSprite("flashlight_mask");
-                sprite.Position = Vector2.Zero;
+                sprite.Position = new Vector2f();
                 sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
               
@@ -99,7 +99,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
             _gaussianBlur.SetRadius(9);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)preblur.Width, (int)preblur.Height));
+            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
 
 
 
@@ -108,7 +108,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 
@@ -141,7 +141,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
             _gaussianBlur.SetRadius(7);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)preblur.Width, (int)preblur.Height));
+            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
 
 
 
@@ -183,7 +183,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
             _gaussianBlur.SetRadius(5);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)preblur.Width, (int)preblur.Height));
+            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
 
 
 
@@ -225,7 +225,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
             _gaussianBlur.SetRadius(3);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)preblur.Width, (int)preblur.Height));
+            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
 
 
 

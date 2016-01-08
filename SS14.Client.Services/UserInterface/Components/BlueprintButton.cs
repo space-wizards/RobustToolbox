@@ -6,6 +6,7 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -52,7 +53,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         {
                             Color = new SFML.Graphics.Color(248, 248, 255),
                             ShadowColor = new SFML.Graphics.Color(105, 105, 105),
-                            ShadowOffset = new Vector2(1, 1),
+                            ShadowOffset = new Vector2f(1, 1),
                             Shadowed = true
                         };
 
@@ -64,18 +65,18 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             var bounds = _icon.GetLocalBounds();
-            ClientArea = new Rectangle(Position,
-                                       new Size((int) (Label.Width + bounds.Width),
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int) (Label.Width + bounds.Width),
                                                 (int) Math.Max(Label.Height, bounds.Height)));
-            Label.Position = new Point(Position.X + (int)bounds.Width, Position.Y);
-            _icon.Position = new Vector2(Position.X, Position.Y + (Label.Height / 2f - bounds.Height / 2f));
+            Label.Position = new Vector2i(Position.X + (int)bounds.Width, Position.Y);
+            _icon.Position = new Vector2f(Position.X, Position.Y + (Label.Height / 2f - bounds.Height / 2f));
             Label.Text = Compo1Name + " + " + Compo2Name + " = " + ResultName;
         }
 
         public override void Render()
         {
             if (_bgcol != SFML.Graphics.Color.Transparent)
-            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,
                                                            ClientArea.Height, _bgcol);
             _icon.Draw();
             Label.Draw();
@@ -92,7 +93,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -107,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _bgcol = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
+            _bgcol = ClientArea.Contains(e.X, e.Y)
                          ? new SFML.Graphics.Color(70, 130, 180)
                          : SFML.Graphics.Color.Transparent;
         }

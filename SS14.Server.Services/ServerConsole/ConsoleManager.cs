@@ -25,10 +25,10 @@ namespace SS14.Server.Services.ServerConsole
         public ConsoleManager()
         {
             InitializeCommands();
-            Size consoleSize = IoCManager.Resolve<IServerConfigurationManager>().ConsoleSize;
+            var consoleSize = IoCManager.Resolve<IServerConfigurationManager>().ConsoleSize;
             try
             {
-                Con.SetWindowSize(consoleSize.Width, consoleSize.Height);
+                Con.SetWindowSize(consoleSize.X, consoleSize.Y);
             }
             catch (ArgumentOutOfRangeException e)
             {

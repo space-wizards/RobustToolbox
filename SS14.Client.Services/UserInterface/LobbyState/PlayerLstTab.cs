@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using SFML.Window;
 using System.Drawing;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -12,13 +13,13 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         public ScrollableContainer _scPlayerList;
 
-        public PlayerListTab(string uniqueName, Size size, IResourceManager resourceManager)
+        public PlayerListTab(string uniqueName, Vector2i size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
         {
             DrawBorder = false;
 
-            _scPlayerList = new ScrollableContainer("scplayerlist", new Size(784, 346), resourceManager);
-            _scPlayerList.Position = new Point(5,10);
+            _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceManager);
+            _scPlayerList.Position = new Vector2i(5,10);
             components.Add(_scPlayerList);
         }
 
@@ -50,17 +51,17 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return base.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return base.MouseUp(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             base.MouseMove(e);
         }

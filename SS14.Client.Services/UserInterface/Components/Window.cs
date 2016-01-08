@@ -1,39 +1,34 @@
 ﻿using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using System;
-using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
 using VertexFieldContext = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldContext;
 using VertexFieldType = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldType;
 using SS14.Client.Graphics.VertexData;
-
-
-
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class Window : ScrollableContainer
     {
         protected const int titleBuffer = 1;
-        protected readonly IResourceManager _resourceManager;
 
-        public Color TitleColor1 = Color.SlateGray;
-        public Color TitleColor2 = Color.DarkSlateGray;
+        public Color TitleColor1 = new Color(112, 128, 144);
+        public Color TitleColor2 = new Color(47, 79, 79);
 
         protected ImageButton closeButton;
-        public Boolean closeButtonVisible = true;
+        public bool closeButtonVisible = true;
         protected bool dragging = false;
-        protected Vector2 draggingOffset = new Vector2();
+        protected Vector2f draggingOffset = new Vector2f();
         protected GradientBox gradient;
         protected Label title;
-        protected Rectangle titleArea;
+        protected IntRect titleArea;
 
-        public Window(string windowTitle, Size size, IResourceManager resourceManager)
+        public Window(string windowTitle, Vector2i size, IResourceManager resourceManager)
             : base(windowTitle, size, resourceManager)
         {
-            _resourceManager = resourceManager;
-
             closeButton = new ImageButton
                               {
                                   ImageNormal = "closewindow"
@@ -57,14 +52,13 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Update(frameTime);
             if (title == null || gradient == null) return;
             int y_pos = ClientArea.Top - (2*titleBuffer) - title.ClientArea.Height + 1;
-            title.Position = new Point(ClientArea.X + 3, y_pos + titleBuffer);
-            titleArea = new Rectangle(ClientArea.X, y_pos, ClientArea.Width, title.ClientArea.Height + (2*titleBuffer));
+            title.Position = new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
+            titleArea = new IntRect(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2*titleBuffer));
             title.Update(frameTime);
-            closeButton.Position = new Point(titleArea.Right - 5 - closeButton.ClientArea.Width,
-                                             titleArea.Y + (int) (titleArea.Height/2f) -
+            closeButton.Position = new Vector2i(titleArea.Right() - 5 - closeButton.ClientArea.Width,
+                                             titleArea.Top + (int) (titleArea.Height/2f) -
                                              (int) (closeButton.ClientArea.Height/2f));
-            Rectangle gradientArea = titleArea;
-            gradient.ClientArea = gradientArea;
+            gradient.ClientArea = titleArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
             gradient.Update(frameTime);
@@ -89,7 +83,7 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
 
@@ -108,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging) dragging = false;
             if (disposing || !IsVisible()) return false;
@@ -117,12 +111,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             if (dragging)
             {
-                Position = new Point((int) e.X - (int) draggingOffset.X,
+                Position = new Vector2i((int) e.X - (int) draggingOffset.X,
                                      (int) e.Y - (int) draggingOffset.Y);
             }
             base.MouseMove(e);
@@ -130,7 +124,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return;
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (base.MouseWheelMove(e)) return true;
             return false;
@@ -148,8 +142,8 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly VertexTypeList.PositionDiffuse2DTexture1[] box =
             new VertexTypeList.PositionDiffuse2DTexture1[4];
 
-        public Color Color1 = Color.SlateGray;
-        public Color Color2 = Color.DarkSlateGray;
+        public Color Color1 = new Color(112, 128, 144);
+        public Color Color2 = new Color(47, 79, 79);
 
         public bool Vertical = true;
 
@@ -161,21 +155,21 @@ namespace SS14.Client.Services.UserInterface.Components
             box[0].TextureCoordinates.Y = 0.0f;
             box[0].Color = Color1;
 
-            box[1].Position.X = ClientArea.Right;
+            box[1].Position.X = ClientArea.Right();
             box[1].Position.Y = ClientArea.Top;
             box[1].TextureCoordinates.X = 0.0f;
             box[1].TextureCoordinates.Y = 0.0f;
             if (!Vertical) box[1].Color = Color2;
             else box[1].Color = Color1;
 
-            box[2].Position.X = ClientArea.Right;
-            box[2].Position.Y = ClientArea.Bottom;
+            box[2].Position.X = ClientArea.Right();
+            box[2].Position.Y = ClientArea.Bottom();
             box[2].TextureCoordinates.X = 0.0f;
             box[2].TextureCoordinates.Y = 0.0f;
             box[2].Color = Color2;
 
             box[3].Position.X = ClientArea.Left;
-            box[3].Position.Y = ClientArea.Bottom;
+            box[3].Position.Y = ClientArea.Bottom();
             box[3].TextureCoordinates.X = 0.0f;
             box[3].TextureCoordinates.Y = 0.0f;
             if (!Vertical) box[3].Color = Color1;

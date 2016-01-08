@@ -6,6 +6,8 @@ using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SFML.Graphics;
+using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -29,9 +31,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private float _caretPos;
         private float _caretWidth = 2;
 
-        private Rectangle _clientAreaLeft;
-        private Rectangle _clientAreaMain;
-        private Rectangle _clientAreaRight;
+        private IntRect _clientAreaLeft;
+        private IntRect _clientAreaMain;
+        private IntRect _clientAreaRight;
 
         private int _displayIndex;
 
@@ -77,17 +79,17 @@ namespace SS14.Client.Services.UserInterface.Components
             var boundsLeft = _textboxLeft.GetLocalBounds();
             var boundsMain = _textboxMain.GetLocalBounds();
             var boundsRight = _textboxRight.GetLocalBounds();
-            _clientAreaLeft = new Rectangle(Position, new Size((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaLeft = new IntRect(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
          
-            _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size(Width, (int)boundsMain.Height));
-            _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int)boundsRight.Width, (int)boundsRight.Height));
-            ClientArea = new Rectangle(Position,
-                                       new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
+            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+                                            Width, (int)boundsMain.Height);
+            _clientAreaRight = new IntRect(_clientAreaMain.Right(), Position.Y,
+                                             (int)boundsRight.Width, (int)boundsRight.Height);
+            ClientArea = new IntRect(Position,
+                                       new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
-            Label.Position = new Point(_clientAreaLeft.Right,
+            Label.Position = new Vector2i(_clientAreaLeft.Right(),
                                        Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
 
             _caretPos = Label.Text.Length;
@@ -145,7 +147,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }

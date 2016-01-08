@@ -1,4 +1,6 @@
-﻿using SS14.Shared.GameObjects;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Hitbox;
 using System;
@@ -7,26 +9,26 @@ using System.Drawing;
 namespace SS14.Client.GameObjects {
     public class HitboxComponent : Component {
 
-        public RectangleF AABB { get; set; }
-        public SizeF Size {
+        public FloatRect AABB { get; set; }
+        public Vector2f Size {
             get {
-                return AABB.Size;
+                return new Vector2f(AABB.Width, AABB.Height);
             }
             set {
-                AABB = new RectangleF(
-                    AABB.Left + (AABB.Width - value.Width),
-                    AABB.Top + (AABB.Height - value.Height),
-                    value.Width,
-                    value.Height
+                AABB = new FloatRect(
+                    AABB.Left + (AABB.Width - value.X),
+                    AABB.Top + (AABB.Height - value.Y),
+                    value.X,
+                    value.Y
                     );
             }
         }
-        public PointF Offset {
+        public Vector2f Offset {
             get {
-                return new PointF(AABB.Left + AABB.Width / 2f, AABB.Top + AABB.Height / 2f);
+                return new Vector2f(AABB.Left + AABB.Width / 2f, AABB.Top + AABB.Height / 2f);
             }
             set {
-                AABB = new RectangleF(
+                AABB = new FloatRect(
                     value.X - AABB.Width / 2f,
                     value.Y - AABB.Height / 2f,
                     AABB.Width,
@@ -38,8 +40,8 @@ namespace SS14.Client.GameObjects {
 
         public HitboxComponent() {
             Family = ComponentFamily.Hitbox;
-            Size = new SizeF();
-            Offset = new PointF();
+            Size = new Vector2f();
+            Offset = new Vector2f();
         }
 
         public override Type StateType {

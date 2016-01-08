@@ -8,7 +8,7 @@ using System;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-
+using SFML.Graphics;
 
 namespace SS14.UnitTesting
 {

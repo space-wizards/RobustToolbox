@@ -10,6 +10,7 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
 using SFML.Graphics;
+using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -65,7 +66,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            hotbarBG.Position = new Vector2(Position.X, Position.Y);
+            hotbarBG.Position = new Vector2f(Position.X, Position.Y);
 
             int y_dist = 30;
             int x_pos = 175;
@@ -75,15 +76,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
             foreach (GuiComponent comp in slots)
             {
-                comp.Position = new Point(Position.X + x_pos, Position.Y + y_dist);
+                comp.Position = new Vector2i(Position.X + x_pos, Position.Y + y_dist);
                 comp.Update(frameTime);
-                if (comp.ClientArea.Right > max_x) max_x = comp.ClientArea.Right;
-                if (comp.ClientArea.Bottom > max_y) max_y = comp.ClientArea.Bottom;
+                if (comp.ClientArea.Right() > max_x) max_x = comp.ClientArea.Right();
+                if (comp.ClientArea.Bottom() > max_y) max_y = comp.ClientArea.Bottom();
                 x_pos += comp.ClientArea.Width + 1;
             }
 
             var bounds = hotbarBG.GetLocalBounds();
-            ClientArea = Rectangle.Round(new RectangleF(bounds.Left, bounds.Top, bounds.Width, bounds.Height));
+            ClientArea = new FloatRect(bounds.Left, bounds.Top, bounds.Width, bounds.Height).Round();
         }
 
         public override void Render()
@@ -97,7 +98,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 comp.Render();
 
             foreach (PlayerActionButton comp in (from a in slots where a is PlayerActionButton select a))
-                comp.DrawTooltip(Point.Empty);
+                comp.DrawTooltip(new Vector2i());
         }
 
         public override void Dispose()

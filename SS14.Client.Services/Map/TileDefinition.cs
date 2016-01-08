@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -53,7 +54,7 @@ namespace SS14.Client.Services.Map
         {
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition)
         {
         }
 

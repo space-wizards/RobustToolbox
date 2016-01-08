@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Drawing;
@@ -29,7 +30,7 @@ namespace SS14.Client.GameObjects
             return reply;
         }
 
-        public bool CheckClick(PointF worldPos, out int drawdepth)
+        public bool CheckClick(Vector2f worldPos, out int drawdepth)
         {
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
                                                             ComponentMessageType.CheckSpriteClick, worldPos);

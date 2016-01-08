@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.Map;
+﻿using SFML.Graphics;
+using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Hitbox;
@@ -10,12 +11,12 @@ namespace SS14.Server.GameObjects
 {
     public class HitboxComponent : Component
     {
-        public RectangleF AABB { get; set; }
+        public FloatRect AABB { get; set; }
 
         public HitboxComponent()
         {
             Family = ComponentFamily.Hitbox;
-            AABB = new RectangleF();
+            AABB = new FloatRect();
         }
 
         public override ComponentState GetComponentState()
@@ -36,19 +37,19 @@ namespace SS14.Server.GameObjects
             {
                 case "SizeX":
                     var width = parameter.GetValue<float>() / tileSize;
-                    AABB = new RectangleF(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
+                    AABB = new FloatRect(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
                     break;
                 case "SizeY":
                     var height = parameter.GetValue<float>() / tileSize;
-                    AABB = new RectangleF(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
+                    AABB = new FloatRect(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
                     break;
                 case "OffsetX":
                     var x = parameter.GetValue<float>() / tileSize;
-                    AABB = new RectangleF(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
+                    AABB = new FloatRect(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
                     break;
                 case "OffsetY":
                     var y = parameter.GetValue<float>() / tileSize;
-                    AABB = new RectangleF(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
+                    AABB = new FloatRect(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
                     break;
             }
         }

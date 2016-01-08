@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using SFML.Graphics;
@@ -15,7 +14,6 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
-using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.Timing;
@@ -240,7 +238,7 @@ namespace SS14.Client
 //            uint displayHeight = _configurationManager.GetDisplayHeight();
 //            bool fullscreen = _configurationManager.GetFullscreen();
 //            var refresh = (int) _configurationManager.GetDisplayRefresh();
-//            Size = new Size((int) displayWidth, (int) displayHeight);
+//            Size = new Vector2i((int) displayWidth, (int) displayHeight);
 //
 //            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 //

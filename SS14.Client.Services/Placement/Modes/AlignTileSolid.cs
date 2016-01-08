@@ -5,6 +5,8 @@ using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
 using System.Drawing;
 using Color = SFML.Graphics.Color;
+using SFML.System;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -15,7 +17,7 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2 mouseS, IMapManager currentMap)
+        public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
@@ -25,35 +27,36 @@ namespace SS14.Client.Services.Placement.Modes
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
             var bounds = spriteToDraw.GetLocalBounds();
-            var spriteSize = CluwneLib.PixelToTile(new SizeF(bounds.Width, bounds.Height));
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.Width / 2f),
-                                                 mouseWorld.Y - (spriteSize.Height / 2f),
-                                                 spriteSize.Width, spriteSize.Height);
+            var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
+            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
 
             currentTile = currentMap.GetTileRef(mouseWorld);
 
             if (!currentTile.Tile.TileDef.IsWall)
                 return false;
 
-            if (pManager.CurrentPermission.Range > 0)
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
-                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
+                         .Position - mouseWorld).LengthSquared() > rangeSquared)
                     return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new Vector2(currentTile.X + 0.5f,
+                mouseWorld = new Vector2f(currentTile.X + 0.5f,
                                          currentTile.Y + 0.5f);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
             }
             else
             {
-                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
+                mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
                                          currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 
-                spriteRectWorld = new RectangleF(mouseWorld.X - (bounds.Width/2f),
+                spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),
                                                  mouseWorld.Y - (bounds.Height/2f), bounds.Width,
                                                  bounds.Height);
                 if (pManager.CollisionManager.IsColliding(spriteRectWorld))
@@ -70,7 +73,7 @@ namespace SS14.Client.Services.Placement.Modes
             {
                 var bounds = spriteToDraw.GetLocalBounds();
                 spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
                                                     mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

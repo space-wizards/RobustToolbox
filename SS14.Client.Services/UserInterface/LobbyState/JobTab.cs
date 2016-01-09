@@ -1,18 +1,12 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
-using SFML.Window;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using System.Drawing;
-using SS14.Client.Graphics;
-using BlendMode = SFML.Graphics.BlendMode;
-using Color = SFML.Graphics.Color;
-using SS14.Client.Services.Helpers;
-using SS14.Client.GameObjects;
-using SFML.System;
 using SS14.Shared.Maths;
-using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

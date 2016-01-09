@@ -1,7 +1,5 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Shared.Maths;
-using System.Drawing;
 
 namespace SS14.Client.Graphics
 {

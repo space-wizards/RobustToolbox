@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using Drawing = System.Drawing;
-using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics.VertexData;
-using SS14.Client.Graphics.Collection;
-using VertexFieldContext = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldType;
+﻿using SFML.Graphics;
 using SFML.System;
-using SFML.Graphics;
+using SS14.Client.Graphics.Collection;
+using SS14.Shared.Maths;
+using System;
+using System.Runtime.InteropServices;
 
 namespace SS14.Client.Graphics.VertexData
 {

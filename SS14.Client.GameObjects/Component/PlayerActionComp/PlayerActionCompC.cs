@@ -6,7 +6,6 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Client.GameObjects

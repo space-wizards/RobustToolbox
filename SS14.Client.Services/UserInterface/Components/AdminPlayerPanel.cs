@@ -1,11 +1,10 @@
 ﻿using Lidgren.Network;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SFML.System;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components

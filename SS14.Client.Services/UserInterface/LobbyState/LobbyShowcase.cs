@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.GameObjects;
+﻿using SFML.Graphics;
 using SFML.System;
-using SFML.Graphics;
-using SS14.Shared.Maths;
+using SFML.Window;
 using SS14.Shared;
+using SS14.Shared.Maths;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -96,7 +93,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Vector2i(ItemOffsets.X + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
                                   ItemOffsets.Y + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
-                        middle.Key.Color = SFML.Graphics.Color.White;
+                        middle.Key.Color = Color.White;
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
@@ -128,7 +125,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currLeft.Key.Color = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                currLeft.Key.Color = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
 
                             currLeft.Key.Render();
                         }
@@ -147,7 +144,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currRight.Key.Color = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                currRight.Key.Color = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
 
                             currRight.Key.Render();
                         }

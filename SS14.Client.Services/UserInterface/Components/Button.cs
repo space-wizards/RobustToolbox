@@ -6,8 +6,6 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
-using System.Drawing;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

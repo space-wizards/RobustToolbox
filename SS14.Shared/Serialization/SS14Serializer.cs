@@ -1,11 +1,11 @@
 ﻿using NetSerializer;
+using SFML.Graphics;
+using SFML.System;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Generic;
-using SFML.System;
-using SFML.Graphics;
 
 namespace SS14.Shared.Serialization
 {

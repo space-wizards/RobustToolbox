@@ -1,19 +1,17 @@
-﻿using SS14.Client.Interfaces.Input;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.GameObjects;
-using SFML.System;
-using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -68,15 +66,15 @@ namespace SS14.Client.Services.UserInterface.Components
             _chatColors = new Dictionary<ChatChannel, SFML.Graphics.Color>
                               {
                                   [ChatChannel.Default] = new SFML.Graphics.Color(128, 128, 128),
-                                  [ChatChannel.Damage ] = SFML.Graphics.Color.Red,
+                                  [ChatChannel.Damage ] = Color.Red,
                                   [ChatChannel.Radio  ] = new SFML.Graphics.Color(0, 100, 0),
-                                  [ChatChannel.Server ] = SFML.Graphics.Color.Blue,
+                                  [ChatChannel.Server ] = Color.Blue,
                                   [ChatChannel.Player ] = new SFML.Graphics.Color(0, 128, 0),
-                                  [ChatChannel.Lobby  ] = SFML.Graphics.Color.White,
+                                  [ChatChannel.Lobby  ] = Color.White,
                                   [ChatChannel.Ingame ] = new SFML.Graphics.Color(0, 128, 0),
-                                  [ChatChannel.OOC    ] = SFML.Graphics.Color.White,
-                                  [ChatChannel.Emote  ] = SFML.Graphics.Color.Cyan,
-                                  [ChatChannel.Visual ] = SFML.Graphics.Color.Yellow,
+                                  [ChatChannel.OOC    ] = Color.White,
+                                  [ChatChannel.Emote  ] = Color.Cyan,
+                                  [ChatChannel.Visual ] = Color.Yellow,
                               };
         }
 

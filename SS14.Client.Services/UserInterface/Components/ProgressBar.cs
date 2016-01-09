@@ -1,12 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
+using System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -17,7 +15,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public SFML.Graphics.Color backgroundColor = new SFML.Graphics.Color(70, 130, 180);
         public SFML.Graphics.Color barColor = new SFML.Graphics.Color(176, 196, 222);
-        public SFML.Graphics.Color borderColor = SFML.Graphics.Color.Black;
+        public SFML.Graphics.Color borderColor = Color.Black;
 
         protected float max = 1000;
         protected float min = 0;
@@ -29,7 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _resourceManager = resourceManager;
             Text = new TextSprite("ProgressBarText", "", _resourceManager.GetFont("CALIBRI"));
-            Text.Color = SFML.Graphics.Color.Black;
+            Text.Color = Color.Black;
             Text.ShadowColor = new SFML.Graphics.Color(105, 105, 105);
             Text.ShadowOffset = new Vector2f(1, 1);
             Text.Shadowed = true;

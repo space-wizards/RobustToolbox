@@ -6,7 +6,6 @@ using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System.Drawing;
 
 namespace SS14.Client.Services.Lighting
 {

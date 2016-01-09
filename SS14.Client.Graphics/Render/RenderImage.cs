@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using System.Diagnostics;
+﻿using SFML.Graphics;
 using SFML.System;
+using System;
+using System.Diagnostics;
 
 namespace SS14.Client.Graphics.Render
 {

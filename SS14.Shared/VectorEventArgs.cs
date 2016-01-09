@@ -1,6 +1,5 @@
-﻿using System;
-using SS14.Shared.Maths;
-using SFML.System;
+﻿using SFML.System;
+using System;
 
 namespace SS14.Shared
 {

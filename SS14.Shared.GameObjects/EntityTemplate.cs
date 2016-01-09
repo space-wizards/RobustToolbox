@@ -1,11 +1,11 @@
-﻿using SS14.Shared.GO;
+﻿using SFML.System;
+using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using SS14.Shared.Maths;
-using SFML.System;
 
 namespace SS14.Shared.GameObjects
 {

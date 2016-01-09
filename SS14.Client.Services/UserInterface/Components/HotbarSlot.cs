@@ -1,14 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using SS14.Client.Graphics.Sprite;
 using System;
-using SFML.Window;
-using System.Drawing;
-using SFML.Graphics;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

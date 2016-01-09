@@ -1,17 +1,11 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
-using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.OpenGL;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.Services.Lighting
 {

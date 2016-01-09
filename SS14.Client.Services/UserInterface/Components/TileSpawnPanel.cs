@@ -1,16 +1,13 @@
-﻿using SS14.Client.Interfaces.Map;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

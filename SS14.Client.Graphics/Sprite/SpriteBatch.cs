@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

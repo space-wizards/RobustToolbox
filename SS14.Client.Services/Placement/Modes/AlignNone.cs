@@ -1,12 +1,10 @@
-﻿using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
-using System.Drawing;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
-using SFML.System;
-using SFML.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Placement.Modes
 {

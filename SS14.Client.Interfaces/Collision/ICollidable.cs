@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using SS14.Shared.GameObjects;
-using System.Drawing;
 
 namespace SS14.Client.Interfaces.Collision
 {

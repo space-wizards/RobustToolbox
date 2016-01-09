@@ -1,10 +1,9 @@
-﻿using SS14.Client.Graphics.Shader;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.Player.PostProcessing

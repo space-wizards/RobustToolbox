@@ -1,8 +1,6 @@
 ﻿using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Shared.Maths;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.Services.Helpers
 {

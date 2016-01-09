@@ -1,17 +1,12 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
-using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
-using System.Drawing;
-using Image = SFML.Graphics.Image;
-using Color = SFML.Graphics.Color;
-using SFML.System;
 
 namespace SS14.Client.Services.Helpers
 {

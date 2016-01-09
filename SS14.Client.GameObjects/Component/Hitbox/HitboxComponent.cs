@@ -4,9 +4,9 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Hitbox;
 using System;
-using System.Drawing;
 
-namespace SS14.Client.GameObjects {
+namespace SS14.Client.GameObjects
+{
     public class HitboxComponent : Component {
 
         public FloatRect AABB { get; set; }

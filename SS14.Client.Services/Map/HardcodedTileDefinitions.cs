@@ -1,15 +1,10 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Map
 {

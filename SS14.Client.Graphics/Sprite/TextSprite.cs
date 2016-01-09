@@ -1,17 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Interface;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using Color = SFML.Graphics.Color;
-using Font = SFML.Graphics.Font;
-
-
-
 
 namespace SS14.Client.Graphics.Sprite
 {

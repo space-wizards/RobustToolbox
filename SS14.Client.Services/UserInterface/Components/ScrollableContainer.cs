@@ -1,14 +1,13 @@
-﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Graphics.Render;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Interfaces.Resource;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
-using SFML.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -120,7 +119,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? BackgroundColor : SFML.Graphics.Color.Transparent);
+            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -148,13 +147,13 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, SFML.Graphics.Color.White, BlitterSizeMode.None);
+            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-            CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  BorderSize, SFML.Graphics.Color.Black);
+            CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  BorderSize, Color.Black);
             clippingRI.EndDrawing();
         }
 

@@ -1,12 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using SFML.Graphics;
-using SFML.System;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
+using System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -30,7 +28,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public string Result;
         public string ResultName;
 
-        private SFML.Graphics.Color _bgcol = SFML.Graphics.Color.Transparent;
+        private SFML.Graphics.Color _bgcol = Color.Transparent;
         private Sprite _icon;
 
         public BlueprintButton(string c1, string c1N, string c2, string c2N, string res, string resname,
@@ -75,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            if (_bgcol != SFML.Graphics.Color.Transparent)
+            if (_bgcol != Color.Transparent)
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,
                                                            ClientArea.Height, _bgcol);
             _icon.Draw();
@@ -110,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _bgcol = ClientArea.Contains(e.X, e.Y)
                          ? new SFML.Graphics.Color(70, 130, 180)
-                         : SFML.Graphics.Color.Transparent;
+                         : Color.Transparent;
         }
     }
 }

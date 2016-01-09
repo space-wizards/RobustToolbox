@@ -1,6 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -10,12 +12,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.Linq;
-using SFML.Window;
-using Color = SFML.Graphics.Color;
-using SFML.Graphics;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

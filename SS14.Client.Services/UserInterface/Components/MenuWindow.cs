@@ -13,7 +13,6 @@ using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

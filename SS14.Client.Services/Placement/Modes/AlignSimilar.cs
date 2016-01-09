@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
@@ -8,11 +9,8 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
-using Color = SFML.Graphics.Color;
-using SFML.System;
 
 namespace SS14.Client.Services.Placement.Modes
 {

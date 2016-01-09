@@ -1,13 +1,11 @@
-﻿using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.Map;
+﻿using SFML.System;
+using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
-using SFML.System;
 
 namespace SS14.Server.GameObjects
 {

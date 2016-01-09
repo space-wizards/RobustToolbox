@@ -1,4 +1,6 @@
 ﻿using Lidgren.Network;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
@@ -8,14 +10,10 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SFML.System;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

@@ -1,10 +1,10 @@
-﻿using SS14.Client.Interfaces.Network;
+﻿using SFML.System;
+using SS14.Client.Interfaces.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
-using SFML.System;
 
 namespace SS14.Client.GameObjects
 {

@@ -10,7 +10,6 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Reflection;
 
 namespace SS14.Client.Services.State.States

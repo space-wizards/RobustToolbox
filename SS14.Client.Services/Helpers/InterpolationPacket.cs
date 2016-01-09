@@ -1,6 +1,4 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 
 namespace SS14.Client.Services.Helpers

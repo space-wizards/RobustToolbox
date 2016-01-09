@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SS14.Client.Graphics;
-using OpenTK;
-//OpenGL v4 or before?
+﻿//OpenGL v4 or before?
 using OpenTK.Graphics.OpenGL;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
 using SFML.Graphics;
 using SS14.Client.Graphics.Shader;
+using System;
 using PrimitiveType = OpenTK.Graphics.OpenGL.PrimitiveType;
-using System.Runtime.InteropServices;
-using SFML.Window;
 
 namespace SS14.Client.Graphics.OpenGL
 {

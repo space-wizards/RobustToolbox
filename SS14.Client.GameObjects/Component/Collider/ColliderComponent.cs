@@ -1,13 +1,11 @@
-﻿using SS14.Client.Interfaces.Collision;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using System.Drawing;
-using SS14.Shared.Maths;
-using SFML.Graphics;
-using SFML.System;
 
 namespace SS14.Client.GameObjects
 {
@@ -31,7 +29,7 @@ namespace SS14.Client.GameObjects
         public ColliderComponent()
         {
             Family = ComponentFamily.Collider;
-            DebugColor = SFML.Graphics.Color.Blue;
+            DebugColor = Color.Blue;
         }
 
         public FloatRect WorldAABB
@@ -62,7 +60,7 @@ namespace SS14.Client.GameObjects
         public override void SetParameter(ComponentParameter parameter) {
             switch (parameter.MemberName) {
                 case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), SFML.Graphics.Color.Blue);
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Blue);
                     break;
             }
         }

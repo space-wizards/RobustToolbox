@@ -1,10 +1,9 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Shared;
 using System;
-using System.Drawing;
-using SFML.System;
-using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.UserInterface
 {

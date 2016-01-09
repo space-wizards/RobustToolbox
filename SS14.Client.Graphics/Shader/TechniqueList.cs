@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace SS14.Client.Graphics.Shader
 {
-    
+
     /// <para>
     /// With the transition from FX to GLSL, GLSL shaders cannot do multiple techniques per shader, 
     /// to fix that, each Technique has been converted into a standalone shader.

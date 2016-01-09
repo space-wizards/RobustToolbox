@@ -1,14 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.GameObjects;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Shared.Maths;
-using SS14.Shared;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -176,7 +174,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Vector2i(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
-                        ctemp = SFML.Graphics.Color.White;
+                        ctemp = Color.White;
                     selected.Key.Color = ctemp;
                     selected.Key.Render();
 
@@ -200,7 +198,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedLeft.Key.Color = ctemp;
 
                             selectedLeft.Key.Render();
@@ -218,7 +216,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosRight = selectedRight.Key.ClientArea.Right() + ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedRight.Key.Color = ctemp;
                             selectedRight.Key.Render();
                         }

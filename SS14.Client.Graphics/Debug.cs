@@ -1,10 +1,4 @@
-﻿using SFML.Graphics;
-using SS14.Client.Graphics.Render;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.Graphics
 {

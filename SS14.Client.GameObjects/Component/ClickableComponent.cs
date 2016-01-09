@@ -2,7 +2,6 @@
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Drawing;
 
 namespace SS14.Client.GameObjects
 {

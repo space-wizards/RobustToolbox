@@ -1,4 +1,8 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -7,18 +11,8 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
-using System.IO;
 using System.Windows.Forms;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics.Render;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Timing;
-
-using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {
@@ -81,7 +75,7 @@ namespace SS14.Client
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();

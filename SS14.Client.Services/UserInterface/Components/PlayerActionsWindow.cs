@@ -1,12 +1,11 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using System.Drawing;
 using System.Linq;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

@@ -1,7 +1,8 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.GameObject;
+using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Services.Log;
 using SS14.Shared;
@@ -12,7 +13,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
 using System.Linq;
-using SFML.System;
 
 namespace SS14.Server.Services.Player
 {

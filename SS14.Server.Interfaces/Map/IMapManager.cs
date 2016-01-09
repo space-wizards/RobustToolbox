@@ -1,10 +1,8 @@
 using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
 using SS14.Shared;
 using System.Collections.Generic;
-using System.Drawing;
-using SS14.Shared.Maths;
-using SFML.System;
-using SFML.Graphics;
 
 namespace SS14.Server.Interfaces.Map
 {

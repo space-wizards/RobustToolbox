@@ -2,7 +2,6 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System;
-using System.Drawing;
 
 namespace SS14.Server.GameObjects
 {

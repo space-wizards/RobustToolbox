@@ -2,8 +2,7 @@
 using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Sprite;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics;
 using System.Drawing;
@@ -18,8 +17,8 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
     {
         private IResourceManager resources;
         private RenderImage testRenderImage;
-        private CluwneSprite testsprite;
-    
+        private SFML.Graphics.Sprite testsprite;
+
         public TestShader_Test()
         {
             base.InitializeCluwneLib(1280,720,false,60);

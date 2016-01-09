@@ -1,9 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System;
 using System.Diagnostics;
 
 namespace SS14.Client.Services.Map
@@ -11,7 +10,7 @@ namespace SS14.Client.Services.Map
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public class TileDefinition : ITileDefinition
     {
-        protected CluwneSprite tileSprite { get; set; }
+        protected Sprite tileSprite { get; set; }
 
         ushort tileId = ushort.MaxValue;
         public ushort TileId
@@ -45,7 +44,7 @@ namespace SS14.Client.Services.Map
         {
             if (tileSprite != null)
             {
-                tileSprite.SetPosition(xTopLeft, yTopLeft);
+                tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
                 batch.Draw(tileSprite);
             }
         }

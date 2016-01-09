@@ -1,8 +1,7 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using Lidgren.Network;
-
+﻿using Lidgren.Network;
+using SFML.Graphics;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
@@ -16,12 +15,13 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Placement
 {
@@ -33,12 +33,13 @@ namespace SS14.Client.Services.Placement
         public readonly IResourceManager ResourceManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
-		public CluwneSprite CurrentBaseSprite;
+        public Sprite CurrentBaseSprite;
+        public string CurrentBaseSpriteKey = "";
         public PlacementMode CurrentMode;
         public PlacementInformation CurrentPermission;
         public EntityTemplate CurrentTemplate;
         public Direction Direction = Direction.South;
-        public Boolean ValidPosition;
+        public bool ValidPosition;
 
         public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager,
                                 ICollisionManager collisionManager, IPlayerManager playerManager)
@@ -218,9 +219,10 @@ namespace SS14.Client.Services.Placement
             //if (spriteParam == null) return;
 
             var spriteName = spriteParam == null?"":spriteParam.GetValue<string>();
-			CluwneSprite sprite = ResourceManager.GetSprite(spriteName);
+            Sprite sprite = ResourceManager.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
+            CurrentBaseSpriteKey = spriteName;
             CurrentTemplate = template;
 
             IsActive = true;
@@ -231,10 +233,12 @@ namespace SS14.Client.Services.Placement
             if (tileType.TileDef.IsWall)
             {
                 CurrentBaseSprite = ResourceManager.GetSprite("wall");
+                CurrentBaseSpriteKey = "wall";
             }
             else
             {
                 CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+                CurrentBaseSpriteKey = "tilebuildoverlay";
             }
 
             IsActive = true;
@@ -265,13 +269,13 @@ namespace SS14.Client.Services.Placement
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-		public CluwneSprite GetDirectionalSprite()
+        public Sprite GetDirectionalSprite()
         {
-			CluwneSprite spriteToUse = CurrentBaseSprite;
+            Sprite spriteToUse = CurrentBaseSprite;
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSprite.Key + "_" + Direction.ToString()).ToLowerInvariant();
+            string dirName = (CurrentBaseSpriteKey + "_" + Direction.ToString()).ToLowerInvariant();
             if (ResourceManager.SpriteExists(dirName))
                 spriteToUse = ResourceManager.GetSprite(dirName);
 

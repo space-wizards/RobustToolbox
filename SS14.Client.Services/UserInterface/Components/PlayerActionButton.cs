@@ -8,6 +8,8 @@ using SS14.Client.Graphics.Sprite;
 using System.Drawing;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics;
+using SFML.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,7 +21,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly TextSprite timeLeft;
 
         private readonly TextSprite tooltip;
-        private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
         public IPlayerAction assignedAction;
         private double cooldownLeft;
 
@@ -39,7 +41,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             timeLeft = new TextSprite("cooldown" + _assigned.Uid.ToString() + _assigned.Name, "",
                                       _resourceManager.GetFont("CALIBRI"));
-            timeLeft.Color = Color.NavajoWhite;
+            timeLeft.Color = new Color(255, 222, 173);
             timeLeft.ShadowColor = Color.Black;
             timeLeft.ShadowOffset = new Vector2(1, 1);
             timeLeft.Shadowed = true;
@@ -70,13 +72,14 @@ namespace SS14.Client.Services.UserInterface.Components
             if (mouseOver && DateTime.Now.Subtract(mouseOverStart).TotalSeconds >= 1)
                 showTooltip = true;
 
+            var bounds = _buttonSprite.GetLocalBounds();
             ClientArea = new Rectangle(Position,
-                                       new Size((int)_buttonSprite.Width, (int)_buttonSprite.Height));
+                                       new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
-            if (cooldownLeft > 0) Color = Color.DarkGray;
+            if (cooldownLeft > 0) Color = new Color(64, 64, 64);
             else Color = Color.White;
 
             _buttonSprite.Color = Color;
@@ -104,8 +107,8 @@ namespace SS14.Client.Services.UserInterface.Components
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
                 tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5 + offset.X, tooltipPos.Y + 5 + 10 + offset.Y);
-                CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos + offset.X), tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, tooltip.Height + 5, Color.SteelBlue);
-                CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos + offset.X), tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, (tooltip.Height + 5), Color.DarkSlateBlue);
+                CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos + offset.X), tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, tooltip.Height + 5, System.Drawing.Color.SteelBlue);
+                CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos + offset.X), tooltipPos.Y + 10 + offset.Y, tooltip.Width + 5, (tooltip.Height + 5), System.Drawing.Color.DarkSlateBlue);
                 tooltip.Draw();
             }
         }

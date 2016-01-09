@@ -1,12 +1,12 @@
-﻿using SS14.Shared;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.States;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
+using SS14.Client.Graphics.States;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.Graphics.Sprite
 {
@@ -55,29 +55,17 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Sprite passthrough methods
 
-        public RectangleF AABB
+        public IntRect AABB
         {
             get
             {
                 if (_currentSprite != null)
-                    return _currentSprite.AABB;
-                return RectangleF.Empty;
+                    return _currentSprite.TextureRect;
+                return new IntRect();
             }
         }
 
-        public bool HorizontalFlip
-        {
-            get
-            {
-                if (_currentSprite != null) return _currentSprite.HorizontalFlip;
-                return false;
-            }
-            set
-            {
-                if (_currentSprite != null)
-                    _currentSprite.HorizontalFlip = value;
-            }
-        }
+        public bool HorizontalFlip { get; set; }
 
         #endregion
 
@@ -88,10 +76,10 @@ namespace SS14.Client.Graphics.Sprite
         /// <summary>
         /// Dictionary of animation names to directional sprite set
         /// </summary>
-        private Dictionary<string, Dictionary<Direction, CluwneSprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, CluwneSprite[]>>();
+        private Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
 
         private Dictionary<string, Dictionary<Direction, RectangleF>> _averageAABBs = new Dictionary<string, Dictionary<Direction, RectangleF>>();
-        private CluwneSprite _currentSprite;
+        private SFML.Graphics.Sprite _currentSprite;
 
         private Direction _direction = Direction.South;
 
@@ -106,7 +94,7 @@ namespace SS14.Client.Graphics.Sprite
             int t = 0;
             foreach (var info in collection.Animations)
             {
-                _sprites.Add(info.Name, new Dictionary<Direction, CluwneSprite[]>());
+                _sprites.Add(info.Name, new Dictionary<Direction, SFML.Graphics.Sprite[]>());
 
                 //Because we have a shitload of frames, we're going to store the average size as the AABB for each direction and each animation
                 _averageAABBs.Add(info.Name, new Dictionary<Direction, RectangleF>());
@@ -116,17 +104,18 @@ namespace SS14.Client.Graphics.Sprite
                 AnimationStates.Add(info.Name, new AnimationState(info));
                 foreach (var dir in Enum.GetValues(typeof(Direction)).Cast<Direction>())
                 {
-                    sprites.Add(dir, new CluwneSprite[info.Frames]);
+                    sprites.Add(dir, new SFML.Graphics.Sprite[info.Frames]);
                     var thisDirSprites = sprites[dir];
                     for (var i = 0; i < info.Frames; i++)
                     {
                         var spritename = collection.Name.ToLowerInvariant() + "_" + info.Name.ToLowerInvariant() + "_"
                                          + DirectionToUriComponent(dir) + "_" + i;
                         thisDirSprites[i] = resourceManager.GetSprite(spritename);
-                        x += thisDirSprites[i].AABB.X;
-                        y += thisDirSprites[i].AABB.Y;
-                        w += thisDirSprites[i].AABB.Width;
-                        h += thisDirSprites[i].AABB.Height;
+                        var bounds = thisDirSprites[i].GetLocalBounds();
+                        x += bounds.Left;
+                        y += bounds.Top;
+                        w += bounds.Width;
+                        h += bounds.Height;
                         t++;
                     }
                     averageAABBs.Add(dir, new RectangleF(x / t, y / t, w / t, h / t));
@@ -139,19 +128,20 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        public CluwneSprite GetCurrentSprite()
+        public SFML.Graphics.Sprite GetCurrentSprite()
         {
             return _currentSprite;
         }
 
         public void Draw()
         {
+            _currentSprite.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
             _currentSprite.Draw();
         }
 
         public void SetPosition(float x, float y)
         {
-            _currentSprite.SetPosition(x, y);
+            _currentSprite.Position = new SFML.System.Vector2f(x, y);
         }
 
         private void UpdateDirection()

@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 
@@ -8,7 +8,7 @@ namespace SS14.Client.Interfaces.UserInterface
     {
         Entity DragEntity { get; }
         IPlayerAction DragAction { get; }
-        CluwneSprite DragSprite { get; }
+        Sprite DragSprite { get; }
         bool IsEntity { get; }
         bool IsActive { get; }
 

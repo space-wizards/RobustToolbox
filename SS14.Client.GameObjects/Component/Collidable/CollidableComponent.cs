@@ -13,7 +13,7 @@ namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidable
     {
-        public Color DebugColor { get; set; }
+        public SFML.Graphics.Color DebugColor { get; set; }
 
         private bool collisionEnabled = true;
         private RectangleF currentAABB;
@@ -27,7 +27,7 @@ namespace SS14.Client.GameObjects
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
-            DebugColor = Color.Red;
+            DebugColor = SFML.Graphics.Color.Red;
             tweakAABB = new Vector4(0,0,0,0);
         }
 
@@ -181,9 +181,7 @@ namespace SS14.Client.GameObjects
                     tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "DebugColor":
-                    var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
-                    if (!color.IsEmpty)
-                        DebugColor = color;
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), SFML.Graphics.Color.Red);
                     break;
             }
         }

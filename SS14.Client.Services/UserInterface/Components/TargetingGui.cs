@@ -9,6 +9,8 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
+using SFML.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,7 +21,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
 
         private readonly TargetingDummy _targetArea;
-        private readonly CluwneSprite background;
+        private readonly Sprite background;
         private IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
         public TargetingGui()
@@ -42,7 +44,9 @@ namespace SS14.Client.Services.UserInterface.Components
                 new Point(Position.X + (int) (ClientArea.Width/2f) - (int) (_targetArea.ClientArea.Width/2f),
                           Position.Y + 15);
             _targetArea.Update(0);
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) background.Width, (int) background.Height);
+
+            var bounds = background.GetLocalBounds();
+            ClientArea = new Rectangle(Position.X, Position.Y, (int)bounds.Width, (int)bounds.Height);
         }
 
         public override void Render()

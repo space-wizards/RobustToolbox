@@ -8,6 +8,8 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,7 +18,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly DamageType resAssigned;
 
-		private CluwneSprite icon;
+        private Sprite icon;
         private TextSprite text;
 
         public ArmorInfoLabel(DamageType resistance, IResourceManager resourceManager)
@@ -25,7 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
             resAssigned = resistance;
 
             text = new TextSprite("StatInfoLabel" + resistance, "", _resourceManager.GetFont("CALIBRI"))
-                       {Color = Color.White};
+                       {Color = SFML.Graphics.Color.White};
 
             switch (resistance)
             {
@@ -63,12 +65,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
+            var bounds = icon.GetLocalBounds();
             icon.Position = new Vector2(Position.X,Position.Y);
-            text.Position = new Vector2(Position.X + icon.Width + 5,
-                                         Position.Y + (int) (icon.Height/2f) - (int) (text.Height/2f));
+            text.Position = new Vector2(Position.X + bounds.Width + 5,
+                                         Position.Y + (int) (bounds.Height/2f) - (int) (text.Height/2f));
             ClientArea = new Rectangle(Position,
-                                       new Size((int) text.Width + (int) icon.Width + 5,
-                                                (int) Math.Max(icon.Height, text.Height)));
+                                       new Size((int) text.Width + (int)bounds.Width + 5,
+                                                (int) Math.Max(bounds.Height, text.Height)));
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();
             if (playerMgr != null)

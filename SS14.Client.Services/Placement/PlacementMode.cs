@@ -1,6 +1,6 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Placement
 {
@@ -11,7 +11,7 @@ namespace SS14.Client.Services.Placement
         public TileRef currentTile;
         public Vector2 mouseScreen;
         public Vector2 mouseWorld;
-		public CluwneSprite spriteToDraw;
+        public Sprite spriteToDraw;
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -32,17 +32,15 @@ namespace SS14.Client.Services.Placement
         {
         }
 
-		public CluwneSprite GetDirectionalSprite(CluwneSprite baseSprite)
+        public Sprite GetDirectionalSprite(string baseSprite)
         {
-			CluwneSprite spriteToUse = baseSprite;
-
             if (baseSprite == null) return null;
 
-            string dirName = (baseSprite.Key + "_" + pManager.Direction.ToString()).ToLowerInvariant();
+            string dirName = (baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant();
             if (pManager.ResourceManager.SpriteExists(dirName))
-                spriteToUse = pManager.ResourceManager.GetSprite(dirName);
-
-            return spriteToUse;
+                return pManager.ResourceManager.GetSprite(dirName);
+            else
+                return null;
         }
     }
 }

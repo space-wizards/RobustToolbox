@@ -8,6 +8,9 @@ using SS14.Shared.Maths;
 using System;
 using System.Drawing;
 using SFML.Window;
+using SFML.Graphics;
+using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,14 +22,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
     internal class HealthScannerWindow : GuiComponent
     {
-		private readonly CluwneSprite _arml;
-		private readonly CluwneSprite _armr;
-		private readonly CluwneSprite _background;
-		private readonly CluwneSprite _chest;
-		private readonly CluwneSprite _groin;
-		private readonly CluwneSprite _head;
-		private readonly CluwneSprite _legl;
-		private readonly CluwneSprite _legr;
+        private readonly Sprite _arml;
+        private readonly Sprite _armr;
+        private readonly Sprite _background;
+        private readonly Sprite _chest;
+        private readonly Sprite _groin;
+        private readonly Sprite _head;
+        private readonly Sprite _legl;
+        private readonly Sprite _legr;
         private readonly TextSprite _overallHealth;
         private readonly IResourceManager _resourceManager;
         private readonly UserInterfaceManager _uiMgr;
@@ -44,7 +47,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _overallHealth = new TextSprite("hpscan" + assignedEnt.Uid.ToString(), "",
                                             _resourceManager.GetFont("CALIBRI"));
-            _overallHealth.Color = Color.ForestGreen;
+            _overallHealth.Color = new SFML.Graphics.Color(34, 139, 34);
 
             _background = _resourceManager.GetSprite("healthscan_bg");
 
@@ -66,11 +69,11 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             float healthPct = curr/(float) max;
 
-            if (healthPct > 0.75) return Color.LightGreen;
-            else if (healthPct > 0.50) return Color.Yellow;
-            else if (healthPct > 0.25) return Color.DarkOrange;
-            else if (healthPct > 0) return Color.Red;
-            else return Color.DimGray;
+            if (healthPct > 0.75) return new Color(128, 255, 128);
+            else if (healthPct > 0.50) return new Color(255, 255, 0);
+            else if (healthPct > 0.25) return new Color(192, 64, 0);
+            else if (healthPct > 0) return new Color(255, 0, 0);
+            else return new Color(64, 64, 64);
         }
 
         private void Setup()
@@ -135,7 +138,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _overallHealth.Position = new Vector2(Position.X + 86, Position.Y + 29);
 
-            ClientArea = new Rectangle(Position, new Size((int) _background.Width, (int) _background.Height));
+            var bounds = _background.GetLocalBounds();
+            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -159,12 +163,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (dragging) Position = new Point( e.X, e.Y);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -180,7 +184,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {

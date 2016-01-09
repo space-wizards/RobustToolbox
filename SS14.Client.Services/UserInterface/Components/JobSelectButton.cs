@@ -3,6 +3,9 @@ using System;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
+using SFML.Graphics;
+using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,9 +22,9 @@ namespace SS14.Client.Services.UserInterface.Components
         public bool Selected;
         private Rectangle _buttonArea;
 
-		private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
         private TextSprite _descriptionTextSprite;
-		private CluwneSprite _jobSprite;
+        private Sprite _jobSprite;
 
         public JobSelectButton(string text, string spriteName, string description, IResourceManager resourceManager)
         {
@@ -34,7 +37,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                     _resourceManager.GetFont("CALIBRI"))
                                          {
                                              Color = Color.Black,
-                                             ShadowColor = Color.DimGray,
+                                             ShadowColor = new Color(105, 105, 105),
                                              Shadowed = true,
                                              //ShadowOffset = new Vector2(1, 1)
                                          };
@@ -46,11 +49,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
+            var bounds = _buttonSprite.GetLocalBounds();
             _buttonArea = new Rectangle(new Point(Position.X, Position.Y),
-                                        new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
+                                        new Size((int)bounds.Width, (int)bounds.Height));
             ClientArea = new Rectangle(new Point(Position.X, Position.Y),
-                                       new Size((int) _buttonSprite.Width + (int) _descriptionTextSprite.Width + 2,
-                                                (int) _buttonSprite.Height));
+                                       new Size((int)bounds.Width + (int) _descriptionTextSprite.Width + 2,
+                                                (int)bounds.Height));
             _descriptionTextSprite.Position = new Point(_buttonArea.Right + 2, _buttonArea.Top);
         }
 
@@ -58,15 +62,17 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!Available)
             {
-                _buttonSprite.Color = Color.DarkRed; 
+                _buttonSprite.Color = new Color(128, 0, 0); 
             }
             else if (Selected)
             {
-                _buttonSprite.Color = Color.DarkSeaGreen;
+                _buttonSprite.Color = new Color(0, 128, 64);
              
             }
-            _buttonSprite.Draw(_buttonArea);
-            _jobSprite.Draw(_buttonArea);
+            _buttonSprite.SetTransformToRect(_buttonArea);
+            _jobSprite.SetTransformToRect(_buttonArea);
+            _buttonSprite.Draw();
+            _jobSprite.Draw();
             _descriptionTextSprite.Draw();
             _buttonSprite.Color = Color.White;
         }
@@ -81,7 +87,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!Available) return false;
             if (_buttonArea.Contains(new Point((int) e.X, (int) e.Y)))
@@ -93,7 +99,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

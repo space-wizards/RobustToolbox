@@ -130,10 +130,10 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (buttons.Count > 0)
             CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                     Color.DimGray);
+                                                     new SFML.Graphics.Color(105, 105, 105));
 
-           CluwneLib.drawCircle(Position.X, Position.Y, 3, Color.White);
-            CluwneLib.drawCircle(Position.X, Position.Y, 2, Color.Gray);
+            CluwneLib.drawCircle(Position.X, Position.Y, 3, SFML.Graphics.Color.White);
+            CluwneLib.drawCircle(Position.X, Position.Y, 2, new SFML.Graphics.Color(128, 128, 128));
 
             foreach (StatusEffectButton button in buttons)
                 button.Render();
@@ -148,7 +148,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             var mousePoint = new Vector2((int) e.X, (int) e.Y);
 
@@ -158,7 +158,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {
@@ -169,7 +169,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (dragging)
             {

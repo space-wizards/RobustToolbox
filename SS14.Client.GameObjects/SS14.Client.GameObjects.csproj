@@ -158,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnimatedSprite.cs" />
+    <Compile Include="ColorUtils.cs" />
     <Compile Include="Component\ClickableComponent.cs">
       <SubType>Code</SubType>
     </Compile>

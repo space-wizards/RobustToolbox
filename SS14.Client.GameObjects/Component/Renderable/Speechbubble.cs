@@ -8,8 +8,7 @@ using System.Drawing;
 using System.Text;
 using SS14.Shared.Maths;
 using Color = System.Drawing.Color;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -33,7 +32,7 @@ namespace SS14.Client.GameObjects
         /// Holder for built bubble sprite.
         /// Rebuilt upon text change.
         /// </summary>
-        private readonly CluwneSprite _bubbleSprite;
+        private readonly Sprite _bubbleSprite;
 
         /// <summary>
         /// Owner mob unique name.
@@ -81,7 +80,7 @@ namespace SS14.Client.GameObjects
             _stringBuilder = new StringBuilder();
 
             _bubbleRender = new RenderImage("bubble ",1, 1);
-            _bubbleSprite = new CluwneSprite("_bubbleRender",_bubbleRender);
+            _bubbleSprite = new Sprite(_bubbleRender.Texture);
         }
 
         #endregion
@@ -96,10 +95,13 @@ namespace SS14.Client.GameObjects
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            float x = position.X - windowOrigin.X - (_bubbleSprite.Width/2.0f);
-            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (spriteToDrawAbove.Height/2.0f) - 5.0f;
+            var bubbleBounds = _bubbleSprite.GetLocalBounds();
+            var spriteBounds = spriteToDrawAbove.GetLocalBounds();
 
-            _bubbleSprite.SetPosition(x, y);
+            float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
+            float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
+
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 
@@ -107,10 +109,12 @@ namespace SS14.Client.GameObjects
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            float x = position.X - windowOrigin.X - (_bubbleSprite.Width / 2.0f);
-            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (boundingBox.Height / 2.0f) - 5.0f;
+            var bubbleBounds = _bubbleSprite.GetLocalBounds();
 
-            _bubbleSprite.SetPosition(x, y);
+            float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
+            float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
+
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 

@@ -11,7 +11,6 @@ using SS14.Shared.ServerEnums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 

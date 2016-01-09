@@ -1,16 +1,11 @@
-﻿using SS14.Client.Graphics.Shader;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
+using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using SS14.Client.Services.Resources;
-using SFML.System;
 
 namespace SS14.Client.Services.Helpers
 {

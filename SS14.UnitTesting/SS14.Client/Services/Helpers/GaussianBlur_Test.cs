@@ -1,19 +1,13 @@
-﻿using System;
-using NUnit.Framework;
-using SS14.Shared.IoC;
-using SS14.Client.Interfaces.Configuration;
-using SS14.Client.Interfaces.Resource;
+﻿using NUnit.Framework;
+using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using System.Windows.Forms;
-using SFML.System;
-using SS14.Client.Services.Helpers;
 using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
+using SS14.Client.Interfaces.Configuration;
+using SS14.Client.Interfaces.Resource;
+using SS14.Client.Services.Helpers;
+using System;
 
 namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 {
@@ -64,7 +58,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                
                 
@@ -150,7 +144,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 
@@ -192,7 +186,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 
@@ -234,7 +228,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 

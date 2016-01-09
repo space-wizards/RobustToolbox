@@ -1,18 +1,15 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Collections.Generic;
-using SFML.Window;
-using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics;
-using SFML.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -114,7 +111,7 @@ namespace SS14.Client.Services.UserInterface.Components
             foreach (ContextMenuButton button in _buttons)
                 button.Render();
           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                 SFML.Graphics.Color.Black);
+                                                 Color.Black);
         }
 
         public override void Dispose()

@@ -1,10 +1,7 @@
-﻿using SS14.Shared;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Drawing;
-using SS14.Shared.Maths;
-using SFML.System;
-using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.GOC
 {

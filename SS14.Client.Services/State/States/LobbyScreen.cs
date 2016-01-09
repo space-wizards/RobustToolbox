@@ -1,18 +1,15 @@
 ﻿using Lidgren.Network;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Event;
 using SS14.Shared;
-using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using SFML.Window;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics;
-using SFML.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.State.States
 {

@@ -1,23 +1,21 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
-using SS14.Client.Graphics;
+using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics.Collection;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Sprite;
 using TextureCache = SS14.Client.Graphics.texture.TextureCache;
-using SFML.Graphics;
-using SS14.Client.Graphics.Collection;
-using SFML.System;
 
 namespace SS14.Client.Services.Resources
 {
@@ -558,7 +556,7 @@ namespace SS14.Client.Services.Resources
             key = key.ToLowerInvariant();
             if (_sprites.ContainsKey(key))
             {
-                _sprites[key].Color = SFML.Graphics.Color.White;
+                _sprites[key].Color = Color.White;
                 return _sprites[key];
             }
             else return GetSpriteFromImage(key);

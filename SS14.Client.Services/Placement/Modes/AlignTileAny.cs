@@ -1,12 +1,10 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
-using System.Drawing;
-using SFML.System;
-using SFML.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -76,7 +74,7 @@ namespace SS14.Client.Services.Placement.Modes
                                                     mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = SFML.Graphics.Color.White;
+                spriteToDraw.Color = Color.White;
             }
         }
     }

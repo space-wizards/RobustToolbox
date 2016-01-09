@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -6,8 +7,6 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Light;
 using SS14.Shared.IoC;
 using System;
-using SS14.Shared.Maths;
-using SFML.System;
 
 namespace SS14.Client.GameObjects
 {

@@ -1,10 +1,5 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.VertexData;
-using SS14.Shared.Maths;
-using System.Drawing;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Lighting
 {

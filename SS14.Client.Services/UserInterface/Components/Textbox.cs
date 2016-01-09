@@ -1,13 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
-using Color = SFML.Graphics.Color;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SFML.Graphics;
-using SFML.System;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -57,7 +55,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color =  SFML.Graphics.Color.Black};
+            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color = Color.Black};
 
             Update(0);
         }
@@ -103,7 +101,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            if (drawColor != SFML.Graphics.Color.White)
+            if (drawColor != Color.White)
             {
                 _textboxLeft.Color = drawColor;
                 _textboxMain.Color = drawColor;

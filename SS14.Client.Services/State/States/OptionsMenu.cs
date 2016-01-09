@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using KeyEventArgs = SFML.Window.KeyEventArgs;

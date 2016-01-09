@@ -1,13 +1,13 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.System;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using System;
 using SS14.Shared.Maths;
-using SFML.System;
+using System;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {

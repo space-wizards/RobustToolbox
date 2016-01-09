@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
+using System;
 
 
 namespace SS14.Client.Graphics.Render

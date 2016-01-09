@@ -5,10 +5,8 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Client.GameObjects

@@ -1,7 +1,5 @@
 ﻿using SFML.System;
 using SS14.Client.Graphics.Sprite;
-using SS14.Shared;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Interfaces.Map
 {

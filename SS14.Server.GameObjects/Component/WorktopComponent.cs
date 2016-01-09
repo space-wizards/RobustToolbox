@@ -1,10 +1,8 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Linq;
-using SS14.Shared.Maths;
-using SFML.System;
 
 namespace SS14.Server.GameObjects
 {

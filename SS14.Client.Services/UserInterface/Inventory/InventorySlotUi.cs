@@ -1,15 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
-using SFML.Window;
 using System;
-using System.Drawing;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {

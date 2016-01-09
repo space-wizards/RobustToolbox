@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SS14.Client.Graphics.Interface
+﻿namespace SS14.Client.Graphics.Interface
 {
     public interface ICluwneDrawable
     {

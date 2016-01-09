@@ -3,7 +3,6 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using Con = System.Console;

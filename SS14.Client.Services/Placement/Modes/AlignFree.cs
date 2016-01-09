@@ -1,10 +1,7 @@
-﻿using SS14.Shared.Maths;
-using SS14.Client.Interfaces.Map;
-using System.Drawing;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Map;
 
 namespace SS14.Client.Services.Placement.Modes
 {

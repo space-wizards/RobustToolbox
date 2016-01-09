@@ -1,4 +1,7 @@
-﻿using SS14.Client.Interfaces.GOC;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Placement;
@@ -7,11 +10,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

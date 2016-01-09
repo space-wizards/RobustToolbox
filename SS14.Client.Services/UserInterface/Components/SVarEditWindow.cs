@@ -7,7 +7,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

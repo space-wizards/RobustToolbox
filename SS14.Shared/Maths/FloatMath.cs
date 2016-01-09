@@ -1,13 +1,9 @@
-﻿ ﻿using System;
- using System.Collections.Generic;
- using System.Diagnostics;
- using System.Linq;
- using System.Text;
- 
+﻿using System;
+
 
 namespace SS14.Shared.Maths
 {
-     public static class FloatMath
+    public static class FloatMath
      {
     
          private const int LookupSize = 1024*64; //has to be power of 2

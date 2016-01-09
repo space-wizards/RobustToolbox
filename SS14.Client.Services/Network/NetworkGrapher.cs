@@ -1,15 +1,11 @@
-﻿using SS14.Client.Interfaces.Network;
+﻿using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using SS14.Client.Services.Helpers;
-using SS14.Client.GameObjects;
-using SFML.System;
-using SS14.Shared;
 
 namespace SS14.Client.Services.Network
 {

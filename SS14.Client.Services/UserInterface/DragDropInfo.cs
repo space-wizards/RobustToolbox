@@ -1,5 +1,4 @@
 ﻿using SFML.Graphics;
-using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;

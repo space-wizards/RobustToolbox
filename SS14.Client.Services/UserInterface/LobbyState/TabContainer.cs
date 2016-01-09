@@ -1,10 +1,7 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Resource;
-using System.Drawing;
-using SFML.Window;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

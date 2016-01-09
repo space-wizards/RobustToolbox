@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.Network;
+﻿using SFML.System;
+using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -8,9 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using SS14.Shared.Maths;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
-using SFML.System;
 
 namespace SS14.Server.GameObjects
 {

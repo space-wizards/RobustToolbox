@@ -1,19 +1,18 @@
-﻿using SFML.System;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Configuration;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-using SFML.Graphics;
 
 namespace SS14.UnitTesting
 {
 
-  
+
     public class SS14UnitTest
     {
 
@@ -125,7 +124,7 @@ namespace SS14.UnitTesting
                var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
                GetClock.Restart();
                frameEvent = new FrameEventArgs(lastFrameTime);
-               CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+               CluwneLib.ClearCurrentRendertarget(Color.Black);
                CluwneLib.Screen.DispatchEvents();
                InjectedMethod();
                CluwneLib.Screen.Display();

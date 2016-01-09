@@ -1,14 +1,9 @@
-﻿using System;
-using NUnit.Framework;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.Render;
-using Color = SFML.Graphics.Color;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics;
-using System.Drawing;
-using SFML.System;
+﻿using NUnit.Framework;
 using SFML.Graphics;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
 {

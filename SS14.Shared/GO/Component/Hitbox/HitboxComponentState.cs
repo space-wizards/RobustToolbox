@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using System;
-using System.Drawing;
 
 namespace SS14.Shared.GO.Component.Hitbox
 {

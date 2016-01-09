@@ -1,11 +1,9 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SFML.Graphics;
-using SS14.Client.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {

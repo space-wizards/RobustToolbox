@@ -1,20 +1,13 @@
-﻿using System;
+﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Timing;
-using Color = SFML.Graphics.Color;
-using SS14.Client.Graphics.Shader;
-using SS14.Shared.Maths;
-using System.Drawing;
-using SFML.Window;
-using System.Collections.Generic;
-using System.Collections;
 using SS14.Client.Graphics.Settings;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Timing;
 using SS14.Client.Graphics.View;
-
-using OpenTK.Graphics;
+using System;
 
 namespace SS14.Client.Graphics
 {
@@ -155,12 +148,12 @@ namespace SS14.Client.Graphics
 
 
             //Hook OpenTK into SFMLs Opengl 
-	    OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+        OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
                 // Non-Native backend doesn't have a default GetAddress method
-		Backend = OpenTK.PlatformBackend.PreferNative
-	    });
-	    new GraphicsContext(OpenTK.ContextHandle.Zero, null);
-	}
+        Backend = OpenTK.PlatformBackend.PreferNative
+        });
+        new GraphicsContext(OpenTK.ContextHandle.Zero, null);
+    }
        
         public static void RequestGC(Action action)
         {

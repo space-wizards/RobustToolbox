@@ -1,7 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Map;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Placement
 {

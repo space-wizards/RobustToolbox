@@ -2,7 +2,6 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Network;
@@ -15,7 +14,6 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Client.Services.State.States
@@ -278,7 +276,7 @@ namespace SS14.Client.Services.State.States
 
                 Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceManager);
                 newLabel.Position = new Vector2i(0, offY);
-                newLabel.TextColor = SFML.Graphics.Color.Black;
+                newLabel.TextColor = Color.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.components.Add(newLabel);

@@ -1,9 +1,6 @@
-﻿using SS14.Shared;
-using SS14.Shared.GameObjects;
-using System.Drawing;
-using SS14.Shared.Maths;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Client.Interfaces.Collision
 {

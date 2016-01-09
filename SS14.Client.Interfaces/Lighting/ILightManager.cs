@@ -1,8 +1,6 @@
-﻿using SS14.Shared;
-using System.Drawing;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
 using SFML.System;
-using SFML.Graphics;
+using SS14.Shared;
 
 namespace SS14.Client.Interfaces.Lighting
 {

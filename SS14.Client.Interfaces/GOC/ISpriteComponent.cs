@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace SS14.Client.Interfaces.GOC
 {

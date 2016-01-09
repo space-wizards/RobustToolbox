@@ -1,16 +1,15 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
-using SFML.Graphics;
-using SFML.System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -134,7 +133,7 @@ namespace SS14.Client.Services.UserInterface.Components
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                      new SFML.Graphics.Color(105, 105, 105));
 
-            CluwneLib.drawCircle(Position.X, Position.Y, 3, SFML.Graphics.Color.White);
+            CluwneLib.drawCircle(Position.X, Position.Y, 3, Color.White);
             CluwneLib.drawCircle(Position.X, Position.Y, 2, new SFML.Graphics.Color(128, 128, 128));
 
             foreach (StatusEffectButton button in buttons)

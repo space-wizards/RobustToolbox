@@ -1,15 +1,14 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Collidable;
 using SS14.Shared.IoC;
-using System;
-using System.Drawing;
 using SS14.Shared.Maths;
-using SFML.Graphics;
-using SS14.Shared;
+using System;
 
 namespace SS14.Client.GameObjects
 {
@@ -29,7 +28,7 @@ namespace SS14.Client.GameObjects
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
-            DebugColor = SFML.Graphics.Color.Red;
+            DebugColor = Color.Red;
             tweakAABB = new Vector4f(0,0,0,0);
         }
 
@@ -183,7 +182,7 @@ namespace SS14.Client.GameObjects
                     tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), SFML.Graphics.Color.Red);
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Red);
                     break;
             }
         }

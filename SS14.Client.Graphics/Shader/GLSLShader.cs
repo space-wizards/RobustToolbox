@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using ShaderClass = SFML.Graphics.Shader;
+﻿using SFML.System;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
-using SFML.System;
 using System.Diagnostics;
+using System.IO;
+using ShaderClass = SFML.Graphics.Shader;
 
 
 namespace SS14.Client.Graphics.Shader

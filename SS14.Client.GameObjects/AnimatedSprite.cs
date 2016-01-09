@@ -5,7 +5,6 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Client.Graphics.Sprite

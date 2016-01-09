@@ -6,6 +6,8 @@ using System.Drawing;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Maths;
+using Color = SFML.Graphics.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -25,7 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly TextSprite DEBUG;
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite scrollbarButton;
+        private readonly Sprite scrollbarButton;
         private bool DRAW_DEBUG = false;
 
         public bool Horizontal = false;
@@ -51,8 +53,8 @@ namespace SS14.Client.Services.UserInterface.Components
             else scrollbarButton = _resourceManager.GetSprite("scrollbutton_v");
 
             DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceManager.GetFont("CALIBRI"));
-            DEBUG.Color = Color.OrangeRed;
-            DEBUG.ShadowColor = Color.DarkBlue;
+            DEBUG.Color = new Color(255, 128, 0);
+            DEBUG.ShadowColor = new Color(0, 0, 128);
             DEBUG.Shadowed = true;
           //  DEBUG.ShadowOffset = new Vector2(1, 1);
             Update(0);
@@ -77,7 +79,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!IsVisible()) return false;
             if (clientAreaButton.Contains((int) e.X, (int) e.Y))
@@ -92,7 +94,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {
@@ -102,21 +104,21 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (!IsVisible()) return;
             if (dragging)
             {
                 if (Horizontal)
-                    currentPos = (int) e.X - ClientArea.Location.X - (int) (scrollbarButton.Width/2f);
-                else currentPos = (int) e.Y - ClientArea.Location.Y - (int) (scrollbarButton.Height/2f);
+                    currentPos = (int) e.X - ClientArea.Location.X - (int) (scrollbarButton.GetLocalBounds().Width/2f);
+                else currentPos = (int) e.Y - ClientArea.Location.Y - (int) (scrollbarButton.GetLocalBounds().Height/2f);
                 currentPos = Math.Min(currentPos, actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
             }
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             Value += ((Math.Sign(e.Y)*-1)*Math.Max(((max/20)), 1));
             return true;
@@ -126,19 +128,20 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!IsVisible()) return;
             base.Update(frameTime);
+            var bounds = scrollbarButton.GetLocalBounds();
             if (Horizontal)
             {
-                ClientArea = new Rectangle(Position, new Size(size, (int) scrollbarButton.Height));
+                ClientArea = new Rectangle(Position, new Size(size, (int)bounds.Height));
                 clientAreaButton = new Rectangle(new Point(Position.X + currentPos, Position.Y),
-                                                 new Size((int) scrollbarButton.Width, (int) scrollbarButton.Height));
-                actualSize = size - (int) scrollbarButton.Width;
+                                                 new Size((int)bounds.Width, (int)bounds.Height));
+                actualSize = size - (int)bounds.Width;
             }
             else
             {
-                ClientArea = new Rectangle(Position, new Size((int) scrollbarButton.Width, size));
+                ClientArea = new Rectangle(Position, new Size((int)bounds.Width, size));
                 clientAreaButton = new Rectangle(new Point(Position.X, Position.Y + currentPos),
-                                                 new Size((int) scrollbarButton.Width, (int) scrollbarButton.Height));
-                actualSize = size - (int) scrollbarButton.Height;
+                                                 new Size((int)bounds.Width, (int)bounds.Height));
+                actualSize = size - (int)bounds.Height;
             }
 
             stepSize = (float) max/actualSize;
@@ -155,12 +158,13 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (!IsVisible()) return;
             if (drawBackground)
-              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.DarkSlateGray);
-            scrollbarButton.Draw(clientAreaButton);
+              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(47, 79, 79));
+            scrollbarButton.SetTransformToRect(clientAreaButton);
+            scrollbarButton.Draw();
             DEBUG.Position = new Vector2(ClientArea.Location.X + 20, ClientArea.Location.Y + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-           CluwneLib.drawRectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, Color.Black);
+           CluwneLib.drawRectangle(ClientArea.X + 0, ClientArea.Y + 0, ClientArea.Width - 0, ClientArea.Height - 0, SFML.Graphics.Color.Black);
         }
     }
 }

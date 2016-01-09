@@ -71,7 +71,7 @@ namespace SS14.Client
 
           
 
-            _stateManager.RequestStateChange<TestState> ();
+            _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
             EventArgs _frameEventArgs;
@@ -83,7 +83,7 @@ namespace SS14.Client
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget (Color.Black);
+                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();

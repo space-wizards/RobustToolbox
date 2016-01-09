@@ -1,21 +1,17 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-
+﻿using SFML.Graphics;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
-using SFML.Graphics;
-using SS14.Client.Graphics.Sprite;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -32,12 +28,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            var spriteBounds = spriteToDraw.GetLocalBounds();
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
+            var spriteSize = CluwneLib.PixelToTile(new PointF(spriteBounds.Width, spriteBounds.Height)); // TODO: Doublecheck this.  Use SizeF?
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
@@ -80,26 +77,22 @@ namespace SS14.Client.Services.Placement.Modes
 
                 if (reply.MessageType == ComponentMessageType.CurrentSprite)
                 {
-                    var closestSprite = (CluwneSprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestSprite = (Sprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestBounds = closestSprite.GetLocalBounds();
 
                     var closestRect =
                         new RectangleF(
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            closestSprite.Size.X/2f,
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            closestSprite.Size.Y/2f, closestSprite.Width, closestSprite.Height);
+                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - closestBounds.Height / 2f,
+                            closestBounds.Width, closestBounds.Height);
 
                     var sides = new List<Vector2>
-                                    {
-                                        new Vector2(closestRect.X + (closestRect.Width/2f),
-                                                     closestRect.Top - spriteToDraw.Height/2f),
-                                        new Vector2(closestRect.X + (closestRect.Width/2f),
-                                                     closestRect.Bottom + spriteToDraw.Height/2f),
-                                        new Vector2(closestRect.Left - spriteToDraw.Width/2f,
-                                                     closestRect.Y + (closestRect.Height/2f)),
-                                        new Vector2(closestRect.Right + spriteToDraw.Width/2f,
-                                                     closestRect.Y + (closestRect.Height/2f))
-                                    };
+                    {
+                        new Vector2(closestRect.X + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
+                        new Vector2(closestRect.X + (closestRect.Width / 2f), closestRect.Bottom + closestBounds.Height / 2f),
+                        new Vector2(closestRect.Left - closestBounds.Width / 2f, closestRect.Y + (closestRect.Height / 2f)),
+                        new Vector2(closestRect.Right + closestBounds.Width / 2f, closestRect.Y + (closestRect.Height / 2f))
+                    };
 
                     Vector2 closestSide =
                         (from Vector2 side in sides orderby (side - mouseWorld).Length ascending select side).First();
@@ -109,9 +102,8 @@ namespace SS14.Client.Services.Placement.Modes
                 }
             }
 
-            spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                             mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                             spriteToDraw.Height);
+            spriteRectWorld = new RectangleF(mouseWorld.X - (spriteBounds.Width/2f), mouseWorld.Y - (spriteBounds.Height/2f),
+                                             spriteBounds.Width, spriteBounds.Height);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
             return true;
         }
@@ -120,9 +112,10 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                var spriteBounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new Color(0, 128, 0, 255) : new Color(128, 0, 0, 255);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteBounds.Width/2f),
+                                                     mouseScreen.Y - (spriteBounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;

@@ -2,6 +2,8 @@
 using SS14.Client.Interfaces.Map;
 using System.Drawing;
 using SS14.Client.Graphics;
+using Color = SFML.Graphics.Color;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -15,7 +17,7 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
@@ -28,9 +30,10 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                var bounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new Color(34, 34, 139) : new Color(205, 92, 92);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
+                                                     mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
                 spriteToDraw.Color = Color.White;

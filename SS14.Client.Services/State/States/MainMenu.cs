@@ -1,19 +1,16 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using Color = System.Drawing.Color;
-using SFML.Graphics;
 
 namespace SS14.Client.Services.State.States
 {
@@ -24,7 +21,7 @@ namespace SS14.Client.Services.State.States
         private const float ConnectTimeOut = 5000.0f;
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
-		private readonly CluwneSprite _background;
+        private readonly Sprite _background;
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;
@@ -48,8 +45,7 @@ namespace SS14.Client.Services.State.States
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background = ResourceManager.GetSprite("coderart");            
-            _background.Smoothing = false;
+            _background = ResourceManager.GetSprite("coderart");
         
 
             _btnConnect = new ImageButton
@@ -81,7 +77,7 @@ namespace SS14.Client.Services.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
-            _lblVersion.Text.Color = Color.WhiteSmoke;
+            _lblVersion.Text.Color = new SFML.Graphics.Color(245, 245, 245);
 
             _lblVersion.Position = new Point(_Width -  _lblVersion.ClientArea.Width  - 3,
                                              _Height - _lblVersion.ClientArea.Height - 3);
@@ -93,16 +89,16 @@ namespace SS14.Client.Services.State.States
                 Position = new Point(_Width-550, 100),
             };
 
-			_lblVersion.Update(0);
-			_imgTitle.Update(0);
-			_txtConnect.Position = new Point(_imgTitle.ClientArea.Left + 40, _imgTitle.ClientArea.Bottom + 50);
-			_txtConnect.Update(0);
-			_btnConnect.Position = new Point(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
-			_btnConnect.Update(0);
-			_btnOptions.Position = new Point(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
-			_btnOptions.Update(0);
-			_btnExit.Position = new Point(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
-			_btnExit.Update(0);
+            _lblVersion.Update(0);
+            _imgTitle.Update(0);
+            _txtConnect.Position = new Point(_imgTitle.ClientArea.Left + 40, _imgTitle.ClientArea.Bottom + 50);
+            _txtConnect.Update(0);
+            _btnConnect.Position = new Point(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
+            _btnConnect.Update(0);
+            _btnOptions.Position = new Point(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
+            _btnOptions.Update(0);
+            _btnExit.Position = new Point(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
+            _btnExit.Update(0);
         }
 
         #region IState Members

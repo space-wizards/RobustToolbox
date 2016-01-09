@@ -125,7 +125,7 @@ namespace SS14.UnitTesting
                var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
                GetClock.Restart();
                frameEvent = new FrameEventArgs(lastFrameTime);
-               CluwneLib.ClearCurrentRendertarget(Color.Black);
+               CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
                CluwneLib.Screen.DispatchEvents();
                InjectedMethod();
                CluwneLib.Screen.Display();

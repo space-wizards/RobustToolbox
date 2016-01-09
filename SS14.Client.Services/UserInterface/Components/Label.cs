@@ -5,7 +5,7 @@ using System;
 using System.Drawing;
 using SFML.Window;
 using SFML.Graphics;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -13,17 +13,17 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         #region Delegates
 
-		public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
+        public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
 
         #endregion
 
         private readonly IResourceManager _resourceManager;
-        public Color BackgroundColor = Color.Gray;
+        public Color BackgroundColor = new Color(128, 128, 128);
         public Color BorderColor = Color.Black;
         public float BorderWidth = 2f;
         public int FixedHeight = -1;
         public int FixedWidth = -1;
-        public Color HighlightColor = Color.Gray;
+        public Color HighlightColor = new Color(128, 128, 128);
         public TextSprite Text;
 
 
@@ -75,7 +75,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point( e.X , e.Y)))
             {
@@ -85,7 +85,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

@@ -13,9 +13,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         protected Size Size;
 
-        public Color backgroundColor = Color.SteelBlue;
-        public Color barColor = Color.LightSteelBlue;
-        public Color borderColor = Color.Black;
+        public SFML.Graphics.Color backgroundColor = new SFML.Graphics.Color(70, 130, 180);
+        public SFML.Graphics.Color barColor = new SFML.Graphics.Color(176, 196, 222);
+        public SFML.Graphics.Color borderColor = SFML.Graphics.Color.Black;
 
         protected float max = 1000;
         protected float min = 0;
@@ -27,8 +27,8 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _resourceManager = resourceManager;
             Text = new TextSprite("ProgressBarText", "", _resourceManager.GetFont("CALIBRI"));
-            Text.Color = Color.Black;
-            Text.ShadowColor = Color.DimGray;
+            Text.Color = SFML.Graphics.Color.Black;
+            Text.ShadowColor = new SFML.Graphics.Color(105, 105, 105);
             Text.ShadowOffset = new Vector2(1, 1);
             Text.Shadowed = true;
 
@@ -74,12 +74,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

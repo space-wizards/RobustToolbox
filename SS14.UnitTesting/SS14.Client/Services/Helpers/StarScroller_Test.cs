@@ -32,7 +32,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
+                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 

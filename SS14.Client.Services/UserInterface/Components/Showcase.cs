@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using SFML.Window;
+using SS14.Client.GameObjects;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -27,7 +28,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public Size Size = new Size(300, 100);
         protected ImageButton _buttonLeft;
-        private Color ctemp;
+        private SFML.Graphics.Color ctemp;
         protected ImageButton _buttonRight;
         protected int Selected
         {
@@ -60,31 +61,16 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string ButtonRight
         {
-            get
-            {
-                if (_buttonRight != null) return _buttonRight.ImageNormal;
-                else return "";
-            }
             set { _buttonRight.ImageNormal = value; }
         }
 
         public string ButtonLeft
         {
-            get
-            {
-                if (_buttonLeft != null) return _buttonLeft.ImageNormal;
-                else return "";
-            }
             set { _buttonLeft.ImageNormal = value; }
         }
 
         public string SelectionBackground
         {
-            get
-            {
-                if (_selectionGlow != null) return _selectionGlow.Sprite;
-                else return "";
-            }
             set { _selectionGlow.Sprite = value; }
         }
 
@@ -186,7 +172,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
-                        ctemp = Color.FromArgb(255, Color.White);
+                        ctemp = SFML.Graphics.Color.White;
                     selected.Key.Color = ctemp;
                     selected.Key.Render();
 
@@ -210,7 +196,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                                ctemp = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedLeft.Key.Color = ctemp;
 
                             selectedLeft.Key.Render();
@@ -228,7 +214,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                                ctemp = SFML.Graphics.Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedRight.Key.Color = ctemp;
                             selectedRight.Key.Render();
                         }
@@ -254,7 +240,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -272,7 +258,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -286,7 +272,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -324,7 +310,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {

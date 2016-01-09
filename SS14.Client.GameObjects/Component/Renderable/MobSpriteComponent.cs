@@ -4,8 +4,9 @@ using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
 using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 using SS14.Client.Graphics;
+using SFML.Graphics;
+
 namespace SS14.Client.GameObjects
 {
     public class MobSpriteComponent : SpriteComponent
@@ -33,41 +34,41 @@ namespace SS14.Client.GameObjects
                     {
                         case Direction.North:
                             SetSpriteByKey(_basename + "_back");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.South:
                             SetSpriteByKey(_basename + "_front");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.East:
                             SetSpriteByKey(_basename + "_side");
-                            flip = true;
+                            HorizontalFlip = true;
                             break;
                         case Direction.West:
                             SetSpriteByKey(_basename + "_side");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.NorthEast:
                             SetSpriteByKey(_basename + "_back");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.NorthWest:
                             SetSpriteByKey(_basename + "_back");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.SouthEast:
                             SetSpriteByKey(_basename + "_front");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.SouthWest:
                             SetSpriteByKey(_basename + "_front");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                     }
                     break;
                 case ComponentMessageType.Die:
                     SetSpriteByKey(_basename + "_incap_dead");
-                    flip = false;
+                    HorizontalFlip = false;
                     break;
                 case ComponentMessageType.EntitySaidSomething:
                     ChatChannel channel;

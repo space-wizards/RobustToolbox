@@ -33,14 +33,14 @@ namespace SS14.Client.Services.Map
 
         public Tile Create(ushort data = 0) { return new Tile(0, data); }
 
-        CluwneSprite tileSprite;
+        Sprite tileSprite;
 
         public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             if (tileSprite == null)
                 tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("space_texture");
             
-            tileSprite.SetPosition(xTopLeft, yTopLeft);
+            tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
 
@@ -99,8 +99,9 @@ namespace SS14.Client.Services.Map
             IsWall = true;
 
             tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("wall_texture");
-            
-            shape = new RectangleShape(tileSprite.Size);
+
+            var bounds = tileSprite.GetLocalBounds();
+            shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
         }
         
         public override void RenderPos(float x, float y)

@@ -1,21 +1,21 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.Sprite;
-using SFML.Window;
-using SS14.Client.Graphics.Event;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
-using SFML.Graphics;
 using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
@@ -24,7 +24,7 @@ namespace SS14.Client.Services.State.States
     {
         #region Fields
 
-		private readonly CluwneSprite _background;
+        private readonly Sprite _background;
 
         private readonly SimpleImage _imgStatus;
 
@@ -40,13 +40,13 @@ namespace SS14.Client.Services.State.States
         private readonly Label _lblServerInfo;
         private readonly SimpleImage _imgMainBg;
         private SimpleImage _imgChatBg;
-		private ImageButton _btnReady;
+        private ImageButton _btnReady;
 
         private readonly List<Label> _serverLabels = new List<Label>();
 
-		//Keep track of previous tick screen width and height for use in update.
-		private int _prevScreenWidth = 0;
-		private int _prevScreenHeight = 0;
+        //Keep track of previous tick screen width and height for use in update.
+        private int _prevScreenWidth = 0;
+        private int _prevScreenHeight = 0;
 
         private readonly TabContainer _tabCharacter;
         private readonly JobTab _tabJob;
@@ -81,7 +81,7 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-            _background.Smoothing = true;
+            _background.Texture.Smooth = true;
 
             _imgMainBg = new SimpleImage
                           {
@@ -94,35 +94,35 @@ namespace SS14.Client.Services.State.States
                              };
 
             _lblServer = new Label("SERVER:", "MICROGME", ResourceManager);
-            _lblServer.Text.Color = Color.WhiteSmoke;
+            _lblServer.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceManager);
-            _lblServerInfo.Text.Color = Color.DarkRed;
+            _lblServerInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblServerInfo);
 
             _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceManager);
-            _lblMode.Text.Color = Color.WhiteSmoke;
+            _lblMode.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME", ResourceManager);
-            _lblModeInfo.Text.Color = Color.DarkRed;
+            _lblModeInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblModeInfo);
 
             _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceManager);
-            _lblPlayers.Text.Color = Color.WhiteSmoke;
+            _lblPlayers.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceManager);
-            _lblPlayersInfo.Text.Color = Color.DarkRed;
+            _lblPlayersInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblPlayersInfo);
 
             _lblPort = new Label("PORT:", "MICROGME", ResourceManager);
-            _lblPort.Text.Color = Color.WhiteSmoke;
+            _lblPort.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblPort);
 
             _lblPortInfo = new Label("1212", "MICROGME", ResourceManager);
-            _lblPortInfo.Text.Color = Color.DarkRed;
+            _lblPortInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblPortInfo);
 
             _tabs = new TabbedMenu
@@ -131,7 +131,7 @@ namespace SS14.Client.Services.State.States
                             MidSprite = "lobby_tab_mid",
                             BotSprite = "lobby_tab_bot",
                             TabOffset = new Point(-8, 300),
-							ZDepth = 2
+                            ZDepth = 2
                         };
 
             _tabJob = new JobTab("lobbyTabJob", new Size(793, 450), ResourceManager)
@@ -176,23 +176,22 @@ namespace SS14.Client.Services.State.States
 
             _lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(_lobbyChat_TextSubmitted);
 
-			_btnReady = new ImageButton()
-			{
-				ImageNormal = "lobby_ready",
-				ImageHover = "lobby_ready_green",
-				BlendSettings = BlendMode.Alpha,
-				ZDepth = 1
-			};
-			_btnReady.Clicked += _btnReady_Clicked;
-			_btnReady.Update(0);
+            _btnReady = new ImageButton()
+            {
+                ImageNormal = "lobby_ready",
+                ImageHover = "lobby_ready_green",
+                ZDepth = 1
+            };
+            _btnReady.Clicked += _btnReady_Clicked;
+            _btnReady.Update(0);
 
-			_lblServerInfo.FixedWidth = 100;
-			_lblModeInfo.FixedWidth = 90;
-			_lblPlayersInfo.FixedWidth = 60;
-			_lblPortInfo.FixedWidth = 50;
+            _lblServerInfo.FixedWidth = 100;
+            _lblModeInfo.FixedWidth = 90;
+            _lblPlayersInfo.FixedWidth = 60;
+            _lblPortInfo.FixedWidth = 50;
 
 
-			UpdateGUIPosition();
+            UpdateGUIPosition();
         }
 
         void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
@@ -279,7 +278,7 @@ namespace SS14.Client.Services.State.States
 
                 Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceManager);
                 newLabel.Position = new Point(0, offY);
-                newLabel.TextColor = Color.Black;
+                newLabel.TextColor = SFML.Graphics.Color.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.components.Add(newLabel);
@@ -334,7 +333,7 @@ namespace SS14.Client.Services.State.States
             {
                 DepartmentInfo info = (DepartmentInfo) associatedData;
 
-                _tabJob._imgJobGrad.Color = Color.FromArgb(_tabJob._imgJobGrad.Color.A, ColorTranslator.FromHtml(info.Department.DepartmentColorHex));
+                _tabJob._imgJobGrad.Color = ColorUtils.FromHex(info.Department.DepartmentColorHex).WithAlpha(_tabJob._imgJobGrad.Color.A);
 
                 _tabJob._lblDep.Text.Text = info.Department.Name;
 
@@ -382,7 +381,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(_tabs);
             UserInterfaceManager.AddComponent(_imgChatBg);
             UserInterfaceManager.AddComponent(_lobbyChat);
-			UserInterfaceManager.AddComponent(_btnReady);
+            UserInterfaceManager.AddComponent(_btnReady);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.AddComponent(curr);
@@ -405,7 +404,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.RemoveComponent(_tabs);
             UserInterfaceManager.RemoveComponent(_imgChatBg);
             UserInterfaceManager.RemoveComponent(_lobbyChat);
-			UserInterfaceManager.RemoveComponent(_btnReady);
+            UserInterfaceManager.RemoveComponent(_btnReady);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.RemoveComponent(curr);
@@ -416,80 +415,80 @@ namespace SS14.Client.Services.State.States
         public void Update(FrameEventArgs e)
         {
             if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
-			{
+            {
                 _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
                 _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
-				UpdateGUIPosition();
-			}
+                UpdateGUIPosition();
+            }
 
-			// This might be a hacky solution, but the button loses focus way too fast.
-			_btnReady.Focus = true;
+            // This might be a hacky solution, but the button loses focus way too fast.
+            _btnReady.Focus = true;
 
-			_lblServerInfo.Text.Text = _serverName;
-			_lblModeInfo.Text.Text = _gameType;
-			_lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
-			_lblPortInfo.Text.Text = _serverPort.ToString();
+            _lblServerInfo.Text.Text = _serverName;
+            _lblModeInfo.Text.Text = _gameType;
+            _lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
+            _lblPortInfo.Text.Text = _serverPort.ToString();
         }
 
-		public void UpdateGUIPosition()
-		{
-			_imgMainBg.Position = new Point(
+        public void UpdateGUIPosition()
+        {
+            _imgMainBg.Position = new Point(
                 (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
                 (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
-			_imgMainBg.Update(0);
+            _imgMainBg.Update(0);
 
-			_recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
+            _recStatus = new RectangleF(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
 
-			_imgStatus.Position = new Point((int)_recStatus.Left, (int)_recStatus.Top);
-			_imgStatus.Update(0);
+            _imgStatus.Position = new Point((int)_recStatus.Left, (int)_recStatus.Top);
+            _imgStatus.Update(0);
 
-			_lblServer.Position = new Point((int)_recStatus.Left + 5, (int)_recStatus.Top + 2);
-			_lblServer.Update(0);
-			_lblServerInfo.Position = new Point(_lblServer.ClientArea.Right, _lblServer.ClientArea.Y);
-			_lblServerInfo.Update(0);
+            _lblServer.Position = new Point((int)_recStatus.Left + 5, (int)_recStatus.Top + 2);
+            _lblServer.Update(0);
+            _lblServerInfo.Position = new Point(_lblServer.ClientArea.Right, _lblServer.ClientArea.Y);
+            _lblServerInfo.Update(0);
 
-			_lblMode.Position = new Point(_lblServerInfo.ClientArea.Right + (int)_lastLblSpacing,
-										  _lblServerInfo.ClientArea.Y);
-			_lblMode.Update(0);
+            _lblMode.Position = new Point(_lblServerInfo.ClientArea.Right + (int)_lastLblSpacing,
+                                          _lblServerInfo.ClientArea.Y);
+            _lblMode.Update(0);
 
-			_lblModeInfo.Position = new Point(_lblMode.ClientArea.Right, _lblMode.ClientArea.Y);
-			_lblModeInfo.Update(0);
-
-
-			_lblPlayers.Position = new Point(_lblModeInfo.ClientArea.Right + (int)_lastLblSpacing,
-											 _lblModeInfo.ClientArea.Y);
-			_lblPlayers.Update(0);
-
-			_lblPlayersInfo.Position = new Point(_lblPlayers.ClientArea.Right, _lblPlayers.ClientArea.Y);
-			_lblPlayersInfo.Update(0);
+            _lblModeInfo.Position = new Point(_lblMode.ClientArea.Right, _lblMode.ClientArea.Y);
+            _lblModeInfo.Update(0);
 
 
-			_lblPort.Position = new Point(_lblPlayersInfo.ClientArea.Right + (int)_lastLblSpacing,
-										  _lblPlayersInfo.ClientArea.Y);
-			_lblPort.Update(0);
+            _lblPlayers.Position = new Point(_lblModeInfo.ClientArea.Right + (int)_lastLblSpacing,
+                                             _lblModeInfo.ClientArea.Y);
+            _lblPlayers.Update(0);
 
-			_lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
-			_lblPortInfo.Update(0);
+            _lblPlayersInfo.Position = new Point(_lblPlayers.ClientArea.Right, _lblPlayers.ClientArea.Y);
+            _lblPlayersInfo.Update(0);
 
 
-			_tabs.Position = _imgMainBg.Position + new Size(5, 90);
-			_tabs.Update(0);
+            _lblPort.Position = new Point(_lblPlayersInfo.ClientArea.Right + (int)_lastLblSpacing,
+                                          _lblPlayersInfo.ClientArea.Y);
+            _lblPort.Update(0);
 
-			_lobbyChat.Position = new Point(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
-			_lobbyChat.Update(0);
+            _lblPortInfo.Position = new Point(_lblPort.ClientArea.Right, _lblPort.ClientArea.Y);
+            _lblPortInfo.Update(0);
 
-			_imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
-			_imgChatBg.Update(0);
 
-			_btnReady.Position = new Point(_lobbyChat.ClientArea.Right - _btnReady.ClientArea.Width - 5, _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
-			_btnReady.Update(0);
-		}
+            _tabs.Position = _imgMainBg.Position + new Size(5, 90);
+            _tabs.Update(0);
 
-		void _btnReady_Clicked(ImageButton sender)
-		{
-			var playerManager = IoCManager.Resolve<IPlayerManager>();
-			playerManager.SendVerb("joingame", 0);
-		}
+            _lobbyChat.Position = new Point(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+            _lobbyChat.Update(0);
+
+            _imgChatBg.Position = new Point(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
+            _imgChatBg.Update(0);
+
+            _btnReady.Position = new Point(_lobbyChat.ClientArea.Right - _btnReady.ClientArea.Width - 5, _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
+            _btnReady.Update(0);
+        }
+
+        void _btnReady_Clicked(ImageButton sender)
+        {
+            var playerManager = IoCManager.Resolve<IPlayerManager>();
+            playerManager.SendVerb("joingame", 0);
+        }
 
         #endregion
 

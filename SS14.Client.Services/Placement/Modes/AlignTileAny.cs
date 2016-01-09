@@ -19,12 +19,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
+            var bounds = spriteToDraw.GetLocalBounds();
+            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
@@ -50,10 +51,10 @@ namespace SS14.Client.Services.Placement.Modes
                 mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
                                          currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
-
-                spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                                 mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                                 spriteToDraw.Height);
+                
+                spriteRectWorld = new RectangleF(mouseWorld.X - (bounds.Width/2f),
+                                                 mouseWorld.Y - (bounds.Height/2f), bounds.Width,
+                                                 bounds.Height);
                 if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                     return false;
                 //Since walls also have collisions, this means we can't place objects on walls with this mode.
@@ -66,12 +67,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen : Color.IndianRed;
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                    mouseScreen.Y - (spriteToDraw.Height/2f));
+                var bounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
+                                                    mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = SFML.Graphics.Color.White;
             }
         }
     }

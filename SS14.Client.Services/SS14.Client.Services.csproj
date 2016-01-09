@@ -307,9 +307,6 @@
     <Compile Include="State\States\LobbyScreen.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="State\States\TestState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GameTimer\GameTimer.cs">
       <SubType>Code</SubType>
     </Compile>

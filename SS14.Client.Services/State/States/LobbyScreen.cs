@@ -56,8 +56,8 @@ namespace SS14.Client.Services.State.States
 
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))
                              {
-                                 Color = Color.Black,
-                                 ShadowColor = Color.Transparent,
+                                 Color = SFML.Graphics.Color.Black,
+                                 ShadowColor = SFML.Graphics.Color.Transparent,
                                  Shadowed = true,
                                  //TODO CluwneSprite ShadowOffset
                                  // ShadowOffset = new Vector2(1, 1)
@@ -79,7 +79,7 @@ namespace SS14.Client.Services.State.States
             jobListMsg.Write((byte) NetMessage.JobList); //Request Joblist.
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = System.Drawing.Color.LightSteelBlue};
+            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = new SFML.Graphics.Color(176, 222, 196)};
             joinButton.Position = new Point(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;

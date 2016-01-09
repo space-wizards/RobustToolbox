@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using SS14.Client.Graphics;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -32,7 +33,7 @@ namespace SS14.Client.Services.UserInterface
         private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
-        private CluwneSprite _cursorSprite;
+        private Sprite _cursorSprite;
         private DebugConsole _console;
 
         private Vector2 dragOffset = Vector2.Zero;

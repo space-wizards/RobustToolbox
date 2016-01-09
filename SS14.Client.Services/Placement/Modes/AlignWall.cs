@@ -20,12 +20,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = CluwneLib.PixelToTile(spriteToDraw.Size);
+            var bounds = spriteToDraw.GetLocalBounds();
+            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
             var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
@@ -84,12 +85,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen: Color.IndianRed;
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                var bounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
+                                                     mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
+                spriteToDraw.Color = SFML.Graphics.Color.White;
             }
         }
     }

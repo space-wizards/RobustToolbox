@@ -1,11 +1,11 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using System;
-using Color = System.Drawing.Color;
+using Color = SFML.Graphics.Color;
 using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 using SS14.Client.Graphics;
-
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -37,9 +37,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private string _displayText = "";
         private string _text = "";
-		private CluwneSprite _textboxLeft;
-		private CluwneSprite _textboxMain;
-		private CluwneSprite _textboxRight;
+        private Sprite _textboxLeft;
+        private Sprite _textboxMain;
+        private Sprite _textboxRight;
 
         public Color drawColor = Color.White;
         public Color textColor = Color.Black;
@@ -55,7 +55,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color =  Color.Black};
+            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color =  SFML.Graphics.Color.Black};
 
             Update(0);
         }
@@ -74,12 +74,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            _clientAreaLeft = new Rectangle(Position, new Size((int) _textboxLeft.Width, (int) _textboxLeft.Height));
+            var boundsLeft = _textboxLeft.GetLocalBounds();
+            var boundsMain = _textboxMain.GetLocalBounds();
+            var boundsRight = _textboxRight.GetLocalBounds();
+            _clientAreaLeft = new Rectangle(Position, new Size((int)boundsLeft.Width, (int)boundsLeft.Height));
          
             _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size(Width, (int) _textboxMain.Height));
+                                            new Size(Width, (int)boundsMain.Height));
             _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int) _textboxRight.Width, (int) _textboxRight.Height));
+                                             new Size((int)boundsRight.Width, (int)boundsRight.Height));
             ClientArea = new Rectangle(Position,
                                        new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
@@ -98,19 +101,22 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-            if (drawColor != Color.White)
+            if (drawColor != SFML.Graphics.Color.White)
             {
                 _textboxLeft.Color = drawColor;
                 _textboxMain.Color = drawColor;
                 _textboxRight.Color = drawColor;
             }
 
-            _textboxLeft.Draw(_clientAreaLeft);
-            _textboxMain.Draw(_clientAreaMain);
-            _textboxRight.Draw(_clientAreaRight);
+            _textboxLeft.SetTransformToRect(_clientAreaLeft);
+            _textboxMain.SetTransformToRect(_clientAreaMain);
+            _textboxRight.SetTransformToRect(_clientAreaRight);
+            _textboxLeft.Draw();
+            _textboxMain.Draw();
+            _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                      CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, Color.FromArgb(255,255,250));
+                      CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
 
        
 
@@ -137,7 +143,7 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -147,12 +153,12 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool KeyDown(KeyEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             if (!Focus) return false;
 

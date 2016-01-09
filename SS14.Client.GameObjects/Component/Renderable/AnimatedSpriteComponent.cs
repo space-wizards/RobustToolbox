@@ -13,6 +13,7 @@ using System.Drawing;
 using System.Linq;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Sprite;
+using SFML.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -21,7 +22,6 @@ namespace SS14.Client.GameObjects
         protected string baseSprite;
         protected string currentSprite;
         protected AnimatedSprite sprite;
-        protected bool flip;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         protected bool visible = true;
@@ -72,7 +72,9 @@ namespace SS14.Client.GameObjects
                                       sprite.AABB.Height / tileSize);
             }
         }
-        
+
+        public bool HorizontalFlip { get; set; }
+
         #endregion
 
         public override void OnAdd(Entity owner)
@@ -190,14 +192,15 @@ namespace SS14.Client.GameObjects
         {
             if (sprite == null || !visible) return false;
 
-            CluwneSprite spriteToCheck = sprite.GetCurrentSprite();
+            Sprite spriteToCheck = sprite.GetCurrentSprite();
+            var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
                 new RectangleF(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                    (spriteToCheck.Width / 2),
+                    (bounds.Width / 2),
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                    (spriteToCheck.Height / 2), spriteToCheck.Width, spriteToCheck.Height);
+                    (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos)) return false;
 
             // Get the sprite's position within the texture
@@ -259,16 +262,16 @@ namespace SS14.Client.GameObjects
             
             Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
+            var bounds = sprite.AABB;
 
-            if (ownerPos.X + sprite.AABB.Right < topLeft.X
+            if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
                 || ownerPos.X > bottomRight.X
-                || ownerPos.Y + sprite.AABB.Bottom < topLeft.Y
+                || ownerPos.Y + bounds.Top + bounds.Height < topLeft.Y
                 || ownerPos.Y > bottomRight.Y)
                 return;
-
-            sprite.HorizontalFlip = flip;
+            
+            sprite.HorizontalFlip = HorizontalFlip;
             sprite.Draw();
-            sprite.HorizontalFlip = false;
 
             //Render slaves above
             IEnumerable<IRenderableComponent> renderablesAbove = from IRenderableComponent c in slaves

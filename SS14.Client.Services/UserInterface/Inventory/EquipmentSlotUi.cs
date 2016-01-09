@@ -12,6 +12,9 @@ using System.Drawing;
 using SS14.Client.Graphics.Sprite;
 using SFML.Window;
 using SS14.Shared.Maths;
+using SFML.Graphics;
+using Color = SFML.Graphics.Color;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -27,9 +30,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
         private readonly IResourceManager _resourceManager;
         private readonly TextSprite _textSprite;
         private readonly IUserInterfaceManager _userInterfaceManager;
-		private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
         private Color _color;
-		private CluwneSprite _currentEntSprite;
+        private Sprite _currentEntSprite;
 
         public EquipmentSlotUi(EquipmentSlot slot, IPlayerManager playerManager, IResourceManager resourceManager,
                                IUserInterfaceManager userInterfaceManager)
@@ -61,8 +64,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
         public override sealed void Update(float frameTime)
         {
             _buttonSprite.Position = new Vector2(Position.X,Position.Y);
+            var bounds = _buttonSprite.GetLocalBounds();
             ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.Width, (int) _buttonSprite.Height));
+                                       new Size((int)bounds.Width, (int)bounds.Height));
 
             _textSprite.Position = Position;
 
@@ -95,10 +99,15 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _buttonSprite.Color = Color.White;
 
             if (_currentEntSprite != null && CurrentEntity != null)
-                _currentEntSprite.Draw(
-                    new Rectangle((int) (Position.X + _buttonSprite.Width/2f - _currentEntSprite.Width/2f),
-                                  (int) (Position.Y + _buttonSprite.Height/2f - _currentEntSprite.Height/2f),
-                                  (int) _currentEntSprite.Width, (int) _currentEntSprite.Height));
+            {
+                var btnBounds = _buttonSprite.GetLocalBounds();
+                var entBounds = _currentEntSprite.GetLocalBounds();
+                _currentEntSprite.SetTransformToRect(
+                    new Rectangle((int)(Position.X + btnBounds.Width / 2f - entBounds.Width / 2f),
+                                  (int)(Position.Y + btnBounds.Height / 2f - entBounds.Height / 2f),
+                                  (int)entBounds.Width, (int)entBounds.Height));
+                _currentEntSprite.Draw();
+            }
 
             _textSprite.Draw();
         }
@@ -111,7 +120,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -129,7 +138,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
             {
@@ -159,10 +168,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _color = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
-                         ? Color.LightSteelBlue
+                         ? new SFML.Graphics.Color(176, 196, 222)
                          : Color.White;
         }
 

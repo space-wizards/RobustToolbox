@@ -63,7 +63,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                      "CALIBRI", _resourceManager)
                                {
                                    Position = new Point(5, yOffset + 5),
-                                   Text = {Color = isAdmin ? Color.DarkCyan : Color.Black}
+                                   Text = {Color = isAdmin ? new SFML.Graphics.Color(0, 139, 139) : SFML.Graphics.Color.Black}
                                };
 
                 components.Add(line);
@@ -127,27 +127,27 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             if (base.MouseWheelMove(e)) return true;
             return false;

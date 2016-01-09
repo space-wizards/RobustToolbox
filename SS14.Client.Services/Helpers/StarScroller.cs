@@ -31,19 +31,19 @@ namespace SS14.Client.Services.Helpers
                     switch (layer)
                     {
                         case 0:
-                            _stars[i, layer].Magnitude = Color.FromArgb(255, 255, 255);
+                            _stars[i, layer].Magnitude = SFML.Graphics.Color.White;
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*100.0) + 55.0f;
                             break;
                         case 1:
-                            _stars[i, layer].Magnitude = Color.FromArgb(192, 192, 192);
+                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(192, 192, 192);
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*50.0) + 27.5f;
                             break;
                         case 2:
-                            _stars[i, layer].Magnitude = Color.FromArgb(128, 128, 128);
+                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(128, 128, 128);
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*25.0) + 13.5f;
                             break;
                         default:
-                            _stars[i, layer].Magnitude = Color.FromArgb(64, 64, 64);
+                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(64, 64, 64);
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*12.5) + 1.0f;
                             break;
                     }
@@ -71,7 +71,7 @@ namespace SS14.Client.Services.Helpers
 
         public void Render(float xTopleft, float yTopleft)
         {
-            CluwneLib.ClearCurrentRendertarget(Color.Black);
+            CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
             DrawStars(3, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
             DrawStars(2, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
             for (int layer = 1; layer >= 0; layer--)
@@ -85,7 +85,7 @@ namespace SS14.Client.Services.Helpers
             /// <summary>
             /// Magnitude of the star.
             /// </summary>
-            public Color Magnitude;
+            public SFML.Graphics.Color Magnitude;
 
             /// <summary>
             /// Position of the star.

@@ -40,11 +40,5 @@ namespace SS14.Client.Graphics.Render
             get;
             set;
         }
-        
-        public void Clear(Color color)
-        {
-            base.Clear(color.ToSFMLColor());
-        }
-     
     }
 }

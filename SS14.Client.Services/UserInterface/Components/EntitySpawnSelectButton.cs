@@ -1,15 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.GameObjects;
-using System;
-using System.Drawing;
-using System.Linq;
-using Font = SFML.Graphics.Font;
-using Color = SFML.Graphics.Color;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SS14.Shared.Maths;
 using SS14.Client.Graphics;
-using SFML.Graphics;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Maths;
+using System.Linq;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -61,7 +58,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this, associatedTemplate, associatedTemplateName);
                 return true;
@@ -77,11 +74,11 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            objectSprite.Position = new Vector2(Position.X + 5, Position.Y + 5);
+            objectSprite.Position = new Vector2f(Position.X + 5, Position.Y + 5);
             var bounds = objectSprite.GetLocalBounds();
-            name.Position = new Vector2(objectSprite.Position.X + bounds.Width + 5, objectSprite.Position.Y);
-            ClientArea = new Rectangle(Position,
-                                       new Size(
+            name.Position = new Vector2f(objectSprite.Position.X + bounds.Width + 5, objectSprite.Position.Y).Round();
+            ClientArea = new IntRect(Position,
+                                       new Vector2i(
                                            fixed_width != -1
                                                ? fixed_width
                                                : ((int)bounds.Width + (int) name.Width + 15),
@@ -92,9 +89,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Render()
         {
-           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                        selected ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(255, 250, 240));
-           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                  Color.Black);
             objectSprite.Draw();
             name.Draw();

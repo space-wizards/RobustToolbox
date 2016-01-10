@@ -1,10 +1,10 @@
 ﻿
-using System.Diagnostics;
+using SFML.Graphics;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using System.Drawing;
+using System.Diagnostics;
 
 namespace SS14.Client.GameObjects.Component.Light.LightModes
 {

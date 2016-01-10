@@ -1,7 +1,8 @@
 ﻿
+using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
-using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -10,9 +11,7 @@ using SS14.Shared.GO.Component.Particles;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -27,14 +26,14 @@ namespace SS14.Client.GameObjects
         #endregion
 
         #region Properties
-        public RectangleF AverageAABB
+        public FloatRect AverageAABB
         {
             get { return AABB; }
         }
 
-        public RectangleF AABB
+        public FloatRect AABB
         {
-            get { return RectangleF.Empty; }
+            get { return new FloatRect(); }
         }
         #endregion
 
@@ -51,8 +50,8 @@ namespace SS14.Client.GameObjects
 
         public void OnMove(object sender, VectorEventArgs args)
         {
-            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2f(args.VectorTo.X, args.VectorTo.Y) -
+                         new Vector2f(args.VectorFrom.X, args.VectorFrom.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
@@ -98,10 +97,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
+        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
         {            
-            Vector2 renderPos =
-CluwneLib.WorldToScreen(
+            Vector2f renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
@@ -165,7 +163,7 @@ CluwneLib.WorldToScreen(
                 ParticleSettings toAdd = IoCManager.Resolve<IResourceManager>().GetParticles(name);
                 if (toAdd != null)
                 {
-                    _emitters.Add(name, new ParticleSystem(toAdd, Vector2.Zero));
+                    _emitters.Add(name, new ParticleSystem(toAdd, new Vector2f()));
                     _emitters[name].Emit = active;
                 }
             }

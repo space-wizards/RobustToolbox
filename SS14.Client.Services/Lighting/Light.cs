@@ -1,8 +1,8 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
-using System.Drawing;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Lighting
 {
@@ -16,14 +16,14 @@ namespace SS14.Client.Services.Lighting
 
         #region ILight Members
 
-        public Vector2 Position { get; private set; }
+        public Vector2f Position { get; private set; }
         public Color Color { get; private set; }
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
         public LightState LightState { get; private set; }
         public LightMode LightMode { get; set; }
 
-        public void Move(Vector2 toPosition)
+        public void Move(Vector2f toPosition)
         {
             Position = toPosition;
             LightArea.Calculated = false;
@@ -40,7 +40,7 @@ namespace SS14.Client.Services.Lighting
 
         public void SetColor(int a, int r, int g, int b)
         {
-            Color = Color.FromArgb(a, r, g, b);
+            Color = new Color((byte)r, (byte)g, (byte)b, (byte)a);
         }
 
         public void SetColor(Color color)
@@ -48,9 +48,9 @@ namespace SS14.Client.Services.Lighting
             Color = color;
         }
 
-        public Vector4 GetColorVec()
+        public Vector4f GetColorVec()
         {
-            return new Vector4((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
+            return new Vector4f((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
         }
 
         public void SetMask(string mask)

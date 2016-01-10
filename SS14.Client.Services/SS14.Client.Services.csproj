@@ -113,9 +113,6 @@
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
     </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
     <Reference Include="System.ServiceModel">
       <Name>System.ServiceModel</Name>
     </Reference>

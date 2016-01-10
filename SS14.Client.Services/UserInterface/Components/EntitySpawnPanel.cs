@@ -1,4 +1,7 @@
-﻿using SS14.Client.Interfaces.GOC;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Placement;
@@ -7,10 +10,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SFML.Window;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -25,20 +25,20 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IPlacementManager _placementManager;
         private readonly IResourceManager _resourceManager;
 
-        public EntitySpawnPanel(Size size, IResourceManager resourceManager, IPlacementManager placementManager)
+        public EntitySpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
             : base("Entity Spawn Panel", size, resourceManager)
         {
             _resourceManager = resourceManager;
             _placementManager = placementManager;
 
-            _entityList = new ScrollableContainer("entspawnlist", new Size(200, 400), _resourceManager)
-                              {Position = new Point(5, 5)};
+            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceManager)
+                              {Position = new Vector2i(5, 5)};
             components.Add(_entityList);
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) {Position = new Point(210, 0)};
+            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) {Position = new Vector2i(210, 0)};
             components.Add(searchLabel);
 
-            _entSearchTextbox = new Textbox(125, _resourceManager) {Position = new Point(210, 20)};
+            _entSearchTextbox = new Textbox(125, _resourceManager) {Position = new Vector2i(210, 20)};
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
             components.Add(_entSearchTextbox);
 
@@ -46,12 +46,12 @@ namespace SS14.Client.Services.UserInterface.Components
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
-                                  Position = new Point(210, 55)
+                                  Position = new Vector2i(210, 55)
                               };
 
             _overLabel = new Label("Override Placement:", "CALIBRI", _resourceManager)
                              {
-                                 Position = _clearLabel.Position + new Size(0, _clearLabel.ClientArea.Height + 15)
+                                 Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
                              };
 
             components.Add(_overLabel);
@@ -75,7 +75,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _lstOverride = new Listbox(150, 125, resourceManager, initOpts);
             _lstOverride.SelectItem("None");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
-            _lstOverride.Position = _overLabel.Position + new Size(0, _overLabel.ClientArea.Height);
+            _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
             components.Add(_lstOverride);
 
             _clearLabel.Clicked += ClearLabelClicked;
@@ -86,17 +86,17 @@ namespace SS14.Client.Services.UserInterface.Components
                                 {
                                     ImageNormal = "erasericon",
                                     Position =
-                                        new Point(_clearLabel.Position.X + _clearLabel.ClientArea.Width + 5,
+                                        new Vector2i(_clearLabel.Position.X + _clearLabel.ClientArea.Width + 5,
                                                   _clearLabel.Position.Y)
                                 };
 
-            //eraserButton.Position = new Point(clearLabel.ClientArea.Right + 5, clearLabel.ClientArea.Top); Clientarea not updating properly. FIX THIS
+            //eraserButton.Position = new Vector2i(clearLabel.ClientArea.Right + 5, clearLabel.ClientArea.Top); Clientarea not updating properly. FIX THIS
             _eraserButton.Clicked += EraserButtonClicked;
             components.Add(_eraserButton);
 
             BuildEntityList();
 
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
@@ -171,7 +171,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, _resourceManager)))
             {
                 _entityList.components.Add(newButton);
-                newButton.Position = new Point(5, yOffset);
+                newButton.Position = new Vector2i(5, yOffset);
                 newButton.Update(0);
                 yOffset += 5 + newButton.ClientArea.Height;
                 newButton.Clicked += NewButtonClicked;

@@ -1,4 +1,7 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -7,9 +10,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -88,7 +89,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
+            ClientArea = new IntRect(Position, new Vector2i(_elements[0].ClientArea.Width, _elements[0].ClientArea.Height));
             foreach (TargetingDummyElement current in _elements)
             {
                 current.Position = Position;
@@ -111,9 +112,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int) e.X, (int) e.Y))) return false;
+            if (!ClientArea.Contains(e.X, e.Y)) return false;
 
             TargetingDummyElement prevSelection = (from element in _elements
                                                    where element.IsSelected()
@@ -138,7 +139,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

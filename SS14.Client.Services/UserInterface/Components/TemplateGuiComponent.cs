@@ -1,8 +1,7 @@
 ﻿using Lidgren.Network;
+using SFML.Window;
 using SS14.Shared;
 using System;
-using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -41,7 +40,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }
@@ -50,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }

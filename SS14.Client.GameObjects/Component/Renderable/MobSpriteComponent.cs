@@ -1,11 +1,11 @@
 ﻿
+using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using System;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
-using SFML.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -127,7 +127,7 @@ namespace SS14.Client.GameObjects
             SetSpriteByKey(_basename + "_front");
         }
 
-        public override void Render(Vector2 topLeft, Vector2 bottomRight)
+        public override void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             if (!visible) return;
             if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X < topLeft.X
@@ -140,7 +140,7 @@ namespace SS14.Client.GameObjects
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
-                                   Vector2.Zero, currentBaseSprite);
+                                   new Vector2f(), currentBaseSprite);
         }
 
         public override void HandleComponentState(dynamic state)

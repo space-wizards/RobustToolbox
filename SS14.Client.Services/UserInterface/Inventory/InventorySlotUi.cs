@@ -1,15 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
-using SFML.Window;
 using System;
-using System.Drawing;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -42,7 +39,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
         public override void Update(float frameTime)
         {
             var bounds = _slotSprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -56,7 +53,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 var slotBounds = _slotSprite.GetLocalBounds();
                 var entBounds = _entitySprite.GetLocalBounds();
                 _entitySprite.SetTransformToRect (
-                    new Rectangle((int)(Position.X + slotBounds.Width / 2f - entBounds.Width / 2f),
+                    new IntRect((int)(Position.X + slotBounds.Width / 2f - entBounds.Width / 2f),
                                   (int)(Position.Y + slotBounds.Height / 2f - entBounds.Height / 2f),
                                   (int)entBounds.Width, (int)entBounds.Height));
                 _entitySprite.Draw();
@@ -72,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -82,7 +79,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }
@@ -91,7 +88,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
+            _currentColor = ClientArea.Contains(e.X, e.Y)
                                 ? new SFML.Graphics.Color(176, 196, 222)
                                 : Color.White;
         }

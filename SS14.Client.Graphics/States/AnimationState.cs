@@ -1,5 +1,5 @@
-﻿using System;
-using SS14.Client.Graphics.Sprite;
+﻿using SS14.Client.Graphics.Sprite;
+using System;
 
 namespace SS14.Client.Graphics.States
 {

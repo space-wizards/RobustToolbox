@@ -1,16 +1,16 @@
-﻿using SS14.Server.Interfaces.GOC;
+﻿using SFML.System;
+using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Transform;
 using System;
-using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
     internal class TransformComponent : Component, ITransformComponent
     {
-        private Vector2 _position = Vector2.Zero;
+        private Vector2f _position = new Vector2f();
         private bool firstState = true;
         public TransformComponent()
         {
@@ -20,35 +20,35 @@ namespace SS14.Server.GameObjects
         public float X
         {
             get { return Position.X; }
-            set { Position = new Vector2(value, Position.Y); }
+            set { Position = new Vector2f(value, Position.Y); }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2(Position.X, value); }
+            set { Position = new Vector2f(Position.X, value); }
         }
 
         #region ITransformComponent Members
 
-        public Vector2 Position
+        public Vector2f Position
         {
             get { return _position; }
             set
             {
-                Vector2 oldPosition = _position;
+                Vector2f oldPosition = _position;
                 _position = value;
 
                 if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 
-        public void TranslateTo(Vector2 toPosition)
+        public void TranslateTo(Vector2f toPosition)
         {
             Position = toPosition;
         }
 
-        public void TranslateByOffset(Vector2 offset)
+        public void TranslateByOffset(Vector2f offset)
         {
             Position = Position + offset;
         }
@@ -59,7 +59,7 @@ namespace SS14.Server.GameObjects
 
         public override void Shutdown()
         {
-            Position = Vector2.Zero;
+            Position = new Vector2f();
         }
 
         public override ComponentState GetComponentState()

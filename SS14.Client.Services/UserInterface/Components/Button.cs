@@ -1,11 +1,11 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 using System;
-using System.Drawing;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -23,9 +23,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private Sprite _buttonMain;
         private Sprite _buttonRight;
 
-        private Rectangle _clientAreaLeft;
-        private Rectangle _clientAreaMain;
-        private Rectangle _clientAreaRight;
+        private IntRect _clientAreaLeft;
+        private IntRect _clientAreaMain;
+        private IntRect _clientAreaRight;
 
         private Color drawColor = Color.White;
         public Color mouseOverColor = Color.White;
@@ -54,15 +54,15 @@ namespace SS14.Client.Services.UserInterface.Components
             var boundsLeft = _buttonLeft.GetLocalBounds();
             var boundsMain = _buttonMain.GetLocalBounds();
             var boundsRight = _buttonRight.GetLocalBounds();
-            _clientAreaLeft = new Rectangle(Position, new Size((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = new Rectangle(new Point(_clientAreaLeft.Right, Position.Y),
-                                            new Size((int) Label.Width, (int)boundsMain.Height));
-            _clientAreaRight = new Rectangle(new Point(_clientAreaMain.Right, Position.Y),
-                                             new Size((int)boundsRight.Width, (int)boundsRight.Height));
-            ClientArea = new Rectangle(Position,
-                                       new Size(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
+            _clientAreaLeft = new IntRect(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+                                            (int) Label.Width, (int)boundsMain.Height);
+            _clientAreaRight = new IntRect(_clientAreaMain.Right(), Position.Y,
+                                             (int)boundsRight.Width, (int)boundsRight.Height);
+            ClientArea = new IntRect(Position,
+                                       new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
-            Label.Position = new Point(_clientAreaLeft.Right,
+            Label.Position = new Vector2i(_clientAreaLeft.Right(),
                                        Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
         }
 
@@ -100,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
-                if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+                if (ClientArea.Contains(e.X, e.Y))
                     drawColor = mouseOverColor;
                 else
                     drawColor = Color.White;
@@ -108,7 +108,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 return true;

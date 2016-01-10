@@ -1,9 +1,9 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Mover;
 using System;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -52,9 +52,9 @@ namespace SS14.Client.GameObjects
             Translate(args.VectorTo);
         }
 
-        private void Translate(Vector2 toPosition)
+        private void Translate(Vector2f toPosition)
         {
-            Vector2 delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            Vector2f delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
 
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
             /*

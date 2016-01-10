@@ -1,15 +1,13 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
 using System;
-using System.Drawing;
-using SFML.Window;
-using SFML.Graphics;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -52,19 +50,19 @@ namespace SS14.Client.Services.UserInterface.Inventory
         public override void Update(float frameTime)
         {
             var bounds = _sprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
             _sprite.Color = _color;
             var spriteBounds = _sprite.GetLocalBounds();
-            _sprite.SetTransformToRect(new Rectangle(Position, new Size((int)spriteBounds.Width, (int)spriteBounds.Height)));
+            _sprite.SetTransformToRect(new IntRect(Position, new Vector2i((int)spriteBounds.Width, (int)spriteBounds.Height)));
             _sprite.Draw();
             if (_entSprite != null)
             {
                 var entBounds = _entSprite.GetLocalBounds();
-                _entSprite.SetTransformToRect(new Rectangle((int)(Position.X + spriteBounds.Width / 2f - entBounds.Width / 2f),
+                _entSprite.SetTransformToRect(new IntRect((int)(Position.X + spriteBounds.Width / 2f - entBounds.Width / 2f),
                                               (int)(Position.Y + spriteBounds.Height / 2f - entBounds.Height / 2f),
                                               (int)entBounds.Width, (int)entBounds.Height));
                 _entSprite.Draw();
@@ -80,7 +78,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 ResetEntity();
                 return true;
@@ -90,7 +88,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
@@ -104,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
                 _color = new Color(176, 222, 196);
             else
                 _color = Color.White;

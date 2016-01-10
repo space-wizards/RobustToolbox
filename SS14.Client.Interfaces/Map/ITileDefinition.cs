@@ -1,6 +1,5 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared;
-using SS14.Shared.Maths;
+﻿using SFML.System;
+using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Interfaces.Map
 {
@@ -22,7 +21,7 @@ namespace SS14.Client.Interfaces.Map
 
         void Render(float xTopLeft, float yTopLeft, SpriteBatch batch);
         void RenderPos(float x, float y);
-        void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition);
+        void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition);
         void DrawDecals(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch);
         void RenderGas(float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch);
         void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch);

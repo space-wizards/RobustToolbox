@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
-using SS14.Client.Graphics.VertexData;
-using VertexFieldContext = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldType;
 
 
 namespace SS14.Client.Graphics.VertexData
 {
-	/// <summary>
-	/// VertexField
-	/// </summary>
-	public class VertexField
+    /// <summary>
+    /// VertexField
+    /// </summary>
+    public class VertexField
 	{
 		#region Variables.
 		private short _stream;					                // Stream to which this element is bound.

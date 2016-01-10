@@ -1,14 +1,15 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -100,7 +101,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 foreach (StatusEffectButton button in buttons)
                 {
-                    button.Position = new Point(Position.X + x_off, Position.Y + y_off);
+                    button.Position = new Vector2i(Position.X + x_off, Position.Y + y_off);
 
                     if (Position.X + x_off + 32 + spacing > max_x) max_x = Position.X + x_off + 32 + spacing;
                     if (Position.Y + y_off + 32 + spacing > max_y) max_y = Position.Y + y_off + 32 + spacing;
@@ -122,17 +123,17 @@ namespace SS14.Client.Services.UserInterface.Components
                     button.Update(frameTime);
                 }
 
-                ClientArea = new Rectangle(Position, new Size(max_x - Position.X, max_y - Position.Y));
+                ClientArea = new IntRect(Position, new Vector2i(max_x - Position.X, max_y - Position.Y));
             }
         }
 
         public override void Render()
         {
             if (buttons.Count > 0)
-            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                      new SFML.Graphics.Color(105, 105, 105));
 
-            CluwneLib.drawCircle(Position.X, Position.Y, 3, SFML.Graphics.Color.White);
+            CluwneLib.drawCircle(Position.X, Position.Y, 3, Color.White);
             CluwneLib.drawCircle(Position.X, Position.Y, 2, new SFML.Graphics.Color(128, 128, 128));
 
             foreach (StatusEffectButton button in buttons)
@@ -150,9 +151,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            var mousePoint = new Vector2((int) e.X, (int) e.Y);
+            var mousePoint = new Vector2i(e.X, e.Y);
 
-            if ((mousePoint - new Vector2(Position.X, Position.Y)).Length <= 3)
+            if ((mousePoint - Position).LengthSquared() <= 3*3)
                 dragging = true;
 
             return false;
@@ -173,7 +174,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (dragging)
             {
-                Position = new Point((int) e.X, (int) e.Y);
+                Position = new Vector2i((int) e.X, (int) e.Y);
             }
             else
             {

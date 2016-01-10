@@ -1,6 +1,6 @@
-﻿using System;
+﻿using SS14.Client.Graphics.Sprite;
+using System;
 using System.Collections.Generic;
-using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Graphics.Collection
 {

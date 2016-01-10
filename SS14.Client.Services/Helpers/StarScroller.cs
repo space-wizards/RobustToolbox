@@ -1,7 +1,6 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
+﻿using SFML.System;
+using SS14.Client.Graphics;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -23,7 +22,7 @@ namespace SS14.Client.Services.Helpers
             {
                 for (int i = 0; i < _stars.Length/4; i++)
                 {
-                    _stars[i, layer].Position = new Vector2((float) (_random.NextDouble()*CluwneLib.Screen.Size.X),
+                    _stars[i, layer].Position = new Vector2f((float) (_random.NextDouble()*CluwneLib.Screen.Size.X),
                                                              (float)
                                                              (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Height));
 
@@ -65,7 +64,7 @@ namespace SS14.Client.Services.Helpers
                 // Wrap around.
                 if (_stars[i, layer].Position.Y > CluwneLib.CurrentClippingViewport.Height)
                     _stars[i, layer].Position =
-                        new Vector2((float) (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Width), 0);
+                        new Vector2f((float) (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Width), 0);
             }
         }
 
@@ -90,7 +89,7 @@ namespace SS14.Client.Services.Helpers
             /// <summary>
             /// Position of the star.
             /// </summary>
-            public Vector2 Position;
+            public Vector2f Position;
 
             /// <summary>
             /// Vertical delta.

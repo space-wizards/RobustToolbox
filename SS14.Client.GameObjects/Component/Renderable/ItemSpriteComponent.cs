@@ -1,12 +1,12 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.GameObjects
 {
@@ -185,9 +185,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        protected override bool WasClicked(PointF worldPos)
+        protected override bool WasClicked(Vector2f worldPos)
         {
-            return base.WasClicked(worldPos) && !IsInHand;
+            return !IsInHand && base.WasClicked(worldPos);
         }
 
         public override void HandleComponentState(dynamic state)

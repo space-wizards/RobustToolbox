@@ -1,30 +1,27 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System.Collections.Generic;
-using SFML.Window;
-using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics;
-using SFML.Graphics;
-using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class ContextMenu : GuiComponent
     {
-        private readonly Vector2 _buttonSize = new Vector2(150, 20);
+        private readonly Vector2f _buttonSize = new Vector2f(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private Entity _owningEntity;
 
-        public ContextMenu(Entity entity, Vector2 creationPos, IResourceManager resourceManager,
+        public ContextMenu(Entity entity, Vector2f creationPos, IResourceManager resourceManager,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;
@@ -72,10 +69,10 @@ namespace SS14.Client.Services.UserInterface.Components
             float currY = creationPos.Y;
             foreach (ContextMenuButton button in _buttons)
             {
-                button.Position = new Point((int) creationPos.X, (int) currY);
+                button.Position = new Vector2i((int) creationPos.X, (int) currY);
                 currY += _buttonSize.Y;
             }
-            ClientArea = new Rectangle((int) creationPos.X, (int) creationPos.Y, (int) _buttonSize.X,
+            ClientArea = new IntRect((int) creationPos.X, (int) creationPos.Y, (int) _buttonSize.X,
                                        _buttons.Count()*(int) _buttonSize.Y);
         }
 
@@ -83,15 +80,15 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if ((string) sender.UserData == "examine")
             {
-                var newExamine = new ExamineWindow(new Size(300, 200), _owningEntity, _resourceManager);
+                var newExamine = new ExamineWindow(new Vector2i(300, 200), _owningEntity, _resourceManager);
                 _userInterfaceManager.AddComponent(newExamine);
-                newExamine.Position = new Point(ClientArea.X, ClientArea.Y);
+                newExamine.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
             }
             else if ((string) sender.UserData == "svars")
             {
-                var newSVars = new SVarEditWindow(new Size(350, 400), _owningEntity);
+                var newSVars = new SVarEditWindow(new Vector2i(350, 400), _owningEntity);
                 _userInterfaceManager.AddComponent(newSVars);
-                newSVars.Position = new Point(ClientArea.X, ClientArea.Y);
+                newSVars.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
 
                 _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).GetSVarsCallback +=
                     newSVars.GetSVarsCallback;
@@ -113,8 +110,8 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             foreach (ContextMenuButton button in _buttons)
                 button.Render();
-          CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                 SFML.Graphics.Color.Black);
+          CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
+                                                 Color.Black);
         }
 
         public override void Dispose()
@@ -172,11 +169,11 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly Label _textLabel;
 
-        public Vector2 Size;
+        public Vector2f Size;
         private SFML.Graphics.Color _currentColor;
         private Sprite _iconSprite;
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceManager resourceManager)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2f size, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
 
@@ -194,9 +191,9 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             base.Update(frameTime);
             var bounds = _iconSprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
-            _textLabel.Position = new Point(ClientArea.X + (int)bounds.Width + 6,
-                                            ClientArea.Y + (int) (ClientArea.Height/2f) -
+            ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
+            _textLabel.Position = new Vector2i(ClientArea.Left + (int)bounds.Width + 6,
+                                            ClientArea.Top + (int) (ClientArea.Height/2f) -
                                             (int) (_textLabel.ClientArea.Height/2f));
             _textLabel.Update(frameTime);
         }
@@ -205,10 +202,10 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             base.Render();
             var bounds = _iconSprite.GetLocalBounds();
-            var iconRect = new Rectangle(ClientArea.X + 3,
-                                         ClientArea.Y + (int) (ClientArea.Height/2f) - (int) (bounds.Height/2f),
+            var iconRect = new IntRect(ClientArea.Left + 3,
+                                         ClientArea.Top + (int) (ClientArea.Height/2f) - (int) (bounds.Height/2f),
                                          (int)bounds.Width, (int)bounds.Height);
-           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,  _currentColor);
+           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  _currentColor);
             _textLabel.Render();
             _iconSprite.SetTransformToRect(iconRect);
             _iconSprite.Draw();
@@ -224,14 +221,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
                 if (Selected != null) Selected(this);
             return true;
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
+            _currentColor = ClientArea.Contains(e.X, e.Y)
                                 ? new SFML.Graphics.Color(211, 211, 211)
                                 : new SFML.Graphics.Color(128, 128, 128);
         }

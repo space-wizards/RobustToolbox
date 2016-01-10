@@ -75,7 +75,6 @@
       <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CluwneLib.cs">

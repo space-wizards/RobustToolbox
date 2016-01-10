@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Server.GameObjects.Organs;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
@@ -9,7 +10,6 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Server.GameObjects.Organs;
 using Human = SS14.Server.GameObjects.Organs.Human;
 
 namespace SS14.Server.GameObjects

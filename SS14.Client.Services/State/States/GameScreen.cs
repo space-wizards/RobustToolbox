@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -28,11 +28,9 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
-using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.State.States
 {
@@ -66,7 +64,6 @@ namespace SS14.Client.Services.State.States
 
         private List<RenderImage> _cleanupList = new List<RenderImage>();
         private List<Sprite> _cleanupSpriteList = new List<Sprite>();
-        private SizeF _viewportSize;
 
         private SpriteBatch _wallBatch;
         private SpriteBatch _wallTopsBatch;
@@ -83,8 +80,8 @@ namespace SS14.Client.Services.State.States
 
         #region Mouse/Camera stuff
 
-        public Vector2 MousePosScreen = Vector2.Zero;
-        public Vector2 MousePosWorld = Vector2.Zero;
+        public Vector2i MousePosScreen = new Vector2i();
+        public Vector2f MousePosWorld = new Vector2f();
 
         #endregion
 
@@ -273,38 +270,38 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Point((int)CluwneLib.Screen.Size.X - 800, 10);
+            statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X - 800, 10);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Point((int)CluwneLib.Screen.Size.X, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Vector2i((int)CluwneLib.Screen.Size.X, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 
             _handsGui = new HandsGui();
-            _handsGui.Position = new Point(hotbar.Position.X + 5, hotbar.Position.Y + 7);
+            _handsGui.Position = new Vector2i(hotbar.Position.X + 5, hotbar.Position.Y + 7);
             UserInterfaceManager.AddComponent(_handsGui);
 
             var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
             combo.Update(0);
-            combo.Position = new Point(hotbar.ClientArea.Right - combo.ClientArea.Width + 5,
+            combo.Position = new Vector2i(hotbar.ClientArea.Right() - combo.ClientArea.Width + 5,
                                        hotbar.Position.Y - combo.ClientArea.Height - 5);
             UserInterfaceManager.AddComponent(combo);
 
             var healthPanel = new HealthPanel();
-            healthPanel.Position = new Point(hotbar.ClientArea.Right - 1, hotbar.Position.Y + 11);
+            healthPanel.Position = new Vector2i(hotbar.ClientArea.Right() - 1, hotbar.Position.Y + 11);
             healthPanel.Update(0);
             UserInterfaceManager.AddComponent(healthPanel);
 
             var targetingUi = new TargetingGui();
             targetingUi.Update(0);
-            targetingUi.Position = new Point(healthPanel.Position.X + healthPanel.ClientArea.Width, healthPanel.Position.Y - 40);
+            targetingUi.Position = new Vector2i(healthPanel.Position.X + healthPanel.ClientArea.Width, healthPanel.Position.Y - 40);
             UserInterfaceManager.AddComponent(targetingUi);
 
             var inventoryButton = new ImageButton
             {
                 ImageNormal = "button_inv",
-                Position = new Point(hotbar.Position.X + 172, hotbar.Position.Y + 2)
+                Position = new Vector2i(hotbar.Position.X + 172, hotbar.Position.Y + 2)
             };
             inventoryButton.Update(0);
             inventoryButton.Clicked += inventoryButton_Clicked;
@@ -314,7 +311,7 @@ namespace SS14.Client.Services.State.States
             {
                 ImageNormal = "button_status",
                 Position =
-                    new Point(inventoryButton.ClientArea.Right, inventoryButton.Position.Y)
+                    new Vector2i(inventoryButton.ClientArea.Right(), inventoryButton.Position.Y)
             };
             statusButton.Update(0);
             statusButton.Clicked += statusButton_Clicked;
@@ -323,7 +320,7 @@ namespace SS14.Client.Services.State.States
             var craftButton = new ImageButton
             {
                 ImageNormal = "button_craft",
-                Position = new Point(statusButton.ClientArea.Right, statusButton.Position.Y)
+                Position = new Vector2i(statusButton.ClientArea.Right(), statusButton.Position.Y)
             };
             craftButton.Update(0);
             craftButton.Clicked += craftButton_Clicked;
@@ -332,7 +329,7 @@ namespace SS14.Client.Services.State.States
             var menuButton = new ImageButton
             {
                 ImageNormal = "button_menu",
-                Position = new Point(craftButton.ClientArea.Right, craftButton.Position.Y)
+                Position = new Vector2i(craftButton.ClientArea.Right(), craftButton.Position.Y)
             };
             menuButton.Update(0);
             menuButton.Clicked += menuButton_Clicked;
@@ -371,7 +368,7 @@ namespace SS14.Client.Services.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Transparent);
             playerVision.SetRadius(1024);
-            playerVision.Move(Vector2.Zero);
+            playerVision.Move(new Vector2f());
 
 
             _occluderDebugTarget = new RenderImage("debug", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
@@ -383,6 +380,7 @@ namespace SS14.Client.Services.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
+            CluwneLib.TileSize = MapManager.TileSize;
 
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
@@ -400,7 +398,7 @@ namespace SS14.Client.Services.State.States
         bool onetime = true;
         public void Render(FrameEventArgs e)
         {
-            CluwneLib.Screen.Clear(SFML.Graphics.Color.Black);
+            CluwneLib.Screen.Clear(Color.Black);
 
             // CluwneLib.Screen.DefaultView.Reset(new FloatRect(new Vector2(0,0), new Vector2(400, 400)));
 
@@ -411,7 +409,7 @@ namespace SS14.Client.Services.State.States
             if (PlayerManager.ControlledEntity != null)
             {
                 CluwneLib.WorldCenter = CluwneLib.GetNearestPixel(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                CluwneLib.ScreenViewportSize = new SizeF(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
 
                 var vp = CluwneLib.WorldViewport;
 
@@ -424,7 +422,7 @@ namespace SS14.Client.Services.State.States
 
                 //Draw all rendertargets to the scenetarget
                 _sceneTarget.BeginDrawing();
-                _sceneTarget.Clear(SFML.Graphics.Color.Black);
+                _sceneTarget.Clear(Color.Black);
 
                 //PreOcclusion 
                 RenderTiles();
@@ -454,7 +452,7 @@ namespace SS14.Client.Services.State.States
             {
                 //Set rendertarget to draw the rest of the scene
                 _tilesTarget.BeginDrawing();
-                _tilesTarget.Clear(SFML.Graphics.Color.Black);
+                _tilesTarget.Clear(Color.Black);
 
                 if (_floorBatch.Count > 0)
                 {
@@ -471,7 +469,7 @@ namespace SS14.Client.Services.State.States
                 _redrawTiles = false;
             }
 
-            _tilesTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, SFML.Graphics.Color.White, BlitterSizeMode.Scale);
+            _tilesTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Scale);
         }
 
         private void RenderOverlay()
@@ -479,7 +477,7 @@ namespace SS14.Client.Services.State.States
             if (_redrawOverlay)
             {
                 _overlayTarget.BeginDrawing();
-                _overlayTarget.Clear(SFML.Graphics.Color.Transparent);
+                _overlayTarget.Clear(Color.Transparent);
 
                 // Render decal batch
 
@@ -495,13 +493,13 @@ namespace SS14.Client.Services.State.States
                 _overlayTarget.EndDrawing();
             }
 
-            _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+            _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
-        private void RenderDebug(RectangleF viewport)
+        private void RenderDebug(FloatRect viewport)
         {
             if (debugWallOccluders || debugPlayerShadowMap)
-                _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, SFML.Graphics.Color.White, BlitterSizeMode.Scale);
+                _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, Color.White, BlitterSizeMode.Scale);
 
             if (CluwneLib.Debug.DebugColliders)
             {
@@ -509,13 +507,13 @@ namespace SS14.Client.Services.State.States
                     _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
                     .OfType<ColliderComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(viewport));
+                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
                 var collidables =
                     _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
                     .OfType<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
-                    .Where(c => !c.AABB.IsEmpty && c.AABB.IntersectsWith(viewport));
+                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
                 foreach (var hitbox in colliders.Concat(collidables))
                 {
@@ -617,13 +615,13 @@ namespace SS14.Client.Services.State.States
             if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Size(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceManager,
                                                                      PlacementManager)); //Create a new one.
             }
             if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Size(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
             if (e.Code == Keyboard.Key.F12)
@@ -632,7 +630,7 @@ namespace SS14.Client.Services.State.States
                 var actComp =
                     (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
                 if (actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Size(150, 150), ResourceManager,
+                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Vector2i(150, 150), ResourceManager,
                                                                               actComp)); //Create a new one.
             }
 
@@ -680,8 +678,6 @@ namespace SS14.Client.Services.State.States
 
             // Convert our click from screen -> world coordinates
             //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
-            // A bounding box for our click
-            var mouseAABB = new RectangleF(MousePosWorld.X, MousePosWorld.Y, 1, 1);
             float checkDistance = 1.5f;
             // Find all the entities near us we could have clicked
             Entity[] entities =
@@ -691,7 +687,7 @@ namespace SS14.Client.Services.State.States
 
             // See which one our click AABB intersected with
             var clickedEntities = new List<ClickData>();
-            var clickedWorldPoint = new PointF(mouseAABB.X, mouseAABB.Y);
+            var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
             foreach (Entity entity in entities)
             {
                 var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
@@ -748,7 +744,7 @@ namespace SS14.Client.Services.State.States
                         break;
                     case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                        UserInterfaceManager.AddComponent(new PropEditWindow(new Size(400, 400), ResourceManager,
+                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
                                                                              entToClick));
                         break;
                 }
@@ -762,7 +758,7 @@ namespace SS14.Client.Services.State.States
                             if (UserInterfaceManager.currentTargetingAction != null &&
                                 UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
                             {
-                                UserInterfaceManager.SelectTarget(new PointF(MousePosWorld.X, MousePosWorld.Y));
+                                UserInterfaceManager.SelectTarget(new Vector2f(MousePosWorld.X, MousePosWorld.Y));
                             }
                             else
                             {
@@ -793,8 +789,7 @@ namespace SS14.Client.Services.State.States
 
         public void MouseMove(MouseMoveEventArgs e)
         {
-            float distanceToPrev = (MousePosScreen - new Vector2(e.X, e.Y)).Length;
-            MousePosScreen = new Vector2(e.X, e.Y);
+            MousePosScreen = new Vector2i(e.X, e.Y);
             MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
         }
@@ -978,12 +973,12 @@ namespace SS14.Client.Services.State.States
             {
                 case NetMessage.RequestAdminLogin:
                     UserInterfaceManager.DisposeAllComponents<AdminPasswordDialog>(); //Remove old ones.
-                    UserInterfaceManager.AddComponent(new AdminPasswordDialog(new Size(200, 50), NetworkManager,
+                    UserInterfaceManager.AddComponent(new AdminPasswordDialog(new Vector2i(200, 50), NetworkManager,
                                                                               ResourceManager)); //Create a new one.
                     break;
                 case NetMessage.RequestAdminPlayerlist:
                     UserInterfaceManager.DisposeAllComponents<AdminPlayerPanel>();
-                    UserInterfaceManager.AddComponent(new AdminPlayerPanel(new Size(600, 200), NetworkManager,
+                    UserInterfaceManager.AddComponent(new AdminPlayerPanel(new Vector2i(600, 200), NetworkManager,
                                                                            ResourceManager, messageBody));
                     break;
                 case NetMessage.RequestBanList:
@@ -1005,7 +1000,7 @@ namespace SS14.Client.Services.State.States
                         banList.List.Add(entry);
                     }
                     UserInterfaceManager.DisposeAllComponents<AdminUnbanPanel>();
-                    UserInterfaceManager.AddComponent(new AdminUnbanPanel(new Size(620, 200), banList, NetworkManager,
+                    UserInterfaceManager.AddComponent(new AdminUnbanPanel(new Vector2i(620, 200), banList, NetworkManager,
                                                                           ResourceManager));
                     break;
             }
@@ -1106,7 +1101,7 @@ namespace SS14.Client.Services.State.States
         public void FormResize()
         {
             CluwneLib.ScreenViewportSize =
-                new SizeF(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
 
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
@@ -1124,7 +1119,7 @@ namespace SS14.Client.Services.State.States
 
         public void OnTileChanged(TileRef tileRef, Tile oldTile)
         {
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new RectangleF(tileRef.X, tileRef.Y, 1, 1));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new FloatRect(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
             RecalculateScene();
         }
@@ -1169,11 +1164,11 @@ namespace SS14.Client.Services.State.States
 
             //Step 2 - Set up the render targets for the composite lighting.                    
             RenderImage copy;
-            screenShadows.Clear(SFML.Graphics.Color.Black);
+            screenShadows.Clear(Color.Black);
 
             var lightTextures = new List<Texture>();
-            var colors = new List<Vector4>();
-            var positions = new List<Vector4>();
+            var colors = new List<Vector4f>();
+            var positions = new List<Vector4f>();
 
             //Step 3 - Blend all the lights!
             foreach (ILight Light in lights)
@@ -1186,10 +1181,10 @@ namespace SS14.Client.Services.State.States
                 var area = (LightArea)Light.LightArea;
 
                 //Set the drawing position.
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
-                var LightPositionData = new Vector4(blitPos.X / screenShadows.Width,
+                var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
                                                     blitPos.Y / screenShadows.Height,
                                                     (float)screenShadows.Width / area.RenderTarget.Width,
                                                     (float)screenShadows.Height / area.RenderTarget.Height);
@@ -1203,8 +1198,8 @@ namespace SS14.Client.Services.State.States
             bool fill = false;
             Texture black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Texture;
             var r_img = new Texture[num_lights];
-            var r_col = new Vector4[num_lights];
-            var r_pos = new Vector4[num_lights];
+            var r_col = new Vector4f[num_lights];
+            var r_pos = new Vector4f[num_lights];
             do
             {
                 if (fill)
@@ -1212,8 +1207,8 @@ namespace SS14.Client.Services.State.States
                     for (int j = i; j < num_lights; j++)
                     {
                         r_img[j] = black;
-                        r_col[j] = Vector4.Zero;
-                        r_pos[j] = new Vector4(0, 0, 1, 1);
+                        r_col[j] = Vector4f.Zero;
+                        r_pos[j] = new Vector4f(0, 0, 1, 1);
 
                     }
                     i = num_lights;
@@ -1246,8 +1241,8 @@ namespace SS14.Client.Services.State.States
                     i = 0;
                     draw = false;
                     r_img = new Texture[num_lights];
-                    r_col = new Vector4[num_lights];
-                    r_pos = new Vector4[num_lights];
+                    r_col = new Vector4f[num_lights];
+                    r_pos = new Vector4f[num_lights];
                 }
                 if (lightTextures.Count > 0)
                 {
@@ -1279,7 +1274,7 @@ namespace SS14.Client.Services.State.States
 
         }
 
-        private void CalculateSceneBatches(RectangleF vision)
+        private void CalculateSceneBatches(FloatRect vision)
         {
             if (!_recalculateScene)
                 return;
@@ -1320,7 +1315,7 @@ namespace SS14.Client.Services.State.States
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
-                playerOcclusionTarget.Clear(SFML.Graphics.Color.Transparent);
+                playerOcclusionTarget.Clear(Color.Transparent);
                 playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
@@ -1330,7 +1325,7 @@ namespace SS14.Client.Services.State.States
 
                 if (TileReference.Tile.TileDef.IsOpaque)
                 {
-                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
+                    area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
                 }
 
 
@@ -1338,16 +1333,16 @@ namespace SS14.Client.Services.State.States
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
                 var tmpBlitPos = CluwneLib.WorldToScreen(area.LightPosition) -
-                                 new Vector2(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
+                                 new Vector2f(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
 
                 if (debugWallOccluders)
                 {
                     _occluderDebugTarget.BeginDrawing();
-                    _occluderDebugTarget.Clear(SFML.Graphics.Color.White);
+                    _occluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
-                        SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+                        Color.White, BlitterSizeMode.Crop);
                     _occluderDebugTarget.EndDrawing();
                 }
 
@@ -1356,8 +1351,8 @@ namespace SS14.Client.Services.State.States
                 if (debugPlayerShadowMap)
                 {
                     _occluderDebugTarget.BeginDrawing();
-                    _occluderDebugTarget.Clear(SFML.Graphics.Color.White);
-                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+                    _occluderDebugTarget.Clear(Color.White);
+                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
                     _occluderDebugTarget.EndDrawing();
                 }
 
@@ -1368,7 +1363,7 @@ namespace SS14.Client.Services.State.States
                 area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
 
-                area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+                area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 //area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
                 //area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
@@ -1381,21 +1376,21 @@ namespace SS14.Client.Services.State.States
             }
             else
             {
-                playerOcclusionTarget.Clear(SFML.Graphics.Color.Black);
+                playerOcclusionTarget.Clear(Color.Black);
             }
         }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
-            RectangleF lightArea = new RectangleF(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+            Vector2f lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
+            var lightArea = new FloatRect(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
             var tiles = MapManager.GetWallsIntersecting(lightArea);
 
             foreach (TileRef t in tiles)
             {
-                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2(t.X, t.Y)));
+                Vector2f pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2f(t.X, t.Y)));
                 t.Tile.TileDef.RenderPos(pos.X, pos.Y);
             }
         }
@@ -1404,14 +1399,14 @@ namespace SS14.Client.Services.State.States
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)playerOcclusionTarget.Width, (int)playerOcclusionTarget.Height));
+            _gaussianBlur.SetSize(new Vector2f(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
             _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
         }
 
         /// <summary>
         /// Copys all tile sprites into batches.
         /// </summary>
-        private void DrawTiles(RectangleF vision)
+        private void DrawTiles(FloatRect vision)
         {
             var tiles = MapManager.GetTilesIntersecting(vision, false);
             var walls = new List<TileRef>();
@@ -1426,7 +1421,7 @@ namespace SS14.Client.Services.State.States
                     walls.Add(TileReference);
                 else
                 {
-                    var point = CluwneLib.WorldToScreen(new PointF(TileReference.X, TileReference.Y));
+                    var point = CluwneLib.WorldToScreen(new Vector2f(TileReference.X, TileReference.Y));
                     TileType.Render(point.X, point.Y, _floorBatch);
                     TileType.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
                 }
@@ -1440,7 +1435,7 @@ namespace SS14.Client.Services.State.States
                 var t = tr.Tile;
                 var td = t.TileDef;
 
-                var point = CluwneLib.WorldToScreen(new PointF(tr.X, tr.Y));
+                var point = CluwneLib.WorldToScreen(new Vector2f(tr.X, tr.Y));
                 td.Render(point.X, point.Y, _wallBatch);
                 td.RenderTop(point.X, point.Y, _wallTopsBatch);
             }
@@ -1450,7 +1445,7 @@ namespace SS14.Client.Services.State.States
         /// Render the renderables
         /// </summary>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        private void RenderComponents(float frameTime, RectangleF viewPort)
+        private void RenderComponents(float frameTime, FloatRect viewPort)
         {
             IEnumerable<Component> components = _entityManager.ComponentManager.GetComponents(ComponentFamily.Renderable)
                 .Union(_entityManager.ComponentManager.GetComponents(ComponentFamily.Particles));
@@ -1460,7 +1455,7 @@ namespace SS14.Client.Services.State.States
                                                                  where c.DrawDepth < DrawDepth.MobBase
                                                                  select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
                        floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
@@ -1469,7 +1464,7 @@ namespace SS14.Client.Services.State.States
                                                                        c.DrawDepth < DrawDepth.WallTops
                                                                  select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
                        largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
@@ -1477,7 +1472,7 @@ namespace SS14.Client.Services.State.States
                                                                    where c.DrawDepth >= DrawDepth.WallTops
                                                                    select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
+            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
                        ceilingRenderables);
         }
 
@@ -1490,23 +1485,23 @@ namespace SS14.Client.Services.State.States
             //Render the scene and lights together to compose the lit scene
 
             _composedSceneTarget.BeginDrawing();
-            _composedSceneTarget.Clear(SFML.Graphics.Color.Black);
+            _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
             Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
             float texratiox = CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
             float texratioy = CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
-            var maskProps = new Vector4(texratiox, texratioy, 0, 0);
+            var maskProps = new Vector4f(texratiox, texratioy, 0, 0);
 
             LightblendTechnique["FinalLightBlend"].SetParameter("PlayerViewTexture", playerOcclusionTarget);
             LightblendTechnique["FinalLightBlend"].SetParameter("OutOfViewTexture", outofview.Texture);
             LightblendTechnique["FinalLightBlend"].SetParameter("MaskProps", maskProps);
             LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", GLSLShader.CurrentTexture);
             LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
-            LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
+            LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4f(.05f, .05f, 0.05f, 1));
 
 
             // Blit the shadow image on top of the screen
-            screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+            screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
 
 
             LightblendTechnique["FinalLightBlend"].ResetCurrentShader();
@@ -1514,11 +1509,11 @@ namespace SS14.Client.Services.State.States
 
 
             playerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
-            playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop); //draw playervision again
+            playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again
             PlayerPostProcess();
 
             //redraw composed scene
-            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Screen.Size.X, (uint)CluwneLib.Screen.Size.Y, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Screen.Size.X, (uint)CluwneLib.Screen.Size.Y, Color.White, BlitterSizeMode.Crop);
 
 
 
@@ -1533,7 +1528,7 @@ namespace SS14.Client.Services.State.States
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Size((int)screenShadows.Width, (int)screenShadows.Height));
+            _gaussianBlur.SetSize(new Vector2f(screenShadows.Width, screenShadows.Height));
             _gaussianBlur.PerformGaussianBlur(screenShadows);
         }
 
@@ -1546,7 +1541,7 @@ namespace SS14.Client.Services.State.States
 
         #region Helper methods
 
-        private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
+        private void RenderList(Vector2f topleft, Vector2f bottomright, IEnumerable<IRenderableComponent> renderables)
         {
             foreach (IRenderableComponent component in renderables)
             {
@@ -1573,7 +1568,7 @@ namespace SS14.Client.Services.State.States
                 return;
             if (t.Tile.TileDef.IsOpaque)
             {
-                area.LightPosition = new Vector2(area.LightPosition.X,
+                area.LightPosition = new Vector2f(area.LightPosition.X,
                                                   t.Y +
                                                   MapManager.TileSize + 1);
             }

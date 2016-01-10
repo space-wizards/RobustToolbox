@@ -1,6 +1,6 @@
 ﻿using SFML.Graphics;
-using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.Interfaces.Resource

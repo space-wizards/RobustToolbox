@@ -1,15 +1,11 @@
-﻿using SS14.Client.Graphics.Shader;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
+using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using SS14.Client.Services.Resources;
 
 namespace SS14.Client.Services.Helpers
 {
@@ -39,7 +35,7 @@ namespace SS14.Client.Services.Helpers
             //Set Defaults
             Radius = 7;
             Amount = 2.5f;
-            Size = new SizeF(256.0f, 256.0f);
+            Size = new Vector2f(256.0f, 256.0f);
 
             LoadShaders();
             //ComputeOffsets(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
@@ -75,15 +71,15 @@ namespace SS14.Client.Services.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2[] WeightsOffsetsX { get; private set; }
+        public Vector2f[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2[] WeightsOffsetsY { get; private set; }
+        public Vector2f[] WeightsOffsetsY { get; private set; }
 
-        public SizeF Size { get; private set; }
+        public Vector2f Size { get; private set; }
 
         public void Dispose()
         {
@@ -99,10 +95,10 @@ namespace SS14.Client.Services.Helpers
 
         public void SetSize(float size)
         {
-            SetSize(new SizeF(size, size));
+            SetSize(new Vector2f(size, size));
         }
 
-        public void SetSize(SizeF size)
+        public void SetSize(Vector2f size)
         {
             Size = size;
             ComputeOffsets();
@@ -188,15 +184,15 @@ namespace SS14.Client.Services.Helpers
         /// </summary>
         public void ComputeOffsets()
         {
-            float textureWidth = Size.Width;
-            float textureHeight = Size.Height;
+            float textureWidth = Size.X;
+            float textureHeight = Size.Y;
             if (Kernel == null)
                 ComputeKernel();
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector2[Radius*2 + 1];
-            WeightsOffsetsY = new Vector2[Radius*2 + 1];
+            WeightsOffsetsX = new Vector2f[Radius*2 + 1];
+            WeightsOffsetsY = new Vector2f[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -204,8 +200,8 @@ namespace SS14.Client.Services.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector2(Kernel[index], i*xOffset);
-                WeightsOffsetsY[index] = new Vector2(Kernel[index], i*yOffset);
+                WeightsOffsetsX[index] = new Vector2f(Kernel[index], i*xOffset);
+                WeightsOffsetsY[index] = new Vector2f(Kernel[index], i*yOffset);
             }
         }
 

@@ -1,13 +1,12 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Client.GameObjects
@@ -55,7 +54,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Render(Vector2 topLeft, Vector2 bottomRight)
+        public override void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             if (IsCurrentlyWorn && currentSprite == baseSprite)
             {
@@ -88,7 +87,7 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = NotWornSprite;
             var bounds = spriteToRender.GetLocalBounds();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(
+            Vector2f renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));

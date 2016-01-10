@@ -1,13 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using SS14.Client.Graphics.Sprite;
 using System;
-using SFML.Window;
-using System.Drawing;
-using SFML.Graphics;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -40,15 +38,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X, Position.Y);
             var bounds = _buttonSprite.GetLocalBounds();
-            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
             _buttonSprite.Color = Color;
-            _buttonSprite.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X, Position.Y);
             _buttonSprite.Draw();
             _buttonSprite.Color = Color;
         }
@@ -63,7 +61,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -73,7 +71,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
+            if (ClientArea.Contains(e.X, e.Y) &&
                 IoCManager.Resolve<IUserInterfaceManager>().DragInfo.IsActive)
             {
                 if (Dropped != null) Dropped(this);

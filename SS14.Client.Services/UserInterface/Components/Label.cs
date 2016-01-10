@@ -1,11 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics;
-using System;
-using System.Drawing;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
+using System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -50,8 +49,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Position = Position;
-            ClientArea = new Rectangle(Position,
-                                       new Size(FixedWidth == -1 ? (int) Text.Width : FixedWidth,
+            ClientArea = new IntRect(Position,
+                                       new Vector2i(FixedWidth == -1 ? (int) Text.Width : FixedWidth,
                                                 FixedHeight == -1 ? (int) Text.Height : FixedHeight));
         }
 
@@ -59,11 +58,11 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Render()
         {
             if (DrawBackground)
-              CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width,ClientArea.Height, BackgroundColor);
+              CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle((int)(Text.Position.X + 3), (int)Text.Position.Y + 4, (int)Text.Width, (int)Text.Height - 9, BackgroundColor);
             if (DrawBorder)
-               CluwneLib.drawHollowRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
+               CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
             Text.Draw();
         }
 
@@ -77,7 +76,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point( e.X , e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this, e);
                 return true;
@@ -89,7 +88,5 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             return false;
         }
-
-        public Size Size { get; set; }
     }
 }

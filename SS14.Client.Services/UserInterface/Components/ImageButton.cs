@@ -1,12 +1,9 @@
-﻿using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using SFML.Window;
-using SFML.Graphics;
-using System.Drawing;
-using SS14.Shared.Maths;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -58,10 +55,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (_drawSprite != null)
             {
-                _drawSprite.Position = new Vector2( Position.X,Position.Y);
+                _drawSprite.Position = new Vector2f( Position.X,Position.Y);
                 var bounds = _drawSprite.GetLocalBounds();
-                ClientArea = new Rectangle(Position,
-                                           new Size((int)bounds.Width, (int)bounds.Height));
+                ClientArea = new IntRect(Position,
+                                           new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }
 
@@ -70,7 +67,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (_drawSprite != null)
             {
                 _drawSprite.Color = Color;
-                _drawSprite.Position = new Vector2 (Position.X,Position.Y);
+                _drawSprite.Position = new Vector2f (Position.X,Position.Y);
                 _drawSprite.Texture.Smooth = true;
                 _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
                 _drawSprite.Color = Color;
@@ -89,7 +86,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.X, (int)e.Y)) && _buttonHover != null)
+            if (ClientArea.Contains(e.X, e.Y) && _buttonHover != null)
             {
                 if (_drawSprite != _buttonClick)
                     _drawSprite = _buttonHover;
@@ -103,7 +100,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int)e.X, (int)e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_buttonClick != null) _drawSprite = _buttonClick;
                 if (Clicked != null) Clicked(this);
@@ -116,7 +113,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (_drawSprite == _buttonClick)
                 if (_buttonHover != null)
-                    _drawSprite = ClientArea.Contains(new Point((int)e.X, (int)e.Y))
+                    _drawSprite = ClientArea.Contains(e.X, e.Y)
                                       ? _buttonHover
                                       : _buttonNormal;
                 else

@@ -1,14 +1,11 @@
 ﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.Text;
-using SS14.Shared.Maths;
-using Color = System.Drawing.Color;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -74,9 +71,9 @@ namespace SS14.Client.GameObjects
             _mobName = mobname;
             _buildTime = DateTime.Now;
             _textSprite = new Text(String.Empty, _resourceManager.GetFont("CALIBRI"));
-            _textSprite.Color = SFML.Graphics.Color.Black;
+            _textSprite.Color = Color.Black;
             // TODO Word wrap!
-            _textSprite.Position = new Vector2(5, 3);
+            _textSprite.Position = new Vector2f(5, 3);
             _stringBuilder = new StringBuilder();
 
             _bubbleRender = new RenderImage("bubble ",1, 1);
@@ -91,7 +88,7 @@ namespace SS14.Client.GameObjects
 
         #region Publics
 
-        public void Draw(Vector2 position, Vector2 windowOrigin, Sprite spriteToDrawAbove)
+        public void Draw(Vector2f position, Vector2f windowOrigin, Sprite spriteToDrawAbove)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -105,7 +102,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2 position, Vector2 windowOrigin, RectangleF boundingBox)
+        public void Draw(Vector2f position, Vector2f windowOrigin, FloatRect boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 

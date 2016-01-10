@@ -1,11 +1,11 @@
-﻿using SS14.Client.Interfaces.Collision;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using System.Drawing;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -13,7 +13,7 @@ namespace SS14.Client.GameObjects
     {
         public SFML.Graphics.Color DebugColor { get; set; }
 
-        private RectangleF AABB
+        private FloatRect AABB
         {
             get
             {
@@ -22,17 +22,17 @@ namespace SS14.Client.GameObjects
                 else if (Owner.HasComponent(ComponentFamily.Renderable))
                     return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
                 else
-                    return RectangleF.Empty;
+                    return new FloatRect();
             }
         }
 
         public ColliderComponent()
         {
             Family = ComponentFamily.Collider;
-            DebugColor = SFML.Graphics.Color.Blue;
+            DebugColor = Color.Blue;
         }
 
-        public RectangleF WorldAABB
+        public FloatRect WorldAABB
         {
             get
             {
@@ -42,17 +42,17 @@ namespace SS14.Client.GameObjects
                 if (trans == null)
                     return aabb;
                 else if (aabb != null)
-                    return new RectangleF(
+                    return new FloatRect(
                         aabb.Left + trans.X,
                         aabb.Top + trans.Y,
                         aabb.Width,
                         aabb.Height);
                 else
-                    return RectangleF.Empty;
+                    return new FloatRect();
             }
         }
 
-        public bool TryCollision(Vector2 offset, bool bump = false)
+        public bool TryCollision(Vector2f offset, bool bump = false)
         {
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
@@ -60,7 +60,7 @@ namespace SS14.Client.GameObjects
         public override void SetParameter(ComponentParameter parameter) {
             switch (parameter.MemberName) {
                 case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), SFML.Graphics.Color.Blue);
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Blue);
                     break;
             }
         }

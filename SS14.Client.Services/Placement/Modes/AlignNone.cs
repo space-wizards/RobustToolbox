@@ -1,10 +1,10 @@
-﻿using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
-using System.Drawing;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -14,7 +14,7 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2 mouseS, IMapManager currentMap)
+        public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
@@ -24,8 +24,8 @@ namespace SS14.Client.Services.Placement.Modes
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
             var bounds = spriteToDraw.GetLocalBounds();
-            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+            var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
+            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
 
@@ -37,10 +37,11 @@ namespace SS14.Client.Services.Placement.Modes
 
             //if (currentMap.IsSolidTile(mouseWorld)) return false;
 
-            if (pManager.CurrentPermission.Range > 0)
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
-                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
+                         .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             currentTile = currentMap.GetTileRef(mouseWorld);
 
@@ -53,7 +54,7 @@ namespace SS14.Client.Services.Placement.Modes
             {
                 var bounds = spriteToDraw.GetLocalBounds();
                 spriteToDraw.Color = pManager.ValidPosition ? new Color(34, 34, 139) : new Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width/2f),
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
                                                      mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

@@ -1,11 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using System;
-using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
-using SFML.Graphics;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -68,7 +65,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 Value = !Value;
                 return true;

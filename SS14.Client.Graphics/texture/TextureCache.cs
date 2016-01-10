@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using SS14.Client.Graphics.Collection;
-using SFML.Graphics;
+﻿using SS14.Client.Graphics.Collection;
 using SFMLTexture = SFML.Graphics.Texture;
-
 
 namespace SS14.Client.Graphics.texture
 {

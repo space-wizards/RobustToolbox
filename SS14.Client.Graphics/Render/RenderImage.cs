@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
+using System;
 using System.Diagnostics;
 
 namespace SS14.Client.Graphics.Render
@@ -90,7 +85,7 @@ namespace SS14.Client.Graphics.Render
             set;
         }
 
-        public Vector2 Scale
+        public Vector2f Scale
         {
             get;
             set;
@@ -264,7 +259,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(int posX, int posY, uint width, uint height, Color color, BlitterSizeMode state)
         {
             Mode = state;
-            Blit(new Vector2(posX, posY), new Vector2(width, height), color);
+            Blit(new Vector2f(posX, posY), new Vector2f(width, height), color);
         }
 
         /// <summary>
@@ -279,7 +274,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(float posX, float posY, uint width, uint height, Color color, BlitterSizeMode state)
         {
             Mode = state;
-            Blit(new Vector2(posX, posY), new Vector2(width, height), color);
+            Blit(new Vector2f(posX, posY), new Vector2f(width, height), color);
         }
 
         /// <summary>
@@ -293,7 +288,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(int posX, int posY, uint widthX, uint heightY, BlitterSizeMode mode)
         {
             Mode = mode;
-            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
+            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
         }
 
         /// <summary>
@@ -307,7 +302,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(float posX, float posY, uint widthX, uint heightY, BlitterSizeMode mode)
         {
             Mode = mode;
-            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
+            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
         }
 
 
@@ -321,7 +316,7 @@ namespace SS14.Client.Graphics.Render
         /// <param name="heightY"> Height of Texture </param>
         public void Blit(int posX, int posY, uint widthX, uint heightY)
         {
-            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
+            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
         }
 
         /// <summary>
@@ -332,14 +327,14 @@ namespace SS14.Client.Graphics.Render
         /// <param name="widthX"> Width of CluwneSprite </param>
         /// <param name="heightY"> Height of CluwneSprite </param>
         public void Blit(float posX, float posY, uint widthX, uint heightY)
-        {        
-            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
+        {
+            Blit(new SFML.System.Vector2f(posX, posY), new SFML.System.Vector2f(widthX, heightY), Color.White);
         }
 
 
         public void Blit(RenderImage target)
         {
-            Blit(Vector2.Zero, new Vector2(target.Size.X, target.Size.Y), Color.White);
+            Blit(new SFML.System.Vector2f(), new SFML.System.Vector2f(target.Size.X, target.Size.Y), Color.White);
         }
 
 
@@ -350,7 +345,7 @@ namespace SS14.Client.Graphics.Render
         /// <param name="Position"> Position of Texture </param>
         /// <param name="Size"> Size of the Texture </param>
         /// <param name="color"> Global color of object </param>
-        public void Blit(Vector2 position, Vector2 Size, SFML.Graphics.Color color)
+        public void Blit(SFML.System.Vector2f position, SFML.System.Vector2f Size, SFML.Graphics.Color color)
         {
             isStillDrawing();
             blitsprite = new SFML.Graphics.Sprite(Texture);
@@ -360,7 +355,7 @@ namespace SS14.Client.Graphics.Render
 
             if (Mode == BlitterSizeMode.Scale)
             {
-                Vector2 scale = new Vector2(( Size.X / bounds.Width ),( Size.Y / bounds.Height ));
+                SFML.System.Vector2f scale = new SFML.System.Vector2f(( Size.X / bounds.Width ),( Size.Y / bounds.Height ));
                 blitsprite.Scale = scale;
                
                 

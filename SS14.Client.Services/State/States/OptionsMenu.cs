@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -6,7 +7,6 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
@@ -115,25 +115,25 @@ namespace SS14.Client.Services.State.States
             _btnApply.Clicked += _applybtt_Clicked;
 
 
-            _lstResolution.Position = new Point(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
+            _lstResolution.Position = new Vector2i(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
             _lstResolution.Update(0);
-            _chkFullscreen.Position = new Point(_lstResolution.Position.X,
+            _chkFullscreen.Position = new Vector2i(_lstResolution.Position.X,
                                                 _lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
             _chkFullscreen.Update(0);
-            _chkVsync.Position = new Point(_chkFullscreen.Position.X,
+            _chkVsync.Position = new Vector2i(_chkFullscreen.Position.X,
                                            _chkFullscreen.Position.Y + _chkFullscreen.ClientArea.Height + 10);
             _chkVsync.Update(0);
-            _lblFullscreen.Position = new Point(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
+            _lblFullscreen.Position = new Vector2i(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
                                                 _chkFullscreen.Position.Y + (int)(_chkFullscreen.ClientArea.Height / 2f) -
                                                 (int)(_lblFullscreen.ClientArea.Height / 2f));
             _lblFullscreen.Update(0);
-            _lblVsync.Position = new Point(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
+            _lblVsync.Position = new Vector2i(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
                                            _chkVsync.Position.Y + (int)(_chkVsync.ClientArea.Height / 2f) -
                                            (int)(_chkVsync.ClientArea.Height / 2f));
             _lblVsync.Update(0);
-            _btnMainMenu.Position = new Point(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
+            _btnMainMenu.Position = new Vector2i(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
             _btnMainMenu.Update(0);
-            _btnApply.Position = new Point(_btnMainMenu.Position.X,
+            _btnApply.Position = new Vector2i(_btnMainMenu.Position.X,
                                            _btnMainMenu.Position.Y + _btnMainMenu.ClientArea.Height + 5);
             _btnApply.Update(0);
         }
@@ -142,11 +142,11 @@ namespace SS14.Client.Services.State.States
 
         public void Render(FrameEventArgs e)
         {
-            _background.SetTransformToRect(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+            _background.SetTransformToRect(new IntRect(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
             _background.Draw();
 
             var bounds = _ticketBg.GetLocalBounds();
-            _ticketBg.SetTransformToRect(new Rectangle(0, (int)(CluwneLib.Screen.Size.Y / 2f - bounds.Height / 2f), (int)bounds.Width, (int)bounds.Height));
+            _ticketBg.SetTransformToRect(new IntRect(0, (int)(CluwneLib.Screen.Size.Y / 2f - bounds.Height / 2f), (int)bounds.Width, (int)bounds.Height));
             _ticketBg.Draw();
             UserInterfaceManager.Render();
         }

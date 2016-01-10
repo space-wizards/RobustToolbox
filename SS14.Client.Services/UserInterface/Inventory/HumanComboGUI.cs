@@ -1,5 +1,10 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -10,14 +15,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics.Sprite;
-using SFML.Window;
-using Color = SFML.Graphics.Color;
-using SS14.Shared.Maths;
-using SFML.Graphics;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -186,16 +184,16 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
                                {
                                    ShadowColor = new Color(105, 105, 105),
-                                   ShadowOffset = new Vector2(1, 1),
+                                   ShadowOffset = new Vector2f(1, 1),
                                    Shadowed = true
                                };
 
-            _blueprints = new ScrollableContainer("blueprintCont", new Size(210, 100), _resourceManager);
+            _blueprints = new ScrollableContainer("blueprintCont", new Vector2i(210, 100), _resourceManager);
         }
 
         private void CraftButtonClicked(ImageButton sender)
         {
-            //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
+            //craftTimer = new Timer_Bar(new Vector2i(200,15), new TimeSpan(0,0,0,10));
             if (_craftSlot1.ContainingEntity == null || _craftSlot2.ContainingEntity == null) return;
 
             if (_playerManager != null)
@@ -324,7 +322,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     break;
                 case ComboGuiMessage.ShowCraftBar:
                     int seconds = message.ReadInt32();
-                    _craftTimer = new Timer_Bar(new Size(210, 15), new TimeSpan(0, 0, 0, seconds), _resourceManager);
+                    _craftTimer = new Timer_Bar(new Vector2i(210, 15), new TimeSpan(0, 0, 0, seconds), _resourceManager);
                     _craftStatus.Text = "Status: Crafting...";
                     _craftStatus.Color = new SFML.Graphics.Color(176, 196, 222);
                     break;
@@ -397,7 +395,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
             newBpb.Clicked += BlueprintClicked;
 
-            newBpb.Position = new Point(0, _blueprintsOffset);
+            newBpb.Position = new Vector2i(0, _blueprintsOffset);
             _blueprintsOffset += newBpb.ClientArea.Height;
 
             _blueprints.components.Add(newBpb);
@@ -405,7 +403,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         private void BlueprintClicked(BlueprintButton sender)
         {
-            //craftTimer = new Timer_Bar(new Size(200,15), new TimeSpan(0,0,0,10));
+            //craftTimer = new Timer_Bar(new Vector2i(200,15), new TimeSpan(0,0,0,10));
             if (_playerManager != null)
                 if (_playerManager.ControlledEntity != null)
                     if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
@@ -437,7 +435,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 _tabEquip.Render();
                 _tabCraft.Render();
 
-                _txtDbg.Position = new Vector2(Position.X + 20, Position.Y + 15);
+                _txtDbg.Position = new Vector2i(Position.X + 20, Position.Y + 15);
                 _txtDbg.Color = new SFML.Graphics.Color(255, 222, 173);
                 if (_currentTab == 1) _txtDbg.Text = "Equipment";
                 if (_currentTab == 2) _txtDbg.Text = "Status";
@@ -518,38 +516,38 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         _inventory = new InventoryViewer(invComp, _userInterfaceManager, _resourceManager);
                     }
 
-            _comboBg.Position = new Vector2 (Position.X, Position.Y);
+            _comboBg.Position = new Vector2f (Position.X, Position.Y);
 
             var bounds = _comboBg.GetLocalBounds();
-            Point equipBgPos = Position;
-            _equipBg.Position = new Vector2 (Position.X,Position.Y);
-            equipBgPos.Offset((int) (bounds.Width/2f - bounds.Width/2f), 40);
-            _equipBg.Position = new Vector2(equipBgPos.X,equipBgPos.Y);
+            var equipBgPos = Position;
+            _equipBg.Position = new Vector2f (Position.X,Position.Y);
+            equipBgPos += new Vector2i((int) (bounds.Width/2f - bounds.Width/2f), 40);
+            _equipBg.Position = new Vector2f(equipBgPos.X,equipBgPos.Y);
 
-            Point comboClosePos = Position;
-            comboClosePos.Offset(264, 11); //Magic photoshop ruler numbers.
+            var comboClosePos = Position;
+            comboClosePos += new Vector2i(264, 11); //Magic photoshop ruler numbers.
             _comboClose.Position = comboClosePos;
             _comboClose.Update(frameTime);
 
-            Point tabEquipPos = Position;
-            tabEquipPos.Offset(-26, 76); //Magic photoshop ruler numbers.
+            var tabEquipPos = Position;
+            tabEquipPos += new Vector2i(-26, 76); //Magic photoshop ruler numbers.
             _tabEquip.Position = tabEquipPos;
             _tabEquip.Color = _currentTab == 1 ? Color.White :_inactiveColor;
             _tabEquip.Update(frameTime);
 
-            Point tabHealthPos = tabEquipPos;
-            tabHealthPos.Offset(0, 3 + _tabEquip.ClientArea.Height);
+            var tabHealthPos = tabEquipPos;
+            tabHealthPos += new Vector2i(0, 3 + _tabEquip.ClientArea.Height);
             _tabHealth.Position = tabHealthPos;
             _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
             _tabHealth.Update(frameTime);
 
-            Point tabCraftPos = tabHealthPos;
-            tabCraftPos.Offset(0, 3 + _tabHealth.ClientArea.Height);
+            var tabCraftPos = tabHealthPos;
+            tabCraftPos += new Vector2i(0, 3 + _tabHealth.ClientArea.Height);
             _tabCraft.Position = tabCraftPos;
             _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
             _tabCraft.Update(frameTime);
 
-            ClientArea = new Rectangle(Position.X, Position.Y, (int)bounds.Width, (int)bounds.Height);
+            ClientArea = new IntRect(Position.X, Position.Y, (int)bounds.Width, (int)bounds.Height);
 
             switch (_currentTab)
             {
@@ -558,55 +556,55 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         #region Equip
 
                         //Only set position for topmost 2 slots directly. Rest uses these to position themselves.
-                        Point slotLeftStart = Position;
-                        slotLeftStart.Offset(28, 40);
+                        var slotLeftStart = Position;
+                        slotLeftStart += new Vector2i(28, 40);
                         _slotHead.Position = slotLeftStart;
                         _slotHead.Update(frameTime);
                         
-                        Point slotRightStart = Position;
-                        slotRightStart.Offset((int) (bounds.Width - _slotMask.ClientArea.Width - 28), 40);
+                        var slotRightStart = Position;
+                        slotRightStart += new Vector2i((int) (bounds.Width - _slotMask.ClientArea.Width - 28), 40);
                         _slotMask.Position = slotRightStart;
                         _slotMask.Update(frameTime);
 
                         int vertSpacing = 6 + _slotHead.ClientArea.Height;
 
                         //Left Side - head, eyes, outer, hands, feet
-                        slotLeftStart.Offset(0, vertSpacing);
+                        slotLeftStart.Y += vertSpacing;
                         _slotEyes.Position = slotLeftStart;
                         _slotEyes.Update(frameTime);
 
-                        slotLeftStart.Offset(0, vertSpacing);
+                        slotLeftStart.Y += vertSpacing;
                         _slotOuter.Position = slotLeftStart;
                         _slotOuter.Update(frameTime);
 
-                        slotLeftStart.Offset(0, vertSpacing);
+                        slotLeftStart.Y += vertSpacing;
                         _slotHands.Position = slotLeftStart;
                         _slotHands.Update(frameTime);
 
-                        slotLeftStart.Offset(0, vertSpacing);
+                        slotLeftStart.Y += vertSpacing;
                         _slotFeet.Position = slotLeftStart;
                         _slotFeet.Update(frameTime);
 
                         //Right Side - mask, ears, inner, belt, back
-                        slotRightStart.Offset(0, vertSpacing);
+                        slotRightStart.Y += vertSpacing;
                         _slotEars.Position = slotRightStart;
                         _slotEars.Update(frameTime);
 
-                        slotRightStart.Offset(0, vertSpacing);
+                        slotRightStart.Y += vertSpacing;
                         _slotInner.Position = slotRightStart;
                         _slotInner.Update(frameTime);
 
-                        slotRightStart.Offset(0, vertSpacing);
+                        slotRightStart.Y += vertSpacing;
                         _slotBelt.Position = slotRightStart;
                         _slotBelt.Update(frameTime);
 
-                        slotRightStart.Offset(0, vertSpacing);
+                        slotRightStart.Y += vertSpacing;
                         _slotBack.Position = slotRightStart;
                         _slotBack.Update(frameTime);
 
                         if (_inventory != null)
                         {
-                            _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
+                            _inventory.Position = new Vector2i(Position.X + 12, Position.Y + 315);
                             _inventory.Update(frameTime);
                         }
                         break;
@@ -617,32 +615,32 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     {
                         #region Status
 
-                        var resLinePos = new Point(Position.X + 35, Position.Y + 70);
+                        var resLinePos = new Vector2i(Position.X + 35, Position.Y + 70);
 
                         const int spacing = 8;
 
                         _ResBlunt.Position = resLinePos;
-                        resLinePos.Offset(0, _ResBlunt.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResBlunt.ClientArea.Height + spacing;
                         _ResBlunt.Update(frameTime);
 
                         _ResPierce.Position = resLinePos;
-                        resLinePos.Offset(0, _ResPierce.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResPierce.ClientArea.Height + spacing;
                         _ResPierce.Update(frameTime);
 
                         _ResSlash.Position = resLinePos;
-                        resLinePos.Offset(0, _ResSlash.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResSlash.ClientArea.Height + spacing;
                         _ResSlash.Update(frameTime);
 
                         _ResBurn.Position = resLinePos;
-                        resLinePos.Offset(0, _ResBurn.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResBurn.ClientArea.Height + spacing;
                         _ResBurn.Update(frameTime);
 
                         _ResFreeze.Position = resLinePos;
-                        resLinePos.Offset(0, _ResFreeze.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResFreeze.ClientArea.Height + spacing;
                         _ResFreeze.Update(frameTime);
 
                         _ResShock.Position = resLinePos;
-                        resLinePos.Offset(0, _ResShock.ClientArea.Height + spacing);
+                        resLinePos.Y += _ResShock.ClientArea.Height + spacing;
                         _ResShock.Update(frameTime);
 
                         _ResTox.Position = resLinePos;
@@ -656,35 +654,35 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     {
                         #region Crafting
 
-                        _craftSlot1.Position = new Point(Position.X + 40, Position.Y + 80);
+                        _craftSlot1.Position = new Vector2i(Position.X + 40, Position.Y + 80);
                         _craftSlot1.Update(frameTime);
 
                         _craftSlot2.Position =
-                            new Point(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
+                            new Vector2i(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
                         _craftSlot2.Update(frameTime);
 
                         _craftButton.Position =
-                            new Point(
+                            new Vector2i(
                                 Position.X + (int) (ClientArea.Width/2f) - (int) (_craftButton.ClientArea.Width/2f),
                                 Position.Y + 70);
                         _craftButton.Update(frameTime);
 
                         if (_craftTimer != null)
                             _craftTimer.Position =
-                                new Point(
+                                new Vector2i(
                                     Position.X + (int) (ClientArea.Width/2f) - (int) (_craftTimer.ClientArea.Width/2f),
                                     Position.Y + 155);
 
                         _craftStatus.Position =
-                            new Vector2(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
+                            new Vector2i(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
                                          Position.Y + 40);
 
-                        _blueprints.Position = new Point(Position.X + 40, Position.Y + 180);
+                        _blueprints.Position = new Vector2i(Position.X + 40, Position.Y + 180);
                         _blueprints.Update(frameTime);
 
                         if (_inventory != null)
                         {
-                            _inventory.Position = new Point(Position.X + 12, Position.Y + 315);
+                            _inventory.Position = new Vector2i(Position.X + 12, Position.Y + 315);
                             _inventory.Update(frameTime);
                         }
                         break;
@@ -775,7 +773,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            var mouseAABB = new PointF(e.X, e.Y);
+            var mouseAABB = new Vector2i(e.X, e.Y);
 
             switch (_currentTab)
             {

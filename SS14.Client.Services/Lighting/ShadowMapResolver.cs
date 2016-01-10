@@ -1,17 +1,11 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
-using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.OpenGL;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.Services.Lighting
 {
@@ -74,10 +68,10 @@ namespace SS14.Client.Services.Lighting
         {
             Texture shadowCastersTexture = Area.RenderTarget.Texture;
             RenderImage Result = Area.RenderTarget;
-            Vector2 LightPosition = Area.LightPosition;
+            SFML.System.Vector2f LightPosition = Area.LightPosition;
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
-            Vector4 MaskProps = Vector4.Zero;
-            Vector4 diffuseColor = Vector4.One;
+            Vector4f MaskProps = Vector4f.Zero;
+            Vector4f diffuseColor = Vector4f.One;
 
             //Debug.DebugRendertarget(Area.RenderTarget);
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
@@ -117,8 +111,8 @@ namespace SS14.Client.Services.Lighting
 
         private void ExecuteTechnique(RenderImage source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
-            Vector2 renderTargetSize;
-            renderTargetSize = new Vector2(baseSize, baseSize);
+            Vector2f renderTargetSize;
+            renderTargetSize = new Vector2f(baseSize, baseSize);
 
             destinationTarget.BeginDrawing();
             destinationTarget.Clear(Color.White);

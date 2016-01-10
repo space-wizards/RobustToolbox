@@ -1,15 +1,10 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Map
 {
@@ -39,8 +34,8 @@ namespace SS14.Client.Services.Map
         {
             if (tileSprite == null)
                 tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("space_texture");
-            
-            tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
+
+            tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
 
@@ -49,7 +44,7 @@ namespace SS14.Client.Services.Map
 
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition)
         {
         }
 
@@ -101,13 +96,13 @@ namespace SS14.Client.Services.Map
             tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("wall_texture");
 
             var bounds = tileSprite.GetLocalBounds();
-            shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
+            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
         }
         
         public override void RenderPos(float x, float y)
         {
             shape.FillColor = Color.Black;
-            shape.Position = new Vector2f(x, y);
+            shape.Position = new SFML.System.Vector2f(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
     }

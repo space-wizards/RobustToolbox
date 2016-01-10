@@ -1,6 +1,5 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -87,7 +86,7 @@ namespace SS14.Client.Graphics.Sprite
         {
             count++;
             Using(S.Texture);
-            Vector2 Scale = new Vector2(S.Scale.X, S.Scale.Y);
+            Vector2f Scale = new Vector2f(S.Scale.X, S.Scale.Y);
             float sin = 0, cos = 1;
             //FloatMath.SinCos(rotation, out sin, out cos);
 
@@ -106,11 +105,11 @@ namespace SS14.Client.Graphics.Sprite
             activeItem.Verticies.Append
                 (
                  new Vertex(
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color,
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top)
                             )
@@ -121,11 +120,11 @@ namespace SS14.Client.Graphics.Sprite
             activeItem.Verticies.Append
                 (
                 new Vertex(
-                        new Vector2f(   
+                        new SFML.System.Vector2f(   
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color,
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top)
                           )
@@ -135,11 +134,11 @@ namespace SS14.Client.Graphics.Sprite
             activeItem.Verticies.Append
                 (
                 new Vertex(
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color,
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top + S.TextureRect.Height)
                          )
@@ -149,11 +148,11 @@ namespace SS14.Client.Graphics.Sprite
 
             activeItem.Verticies.Append(
                 new Vertex(
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color,
-                        new Vector2f(
+                        new SFML.System.Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top + S.TextureRect.Height)
                         )

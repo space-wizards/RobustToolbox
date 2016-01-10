@@ -1,8 +1,9 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Shared;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -14,9 +15,9 @@ namespace SS14.Client.Interfaces.UserInterface
         /// </summary>
         GuiComponentType ComponentClass { get; }
 
-        Point Position { get; set; }
+        Vector2i Position { get; set; }
 
-        Rectangle ClientArea { get; set; }
+        IntRect ClientArea { get; set; }
         bool RecieveInput { get; set; }
 
         bool Focus { get; set; }
@@ -37,7 +38,7 @@ namespace SS14.Client.Interfaces.UserInterface
         bool MouseUp(MouseButtonEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
         bool MouseWheelMove(MouseWheelEventArgs e);
-		bool KeyDown(KeyEventArgs e);
+        bool KeyDown(KeyEventArgs e);
 
         void ComponentUpdate(params object[] args);
     }

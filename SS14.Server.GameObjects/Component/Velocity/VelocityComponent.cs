@@ -1,14 +1,13 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Velocity;
-using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
     public class VelocityComponent : Component
     {
-        private Vector2 _velocity = Vector2.Zero;
+        private Vector2f _velocity = new Vector2f();
 
 
         public VelocityComponent()
@@ -16,7 +15,7 @@ namespace SS14.Server.GameObjects
             Family = ComponentFamily.Velocity;
         }
 
-        public Vector2 Velocity
+        public Vector2f Velocity
         {
             get { return _velocity; }
             set { _velocity = value; }
@@ -25,18 +24,18 @@ namespace SS14.Server.GameObjects
         public float X
         {
             get { return Velocity.X; }
-            set { Velocity = new Vector2(value, Velocity.Y); }
+            set { Velocity = new Vector2f(value, Velocity.Y); }
         }
 
         public float Y
         {
             get { return Velocity.Y; }
-            set { Velocity = new Vector2(Velocity.X, value); }
+            set { Velocity = new Vector2f(Velocity.X, value); }
         }
 
         public override void Shutdown()
         {
-            Velocity = Vector2.Zero;
+            Velocity = new Vector2f();
         }
 
         public override ComponentState GetComponentState()

@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.Network;
+﻿using SFML.System;
+using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -8,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using SS14.Shared.Maths;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
 
 namespace SS14.Server.GameObjects
@@ -42,7 +42,7 @@ namespace SS14.Server.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public Entity SpawnEntityAt(string EntityType, Vector2 position)
+        public Entity SpawnEntityAt(string EntityType, Vector2f position)
         {
             Entity e = SpawnEntity(EntityType);
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
@@ -99,7 +99,7 @@ namespace SS14.Server.GameObjects
             string name = e.Attribute("name").Value;
             Entity ent = SpawnEntity(template);
             ent.Name = name;
-            ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(X, Y));
+            ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(X, Y));
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
         }
 

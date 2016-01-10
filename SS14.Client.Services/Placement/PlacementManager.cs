@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Collision;
@@ -15,13 +16,10 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.Placement
 {
@@ -165,7 +163,7 @@ namespace SS14.Client.Services.Placement
                 PreparePlacement(info.EntityType);
         }
 
-        public void Update(Vector2 mouseScreen, IMapManager currentMap)
+        public void Update(Vector2i mouseScreen, IMapManager currentMap)
         {
             if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
 
@@ -184,7 +182,7 @@ namespace SS14.Client.Services.Placement
                     pos.Y,
                     CurrentPermission.Range,
                     Color.White,
-                    new Vector2(2, 2));
+                    new Vector2f(2, 2));
             }
         }
 

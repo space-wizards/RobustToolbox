@@ -1,10 +1,11 @@
-﻿using SFML.Window;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -17,8 +18,8 @@ namespace SS14.Client.Services.UserInterface.Components
         #region IGuiComponent Members
 
         public GuiComponentType ComponentClass { get; protected set; }
-        public virtual Point Position { get; set; }
-        public virtual Rectangle ClientArea { get; set; }
+        public virtual Vector2i Position { get; set; }
+        public virtual IntRect ClientArea { get; set; }
 
         public int ZDepth { get; set; }
 
@@ -72,26 +73,26 @@ namespace SS14.Client.Services.UserInterface.Components
         {
         }
 
-		public virtual bool MouseDown(MouseButtonEventArgs e)
+        public virtual bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public virtual bool MouseUp(MouseButtonEventArgs e)
+        public virtual bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public virtual void MouseMove(MouseMoveEventArgs e)
+        public virtual void MouseMove(MouseMoveEventArgs e)
         {
         }
 
-		public virtual bool MouseWheelMove(MouseWheelEventArgs e)
+        public virtual bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return false;
         }
 
-		public virtual bool KeyDown(KeyEventArgs e)
+        public virtual bool KeyDown(KeyEventArgs e)
         {
             return false;
         }

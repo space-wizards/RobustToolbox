@@ -1,4 +1,6 @@
 ﻿using Lidgren.Network;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
@@ -8,13 +10,10 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
-
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -24,9 +23,9 @@ namespace SS14.Client.Services.UserInterface.Components
         private List<Label> lines = new List<Label>();
         private int last_y = 0;
 
-        public DebugConsole(string uniqueName, Size size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
         {
-            input = new Textbox(size.Width, resourceManager);
+            input = new Textbox(size.X, resourceManager);
             input.ClearFocusOnSubmit = false;
             input.drawColor = new SFML.Graphics.Color(128, 128, 128, 100);
             input.textColor = new SFML.Graphics.Color(255, 250, 240);
@@ -46,10 +45,10 @@ namespace SS14.Client.Services.UserInterface.Components
         public void AddLine(string text, SFML.Graphics.Color color)
         {
             Label newLabel = new Label(text, "MICROGBE", this._resourceManager);
-            newLabel.Position = new Point(5, last_y);
+            newLabel.Position = new Vector2i(5, last_y);
             newLabel.TextColor = color;
             newLabel.Update(0);
-            last_y = newLabel.ClientArea.Bottom;
+            last_y = newLabel.ClientArea.Bottom();
             components.Add(newLabel);
         }
 
@@ -58,7 +57,7 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Update(frameTime);
             if (input != null)
             {
-                input.Position = new Point(ClientArea.Left, ClientArea.Bottom);
+                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
                 input.Update(frameTime);
             }
         }

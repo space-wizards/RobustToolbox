@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using Drawing = System.Drawing;
-using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics.VertexData;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics.Collection;
-using VertexFieldContext = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldContext;
-using VertexFieldType = SS14.Client.Graphics.VertexData.VertexEnums.VertexFieldType;
-
-
+using SS14.Shared.Maths;
+using System;
+using System.Runtime.InteropServices;
 
 namespace SS14.Client.Graphics.VertexData
 {
@@ -30,32 +23,32 @@ namespace SS14.Client.Graphics.VertexData
             /// <summary>
             /// Position of the vertex.
             /// </summary>
-            public Vector3 Position;
+            public Vector3f Position;
 
             /// <summary>
             /// Color value of the vertex.
             /// </summary>
-            internal int ColorValue;
+            internal uint ColorValue;
 
             /// <summary>
             /// Texture coordinates.
             /// </summary>
-            public Vector2 TextureCoordinates;
+            public Vector2f TextureCoordinates;
             #endregion
 
             #region Properties.
             /// <summary>
-            /// Property to set or return the color as a <see cref="System.Drawing.Color"/> value.
+            /// Property to set or return the color as a <see cref="SFML.Graphics.Color"/> value.
             /// </summary>
-            public Drawing.Color Color
+            public Color Color
             {
                 get
                 {
-                    return Drawing.Color.FromArgb(ColorValue);
+                    return SfmlExt.IntToColor(ColorValue);
                 }
                 set
                 {
-                    ColorValue = value.ToArgb();
+                    ColorValue = value.ToInt();
                 }
             }
             #endregion
@@ -130,11 +123,11 @@ namespace SS14.Client.Graphics.VertexData
             /// <param name="position">Position of the vertex.</param>
             /// <param name="color">Color of the vertex.</param>
             /// <param name="textureCoordinates">Texture coordinates.</param>
-            public PositionDiffuse2DTexture1 ( Vector3 position , Drawing.Color color , Vector2 textureCoordinates )
+            public PositionDiffuse2DTexture1 ( Vector3f position , Color color , Vector2f textureCoordinates )
             {
                 // Copy data.
                 Position = position;
-                ColorValue = color.ToArgb();
+                ColorValue = color.ToInt();
                 TextureCoordinates = textureCoordinates;
             }
             #endregion

@@ -1,9 +1,9 @@
-﻿using System.Drawing;
+﻿using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.Collision
 {
     public interface ICollider
     {
-        RectangleF AABB { get; }
+        FloatRect AABB { get; }
     }
 }

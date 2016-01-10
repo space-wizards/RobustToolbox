@@ -1,16 +1,15 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 using System;
-using System.Drawing;
-using SFML.Window;
-using SFML.Graphics;
-using SS14.Client.Graphics;
-using Color = SFML.Graphics.Color;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -38,7 +37,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private bool dragging;
 
-        public HealthScannerWindow(Entity assignedEnt, Vector2 mousePos, UserInterfaceManager uiMgr,
+        public HealthScannerWindow(Entity assignedEnt, Vector2i mousePos, UserInterfaceManager uiMgr,
                                    IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
@@ -59,7 +58,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _legl = _resourceManager.GetSprite("healthscan_legl");
             _legr = _resourceManager.GetSprite("healthscan_legr");
 
-            Position = new Point((int) mousePos.X, (int) mousePos.Y);
+            Position = mousePos;
 
             Setup();
             Update(0);
@@ -126,20 +125,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _background.Position = new Vector2(Position.X, Position.Y); 
+            _background.Position =
+            _head.Position =
+            _chest.Position =
+            _arml.Position =
+            _armr.Position =
+            _groin.Position =
+            _legl.Position =
+            _legr.Position = Position.ToFloat();
 
-            _head.Position = new Vector2 (Position.X, Position.Y);
-            _chest.Position = new Vector2(Position.X, Position.Y);
-            _arml.Position = new Vector2(Position.X, Position.Y); 
-            _armr.Position = new Vector2(Position.X, Position.Y); 
-            _groin.Position = new Vector2(Position.X, Position.Y);
-            _legl.Position = new Vector2(Position.X, Position.Y); 
-            _legr.Position = new Vector2(Position.X, Position.Y);
-
-            _overallHealth.Position = new Vector2(Position.X + 86, Position.Y + 29);
+            _overallHealth.Position = new Vector2i(Position.X + 86, Position.Y + 29);
 
             var bounds = _background.GetLocalBounds();
-            ClientArea = new Rectangle(Position, new Size((int)bounds.Width, (int)bounds.Height));
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -165,15 +163,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (dragging) Position = new Point( e.X, e.Y);
+            if (dragging) Position = new Vector2i( e.X, e.Y);
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
-                var insidePos = new Vector2((int) e.X , (int) e.Y );
-                if ((insidePos - new Vector2(189, 9)).Length <= 5)
+                var insidePos = new Vector2f((int) e.X , (int) e.Y );
+                if ((insidePos - new Vector2f(189, 9)).LengthSquared() <= 5*5)
                 {
                     _uiMgr.RemoveComponent(this);
                     Dispose();

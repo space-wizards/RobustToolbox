@@ -1,9 +1,7 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Resource;
-using System.Drawing;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SFML.Graphics;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -12,7 +10,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public string tabName = "";
         public Sprite tabSprite = null;
 
-        public TabContainer(string uniqueName, Size size, IResourceManager resourceManager)
+        public TabContainer(string uniqueName, Vector2i size, IResourceManager resourceManager)
             : base(uniqueName, size, resourceManager)
         {
             DrawBorder = false;

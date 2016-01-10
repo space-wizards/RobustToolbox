@@ -1,10 +1,11 @@
-﻿using SS14.Shared.GO;
+﻿using SFML.System;
+using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using SS14.Shared.Maths;
 
 namespace SS14.Shared.GameObjects
 {
@@ -95,11 +96,11 @@ namespace SS14.Shared.GameObjects
                 case "bool":
                     return typeof (bool);
                 case "vector2":
-                    return typeof(Vector2);
+                    return typeof(Vector2f);
                 case "vector3":
-                    return typeof(Vector3);
+                    return typeof(Vector3f);
                 case "vector4":
-                    return typeof(Vector4);
+                    return typeof(Vector4f);
                 default:
                     return null;
             }
@@ -168,29 +169,29 @@ namespace SS14.Shared.GameObjects
                     {
                         paramValue = paramRawValue;
                     }
-                    else if (paramType == typeof (Vector2))
+                    else if (paramType == typeof (Vector2f))
                     {
                         var args = paramRawValue.Split(',');
                         if (args.Length != 2)
                             throw new ArgumentException("Could not parse parameter " + paramName +
                                                         " as Vector2. Value: " + paramRawValue);
-                        paramValue = new Vector2(float.Parse(args[0]), float.Parse(args[1]));
+                        paramValue = new Vector2f(float.Parse(args[0]), float.Parse(args[1]));
                     }
-                    else if (paramType == typeof(Vector3))
+                    else if (paramType == typeof(Vector3f))
                     {
                         var args = paramRawValue.Split(',');
                         if (args.Length != 3)
                             throw new ArgumentException("Could not parse parameter " + paramName +
                                                         " as Vector3. Value: " + paramRawValue);
-                        paramValue = new Vector3(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
+                        paramValue = new Vector3f(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]));
                     }
-                    else if (paramType == typeof(Vector4))
+                    else if (paramType == typeof(Vector4f))
                     {
                         var args = paramRawValue.Split(',');
                         if (args.Length != 4)
                             throw new ArgumentException("Could not parse parameter " + paramName +
                                                         " as Vector4. Value: " + paramRawValue);
-                        paramValue = new Vector4(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
+                        paramValue = new Vector4f(float.Parse(args[0]), float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
                     }
                     else
                     {

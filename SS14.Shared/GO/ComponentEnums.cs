@@ -34,6 +34,7 @@
         Physics,
         PlayerActions, //Holds and manages player actions (abilities).
         Renderable, // Can be rendered -- sprite or particle system
+		//Script, // Does Lua scripts.
         StatusEffects, //Holds and manages status effects.
         SVars,
         Think, // Holds more specific scripts that need to respond to event messages

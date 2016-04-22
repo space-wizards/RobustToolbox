@@ -35,6 +35,7 @@ namespace SS14.Client.Interfaces.UserInterface
         bool MouseDown(MouseButtonEventArgs e);
         void MouseEntered(EventArgs e);
         void MouseLeft(EventArgs e);
+        bool TextEntered(TextEventArgs e);
 
         void HandleNetMessage(NetIncomingMessage msg);
     }

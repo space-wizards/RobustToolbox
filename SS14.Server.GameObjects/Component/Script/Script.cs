@@ -17,16 +17,10 @@ namespace SS14.Server.GameObjects
 
 		public ScriptComponent()
 		{
-			//Family = ComponentFamily.Script;
+			Family = ComponentFamily.Script;
 
 			lua = new Lua();
 			lua.LoadCLRPackage();
-
-			
-			/* Would these be important?
-			RegisterSVar("Code", typeof(string));
-			RegisterSVar("File", typeof(string));
-			*/
 		}
 
 		public object[] CallLuaFunction(string funcName, object[] arguments)

@@ -553,6 +553,10 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.MouseLeft(e);
         }
 
+        public void TextEntered(TextEventArgs e)
+        {
+            UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
+        }
 
         #endregion
     }

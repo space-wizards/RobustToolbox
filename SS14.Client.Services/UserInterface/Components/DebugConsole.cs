@@ -140,6 +140,13 @@ namespace SS14.Client.Services.UserInterface.Components
             else return false;
         }
 
+        public override bool TextEntered(TextEventArgs e)
+        {
+            if (!base.TextEntered(e))
+                return input.TextEntered(e);
+            else return false;
+        }
+
         /// <summary>
         /// Processes commands (chat messages starting with /)
         /// </summary>

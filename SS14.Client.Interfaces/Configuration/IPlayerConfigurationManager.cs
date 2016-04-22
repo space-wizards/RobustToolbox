@@ -1,4 +1,6 @@
-﻿namespace SS14.Client.Interfaces.Configuration
+﻿using SFML.Window;
+
+namespace SS14.Client.Interfaces.Configuration
 {
     public interface IPlayerConfigurationManager
     {
@@ -26,7 +28,7 @@
         int GetRate();
         int GetUpdateRate();
         int GetCommandRate();
-        char GetConsoleKey();
+        Keyboard.Key GetConsoleKey();
         float GetInterpolation();
     }
 }

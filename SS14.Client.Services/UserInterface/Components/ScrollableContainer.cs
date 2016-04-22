@@ -299,5 +299,12 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (component.KeyDown(e)) return true;
             return false;
         }
+
+        public override bool TextEntered(TextEventArgs e)
+        {
+            foreach (GuiComponent component in components)
+                if (component.TextEntered(e)) return true;
+            return false;
+        }
     }
 }

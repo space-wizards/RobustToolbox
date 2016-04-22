@@ -1,4 +1,5 @@
 ﻿using SS14.Client.Interfaces.Configuration;
+using SFML.Window;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -49,7 +50,7 @@ namespace SS14.Client.Services.Configuration
             return Configuration.PlayerName;
         }
 
-        public char GetConsoleKey()
+        public Keyboard.Key GetConsoleKey()
         {
             return Configuration.ConsoleKey;
         }

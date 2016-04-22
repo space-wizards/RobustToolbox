@@ -116,7 +116,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                      CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
+                CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
 
        
 
@@ -217,7 +217,18 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
            
-            return false;
+            return true;
+        }
+
+        public override bool TextEntered(TextEventArgs e)
+        {
+            if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Unicode))
+                return false;
+
+            Text = Text.Insert(_caretIndex, e.Unicode);
+            if (_caretIndex < _text.Length) _caretIndex++;
+            SetVisibleText();
+            return true;
         }
 
         private void SetVisibleText()

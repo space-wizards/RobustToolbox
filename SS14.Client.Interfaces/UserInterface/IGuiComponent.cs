@@ -39,6 +39,7 @@ namespace SS14.Client.Interfaces.UserInterface
         void MouseMove(MouseMoveEventArgs e);
         bool MouseWheelMove(MouseWheelEventArgs e);
         bool KeyDown(KeyEventArgs e);
+        bool TextEntered(TextEventArgs e);
 
         void ComponentUpdate(params object[] args);
     }

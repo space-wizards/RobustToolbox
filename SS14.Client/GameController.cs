@@ -220,6 +220,12 @@ namespace SS14.Client
                 _stateManager.MouseLeft(e);
         }
 
+        private void TextEntered(object sender, TextEventArgs e)
+        {
+            if (_stateManager != null)
+                _stateManager.TextEntered(e);
+        }
+
         #endregion
 
         #endregion
@@ -270,18 +276,18 @@ namespace SS14.Client
                 onetime = false;
             }
             CluwneLib.Screen.SetMouseCursorVisible(false);
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
-            CluwneLib.Screen.KeyPressed += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased += KeyUpEvent;
-            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
+            CluwneLib.Screen.BackgroundColor      = Color.Black;
+            CluwneLib.Screen.Resized             += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed              += MainWindowRequestClose;
+            CluwneLib.Screen.KeyPressed          += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased         += KeyUpEvent;
+            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
-            CluwneLib.Screen.MouseEntered += MouseEntered;
-            CluwneLib.Screen.MouseLeft += MouseLeft;
-
+            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered        += MouseEntered;
+            CluwneLib.Screen.MouseLeft           += MouseLeft;
+            CluwneLib.Screen.TextEntered         += TextEntered;
           
 
 

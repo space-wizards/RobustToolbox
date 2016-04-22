@@ -358,7 +358,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Equals(_config.GetConsoleKey()))
+            if (e.Code == _config.GetConsoleKey())
             {
                 _console.ToggleVisible();
                 return true;
@@ -373,13 +373,30 @@ namespace SS14.Client.Services.UserInterface
                                                           where comp.RecieveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
-                                                          //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                          // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
                                                           orderby comp.Focus descending
                                                           select comp;
 
             return inputList.Any(current => current.KeyDown(e));
         }
 
+        public virtual bool TextEntered(TextEventArgs e)
+        {
+            if (_console.IsVisible())
+            {
+                if (_console.TextEntered(e)) return true;
+            }
+
+            IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                          where comp.RecieveInput
+                                                          orderby comp.ZDepth ascending
+                                                          orderby comp.IsVisible() descending
+                                                          // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                          orderby comp.Focus descending
+                                                          select comp;
+
+            return inputList.Any(current => current.TextEntered(e));
+        }
         #endregion
 
         #region Component retrieval

@@ -22,5 +22,6 @@ namespace SS14.Client.Interfaces.State
         void MouseEntered(EventArgs e);
         void MouseLeft(EventArgs e);
         void FormResize();
+        void TextEntered(TextEventArgs e);
     }
 }

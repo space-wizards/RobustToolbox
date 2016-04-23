@@ -25,18 +25,19 @@ namespace SS14.Client.Services.UserInterface.Components
             _okayButton.Clicked += OkayButtonClicked;
             _okayButton.mouseOverColor = new SFML.Graphics.Color(135, 206, 250);
             _textboxPassword.OnSubmit += textboxPassword_OnSubmit;
+            _textboxPassword.ClearOnSubmit = false; // We dispose on submit so if it clears after disposal it'll nullref.
             components.Add(_textboxPassword);
             components.Add(_okayButton);
             Position = new Vector2i((int) ( CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
-        }
+         }
 
         private void textboxPassword_OnSubmit(string text, Textbox sender)
         {
             if (text.Length > 1 && !string.IsNullOrWhiteSpace(text))
             {
                 TryAdminLogin(text);
-                _textboxPassword.Text = string.Empty;
+                // _textboxPassword.Text = string.Empty;
             }
         }
 
@@ -45,7 +46,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (_textboxPassword.Text.Length <= 1 || string.IsNullOrWhiteSpace(_textboxPassword.Text)) return;
 
             TryAdminLogin(_textboxPassword.Text);
-            _textboxPassword.Text = string.Empty;
+            // _textboxPassword.Text = string.Empty;
         }
 
         public override void Update(float frameTime)

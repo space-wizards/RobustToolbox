@@ -97,6 +97,11 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
+        public virtual bool TextEntered(TextEventArgs e)
+        {
+            return false;
+        }
+
         #endregion
     }
 }

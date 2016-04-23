@@ -641,6 +641,11 @@ namespace SS14.Client.Services.State.States
         {
             PlayerManager.KeyUp(e.Code);
         }
+
+        public void TextEntered(TextEventArgs e)
+        {
+            UserInterfaceManager.TextEntered(e);
+        }
         #endregion
 
         #region Mouse

@@ -105,6 +105,12 @@ namespace SS14.Client.Services.State
                 CurrentState.MouseLeft(e);
         }
 
+        public void TextEntered(TextEventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.TextEntered(e);
+        }
+
         #endregion
 
         #region Updates & Statechanges

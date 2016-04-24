@@ -85,7 +85,6 @@
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="OpenGL\GLTexture.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>

@@ -140,9 +140,11 @@
     <Compile Include="Chat\IChatManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Commands\IClientCommand.cs" />
     <Compile Include="ClientConsoleHost\IClientConsoleHost.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Commands\IConsoleCommand.cs" />
     <Compile Include="Configuration\IServerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -242,6 +244,9 @@
     <Compile Include="Serialization\ISS14Serializer.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="NewFolder1\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

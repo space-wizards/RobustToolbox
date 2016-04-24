@@ -15,7 +15,7 @@ namespace SS14.Shared.Utility
             bool inquotes = false;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '/' || text[i] == '*')
+                if (text[i] == '*')
                     continue;
                 else if (inquotes && text[i] == '"')
                 {

@@ -6,6 +6,9 @@ using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
+using Color = SFML.Graphics.Color;
+
+
 
 namespace SS14.Client.Services.Lighting
 {

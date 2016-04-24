@@ -381,8 +381,8 @@ namespace SS14.Client.Services.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
-            CluwneLib.TileSize = MapManager.TileSize;
 
+            CluwneLib.TileSize = MapManager.TileSize;
 
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
@@ -1202,6 +1202,7 @@ namespace SS14.Client.Services.State.States
                 Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
 
 
+
                 //Set shader parameters
                 var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
                                                     blitPos.Y / screenShadows.Height,
@@ -1295,8 +1296,7 @@ namespace SS14.Client.Services.State.States
                 source.Blit(0, 0, source.Width, source.Height);
                screenShadows.EndDrawing();
             }
-
-         
+     
            
 
             //Debug.DebugRendertarget(shadowIntermediate);
@@ -1410,7 +1410,9 @@ namespace SS14.Client.Services.State.States
 
                 playerOcclusionTarget.EndDrawing();
 
+
                 //Debug.DebugRendertarget(playerOcclusionTarget);
+
 
             }
             else

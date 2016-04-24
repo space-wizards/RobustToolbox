@@ -9,7 +9,6 @@ using System;
 using Color = SFML.Graphics.Color;
 
 
-
 namespace SS14.Client.Services.Lighting
 {
     public class ShadowMapResolver : IDisposable

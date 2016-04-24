@@ -36,7 +36,7 @@ namespace SS14.Client.Services.UserInterface.Components
             Update(0);
         }
 
-        void input_OnSubmit(string text, Textbox sender)
+        private void input_OnSubmit(string text, Textbox sender)
         {
             AddLine(text, new SFML.Graphics.Color(255, 250, 240));
             ProcessCommand(text);
@@ -77,7 +77,7 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-        void netMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
+        private void netMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
         {
             //Make sure we reset the position - we might recieve this message after the gamestates.
             if (e.Message.Position > 0) e.Message.Position = 0;
@@ -152,7 +152,7 @@ namespace SS14.Client.Services.UserInterface.Components
         /// </summary>
         /// <param name="text">input text</param>
         private void ProcessCommand(string text)
-        {   
+        {
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
 
@@ -175,9 +175,11 @@ namespace SS14.Client.Services.UserInterface.Components
                     //this.scrollbarH.Value = 0;
                     this.scrollbarV.Value = 0;
                     break;
+
                 case "quit":
                     Environment.Exit(0);
                     break;
+
                 case "addparticles": //This is only clientside.
                     if (args.Count >= 3)
                     {
@@ -210,12 +212,13 @@ namespace SS14.Client.Services.UserInterface.Components
                             {
                                 var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
                                 var compo = (IParticleSystemComponent)entMgr.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
-                                target.AddComponent(ComponentFamily.Particles, compo);                                
+                                target.AddComponent(ComponentFamily.Particles, compo);
                             }
                         }
                     }
                     SendServerConsoleCommand(text); //Forward to server.
                     break;
+
                 case "removeparticles":
                     if (args.Count >= 3)
                     {
@@ -247,6 +250,20 @@ namespace SS14.Client.Services.UserInterface.Components
                     }
                     SendServerConsoleCommand(text); //Forward to server.
                     break;
+
+                case "sendchat":
+                    if (args.Count < 2)
+                        return;
+
+                    INetworkManager NetworkManager = IoCManager.Resolve<INetworkManager>();
+                    NetOutgoingMessage message = NetworkManager.CreateMessage();
+                    message.Write((byte)NetMessage.ChatMessage);
+                    message.Write((byte)ChatChannel.Player);
+                    message.Write(args[1]);
+                    NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+
+                    break;
+
                 default:
                     SendServerConsoleCommand(text); //Forward to server.
                     break;
@@ -259,7 +276,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (netMgr != null && netMgr.IsConnected)
             {
                 NetOutgoingMessage outMsg = netMgr.CreateMessage();
-                outMsg.Write((byte) NetMessage.ConsoleCommand);
+                outMsg.Write((byte)NetMessage.ConsoleCommand);
                 outMsg.Write(text);
                 netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }

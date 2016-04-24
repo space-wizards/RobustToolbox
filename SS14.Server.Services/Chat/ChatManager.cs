@@ -1,9 +1,11 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
+using SS14.Server.Interfaces.Commands;
 using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Services.Chat.Commands;
 using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.GO;
@@ -13,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Chat
@@ -20,22 +23,27 @@ namespace SS14.Server.Services.Chat
     public class ChatManager : IChatManager
     {
         private ISS14Server _serverMain;
+
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
+        private Dictionary<string, IClientCommand> _commands = new Dictionary<string, IClientCommand>();
         private string _emotePath = @"emotes.xml";
+
         #region IChatManager Members
 
         public void Initialize(ISS14Server server)
         {
             _serverMain = server;
             LoadEmotes();
+            LoadCommands();
         }
 
         public void HandleNetMessage(NetIncomingMessage message)
         {
             //Read the chat message and pass it on
-            var channel = (ChatChannel) message.ReadByte();
+            var channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
-            string name = _serverMain.GetClient(message.SenderConnection).PlayerName;
+            IClient client = _serverMain.GetClient(message.SenderConnection);
+            string name = client.PlayerName;
             LogManager.Log("CHAT- Channel " + channel.ToString() + " - Player " + name + "Message: " + text + "\n");
             var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).AttachedEntityUid;
 
@@ -45,9 +53,9 @@ namespace SS14.Server.Services.Chat
             if (hasChannelIdentifier)
                 text = text.Substring(1);
             text = text.Trim(); // Remove whitespace
-            //if (text[0] == '/')
-            //    ProcessCommand(text, name, channel, entityId, message.SenderConnection);
-            if (text[0] == '*')
+            if (text[0] == '/')
+                ProcessCommand(text, name, channel, entityId, client);
+            else if (text[0] == '*')
                 ProcessEmote(text, name, channel, entityId, message.SenderConnection);
             else
                 SendChatMessage(channel, text, name, entityId);
@@ -64,10 +72,10 @@ namespace SS14.Server.Services.Chat
 
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
 
-            message.Write((byte) NetMessage.ChatMessage);
-            message.Write((byte) channel);
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)channel);
             message.Write(fullmsg);
-            if(entityId == null)
+            if (entityId == null)
                 message.Write(-1);
             else
                 message.Write((int)entityId);
@@ -81,19 +89,26 @@ namespace SS14.Server.Services.Chat
                 case ChatChannel.Default:
                     IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
                     break;
+
                 case ChatChannel.Damage:
                 case ChatChannel.Ingame:
                 case ChatChannel.Visual:
                 case ChatChannel.Emote:
                     SendToPlayersInRange(message, entityId);
                     break;
+
                 case ChatChannel.Lobby:
                     SendToLobby(message);
                     break;
             }
         }
 
-        #endregion
+        public Dictionary<string, IClientCommand> GetCommands()
+        {
+            return _commands;
+        }
+
+        #endregion IChatManager Members
 
         private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
         {
@@ -105,10 +120,12 @@ namespace SS14.Server.Services.Chat
                     channel = ChatChannel.OOC;
                     hasChannelIdentifier = true;
                     break;
+
                 case ':':
                     channel = ChatChannel.Radio;
                     hasChannelIdentifier = true;
                     break;
+
                 case '@':
                     channel = ChatChannel.Emote;
                     hasChannelIdentifier = true;
@@ -123,11 +140,11 @@ namespace SS14.Server.Services.Chat
             {
                 using (var emoteFileStream = new FileStream(_emotePath, FileMode.Open, FileAccess.Read))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof (List<Emote>));
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Emote>));
 
-                    var emotes = (List<Emote>) serializer.Deserialize(emoteFileStream);
+                    var emotes = (List<Emote>)serializer.Deserialize(emoteFileStream);
                     emoteFileStream.Close();
-                    foreach(var emote in emotes)
+                    foreach (var emote in emotes)
                     {
                         _emotes.Add(emote.Command, emote);
                     }
@@ -142,10 +159,27 @@ namespace SS14.Server.Services.Chat
                     emote.OtherText = "{0} does something!";
                     emote.SelfText = "You do something!";
                     _emotes.Add("default", emote);
-                    XmlSerializer serializer = new XmlSerializer(typeof (List<Emote>));
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Emote>));
                     serializer.Serialize(emoteFileStream, _emotes.Values.ToList());
                     emoteFileStream.Close();
                 }
+            }
+        }
+
+        // Load all command types.
+        private void LoadCommands()
+        {
+            List<Type> CommandTypes = new List<Type>();
+            CommandTypes.AddRange(
+                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ChatCommand).IsAssignableFrom(t))
+            );
+
+            foreach (Type t in CommandTypes)
+            {
+                if (t == typeof(ChatCommand))
+                    continue;
+                ChatCommand instance = (ChatCommand)Activator.CreateInstance(t, null);
+                instance.Register(_commands); // Done like this so scripted commands can be less hardcoded.
             }
         }
 
@@ -175,7 +209,7 @@ namespace SS14.Server.Services.Chat
             var args = new List<string>();
 
             CommandParsing.ParseArguments(text, args);
-            if(_emotes.ContainsKey(args[0]))
+            if (_emotes.ContainsKey(args[0]))
             {
                 var userText = String.Format(_emotes[args[0]].SelfText, name);//todo user-only channel
                 var otherText = String.Format(_emotes[args[0]].OtherText, name, "his"); //todo pronouns, gender
@@ -185,43 +219,30 @@ namespace SS14.Server.Services.Chat
             {
                 //todo Bitch at the user
             }
-            
         }
 
-    //    /// <summary>
-    //    /// Processes commands (chat messages starting with /)
-    //    /// </summary>
-    //    /// <param name="text">chat text</param>
-    //    /// <param name="name">player name that sent the chat text</param>
-    //    /// <param name="channel">channel message was recieved on</param>
-    //    /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
-    //    private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
-    //    {
-    //        if (entityId == null)
-    //            return;
-    //        var args = new List<string>();
+        /// <summary>
+        /// Processes commands (chat messages starting with /)
+        /// </summary>
+        /// <param name="text">Text content.</param>
+        /// <param name="name">Player name that sent the chat text.</param>
+        /// <param name="channel">Channel message was recieved on.</param>
+        /// <param name="client">Client that sent the command.</param>
+        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, IClient client)
+        {
+            List<string> args = new List<string>();
 
-    //        CommandParsing.ParseArguments(text, args);
+            CommandParsing.ParseArguments(text.Substring(1), args); // Parse, but cut out the first character (/).
 
-    //        string command = args[0];
+            if (args.Count <= 0)
+                return;
 
-    //        Vector2 position;
-    //        Entity player;
-    //        player = _serverMain.EntityManager.GetEntity((int)entityId);
-    //        if (player == null)
-    //            position = new Vector2(160, 160);
-    //        else
-    //            position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
+            string command = args[0];
+            if (!_commands.ContainsKey(command))
+                return; // TODO: Bitch at user when the rest of this file isn't cancer and you can actually send things to individual people.
 
-    //        var map = IoCManager.Resolve<IMapManager>();
-    //        switch (command)
-    //        {
-    //            default:
-    //                string message = "Command '" + command + "' not recognized.";
-    //                SendChatMessage(channel, message, name, entityId);
-    //                break;
-    //        }
-    //    }
+            _commands[command].Execute(client, args.ToArray());
+        }
     }
 
     public struct Emote

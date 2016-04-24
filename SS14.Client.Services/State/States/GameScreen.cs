@@ -350,6 +350,7 @@ namespace SS14.Client.Services.State.States
             lightArea1024 = new LightArea(ShadowmapSize.Size1024);
 
             screenShadows = new RenderImage("screenShadows", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, ImageBufferFormats.BufferRGB888A8);
+            
             _cleanupList.Add(screenShadows);
             screenShadows.UseDepthBuffer = false;
             shadowIntermediate = new RenderImage("shadowIntermediate", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
@@ -369,7 +370,7 @@ namespace SS14.Client.Services.State.States
             Lightmap = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
-            playerVision.SetColor(Color.Transparent);
+            playerVision.SetColor(Color.Blue);
             playerVision.SetRadius(1024);
             playerVision.Move(Vector2.Zero);
 
@@ -382,7 +383,6 @@ namespace SS14.Client.Services.State.States
         {
             LastUpdate = Now;
             Now = DateTime.Now;
-
 
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _entityManager.ComponentManager.Update(e.FrameDeltaTime);
@@ -418,6 +418,7 @@ namespace SS14.Client.Services.State.States
                 // Get nearby lights
                 ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
 
+               
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);
@@ -439,6 +440,7 @@ namespace SS14.Client.Services.State.States
                 _sceneTarget.ResetCurrentRenderTarget();
                 //_sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
 
+                Debug.DebugRendertarget(_sceneTarget);
 
                 LightScene();
 
@@ -1168,8 +1170,17 @@ namespace SS14.Client.Services.State.States
             }
 
             //Step 2 - Set up the render targets for the composite lighting.                    
-            RenderImage copy;
             screenShadows.Clear(Color.Black);
+
+            RenderImage source = screenShadows;
+            source.Clear(Color.Black);
+          
+            RenderImage desto = shadowIntermediate;
+            RenderImage copy = null;
+
+
+            Lightmap.setAsCurrentShader();
+
 
             var lightTextures = new List<Texture>();
             var colors = new List<Vector4>();
@@ -1187,6 +1198,7 @@ namespace SS14.Client.Services.State.States
 
                 //Set the drawing position.
                 Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X / screenShadows.Width,
@@ -1222,9 +1234,9 @@ namespace SS14.Client.Services.State.States
                 }
                 if (draw)
                 {
-                    shadowIntermediate.BeginDrawing();
+                  
+                    desto.BeginDrawing();
 
-                    Lightmap.setAsCurrentShader();
                     Lightmap.SetParameter("LightPosData", r_pos);
                     Lightmap.SetParameter("Colors", r_col);
                     Lightmap.SetParameter("light0", r_img[0]);
@@ -1232,28 +1244,30 @@ namespace SS14.Client.Services.State.States
                     Lightmap.SetParameter("light2", r_img[2]);
                     Lightmap.SetParameter("light3", r_img[3]);
                     Lightmap.SetParameter("light4", r_img[4]);
-                    Lightmap.SetParameter("light5", r_img[5]);
-                    Lightmap.SetParameter("sceneTexture", screenShadows);
-                    screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, BlitterSizeMode.Crop);
-
-                    shadowIntermediate.EndDrawing();
+                    Lightmap.SetParameter("light5", r_img[5]);              
+                    Lightmap.SetParameter("sceneTexture", GLSLShader.CurrentTexture);
                     // Blit the shadow image on top of the screen
+                    source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
+
+                    desto.EndDrawing();
+            
 
                     //Swap rendertargets to set up for the next light
-                    copy = screenShadows;
-                    screenShadows = shadowIntermediate;
-                    shadowIntermediate = copy;
+                    copy = source;
+                    source = desto;
+                    desto = copy;
                     i = 0;
                     draw = false;
+                    fill = false;
                     r_img = new Texture[num_lights];
                     r_col = new Vector4[num_lights];
                     r_pos = new Vector4[num_lights];
                 }
                 if (lightTextures.Count > 0)
                 {
-                    Texture l = lightTextures[0];
+                    r_img[i] = lightTextures[0];
                     lightTextures.RemoveAt(0);
-                    r_img[i] = l;
+                    
 
                     r_col[i] = colors[0];
                     colors.RemoveAt(0);
@@ -1272,9 +1286,17 @@ namespace SS14.Client.Services.State.States
             } while (lightTextures.Count > 0 || draw || fill);
 
             Lightmap.ResetCurrentShader();
-            shadowIntermediate.ResetCurrentRenderTarget(); // back to screen
+       
+            if(source != screenShadows)
+            {              
+               screenShadows.BeginDrawing();
+                source.Blit(0, 0, source.Width, source.Height);
+               screenShadows.EndDrawing();
+            }
 
-            Debug.DebugRendertarget(shadowIntermediate);
+         
+           
+
 
 
         }
@@ -1311,6 +1333,8 @@ namespace SS14.Client.Services.State.States
 
         private void RenderPlayerVisionMap()
         {
+
+
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(Color.LightGray);
@@ -1320,17 +1344,19 @@ namespace SS14.Client.Services.State.States
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
-                playerOcclusionTarget.Clear(Color.Transparent);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                playerOcclusionTarget.Clear(Color.Black);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);            
+                            
 
-                LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
-                area.LightPosition = playerVision.Position; // Set the light position
+                LightArea area =  GetLightArea(RadiusToShadowMapSize( playerVision.Radius));
+                area.LightPosition =  playerVision.Position  ; // Set the light position            
 
                 TileRef TileReference = MapManager.GetTileRef(playerVision.Position);
 
                 if (TileReference.Tile.TileDef.IsOpaque)
                 {
                     area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
+                    
                 }
 
 
@@ -1344,15 +1370,17 @@ namespace SS14.Client.Services.State.States
 
                 if (debugWallOccluders)
                 {
+                    
                     _occluderDebugTarget.BeginDrawing();
                     _occluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit(tmpBlitPos.X, tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
                     _occluderDebugTarget.EndDrawing();
+                 
                 }
-
+           
                 shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
-
+               
                 if (debugPlayerShadowMap)
                 {
                     _occluderDebugTarget.BeginDrawing();
@@ -1375,9 +1403,8 @@ namespace SS14.Client.Services.State.States
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-
                 playerOcclusionTarget.EndDrawing();
-                Debug.DebugRendertarget(playerOcclusionTarget);
+               
             }
             else
             {

@@ -1,32 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <SavedEntities>
   <SavedEntity X="10.3125" Y="9.375" template="Toolbox" name="Toolbox" />
-  <SavedEntity X="7.8125" Y="6.25" template="WallLight" name="FuckingLight" />
+  <SavedEntity X="0" Y="0" template="WallLight" name="FuckingLight" />
   <SavedEntity X="13.4997520446778" Y="9.26746177673341" template="Janitor_Suit" name="Janitor_Suit" />
   <SavedEntity X="13.4997520446778" Y="9.26746177673341" template="Shoes" name="Shoes" />
   <SavedEntity X="78.9826049804688" Y="73.9999618530275" template="Door" name="Door" />
   <SavedEntity X="79.0138549804688" Y="67.9999618530275" template="Door" name="Door" />
-  <SavedEntity X="76.8931579589844" Y="68.5268402099609" template="WallLight" name="WallLight" />
-  <SavedEntity X="72.1060714721681" Y="60.9726486206056" template="WallLight" name="WallLight" />
-  <SavedEntity X="83.6998214721681" Y="60.9782485961916" template="WallLight" name="WallLight" />
-  <SavedEntity X="83.8248214721681" Y="43.4940948486328" template="WallLight" name="WallLight" />
-  <SavedEntity X="72.1998214721681" Y="43.2009849548341" template="WallLight" name="WallLight" />
-  <SavedEntity X="78.5748214721681" Y="14.3448352813721" template="WallLight" name="WallLight" />
-  <SavedEntity X="67.6060714721681" Y="14.3448352813721" template="WallLight" name="WallLight" />
-  <SavedEntity X="64.9810714721681" Y="16.4385852813721" template="WallLight" name="WallLight" />
-  <SavedEntity X="55.4470901489259" Y="14.1885776519775" template="WallLight" name="WallLight" />
-  <SavedEntity X="47.1642608642578" Y="14.3135776519775" template="WallLight" name="WallLight" />
-  <SavedEntity X="39.0080108642578" Y="14.3135776519775" template="WallLight" name="WallLight" />
-  <SavedEntity X="27.5190963745117" Y="14.3760776519775" template="WallLight" name="WallLight" />
-  <SavedEntity X="42.0219192504884" Y="2.36498355865478" template="WallLight" name="WallLight" />
-  <SavedEntity X="33.7039947509766" Y="6.32759952545166" template="WallLight" name="WallLight" />
-  <SavedEntity X="21.3772583007813" Y="6.26509952545166" template="WallLight" name="WallLight" />
-  <SavedEntity X="27.6056137084961" Y="2.34289264678955" template="WallLight" name="WallLight" />
-  <SavedEntity X="16.1711330413818" Y="2.30427265167236" template="WallLight" name="WallLight" />
-  <SavedEntity X="18.9691371917725" Y="18.3592796325684" template="WallLight" name="WallLight" />
-  <SavedEntity X="10.7939710617065" Y="28.2995872497559" template="WallLight" name="WallLight" />
-  <SavedEntity X="17.567066192627" Y="28.3179512023926" template="WallLight" name="WallLight" />
+  <SavedEntity X="4" Y="4" template="WallLight" name="WallLight" />
+  <SavedEntity X="8" Y="8" template="WallLight" name="WallLight" />
+  <SavedEntity X="12" Y="12" template="WallLight" name="WallLight" />
+  <SavedEntity X="16" Y="16" template="WallLight" name="WallLight" />
+   <SavedEntity X="20" Y="20" template="WallLight" name="WallLight" />
+    <SavedEntity X="24" Y="24" template="WallLight" name="WallLight" />
   <SavedEntity X="18.8455581665039" Y="4.91581058502197" template="Worktop" name="Worktop" />
   <SavedEntity X="13.4997520446778" Y="9.26746177673341" template="Mop" name="Mop" />
   <SavedEntity X="8.91437053680419" Y="2.87823295593262" template="Extinguisher" name="Extinguisher" />

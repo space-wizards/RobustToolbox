@@ -4,13 +4,8 @@ using SS14.Client.Graphics.Render;
 using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Resource;
 using System;
-using System.Drawing;
 using SFML.Graphics;
 using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
-using SFML.System;
-using SS14.Client.Graphics.OpenGL;
 using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Services.Lighting

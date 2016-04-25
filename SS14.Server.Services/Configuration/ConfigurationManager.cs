@@ -12,6 +12,7 @@ namespace SS14.Server.Services.Configuration
     public sealed class ConfigurationManager : IServerConfigurationManager, IService
     {
         private string ConfigFile;
+        private string _defaultPath = "./server_config.xml"; //Default path for later saving purposes when there is no file
         public PersistentConfiguration Configuration;
 
         #region IConfigurationManager Members
@@ -20,15 +21,16 @@ namespace SS14.Server.Services.Configuration
         {
             if (File.Exists(ConfigFileLoc))
             {
-                var ConfigLoader = new XmlSerializer(typeof (PersistentConfiguration));
+                var ConfigLoader = new XmlSerializer(typeof(PersistentConfiguration));
                 StreamReader ConfigReader = File.OpenText(ConfigFileLoc);
-                var Config = (PersistentConfiguration) ConfigLoader.Deserialize(ConfigReader);
+                var Config = (PersistentConfiguration)ConfigLoader.Deserialize(ConfigReader);
                 ConfigReader.Close();
                 Configuration = Config;
                 ConfigFile = ConfigFileLoc;
             }
             else
             {
+                SetDefaultConfiguration();
                 //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigurationManager: Could not load config. File not found. " + ConfigFileLoc);
             }
         }
@@ -138,6 +140,13 @@ namespace SS14.Server.Services.Configuration
         }
 
         #endregion
+
+
+        private void SetDefaultConfiguration()
+        {
+            Configuration = new PersistentConfiguration();
+            ConfigFile = _defaultPath;
+        }
 
         public void LoadResources()
         {

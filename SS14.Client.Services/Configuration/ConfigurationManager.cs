@@ -17,17 +17,18 @@ namespace SS14.Client.Services.Configuration
             if (File.Exists(configFile))
             {
                 _configFile = configFile;
-                var configLoader = new XmlSerializer(typeof (PlayerConfiguration));
+                var configLoader = new XmlSerializer(typeof(PlayerConfiguration));
                 StreamReader configReader = File.OpenText(configFile);
-                var config = (PlayerConfiguration) configLoader.Deserialize(configReader);
+                var config = (PlayerConfiguration)configLoader.Deserialize(configReader);
                 configReader.Close();
                 Configuration = config;
 
-                config.ResourcePack=SS14.Shared.Utility.PlatformTools.SanePath(config.ResourcePack);
+                config.ResourcePack = SS14.Shared.Utility.PlatformTools.SanePath(config.ResourcePack);
 
             }
             else
             {
+                SetDefaultConfiguration();
                 //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigManager: Could not load config. File not found. " + ConfigFileLoc);
             }
         }
@@ -167,6 +168,11 @@ namespace SS14.Client.Services.Configuration
 
         #endregion
 
+        private void SetDefaultConfiguration()
+        {
+            Configuration = new PlayerConfiguration();
+        }
+
         private void Save()
         {
             if (Configuration == null)
@@ -175,7 +181,7 @@ namespace SS14.Client.Services.Configuration
             }
             else
             {
-                var configSaver = new XmlSerializer(typeof (PlayerConfiguration));
+                var configSaver = new XmlSerializer(typeof(PlayerConfiguration));
                 StreamWriter configWriter = File.CreateText(_configFile);
                 configSaver.Serialize(configWriter, Configuration);
                 configWriter.Flush();

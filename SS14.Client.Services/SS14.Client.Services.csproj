@@ -489,6 +489,12 @@
       <LastGenOutput>KeyBindings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <None Include="Input\KeyBindings.xsc">
+      <DependentUpon>KeyBindings.xsd</DependentUpon>
+    </None>
+    <None Include="Input\KeyBindings.xss">
+      <DependentUpon>KeyBindings.xsd</DependentUpon>
+    </None>
     <None Include="MessageLogging\messageLoggerService.config">
     </None>
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf">

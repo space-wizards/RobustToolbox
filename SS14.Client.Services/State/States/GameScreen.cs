@@ -1359,7 +1359,7 @@ namespace SS14.Client.Services.State.States
                 if (TileReference.Tile.TileDef.IsOpaque)
                 {
 
-                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
+                    area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
                     
 
                 }

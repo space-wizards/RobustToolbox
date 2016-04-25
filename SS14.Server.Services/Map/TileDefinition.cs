@@ -1,6 +1,6 @@
 ﻿using SS14.Server.Interfaces.Map;
-using System.Diagnostics;
 using SS14.Shared.IoC;
+using System.Diagnostics;
 
 namespace SS14.Server.Services.Map
 {

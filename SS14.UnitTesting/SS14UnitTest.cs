@@ -1,19 +1,18 @@
-﻿using SFML.System;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Configuration;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-
 
 namespace SS14.UnitTesting
 {
 
-  
+
     public class SS14UnitTest
     {
 

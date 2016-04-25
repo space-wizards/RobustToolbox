@@ -107,10 +107,6 @@
       <Name>System.Core</Name>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Xml">
       <Name>System.Xml</Name>
       <Private>False</Private>
@@ -285,9 +281,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EntitySystems\TransformSystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Vector2.cs">
       <SubType>Code</SubType>
     </Compile>
     <None Include="Entity.cs">

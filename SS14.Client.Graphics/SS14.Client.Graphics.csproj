@@ -75,7 +75,6 @@
       <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CluwneLib.cs">
@@ -85,7 +84,6 @@
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="OpenGL\GLTexture.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>

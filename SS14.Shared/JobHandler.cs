@@ -1,6 +1,7 @@
-﻿using System;
+﻿using SFML.Graphics;
+using SS14.Shared.Maths;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -19,8 +20,8 @@ namespace SS14.Shared
         [XmlIgnore]
         public Color DepartmentColor
         {
-            get { return ColorTranslator.FromHtml(DepartmentColorHex); }
-            set { DepartmentColorHex = ColorTranslator.ToHtml(value); }
+            get { return ColorUtils.FromHex(DepartmentColorHex); }
+            set { DepartmentColorHex = $"#{value.ToInt():X8}"; }
         }
     }
 
@@ -97,7 +98,7 @@ namespace SS14.Shared
             depDef.DepartmentIcon = "department_security";
             depDef.Description = "The security department handles the security of the station in all matters.";
             depDef.Name = "Security";
-            depDef.DepartmentColor = Color.FromArgb(255, 125, 125, 125);
+            depDef.DepartmentColor = new Color(125, 125, 125);
 
             JobSettingsTemplate.DepartmentDefinitions = new List<DepartmentDefinition>() {depDef};
 

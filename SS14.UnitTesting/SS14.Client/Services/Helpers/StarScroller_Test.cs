@@ -1,11 +1,9 @@
-﻿using System;
-using NUnit.Framework;
-using SS14.Client.Services.Helpers;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Event;
+﻿using NUnit.Framework;
 using SFML.System;
 using SS14.Client.Graphics;
-using System.Drawing;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
+using System;
 
 namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 {
@@ -32,7 +30,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
+                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
 

@@ -1,6 +1,8 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
-using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -9,30 +11,27 @@ using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SS14.Shared.Maths;
-using CluwneSprite = SS14.Client.Graphics.Sprite.CluwneSprite;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.GameObjects
 {
     public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
     {
-        protected CluwneSprite currentBaseSprite;
-        protected Dictionary<string, CluwneSprite> dirSprites;
-        protected bool flip;
+        protected Sprite currentBaseSprite;
+        protected string currentBaseSpriteKey;
+        protected Dictionary<string, Sprite> dirSprites;
+        protected bool HorizontalFlip { get; set; }
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        protected Dictionary<string, CluwneSprite> sprites;
+        protected Dictionary<string, Sprite> sprites;
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
 
         public SpriteComponent()
         {
             Family = ComponentFamily.Renderable;
-            sprites = new Dictionary<string, CluwneSprite>();
-            dirSprites = new Dictionary<string, CluwneSprite>();
+            sprites = new Dictionary<string, Sprite>();
+            dirSprites = new Dictionary<string, Sprite>();
             slaves = new List<IRenderableComponent>();
         }
 
@@ -46,32 +45,32 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                       (GetActiveDirectionalSprite().AABB.Height/2);
+                       (GetActiveDirectionalSprite().GetLocalBounds().Height/2);
             }
         }
 
         #region ISpriteComponent Members
         
-        public RectangleF AverageAABB
+        public FloatRect AverageAABB
         {
             get { return AABB; }
         }
         
-        public RectangleF AABB
+        public FloatRect AABB
         {
             get
             {
-                return new RectangleF(0, 0, GetActiveDirectionalSprite().AABB.Width,
-                                      GetActiveDirectionalSprite().AABB.Height);
+                var bounds = GetActiveDirectionalSprite().GetLocalBounds();
+                return new FloatRect(0, 0, bounds.Width, bounds.Height);
             }
         }
 
-        public CluwneSprite GetCurrentSprite()
+        public Sprite GetCurrentSprite()
         {
             return GetActiveDirectionalSprite();
         }
 
-        public CluwneSprite GetSprite(string spriteKey)
+        public Sprite GetSprite(string spriteKey)
         {
             if (sprites.ContainsKey(spriteKey))
                 return sprites[spriteKey];
@@ -79,7 +78,7 @@ namespace SS14.Client.GameObjects
                 return null;
         }
 
-        public List<CluwneSprite> GetAllSprites()
+        public List<Sprite> GetAllSprites()
         {
             return sprites.Values.ToList();
         }
@@ -89,6 +88,7 @@ namespace SS14.Client.GameObjects
             if (sprites.ContainsKey(spriteKey))
             {
                 currentBaseSprite = sprites[spriteKey];
+                currentBaseSpriteKey = spriteKey;
                 if (Owner != null)
                     Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
             }
@@ -110,7 +110,7 @@ namespace SS14.Client.GameObjects
             BuildDirectionalSprites();
         }
 
-        public void AddSprite(string key, CluwneSprite spritetoadd)
+        public void AddSprite(string key, Sprite spritetoadd)
         {
             if (spritetoadd != null && key != "")
                 sprites.Add(key, spritetoadd);
@@ -177,7 +177,7 @@ namespace SS14.Client.GameObjects
             {
                 case ComponentMessageType.CheckSpriteClick:
                     reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((PointF) list[0]), DrawDepth);
+                                                      WasClicked((Vector2f) list[0]), DrawDepth);
                     break;
                 case ComponentMessageType.GetAABB:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
@@ -200,7 +200,7 @@ namespace SS14.Client.GameObjects
             return reply;
         }
 
-        protected virtual CluwneSprite GetBaseSprite()
+        protected virtual Sprite GetBaseSprite()
         {
             return currentBaseSprite;
         }
@@ -210,14 +210,14 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        private CluwneSprite GetActiveDirectionalSprite()
+        private Sprite GetActiveDirectionalSprite()
         {
             if (currentBaseSprite == null) return null;
 
-            CluwneSprite sprite = currentBaseSprite;
+            Sprite sprite = currentBaseSprite;
 
             string dirName =
-                (currentBaseSprite.Key + "_" +
+                (currentBaseSpriteKey + "_" +
                  Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).
                     ToLowerInvariant();
 
@@ -227,26 +227,25 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
-        protected virtual bool WasClicked(PointF worldPos)
+        protected virtual bool WasClicked(Vector2f worldPos)
         {
             if (currentBaseSprite == null || !visible) return false;
 
-            CluwneSprite spriteToCheck = GetActiveDirectionalSprite();
+            Sprite spriteToCheck = GetActiveDirectionalSprite();
+            var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new RectangleF(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                    (spriteToCheck.Width/2),
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                    (spriteToCheck.Height/2), spriteToCheck.Width, spriteToCheck.Height);
-            if (!AABB.Contains(worldPos)) return false;
+                new FloatRect(
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (bounds.Width/2),
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (bounds.Height/2), bounds.Width, bounds.Height);
+            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
             
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
             
             // Get the clicked position relative to the texture
-            var spritePosition = new Point((int) (worldPos.X - AABB.X + texRect.Left),
-                                           (int) (worldPos.Y - AABB.Y + texRect.Top));
+            var spritePosition = new Vector2i((int) (worldPos.X - AABB.Left + texRect.Left),
+                                              (int) (worldPos.Y - AABB.Top + texRect.Top));
 
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
@@ -281,7 +280,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
+        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
@@ -299,23 +298,20 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (currentBaseSprite == null) return;
 
-            CluwneSprite spriteToRender = GetActiveDirectionalSprite();
+            Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen( Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Vector2f renderPos = CluwneLib.WorldToScreen( Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <
-                topLeft.X
+            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + bounds.Left + bounds.Width < topLeft.X
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                ||
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                spriteToRender.AABB.Bottom < topLeft.Y
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + bounds.Top + bounds.Height < topLeft.Y
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.HorizontalFlip = flip;
+            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
-            spriteToRender.HorizontalFlip = false;
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -332,18 +328,19 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            CluwneLib.drawRectangle(renderPos.X - aabb.Width / 2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
+            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
         }
 
-        public void SetSpriteCenter(string sprite, Vector2 center)
+        public void SetSpriteCenter(string sprite, Vector2f center)
         {
             SetSpriteCenter(sprites[sprite], center);
         }
 
-        public void SetSpriteCenter(CluwneSprite sprite, Vector2 center)
+        public void SetSpriteCenter(Sprite sprite, Vector2f center)
         {
-            sprite.SetPosition(center.X - (GetActiveDirectionalSprite().AABB.Width/2),
-                               center.Y - (GetActiveDirectionalSprite().AABB.Height/2));
+            var bounds = GetActiveDirectionalSprite().GetLocalBounds();
+            sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),
+                                                       center.Y - (bounds.Height / 2));
         }
 
         public bool IsSlaved()

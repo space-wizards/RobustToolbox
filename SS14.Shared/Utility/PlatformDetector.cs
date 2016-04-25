@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 
-namespace SS14.Shared.Utility {
+namespace SS14.Shared.Utility
+{
     public enum Platform {
         Windows,
         Linux,

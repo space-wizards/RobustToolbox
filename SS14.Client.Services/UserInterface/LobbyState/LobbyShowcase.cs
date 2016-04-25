@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SS14.Client.Graphics;
+using SS14.Shared;
+using SS14.Shared.Maths;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class LobbyShowcase : Showcase
     {
         protected int ScrollOffset = 0;
-        public Size ItemOffsets = new Size(0,0);
+        public Vector2i ItemOffsets = new Vector2i(0,0);
 
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
@@ -61,12 +63,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, Size);
+            ClientArea = new IntRect(Position, Size);
 
-            _buttonRight.Position = new Point(ClientArea.Right - _buttonRight.ClientArea.Width, ClientArea.Top + (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
+            _buttonRight.Position = new Vector2i(ClientArea.Right() - _buttonRight.ClientArea.Width, ClientArea.Top + (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
             _buttonRight.Update(frameTime);
 
-            _buttonLeft.Position = new Point(_buttonRight.ClientArea.X - _buttonRight.ClientArea.Width - _buttonLeft.ClientArea.Width, _buttonRight.ClientArea.Y);
+            _buttonLeft.Position = new Vector2i(_buttonRight.ClientArea.Left - _buttonRight.ClientArea.Width - _buttonLeft.ClientArea.Width, _buttonRight.ClientArea.Top);
 
             _buttonLeft.Update(frameTime);
 
@@ -88,21 +90,21 @@ namespace SS14.Client.Services.UserInterface.Components
                 {
                     KeyValuePair<ImageButton, Object> middle = _items[ScrollOffset];
                     middle.Key.Position =
-                        new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
-                                  ItemOffsets.Height + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
+                        new Vector2i(ItemOffsets.X + ClientArea.Left + (int)(ClientArea.Width / 2f - middle.Key.ClientArea.Width / 2f),
+                                  ItemOffsets.Y + ClientArea.Top + (int)(ClientArea.Height / 2f - middle.Key.ClientArea.Height / 2f));
                     if (FadeItems)
                         middle.Key.Color = Color.White;
 
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
-                        _selectionGlow.Position = new Point(ItemOffsets.Width + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), middle.Key.ClientArea.Top + (int)(middle.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                        _selectionGlow.Position = new Vector2i(ItemOffsets.X + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), middle.Key.ClientArea.Top + (int)(middle.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
                         _selectionGlow.Render();
                     }
 
                     middle.Key.Render();
 
                     int lastPosLeft = middle.Key.ClientArea.Left - ItemSpacing;
-                    int lastPosRight = middle.Key.ClientArea.Right + ItemSpacing;
+                    int lastPosRight = middle.Key.ClientArea.Right() + ItemSpacing;
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
@@ -113,17 +115,17 @@ namespace SS14.Client.Services.UserInterface.Components
                         if ((ScrollOffset - i) >= 0 && (ScrollOffset - i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> currLeft = _items[(ScrollOffset - i)];
-                            currLeft.Key.Position = new Point(lastPosLeft - currLeft.Key.ClientArea.Width,ClientArea.Top + (int)(ClientArea.Height / 2f - currLeft.Key.ClientArea.Height / 2f));
+                            currLeft.Key.Position = new Vector2i(lastPosLeft - currLeft.Key.ClientArea.Width,ClientArea.Top + (int)(ClientArea.Height / 2f - currLeft.Key.ClientArea.Height / 2f));
                             lastPosLeft = currLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset - i) == Selected)
                             {
-                                _selectionGlow.Position = new Point(currLeft.Key.ClientArea.Left + (int)(currLeft.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currLeft.Key.ClientArea.Top + (int)(currLeft.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                                _selectionGlow.Position = new Vector2i(currLeft.Key.ClientArea.Left + (int)(currLeft.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currLeft.Key.ClientArea.Top + (int)(currLeft.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
                                 _selectionGlow.Render();
                             }
 
                             if (FadeItems)
-                                currLeft.Key.Color = Color.FromArgb ((byte)(baseAlpha / alphaAdj), Color.White);
+                                currLeft.Key.Color = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
 
                             currLeft.Key.Render();
                         }
@@ -132,17 +134,17 @@ namespace SS14.Client.Services.UserInterface.Components
                         if ((ScrollOffset + i) >= 0 && (ScrollOffset + i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> currRight = _items[(ScrollOffset + i)];
-                            currRight.Key.Position = new Point(lastPosRight, ClientArea.Top + (int)(ClientArea.Height / 2f - currRight.Key.ClientArea.Height / 2f));
-                            lastPosRight = currRight.Key.ClientArea.Right + ItemSpacing;
+                            currRight.Key.Position = new Vector2i(lastPosRight, ClientArea.Top + (int)(ClientArea.Height / 2f - currRight.Key.ClientArea.Height / 2f));
+                            lastPosRight = currRight.Key.ClientArea.Right() + ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset + i) == Selected)
                             {
-                                _selectionGlow.Position = new Point(currRight.Key.ClientArea.Left + (int)(currRight.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currRight.Key.ClientArea.Top + (int)(currRight.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
+                                _selectionGlow.Position = new Vector2i(currRight.Key.ClientArea.Left + (int)(currRight.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currRight.Key.ClientArea.Top + (int)(currRight.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
                                 _selectionGlow.Render();
                             }
 
                             if (FadeItems)
-                                currRight.Key.Color = Color.FromArgb((byte) (baseAlpha/alphaAdj), Color.White);
+                                currRight.Key.Color = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
 
                             currRight.Key.Render();
                         }
@@ -165,7 +167,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (ScrollingNeeded())
                 {
@@ -186,7 +188,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 _buttonLeft.MouseMove(e);
                 _buttonRight.MouseMove(e);
@@ -200,7 +202,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
 
                 if (ShowArrows && ScrollingNeeded())
@@ -238,7 +240,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_buttonLeft.MouseUp(e)) return true;
                 if (_buttonRight.MouseUp(e)) return true;

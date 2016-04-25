@@ -1,15 +1,10 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Map
 {
@@ -33,14 +28,14 @@ namespace SS14.Client.Services.Map
 
         public Tile Create(ushort data = 0) { return new Tile(0, data); }
 
-        CluwneSprite tileSprite;
+        Sprite tileSprite;
 
         public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             if (tileSprite == null)
                 tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("space_texture");
-            
-            tileSprite.SetPosition(xTopLeft, yTopLeft);
+
+            tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
 
@@ -49,7 +44,7 @@ namespace SS14.Client.Services.Map
 
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition)
         {
         }
 
@@ -99,14 +94,15 @@ namespace SS14.Client.Services.Map
             IsWall = true;
 
             tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("wall_texture");
-            
-            shape = new RectangleShape(tileSprite.Size);
+
+            var bounds = tileSprite.GetLocalBounds();
+            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
         }
         
         public override void RenderPos(float x, float y)
         {
             shape.FillColor = Color.Black;
-            shape.Position = new Vector2f(x, y);
+            shape.Position = new SFML.System.Vector2f(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
     }

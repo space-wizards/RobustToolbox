@@ -1,24 +1,19 @@
-﻿using BKSystem.IO;
-using Lidgren.Network;
-using SS14.Client.Interfaces.Collision;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.State;
-using SS14.Client.Services.State.States;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 
 namespace SS14.Client.Services.Map
 {
     public class MapManager : IMapManager
     {
-        private Dictionary<Point, Chunk> chunks = new Dictionary<Point, Chunk>();
+        private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
         private static readonly int ChunkSize = Chunk.ChunkSize;
 
         public event TileChangedEventHandler TileChanged;
@@ -37,12 +32,12 @@ namespace SS14.Client.Services.Map
 
         // If `ignoreSpace` is false, this will return tiles in chunks that don't even exist.
         // This is to make the tile count predictable.  Is this appropriate behavior?
-        public IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace)
+        public IEnumerable<TileRef> GetTilesIntersecting(FloatRect area, bool ignoreSpace)
         {
-            int chunkLeft = (int)Math.Floor(area.X / ChunkSize);
-            int chunkTop = (int)Math.Floor(area.Y / ChunkSize);
-            int chunkRight = (int)Math.Floor(area.Right / ChunkSize);
-            int chunkBottom = (int)Math.Floor(area.Bottom / ChunkSize);
+            int chunkLeft = (int)Math.Floor(area.Left / ChunkSize);
+            int chunkTop = (int)Math.Floor(area.Top / ChunkSize);
+            int chunkRight = (int)Math.Floor(area.Right() / ChunkSize);
+            int chunkBottom = (int)Math.Floor(area.Bottom() / ChunkSize);
             for (int chunkY = chunkTop; chunkY <= chunkBottom; ++chunkY)
             {
                 for (int chunkX = chunkLeft; chunkX <= chunkRight; ++chunkX)
@@ -58,12 +53,12 @@ namespace SS14.Client.Services.Map
                         yMin = Mod(Math.Floor(area.Top), ChunkSize);
 
                     if (chunkX == chunkRight)
-                        xMax = Mod(Math.Floor(area.Right), ChunkSize);
+                        xMax = Mod(Math.Floor(area.Right()), ChunkSize);
                     if (chunkY == chunkBottom)
-                        yMax = Mod(Math.Floor(area.Bottom), ChunkSize);
+                        yMax = Mod(Math.Floor(area.Bottom()), ChunkSize);
 
                     Chunk chunk;
-                    if (!chunks.TryGetValue(new Point(chunkX, chunkY), out chunk))
+                    if (!chunks.TryGetValue(new Vector2i(chunkX, chunkY), out chunk))
                     {
                         if (ignoreSpace)
                             continue;
@@ -92,11 +87,11 @@ namespace SS14.Client.Services.Map
                 }
             }
         }
-        public IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area)
+        public IEnumerable<TileRef> GetGasTilesIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsGasVolume);
         }
-        public IEnumerable<TileRef> GetWallsIntersecting(RectangleF area)
+        public IEnumerable<TileRef> GetWallsIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsWall);
         }
@@ -125,13 +120,13 @@ namespace SS14.Client.Services.Map
 
         #region Indexers
 
-        public TileRef GetTileRef(Vector2 pos)
+        public TileRef GetTileRef(Vector2f pos)
         {
             return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
         }
         public TileRef GetTileRef(int x, int y)
         {
-            Point chunkPos = new Point(
+            Vector2i chunkPos = new Vector2i(
                 (int)Math.Floor((float)x / ChunkSize),
                 (int)Math.Floor((float)y / ChunkSize)
             );
@@ -155,7 +150,7 @@ namespace SS14.Client.Services.Map
                 this.mm = mm;
             }
 
-            public Tile this[Vector2 pos]
+            public Tile this[Vector2f pos]
             {
                 get
                 {
@@ -170,7 +165,7 @@ namespace SS14.Client.Services.Map
             {
                 get
                 {
-                    Point chunkPos = new Point(
+                    Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
@@ -182,7 +177,7 @@ namespace SS14.Client.Services.Map
                 }
                 set
                 {
-                    Point chunkPos = new Point(
+                    Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
@@ -240,7 +235,7 @@ namespace SS14.Client.Services.Map
             {
                 int x = message.ReadInt32();
                 int y = message.ReadInt32();
-                var chunkPos = new Point(x, y);
+                var chunkPos = new Vector2i(x, y);
 
                 Chunk chunk;
                 if (!chunks.TryGetValue(chunkPos, out chunk))
@@ -269,21 +264,21 @@ namespace SS14.Client.Services.Map
         //    Type tileType = Type.GetType("SS14.Client.Services.Tiles." + typeName, false);
 
         //    if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
-        //    RectangleF rect = new RectangleF();
+        //    RectangleF rect = new FloatRect();
         //    Tile created;
         //    if (typeName != "Wall")
         //    {
-        //        rect = new RectangleF(pos.X, pos.Y, TileSpacing, TileSpacing);
+        //        rect = new FloatRect(pos.X, pos.Y, TileSpacing, TileSpacing);
         //    }
         //    else
         //    {
         //        if (dir == Direction.North)
         //        {
-        //            rect = new RectangleF(pos.X, pos.Y, wallThickness, TileSpacing);
+        //            rect = new FloatRect(pos.X, pos.Y, wallThickness, TileSpacing);
         //        }
         //        else
         //        {
-        //            rect = new RectangleF(pos.X, pos.Y, TileSpacing, wallThickness);
+        //            rect = new FloatRect(pos.X, pos.Y, TileSpacing, wallThickness);
         //        }
         //    }
 

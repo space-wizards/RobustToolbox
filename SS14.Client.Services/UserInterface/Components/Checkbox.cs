@@ -1,9 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using System;
-using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -17,10 +16,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-		private CluwneSprite checkbox;
-		private CluwneSprite checkboxCheck;
+        private Sprite checkbox;
+        private Sprite checkboxCheck;
 
-        private Boolean value;
+        private bool value;
 
 
         public Checkbox(IResourceManager resourceManager)
@@ -32,7 +31,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         }
 
-        public Boolean Value
+        public bool Value
         {
             get { return value; }
             set
@@ -46,7 +45,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            checkbox.Position = Position;          
+            checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
         }
 
         public override void Render()
@@ -64,9 +63,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 Value = !Value;
                 return true;
@@ -74,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

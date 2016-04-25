@@ -1,34 +1,35 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Collidable;
 using SS14.Shared.IoC;
-using System;
-using System.Drawing;
 using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidable
     {
-        public Color DebugColor { get; set; }
+        public SFML.Graphics.Color DebugColor { get; set; }
 
         private bool collisionEnabled = true;
-        private RectangleF currentAABB;
+        private FloatRect currentAABB;
         protected bool isHardCollidable = true;
 
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4 tweakAABB;
+        private Vector4f tweakAABB;
 
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
             DebugColor = Color.Red;
-            tweakAABB = new Vector4(0,0,0,0);
+            tweakAABB = new Vector4f(0,0,0,0);
         }
 
         public override Type StateType
@@ -36,20 +37,20 @@ namespace SS14.Client.GameObjects
             get { return typeof (CollidableComponentState); }
         }
 
-        private Vector4 TweakAABB
+        private Vector4f TweakAABB
         {
             get { return tweakAABB; }
             set { tweakAABB = value; }
         }
 
-        private RectangleF OffsetAABB
+        private FloatRect OffsetAABB
         {
             get
             {
 // Return tweaked AABB
                 if (currentAABB != null)
                     return
-                        new RectangleF(
+                        new FloatRect(
                             currentAABB.Left +
                             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
                             (currentAABB.Width/2) + tweakAABB.W,
@@ -59,13 +60,13 @@ namespace SS14.Client.GameObjects
                             currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
                             currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
                 else
-                    return RectangleF.Empty;
+                    return new FloatRect();
             }
         }
 
         #region ICollidable Members
 
-        public RectangleF AABB
+        public FloatRect AABB
         {
             get { return OffsetAABB; }
         }
@@ -166,7 +167,7 @@ namespace SS14.Client.GameObjects
             switch (parameter.MemberName)
             {
                 case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4>() / IoCManager.Resolve<IMapManager>().TileSize;
+                    TweakAABB = parameter.GetValue<Vector4f>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "TweakAABBtop":
                     tweakAABB.X = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
@@ -181,9 +182,7 @@ namespace SS14.Client.GameObjects
                     tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
                     break;
                 case "DebugColor":
-                    var color = ColorTranslator.FromHtml(parameter.GetValue<string>());
-                    if (!color.IsEmpty)
-                        DebugColor = color;
+                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Red);
                     break;
             }
         }
@@ -218,10 +217,10 @@ namespace SS14.Client.GameObjects
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-                currentAABB = (RectangleF) reply.ParamsList[0];
-                currentAABB = new RectangleF(
-                    currentAABB.X / tileSize,
-                    currentAABB.Y / tileSize,
+                currentAABB = (FloatRect) reply.ParamsList[0];
+                currentAABB = new FloatRect(
+                    currentAABB.Left / tileSize,
+                    currentAABB.Top / tileSize,
                     currentAABB.Width / tileSize,
                     currentAABB.Height / tileSize);
             }

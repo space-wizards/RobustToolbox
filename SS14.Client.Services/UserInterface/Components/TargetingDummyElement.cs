@@ -1,12 +1,10 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SFML.Window;
-using Image = SFML.Graphics.Image;
-using SS14.Client.Graphics;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -22,10 +20,10 @@ namespace SS14.Client.Services.UserInterface.Components
         public BodyPart BodyPart;
         public float CurrentHealth;
         public float MaxHealth;
-        private Point _clickPoint;
+        private Vector2i _clickPoint;
 
-        private CluwneSprite _elementSprite;
-        private Boolean _selected;
+        private Sprite _elementSprite;
+        private bool _selected;
 
         public TargetingDummyElement(string spriteName, BodyPart part, IResourceManager resourceManager)
         {
@@ -54,9 +52,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _elementSprite.Position = new Vector2(Position.X,Position.Y);
-            ClientArea = new Rectangle(Position,
-                                       new Size((int)_elementSprite.Width, (int)_elementSprite.Height));
+            _elementSprite.Position = new Vector2f(Position.X,Position.Y);
+            var bounds = _elementSprite.GetLocalBounds();
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -64,20 +63,20 @@ namespace SS14.Client.Services.UserInterface.Components
             //elementSprite.Color = selected ? Color.DarkRed : Color.White;
             float healthPct = CurrentHealth / MaxHealth;
 
-            if (healthPct > 0.75) _elementSprite.Color      = Color.DarkGreen;
+            if (healthPct > 0.75) _elementSprite.Color      = new Color(0, 128, 0);
             else if (healthPct > 0.50) _elementSprite.Color = Color.Yellow;
-            else if (healthPct > 0.25) _elementSprite.Color = Color.DarkOrange;
+            else if (healthPct > 0.25) _elementSprite.Color = new Color(128, 64, 0);
             else if (healthPct > 0) _elementSprite.Color    = Color.Red;
             else _elementSprite.Color = Color.Black;
 
-            _elementSprite.Position = new Vector2(Position.X,Position.Y);
+            _elementSprite.Position = new Vector2f(Position.X,Position.Y);
             _elementSprite.Draw();
             _elementSprite.Color = Color.White;
 
             if (!_selected) return;
 
            CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 5, Color.Black);
-           CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, Color.DarkRed);
+           CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 4, new Color(139, 0, 0));
            CluwneLib.drawCircle(Position.X + _clickPoint.X, Position.Y + _clickPoint.Y, 3, Color.Black);
         }
 
@@ -91,10 +90,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!ClientArea.Contains(new Point((int)e.X, (int)e.Y))) return false;
-
-            var spritePosition = new Point((int)e.X - Position.X + (int)_elementSprite.ImageOffset.X,
-                                           (int)e.Y - Position.Y + (int)_elementSprite.ImageOffset.Y);
+            if (!ClientArea.Contains(e.X, e.Y)) return false;
 
             // Image.ImageLockBox imgData = _elementSprite.Image.GetImageData();
             //imgData.Lock(false);
@@ -106,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (pixColour.A != 0)
             {
                 if (Clicked != null) Clicked(this);
-                _clickPoint = new Point((int)e.X - Position.X, (int)e.Y - Position.Y);
+                _clickPoint = new Vector2i(e.X - Position.X, e.Y - Position.Y);
                 _selected = true;
                 return true;
             }

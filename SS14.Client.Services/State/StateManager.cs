@@ -1,4 +1,6 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.Window;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -10,9 +12,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using SFML.Window;
-using SS14.Client.Graphics.Event;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State
@@ -104,6 +103,12 @@ namespace SS14.Client.Services.State
         {
             if (CurrentState != null)
                 CurrentState.MouseLeft(e);
+        }
+
+        public void TextEntered(TextEventArgs e)
+        {
+            if (CurrentState != null)
+                CurrentState.TextEntered(e);
         }
 
         #endregion

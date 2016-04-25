@@ -1,8 +1,7 @@
-﻿using System;
-using NUnit.Framework;
-using SS14.Shared.IoC;
-using SS14.Server.Interfaces.Configuration;
+﻿using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
+using SS14.Server.Interfaces.Configuration;
+using SS14.Shared.IoC;
 
 namespace SS14.UnitTesting.SS14.Shared.IoC
 {

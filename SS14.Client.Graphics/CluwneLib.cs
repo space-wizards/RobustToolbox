@@ -1,21 +1,13 @@
-﻿using System;
+﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Timing;
-using SystemColor = System.Drawing.Color;
-using SFMLColor = SFML.Graphics.Color;
-using SS14.Client.Graphics.Shader;
-using SS14.Shared.Maths;
-using System.Drawing;
-using SFML.Window;
-using System.Collections.Generic;
-using System.Collections;
 using SS14.Client.Graphics.Settings;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Timing;
 using SS14.Client.Graphics.View;
-
-using OpenTK.Graphics;
+using System;
 
 namespace SS14.Client.Graphics
 {
@@ -32,21 +24,21 @@ namespace SS14.Client.Graphics
         public static event EventHandler RefreshVideoSettings;
 
         #region Accessors
-        public static Vector2 WorldCenter { get; set; }
-        public static SizeF ScreenViewportSize { get; set; }
+        public static Vector2f WorldCenter { get; set; }
+        public static Vector2u ScreenViewportSize { get; set; }
         public static int TileSize { get; set; }
-        public static RectangleF WorldViewport
+        public static FloatRect WorldViewport
         {
             get
             {
                 return ScreenToWorld(ScreenViewport);
             }
         }      
-        public static RectangleF ScreenViewport
+        public static IntRect ScreenViewport
         {
             get
             {
-                return new RectangleF(PointF.Empty, ScreenViewportSize);
+                return new IntRect(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
             }
         }     
 
@@ -134,7 +126,12 @@ namespace SS14.Client.Graphics
 
             IsRunning = true;
         }
-                        
+
+        public static void drawRectangle(int x, int y, int width, int height, object p)
+        {
+            throw new NotImplementedException();
+        }
+
         public static void Initialize()
         {
             if (IsInitialized)
@@ -151,11 +148,12 @@ namespace SS14.Client.Graphics
 
 
             //Hook OpenTK into SFMLs Opengl 
-            var wi = OpenTK.Platform.Utilities.CreateWindowsWindowInfo(Screen.SystemHandle);
-            var ctx = new OpenTK.Graphics.GraphicsContext(OpenTK.Graphics.GraphicsMode.Default, wi);
-            ctx.MakeCurrent(wi);
-            ctx.LoadAll();
-        }
+        OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+                // Non-Native backend doesn't have a default GetAddress method
+        Backend = OpenTK.PlatformBackend.PreferNative
+        });
+        new GraphicsContext(OpenTK.ContextHandle.Zero, null);
+    }
        
         public static void RequestGC(Action action)
         {
@@ -164,9 +162,9 @@ namespace SS14.Client.Graphics
 
   
 
-        public static void ClearCurrentRendertarget(SystemColor color)
+        public static void ClearCurrentRendertarget(Color color)
         {
-            CurrentRenderTarget.Clear(color.ToSFMLColor());
+            CurrentRenderTarget.Clear(color);
         }
 
         public static void Terminate()
@@ -242,12 +240,12 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, SystemColor Color)
+        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
-            rectangle.FillColor = Color.ToSFMLColor();
+            rectangle.FillColor = Color;
 
             CurrentRenderTarget.Draw(rectangle);           
         }
@@ -260,12 +258,12 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, SystemColor Color)
+        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
-            rectangle.FillColor = Color.ToSFMLColor();
+            rectangle.FillColor = Color;
 
             CurrentRenderTarget.Draw(rectangle);
         }
@@ -280,14 +278,14 @@ namespace SS14.Client.Graphics
         /// <param name="heightY"> Height Y of rectangle </param>
         /// <param name="OutlineThickness"> Outline Thickness of rectangle </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, SystemColor OutlineColor)
+        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
         {
             RectangleShape HollowRect = new RectangleShape();
-            HollowRect.FillColor = SystemColor.Transparent.ToSFMLColor();
-            HollowRect.Position = new Vector2f(posX, posY);
-            HollowRect.Size = new Vector2f(widthX, heightY);
+            HollowRect.FillColor = Color.Transparent;
+            HollowRect.Position = new SFML.System.Vector2f(posX, posY);
+            HollowRect.Size = new SFML.System.Vector2f(widthX, heightY);
             HollowRect.OutlineThickness = OutlineThickness;
-            HollowRect.OutlineColor = OutlineColor.ToSFMLColor();
+            HollowRect.OutlineColor = OutlineColor;
 
             CurrentRenderTarget.Draw(HollowRect);
            
@@ -304,12 +302,12 @@ namespace SS14.Client.Graphics
         /// <param name="posY"> Pos Y of Circle </param>
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawCircle(int posX, int posY, int radius, SystemColor color)
+        public static void drawCircle(int posX, int posY, int radius, Color color)
         {
             CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2(posX, posY);
+            Circle.Position = new Vector2f(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = color.ToSFMLColor();
+            Circle.FillColor = color;
 
             CurrentRenderTarget.Draw(Circle);
 
@@ -323,14 +321,14 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
         /// <param name="OutlineColor"> Circle outline Color </param>
-        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness ,SystemColor OutlineColor)
+        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness, Color OutlineColor)
         {
             CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2(posX, posY);
+            Circle.Position = new Vector2f(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = SystemColor.Transparent.ToSFMLColor();
+            Circle.FillColor = Color.Transparent;
             Circle.OutlineThickness = OutlineThickness;
-            Circle.OutlineColor = OutlineColor.ToSFMLColor();
+            Circle.OutlineColor = OutlineColor;
 
             CurrentRenderTarget.Draw(Circle);
         }
@@ -343,12 +341,12 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Cirle </param>
         /// <param name="color"> Fill Color </param>
         /// <param name="vector2"></param>
-        public static void drawCircle(float posX, float posY, int radius, SystemColor color, Vector2 vector2)
+        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2f vector2)
         {
             CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2(posX, posY);
+            Circle.Position = new Vector2f(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = SystemColor.Transparent.ToSFMLColor();
+            Circle.FillColor = Color.Transparent;
 
             CurrentRenderTarget.Draw(Circle);
         }
@@ -361,12 +359,12 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawPoint(int posX, int posY, SystemColor color)
+        public static void drawPoint(int posX, int posY, Color color)
         {
             RectangleShape Point = new RectangleShape();
-            Point.Position = new Vector2(posX, posY);
-            Point.Size = new Vector2(1, 1);
-            Point.FillColor = color.ToSFMLColor();
+            Point.Position = new Vector2f(posX, posY);
+            Point.Size = new Vector2f(1, 1);
+            Point.FillColor = color;
 
             CurrentRenderTarget.Draw(Point);
         }
@@ -377,14 +375,14 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowPoint(int posX, int posY, SystemColor OutlineColor)
+        public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
         {
             RectangleShape hollowPoint = new RectangleShape();
-            hollowPoint.Position = new Vector2(posX, posY);
-            hollowPoint.Size = new Vector2(1, 1);
-            hollowPoint.FillColor = SystemColor.Transparent.ToSFMLColor();
+            hollowPoint.Position = new Vector2f(posX, posY);
+            hollowPoint.Size = new Vector2f(1, 1);
+            hollowPoint.FillColor = Color.Transparent;
             hollowPoint.OutlineThickness = .6f;
-            hollowPoint.OutlineColor = OutlineColor.ToSFMLColor();
+            hollowPoint.OutlineColor = OutlineColor;
 
             CurrentRenderTarget.Draw(hollowPoint);
         }
@@ -400,13 +398,13 @@ namespace SS14.Client.Graphics
         /// <param name="rotate"> Line Rotation </param>
         /// <param name="thickness"> Line Thickness </param>
         /// <param name="Color"> Line Color </param>
-        public static void drawLine(int posX, int posY, int rotate,float thickness, SystemColor Color)
+        public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
         {
             RectangleShape line = new RectangleShape();
-            line.Position = new Vector2(posX,posY);
+            line.Position = new Vector2f(posX, posY);
             line.Rotation = rotate;
             line.OutlineThickness = thickness;
-            line.FillColor = Color.ToSFMLColor();
+            line.FillColor = Color;
 
             CurrentRenderTarget.Draw(line);
         }
@@ -420,34 +418,23 @@ namespace SS14.Client.Graphics
        /// <summary>
        /// Transforms a point from the world (tile) space, to screen (pixel) space.
        /// </summary>
-       public static PointF WorldToScreen(PointF point)
+       public static Vector2f WorldToScreen(Vector2f point)
        {
            var center = WorldCenter;
-           return new PointF(
-               (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-               (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
-               );
-       }
-       /// <summary>
-       /// Transforms a point from the world (tile) space, to screen (pixel) space.
-       /// </summary>
-       public static Vector2 WorldToScreen(Vector2 point)
-       {
-           var center = WorldCenter;
-           return new Vector2(
-               (point.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-               (point.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2
+           return new Vector2f(
+               (point.X - center.X) * TileSize + ScreenViewportSize.X / 2,
+               (point.Y - center.Y) * TileSize + ScreenViewportSize.Y / 2
                );
        }
        /// <summary>
        /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
        /// </summary>
-       public static RectangleF WorldToScreen(RectangleF rect)
+       public static FloatRect WorldToScreen(FloatRect rect)
        {
            var center = WorldCenter;
-           return new RectangleF(
-               (rect.X - center.X) * TileSize + ScreenViewportSize.Width / 2,
-               (rect.Y - center.Y) * TileSize + ScreenViewportSize.Height / 2,
+           return new FloatRect(
+               (rect.Left - center.X) * TileSize + ScreenViewportSize.X / 2,
+               (rect.Top - center.Y) * TileSize + ScreenViewportSize.Y / 2,
                rect.Width * TileSize,
                rect.Height * TileSize
                );
@@ -456,59 +443,36 @@ namespace SS14.Client.Graphics
        /// <summary>
        /// Transforms a point from the screen (pixel) space, to world (tile) space.
        /// </summary>
-       public static PointF ScreenToWorld(PointF point)
+       public static Vector2f ScreenToWorld(Vector2i point)
        {
            var center = WorldCenter;
-           return new PointF(
-               (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-               (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
-               );
-       }
-       /// <summary>
-       /// Transforms a point from the screen (pixel) space, to world (tile) space.
-       /// </summary>
-       public static Vector2 ScreenToWorld(Vector2 point)
-       {
-           var center = WorldCenter;
-           return new Vector2(
-               (point.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-               (point.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y
+           return new Vector2f(
+               (point.X - ScreenViewportSize.X / 2) / TileSize + center.X,
+               (point.Y - ScreenViewportSize.Y / 2) / TileSize + center.Y
                );
        }
        /// <summary>
        /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
        /// </summary>
-       public static RectangleF ScreenToWorld(RectangleF rect)
+       public static FloatRect ScreenToWorld(IntRect rect)
        {
            var center = WorldCenter;
-           return new RectangleF(
-               (rect.X - ScreenViewportSize.Width / 2) / TileSize + center.X,
-               (rect.Y - ScreenViewportSize.Height / 2) / TileSize + center.Y,
+           return new FloatRect(
+               (rect.Left - ScreenViewportSize.X / 2) / TileSize + center.X,
+               (rect.Top - ScreenViewportSize.Y / 2) / TileSize + center.Y,
                rect.Width / TileSize,
                rect.Height / TileSize
                );
        }
 
        /// <summary>
-       /// Scales a size from pixel coordinates to tile coordinates.
-       /// </summary>
-       /// <param name="size"></param>
-       /// <returns></returns>
-       public static SizeF PixelToTile(SizeF size)
-       {
-           return new SizeF(
-               size.Width / TileSize,
-               size.Height / TileSize
-               );
-       }
-       /// <summary>
        /// Scales a vector from pixel coordinates to tile coordinates.
        /// </summary>
        /// <param name="size"></param>
        /// <returns></returns>
-       public static Vector2 PixelToTile(Vector2 vec)
+       public static Vector2f PixelToTile(Vector2f vec)
        {
-           return new Vector2(
+           return new Vector2f(
                vec.X / TileSize,
                vec.Y / TileSize
                );
@@ -518,32 +482,22 @@ namespace SS14.Client.Graphics
        /// </summary>
        /// <param name="size"></param>
        /// <returns></returns>
-       public static RectangleF PixelToTile(RectangleF rect)
+       public static FloatRect PixelToTile(FloatRect rect)
        {
-           return new RectangleF(
-               rect.X / TileSize,
-               rect.Y / TileSize,
+           return new FloatRect(
+               rect.Left / TileSize,
+               rect.Top / TileSize,
                rect.Width / TileSize,
                rect.Height / TileSize
                );
        }
-
+ 
        /// <summary>
        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
        /// </summary>
-       public static PointF GetNearestPixel(PointF worldPoint)
+       public static Vector2f GetNearestPixel(Vector2f worldPoint)
        {
-           return new PointF(
-               (float)Math.Round(worldPoint.X * TileSize) / TileSize,
-               (float)Math.Round(worldPoint.Y * TileSize) / TileSize
-               );
-       }
-       /// <summary>
-       /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
-       /// </summary>
-       public static Vector2 GetNearestPixel(Vector2 worldPoint)
-       {
-           return new Vector2(
+           return new Vector2f(
                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
                );
@@ -553,25 +507,5 @@ namespace SS14.Client.Graphics
 
 
        
-    }
-
-
-    internal static class Conversions
-    {
-        public static SFMLColor ToSFMLColor(this SystemColor SystemColor)
-        {
-            return new SFMLColor(SystemColor.R,SystemColor.G,SystemColor.B,SystemColor.A);
-        }
-
-        public static SystemColor ToSystemColor(this SFMLColor SFMLColor)
-        {
-            SystemColor temp = SystemColor.FromArgb(SFMLColor.A, SFMLColor.R, SFMLColor.G, SFMLColor.B);
-            return temp;
-        }
-      
-        public static Vector2 ToVector2(this Point point)
-        {
-            return new Vector2(point.X, point.Y);
-        }
     }
 }

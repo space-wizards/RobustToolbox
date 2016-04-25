@@ -1,9 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -25,9 +28,9 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public int ItemSpacing = 10; //Additional space between items.
 
-        public Size Size = new Size(300, 100);
+        public Vector2i Size = new Vector2i(300, 100);
         protected ImageButton _buttonLeft;
-        private Color ctemp;
+        private SFML.Graphics.Color ctemp;
         protected ImageButton _buttonRight;
         protected int Selected
         {
@@ -60,31 +63,16 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string ButtonRight
         {
-            get
-            {
-                if (_buttonRight != null) return _buttonRight.ImageNormal;
-                else return "";
-            }
             set { _buttonRight.ImageNormal = value; }
         }
 
         public string ButtonLeft
         {
-            get
-            {
-                if (_buttonLeft != null) return _buttonLeft.ImageNormal;
-                else return "";
-            }
             set { _buttonLeft.ImageNormal = value; }
         }
 
         public string SelectionBackground
         {
-            get
-            {
-                if (_selectionGlow != null) return _selectionGlow.Sprite;
-                else return "";
-            }
             set { _selectionGlow.Sprite = value; }
         }
 
@@ -144,14 +132,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, Size);
+            ClientArea = new IntRect(Position, Size);
 
-            _buttonLeft.Position = new Point(ClientArea.Left,
+            _buttonLeft.Position = new Vector2i(ClientArea.Left,
                                              ClientArea.Top +
                                              (int) (ClientArea.Height/2f - _buttonLeft.ClientArea.Height/2f));
             _buttonLeft.Update(frameTime);
 
-            _buttonRight.Position = new Point(ClientArea.Right - _buttonRight.ClientArea.Width,
+            _buttonRight.Position = new Vector2i(ClientArea.Right() - _buttonRight.ClientArea.Width,
                                               ClientArea.Top +
                                               (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
             _buttonRight.Update(frameTime);
@@ -175,7 +163,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     if (_selectionGlow != null)
                     {
                         _selectionGlow.Position =
-                            new Point(
+                            new Vector2i(
                                 ClientArea.Left + (int) (ClientArea.Width/2f - _selectionGlow.ClientArea.Width/2f),
                                 ClientArea.Top + (int) (ClientArea.Height/2f - _selectionGlow.ClientArea.Height/2f));
                         _selectionGlow.Render();
@@ -183,15 +171,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
                     KeyValuePair<ImageButton, Object> selected = _items[Selected];
                     selected.Key.Position =
-                        new Point(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
+                        new Vector2i(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
-                        ctemp = Color.FromArgb(255, Color.White);
+                        ctemp = Color.White;
                     selected.Key.Color = ctemp;
                     selected.Key.Render();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
-                    int lastPosRight = selected.Key.ClientArea.Right + ItemSpacing;
+                    int lastPosRight = selected.Key.ClientArea.Right() + ItemSpacing;
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
@@ -202,7 +190,7 @@ namespace SS14.Client.Services.UserInterface.Components
                         if ((Selected - i) >= 0 && (Selected - i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> selectedLeft = _items[(Selected - i)];
-                            selectedLeft.Key.Position = new Point(lastPosLeft - selectedLeft.Key.ClientArea.Width,
+                            selectedLeft.Key.Position = new Vector2i(lastPosLeft - selectedLeft.Key.ClientArea.Width,
                                                                   ClientArea.Top +
                                                                   (int)
                                                                   (ClientArea.Height/2f -
@@ -210,7 +198,7 @@ namespace SS14.Client.Services.UserInterface.Components
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedLeft.Key.Color = ctemp;
 
                             selectedLeft.Key.Render();
@@ -220,15 +208,15 @@ namespace SS14.Client.Services.UserInterface.Components
                         if ((Selected + i) >= 0 && (Selected + i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> selectedRight = _items[(Selected + i)];
-                            selectedRight.Key.Position = new Point(lastPosRight,
+                            selectedRight.Key.Position = new Vector2i(lastPosRight,
                                                                    ClientArea.Top +
                                                                    (int)
                                                                    (ClientArea.Height/2f -
                                                                     selectedRight.Key.ClientArea.Height/2f));
-                            lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
+                            lastPosRight = selectedRight.Key.ClientArea.Right() + ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.FromArgb((int)(baseAlpha / alphaAdj), Color.White);
+                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
                             selectedRight.Key.Color = ctemp;
                             selectedRight.Key.Render();
                         }
@@ -254,9 +242,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (e.Delta > 0)
                 {
@@ -272,9 +260,9 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 _buttonLeft.MouseMove(e);
                 _buttonRight.MouseMove(e);
@@ -286,9 +274,9 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
 
                 if (ShowArrows)
@@ -324,9 +312,9 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_buttonLeft.MouseUp(e)) return true;
                 if (_buttonRight.MouseUp(e)) return true;

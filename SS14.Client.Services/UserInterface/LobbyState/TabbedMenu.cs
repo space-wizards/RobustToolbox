@@ -1,11 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,14 +16,14 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly List<KeyValuePair<ImageButton, TabContainer>> _tabs =
             new List<KeyValuePair<ImageButton, TabContainer>>();
 
-        public Point TabOffset = new Point(0, 0);
+        public Vector2i TabOffset = new Vector2i(0, 0);
         private TabContainer _activeTab;
-		private CluwneSprite botSprite;
-		private CluwneSprite midSprite;
+        private string botSprite;
+        private string midSprite;
 
-        public Vector2 size;
+        public Vector2f size;
 
-		private CluwneSprite topSprite;
+        private string topSprite;
 
         public TabbedMenu()
         {
@@ -33,20 +33,20 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public string TopSprite
         {
-            get { return topSprite != null ? topSprite.Key : null; }
-            set { topSprite = _resourceManager.GetSprite(value); }
+            get { return topSprite; }
+            set { topSprite = value; }
         }
 
         public string MidSprite
         {
-            get { return midSprite != null ? midSprite.Key : null; }
-            set { midSprite = _resourceManager.GetSprite(value); }
+            get { return midSprite; }
+            set { midSprite = value; }
         }
 
         public string BotSprite
         {
-            get { return botSprite != null ? botSprite.Key : null; }
-            set { botSprite = _resourceManager.GetSprite(value); }
+            get { return botSprite; }
+            set { botSprite = value; }
         }
 
         public void SelectTab(TabContainer tab)
@@ -109,7 +109,7 @@ namespace SS14.Client.Services.UserInterface.Components
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
-                curr.Key.Position = new Point(Position.X + TabOffset.X - curr.Key.ClientArea.Width,
+                curr.Key.Position = new Vector2i(Position.X + TabOffset.X - curr.Key.ClientArea.Width,
                                               Position.Y + TabOffset.Y - prevHeight);
                 prevHeight += curr.Key.ClientArea.Height;
 
@@ -121,7 +121,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (_activeTab != null)
                 _activeTab.Update(frameTime);
 
-            ClientArea = new Rectangle(Position, new Size((int) size.X, (int) size.Y));
+            ClientArea = new IntRect(Position, new Vector2i((int) size.X, (int) size.Y));
         }
 
         public override void Render()
@@ -129,15 +129,16 @@ namespace SS14.Client.Services.UserInterface.Components
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
-                CluwneSprite currTabSprite = curr.Value.tabSprite;
+                Sprite currTabSprite = curr.Value.tabSprite;
 
                 curr.Key.Render();
 
                 if (currTabSprite != null)
                 {
+                    var bounds = currTabSprite.GetLocalBounds();
                     currTabSprite.Position =
-                        new Vector2(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - currTabSprite.Width/2f),
-                                     curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - currTabSprite.Height/2f));
+                        new Vector2f(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
+                                     curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - bounds.Height/2f));
                     currTabSprite.Draw();
                 }
             }
@@ -168,7 +169,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.KeyDown(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -180,7 +181,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.MouseWheelMove(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -192,7 +193,7 @@ namespace SS14.Client.Services.UserInterface.Components
             base.MouseMove(e);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             foreach (var curr in _tabs)
             {
@@ -204,7 +205,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return base.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (var curr in _tabs)
             {

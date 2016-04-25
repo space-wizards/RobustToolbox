@@ -1,14 +1,13 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
-using SS14.Client.Graphics;
-using System.Drawing;
 
 namespace SS14.Client.GameObjects
 {
@@ -55,7 +54,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Render(Vector2 topLeft, Vector2 bottomRight)
+        public override void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             if (IsCurrentlyWorn && currentSprite == baseSprite)
             {
@@ -86,24 +85,21 @@ namespace SS14.Client.GameObjects
             if (NotWornSprite == null) return;
 
             Sprite spriteToRender = NotWornSprite;
+            var bounds = spriteToRender.GetLocalBounds();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(
+            Vector2f renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-            spriteToRender.SetPosition(renderPos.X - (spriteToRender.Width / 2),
-                               renderPos.Y - (spriteToRender.Height / 2));
+            spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
+                                                               renderPos.Y - (bounds.Height / 2));
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + spriteToRender.AABB.Right <
-                topLeft.X
+            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + bounds.Left + bounds.Width < topLeft.X
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                ||
-                Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                spriteToRender.AABB.Bottom < topLeft.Y
+                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + bounds.Top + bounds.Height < topLeft.Y
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.HorizontalFlip = flip;
+            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
-            spriteToRender.HorizontalFlip = false;
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -120,7 +116,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            CluwneLib.drawRectangle((renderPos.X - aabb.Width / 2),(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color.Lime);
+            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2),(int)(renderPos.Y - aabb.Height / 2), (int)aabb.Width, (int)aabb.Height, new SFML.Graphics.Color(0, 0, 255));
         }
 
     }

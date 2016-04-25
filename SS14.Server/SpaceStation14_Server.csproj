@@ -80,6 +80,10 @@
       <HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="sfmlnet-system-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
@@ -94,10 +98,6 @@
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml">
@@ -181,6 +181,9 @@
     <Compile Include="Timing\TimerQueueTimer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <None Include="Scripts\test.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Timing\TimerQueueTimer_.cs">
     </None>
     <None Include="app.config">

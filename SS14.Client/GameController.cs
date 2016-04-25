@@ -1,4 +1,8 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -7,20 +11,8 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics.Render;
-using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Timing;
-
-using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {
@@ -71,7 +63,7 @@ namespace SS14.Client
 
           
 
-            _stateManager.RequestStateChange<TestState> ();
+            _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
             EventArgs _frameEventArgs;
@@ -83,7 +75,7 @@ namespace SS14.Client
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget (Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();
@@ -228,6 +220,12 @@ namespace SS14.Client
                 _stateManager.MouseLeft(e);
         }
 
+        private void TextEntered(object sender, TextEventArgs e)
+        {
+            if (_stateManager != null)
+                _stateManager.TextEntered(e);
+        }
+
         #endregion
 
         #endregion
@@ -240,7 +238,7 @@ namespace SS14.Client
 //            uint displayHeight = _configurationManager.GetDisplayHeight();
 //            bool fullscreen = _configurationManager.GetFullscreen();
 //            var refresh = (int) _configurationManager.GetDisplayRefresh();
-//            Size = new Size((int) displayWidth, (int) displayHeight);
+//            Size = new Vector2i((int) displayWidth, (int) displayHeight);
 //
 //            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 //
@@ -277,18 +275,19 @@ namespace SS14.Client
                 CluwneLib.RefreshVideoSettings += SetupCluwne;
                 onetime = false;
             }
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
-            CluwneLib.Screen.KeyPressed += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased += KeyUpEvent;
-            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
+            CluwneLib.Screen.SetMouseCursorVisible(false);
+            CluwneLib.Screen.BackgroundColor      = Color.Black;
+            CluwneLib.Screen.Resized             += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed              += MainWindowRequestClose;
+            CluwneLib.Screen.KeyPressed          += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased         += KeyUpEvent;
+            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
-            CluwneLib.Screen.MouseEntered += MouseEntered;
-            CluwneLib.Screen.MouseLeft += MouseLeft;
-
+            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered        += MouseEntered;
+            CluwneLib.Screen.MouseLeft           += MouseLeft;
+            CluwneLib.Screen.TextEntered         += TextEntered;
           
 
 

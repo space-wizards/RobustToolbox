@@ -1,9 +1,10 @@
-﻿using SS14.Client.Interfaces.Network;
+﻿using SFML.System;
+using SS14.Client.Interfaces.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -18,13 +19,14 @@ namespace SS14.Client.GameObjects
         }
 
 
-        public Entity[] GetEntitiesInRange(Vector2 position, float Range)
+        public Entity[] GetEntitiesInRange(Vector2f position, float Range)
         {
+            Range *= Range; // Square it here to avoid Sqrt
             IEnumerable<Entity> entities = from e in _entities.Values
                                            where
                                                (position -
                                                 e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).
-                                                   Length < Range
+                                                   LengthSquared() < Range
                                            select e;
 
             return entities.ToArray();

@@ -1,6 +1,6 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.ServerEnums;
-using System.Drawing;
 
 namespace SS14.Server.Interfaces.Configuration
 {
@@ -18,7 +18,7 @@ namespace SS14.Server.Interfaces.Configuration
         int ServerMaxPlayers { get; set; }
         float TickRate { get; set; }
         GameType GameType { get; set; }
-        Size ConsoleSize { get; set; }
+        Vector2i ConsoleSize { get; set; }
         void Initialize(string configFilePath);
         void Save();
     }

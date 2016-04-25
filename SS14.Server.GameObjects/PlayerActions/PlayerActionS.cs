@@ -1,7 +1,7 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System;
-using System.Drawing;
 
 namespace SS14.Server.GameObjects
 {
@@ -21,7 +21,7 @@ namespace SS14.Server.GameObjects
             uid = _uid;
         }
 
-        public virtual void OnUse(PointF targetPoint)
+        public virtual void OnUse(Vector2f targetPoint)
         {
             parent.StartCooldown(this);
         }

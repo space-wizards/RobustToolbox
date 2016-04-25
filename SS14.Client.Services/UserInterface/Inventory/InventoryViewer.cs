@@ -1,12 +1,12 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared.GameObjects;
-using SFML.Window;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -23,7 +23,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _userInterfaceManager = userInterfaceManager;
             _resourceManager = resourceManager;
 
-            _inventoryContainer = new ScrollableContainer(assignedCompo.Owner.Uid + "InvViewer", new Size(270, 125),
+            _inventoryContainer = new ScrollableContainer(assignedCompo.Owner.Uid + "InvViewer", new Vector2i(270, 125),
                                                           _resourceManager);
             _inventoryComponent = assignedCompo;
             _inventoryComponent.Changed += ComponentChanged;
@@ -50,7 +50,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             {
                 var slot = new InventorySlotUi(entity, _resourceManager)
                                {
-                                   Position = new Point(currX*spacing + xOffset, currY*spacing + yOffset)
+                                   Position = new Vector2i(currX*spacing + xOffset, currY*spacing + yOffset)
                                };
 
                 slot.Clicked += SlotClicked;
@@ -69,7 +69,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             {
                 var slot = new InventorySlotUi(null, _resourceManager)
                                {
-                                   Position = new Point(currX*spacing + xOffset, currY*spacing + yOffset)
+                                   Position = new Vector2i(currX*spacing + xOffset, currY*spacing + yOffset)
                                };
 
                 slot.Clicked += SlotClicked;
@@ -112,18 +112,18 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (_inventoryContainer.MouseDown(e))
                 return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             //If dropped on container add to inventory.
             if (_inventoryContainer.MouseUp(e)) return true;
-            if (_inventoryContainer.ClientArea.Contains(new Point((int) e.X, (int) e.Y)) &&
+            if (_inventoryContainer.ClientArea.Contains(e.X, e.Y) &&
                 _userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
             {
                 if (!_inventoryComponent.ContainsEntity(_userInterfaceManager.DragInfo.DragEntity))
@@ -140,12 +140,12 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _inventoryContainer.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return _inventoryContainer.MouseWheelMove(e);
         }

@@ -1,17 +1,13 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
-using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
-using SFML.Graphics;
-using Color = SFML.Graphics.Color;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.OpenGL;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
+using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
+using System;
+using Color = SFML.Graphics.Color;
+
 
 namespace SS14.Client.Services.Lighting
 {
@@ -74,16 +70,16 @@ namespace SS14.Client.Services.Lighting
         {
             Texture shadowCastersTexture = Area.RenderTarget.Texture;
             RenderImage Result = Area.RenderTarget;
-            Vector2 LightPosition = Area.LightPosition;
+            SFML.System.Vector2f LightPosition = Area.LightPosition;
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
-            Vector4 MaskProps = Vector4.Zero;
-            Vector4 diffuseColor = Vector4.One;
+            Vector4f MaskProps = Vector4f.Zero;
+            Vector4f diffuseColor = Vector4f.One;
 
-            Debug.DebugRendertarget(Area.RenderTarget);
+            //Debug.DebugRendertarget(Area.RenderTarget);
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
-            Debug.DebugRendertarget(distancesRT);
+            //Debug.DebugRendertarget(distancesRT);
             ExecuteTechnique(distancesRT, distortRT, "Distort");
-            Debug.DebugRendertarget(distortRT);
+            //Debug.DebugRendertarget(distortRT);
 
             // Working now
             ApplyHorizontalReduction(distortRT, shadowMap);
@@ -91,13 +87,13 @@ namespace SS14.Client.Services.Lighting
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
             resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);            
-            
-            CluwneSprite Sprite = new CluwneSprite("Maskspritetorendergarget", MaskTexture);
-            RenderImage MaskTarget = new RenderImage("MaskTarget", (uint)Sprite.Size.X, (uint)Sprite.Size.Y);
-            Debug.DebugRendertarget(shadowMap, "ShadowMap");
+            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
+
+            var maskSize = MaskTexture.Size;
+            RenderImage MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
+            //Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
-            Debug.DebugRendertarget(Result, "DrawShadowsResult");
+            //Debug.DebugRendertarget(Result, "DrawShadowsResult");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
@@ -117,8 +113,8 @@ namespace SS14.Client.Services.Lighting
 
         private void ExecuteTechnique(RenderImage source, RenderImage destinationTarget, string techniqueName, RenderImage shadowMap)
         {
-            Vector2 renderTargetSize;
-            renderTargetSize = new Vector2(baseSize, baseSize);
+            Vector2f renderTargetSize;
+            renderTargetSize = new Vector2f(baseSize, baseSize);
 
             destinationTarget.BeginDrawing();
             destinationTarget.Clear(Color.White);
@@ -168,7 +164,7 @@ namespace SS14.Client.Services.Lighting
 
                 HorizontalReduction.EndDrawing();
                 src = HorizontalReduction; // hr becomes new src 
-                Debug.DebugRendertarget(HorizontalReduction);
+                //Debug.DebugRendertarget(HorizontalReduction);
                 step--;
             }
 
@@ -181,7 +177,7 @@ namespace SS14.Client.Services.Lighting
             HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
                 //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader); 
             destination.EndDrawing();
-            Debug.DebugRendertarget(destination);
+            //Debug.DebugRendertarget(destination);
             CluwneLib.ResetRenderTarget();
         }
 

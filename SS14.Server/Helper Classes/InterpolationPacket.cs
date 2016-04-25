@@ -1,17 +1,16 @@
 ﻿using Lidgren.Network;
-using SS14.Shared;
+using SFML.System;
 using System;
-using SS14.Shared.Maths;
 
 namespace SS14.Server.HelperClasses
 {
     public struct InterpolationPacket
     {
-        public Vector2 position;
+        public Vector2f position;
         public float rotation;
         public double time;
 
-        public InterpolationPacket(Vector2 _position, float _rotation, double _time)
+        public InterpolationPacket(Vector2f _position, float _rotation, double _time)
         {
             position = _position;
             rotation = _rotation;
@@ -20,7 +19,7 @@ namespace SS14.Server.HelperClasses
 
         public InterpolationPacket(float x, float y, float _rotation, double _time)
         {
-            position = new Vector2(x, y);
+            position = new Vector2f(x, y);
             rotation = _rotation;
             time = _time;
         }
@@ -30,7 +29,7 @@ namespace SS14.Server.HelperClasses
             float x = message.ReadFloat();
             float y = message.ReadFloat();
             float z = message.ReadFloat();
-            position = new Vector2(x, y);
+            position = new Vector2f(x, y);
             rotation = message.ReadFloat();
             time = 0;
         }

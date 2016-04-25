@@ -75,6 +75,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="KopiLua">
+      <HintPath>..\Third-Party\KopiLua.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
       <Private>False</Private>
@@ -83,6 +86,13 @@
       <Name>NetSerializer</Name>
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="NLua">
+      <HintPath>..\Third-Party\NLua.dll</HintPath>
+    </Reference>
+    <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-system-2">
       <Name>sfmlnet-system-2</Name>
@@ -103,10 +113,6 @@
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml">
@@ -202,6 +208,7 @@
     <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Component\Script\Script.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -1,7 +1,8 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.GameObject;
+using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Services.Log;
 using SS14.Shared;
@@ -45,7 +46,7 @@ namespace SS14.Server.Services.Player
             //Spawn the player's entity. There's probably a much better place to do this.
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
             Entity human = a;
-            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2(0, 0));
+            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
             if (s.assignedJob != null)
             {
                 foreach (
@@ -126,14 +127,13 @@ namespace SS14.Server.Services.Player
             }
         }
 
-        public IPlayerSession[] GetPlayersInRange(Vector2 position, int range)
+        public IPlayerSession[] GetPlayersInRange(Vector2f position, int range)
         {
             return
-                playerSessions.Values.Where(
-                    x =>
+                playerSessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).
-                        Magnitude < range).ToArray();
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).LengthSquared() < range * range)
+                        .ToArray();
         }
 
         public IPlayerSession[] GetPlayersInLobby()

@@ -79,6 +79,7 @@
       <Name>Microsoft.Diagnostics.Runtime</Name>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.DebuggerVisualizers, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -169,6 +170,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TextureVisualizer.cs" />
     <None Include="app.config">
     </None>
     <Content Include="..\Third-Party\extlibs\csfml-audio-2.dll">

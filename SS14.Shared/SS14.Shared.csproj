@@ -64,6 +64,10 @@
       <Name>NetSerializer</Name>
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
     </Reference>
+    <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-system-2">
       <Name>sfmlnet-system-2</Name>
       <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
@@ -80,9 +84,6 @@
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
       <Name>System.Windows.Forms</Name>
@@ -108,6 +109,7 @@
     <Compile Include="BoundKeyEventArgs.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ColorUtils.cs" />
     <Compile Include="EntityEvents.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -232,6 +234,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Maths\FloatMath.cs" />
+    <Compile Include="Maths\Vector4f.cs" />
+    <Compile Include="Maths\SfmlExt.cs" />
     <Compile Include="Objectives\ObjectiveParameterType.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -332,15 +336,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utility\unZipString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Maths\Vector2.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Maths\Vector3.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Maths\Vector4.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NetworkEnums.cs">

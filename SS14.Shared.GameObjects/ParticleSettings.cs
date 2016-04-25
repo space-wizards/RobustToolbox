@@ -1,7 +1,8 @@
-﻿using SS14.Shared.Utility;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Shared.Utility;
 using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Xml.Serialization;
 
 namespace SS14.Shared.GameObjects
@@ -9,24 +10,24 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class ParticleSettings : INotifyPropertyChanged
     {
-        private PointF _emitterPosition = new PointF(0, 0);
-        private PointF _emissionOffset = new PointF(0, 0);
+        private Vector2f _emitterPosition = new Vector2f(0, 0);
+        private Vector2f _emissionOffset = new Vector2f(0, 0);
         private bool _emit = true;
         private int _emitRate = 1;
         private int _maximumParticleCount = 200;
-        private PointF _emissionRadiusRange = new PointF(0, 0);
-        private PointF _velocity = new PointF(0, 0);
+        private Vector2f _emissionRadiusRange = new Vector2f(0, 0);
+        private Vector2f _velocity = new Vector2f(0, 0);
         private float _velocityVariance = 0;
-        private PointF _acceleration = new PointF(0, 0);
+        private Vector2f _acceleration = new Vector2f(0, 0);
         private float _accelerationVariance = 0;
         private float _radialVelocity = 0;
         private float _radialVelocityVariance = 0;
         private float _radialAcceleration = 0;
         private float _colorVariance = 0;
         private float _sizeVariance = 0;
-        private PointF _sizeRange = new PointF(1, 1);
+        private Vector2f _sizeRange = new Vector2f(1, 1);
         private float _spinVelocityVariance = 0;
-        private PointF _spinVelocity = new PointF(0, 0);
+        private Vector2f _spinVelocity = new Vector2f(0, 0);
         private float _lifetimeVariance = 0;
         private float _lifetime = 1;
         private float _tangentialAccelerationVariance = 0;
@@ -34,9 +35,7 @@ namespace SS14.Shared.GameObjects
         private float _tangentialVelocityVariance = 0;
         private float _tangentialVelocity = 0;
         private float _radialAccelerationVariance = 0;
-        private SS14.Shared.Utility.Range<Color> _colorRange = new SS14.Shared.Utility.Range<Color>(Color.Black,
-                                                                                                    Color.FromArgb(0, 0,
-                                                                                                                   0, 0));
+        private Range<Color> _colorRange = new Range<Color>(Color.Black, new Color(0, 0, 0, 0));
         private string _sprite = "star1";
 
         public ParticleSettings()
@@ -91,7 +90,7 @@ namespace SS14.Shared.GameObjects
         /// Emitter Position;
         /// This is the logical position of the emitter object
         /// </summary>
-        public PointF EmitterPosition
+        public Vector2f EmitterPosition
         {
             get { return _emitterPosition; }
             set
@@ -105,7 +104,7 @@ namespace SS14.Shared.GameObjects
         /// Emission Offset;
         /// This is where the particles should be emitted relative to the emitter position.
         /// </summary>
-        public PointF EmissionOffset
+        public Vector2f EmissionOffset
         {
             get { return _emissionOffset; }
             set
@@ -149,7 +148,7 @@ namespace SS14.Shared.GameObjects
         /// This controls the range in radius from the emission position where the particles 
         /// will start. If the radius is 0, they will all be emitted at the EmitPosition.
         /// </summary>
-        public PointF EmissionRadiusRange
+        public Vector2f EmissionRadiusRange
         {
             get { return _emissionRadiusRange; }
             set
@@ -163,7 +162,7 @@ namespace SS14.Shared.GameObjects
         /// Velocity Range
         /// This controls the particle's initial velocity
         /// </summary>
-        public PointF Velocity
+        public Vector2f Velocity
         {
             get { return _velocity; }
             set
@@ -191,7 +190,7 @@ namespace SS14.Shared.GameObjects
         /// Acceleration Range
         /// This controls the particle's initial acceleration
         /// </summary>
-        public PointF Acceleration
+        public Vector2f Acceleration
         {
             get { return _acceleration; }
             set
@@ -359,7 +358,7 @@ namespace SS14.Shared.GameObjects
         /// Spin Velocity
         /// This controls the initial spin velocity over the life of the particle
         /// </summary>
-        public PointF SpinVelocity
+        public Vector2f SpinVelocity
         {
             get { return _spinVelocity; }
             set
@@ -387,7 +386,7 @@ namespace SS14.Shared.GameObjects
         /// Size Range
         /// This controls the range in size of the particle over the course of its lifetime
         /// </summary>
-        public PointF SizeRange
+        public Vector2f SizeRange
         {
             get { return _sizeRange; }
             set
@@ -410,8 +409,8 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        [XmlIgnore]
-        public SS14.Shared.Utility.Range<Color> ColorRange
+        [XmlElement(ElementName = "ColorRange")]
+        public Range<Color> ColorRange
         {
             get { return _colorRange; }
             set
@@ -419,13 +418,6 @@ namespace SS14.Shared.GameObjects
                 _colorRange = value;
                 OnPropertyChanged("ColorRange");
             }
-        }
-
-        [XmlElement(ElementName = "ColorRange")]
-        public SerializableColorRange ColorRangeXml
-        {
-            get { return new SerializableColorRange(ColorRange); }
-            set { ColorRange = value.ToRange(); }
         }
 
         /// <summary>
@@ -449,59 +441,5 @@ namespace SS14.Shared.GameObjects
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-    }
-
-    public class SerializableColor
-    {
-        public int A { get; set; }
-        public int R { get; set; }
-        public int G { get; set; }
-        public int B { get; set; }
-
-        public SerializableColor()
-        {
-
-        }
-
-        public SerializableColor(Color c)
-        {
-            A = c.A;
-            R = c.R;
-            G = c.G;
-            B = c.B;
-        }
-
-        public Color ToColor()
-        {
-            return Color.FromArgb(A, R, G, B);
-        }
-    }
-
-    public class SerializableColorRange
-    {
-        public SerializableColor Start { get; set; }
-        public SerializableColor End { get; set; }
-
-        public SerializableColorRange()
-        {
-
-        }
-
-        public SerializableColorRange(Color start, Color end)
-        {
-            Start = new SerializableColor(start);
-            End = new SerializableColor(end);
-        }
-
-        public SerializableColorRange(Range<Color> colorRange)
-        {
-            Start = new SerializableColor(colorRange.Start);
-            End = new SerializableColor(colorRange.End);
-        }
-
-        public Range<Color> ToRange()
-        {
-            return new Range<Color>(Start.ToColor(), End.ToColor());
-        }
     }
 }

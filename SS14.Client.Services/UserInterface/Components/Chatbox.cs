@@ -1,16 +1,17 @@
-﻿using SS14.Client.Interfaces.Input;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using SFML.Window;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -25,7 +26,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private const int MaxHistory = 20;
         private const int MaxLines = 10;
         private const int MaxLinePixelLength = 450;
-        private readonly Dictionary<ChatChannel, Color> _chatColors;
+        private readonly Dictionary<ChatChannel, SFML.Graphics.Color> _chatColors;
         private readonly StringBuilder _currentInputText = new StringBuilder();
 
         private readonly IList<Label> _entries = new List<Label>();
@@ -34,7 +35,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
 
-        public Vector2 Size = new Vector2(475, 175);
+        public Vector2f Size = new Vector2f(475, 175);
 
         private bool _active;
         private bool _disposing;
@@ -49,31 +50,31 @@ namespace SS14.Client.Services.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _keyBindingManager = keyBindingManager;
 
-            Position = new Point((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
+            Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
+            ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
             _textInputLabel = new Label("", "CALIBRI", _resourceManager)
                                   {
                                       Text =
                                           {
-                                              Size = new Size(ClientArea.Width - 10, 12),
-                                              Color = Color.Green
+                                              Size = new Vector2i(ClientArea.Width - 10, 12),
+                                              Color = new SFML.Graphics.Color(0, 128, 0)
                                           }
                                   };
 
-            _chatColors = new Dictionary<ChatChannel, Color>
+            _chatColors = new Dictionary<ChatChannel, SFML.Graphics.Color>
                               {
-                                  {ChatChannel.Default, Color.Gray},
-                                  {ChatChannel.Damage, Color.Red},
-                                  {ChatChannel.Radio, Color.DarkGreen},
-                                  {ChatChannel.Server, Color.Blue},
-                                  {ChatChannel.Player, Color.Green},
-                                  {ChatChannel.Lobby, Color.White},
-                                  {ChatChannel.Ingame, Color.Green},
-                                  {ChatChannel.OOC, Color.White},
-                                  {ChatChannel.Emote, Color.Cyan},
-                                  {ChatChannel.Visual, Color.Yellow},
+                                  [ChatChannel.Default] = new SFML.Graphics.Color(128, 128, 128),
+                                  [ChatChannel.Damage ] = Color.Red,
+                                  [ChatChannel.Radio  ] = new SFML.Graphics.Color(0, 100, 0),
+                                  [ChatChannel.Server ] = Color.Blue,
+                                  [ChatChannel.Player ] = new SFML.Graphics.Color(0, 128, 0),
+                                  [ChatChannel.Lobby  ] = Color.White,
+                                  [ChatChannel.Ingame ] = new SFML.Graphics.Color(0, 128, 0),
+                                  [ChatChannel.OOC    ] = Color.White,
+                                  [ChatChannel.Emote  ] = Color.Cyan,
+                                  [ChatChannel.Visual ] = Color.Yellow,
                               };
         }
 
@@ -159,7 +160,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                                                         Text =
                                                                             {
                                                                                 Size =
-                                                                                    new Size(ClientArea.Width - 10, 12),
+                                                                                    new Vector2i(ClientArea.Width - 10, 12),
                                                                                 Color = _chatColors[channel]
                                                                             }
                                                                     }))
@@ -174,7 +175,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             CheckAndSetLine(_currentInputText.ToString());
 
-            _textInputLabel.Position = new Point(ClientArea.X + 4, ClientArea.Y + ClientArea.Height - 23);
+            _textInputLabel.Position = new Vector2i(ClientArea.Left + 4, ClientArea.Bottom() - 23);
             _textInputLabel.Render();
 
             while (_entries.Count > MaxLines)
@@ -184,8 +185,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
             for (int i = _entries.Count - 1; i >= start; i--)
             {
-                _entries[i].Position = new Point(ClientArea.X + 2,
-                                                 ClientArea.Y + ClientArea.Height - (14*(_entries.Count - i)) - 26);
+                _entries[i].Position = new Vector2i(ClientArea.Left + 2,
+                                                 ClientArea.Bottom() - (14*(_entries.Count - i)) - 26);
                 _entries[i].Render();
             }
         }
@@ -302,7 +303,7 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            ClientArea = new Rectangle(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
+            ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
             // _textInputLabel.Text.Scale = new SFML.System.Vector2f (ClientArea.Width - 10, 12);
             _textInputLabel.Update(frameTime);
             foreach (Label l in _entries) l.Update(frameTime);
@@ -312,8 +313,8 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (_disposing || !IsVisible()) return;
             CluwneLib.BlendingMode = BlendingModes.Modulated;
-            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.Black));
-            CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.FromArgb(100, Color.LightGray));
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(0, 0, 0, 100));
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(211, 211, 211, 100));
             CluwneLib.BlendingMode = BlendingModes.None;
             DrawLines();
         }

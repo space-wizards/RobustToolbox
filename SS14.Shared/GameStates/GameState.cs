@@ -83,7 +83,7 @@ namespace SS14.Shared.GameStates
             if (_serialized)
                 return;
             _serializedData = new MemoryStream();
-            Serializer.Serialize(_serializedData, this);
+            new SS14Serializer().Serialize(_serializedData, this);
             _serialized = true;
         }
 

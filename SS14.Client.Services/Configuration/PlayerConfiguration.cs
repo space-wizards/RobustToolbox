@@ -1,4 +1,5 @@
 ﻿using System;
+using SFML.Window;
 
 namespace SS14.Client.Services.Configuration
 {
@@ -23,6 +24,6 @@ namespace SS14.Client.Services.Configuration
         public int UpdateRate = 20; //Updates from the server per second
         public int CommandRate = 30; //Commands to the server per second
         public float Interpolation = 0.1f; //Number of seconds behind to render interpolation
-        public char ConsoleKey = '#';
+        public Keyboard.Key ConsoleKey = Keyboard.Key.Home;
     }
 }

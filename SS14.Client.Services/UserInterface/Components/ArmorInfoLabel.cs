@@ -1,13 +1,14 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,7 +17,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         private readonly DamageType resAssigned;
 
-		private CluwneSprite icon;
+        private Sprite icon;
         private TextSprite text;
 
         public ArmorInfoLabel(DamageType resistance, IResourceManager resourceManager)
@@ -63,12 +64,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            icon.Position = new Vector2(Position.X,Position.Y);
-            text.Position = new Vector2(Position.X + icon.Width + 5,
-                                         Position.Y + (int) (icon.Height/2f) - (int) (text.Height/2f));
-            ClientArea = new Rectangle(Position,
-                                       new Size((int) text.Width + (int) icon.Width + 5,
-                                                (int) Math.Max(icon.Height, text.Height)));
+            var bounds = icon.GetLocalBounds();
+            icon.Position = new Vector2f(Position.X,Position.Y);
+            text.Position = new Vector2i(Position.X + (int)bounds.Width + 5,
+                                         Position.Y + (int) (bounds.Height/2f) - (int) (text.Height/2f));
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int) text.Width + (int)bounds.Width + 5,
+                                                (int) Math.Max(bounds.Height, text.Height)));
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();
             if (playerMgr != null)

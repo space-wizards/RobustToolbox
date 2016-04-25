@@ -1,10 +1,9 @@
-﻿using SS14.Client.Graphics.Shader;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.Player.PostProcessing
@@ -23,14 +22,14 @@ namespace SS14.Client.Services.Player.PostProcessing
             var OstafLikesTheCock = new RenderImage("CockLoverOstaf", image.Height, image.Height);
 
             OstafLikesTheCock.BeginDrawing();
-                image.Blit(0, 0, image.Height, image.Height, Color.White, BlitterSizeMode.Crop);
+                image.Blit(0, 0, image.Height, image.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
             OstafLikesTheCock.EndDrawing();
 
             image.BeginDrawing();
                 _shader.setAsCurrentShader();
                 _shader.SetParameter("SceneTexture", OstafLikesTheCock);
                 _shader.setDuration((Math.Abs(_duration)));               
-                OstafLikesTheCock.Blit(0, 0, image.Height, image.Height, Color.White, BlitterSizeMode.Crop);
+                OstafLikesTheCock.Blit(0, 0, image.Height, image.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
             image.EndDrawing();
 
             _shader.ResetCurrentShader();

@@ -1,5 +1,5 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Map;
 
 namespace SS14.Client.Services.Placement
@@ -9,9 +9,9 @@ namespace SS14.Client.Services.Placement
         public readonly PlacementManager pManager;
 
         public TileRef currentTile;
-        public Vector2 mouseScreen;
-        public Vector2 mouseWorld;
-		public CluwneSprite spriteToDraw;
+        public Vector2i mouseScreen;
+        public Vector2f mouseWorld;
+        public Sprite spriteToDraw;
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -23,7 +23,7 @@ namespace SS14.Client.Services.Placement
             get { return GetType().Name; }
         }
 
-        public virtual bool Update(Vector2 mouseScreen, IMapManager currentMap) //Return valid position?
+        public virtual bool Update(Vector2i mouseScreen, IMapManager currentMap) //Return valid position?
         {
             return false;
         }
@@ -32,17 +32,15 @@ namespace SS14.Client.Services.Placement
         {
         }
 
-		public CluwneSprite GetDirectionalSprite(CluwneSprite baseSprite)
+        public Sprite GetDirectionalSprite(string baseSprite)
         {
-			CluwneSprite spriteToUse = baseSprite;
-
             if (baseSprite == null) return null;
 
-            string dirName = (baseSprite.Key + "_" + pManager.Direction.ToString()).ToLowerInvariant();
+            string dirName = (baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant();
             if (pManager.ResourceManager.SpriteExists(dirName))
-                spriteToUse = pManager.ResourceManager.GetSprite(dirName);
-
-            return spriteToUse;
+                return pManager.ResourceManager.GetSprite(dirName);
+            else
+                return null;
         }
     }
 }

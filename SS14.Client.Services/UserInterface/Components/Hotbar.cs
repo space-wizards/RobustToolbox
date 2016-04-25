@@ -1,21 +1,21 @@
-﻿using SS14.Client.Interfaces.GOC;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
-using System;
-using System.Drawing;
-using System.Linq;
-using SS14.Client.Graphics.Sprite;
-using SFML.Window;
-using SS14.Client.Graphics;
 using SS14.Shared.Maths;
+using System;
+using System.Linq;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class Hotbar : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite hotbarBG;
+        private readonly Sprite hotbarBG;
 
         private readonly GuiComponent[] slots = new GuiComponent[10];
 
@@ -64,7 +64,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            hotbarBG.Position = new Vector2(Position.X, Position.Y);
+            hotbarBG.Position = new Vector2f(Position.X, Position.Y);
 
             int y_dist = 30;
             int x_pos = 175;
@@ -74,15 +74,15 @@ namespace SS14.Client.Services.UserInterface.Components
 
             foreach (GuiComponent comp in slots)
             {
-                comp.Position = new Point(Position.X + x_pos, Position.Y + y_dist);
+                comp.Position = new Vector2i(Position.X + x_pos, Position.Y + y_dist);
                 comp.Update(frameTime);
-                if (comp.ClientArea.Right > max_x) max_x = comp.ClientArea.Right;
-                if (comp.ClientArea.Bottom > max_y) max_y = comp.ClientArea.Bottom;
+                if (comp.ClientArea.Right() > max_x) max_x = comp.ClientArea.Right();
+                if (comp.ClientArea.Bottom() > max_y) max_y = comp.ClientArea.Bottom();
                 x_pos += comp.ClientArea.Width + 1;
             }
 
-            //ClientArea = new Rectangle(Position, new Size((int)max_x - Position.X + 5, (int)max_y - Position.Y + 5));
-            ClientArea = Rectangle.Round(hotbarBG.AABB);
+            var bounds = hotbarBG.GetLocalBounds();
+            ClientArea = new FloatRect(bounds.Left, bounds.Top, bounds.Width, bounds.Height).Round();
         }
 
         public override void Render()
@@ -96,7 +96,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 comp.Render();
 
             foreach (PlayerActionButton comp in (from a in slots where a is PlayerActionButton select a))
-                comp.DrawTooltip(Point.Empty);
+                comp.DrawTooltip(new Vector2i());
         }
 
         public override void Dispose()
@@ -105,21 +105,21 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseDown(e)) return true;
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 if (comp.MouseUp(e)) return true;
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             foreach (GuiComponent comp in slots)
                 comp.MouseMove(e);

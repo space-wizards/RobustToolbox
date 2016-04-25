@@ -1,10 +1,8 @@
-﻿using System;
-using NUnit.Framework;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.Graphics.Render;
-
+﻿using NUnit.Framework;
+using SFML.Graphics;
 using SS14.Client.Graphics;
-using System.Drawing;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
 {

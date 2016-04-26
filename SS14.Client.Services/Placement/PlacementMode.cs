@@ -32,15 +32,21 @@ namespace SS14.Client.Services.Placement
         {
         }
 
+        public Sprite GetSprite(string key)
+        {
+            if (key == null) return null;
+
+            if (pManager.ResourceManager.SpriteExists(key))
+                return pManager.ResourceManager.GetSprite(key);
+            else
+                return null;
+        }
+
         public Sprite GetDirectionalSprite(string baseSprite)
         {
             if (baseSprite == null) return null;
 
-            string dirName = (baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant();
-            if (pManager.ResourceManager.SpriteExists(dirName))
-                return pManager.ResourceManager.GetSprite(dirName);
-            else
-                return null;
+            return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
         }
     }
 }

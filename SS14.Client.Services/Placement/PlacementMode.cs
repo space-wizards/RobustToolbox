@@ -1,6 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Map;
+using System.Text;
 
 namespace SS14.Client.Services.Placement
 {
@@ -48,7 +49,12 @@ namespace SS14.Client.Services.Placement
         {
             if (baseSprite == null) pManager.ResourceManager.GetNoSprite();
 
-            return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
+            string directionStr = pManager.Direction.ToString();
+            StringBuilder sb = new StringBuilder(baseSprite.Length + 1 + directionStr.Length);
+            sb.Append(baseSprite);
+            sb.Append('_');
+            sb.Append(directionStr);
+            return GetSprite(sb.ToString().ToLowerInvariant());
         }
     }
 }

@@ -34,17 +34,19 @@ namespace SS14.Client.Services.Placement
 
         public Sprite GetSprite(string key)
         {
-            if (key == null) return null;
-
-            if (pManager.ResourceManager.SpriteExists(key))
-                return pManager.ResourceManager.GetSprite(key);
+            if (key == null || !pManager.ResourceManager.SpriteExists(key))
+            {
+                return pManager.ResourceManager.GetNoSprite();
+            }
             else
-                return null;
+            {
+                return pManager.ResourceManager.GetSprite(key);
+            }
         }
 
         public Sprite GetDirectionalSprite(string baseSprite)
         {
-            if (baseSprite == null) return null;
+            if (baseSprite == null) pManager.ResourceManager.GetNoSprite();
 
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
         }

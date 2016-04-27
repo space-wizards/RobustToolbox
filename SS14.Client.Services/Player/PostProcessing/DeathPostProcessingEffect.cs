@@ -1,17 +1,16 @@
-﻿using SS14.Client.Graphics.Shader;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using SS14.Client.Graphics;
 
 
 namespace SS14.Client.Services.Player.PostProcessing
 {
     public class DeathPostProcessingEffect : PostProcessingEffect
     {
-        private readonly FXShader _shader;
+        private readonly GLSLShader _shader;
 
         public DeathPostProcessingEffect(float duration): base(duration)
         {
@@ -20,19 +19,20 @@ namespace SS14.Client.Services.Player.PostProcessing
 
         public override void ProcessImage(RenderImage image)
         {
-            var OstafLikesTheCock = new RenderImage(image.Height, image.Height);
+            var OstafLikesTheCock = new RenderImage("CockLoverOstaf", image.Height, image.Height);
 
-            CluwneLib.CurrentRenderTarget = OstafLikesTheCock;
+            OstafLikesTheCock.BeginDrawing();
+                image.Blit(0, 0, image.Height, image.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+            OstafLikesTheCock.EndDrawing();
 
-            image.Blit(0, 0, image.Height, image.Height, Color.White, BlitterSizeMode.Crop);
-            CluwneLib.CurrentRenderTarget = image;
-            CluwneLib.CurrentShader = _shader;
-            _shader.SetParameter("SceneTexture", OstafLikesTheCock);
-            _shader.setDuration((Math.Abs(_duration)));
-            OstafLikesTheCock.Blit(0, 0, image.Height, image.Height, Color.White, BlitterSizeMode.Crop);
+            image.BeginDrawing();
+                _shader.setAsCurrentShader();
+                _shader.SetParameter("SceneTexture", OstafLikesTheCock);
+                _shader.setDuration((Math.Abs(_duration)));               
+                OstafLikesTheCock.Blit(0, 0, image.Height, image.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
+            image.EndDrawing();
 
-            CluwneLib.CurrentRenderTarget = null;
-            CluwneLib.CurrentShader = null;
+            _shader.ResetCurrentShader();
             OstafLikesTheCock.Dispose();
         }
     }

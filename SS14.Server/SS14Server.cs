@@ -31,6 +31,7 @@ using System.Threading;
 using EntityManager = SS14.Server.GameObjects.EntityManager;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
 using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
+
 namespace SS14.Server
 {
     public class SS14Server : ISS14Server
@@ -96,11 +97,11 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            IoCManager.Resolve<IConfigurationManager>().Initialize("./config.xml");
-            LogManager.Initialize(IoCManager.Resolve<IConfigurationManager>().LogPath,
-                                  IoCManager.Resolve<IConfigurationManager>().LogLevel);
+            IoCManager.Resolve<IServerConfigurationManager>().Initialize("./server_config.xml");
+            LogManager.Initialize(IoCManager.Resolve<IServerConfigurationManager>().LogPath,
+                                  IoCManager.Resolve<IServerConfigurationManager>().LogLevel);
 
-            TickRate = IoCManager.Resolve<IConfigurationManager>().TickRate;
+            TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
         }
         
@@ -389,7 +390,7 @@ namespace SS14.Server
 
         public void LoadSettings()
         {
-            var cfgmgr = IoCManager.Resolve<IConfigurationManager>();
+            var cfgmgr = IoCManager.Resolve<IServerConfigurationManager>();
             _serverPort = cfgmgr.Port;
             _serverName = cfgmgr.ServerName;
             _serverMapName = cfgmgr.ServerMapName;
@@ -662,7 +663,7 @@ namespace SS14.Server
                     break;
                 case NetMessage.RequestAdminLogin:
                     string password = messageBody.ReadString();
-                    if (password == IoCManager.Resolve<IConfigurationManager>().AdminPassword)
+                    if (password == IoCManager.Resolve<IServerConfigurationManager>().AdminPassword)
                     {
                         LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address);
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).

@@ -1,8 +1,8 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -32,7 +32,7 @@ namespace SS14.Client.GameObjects
             _movedir = Direction.South;
         }
 
-        private Vector2 Velocity
+        private Vector2f Velocity
         {
             get { return Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity; }
             set { Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity = value; }
@@ -103,39 +103,39 @@ namespace SS14.Client.GameObjects
 
             if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
             {
-                Velocity = new Vector2(0, -1)*_currentMoveSpeed;
+                Velocity = new Vector2f(0, -1)*_currentMoveSpeed;
             }
             else if (_moveDown && !_moveLeft && !_moveRight && !_moveUp) // Move Down
             {
-                Velocity = new Vector2(0, 1)*_currentMoveSpeed;
+                Velocity = new Vector2f(0, 1)*_currentMoveSpeed;
             }
             else if (_moveLeft && !_moveRight && !_moveUp && !_moveDown) // Move Left
             {
-                Velocity = new Vector2(-1, 0)*_currentMoveSpeed;
+                Velocity = new Vector2f(-1, 0)*_currentMoveSpeed;
             }
             else if (_moveRight && !_moveLeft && !_moveUp && !_moveDown) // Move Right
             {
-                Velocity = new Vector2(1, 0)*_currentMoveSpeed;
+                Velocity = new Vector2f(1, 0)*_currentMoveSpeed;
             }
             else if (_moveUp && _moveRight && !_moveLeft && !_moveDown) // Move Up & Right
             {
-                Velocity = new Vector2(0.7071f, -0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(0.7071f, -0.7071f)*_currentMoveSpeed;
             }
             else if (_moveUp && _moveLeft && !_moveRight && !_moveDown) // Move Up & Left
             {
-                Velocity = new Vector2(-0.7071f, -0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(-0.7071f, -0.7071f)*_currentMoveSpeed;
             }
             else if (_moveDown && _moveRight && !_moveLeft && !_moveUp) // Move Down & Right
             {
-                Velocity = new Vector2(0.7071f, 0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(0.7071f, 0.7071f)*_currentMoveSpeed;
             }
             else if (_moveDown && _moveLeft && !_moveRight && !_moveUp) // Move Down & Left
             {
-                Velocity = new Vector2(-0.7071f, 0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(-0.7071f, 0.7071f)*_currentMoveSpeed;
             }
             else
             {
-                Velocity = new Vector2(0f, 0f);
+                Velocity = new Vector2f(0f, 0f);
             }
 
             /*Vector2 translationVector = Velocity*frameTime;
@@ -172,7 +172,7 @@ namespace SS14.Client.GameObjects
             }*/
         }
 
-        public virtual void SendPositionUpdate(Vector2 nextPosition)
+        public virtual void SendPositionUpdate(Vector2f nextPosition)
         {
             Owner.SendComponentNetworkMessage(this,
                                               NetDeliveryMethod.ReliableUnordered,

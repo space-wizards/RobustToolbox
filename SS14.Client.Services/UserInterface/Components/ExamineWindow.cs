@@ -1,8 +1,9 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
-using System.Drawing;
-using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -10,9 +11,9 @@ namespace SS14.Client.Services.UserInterface.Components
     {
         private readonly Label _entityDescription;
         private readonly IResourceManager _resourceManager;
-		private CluwneSprite _entitySprite;
+        private Sprite _entitySprite;
 
-        public ExamineWindow(Size size, Entity entity, IResourceManager resourceManager)
+        public ExamineWindow(Vector2i size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
         {
             _resourceManager = resourceManager;
@@ -27,13 +28,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (reply.MessageType == ComponentMessageType.CurrentSprite)
             {
-                _entitySprite = (CluwneSprite) reply.ParamsList[0];
-                _entityDescription.Position = new Point(10,
-                                                        (int) _entitySprite.Height +
+                _entitySprite = (Sprite) reply.ParamsList[0];
+                _entityDescription.Position = new Vector2i(10,
+                                                        (int)_entitySprite.GetLocalBounds().Height +
                                                         _entityDescription.ClientArea.Height + 10);
             }
             else
-                _entityDescription.Position = new Point(10, 10);
+                _entityDescription.Position = new Vector2i(10, 10);
         }
 
         public override void Render()
@@ -41,9 +42,11 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             if (_entitySprite == null) return;
 
-            var spriteRect = new Rectangle((int) (ClientArea.Width/2f - _entitySprite.Width/2f) + ClientArea.X,
-                                           10 + ClientArea.Y, (int) _entitySprite.Width, (int) _entitySprite.Height);
-            _entitySprite.Draw(spriteRect);
+            var bounds = _entitySprite.GetLocalBounds();
+            var spriteRect = new IntRect((int) (ClientArea.Width/2f - bounds.Width/2f) + ClientArea.Left,
+                                           10 + ClientArea.Top, (int)bounds.Width, (int)bounds.Height);
+            _entitySprite.SetTransformToRect(spriteRect);
+            _entitySprite.Draw();
         }
 
         public override void Dispose()

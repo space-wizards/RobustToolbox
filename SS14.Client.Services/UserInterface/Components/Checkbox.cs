@@ -1,8 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using System;
-using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -16,10 +16,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IResourceManager _resourceManager;
 
-		private CluwneSprite  checkbox;
-		private CluwneSprite checkboxCheck;
+        private Sprite checkbox;
+        private Sprite checkboxCheck;
 
-        private Boolean value;
+        private bool value;
+
 
         public Checkbox(IResourceManager resourceManager)
         {
@@ -27,9 +28,10 @@ namespace SS14.Client.Services.UserInterface.Components
             checkbox = _resourceManager.GetSprite("checkbox0");
             checkboxCheck = _resourceManager.GetSprite("checkbox1");
             Update(0);
+
         }
 
-        public Boolean Value
+        public bool Value
         {
             get { return value; }
             set
@@ -43,13 +45,13 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) checkbox.Width, (int) checkbox.Height));
+            checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
         }
 
         public override void Render()
-        {
-            checkbox.Draw(ClientArea);
-            if (Value) checkboxCheck.Draw(ClientArea);
+        {           
+            checkbox.Draw();
+            if (Value) checkboxCheck.Draw();
         }
 
         public override void Dispose()
@@ -61,9 +63,9 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 Value = !Value;
                 return true;
@@ -71,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

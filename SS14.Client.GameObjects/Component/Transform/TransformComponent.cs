@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.System;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -7,13 +8,12 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
     public class TransformComponent : Component
     {
-        private Vector2 _position = Vector2.Zero;
+        private Vector2f _position = new Vector2f();
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
         public TransformComponentState lerpStateFrom;
@@ -23,12 +23,12 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Transform;
         }
 
-        public Vector2 Position
+        public Vector2f Position
         {
             get { return _position; }
             set
             {
-                Vector2 oldPosition = _position;
+                Vector2f oldPosition = _position;
                 _position = value;
 
                 if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
@@ -43,28 +43,28 @@ namespace SS14.Client.GameObjects
         public float X
         {
             get { return Position.X; }
-            set { Position = new Vector2(value, Position.Y); }
+            set { Position = new Vector2f(value, Position.Y); }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position = new Vector2(Position.X, value); }
+            set { Position = new Vector2f(Position.X, value); }
         }
 
         public event EventHandler<VectorEventArgs> OnMove;
 
         public override void Shutdown()
         {
-            Position = Vector2.Zero;
+            Position = new Vector2f();
         }
 
-        public void TranslateTo(Vector2 toPosition)
+        public void TranslateTo(Vector2f toPosition)
         {
             Position = toPosition;
         }
 
-        public void TranslateByOffset(Vector2 offset)
+        public void TranslateByOffset(Vector2f offset)
         {
             Position = Position + offset;
 
@@ -79,7 +79,7 @@ namespace SS14.Client.GameObjects
         {
             lastState = state;
             states.Add(state);
-            var interp = IoCManager.Resolve<IConfigurationManager>().GetInterpolation();
+            var interp = IoCManager.Resolve<IPlayerConfigurationManager>().GetInterpolation();
             //Remove all states older than the one just before the interp time.
             lerpStateFrom = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
             if (lerpStateFrom != null)
@@ -98,7 +98,7 @@ namespace SS14.Client.GameObjects
             }
             if(lastState.ForceUpdate)
             {
-                TranslateTo(new Vector2(state.X, state.Y));
+                TranslateTo(new Vector2f(state.X, state.Y));
             }
 
         }

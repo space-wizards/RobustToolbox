@@ -1,12 +1,12 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Renderable;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -43,16 +43,16 @@ namespace SS14.Client.GameObjects
                             else
                                 SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandLeft)
-                                flip = false;
+                                HorizontalFlip = false;
                             else
-                                flip = true;
+                                HorizontalFlip = true;
                             break;
                         case Direction.South:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandLeft)
-                                flip = true;
+                                HorizontalFlip = true;
                             else
-                                flip = false;
+                                HorizontalFlip = false;
                             break;
                         case Direction.East:
                             if (holdingHand == InventoryLocation.HandLeft)
@@ -60,7 +60,7 @@ namespace SS14.Client.GameObjects
                             else
                                 SetDrawDepth(DrawDepth.HeldItems);
                             SetSpriteByKey(basename + "_inhand_side");
-                            flip = true;
+                            HorizontalFlip = true;
                             break;
                         case Direction.West:
                             if (holdingHand == InventoryLocation.HandRight)
@@ -68,7 +68,7 @@ namespace SS14.Client.GameObjects
                             else
                                 SetDrawDepth(DrawDepth.HeldItems);
                             SetSpriteByKey(basename + "_inhand_side");
-                            flip = false;
+                            HorizontalFlip = false;
                             break;
                         case Direction.NorthEast:
                             if (SpriteExists(basename + "_inhand_back"))
@@ -76,9 +76,9 @@ namespace SS14.Client.GameObjects
                             else
                                 SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandLeft)
-                                flip = false;
+                                HorizontalFlip = false;
                             else
-                                flip = true;
+                                HorizontalFlip = true;
                             break;
                         case Direction.NorthWest:
                             if (SpriteExists(basename + "_inhand_back"))
@@ -86,23 +86,23 @@ namespace SS14.Client.GameObjects
                             else
                                 SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandLeft)
-                                flip = false;
+                                HorizontalFlip = false;
                             else
-                                flip = true;
+                                HorizontalFlip = true;
                             break;
                         case Direction.SouthEast:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandRight)
-                                flip = false;
+                                HorizontalFlip = false;
                             else
-                                flip = true;
+                                HorizontalFlip = true;
                             break;
                         case Direction.SouthWest:
                             SetSpriteByKey(basename + "_inhand");
                             if (holdingHand == InventoryLocation.HandRight)
-                                flip = false;
+                                HorizontalFlip = false;
                             else
-                                flip = true;
+                                HorizontalFlip = true;
                             break;
                     }
                     break;
@@ -185,9 +185,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        protected override bool WasClicked(PointF worldPos)
+        protected override bool WasClicked(Vector2f worldPos)
         {
-            return base.WasClicked(worldPos) && !IsInHand;
+            return !IsInHand && base.WasClicked(worldPos);
         }
 
         public override void HandleComponentState(dynamic state)

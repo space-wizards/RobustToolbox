@@ -1,6 +1,8 @@
-﻿using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Placement;
@@ -10,12 +12,10 @@ using SS14.Client.Services.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
-using SFML.Window;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface
 {
@@ -29,13 +29,13 @@ namespace SS14.Client.Services.UserInterface
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         private readonly List<IGuiComponent> _components;
-        private readonly IConfigurationManager _config;
+        private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
-        private CluwneSprite _cursorSprite;
+        private Sprite _cursorSprite;
         private DebugConsole _console;
 
-        private Vector2 dragOffset = Vector2.Zero;
+        private Vector2i dragOffset = new Vector2i();
         private bool moveMode;
         private IGuiComponent movingComp;
         private bool showCursor = true;
@@ -50,12 +50,12 @@ namespace SS14.Client.Services.UserInterface
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
-            _config = IoCManager.Resolve<IConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Size((int) CluwneLib.Screen.Size.X, 400), resourceManager);
+            _config = IoCManager.Resolve<IPlayerConfigurationManager>();
+            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Screen.Size.X, 400), resourceManager);
             _console.SetVisible(false);
         }
 
-        public Vector2 MousePos { get; private set; }
+        public Vector2i MousePos { get; private set; }
 
         #region IUserInterfaceManager Members
 
@@ -231,11 +231,11 @@ namespace SS14.Client.Services.UserInterface
             {
                 foreach (IGuiComponent comp in _components)
                 {
-                    if (comp.ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+                    if (comp.ClientArea.Contains(e.X, e.Y))
                     {
                         movingComp = comp;
-                        dragOffset = (new Vector2(e.X, e.Y)) -
-                                     new Vector2(comp.ClientArea.X, comp.ClientArea.Y);
+                        dragOffset = (new Vector2i(e.X, e.Y)) -
+                                     new Vector2i(comp.ClientArea.Left, comp.ClientArea.Top);
                         break;
                     }
                 }
@@ -303,7 +303,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
-            MousePos = new Vector2( e.X, e.Y);
+            MousePos = new Vector2i(e.X, e.Y);
 
             if (_console.IsVisible())
             {
@@ -358,7 +358,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Equals(_config.GetConsoleKey()))
+            if (e.Code == _config.GetConsoleKey())
             {
                 _console.ToggleVisible();
                 return true;
@@ -373,13 +373,30 @@ namespace SS14.Client.Services.UserInterface
                                                           where comp.RecieveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
-                                                          //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                          // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
                                                           orderby comp.Focus descending
                                                           select comp;
 
             return inputList.Any(current => current.KeyDown(e));
         }
 
+        public virtual bool TextEntered(TextEventArgs e)
+        {
+            if (_console.IsVisible())
+            {
+                if (_console.TextEntered(e)) return true;
+            }
+
+            IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
+                                                          where comp.RecieveInput
+                                                          orderby comp.ZDepth ascending
+                                                          orderby comp.IsVisible() descending
+                                                          // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                                                          orderby comp.Focus descending
+                                                          select comp;
+
+            return inputList.Any(current => current.TextEntered(e));
+        }
         #endregion
 
         #region Component retrieval
@@ -478,7 +495,7 @@ namespace SS14.Client.Services.UserInterface
             if(_console.IsVisible()) _console.Update(frameTime);
 
             if (moveMode && movingComp != null)
-                movingComp.Position = (Point) (MousePos - dragOffset);
+                movingComp.Position = (MousePos - dragOffset);
 
             foreach (IGuiComponent component in _components)
                 component.Update(frameTime);
@@ -526,7 +543,7 @@ namespace SS14.Client.Services.UserInterface
                                         : _resourceManager.GetSprite("cursor");
                 }
 
-                _cursorSprite.Position = MousePos;
+                _cursorSprite.Position = MousePos.ToFloat();
                 _cursorSprite.Draw();
             }
         }

@@ -16,7 +16,7 @@ namespace SS14.Server.Services.MessageLogging
         private readonly MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger(IConfigurationManager _configurationManager)
+        public MessageLogger(IServerConfigurationManager _configurationManager)
         {
             _logging = _configurationManager.MessageLogging;
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");

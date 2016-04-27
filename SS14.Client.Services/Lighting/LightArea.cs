@@ -1,44 +1,33 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
-using SS14.Shared.Maths;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
-using System.Drawing;
-using SS14.Client.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.Lighting
 {
     public class LightArea : ILightArea
     {
-        public LightArea(int size)
-        {
-            int baseSize = 2 << (int) size;
-            LightAreaSize = new Vector2(baseSize, baseSize);
-            renderTarget = new RenderImage((uint)baseSize, (uint)baseSize);
 
-
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
-        }
-
-        #region ILightArea Members
-
-        public RenderImage renderTarget { get; private set; }
+        public RenderImage RenderTarget { get; private set; }
 
         /// <summary>
         /// World position coordinates of the light's center
         /// </summary>
-        public Vector2 LightPosition { get; set; }
+        public Vector2f LightPosition { get; set; }
 
-        public Vector2 LightAreaSize { get; set; }
+        public Vector2f LightAreaSize { get; set; }
         public bool Calculated { get; set; }
-		public CluwneSprite Mask { get; set; }
+        public Sprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
 
-        public Vector4 MaskProps
+
+        public Vector4f MaskProps
         {
             get
             {
@@ -61,21 +50,47 @@ namespace SS14.Client.Services.Lighting
             }
         }
 
-        public Vector2 ToRelativePosition(Vector2 worldPosition)
+
+
+        public LightArea(int size)
         {
-            return worldPosition - (LightPosition - LightAreaSize*0.5f);
+            int baseSize = 2 << (int) size;
+            LightAreaSize = new Vector2f(baseSize, baseSize);
+            RenderTarget = new RenderImage("LightArea"+ size, (uint)baseSize, (uint)baseSize);
+
+
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+        }
+
+        public LightArea(ShadowmapSize shadowmapSize)
+        {
+            int baseSize = 2 << (int)shadowmapSize;
+            LightAreaSize = new Vector2f(baseSize, baseSize);
+            RenderTarget = new RenderImage("LightArea"+ shadowmapSize,(uint)baseSize, (uint)baseSize);
+
+
+            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+         
+        }
+
+        #region ILightArea Members
+
+       
+        public Vector2f ToRelativePosition(Vector2f worldPosition)
+        {
+            return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightAreaSize * 0.5f);
         }
 
         public void BeginDrawingShadowCasters()
         {
-           CluwneLib.CurrentRenderTarget = renderTarget;
-            //TODO CluwneLib.Clear
-            //CluwneLib.CurrentRenderTarget.Clear(Color.FromArgb(0, 0, 0, 0));
+            RenderTarget.BeginDrawing();
+
+            RenderTarget.Clear(new SFML.Graphics.Color(0, 0, 0, 0));
         }
 
         public void EndDrawingShadowCasters()
         {
-            CluwneLib.CurrentRenderTarget = null;
+            RenderTarget.EndDrawing();
         }
 
         public void SetMask(string mask)
@@ -85,23 +100,12 @@ namespace SS14.Client.Services.Lighting
 
         #endregion
 
-        private Vector4 maskPropsVec(bool rot, bool flipx, bool flipy)
+        private Vector4f maskPropsVec(bool rot, bool flipx, bool flipy)
         {
-            return new Vector4(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
+            return new Vector4f(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
         }
 
            
-        //TODO Mask
-        SFML.Graphics.Sprite ILightArea.Mask
-        {
-            get
-            {
-                throw new System.NotImplementedException();
-            }
-            set
-            {
-                throw new System.NotImplementedException();
-            }
-        }
+      
     }
 }

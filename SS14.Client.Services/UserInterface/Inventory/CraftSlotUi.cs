@@ -1,12 +1,13 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
 using System;
-using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -19,10 +20,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
         #endregion
 
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite _sprite;
+        private readonly Sprite _sprite;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private Color _color;
-		private CluwneSprite _entSprite;
+        private Sprite _entSprite;
 
         public CraftSlotUi(IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
         {
@@ -48,18 +49,25 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) _sprite.AABB.Width, (int) _sprite.AABB.Height));
+            var bounds = _sprite.GetLocalBounds();
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
-            _sprite.Color = new SFML.Graphics.Color(_color.R, _color.G, _color.B, _color.A); ;
-            _sprite.Draw(new Rectangle(Position, new Size((int) _sprite.AABB.Width, (int) _sprite.AABB.Height)));
+            _sprite.Color = _color;
+            var spriteBounds = _sprite.GetLocalBounds();
+            _sprite.SetTransformToRect(new IntRect(Position, new Vector2i((int)spriteBounds.Width, (int)spriteBounds.Height)));
+            _sprite.Draw();
             if (_entSprite != null)
-                _entSprite.Draw(new Rectangle((int) (Position.X + _sprite.AABB.Width/2f - _entSprite.AABB.Width/2f),
-                                              (int) (Position.Y + _sprite.AABB.Height/2f - _entSprite.AABB.Height/2f),
-                                              (int) _entSprite.Width, (int) _entSprite.Height));
-            _sprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+            {
+                var entBounds = _entSprite.GetLocalBounds();
+                _entSprite.SetTransformToRect(new IntRect((int)(Position.X + spriteBounds.Width / 2f - entBounds.Width / 2f),
+                                              (int)(Position.Y + spriteBounds.Height / 2f - entBounds.Height / 2f),
+                                              (int)entBounds.Width, (int)entBounds.Height));
+                _entSprite.Draw();
+            }
+            _sprite.Color = Color.White;
         }
 
         public override void Dispose()
@@ -68,9 +76,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 ResetEntity();
                 return true;
@@ -78,9 +86,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_userInterfaceManager.DragInfo.IsEntity && _userInterfaceManager.DragInfo.IsActive)
                 {
@@ -92,10 +100,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
-                _color = Color.LightSteelBlue;
+            if (ClientArea.Contains(e.X, e.Y))
+                _color = new Color(176, 222, 196);
             else
                 _color = Color.White;
         }

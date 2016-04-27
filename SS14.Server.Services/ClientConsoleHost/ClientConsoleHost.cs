@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GOC;
@@ -9,11 +10,8 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SS14.Server.Services.ClientConsoleHost
 {
@@ -27,7 +25,7 @@ namespace SS14.Server.Services.ClientConsoleHost
 
             string command = args[0];
 
-            Vector2 position;
+            Vector2f position;
             Entity player;
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();

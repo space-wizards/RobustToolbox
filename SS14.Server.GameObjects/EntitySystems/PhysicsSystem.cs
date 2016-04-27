@@ -1,9 +1,6 @@
-﻿using SS14.Server.Interfaces.Map;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.GO;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
@@ -31,7 +28,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
 
-                if (velocity.Velocity.Magnitude < 0.001f)
+                if (velocity.Velocity.LengthSquared() < 0.00001f)
                     continue;
                 //Decelerate
                 velocity.Velocity -= (velocity.Velocity * (frametime * 0.01f));

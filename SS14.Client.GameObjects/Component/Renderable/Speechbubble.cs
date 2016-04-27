@@ -1,14 +1,11 @@
 ﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
 using System.Text;
-using SS14.Shared.Maths;
-using Color = System.Drawing.Color;
-using Sprite = SS14.Client.Graphics.Sprite.CluwneSprite;
 
 namespace SS14.Client.GameObjects
 {
@@ -74,13 +71,13 @@ namespace SS14.Client.GameObjects
             _mobName = mobname;
             _buildTime = DateTime.Now;
             _textSprite = new Text(String.Empty, _resourceManager.GetFont("CALIBRI"));
-            _textSprite.Color = SFML.Graphics.Color.Black;
+            _textSprite.Color = Color.Black;
             // TODO Word wrap!
-            _textSprite.Position = new Vector2(5, 3);
+            _textSprite.Position = new Vector2f(5, 3);
             _stringBuilder = new StringBuilder();
 
-            _bubbleRender = new RenderImage(1, 1);
-            _bubbleSprite = new Sprite(_bubbleRender);
+            _bubbleRender = new RenderImage("bubble ",1, 1);
+            _bubbleSprite = new Sprite(_bubbleRender.Texture);
         }
 
         #endregion
@@ -91,25 +88,30 @@ namespace SS14.Client.GameObjects
 
         #region Publics
 
-        public void Draw(Vector2 position, Vector2 windowOrigin, Sprite spriteToDrawAbove)
+        public void Draw(Vector2f position, Vector2f windowOrigin, Sprite spriteToDrawAbove)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            float x = position.X - windowOrigin.X - (_bubbleSprite.Width/2.0f);
-            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (spriteToDrawAbove.Height/2.0f) - 5.0f;
+            var bubbleBounds = _bubbleSprite.GetLocalBounds();
+            var spriteBounds = spriteToDrawAbove.GetLocalBounds();
 
-            _bubbleSprite.SetPosition(x, y);
+            float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
+            float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
+
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2 position, Vector2 windowOrigin, RectangleF boundingBox)
+        public void Draw(Vector2f position, Vector2f windowOrigin, FloatRect boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            float x = position.X - windowOrigin.X - (_bubbleSprite.Width / 2.0f);
-            float y = position.Y - windowOrigin.Y - (_bubbleSprite.Height) - (boundingBox.Height / 2.0f) - 5.0f;
+            var bubbleBounds = _bubbleSprite.GetLocalBounds();
 
-            _bubbleSprite.SetPosition(x, y);
+            float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
+            float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
+
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 
@@ -134,7 +136,7 @@ namespace SS14.Client.GameObjects
         private void DrawBubbleSprite()
         {
             // TODO unfuck this
-            /*RenderTarget originalTarget = Gorgon.CurrentRenderTarget;
+            /*RenderTarget originalTarget = CluwneLib.CurrentRenderTarget;
             Sprite cornerSprite = _resourceManager.GetSprite("corners");
 
             //Set up dimensions
@@ -142,7 +144,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.SetSize(_textSprite.Size.X + 10, _textSprite.Size.Y + 10);
 
             //BEGIN RENDERING
-            Gorgon.CurrentRenderTarget = _bubbleRender;
+            CluwneLib.CurrentRenderTarget = _bubbleRender;
             _bubbleRender.Clear(Color.Transparent);
 
             //Draw black triangle at the bottom.
@@ -185,7 +187,7 @@ namespace SS14.Client.GameObjects
 
             _textSprite.Draw();
 
-            Gorgon.CurrentRenderTarget = originalTarget;
+            CluwneLib.CurrentRenderTarget = originalTarget;
 
             _buildTime = DateTime.Now;*/
         }

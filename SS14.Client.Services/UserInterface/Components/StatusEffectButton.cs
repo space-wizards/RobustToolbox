@@ -1,12 +1,12 @@
-﻿using SS14.Client.GameObjects;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GO;
 using System;
-using System.Drawing;
-using SFML.Window;
-using SS14.Shared.Maths;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,10 +19,10 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly TextSprite timeLeft;
 
         private readonly TextSprite tooltip;
-		private CluwneSprite _buttonSprite;
+        private Sprite _buttonSprite;
 
         private bool showTooltip;
-        private Point tooltipPos;
+        private Vector2i tooltipPos;
 
         public StatusEffectButton(StatusEffect _assigned, IResourceManager resourceManager)
         {
@@ -34,8 +34,8 @@ namespace SS14.Client.Services.UserInterface.Components
             timeLeft = new TextSprite("timeleft" + _assigned.uid.ToString() + _assigned.name, "",
                                       _resourceManager.GetFont("CALIBRI"));
             timeLeft.Color = Color.White;
-            timeLeft.ShadowColor = Color.Gray;
-            timeLeft.ShadowOffset = new Vector2(1, 1);
+            timeLeft.ShadowColor = new Color(128, 128, 128);
+            timeLeft.ShadowOffset = new Vector2f(1, 1);
             timeLeft.Shadowed = true;
 
             tooltip = new TextSprite("tooltip" + _assigned.uid.ToString() + _assigned.name, "",
@@ -49,7 +49,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = new Vector2 (Position.X,Position.Y);
+            _buttonSprite.Position = new Vector2f (Position.X,Position.Y);
             if (assignedEffect.doesExpire)
             {
                 string leftStr = Math.Truncate(assignedEffect.expiresAt.Subtract(DateTime.Now).TotalSeconds).ToString();
@@ -57,21 +57,22 @@ namespace SS14.Client.Services.UserInterface.Components
                 int x_pos = 16 - (int) (timeLeft.Width/2f);
 
                 if (assignedEffect.isDebuff) timeLeft.Color = Color.Red;
-                else timeLeft.Color = Color.ForestGreen;
+                else timeLeft.Color = new Color(0, 128, 0);
 
-                timeLeft.Position = new Vector2(Position.X + x_pos, Position.Y + 15);
+                timeLeft.Position = new Vector2i(Position.X + x_pos, Position.Y + 15);
             }
 
-            ClientArea = new Rectangle(Position,
-                                       new Size((int) _buttonSprite.AABB.Width, (int) _buttonSprite.AABB.Height));
+            var bounds = _buttonSprite.GetLocalBounds();
+            ClientArea = new IntRect(Position,
+                                       new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.R, Color.G, Color.B, Color.A);
-            _buttonSprite.Position =new Vector2( Position.X, Position.Y);
+            _buttonSprite.Color = Color;
+            _buttonSprite.Position =new Vector2f( Position.X, Position.Y);
             _buttonSprite.Draw();
-            _buttonSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B);
+            _buttonSprite.Color = Color.White;
 
             if (assignedEffect.doesExpire)
             {
@@ -95,14 +96,14 @@ namespace SS14.Client.Services.UserInterface.Components
                                          : "");
 
                 tooltip.Text = tooltipStr;
-                float x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > CluwneLib.CurrentClippingViewport.Width
+                var x_pos = (tooltipPos.X + 10 + tooltip.Width + 5) > CluwneLib.CurrentClippingViewport.Width
                                   ? 0 - tooltip.Width - 10
                                   : 10 + 5;
-                tooltip.Position = new Vector2(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
-              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
-                                                           tooltip.Height + 5, Color.SteelBlue);
-              CluwneLib.drawRectangle((int)(tooltipPos.X + x_pos), tooltipPos.Y + 10, tooltip.Width + 5,
-                                                    tooltip.Height + 5, Color.DarkSlateBlue);
+                tooltip.Position = new Vector2i(tooltipPos.X + x_pos + 5, tooltipPos.Y + 5 + 10);
+                CluwneLib.drawRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+                                                           tooltip.Height + 5, new Color(70, 130, 180));
+                CluwneLib.drawRectangle(tooltipPos.X + x_pos, tooltipPos.Y + 10, tooltip.Width + 5,
+                                                    tooltip.Height + 5, new Color(72, 61, 139));
                 tooltip.Draw();
             }
         }
@@ -114,22 +115,22 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 showTooltip = true;
-                tooltipPos = new Point((int) e.X, (int) e.Y);
+                tooltipPos = new Vector2i(e.X, e.Y);
             }
             else
                 showTooltip = false;

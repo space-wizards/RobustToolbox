@@ -1,13 +1,6 @@
 ﻿using SFML.Graphics;
-using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Color = System.Drawing.Color;
-
-
-
+using SFML.System;
+using SS14.Client.Graphics.Interface;
 
 namespace SS14.Client.Graphics.Sprite
 {
@@ -17,9 +10,10 @@ namespace SS14.Client.Graphics.Sprite
     public class TextSprite : ICluwneDrawable
     {
 
-        private Boolean _shadowed;                                 // Is the Text Shadowed
+        private bool _shadowed;                                    // Is the Text Shadowed
         private Color _shadowColor;                                // Shadow Color
         private Text _textSprite;
+        private string Label;
 
         #region Constructors
 
@@ -31,6 +25,7 @@ namespace SS14.Client.Graphics.Sprite
         /// <param name="font"> Font to use when displaying Text </param>
         public TextSprite( string Label, string text, Font font )
         {
+            this.Label = Label;
             _textSprite = new Text(text, font, 14);
         }
 
@@ -54,23 +49,18 @@ namespace SS14.Client.Graphics.Sprite
         #endregion
 
         #region Methods
-        public void Draw (RenderTarget target)
-        {
+     
+        public void Draw() 
+        {                
+            _textSprite.Position = new Vector2f(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
+            _textSprite.Color = Color;
+            CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
-            if (CluwneLib.Debug.Fontsize > 0)
-                _textSprite.CharacterSize=CluwneLib.Debug.Fontsize;
-            _textSprite.Position = new Vector2(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
-            _textSprite.Color = Color.ToSFMLColor();
-            target.Draw(_textSprite);
-
-            if (CluwneLib.Debug.TextBorders) {
+            if (CluwneLib.Debug.DebugTextboxes)//CluwneLib.Debug()
+            {
                 FloatRect fr = _textSprite.GetGlobalBounds();
-                CluwneLib.drawHollowRectangle((int)fr.Left, (int) fr.Top, (int) fr.Width, (int) fr.Height, 1.0f, Color.Red);
+                CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);
             }
-        }
-
-        public void Draw() {
-            Draw(CluwneLib.CurrentRenderTarget);
         }
 
 
@@ -82,13 +72,13 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Accessors
 
-        public System.Drawing.Size Size;
+        public Vector2i Size;
 
-        public System.Drawing.Color Color;
+        public Color Color;
 
-        public Vector2 ShadowOffset { get; set; }
+        public Vector2f ShadowOffset { get; set; }
 
-        public Boolean Shadowed
+        public bool Shadowed
         {
             get
             {
@@ -130,7 +120,7 @@ namespace SS14.Client.Graphics.Sprite
         }
     
 
-        public Vector2 Position;
+        public Vector2i Position;
 
         public int Width
         {

@@ -21,7 +21,7 @@ namespace SS14.Client.GameObjects
         public EntityNetworkManager(INetworkManager networkManager)
         {
             _networkManager = networkManager;
-            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetMessageLogging();
+            _messageProfiling = IoCManager.Resolve<IPlayerConfigurationManager>().GetMessageLogging();
         }
 
         #region IEntityNetworkManager Members

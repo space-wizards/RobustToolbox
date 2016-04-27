@@ -1,7 +1,7 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.ServerEnums;
 using System;
-using System.Drawing;
 
 namespace SS14.Server.Services.Configuration
 {
@@ -9,8 +9,8 @@ namespace SS14.Server.Services.Configuration
     public class PersistentConfiguration
     {
         public const int _Version = 1;
-        public string AdminPassword = "admin123";
-        public Size ConsoleSize = new Size(120, 60);
+        public string AdminPassword = "admin123"; // so secure very wow
+        public Vector2i ConsoleSize = new Vector2i(120, 60);
         public LogLevel LogLevel = LogLevel.Information;
 
         public string LogPath = "log.txt";

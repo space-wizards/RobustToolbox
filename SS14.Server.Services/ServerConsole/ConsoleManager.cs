@@ -3,7 +3,6 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using Con = System.Console;
@@ -25,10 +24,10 @@ namespace SS14.Server.Services.ServerConsole
         public ConsoleManager()
         {
             InitializeCommands();
-            Size consoleSize = IoCManager.Resolve<IConfigurationManager>().ConsoleSize;
+            var consoleSize = IoCManager.Resolve<IServerConfigurationManager>().ConsoleSize;
             try
             {
-                Con.SetWindowSize(consoleSize.Width, consoleSize.Height);
+                Con.SetWindowSize(consoleSize.X, consoleSize.Y);
             }
             catch (ArgumentOutOfRangeException e)
             {

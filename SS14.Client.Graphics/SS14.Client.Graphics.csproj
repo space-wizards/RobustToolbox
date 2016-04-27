@@ -24,15 +24,15 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>False</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Graphics\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
@@ -58,6 +58,10 @@
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Third-Party\extlibs\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -71,7 +75,6 @@
       <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CluwneLib.cs">
@@ -81,18 +84,22 @@
     <Compile Include="Collection\BaseCollection.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="OpenGL\GLTexture.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Event\FrameEvent.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
+    <Compile Include="Sprite\SpriteInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
-    <Compile Include="TextureCache.cs">
+    <Compile Include="texture\TextureCache.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ICluwneDrawable.cs">
+    <Compile Include="Interface\ICluwneDrawable.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -104,16 +111,13 @@
     <Compile Include="Render\RenderImage.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Shader\FXShader.cs">
+    <Compile Include="Shader\GLSLShader.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\SpriteBatch.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\CluwneSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sprite\SpriteInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\TextSprite.cs">
@@ -134,7 +138,8 @@
     <Compile Include="VertexData\VertexTypeList.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Viewport.cs">
+    <Compile Include="Settings\VideoSettings.cs" />
+    <Compile Include="View\Viewport.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -143,6 +148,12 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SFMLLibs\csfml-graphics-2.dll" />
+    <Content Include="SFMLLibs\csfml-network-2.dll" />
+    <Content Include="SFMLLibs\csfml-system-2.dll" />
+    <Content Include="SFMLLibs\csfml-window-2.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

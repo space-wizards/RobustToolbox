@@ -113,9 +113,6 @@
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
     </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
     <Reference Include="System.ServiceModel">
       <Name>System.ServiceModel</Name>
     </Reference>
@@ -133,11 +130,6 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj">
-      <Name>SS14.Client.ClientWindow</Name>
-      <Project>{A9E3FA31-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Client.GameObjects\SS14.Client.GameObjects.csproj">
@@ -177,7 +169,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Configuration\Configuration.cs">
+    <Compile Include="Configuration\PlayerConfiguration.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GameStates\GameStateManager.cs">
@@ -310,9 +302,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="State\States\LobbyScreen.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="State\States\TestState.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GameTimer\GameTimer.cs">

@@ -1,10 +1,11 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -27,8 +28,8 @@ namespace SS14.Client.Services.UserInterface.Components
             _message = new Label(message, "CALIBRI", _resourceManager);
             _mainMenuButton = new Button("Main Menu", _resourceManager);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
-            _mainMenuButton.Label.Color = Color.WhiteSmoke;
-            _message.Text.Color = Color.WhiteSmoke;
+            _mainMenuButton.Label.Color = new SFML.Graphics.Color(245, 245, 245);
+            _message.Text.Color = new SFML.Graphics.Color(245, 245, 245);
         }
 
         private void MainMenuButtonClicked(Button sender)
@@ -38,19 +39,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            _message.Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+            _message.Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
                                           (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f - _message.ClientArea.Height/2f) -
                                           50);
             _message.Update(frameTime);
             _mainMenuButton.Position =
-                new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
-                          _message.ClientArea.Bottom + 20);
+                new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+                          _message.ClientArea.Bottom() + 20);
             _mainMenuButton.Update(frameTime);
         }
 
         public override void Render()
         {
-            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color.Black);
+            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, SFML.Graphics.Color.Black);
             _message.Render();
             _mainMenuButton.Render();
         }
@@ -62,29 +63,29 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             _mainMenuButton.MouseDown(e);
             return true;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             _mainMenuButton.MouseUp(e);
             return true;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             _mainMenuButton.MouseMove(e);
         }
 
-		public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
             return true;
         }
 
-		public override bool KeyDown(KeyEventArgs e)
+        public override bool KeyDown(KeyEventArgs e)
         {
             _mainMenuButton.KeyDown(e);
             return true;

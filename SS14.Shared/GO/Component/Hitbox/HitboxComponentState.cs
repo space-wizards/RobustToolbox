@@ -1,5 +1,5 @@
-﻿using System;
-using System.Drawing;
+﻿using SFML.Graphics;
+using System;
 
 namespace SS14.Shared.GO.Component.Hitbox
 {
@@ -11,9 +11,9 @@ namespace SS14.Shared.GO.Component.Hitbox
     [Serializable]
     public class HitboxComponentState : ComponentState
     {
-        public RectangleF AABB;
+        public FloatRect AABB;
 
-        public HitboxComponentState(RectangleF aabb)
+        public HitboxComponentState(FloatRect aabb)
             :base(ComponentFamily.Hitbox)
         {
             AABB = aabb;

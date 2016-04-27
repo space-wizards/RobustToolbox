@@ -1,21 +1,16 @@
-﻿using SS14.Client.Graphics;
-using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
-using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
-
+using SS14.Shared.Maths;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
-using SFML.Graphics;
-using SS14.Client.Graphics.Sprite;
-using Color = System.Drawing.Color;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -28,17 +23,18 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2 mouseS, IMapManager currentMap)
+        public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            var spriteBounds = spriteToDraw.GetLocalBounds();
 
             mouseScreen = mouseS;
-            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
+            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+            var spriteSize = CluwneLib.PixelToTile(new Vector2f(spriteBounds.Width, spriteBounds.Height)); // TODO: Doublecheck this.  Use SizeF?
+            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
 
@@ -51,10 +47,11 @@ namespace SS14.Client.Services.Placement.Modes
             if (currentTile.Tile.TileDef.IsWall)
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
-            if (pManager.CurrentPermission.Range > 0)
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
-                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range) return false;
+                         .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             Entity[] nearbyEntities =
                 ((EntityManager) IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(
@@ -64,7 +61,7 @@ namespace SS14.Client.Services.Placement.Modes
                                                         where entity.Template == pManager.CurrentTemplate
                                                         orderby
                                                             (entity.GetComponent<TransformComponent>(
-                                                                ComponentFamily.Transform).Position - mouseWorld).Length
+                                                                ComponentFamily.Transform).Position - mouseWorld).LengthSquared()
                                                             ascending
                                                         select entity;
 
@@ -80,38 +77,33 @@ namespace SS14.Client.Services.Placement.Modes
 
                 if (reply.MessageType == ComponentMessageType.CurrentSprite)
                 {
-                    var closestSprite = (CluwneSprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestSprite = (Sprite) reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestBounds = closestSprite.GetLocalBounds();
 
                     var closestRect =
-                        new RectangleF(
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
-                            closestSprite.Size.X/2f,
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
-                            closestSprite.Size.Y/2f, closestSprite.Width, closestSprite.Height);
+                        new FloatRect(
+                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - closestBounds.Height / 2f,
+                            closestBounds.Width, closestBounds.Height);
 
-                    var sides = new List<Vector2>
-                                    {
-                                        new Vector2(closestRect.X + (closestRect.Width/2f),
-                                                     closestRect.Top - spriteToDraw.Height/2f),
-                                        new Vector2(closestRect.X + (closestRect.Width/2f),
-                                                     closestRect.Bottom + spriteToDraw.Height/2f),
-                                        new Vector2(closestRect.Left - spriteToDraw.Width/2f,
-                                                     closestRect.Y + (closestRect.Height/2f)),
-                                        new Vector2(closestRect.Right + spriteToDraw.Width/2f,
-                                                     closestRect.Y + (closestRect.Height/2f))
-                                    };
+                    var sides = new List<Vector2f>
+                    {
+                        new Vector2f(closestRect.Left + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
+                        new Vector2f(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom() + closestBounds.Height / 2f),
+                        new Vector2f(closestRect.Left - closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f)),
+                        new Vector2f(closestRect.Right() + closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f))
+                    };
 
-                    Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseWorld).Length ascending select side).First();
+                    Vector2f closestSide =
+                        (from Vector2f side in sides orderby (side - mouseWorld).LengthSquared() ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
+                    mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
                 }
             }
 
-            spriteRectWorld = new RectangleF(mouseWorld.X - (spriteToDraw.Width/2f),
-                                             mouseWorld.Y - (spriteToDraw.Height/2f), spriteToDraw.Width,
-                                             spriteToDraw.Height);
+            spriteRectWorld = new FloatRect(mouseWorld.X - (spriteBounds.Width/2f), mouseWorld.Y - (spriteBounds.Height/2f),
+                                             spriteBounds.Width, spriteBounds.Height);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
             return true;
         }
@@ -120,12 +112,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen.ToSFMLColor() : Color.IndianRed.ToSFMLColor();
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                var spriteBounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new Color(0, 128, 0, 255) : new Color(128, 0, 0, 255);
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (spriteBounds.Width/2f),
+                                                     mouseScreen.Y - (spriteBounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White.ToSFMLColor();
+                spriteToDraw.Color = Color.White;
             }
         }
     }

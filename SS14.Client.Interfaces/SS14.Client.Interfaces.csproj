@@ -110,10 +110,6 @@
       <Name>System.Data.DataSetExtensions</Name>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Xml">
       <Name>System.Xml</Name>
       <Private>False</Private>
@@ -161,7 +157,7 @@
     <Compile Include="Collision\ICollisionManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Configuration\IConfigurationManager.cs">
+    <Compile Include="Configuration\IPlayerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GameStates\IGameStateManager.cs">

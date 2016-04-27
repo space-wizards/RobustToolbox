@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Event;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.Services.UserInterface.Components.Label;
-using SS14.Client.Graphics;
-
-
-
 
 namespace SS14.Client.Services.State.States
 {
@@ -23,8 +20,8 @@ namespace SS14.Client.Services.State.States
 
         private readonly Label _btnApply;
 
-		private readonly CluwneSprite _background;
-        private readonly CluwneSprite _ticketBg;
+        private readonly Sprite _background;
+        private readonly Sprite _ticketBg;
 
         private readonly Checkbox _chkFullscreen;
         private readonly Checkbox _chkVsync;
@@ -34,7 +31,7 @@ namespace SS14.Client.Services.State.States
         private readonly Label _btnMainMenu;
 
         private readonly Listbox _lstResolution;
-	
+    
 
         private readonly Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
 
@@ -48,7 +45,6 @@ namespace SS14.Client.Services.State.States
             : base(managers)
         {
             _background = ResourceManager.GetSprite("mainbg");
-          //  _background.Smoothing = Smoothing.Smooth;
 
             _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
 
@@ -119,39 +115,39 @@ namespace SS14.Client.Services.State.States
             _btnApply.Clicked += _applybtt_Clicked;
 
 
-            _lstResolution.Position = new Point(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
-			_lstResolution.Update(0);
-			_chkFullscreen.Position = new Point(_lstResolution.Position.X,
-												_lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
-			_chkFullscreen.Update(0);
-			_chkVsync.Position = new Point(_chkFullscreen.Position.X,
-										   _chkFullscreen.Position.Y + _chkFullscreen.ClientArea.Height + 10);
-			_chkVsync.Update(0);
-			_lblFullscreen.Position = new Point(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
-												_chkFullscreen.Position.Y + (int)(_chkFullscreen.ClientArea.Height / 2f) -
-												(int)(_lblFullscreen.ClientArea.Height / 2f));
-			_lblFullscreen.Update(0);
-			_lblVsync.Position = new Point(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
-										   _chkVsync.Position.Y + (int)(_chkVsync.ClientArea.Height / 2f) -
-										   (int)(_chkVsync.ClientArea.Height / 2f));
-			_lblVsync.Update(0);
-			_btnMainMenu.Position = new Point(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
-			_btnMainMenu.Update(0);
-			_btnApply.Position = new Point(_btnMainMenu.Position.X,
-										   _btnMainMenu.Position.Y + _btnMainMenu.ClientArea.Height + 5);
-			_btnApply.Update(0);
+            _lstResolution.Position = new Vector2i(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
+            _lstResolution.Update(0);
+            _chkFullscreen.Position = new Vector2i(_lstResolution.Position.X,
+                                                _lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
+            _chkFullscreen.Update(0);
+            _chkVsync.Position = new Vector2i(_chkFullscreen.Position.X,
+                                           _chkFullscreen.Position.Y + _chkFullscreen.ClientArea.Height + 10);
+            _chkVsync.Update(0);
+            _lblFullscreen.Position = new Vector2i(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
+                                                _chkFullscreen.Position.Y + (int)(_chkFullscreen.ClientArea.Height / 2f) -
+                                                (int)(_lblFullscreen.ClientArea.Height / 2f));
+            _lblFullscreen.Update(0);
+            _lblVsync.Position = new Vector2i(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
+                                           _chkVsync.Position.Y + (int)(_chkVsync.ClientArea.Height / 2f) -
+                                           (int)(_chkVsync.ClientArea.Height / 2f));
+            _lblVsync.Update(0);
+            _btnMainMenu.Position = new Vector2i(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
+            _btnMainMenu.Update(0);
+            _btnApply.Position = new Vector2i(_btnMainMenu.Position.X,
+                                           _btnMainMenu.Position.Y + _btnMainMenu.ClientArea.Height + 5);
+            _btnApply.Update(0);
         }
 
         #region IState Members
 
         public void Render(FrameEventArgs e)
         {
-            //TODO .Draw Method
+            _background.SetTransformToRect(new IntRect(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+            _background.Draw();
 
-             _background.Draw(new Rectangle(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
-
-
-           _ticketBg.Draw(new Rectangle(0, (int) (CluwneLib.Screen.Size.Y/2f - _ticketBg.Height/2f),(int) _ticketBg.Width, (int) _ticketBg.Height));
+            var bounds = _ticketBg.GetLocalBounds();
+            _ticketBg.SetTransformToRect(new IntRect(0, (int)(CluwneLib.Screen.Size.Y / 2f - bounds.Height / 2f), (int)bounds.Width, (int)bounds.Height));
+            _ticketBg.Draw();
             UserInterfaceManager.Render();
         }
 
@@ -163,21 +159,21 @@ namespace SS14.Client.Services.State.States
 
         #region Input
 
-		public void KeyDown(KeyEventArgs e)
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-		public void KeyUp(KeyEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-		public void MouseUp(MouseButtonEventArgs e)
+        public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-		public void MouseDown(MouseButtonEventArgs e)
+        public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
@@ -195,7 +191,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-		public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -209,6 +205,10 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.MouseLeft(e);
         }
 
+        public void TextEntered(TextEventArgs e)
+        {
+            UserInterfaceManager.TextEntered(e);
+        }
         #endregion
 
         private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
@@ -216,7 +216,7 @@ namespace SS14.Client.Services.State.States
             ConfigurationManager.SetVsync(newValue);
         }
 
-		private void _applybtt_Clicked(Label sender, MouseButtonEventArgs e)
+        private void _applybtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             ApplyVideoMode();
         }
@@ -228,18 +228,7 @@ namespace SS14.Client.Services.State.States
 
         private void ApplyVideoMode()
         {
-            
-            CluwneLib.Stop();
-
-            CluwneLib.SetMode((int)ConfigurationManager.GetDisplayWidth(),
-                            (int)ConfigurationManager.GetDisplayHeight(),
-                            !ConfigurationManager.GetFullscreen(), false, false,
-                            (int)ConfigurationManager.GetDisplayRefresh());
-                           
-
-           
-
-            CluwneLib.Go();
+          CluwneLib.UpdateVideoSettings();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)
@@ -262,12 +251,12 @@ namespace SS14.Client.Services.State.States
             Environment.Exit(0);
         }
 
-		private void _mainmenubtt_Clicked(Label sender, MouseButtonEventArgs e)
+        private void _mainmenubtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
             StateManager.RequestStateChange<MainScreen>();
         }
 
-		private void _connectbtt_Clicked(Label sender, MouseButtonEventArgs e)
+        private void _connectbtt_Clicked(Label sender, MouseButtonEventArgs e)
         {
         }
 

@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Services.Log;
 
 using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
 using System;
 using System.Reflection;
 using System.Threading;

@@ -1,21 +1,21 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
-using System.Drawing;
+﻿using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
-using SS14.Client.Graphics.Sprite;
-using SS14.Shared.Maths;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
+using System;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
     internal class Progress_Bar : GuiComponent
     {
         private readonly IResourceManager _resourceManager;
-        protected Size Size;
+        protected Vector2i Size;
 
-        public Color backgroundColor = Color.SteelBlue;
-        public Color barColor = Color.LightSteelBlue;
-        public Color borderColor = Color.Black;
+        public SFML.Graphics.Color backgroundColor = new SFML.Graphics.Color(70, 130, 180);
+        public SFML.Graphics.Color barColor = new SFML.Graphics.Color(176, 196, 222);
+        public SFML.Graphics.Color borderColor = Color.Black;
 
         protected float max = 1000;
         protected float min = 0;
@@ -23,13 +23,13 @@ namespace SS14.Client.Services.UserInterface.Components
         protected float percent = 0;
         protected float val = 0;
 
-        public Progress_Bar(Size size, IResourceManager resourceManager)
+        public Progress_Bar(Vector2i size, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
             Text = new TextSprite("ProgressBarText", "", _resourceManager.GetFont("CALIBRI"));
             Text.Color = Color.Black;
-            Text.ShadowColor = Color.DimGray;
-            Text.ShadowOffset = new Vector2(1, 1);
+            Text.ShadowColor = new SFML.Graphics.Color(105, 105, 105);
+            Text.ShadowOffset = new Vector2f(1, 1);
             Text.Shadowed = true;
 
             Size = size;
@@ -48,21 +48,20 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Text = Math.Round(percent*100).ToString() + "%";
-            Text.Position = new Vector2(Position.X + (Size.Width/2f - Text.Width/2f),
-                                         Position.Y + (Size.Height/2f - Text.Height/2f));
-            ClientArea = new Rectangle(Position, Size);
+            Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
+                                         Position.Y + (int)(Size.Y/2f - Text.Height/2f));
+            ClientArea = new IntRect(Position, Size);
             Value++;
         }
 
         public override void Render()
         {
             percent = (val - min)/(max - min);
-            float barWidth = Size.Width*percent;
+            float barWidth = Size.X*percent;
 
-           CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,    backgroundColor);
-           //TODO : CluwneLib.DrawHollowRectangle (ClientArea.X, ClientArea.Y, (int)barWidth, ClientArea.Height, barColor);
-          CluwneLib.drawRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height,
-                                                 borderColor);
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, backgroundColor);
+            CluwneLib.drawHollowRectangle (ClientArea.Left, ClientArea.Top, ClientArea.Width,ClientArea.Height, barWidth, barColor);
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, borderColor);
 
             Text.Draw();
         }
@@ -74,12 +73,12 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             return false;
         }

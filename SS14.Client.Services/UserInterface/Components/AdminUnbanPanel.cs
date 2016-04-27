@@ -1,10 +1,11 @@
 ﻿using Lidgren.Network;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
-using System.Drawing;
-using SFML.Window;
-using SS14.Client.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -13,7 +14,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
 
-        public AdminUnbanPanel(Size size, Banlist banlist, INetworkManager networkManager,
+        public AdminUnbanPanel(Vector2i size, Banlist banlist, INetworkManager networkManager,
                                IResourceManager resourceManager)
             : base("Admin UnBan Panel", size, resourceManager)
         {
@@ -22,11 +23,11 @@ namespace SS14.Client.Services.UserInterface.Components
 
             BuildList(banlist);
 
-            var closeButton = new Button("Close", _resourceManager) {Position = new Point(5, 5)};
+            var closeButton = new Button("Close", _resourceManager) {Position = new Vector2i(5, 5)};
             closeButton.Clicked += CloseButtonClicked;
             components.Add(closeButton);
 
-            Position = new Point((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
+            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
         }
 
@@ -43,13 +44,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 var line = new Label("IP: " + entry.ip + "\tReason: " + entry.reason +
                                      "\tTemporary: " + entry.tempBan + "\tExpires: " +
                                      entry.expiresAt.ToString("d/M/yyyy HH:mm:ss"), "CALIBRI", _resourceManager)
-                               {Position = new Point(5, yOffset + 5)};
+                               {Position = new Vector2i(5, yOffset + 5)};
 
                 components.Add(line);
                 var unbanButton = new Button("Unban", _resourceManager)
                                       {
                                           Position =
-                                              new Point(line.ClientArea.Right + 10,
+                                              new Vector2i(line.ClientArea.Right() + 10,
                                                         yOffset + (int) (line.ClientArea.Height/3f))
                                       };
 
@@ -89,19 +90,19 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Dispose();
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             return base.MouseDown(e);
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (disposing || !IsVisible()) return false;
             return base.MouseUp(e);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (disposing || !IsVisible()) return;
             base.MouseMove(e);

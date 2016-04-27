@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
-using System.Drawing;
+using System;
 
 
 namespace SS14.Client.Graphics.Render
@@ -34,12 +30,10 @@ namespace SS14.Client.Graphics.Render
         {
         }
 
-        public System.Drawing.Color BackgroundColor
+        public Color BackgroundColor
         {
             get;
             set;
         }
-
-     
     }
 }

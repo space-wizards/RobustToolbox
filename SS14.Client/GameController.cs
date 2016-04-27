@@ -1,4 +1,8 @@
-﻿using SS14.Client.Interfaces.Configuration;
+﻿using SFML.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
+using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -7,20 +11,8 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics.Render;
-using Color = System.Drawing.Color;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Timing;
-
-using SS14.Client.Services.UserInterface.Components;
 
 namespace SS14.Client
 {
@@ -30,7 +22,7 @@ namespace SS14.Client
 
         #region Fields
 
-        private IConfigurationManager _configurationManager;
+        private IPlayerConfigurationManager _configurationManager;
       //  private Input _input;
         private INetworkGrapher _netGrapher;
         private INetworkManager _networkManager;
@@ -52,8 +44,8 @@ namespace SS14.Client
 
         public GameController()
         {
-            _configurationManager = IoCManager.Resolve<IConfigurationManager>();
-            _configurationManager.Initialize("./config.xml");
+            _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
+            _configurationManager.Initialize("./player_config.xml");
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
@@ -61,7 +53,7 @@ namespace SS14.Client
             _resourceManager.LoadLocalResources();
 
             //Setup Cluwne first, as the rest depends on it.
-            SetupCluwne ();
+            SetupCluwne();
 
             //Initialization of private members
             _networkManager = IoCManager.Resolve<INetworkManager>();
@@ -69,9 +61,9 @@ namespace SS14.Client
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-            SetupInput ();
+          
 
-            _stateManager.RequestStateChange<TestState> ();
+            _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
             EventArgs _frameEventArgs;
@@ -83,7 +75,7 @@ namespace SS14.Client
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.Clear (Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();
@@ -109,12 +101,16 @@ namespace SS14.Client
 
         private void MainWindowLoad(object sender, EventArgs e)
         {
-
             _stateManager.RequestStateChange<MainScreen>();
         }
 
-        private void MainWindowResizeEnd(object sender, EventArgs e)
+        private void MainWindowResizeEnd(object sender, SizeEventArgs e)
         {
+            var view = new SFML.Graphics.View(
+                new SFML.System.Vector2f(e.Width / 2, e.Height / 2),
+                new SFML.System.Vector2f(e.Width, e.Height)
+                );
+            CluwneLib.Screen.SetView(view);
             _stateManager.FormResize();
         }
         private void MainWindowRequestClose(object sender, EventArgs e)
@@ -224,64 +220,82 @@ namespace SS14.Client
                 _stateManager.MouseLeft(e);
         }
 
+        private void TextEntered(object sender, TextEventArgs e)
+        {
+            if (_stateManager != null)
+                _stateManager.TextEntered(e);
+        }
+
         #endregion
 
         #endregion
 
         #region Privates
 
-//        private void SetupGorgon()
+//        private void SetupCluwneLib()
 //        {
 //            uint displayWidth = _configurationManager.GetDisplayWidth();
 //            uint displayHeight = _configurationManager.GetDisplayHeight();
 //            bool fullscreen = _configurationManager.GetFullscreen();
 //            var refresh = (int) _configurationManager.GetDisplayRefresh();
-//            Size = new Size((int) displayWidth, (int) displayHeight);
+//            Size = new Vector2i((int) displayWidth, (int) displayHeight);
 //
 //            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
 //
 //            CluwneLib.Initialize();
-//            //Gorgon.SetMode(this);
+//            //CluwneLib.SetMode(this);
 //            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
 //                           false, false, refresh);
 //            CluwneLib.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
 //            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Width, CluwneLib.Screen.Height);
 //            CluwneLib.DeviceReset += MainWindowResizeEnd;
-//            //Gorgon.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-//            CluwneLib.Idle += GorgonIdle;
+//            //CluwneLib.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
+//            CluwneLib.Idle += CluwneLibIdle;
 //        }
+        bool onetime = true;
 
         private void SetupCluwne()
         {
-            uint displayWidth = _configurationManager.GetDisplayWidth();
+            uint displayWidth  = _configurationManager.GetDisplayWidth();
             uint displayHeight = _configurationManager.GetDisplayHeight();
-            bool fullscreen = _configurationManager.GetFullscreen();
-            var refresh = (int) _configurationManager.GetDisplayRefresh();
+            bool isFullscreen  = _configurationManager.GetFullscreen();
+            var refresh        = _configurationManager.GetDisplayRefresh();
 
-            CluwneLib.Go();
-           
-            CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
-            CluwneLib.Idle += CluwneLibIdle;
-        }
+          
 
-        private void SetupInput()
-        {
-            CluwneLib.Screen.KeyPressed  += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased += KeyUpEvent;
-
+            CluwneLib.Video.SetFullscreen(isFullscreen);
+            CluwneLib.Video.SetRefreshRate(refresh);
+            CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
+            CluwneLib.Initialize();
+            if (onetime)
+            {
+                //every time the video settings change we close the old screen and create a new one
+                //SetupCluwne Gets called to reset the event handlers to the new screen
+                CluwneLib.FrameEvent += CluwneLibIdle;
+                CluwneLib.RefreshVideoSettings += SetupCluwne;
+                onetime = false;
+            }
+            CluwneLib.Screen.SetMouseCursorVisible(false);
+            CluwneLib.Screen.BackgroundColor      = Color.Black;
+            CluwneLib.Screen.Resized             += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed              += MainWindowRequestClose;
+            CluwneLib.Screen.KeyPressed          += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased         += KeyUpEvent;
             CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
             CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
             CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
             CluwneLib.Screen.MouseEntered        += MouseEntered;
             CluwneLib.Screen.MouseLeft           += MouseLeft;
+            CluwneLib.Screen.TextEntered         += TextEntered;
+          
 
+
+            CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
+
+  
 
         #endregion
 

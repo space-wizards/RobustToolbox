@@ -1,13 +1,15 @@
-﻿using SS14.Client.Graphics.Sprite;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 using System;
-using System.Drawing;
-using SFML.Window;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -19,14 +21,14 @@ namespace SS14.Client.Services.UserInterface.Components
 
     internal class HealthScannerWindow : GuiComponent
     {
-		private readonly CluwneSprite _arml;
-		private readonly CluwneSprite _armr;
-		private readonly CluwneSprite _background;
-		private readonly CluwneSprite _chest;
-		private readonly CluwneSprite _groin;
-		private readonly CluwneSprite _head;
-		private readonly CluwneSprite _legl;
-		private readonly CluwneSprite _legr;
+        private readonly Sprite _arml;
+        private readonly Sprite _armr;
+        private readonly Sprite _background;
+        private readonly Sprite _chest;
+        private readonly Sprite _groin;
+        private readonly Sprite _head;
+        private readonly Sprite _legl;
+        private readonly Sprite _legr;
         private readonly TextSprite _overallHealth;
         private readonly IResourceManager _resourceManager;
         private readonly UserInterfaceManager _uiMgr;
@@ -35,7 +37,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private bool dragging;
 
-        public HealthScannerWindow(Entity assignedEnt, Vector2 mousePos, UserInterfaceManager uiMgr,
+        public HealthScannerWindow(Entity assignedEnt, Vector2i mousePos, UserInterfaceManager uiMgr,
                                    IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
@@ -44,7 +46,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _overallHealth = new TextSprite("hpscan" + assignedEnt.Uid.ToString(), "",
                                             _resourceManager.GetFont("CALIBRI"));
-            _overallHealth.Color = Color.ForestGreen;
+            _overallHealth.Color = new SFML.Graphics.Color(34, 139, 34);
 
             _background = _resourceManager.GetSprite("healthscan_bg");
 
@@ -56,7 +58,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _legl = _resourceManager.GetSprite("healthscan_legl");
             _legr = _resourceManager.GetSprite("healthscan_legr");
 
-            Position = new Point((int) mousePos.X, (int) mousePos.Y);
+            Position = mousePos;
 
             Setup();
             Update(0);
@@ -66,11 +68,11 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             float healthPct = curr/(float) max;
 
-            if (healthPct > 0.75) return Color.LightGreen;
-            else if (healthPct > 0.50) return Color.Yellow;
-            else if (healthPct > 0.25) return Color.DarkOrange;
-            else if (healthPct > 0) return Color.Red;
-            else return Color.DimGray;
+            if (healthPct > 0.75) return new Color(128, 255, 128);
+            else if (healthPct > 0.50) return new Color(255, 255, 0);
+            else if (healthPct > 0.25) return new Color(192, 64, 0);
+            else if (healthPct > 0) return new Color(255, 0, 0);
+            else return new Color(64, 64, 64);
         }
 
         private void Setup()
@@ -82,37 +84,37 @@ namespace SS14.Client.Services.UserInterface.Components
             Color temp = GetColor((int) reply.ParamsList[1], (int) reply.ParamsList[2]);
 
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _head.Color =new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _head.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Torso);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _chest.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _chest.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Left_Arm);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _arml.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _arml.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Right_Arm);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _armr.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _armr.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Groin);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _groin.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _groin.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Left_Leg);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _legl.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _legl.Color = temp;
 
             reply = assigned.SendMessage(this, ComponentFamily.Damageable, ComponentMessageType.GetCurrentLocationHealth,
                                          BodyPart.Right_Leg);
             if (reply.MessageType == ComponentMessageType.CurrentLocationHealth)
-                _legr.Color = new SFML.Graphics.Color(temp.R,temp.G,temp.B,temp.A);
+                _legr.Color = temp;
 
             if (assigned.HasComponent(ComponentFamily.Damageable))
             {
@@ -123,19 +125,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            _background.Position = new Vector2(Position.X, Position.Y); 
+            _background.Position =
+            _head.Position =
+            _chest.Position =
+            _arml.Position =
+            _armr.Position =
+            _groin.Position =
+            _legl.Position =
+            _legr.Position = Position.ToFloat();
 
-            _head.Position = new Vector2 (Position.X, Position.Y);
-            _chest.Position = new Vector2(Position.X, Position.Y);
-            _arml.Position = new Vector2(Position.X, Position.Y); 
-            _armr.Position = new Vector2(Position.X, Position.Y); 
-            _groin.Position = new Vector2(Position.X, Position.Y);
-            _legl.Position = new Vector2(Position.X, Position.Y); 
-            _legr.Position = new Vector2(Position.X, Position.Y);
+            _overallHealth.Position = new Vector2i(Position.X + 86, Position.Y + 29);
 
-            _overallHealth.Position = new Vector2(Position.X + 86, Position.Y + 29);
-
-            ClientArea = new Rectangle(Position, new Size((int) _background.AABB.Width, (int) _background.AABB.Height));
+            var bounds = _background.GetLocalBounds();
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
@@ -159,17 +161,17 @@ namespace SS14.Client.Services.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (dragging) Position = new Point( e.X, e.Y);
+            if (dragging) Position = new Vector2i( e.X, e.Y);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
-                var insidePos = new Vector2((int) e.X , (int) e.Y );
-                if ((insidePos - new Vector2(189, 9)).Length <= 5)
+                var insidePos = new Vector2f((int) e.X , (int) e.Y );
+                if ((insidePos - new Vector2f(189, 9)).LengthSquared() <= 5*5)
                 {
                     _uiMgr.RemoveComponent(this);
                     Dispose();
@@ -180,7 +182,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging)
             {

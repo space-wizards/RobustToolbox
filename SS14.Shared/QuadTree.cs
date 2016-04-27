@@ -1,16 +1,18 @@
 ﻿// From http://csharpquadtree.codeplex.com/
 
+using SFML.Graphics;
+using SFML.System;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
 
 namespace SS14.Shared
 {
     public class QuadTree<T> where T : class, IQuadObject
     {
         private readonly bool sort;
-        private readonly SizeF minLeafSizeF;
+        private readonly Vector2f minLeafSizeF;
         private readonly int maxObjectsPerLeaf;
         private QuadNode root = null;
         private Dictionary<T, QuadNode> objectToNodeLookup = new Dictionary<T, QuadNode>();
@@ -19,7 +21,7 @@ namespace SS14.Shared
         private object syncLock = new object();
         private int objectSortId = 0;
 
-        public QuadTree(SizeF minLeafSizeF, int maxObjectsPerLeaf)
+        public QuadTree(Vector2f minLeafSizeF, int maxObjectsPerLeaf)
         {
             this.minLeafSizeF = minLeafSizeF;
             this.maxObjectsPerLeaf = maxObjectsPerLeaf;
@@ -44,7 +46,7 @@ namespace SS14.Shared
         /// <param name="minLeafSizeF">The smallest SizeF a leaf will split into</param>
         /// <param name="maxObjectsPerLeaf">Maximum number of objects per leaf before it forces a split into sub quadrants</param>
         /// <param name="sort">Whether or not queries will return objects in the order in which they were added</param>
-        public QuadTree(SizeF minLeafSizeF, int maxObjectsPerLeaf, bool sort)
+        public QuadTree(Vector2f minLeafSizeF, int maxObjectsPerLeaf, bool sort)
             : this(minLeafSizeF, maxObjectsPerLeaf)
         {
             this.sort = sort;
@@ -59,19 +61,19 @@ namespace SS14.Shared
                     objectSortOrder.Add(quadObject, objectSortId++);
                 }
 
-                RectangleF bounds = quadObject.Bounds;
+                var bounds = quadObject.Bounds;
                 if (root == null)
                 {
-                    var rootSizeF = new SizeF((float)Math.Ceiling(bounds.Width / minLeafSizeF.Width),
-                                            (float)Math.Ceiling(bounds.Height / minLeafSizeF.Height));
-                    double multiplier = Math.Max(rootSizeF.Width, rootSizeF.Height);
-                    rootSizeF = new SizeF((float)(minLeafSizeF.Width * multiplier), (float)(minLeafSizeF.Height * multiplier));
-                    var center = new Point((int)(bounds.X + bounds.Width / 2), (int)(bounds.Y + bounds.Height / 2));
-                    var rootOrigin = new Point((int)(center.X - rootSizeF.Width / 2), (int)(center.Y - rootSizeF.Height / 2));
-                    root = new QuadNode(new RectangleF(rootOrigin, rootSizeF));
+                    var rootSizeF = new Vector2f((float)Math.Ceiling(bounds.Width / minLeafSizeF.X),
+                                            (float)Math.Ceiling(bounds.Height / minLeafSizeF.Y));
+                    double multiplier = Math.Max(rootSizeF.X, rootSizeF.Y);
+                    rootSizeF = new Vector2f((float)(minLeafSizeF.X * multiplier), (float)(minLeafSizeF.Y * multiplier));
+                    var center = new Vector2i((int)(bounds.Left + bounds.Width / 2), (int)(bounds.Top + bounds.Height / 2));
+                    var rootOrigin = new Vector2i((int)(center.X - rootSizeF.X / 2), (int)(center.Y - rootSizeF.Y / 2));
+                    root = new QuadNode(new FloatRect(rootOrigin.ToFloat(), rootSizeF));
                 }
 
-                while (!root.Bounds.Contains(bounds))
+                while (!root.Bounds.Encloses(bounds))
                 {
                     ExpandRoot(bounds);
                 }
@@ -80,7 +82,7 @@ namespace SS14.Shared
             }
         }
 
-        public List<T> Query(RectangleF bounds)
+        public List<T> Query(FloatRect bounds)
         {
             lock (syncLock)
             {
@@ -93,17 +95,17 @@ namespace SS14.Shared
             }
         }
 
-        private void Query(RectangleF bounds, QuadNode node, List<T> results)
+        private void Query(FloatRect bounds, QuadNode node, List<T> results)
         {
             lock (syncLock)
             {
                 if (node == null) return;
 
-                if (bounds.IntersectsWith(node.Bounds))
+                if (bounds.Intersects(node.Bounds))
                 {
                     foreach (T quadObject in node.Objects)
                     {
-                        if (bounds.IntersectsWith(quadObject.Bounds))
+                        if (bounds.Intersects(quadObject.Bounds))
                             results.Add(quadObject);
                     }
 
@@ -115,12 +117,12 @@ namespace SS14.Shared
             }
         }
 
-        private void ExpandRoot(RectangleF newChildBounds)
+        private void ExpandRoot(FloatRect newChildBounds)
         {
             lock (syncLock)
             {
-                bool isNorth = root.Bounds.Y < newChildBounds.Y;
-                bool isWest = root.Bounds.X < newChildBounds.X;
+                bool isNorth = root.Bounds.Top < newChildBounds.Top;
+                bool isWest = root.Bounds.Left < newChildBounds.Left;
 
                 DiRectangleFion rootDiRectangleFion;
                 if (isNorth)
@@ -133,12 +135,12 @@ namespace SS14.Shared
                 }
 
                 double newX = (rootDiRectangleFion == DiRectangleFion.NW || rootDiRectangleFion == DiRectangleFion.SW)
-                                  ? root.Bounds.X
-                                  : root.Bounds.X - root.Bounds.Width;
+                                  ? root.Bounds.Left
+                                  : root.Bounds.Left - root.Bounds.Width;
                 double newY = (rootDiRectangleFion == DiRectangleFion.NW || rootDiRectangleFion == DiRectangleFion.NE)
-                                  ? root.Bounds.Y
-                                  : root.Bounds.Y - root.Bounds.Height;
-                RectangleF newRootBounds = new RectangleF((float)newX, (float)newY, (float)root.Bounds.Width * 2f, (float)root.Bounds.Height * 2f);
+                                  ? root.Bounds.Top
+                                  : root.Bounds.Top - root.Bounds.Height;
+                FloatRect newRootBounds = new FloatRect((float)newX, (float)newY, (float)root.Bounds.Width * 2f, (float)root.Bounds.Height * 2f);
                 QuadNode newRoot = new QuadNode(newRootBounds);
                 SetupChildNodes(newRoot);
                 newRoot[rootDiRectangleFion] = root;
@@ -150,7 +152,7 @@ namespace SS14.Shared
         {
             lock (syncLock)
             {
-                if (!node.Bounds.Contains(quadObject.Bounds))
+                if (!node.Bounds.Encloses(quadObject.Bounds))
                     throw new Exception("This should not happen, child does not fit within node bounds");
 
                 if (!node.HasChildNodes() && node.Objects.Count + 1 > maxObjectsPerLeaf)
@@ -167,7 +169,7 @@ namespace SS14.Shared
                             if (childNode == null)
                                 continue;
 
-                            if (childNode.Bounds.Contains(childObject.Bounds))
+                            if (childNode.Bounds.Encloses(childObject.Bounds))
                             {
                                 childrenToRelocate.Add(childObject);
                             }
@@ -185,7 +187,7 @@ namespace SS14.Shared
                 {
                     if (childNode != null)
                     {
-                        if (childNode.Bounds.Contains(quadObject.Bounds))
+                        if (childNode.Bounds.Encloses(quadObject.Bounds))
                         {
                             InsertNodeObject(childNode, quadObject);
                             return;
@@ -232,18 +234,18 @@ namespace SS14.Shared
         {
             lock (syncLock)
             {
-                if (minLeafSizeF.Width <= node.Bounds.Width / 2 && minLeafSizeF.Height <= node.Bounds.Height / 2)
+                if (minLeafSizeF.X <= node.Bounds.Width / 2 && minLeafSizeF.Y <= node.Bounds.Height / 2)
                 {
-                    node[DiRectangleFion.NW] = new QuadNode(node.Bounds.X, node.Bounds.Y, node.Bounds.Width / 2,
+                    node[DiRectangleFion.NW] = new QuadNode(node.Bounds.Left, node.Bounds.Top, node.Bounds.Width / 2,
                                                       node.Bounds.Height / 2);
-                    node[DiRectangleFion.NE] = new QuadNode(node.Bounds.X + node.Bounds.Width / 2, node.Bounds.Y,
+                    node[DiRectangleFion.NE] = new QuadNode(node.Bounds.Left + node.Bounds.Width / 2, node.Bounds.Top,
                                                       node.Bounds.Width / 2,
                                                       node.Bounds.Height / 2);
-                    node[DiRectangleFion.SW] = new QuadNode(node.Bounds.X, node.Bounds.Y + node.Bounds.Height / 2,
+                    node[DiRectangleFion.SW] = new QuadNode(node.Bounds.Left, node.Bounds.Top + node.Bounds.Height / 2,
                                                       node.Bounds.Width / 2,
                                                       node.Bounds.Height / 2);
-                    node[DiRectangleFion.SE] = new QuadNode(node.Bounds.X + node.Bounds.Width / 2,
-                                                      node.Bounds.Y + node.Bounds.Height / 2,
+                    node[DiRectangleFion.SE] = new QuadNode(node.Bounds.Left + node.Bounds.Width / 2,
+                                                      node.Bounds.Top + node.Bounds.Height / 2,
                                                       node.Bounds.Width / 2, node.Bounds.Height / 2);
 
                 }
@@ -490,14 +492,14 @@ namespace SS14.Shared
             internal List<T> quadObjects = new List<T>();
             public ReadOnlyCollection<T> Objects;
 
-            public RectangleF Bounds { get; internal set; }
+            public FloatRect Bounds { get; internal set; }
 
             public bool HasChildNodes()
             {
                 return _nodes[0] != null;
             }
 
-            public QuadNode(RectangleF bounds)
+            public QuadNode(FloatRect bounds)
             {
                 Bounds = bounds;
                 Nodes = new ReadOnlyCollection<QuadNode>(_nodes);
@@ -505,7 +507,7 @@ namespace SS14.Shared
             }
 
             public QuadNode(float x, float y, float width, float height)
-                : this(new RectangleF(x, y, width, height))
+                : this(new FloatRect(x, y, width, height))
             {
 
             }
@@ -522,6 +524,6 @@ namespace SS14.Shared
 
     public interface IQuadObject
     {
-        RectangleF Bounds { get; }
+        FloatRect Bounds { get; }
     }
 }

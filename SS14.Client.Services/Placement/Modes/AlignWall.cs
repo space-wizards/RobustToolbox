@@ -1,12 +1,12 @@
-﻿using SS14.Shared.Maths;
-using SS14.Client.ClientWindow;
+﻿using SFML.Graphics;
+using SFML.System;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using SS14.Client.Graphics;
 
 namespace SS14.Client.Services.Placement.Modes
 {
@@ -17,17 +17,18 @@ namespace SS14.Client.Services.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2 mouseS, IMapManager currentMap)
+        public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
-            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
+            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = ClientWindowData.Singleton.PixelToTile(spriteToDraw.Size);
-            var spriteRectWorld = new RectangleF(mouseWorld.X - (spriteSize.X / 2f),
+            var bounds = spriteToDraw.GetLocalBounds();
+            var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
+            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
 
@@ -42,40 +43,41 @@ namespace SS14.Client.Services.Placement.Modes
             if (!currentTile.Tile.TileDef.IsWall)
                 return false;
 
-            if (pManager.CurrentPermission.Range > 0)
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
-                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
+                         .Position - mouseWorld).LengthSquared() > rangeSquared)
                     return false;
 
-            var nodes = new List<Vector2>();
+            var nodes = new List<Vector2f>();
 
             if (pManager.CurrentTemplate.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentTemplate.MountingPoints.Select(
-                        current => new Vector2(mouseWorld.X, currentTile.Y + current)));
+                        current => new Vector2f(mouseWorld.X, currentTile.Y + current)));
             }
             else
             {
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 0.5f));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.0f));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.5f));
+                nodes.Add(new Vector2f(mouseWorld.X, currentTile.Y + 0.5f));
+                nodes.Add(new Vector2f(mouseWorld.X, currentTile.Y + 1.0f));
+                nodes.Add(new Vector2f(mouseWorld.X, currentTile.Y + 1.5f));
             }
 
-            Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - mouseWorld).Length ascending
+            Vector2f closestNode = (from Vector2f node in nodes
+                                    orderby (node - mouseWorld).LengthSquared() ascending
                                     select node).First();
 
-            mouseWorld = Vector2.Add(closestNode,
-                                      new Vector2(pManager.CurrentTemplate.PlacementOffset.Key,
-                                                   pManager.CurrentTemplate.PlacementOffset.Value));
-            mouseScreen = ClientWindowData.Singleton.WorldToScreen(mouseWorld);
+            mouseWorld = closestNode + new Vector2f(pManager.CurrentTemplate.PlacementOffset.Key,
+                                                    pManager.CurrentTemplate.PlacementOffset.Value);
+            mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 
-            if (pManager.CurrentPermission.Range > 0)
+            var range = pManager.CurrentPermission.Range;
+            if (range > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
-                         .Position - mouseWorld).Length > pManager.CurrentPermission.Range)
+                         .Position - mouseWorld).LengthSquared() > range * range)
                     return false;
 
             return true;
@@ -85,12 +87,13 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (spriteToDraw != null)
             {
-                spriteToDraw.Color = pManager.ValidPosition ? Color.ForestGreen.ToSFMLColor(): Color.IndianRed.ToSFMLColor();
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (spriteToDraw.Width/2f),
-                                                     mouseScreen.Y - (spriteToDraw.Height/2f));
+                var bounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
+                                                     mouseScreen.Y - (bounds.Height/2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White.ToSFMLColor();
+                spriteToDraw.Color = Color.White;
             }
         }
     }

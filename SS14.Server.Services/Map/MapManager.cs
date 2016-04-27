@@ -1,4 +1,6 @@
 ﻿using Lidgren.Network;
+using SFML.Graphics;
+using SFML.System;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Services.Log;
@@ -9,7 +11,6 @@ using SS14.Shared.ServerEnums;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 
@@ -17,7 +18,7 @@ namespace SS14.Server.Services.Map
 {
     public class MapManager : IMapManager
     {
-        private Dictionary<Point, Chunk> chunks = new Dictionary<Point, Chunk>();
+        private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
         private static readonly int ChunkSize = Chunk.ChunkSize;
 
         public event TileChangedEventHandler TileChanged;
@@ -38,12 +39,12 @@ namespace SS14.Server.Services.Map
 
         // If `ignoreSpace` is false, this will return tiles in chunks that don't even exist.
         // This is to make the tile count predictable.  Is this appropriate behavior?
-        public IEnumerable<TileRef> GetTilesIntersecting(RectangleF area, bool ignoreSpace)
+        public IEnumerable<TileRef> GetTilesIntersecting(FloatRect area, bool ignoreSpace)
         {
-            int chunkLeft = (int)Math.Floor(area.X / ChunkSize);
-            int chunkTop = (int)Math.Floor(area.Y / ChunkSize);
-            int chunkRight = (int)Math.Floor(area.Right / ChunkSize);
-            int chunkBottom = (int)Math.Floor(area.Bottom / ChunkSize);
+            int chunkLeft = (int)Math.Floor(area.Left / ChunkSize);
+            int chunkTop = (int)Math.Floor(area.Top / ChunkSize);
+            int chunkRight = (int)Math.Floor(area.Right() / ChunkSize);
+            int chunkBottom = (int)Math.Floor(area.Bottom() / ChunkSize);
             for (int chunkY = chunkTop; chunkY <= chunkBottom; ++chunkY)
             {
                 for (int chunkX = chunkLeft; chunkX <= chunkRight; ++chunkX)
@@ -59,12 +60,12 @@ namespace SS14.Server.Services.Map
                         yMin = Mod(Math.Floor(area.Top), ChunkSize);
 
                     if (chunkX == chunkRight)
-                        xMax = Mod(Math.Floor(area.Right), ChunkSize);
+                        xMax = Mod(Math.Floor(area.Right()), ChunkSize);
                     if (chunkY == chunkBottom)
-                        yMax = Mod(Math.Floor(area.Bottom), ChunkSize);
+                        yMax = Mod(Math.Floor(area.Bottom()), ChunkSize);
 
                     Chunk chunk;
-                    if (!chunks.TryGetValue(new Point(chunkX, chunkY), out chunk))
+                    if (!chunks.TryGetValue(new Vector2i(chunkX, chunkY), out chunk))
                     {
                         if (ignoreSpace)
                             continue;
@@ -93,11 +94,11 @@ namespace SS14.Server.Services.Map
                 }
             }
         }
-        public IEnumerable<TileRef> GetGasTilesIntersecting(RectangleF area)
+        public IEnumerable<TileRef> GetGasTilesIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsGasVolume);
         }
-        public IEnumerable<TileRef> GetWallsIntersecting(RectangleF area)
+        public IEnumerable<TileRef> GetWallsIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsWall);
         }
@@ -126,13 +127,13 @@ namespace SS14.Server.Services.Map
 
         #region Indexers
 
-        public TileRef GetTileRef(Vector2 pos)
+        public TileRef GetTileRef(Vector2f pos)
         {
             return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
         }
         public TileRef GetTileRef(int x, int y)
         {
-            Point chunkPos = new Point(
+            Vector2i chunkPos = new Vector2i(
                 (int)Math.Floor((float)x / ChunkSize),
                 (int)Math.Floor((float)y / ChunkSize)
             );
@@ -156,7 +157,7 @@ namespace SS14.Server.Services.Map
                 this.mm = mm;
             }
 
-            public Tile this[Vector2 pos]
+            public Tile this[Vector2f pos]
             {
                 get
                 {
@@ -171,7 +172,7 @@ namespace SS14.Server.Services.Map
             {
                 get
                 {
-                    Point chunkPos = new Point(
+                    Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
@@ -183,7 +184,7 @@ namespace SS14.Server.Services.Map
                 }
                 set
                 {
-                    Point chunkPos = new Point(
+                    Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
@@ -214,14 +215,14 @@ namespace SS14.Server.Services.Map
         }
 
         #endregion
-        
+
         #region Networking
 
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.MapMessage);
-            message.Write((byte) messageType);
+            message.Write((byte)NetMessage.MapMessage);
+            message.Write((byte)messageType);
             return message;
         }
 
@@ -256,7 +257,7 @@ namespace SS14.Server.Services.Map
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (MapMessage) message.ReadByte();
+            var messageType = (MapMessage)message.ReadByte();
             switch (messageType)
             {
                 case MapMessage.TurfClick:
@@ -321,13 +322,16 @@ namespace SS14.Server.Services.Map
 
             string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
 
-            using (var fs = new FileStream(fileName, FileMode.Create)) {
+            using (var fs = new FileStream(fileName, FileMode.Create))
+            {
                 var sw = new StreamWriter(fs);
                 var bw = new BinaryWriter(fs);
                 LogManager.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
 
                 sw.Write("SS14 Map File Version ");
-                sw.WriteLine((int)1); // Format version.  Who knows, it could come in handy.
+                sw.Write((int)1); // Format version.  Who knows, it could come in handy.
+                sw.Write("\r\n"); // Doing this instead of using WriteLine to keep things platform-agnostic.
+                sw.Flush();
 
                 // Tile definition mapping
                 var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
@@ -350,6 +354,7 @@ namespace SS14.Server.Services.Map
                 }
 
                 bw.Write("End of Map");
+                bw.Flush();
             }
 
             LogManager.Log("Done saving map.");
@@ -379,6 +384,8 @@ namespace SS14.Server.Services.Map
                     if (!versionString.StartsWith("SS14 Map File Version "))
                         return false;
 
+                    fs.Seek(versionString.Length + 2, SeekOrigin.Begin);
+
                     int formatVersion;
                     if (!int.TryParse(versionString.Substring(22), out formatVersion))
                         return false;
@@ -400,11 +407,15 @@ namespace SS14.Server.Services.Map
                     int chunkCount = br.ReadInt32();
                     for (int i = 0; i < chunkCount; ++i)
                     {
-                        int x = br.ReadInt32();
-                        int y = br.ReadInt32();
-                        Tile tile = (Tile)br.ReadUInt32();
+                        int cx = br.ReadInt32() * ChunkSize;
+                        int cy = br.ReadInt32() * ChunkSize;
 
-                        this.Tiles[x, y] = tile;
+                        for (int y = cy; y < cy + ChunkSize; ++y)
+                            for (int x = cx; x < cx + ChunkSize; ++x)
+                            {
+                                Tile tile = (Tile)br.ReadUInt32();
+                                this.Tiles[x, y] = tile;
+                            }
                     }
 
                     string ending = br.ReadString();
@@ -434,7 +445,7 @@ namespace SS14.Server.Services.Map
 
                 for (int y = -32; y <= 32; ++y)
                     for (int x = -32; x <= 32; ++x)
-                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32)
+                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
                             Tiles[x, y] = new Tile(wall);
                         else
                             Tiles[x, y] = new Tile(floor);

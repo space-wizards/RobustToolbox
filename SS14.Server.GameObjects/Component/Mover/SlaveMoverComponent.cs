@@ -1,8 +1,8 @@
-﻿using SS14.Shared;
+﻿using SFML.System;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.GO.Component.Mover;
-using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -76,7 +76,7 @@ namespace SS14.Server.GameObjects
             Translate(args.VectorTo);
         }
 
-        public void Translate(Vector2 toPosition)
+        public void Translate(Vector2f toPosition)
         {
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
         }

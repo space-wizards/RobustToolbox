@@ -16,7 +16,7 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
     <RootNamespace>SS14.Client</RootNamespace>
@@ -79,6 +79,7 @@
       <Name>Microsoft.Diagnostics.Runtime</Name>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.DebuggerVisualizers, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -115,12 +116,6 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.ClientWindow\SS14.Client.ClientWindow.csproj">
-      <Name>SS14.Client.ClientWindow</Name>
-      <Project>{A9E3FA31-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>True</Private>
     </ProjectReference>
@@ -175,6 +170,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TextureVisualizer.cs" />
     <None Include="app.config">
     </None>
     <Content Include="..\Third-Party\extlibs\csfml-audio-2.dll">
@@ -269,7 +265,7 @@
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="config.xml">
+    <Content Include="player_config.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -20,7 +20,7 @@ namespace SS14.Client.Services.Network
         {
             IsConnected = false;
 
-            var config = IoCManager.Resolve<IConfigurationManager>();
+            var config = IoCManager.Resolve<IPlayerConfigurationManager>();
 
             //Simulate Latency
             if (config.GetSimulateLatency())

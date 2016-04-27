@@ -1,14 +1,12 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SS14.Client.Graphics
 {
-	/// <summary>
-	/// Enumeration for primitive drawing style.
-	/// </summary>
-	public enum PrimitiveStyle
+    /// <summary>
+    /// Enumeration for primitive drawing style.
+    /// </summary>
+    public enum PrimitiveStyle
 	{
 		/// <summary>A series of individual points.</summary>
 		PointList = 0,
@@ -97,14 +95,16 @@ namespace SS14.Client.Graphics
     /// </summary>
     public enum BlitterSizeMode
     {
+        None = 0,
         /// <summary>
         /// Scale the image based on the width and height passed to the blitter.
         /// </summary>
-        Scale = 0,
+        Scale = 1,
         /// <summary>
         /// Crop the image based on the width and height passed to the blitter.
         /// </summary>
-        Crop = 1
+        Crop = 2
+
     }
 
     /// <summary>

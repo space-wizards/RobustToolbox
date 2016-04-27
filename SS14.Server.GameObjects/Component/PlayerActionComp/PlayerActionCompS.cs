@@ -1,11 +1,11 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
@@ -78,7 +78,7 @@ namespace SS14.Server.GameObjects
                     }
                     else if (toDo.targetType == PlayerActionTargetType.Point)
                     {
-                        var trg = new PointF((float) message.MessageParameters[3], (float) message.MessageParameters[4]);
+                        var trg = new Vector2f((float) message.MessageParameters[3], (float) message.MessageParameters[4]);
                         toDo.OnUse(trg);
                     }
                 }

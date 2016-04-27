@@ -1,11 +1,12 @@
-﻿using SS14.Client.Interfaces.Resource;
+﻿using SFML.Graphics;
+using SFML.System;
+using SFML.Window;
+using SS14.Client.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
-using SFML.Window;
 using System;
-using System.Drawing;
 
 namespace SS14.Client.Services.UserInterface.Inventory
 {
@@ -17,9 +18,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-		private readonly CluwneSprite _entitySprite;
+        private readonly Sprite _entitySprite;
         private readonly IResourceManager _resourceManager;
-		private readonly CluwneSprite _slotSprite;
+        private readonly Sprite _slotSprite;
 
         public Entity ContainingEntity;
         private Color _currentColor;
@@ -37,20 +38,27 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         public override void Update(float frameTime)
         {
-            ClientArea = new Rectangle(Position, new Size((int) _slotSprite.AABB.Width, (int) _slotSprite.AABB.Height));
+            var bounds = _slotSprite.GetLocalBounds();
+            ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
         }
 
         public override void Render()
         {
-            _slotSprite.Color = new SFML.Graphics.Color(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A); ;
-            _slotSprite.Draw(new Rectangle(Position,
-                                           new Size((int) _slotSprite.AABB.Width, (int) _slotSprite.AABB.Height)));
+            _slotSprite.Color = _currentColor;
+            _slotSprite.Position = new Vector2f(Position.X, Position.Y);
+            _slotSprite.Draw();
+
             if (_entitySprite != null)
-                _entitySprite.Draw(
-                    new Rectangle((int) (Position.X + _slotSprite.AABB.Width/2f - _entitySprite.AABB.Width/2f),
-                                  (int) (Position.Y + _slotSprite.AABB.Height/2f - _entitySprite.AABB.Height/2f),
-                                  (int) _entitySprite.Width, (int) _entitySprite.Height));
-            _slotSprite.Color = new SFML.Graphics.Color(Color.White.R, Color.White.G, Color.White.B, Color.White.A);
+            {
+                var slotBounds = _slotSprite.GetLocalBounds();
+                var entBounds = _entitySprite.GetLocalBounds();
+                _entitySprite.SetTransformToRect (
+                    new IntRect((int)(Position.X + slotBounds.Width / 2f - entBounds.Width / 2f),
+                                  (int)(Position.Y + slotBounds.Height / 2f - entBounds.Height / 2f),
+                                  (int)entBounds.Width, (int)entBounds.Height));
+                _entitySprite.Draw();
+            }
+            _slotSprite.Color = Color.White;
         }
 
         public override void Dispose()
@@ -59,9 +67,9 @@ namespace SS14.Client.Services.UserInterface.Inventory
             GC.SuppressFinalize(this);
         }
 
-		public override bool MouseDown(MouseButtonEventArgs e)
+        public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 if (Clicked != null) Clicked(this);
                 return true;
@@ -69,19 +77,19 @@ namespace SS14.Client.Services.UserInterface.Inventory
             return false;
         }
 
-		public override bool MouseUp(MouseButtonEventArgs e)
+        public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Point((int) e.X, (int) e.Y)))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }
             return false;
         }
 
-		public override void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(new Point((int) e.X, (int) e.Y))
-                                ? Color.LightSteelBlue
+            _currentColor = ClientArea.Contains(e.X, e.Y)
+                                ? new SFML.Graphics.Color(176, 196, 222)
                                 : Color.White;
         }
     }

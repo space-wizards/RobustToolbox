@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.System;
+﻿using SFML.System;
 
 namespace SS14.Client.Graphics.Timing
 {
@@ -16,63 +12,64 @@ namespace SS14.Client.Graphics.Timing
         #endregion
 
         #region Variables.
-        private double  _lastFrameTime;							// Last frame time.
-        private double  _frameDrawTime;							// Time to draw a frame in milliseconds.
-        private double  _lastFPSFrameTime;						// Last FPS.
-        private float   _averageFps;						    // Average FPS.
-        private float   _highestFps;							// Highest FPS.
-        private float   _lowestFps;								// Lowest FPS.
-        private float   _currentFps;							// Current FPS.
-        private long    _frameCount;							// Frame count.
-        private long    _totalFrameCount;                       // Total frame count.
-        private Clock   _timer;							        // FPS timer.
-        private int     _frameAvgCounter;						// Counter for frame average.
-        private double  _frameAvgSum;							// Frame average sum.
+        private double  lastFrameTime;							// Last frame time.
+        private double  frameDrawTime;							// Time to draw a frame in milliseconds.
+        private double  lastFPSFrameTime;						// Last FPS.
+        private double averageFps;						    // Average FPS.
+        private double highestFps;							// Highest FPS.
+        private double lowestFps;								// Lowest FPS.
+        private double currentFps;							// Current FPS.
+        private long    frameCount;							// Frame count.
+        private long    totalFrameCount;                       // Total frame count.
+        private Clock   timer;							        // FPS timer.
+        private int     frameAvgCounter;						// Counter for frame average.
+        private double  frameAvgSum;
+        private double CurrentFrameTime;
+            // Frame average sum.
         #endregion
 
         #region Properties
         public double FrameDrawTime
         {
-            get { return _frameDrawTime; }
+            get { return frameDrawTime; }
         }
 
         public Clock Timer
         {
-            get { return _timer; }
-            set { _timer = value; }
+            get { return timer; }
+            set { timer = value; }
         }
 
-        public float AverageFps
+        public double AverageFps
         {
-            get { return _averageFps; }
+            get { return averageFps; }
         }
 
-        public float HighestFps
+        public double HighestFps
         {
-            get { return _highestFps; }
+            get { return highestFps; }
         }
 
-        public float LowestFps
+        public double LowestFps
         {
-            get { return _lowestFps; }
+            get { return lowestFps; }
         }
-
-        public float CurrentFps
+        public double CurrentFps
         {
-            get { return _currentFps; }
+            get { return currentFps; }
         }
 
         public long FrameCount
         {
-            get { return _totalFrameCount; }
+            get { return totalFrameCount; }
         }
 
         #endregion
 
         #region Constructor
-        public TimingData(Clock timer)
+        public TimingData(Clock sfmltimer)
         {
-            _timer = timer;
+            timer = sfmltimer;
         }
         #endregion
 
@@ -87,21 +84,27 @@ namespace SS14.Client.Graphics.Timing
 
         public void Reset()
         {
-            if (_timer != null)
-                _timer.Restart();
-            _lastFPSFrameTime = 0.0;
-            _currentFps = 0.0f;
-            _frameCount = 0;
-            _lastFrameTime = 0.0;
-            _frameDrawTime = 0.0;
-            _frameAvgCounter = 0;
-            _frameAvgSum = 0.0;
-            _totalFrameCount = 0;
+            if (timer != null)
+                timer.Restart();
+            lastFPSFrameTime = 0.0;
+            currentFps = 0;
+            frameCount = 0;
+            lastFrameTime = 0.0;
+            frameDrawTime = 0.0;
+            frameAvgCounter = 0;
+            frameAvgSum = 0.0;
+            totalFrameCount = 0;
         }
 
-        public bool Update()
+        public void Update()
         {
-            return false;
+            CurrentFrameTime = Timer.ElapsedTime.AsSeconds();
+            Timer.Restart();
+            lastFrameTime = CurrentFrameTime;
+            currentFps = 1 / (CurrentFrameTime - lastFrameTime);
+
+            
+
         }
         #endregion
     }

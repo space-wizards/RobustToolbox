@@ -1,5 +1,5 @@
 ﻿using SS14.Shared.Maths;
-using SS14.Client.Graphics;
+using SS14.Client.ClientWindow;
 using SS14.Client.Interfaces.Map;
 using System.Drawing;
 using SS14.Client.Graphics;
@@ -20,7 +20,7 @@ namespace SS14.Client.Services.Placement.Modes
             spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSprite);
 
             mouseScreen = mouseS;
-            mouseWorld = MapUtil.worldToTileSize(mouseScreen);
+            mouseWorld = ClientWindowData.Singleton.ScreenToWorld(mouseScreen);
             currentTile = currentMap.GetTileRef(mouseWorld);
 
             return true;

@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics;
+﻿using SS14.Client.ClientWindow;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -100,7 +101,7 @@ namespace SS14.Client.GameObjects
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {            
             Vector2 renderPos =
-                MapUtil.tileToWorldSize(
+                ClientWindowData.Singleton.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)

@@ -1,6 +1,7 @@
 ﻿using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using Lidgren.Network;
+using SS14.Client.ClientWindow;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GOC;
@@ -177,7 +178,7 @@ namespace SS14.Client.Services.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                var pos = MapUtil.tileToWorldSize(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                var pos = ClientWindowData.Singleton.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
                 CluwneLib.drawCircle(                    pos.X,
                     pos.Y,
                     CurrentPermission.Range,

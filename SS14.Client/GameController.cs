@@ -262,6 +262,7 @@ namespace SS14.Client
            
             CluwneLib.SetMode((int) displayWidth, (int) displayHeight, fullscreen,false,false,refresh);
             CluwneLib.Screen.BackgroundColor = Color.Black;
+            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
             CluwneLib.Screen.Resized += MainWindowResizeEnd;
             CluwneLib.Screen.Closed += MainWindowRequestClose;
             CluwneLib.Idle += CluwneLibIdle;

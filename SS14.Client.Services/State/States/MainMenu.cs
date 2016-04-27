@@ -47,8 +47,8 @@ namespace SS14.Client.Services.State.States
         public MainScreen(IDictionary<Type, object> managers)
             : base(managers)
         {
-            _Width = (int) CluwneLib.Camera.ViewSize.X;
-            _Height = (int) CluwneLib.Camera.ViewSize.Y;
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
             _background = ResourceManager.GetSprite("mainbg_filler");
           //  _background.Smoothing = Smoothing.Smooth;
 
@@ -113,8 +113,8 @@ namespace SS14.Client.Services.State.States
 
         public void FormResize()
         {
-            _Width = (int) CluwneLib.Camera.ViewSize.X;
-            _Height = (int) CluwneLib.Camera.ViewSize.Y;
+            _Width = (int) CluwneLib.Screen.Size.X;
+            _Height = (int) CluwneLib.Screen.Size.Y;
         }
 
         #endregion

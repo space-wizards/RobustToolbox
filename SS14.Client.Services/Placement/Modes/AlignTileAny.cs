@@ -19,7 +19,7 @@ namespace SS14.Client.Services.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);

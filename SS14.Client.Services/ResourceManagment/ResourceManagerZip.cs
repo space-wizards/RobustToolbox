@@ -579,7 +579,7 @@ namespace SS14.Client.Services.Resources
             {
                 return new AnimatedSprite(key, _animationCollections[key], this);
             }
-            return null;
+            return GetNoSprite();
         }
 
         public Sprite GetNoSprite()

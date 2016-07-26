@@ -173,26 +173,6 @@
     <Compile Include="TextureVisualizer.cs" />
     <None Include="app.config">
     </None>
-    <Content Include="..\Third-Party\extlibs\csfml-audio-2.dll">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-graphics-2.dll">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-network-2.dll">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-system-2.dll">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-window-2.dll">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="EntityTemplates\Atmos.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -270,11 +270,11 @@ namespace SS14.Client.Services.State.States
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
             var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X - 800, 10);
+            statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X /2, 400);
             UserInterfaceManager.AddComponent(statusBar);
 
             var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Vector2i((int)CluwneLib.Screen.Size.X, (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
+            hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
             hotbar.Update(0);
             UserInterfaceManager.AddComponent(hotbar);
 

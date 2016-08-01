@@ -139,8 +139,10 @@ namespace SS14.Server.Services.Chat
                 {
                     var emote = new Emote();
                     emote.Command = "default";
-                    emote.OtherText = "{0} does something!";
-                    emote.SelfText = "You do something!";
+                    var text = new EmoteText();
+                    text.OtherText = "{0} does something!";
+                    text.SelfText = "You do something!";
+                    emote.ArrayOfTexts = new EmoteText[1] { text };
                     _emotes.Add("default", emote);
                     XmlSerializer serializer = new XmlSerializer(typeof (List<Emote>));
                     serializer.Serialize(emoteFileStream, _emotes.Values.ToList());
@@ -177,13 +179,17 @@ namespace SS14.Server.Services.Chat
             CommandParsing.ParseArguments(text, args);
             if(_emotes.ContainsKey(args[0]))
             {
-                var userText = String.Format(_emotes[args[0]].SelfText, name);//todo user-only channel
-                var otherText = String.Format(_emotes[args[0]].OtherText, name, "his"); //todo pronouns, gender
+                Random r = new Random();
+                int ranText = r.Next(_emotes[args[0]].ArrayOfTexts.Length - 1);
+
+                var userText = String.Format(_emotes[args[0]].ArrayOfTexts[ranText].SelfText, name);//todo user-only channel
+                var otherText = String.Format(_emotes[args[0]].ArrayOfTexts[ranText].OtherText, name, "his"); //todo pronouns, gender
                 SendChatMessage(ChatChannel.Emote, otherText, name, entityId);
             }
             else
             {
                 //todo Bitch at the user
+
             }
             
         }
@@ -227,6 +233,11 @@ namespace SS14.Server.Services.Chat
     public struct Emote
     {
         public string Command;
+        public EmoteText[] ArrayOfTexts;
+    }
+
+    public struct EmoteText
+    {
         public string SelfText;
         public string OtherText;
     }

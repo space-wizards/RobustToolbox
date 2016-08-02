@@ -13,6 +13,7 @@ using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Services.Player
 {
@@ -56,6 +57,19 @@ namespace SS14.Server.Services.Player
                     newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                         human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
                     human.GetComponent<IEquipmentComponent>(ComponentFamily.Equipment).RaiseEquipItem(newItem);
+                }
+
+                IInventoryComponent inventory = human.GetComponent<IInventoryComponent>(ComponentFamily.Inventory);
+                LogManager.Log(server.EntityManager.ComponentManager.GetComponents(ComponentFamily.Inventory)[0].ToString());
+                if (inventory != null)
+                {
+                    foreach (
+                        Entity newItem in
+                            s.assignedJob.SpawnInventory.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
+                    {
+
+                        
+                    }
                 }
             }
             s.AttachToEntity(a);

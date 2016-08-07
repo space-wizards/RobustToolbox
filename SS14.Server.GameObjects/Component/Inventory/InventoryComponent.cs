@@ -92,10 +92,20 @@ namespace SS14.Server.GameObjects
         }
 
         //Adds item to inventory and dispatches hide message to sprite compo.
-        // TODO this method should be renamed to reflect what it really does
+        [System.Obsolete("Use RaiseInventoryAdd instead.")]
         private void AddToInventory(Entity entity)
         {
             Owner.EntityManager.RaiseEvent(this, new InventoryAddItemToInventoryEventArgs
+            {
+                Actor = Owner,
+                Item = entity
+            });
+        }
+
+        //Adds item to inventory and dispatches hide message to sprite compo.
+        public void RaiseInventoryAdd(Entity entity)
+        {
+            Owner.EntityManager.RaiseEvent(this, new InventoryAddedItemEventArgs
             {
                 Actor = Owner,
                 Item = entity

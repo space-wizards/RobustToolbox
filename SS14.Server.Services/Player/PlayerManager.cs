@@ -12,6 +12,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -63,7 +64,7 @@ namespace SS14.Server.Services.Player
                     Entity newItem in
                         s.assignedJob.SpawnInventory.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
                 {
-                    human.SendMessage(this, ComponentMessageType.InventoryAdd, newItem);
+                    human.GetComponent<IInventoryComponent>(ComponentFamily.Inventory).RaiseInventoryAdd(newItem);
                 }
             }
             s.AttachToEntity(a);

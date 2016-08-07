@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GOC;
@@ -8,11 +9,13 @@ using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Chat
@@ -22,6 +25,9 @@ namespace SS14.Server.Services.Chat
         private ISS14Server _serverMain;
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
         private string _emotePath = @"emotes.xml";
+        private Dictionary<string, Command> _commands = new Dictionary<string, Command>();
+        private string _commandsPath = @"commands.xml";
+        private string _commandScriptsPath = @"Scripts/commands.lua";
         #region IChatManager Members
 
         public void Initialize(ISS14Server server)
@@ -117,6 +123,59 @@ namespace SS14.Server.Services.Chat
             return channel;
         }
 
+        private void LoadCommands()
+        {
+            XElement tmp;
+            try
+            {
+                tmp = XDocument.Load(_commandsPath).Element("Commands");
+            }
+            catch (FileNotFoundException ex)
+            {
+                var saveFile = new XDocument(new XElement("Commands"));
+                saveFile.Save("commands.xml");
+                tmp = XDocument.Load("commands.xml").Element("Commands");
+            }
+            IEnumerable<XElement> Commands = tmp.Descendants("Commands");
+            foreach (XElement e in Commands)
+            {
+                LoadCommand(e);
+            }
+        }
+
+        private void LoadCommand(XElement e)
+        {
+            var command = new Command();
+
+            command.Name = e.Attribute("name").Value;
+
+            _commands.Add(command.Name, command);
+        }
+
+        public Type TranslateType(string typeName)
+        {
+            switch (typeName.ToLowerInvariant())
+            {
+                case "string":
+                    return typeof(string);
+                case "int":
+                    return typeof(int);
+                case "float":
+                    return typeof(float);
+                case "boolean":
+                case "bool":
+                    return typeof(bool);
+                case "vector2":
+                    return typeof(Vector2f);
+                case "vector3":
+                    return typeof(Vector3f);
+                case "vector4":
+                    return typeof(Vector4f);
+                default:
+                    return null;
+            }
+        }
+
         private void LoadEmotes()
         {
             if (File.Exists(_emotePath))
@@ -194,40 +253,33 @@ namespace SS14.Server.Services.Chat
             
         }
 
-    //    /// <summary>
-    //    /// Processes commands (chat messages starting with /)
-    //    /// </summary>
-    //    /// <param name="text">chat text</param>
-    //    /// <param name="name">player name that sent the chat text</param>
-    //    /// <param name="channel">channel message was recieved on</param>
-    //    /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
-    //    private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
-    //    {
-    //        if (entityId == null)
-    //            return;
-    //        var args = new List<string>();
+        /// <summary>
+        /// Processes commands (chat messages starting with /)
+        /// </summary>
+        /// <param name="text">chat text</param>
+        /// <param name="name">player name that sent the chat text</param>
+        /// <param name="channel">channel message was recieved on</param>
+        /// <param name="entityId">Uid of the entity that sent the message. This will always be a player's attached entity</param>
+        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
+        {
+            if (entityId == null)
+                return;
+            var args = new List<string>();
 
-    //        CommandParsing.ParseArguments(text, args);
+            CommandParsing.ParseArguments(text, args);
 
-    //        string command = args[0];
+            string command = args[0];
 
-    //        Vector2 position;
-    //        Entity player;
-    //        player = _serverMain.EntityManager.GetEntity((int)entityId);
-    //        if (player == null)
-    //            position = new Vector2(160, 160);
-    //        else
-    //            position = player.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position;
-
-    //        var map = IoCManager.Resolve<IMapManager>();
-    //        switch (command)
-    //        {
-    //            default:
-    //                string message = "Command '" + command + "' not recognized.";
-    //                SendChatMessage(channel, message, name, entityId);
-    //                break;
-    //        }
-    //    }
+            if (_commands.ContainsKey(args[0]))
+            {
+                var c = _commands[args[0]];
+                IoCManager.Resolve<ICommandScriptManager>().RunFunction(c.Name);
+            }
+            else
+            {
+                LogManager.Log("The command attempting to be called doesnt exist...");
+            }
+        }
     }
 
     public struct Emote
@@ -241,4 +293,18 @@ namespace SS14.Server.Services.Chat
         public string SelfText;
         public string OtherText;
     }
+
+    public struct Command
+    {
+        public string Name;
+    }
+
+    public class CommandLoadException : Exception
+    {
+        public CommandLoadException(string message)
+            : base(message)
+        {
+        }
+    }
+
 }

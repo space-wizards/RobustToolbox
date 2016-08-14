@@ -440,7 +440,7 @@ namespace SS14.Client.Services.State.States
                 _sceneTarget.ResetCurrentRenderTarget();
                 //_sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
 
-                Debug.DebugRendertarget(_sceneTarget);
+                //Debug.DebugRendertarget(_sceneTarget);
 
                 LightScene();
 
@@ -1153,7 +1153,7 @@ namespace SS14.Client.Services.State.States
                 CalculateLightArea(l);
             }
         }
-
+          
         /// <summary>
         /// Renders a set of lights into a single lightmap.
         /// If a light hasn't been prerendered yet, it renders that light.
@@ -1200,8 +1200,7 @@ namespace SS14.Client.Services.State.States
 
                 //Set the drawing position.
                 Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
-
-
+           
 
                 //Set shader parameters
                 var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
@@ -1229,7 +1228,6 @@ namespace SS14.Client.Services.State.States
                         r_img[j] = black;
                         r_col[j] = Vector4f.Zero;
                         r_pos[j] = new Vector4f(0, 0, 1, 1);
-
                     }
                     i = num_lights;
                     draw = true;
@@ -1239,7 +1237,7 @@ namespace SS14.Client.Services.State.States
                 {
                   
                     desto.BeginDrawing();
-
+                   
                     Lightmap.SetParameter("LightPosData", r_pos);
                     Lightmap.SetParameter("Colors", r_col);
                     Lightmap.SetParameter("light0", r_img[0]);
@@ -1248,18 +1246,20 @@ namespace SS14.Client.Services.State.States
                     Lightmap.SetParameter("light3", r_img[3]);
                     Lightmap.SetParameter("light4", r_img[4]);
                     Lightmap.SetParameter("light5", r_img[5]);              
-                    Lightmap.SetParameter("sceneTexture", GLSLShader.CurrentTexture);
+                    Lightmap.SetParameter("sceneTexture", source);
+                    
                     // Blit the shadow image on top of the screen
                     source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
-
+                  
                     desto.EndDrawing();
-            
-
+             
+           
                     //Swap rendertargets to set up for the next light
                     copy = source;
                     source = desto;
                     desto = copy;
                     i = 0;
+              
                     draw = false;
                     fill = false;
                     r_img = new Texture[num_lights];
@@ -1289,19 +1289,17 @@ namespace SS14.Client.Services.State.States
             } while (lightTextures.Count > 0 || draw || fill);
 
             Lightmap.ResetCurrentShader();
-       
+
             if(source != screenShadows)
-            {              
-               screenShadows.BeginDrawing();
+            {
+                screenShadows.BeginDrawing();
                 source.Blit(0, 0, source.Width, source.Height);
-               screenShadows.EndDrawing();
+                screenShadows.EndDrawing();              
             }
-     
-           
 
-            //Debug.DebugRendertarget(shadowIntermediate);
-
-
+            var texunflipx = screenShadows.Texture.CopyToImage();
+            texunflipx.FlipVertically();
+            screenShadows.Texture.Update(texunflipx);           
         }
 
         private void CalculateSceneBatches(FloatRect vision)
@@ -1536,7 +1534,7 @@ namespace SS14.Client.Services.State.States
             LightblendTechnique["FinalLightBlend"].SetParameter("PlayerViewTexture", playerOcclusionTarget);
             LightblendTechnique["FinalLightBlend"].SetParameter("OutOfViewTexture", outofview.Texture);
             LightblendTechnique["FinalLightBlend"].SetParameter("MaskProps", maskProps);
-            LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", GLSLShader.CurrentTexture);
+            LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", screenShadows);
             LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
             LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4f(.05f, .05f, 0.05f, 1));
 
@@ -1548,6 +1546,7 @@ namespace SS14.Client.Services.State.States
             LightblendTechnique["FinalLightBlend"].ResetCurrentShader();
             _composedSceneTarget.EndDrawing();
 
+         //  Debug.DebugRendertarget(_composedSceneTarget);
 
             playerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
             playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again

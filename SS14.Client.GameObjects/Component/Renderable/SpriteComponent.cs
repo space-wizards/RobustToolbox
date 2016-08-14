@@ -310,8 +310,9 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
+          
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -328,6 +329,7 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
+            if(CluwneLib.Debug.DebugColliders)
             CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
         }
 

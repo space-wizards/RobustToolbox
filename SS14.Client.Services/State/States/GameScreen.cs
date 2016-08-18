@@ -584,6 +584,7 @@ namespace SS14.Client.Services.State.States
             {
                 _showDebug = !_showDebug;
                 CluwneLib.Debug.ToggleWallDebug();
+                CluwneLib.Debug.ToggleAABBDebug();
             }
             if (e.Code == Keyboard.Key.F3)
             {

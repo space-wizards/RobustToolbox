@@ -442,7 +442,11 @@ namespace SS14.Client.Services.State.States
 
                 //Debug.DebugRendertarget(_sceneTarget);
 
-                LightScene();
+                if (bFullVision)
+                    _sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                else
+                    LightScene();
+
 
                 RenderDebug(vp);
                 //Render the placement manager shit

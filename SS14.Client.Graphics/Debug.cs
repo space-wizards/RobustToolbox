@@ -21,24 +21,28 @@ namespace SS14.Client.Graphics
 
         public void ToggleAtmosDebug()
         {
-            DebugAtmos = true;
+            DebugAtmos = !DebugAtmos;
         }
 
         public void ToggleWallDebug()
         {
-            DebugWalls = true;
+            DebugWalls = !DebugWalls;
         }
 
         public void ToggleTextboxDebug()
         {
-            DebugTextboxes = true;
+            DebugTextboxes = !DebugTextboxes;
         }
 
         public void ToggleEntitiesDebug()
         {
-            DebugEntities= true;
+            DebugEntities = !DebugEntities;
         }
 
+        public void ToggleAABBDebug()
+        {
+            DebugColliders = !DebugColliders;
+        }
         public static void DebugRendertarget(RenderImage Rendertarget)
         {
             DebugRendertarget(Rendertarget, Rendertarget.Key);

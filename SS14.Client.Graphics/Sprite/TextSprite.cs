@@ -9,7 +9,6 @@ namespace SS14.Client.Graphics.Sprite
     /// </summary>
     public class TextSprite : ICluwneDrawable
     {
-
         private bool _shadowed;                                    // Is the Text Shadowed
         private Color _shadowColor;                                // Shadow Color
         private Text _textSprite;
@@ -23,7 +22,7 @@ namespace SS14.Client.Graphics.Sprite
         /// <param name=""> Label of TextSprite </param>
         /// <param name="p2">   </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        public TextSprite( string Label, string text, Font font )
+        public TextSprite(string Label, string text, Font font)
         {
             this.Label = Label;
             _textSprite = new Text(text, font, 14);
@@ -31,27 +30,28 @@ namespace SS14.Client.Graphics.Sprite
 
         /// <summary>
         /// Creates a TextSprite
-        /// </summary> 
+        /// </summary>
         /// <param name="Label"> ID of the TextSprite</param>
         /// <param name="x"> position X of TextSprite </param>
         /// <param name="y"> Position Y of TextSprite </param>
         /// <param name="width"> Width of TextSprite </param>
         /// <param name="height"> Height of TextSprite </param>
-//        public TextSprite(string Label, int x, int y, int width, int height)
-//        {
-//            this.Position = new Vector2(x, y);
-//        }
+        //        public TextSprite(string Label, int x, int y, int width, int height)
+        //        {
+        //            this.Position = new Vector2(x, y);
+        //        }
 
         /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
         /// </summary>
-        /// 
-        #endregion
+        ///
+
+        #endregion Constructors
 
         #region Methods
-     
-        public void Draw() 
-        {                
+
+        public void Draw()
+        {
             _textSprite.Position = new Vector2f(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
             _textSprite.Color = Color;
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
@@ -63,12 +63,32 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-
+        /// <summary>
+        /// Get the length, in pixels, that the provided string would be.
+        /// </summary>
         public int MeasureLine(string _text)
         {
-            return _text.Length;
+            string temp = Text;
+            Text = _text;
+            int value = (int)_textSprite.FindCharacterPos((uint)_textSprite.DisplayedString.Length + 1).X;
+            Text = temp;
+            return value;
         }
-        #endregion
+
+        /// <summary>
+        /// Get the length, in pixels, of this TextSprite.
+        /// </summary>
+        public int MeasureLine()
+        {
+            return MeasureLine(Text);
+        }
+
+        public Vector2f FindCharacterPos(uint index)
+        {
+            return _textSprite.FindCharacterPos(index);
+        }
+
+        #endregion Methods
 
         #region Accessors
 
@@ -90,7 +110,8 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        public uint FontSize {
+        public uint FontSize
+        {
             get { return _textSprite.CharacterSize; }
             set { _textSprite.CharacterSize = value; }
         }
@@ -118,22 +139,20 @@ namespace SS14.Client.Graphics.Sprite
                 _textSprite.DisplayedString = value;
             }
         }
-    
 
         public Vector2i Position;
 
         public int Width
         {
-            get { return (int) _textSprite.GetLocalBounds().Width; }
-
+            get { return (int)_textSprite.GetLocalBounds().Width; }
         }
 
         public int Height
         {
             // FIXME take into account newlines.
-            get { return (int) _textSprite.CharacterSize; }
+            get { return (int)_textSprite.CharacterSize; }
         }
 
-        #endregion
+        #endregion Accessors
     }
 }

@@ -4,6 +4,8 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 
@@ -15,7 +17,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public delegate void TextSubmitHandler(string text, Textbox sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceManager _resourceManager;
         public bool ClearFocusOnSubmit = true;
@@ -46,6 +48,10 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private float blinkCount;
 
+        // Terrible hack to get around TextEntered AND KeyDown firing at once.
+        // Set to true after handling a KeyDown that produces a character to this.
+        public bool ignoreNextText = false;
+
         public Textbox(int width, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
@@ -55,7 +61,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) {Color = Color.Black};
+            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) { Color = Color.Black };
 
             Update(0);
         }
@@ -78,7 +84,7 @@ namespace SS14.Client.Services.UserInterface.Components
             var boundsMain = _textboxMain.GetLocalBounds();
             var boundsRight = _textboxRight.GetLocalBounds();
             _clientAreaLeft = new IntRect(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-         
+
             _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
                                             Width, (int)boundsMain.Height);
             _clientAreaRight = new IntRect(_clientAreaMain.Right(), Position.Y,
@@ -88,13 +94,11 @@ namespace SS14.Client.Services.UserInterface.Components
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
             Label.Position = new Vector2i(_clientAreaLeft.Right(),
-                                       Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
-
-            _caretPos = Label.Text.Length;
+                                       Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
             if (Focus)
             {
-                blinkCount += 1*frameTime;
+                blinkCount += 1 * frameTime;
                 if (blinkCount > 0.50f) blinkCount = 0;
             }
         }
@@ -116,9 +120,7 @@ namespace SS14.Client.Services.UserInterface.Components
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                CluwneLib.drawRectangle(Label.Position.X+ _caretPos - _caretWidth, Label.Position.Y + (Label.Height/2f) - (_caretHeight/2f),_caretWidth, _caretHeight, new Color(255,255,250));
-
-       
+                CluwneLib.drawRectangle(Label.Position.X + _caretPos - _caretWidth, Label.Position.Y + (Label.Height / 2f) - (_caretHeight / 2f), _caretWidth, _caretHeight, new Color(255, 255, 250));
 
             if (drawColor != Color.White)
             {
@@ -164,18 +166,18 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (e.Control && e.Code == Keyboard.Key.V)
             {
-             
-                    string ret = System.Windows.Forms.Clipboard.GetText();
-                    Text = Text.Insert(_caretIndex, ret);
-                    if (_caretIndex < _text.Length) _caretIndex += ret.Length;
-                    SetVisibleText();
-                    return true;
+                string ret = System.Windows.Forms.Clipboard.GetText();
+                Text = Text.Insert(_caretIndex, ret);
+                if (_caretIndex < _text.Length) _caretIndex += ret.Length;
+                SetVisibleText();
+                ignoreNextText = true;
+                return true;
             }
 
             if (e.Control && e.Code == Keyboard.Key.C)
             {
-               
                 System.Windows.Forms.Clipboard.SetText(Text);
+                ignoreNextText = true;
                 return true;
             }
 
@@ -216,7 +218,6 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-           
             return true;
         }
 
@@ -224,6 +225,12 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Unicode))
                 return false;
+
+            if (ignoreNextText)
+            {
+                ignoreNextText = false;
+                return false;
+            }
 
             Text = Text.Insert(_caretIndex, e.Unicode);
             if (_caretIndex < _text.Length) _caretIndex++;
@@ -274,7 +281,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
-                _caretPos = Label.Position.X +
+                _caretPos = 
                             Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
@@ -284,10 +291,18 @@ namespace SS14.Client.Services.UserInterface.Components
             if (OnSubmit != null) OnSubmit(Text, this);
             if (ClearOnSubmit)
             {
-                Text = string.Empty;
-                _displayText = string.Empty;
+                Clear();
             }
-            if (ClearFocusOnSubmit) Focus = false;
+            if (ClearFocusOnSubmit)
+            {
+                Focus = false;
+                IoCManager.Resolve<IUserInterfaceManager>().RemoveFocus(this);
+            }
+        }
+
+        public void Clear()
+        {
+            Text = string.Empty;
         }
     }
 }

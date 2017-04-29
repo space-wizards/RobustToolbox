@@ -12,7 +12,7 @@ using System.Collections.Generic;
 namespace SS14.Client.Services.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
-        //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
+    //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
         protected readonly IResourceManager _resourceManager;
 
@@ -36,15 +36,15 @@ namespace SS14.Client.Services.UserInterface.Components
         public ScrollableContainer(string uniqueName, Vector2i size, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-
+            name = uniqueName;
             Size = size;
 
             //if (RenderTargetCache.Targets.Contains(uniqueName))
             //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
             //    uniqueName = uniqueName + Guid.NewGuid();
 
-            clippingRI = new RenderImage(uniqueName,(uint)Size.X,(uint) Size.Y);
-            
+            clippingRI = new RenderImage(uniqueName, (uint)Size.X, (uint)Size.Y);
+
             //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
             //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
             //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
@@ -53,8 +53,6 @@ namespace SS14.Client.Services.UserInterface.Components
             clippingRI.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             clippingRI.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-        
-
 
             scrollbarH = new Scrollbar(true, _resourceManager);
             scrollbarV = new Scrollbar(false, _resourceManager);
@@ -62,8 +60,6 @@ namespace SS14.Client.Services.UserInterface.Components
 
             scrollbarH.Update(0);
             scrollbarV.Update(0);
-
-       
 
             Update(0);
         }
@@ -79,7 +75,7 @@ namespace SS14.Client.Services.UserInterface.Components
             if (disposing || !IsVisible()) return;
             ClientArea = new IntRect(Position, new Vector2i((int)clippingRI.Width, (int)clippingRI.Height));
 
-            if (inner_focus != null && !components.Contains((GuiComponent) inner_focus)) ClearFocus();
+            if (inner_focus != null && !components.Contains((GuiComponent)inner_focus)) ClearFocus();
 
             scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom() - scrollbarH.ClientArea.Height);
             scrollbarV.Position = new Vector2i(ClientArea.Right() - scrollbarV.ClientArea.Width, ClientArea.Top);
@@ -101,12 +97,12 @@ namespace SS14.Client.Services.UserInterface.Components
                     max_y = component.Position.Y + component.ClientArea.Height;
             }
 
-            scrollbarH.max = (int) max_x - ClientArea.Width +
+            scrollbarH.max = (int)max_x - ClientArea.Width +
                              (max_y > clippingRI.Height ? scrollbarV.ClientArea.Width : 0);
             if (max_x > clippingRI.Height) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
-            scrollbarV.max = (int) max_y - ClientArea.Height +
+            scrollbarV.max = (int)max_y - ClientArea.Height +
                              (max_x > clippingRI.Height ? scrollbarH.ClientArea.Height : 0);
             if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
             else scrollbarV.SetVisible(false);
@@ -126,11 +122,11 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 if (inner_focus != null && component == inner_focus) continue;
                 var oldPos = component.Position;
-                component.Position = new Vector2i(component.Position.X - (int) scrollbarH.Value,
-                                               component.Position.Y - (int) scrollbarV.Value);
+                component.Position = new Vector2i(component.Position.X - (int)scrollbarH.Value,
+                                               component.Position.Y - (int)scrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
-             
+
                 component.Position = oldPos;
                 component.Update(0);
             }
@@ -138,8 +134,8 @@ namespace SS14.Client.Services.UserInterface.Components
             if (inner_focus != null)
             {
                 var oldPos = inner_focus.Position;
-                inner_focus.Position = new Vector2i(inner_focus.Position.X - (int) scrollbarH.Value,
-                                                 inner_focus.Position.Y - (int) scrollbarV.Value);
+                inner_focus.Position = new Vector2i(inner_focus.Position.X - (int)scrollbarH.Value,
+                                                 inner_focus.Position.Y - (int)scrollbarV.Value);
                 inner_focus.Update(0); //2 Updates per frame D:
                 inner_focus.Render();
                 inner_focus.Position = oldPos;
@@ -147,13 +143,13 @@ namespace SS14.Client.Services.UserInterface.Components
             }
 
             clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y,clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
+            clippingRI.Blit(Position.X, Position.Y, clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
 
             scrollbarH.Render();
             scrollbarV.Render();
 
             if (DrawBorder)
-            CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  BorderSize, Color.Black);
+                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderSize, Color.Black);
             clippingRI.EndDrawing();
         }
 
@@ -210,12 +206,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe= new MouseButtonEvent();
-                mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
-                mbe.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
-                mbe.Button=e.Button;
+                MouseButtonEvent mbe = new MouseButtonEvent();
+                mbe.X = e.X - (Position.X + (int)scrollbarH.Value);
+                mbe.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
+                mbe.Button = e.Button;
 
-                MouseButtonEventArgs modArgs=new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
 
                 foreach (GuiComponent component in components)
                 {
@@ -239,12 +235,12 @@ namespace SS14.Client.Services.UserInterface.Components
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe= new MouseButtonEvent();
-                mbe.X = e.X-(Position.X + (int) scrollbarH.Value);
-                mbe.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
-                mbe.Button=e.Button;
+                MouseButtonEvent mbe = new MouseButtonEvent();
+                mbe.X = e.X - (Position.X + (int)scrollbarH.Value);
+                mbe.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
+                mbe.Button = e.Button;
 
-                MouseButtonEventArgs modArgs=new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
 
                 foreach (GuiComponent component in components)
                 {
@@ -260,11 +256,11 @@ namespace SS14.Client.Services.UserInterface.Components
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
 
-            MouseMoveEvent mme= new MouseMoveEvent();
-            mme.X = e.X-(Position.X + (int) scrollbarH.Value);
-            mme.Y = e.Y-(Position.Y + (int) scrollbarV.Value);
+            MouseMoveEvent mme = new MouseMoveEvent();
+            mme.X = e.X - (Position.X + (int)scrollbarH.Value);
+            mme.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
             MouseMoveEventArgs modArgs = new MouseMoveEventArgs(mme);
- 
+
             foreach (GuiComponent component in components)
                 component.MouseMove(modArgs);
 
@@ -273,8 +269,6 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool MouseWheelMove(MouseWheelEventArgs e)
         {
-           
-
             if (inner_focus != null)
             {
                 if (inner_focus.MouseWheelMove(e))

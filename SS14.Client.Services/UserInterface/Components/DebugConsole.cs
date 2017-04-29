@@ -20,7 +20,6 @@ namespace SS14.Client.Services.UserInterface.Components
     public class DebugConsole : ScrollableContainer
     {
         private Textbox input;
-        private List<Label> lines = new List<Label>();
         private int last_y = 0;
 
         public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
@@ -44,12 +43,20 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public void AddLine(string text, SFML.Graphics.Color color)
         {
-            Label newLabel = new Label(text, "MICROGBE", this._resourceManager);
-            newLabel.Position = new Vector2i(5, last_y);
-            newLabel.TextColor = color;
+            bool atBottom = scrollbarV.Value >= scrollbarV.max;
+            Label newLabel = new Label(text, "MICROGBE", this._resourceManager)
+            {
+                Position = new Vector2i(5, last_y),
+                TextColor = color
+            };
             newLabel.Update(0);
             last_y = newLabel.ClientArea.Bottom();
             components.Add(newLabel);
+            if (atBottom)
+            {
+                Update(0);
+                scrollbarV.Value = scrollbarV.max;
+            }
         }
 
         public override void Update(float frameTime)
@@ -65,14 +72,20 @@ namespace SS14.Client.Services.UserInterface.Components
         public override void ToggleVisible()
         {
             var netMgr = IoCManager.Resolve<INetworkManager>();
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             base.ToggleVisible();
             if (IsVisible())
             {
-                IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
+                // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                // uiMgr.SetFocus(input);
+                // Though TextBox does like focus for the caret and handling KeyDown.
+                input.Focus = true;
                 netMgr.MessageArrived += new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
             }
             else
             {
+                // uiMgr.RemoveFocus(input);
+                input.Focus = true;
                 netMgr.MessageArrived -= new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
             }
         }
@@ -107,7 +120,8 @@ namespace SS14.Client.Services.UserInterface.Components
             if (!base.MouseDown(e))
                 if (input.MouseDown(e))
                 {
-                    IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
+                    // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                    // IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
                     return true;
                 }
             return false;
@@ -124,13 +138,6 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             base.MouseMove(e);
             input.MouseMove(e);
-        }
-
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
-        {
-            if (!base.MouseWheelMove(e))
-                return input.MouseWheelMove(e);
-            else return false;
         }
 
         public override bool KeyDown(KeyEventArgs e)
@@ -169,7 +176,6 @@ namespace SS14.Client.Services.UserInterface.Components
             switch (command)
             {
                 case "cls":
-                    lines.Clear();
                     components.Clear();
                     last_y = 0;
                     //this.scrollbarH.Value = 0;
@@ -262,6 +268,16 @@ namespace SS14.Client.Services.UserInterface.Components
                     message.Write(args[1]);
                     NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
 
+                    break;
+
+                // To debug console scrolling and stuff.
+                case "fill":
+                    SFML.Graphics.Color[] colors = { SFML.Graphics.Color.Green, SFML.Graphics.Color.Blue, SFML.Graphics.Color.Red };
+                    Random random = new Random();
+                    for (int x = 0; x < 50; x++)
+                    {
+                        AddLine("filling...", colors[random.Next(0, colors.Length)]);
+                    }
                     break;
 
                 default:

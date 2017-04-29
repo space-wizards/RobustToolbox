@@ -181,9 +181,6 @@
     <Compile Include="Timing\TimerQueueTimer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="Scripts\test.lua">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Timing\TimerQueueTimer_.cs">
     </None>
     <None Include="app.config">

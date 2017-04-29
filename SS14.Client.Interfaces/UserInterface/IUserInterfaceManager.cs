@@ -19,6 +19,10 @@ namespace SS14.Client.Interfaces.UserInterface
         void ResizeComponents();
         void SetFocus(IGuiComponent newFocus);
         void RemoveFocus();
+        /// <summary>
+        /// Remove focus, but only if the target is currently focused.
+        /// </summary>
+        void RemoveFocus(IGuiComponent target);
         void Update(float frameTime);
         void Render();
 

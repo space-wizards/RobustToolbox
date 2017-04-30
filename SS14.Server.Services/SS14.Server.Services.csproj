@@ -165,10 +165,12 @@
     <Compile Include="Map\HardcodedTileDefinitions.cs" />
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
+    <Compile Include="ServerConsole\Commands\HelpCommand.cs" />
+    <Compile Include="ServerConsole\Commands\ListCommands.cs" />
     <Compile Include="ServerConsole\Commands\ListPlayers.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServerConsole\Commands\RestartServer.cs">
+    <Compile Include="ServerConsole\Commands\ServerManagement.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServerConsole\Commands\SaveConfig.cs">
@@ -177,6 +179,7 @@
     <Compile Include="ServerConsole\Commands\TestCommand.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServerConsole\Commands\ThrowException.cs" />
     <Compile Include="ServerConsole\ConsoleCommand.cs">
       <SubType>Code</SubType>
     </Compile>

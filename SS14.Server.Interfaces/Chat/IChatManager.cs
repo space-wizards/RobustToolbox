@@ -8,9 +8,8 @@ namespace SS14.Server.Interfaces.Chat
     public interface IChatManager
     {
         void SendChatMessage(ChatChannel channel, string text, string name, int? entityID);
-
+        void SendPrivateMessage(IClient client, ChatChannel channel, string text, string name, int? entityId);
         void Initialize(ISS14Server server);
-
         void HandleNetMessage(NetIncomingMessage message);
 
         Dictionary<string, IClientCommand> GetCommands();

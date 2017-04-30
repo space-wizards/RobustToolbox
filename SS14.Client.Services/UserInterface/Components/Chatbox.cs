@@ -80,11 +80,11 @@ namespace SS14.Client.Services.UserInterface.Components
                 drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
                 textColor = new SFML.Graphics.Color(255, 250, 240)
             };
-            input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
+            input.OnSubmit += new Textbox.TextSubmitHandler(Input_OnSubmit);
 
             _chatColors = new Dictionary<ChatChannel, SFML.Graphics.Color>
             {
-                [ChatChannel.Default] = new SFML.Graphics.Color(128, 128, 128),
+                [ChatChannel.Default] = new SFML.Graphics.Color(200, 200, 200),
                 [ChatChannel.Damage] = Color.Red,
                 [ChatChannel.Radio] = new SFML.Graphics.Color(0, 100, 0),
                 [ChatChannel.Server] = Color.Blue,
@@ -187,18 +187,25 @@ namespace SS14.Client.Services.UserInterface.Components
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "MICROGBE", _resourceManager)
+                string[] subdivided = content.Split('\n');
+                if (subdivided.Length == 0)
+                    subdivided = new[] { content };
+
+                foreach (string line in subdivided)
                 {
-                    Position = new Vector2i(5, last_y),
-                    Text =
+                    var label = new Label(line, "MICROGBE", _resourceManager)
+                    {
+                        Position = new Vector2i(5, last_y),
+                        Text =
                     {
                         Size = new Vector2i(ClientArea.Width - 10, 12),
                         Color = _chatColors[channel],
                     }
-                };
-                label.Update(0);
-                last_y = label.ClientArea.Bottom();
-                components.Add(label);
+                    };
+                    label.Update(0);
+                    last_y = label.ClientArea.Bottom();
+                    components.Add(label);
+                }
             }
 
             if (atBottom)
@@ -293,7 +300,7 @@ namespace SS14.Client.Services.UserInterface.Components
             return input.TextEntered(e);
         }
 
-        private void input_OnSubmit(string text, Textbox sender)
+        private void Input_OnSubmit(string text, Textbox sender)
         {
             if (!String.IsNullOrWhiteSpace(text))
             {

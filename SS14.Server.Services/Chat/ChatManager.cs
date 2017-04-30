@@ -63,22 +63,7 @@ namespace SS14.Server.Services.Chat
 
         public void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)
         {
-            string fullmsg = text;
-            if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
-                fullmsg = text; //Emote already has name in it probably...
-            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio ||
-                     channel == ChatChannel.Lobby)
-                fullmsg = name + ": " + text;
-
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-
-            message.Write((byte)NetMessage.ChatMessage);
-            message.Write((byte)channel);
-            message.Write(fullmsg);
-            if (entityId == null)
-                message.Write(-1);
-            else
-                message.Write((int)entityId);
+            NetOutgoingMessage message = MakeNetChatMessage(channel, text, name, entityId);
 
             switch (channel)
             {
@@ -101,6 +86,34 @@ namespace SS14.Server.Services.Chat
                     SendToLobby(message);
                     break;
             }
+        }
+
+        public void SendPrivateMessage(IClient client, ChatChannel channel, string text, string name, int? entityId)
+        {
+            NetOutgoingMessage message = MakeNetChatMessage(channel, text, name, entityId);
+            IoCManager.Resolve<ISS14NetServer>().SendMessage(message, client.NetConnection);
+        }
+
+        private NetOutgoingMessage MakeNetChatMessage(ChatChannel channel, string text, string name, int? entityId)
+        {
+            string fullmsg = text;
+            if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
+                fullmsg = text; //Emote already has name in it probably...
+            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio ||
+                     channel == ChatChannel.Lobby)
+                fullmsg = name + ": " + text;
+
+            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
+
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)channel);
+            message.Write(fullmsg);
+            if (entityId == null)
+                message.Write(-1);
+            else
+                message.Write((int)entityId);
+
+            return message;
         }
 
         public Dictionary<string, IClientCommand> GetCommands()
@@ -239,7 +252,11 @@ namespace SS14.Server.Services.Chat
 
             string command = args[0];
             if (!_commands.ContainsKey(command))
-                return; // TODO: Bitch at user when the rest of this file isn't cancer and you can actually send things to individual people.
+            {
+                string message = string.Format("Command '{0}' not found.", command);
+                SendPrivateMessage(client, ChatChannel.Default, message, "Server", null);
+                return;
+            }
 
             _commands[command].Execute(client, args.ToArray());
         }

@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.ServerEnums;
+using System;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -18,17 +19,21 @@ namespace SS14.Server.Services.Configuration
 
         public void Initialize(string ConfigFileLoc)
         {
-            if (File.Exists(ConfigFileLoc))
+            try
             {
-                var ConfigLoader = new XmlSerializer(typeof (PersistentConfiguration));
+                var ConfigLoader = new XmlSerializer(typeof(PersistentConfiguration));
                 StreamReader ConfigReader = File.OpenText(ConfigFileLoc);
-                var Config = (PersistentConfiguration) ConfigLoader.Deserialize(ConfigReader);
+                var Config = (PersistentConfiguration)ConfigLoader.Deserialize(ConfigReader);
                 ConfigReader.Close();
                 Configuration = Config;
                 ConfigFile = ConfigFileLoc;
             }
-            else
+            catch (Exception e)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Unable to load configuration file:\n{0}", e);
+                Console.ResetColor();
+                Environment.Exit(1);
                 //if (LogManager.Singleton != null) LogManager.Singleton.LogMessage("ConfigurationManager: Could not load config. File not found. " + ConfigFileLoc);
             }
         }
@@ -128,7 +133,7 @@ namespace SS14.Server.Services.Configuration
             set { Configuration.ConsoleSize = value; }
         }
 
-        #endregion
+        #endregion IConfigurationManager Members
 
         #region IService Members
 
@@ -137,7 +142,7 @@ namespace SS14.Server.Services.Configuration
             get { return ServerServiceType.ConfigManager; }
         }
 
-        #endregion
+        #endregion IService Members
 
         public void LoadResources()
         {

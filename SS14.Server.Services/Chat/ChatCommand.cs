@@ -38,7 +38,6 @@ namespace SS14.Server.Services.Chat.Commands
         /// <param name="args">Additional arguments to pass to the command.</param>
         public abstract void Execute(IClient client, params string[] args);
 
-        // Done here so the Lua console command class can add multiple easily.
         public virtual void Register(Dictionary<string, IClientCommand> commands)
         {
             commands.Add(Command, this);

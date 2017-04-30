@@ -35,11 +35,13 @@ namespace SS14.Server.Services.Chat.Commands
         public override void Execute(IClient client, params string[] args)
         {
             string message = "Available commands:\n";
-            foreach (IClientCommand command in IoCManager.Resolve<IChatManager>().GetCommands().Values)
+            IChatManager manager = IoCManager.Resolve<IChatManager>();
+            foreach (IClientCommand command in manager.GetCommands().Values)
             {
                 message += String.Format("{0}: {1}\n", command.Command, command.Description);
             }
-            Console.WriteLine(message);
+            message = message.Trim(' ', '\n');
+            manager.SendPrivateMessage(client, Shared.ChatChannel.Default, message, "Server", null);
         }
     }
 }

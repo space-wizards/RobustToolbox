@@ -54,28 +54,30 @@ namespace SS14.Client.Services.UserInterface.Components
 
             ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
-            _textInputLabel = new Label("", "CALIBRI", _resourceManager)
-                                  {
-                                      Text =
-                                          {
-                                              Size = new Vector2i(ClientArea.Width - 10, 12),
-                                              Color = new SFML.Graphics.Color(0, 128, 0)
-                                          }
-                                  };
+            input = new Textbox(Size.X, resourceManager)
+            {
+                drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
+                textColor = new SFML.Graphics.Color(255, 250, 240)
+            };
+            input.OnSubmit += new Textbox.TextSubmitHandler(Input_OnSubmit);
 
             _chatColors = new Dictionary<ChatChannel, SFML.Graphics.Color>
-                              {
-                                  [ChatChannel.Default] = new SFML.Graphics.Color(128, 128, 128),
-                                  [ChatChannel.Damage ] = Color.Red,
-                                  [ChatChannel.Radio  ] = new SFML.Graphics.Color(0, 100, 0),
-                                  [ChatChannel.Server ] = Color.Blue,
-                                  [ChatChannel.Player ] = new SFML.Graphics.Color(0, 128, 0),
-                                  [ChatChannel.Lobby  ] = Color.White,
-                                  [ChatChannel.Ingame ] = new SFML.Graphics.Color(0, 128, 0),
-                                  [ChatChannel.OOC    ] = Color.White,
-                                  [ChatChannel.Emote  ] = Color.Cyan,
-                                  [ChatChannel.Visual ] = Color.Yellow,
-                              };
+            {
+                [ChatChannel.Default] = new SFML.Graphics.Color(200, 200, 200),
+                [ChatChannel.Damage] = Color.Red,
+                [ChatChannel.Radio] = new SFML.Graphics.Color(0, 100, 0),
+                [ChatChannel.Server] = Color.Blue,
+                [ChatChannel.Player] = new SFML.Graphics.Color(0, 128, 0),
+                [ChatChannel.Lobby] = Color.White,
+                [ChatChannel.Ingame] = new SFML.Graphics.Color(0, 200, 0),
+                [ChatChannel.OOC] = Color.White,
+                [ChatChannel.Emote] = Color.Cyan,
+                [ChatChannel.Visual] = Color.Yellow,
+            };
+
+            this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            this.DrawBackground = true;
+            this.DrawBorder = true;
         }
 
         private bool Active
@@ -166,6 +168,25 @@ namespace SS14.Client.Services.UserInterface.Components
                                                                     }))
             {
                 _entries.Add(label);
+                string[] subdivided = content.Split('\n');
+                if (subdivided.Length == 0)
+                    subdivided = new[] { content };
+
+                foreach (string line in subdivided)
+                {
+                    var label = new Label(line, "MICROGBE", _resourceManager)
+                    {
+                        Position = new Vector2i(5, last_y),
+                        Text =
+                    {
+                        Size = new Vector2i(ClientArea.Width - 10, 12),
+                        Color = _chatColors[channel],
+                    }
+                    };
+                    label.Update(0);
+                    last_y = label.ClientArea.Bottom();
+                    components.Add(label);
+                }
             }
 
             DrawLines();
@@ -283,6 +304,22 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (_currentInputText.Length > 0)
                     _currentInputText.Remove(_currentInputText.Length - 1, 1);
                 return true;
+           }
+            return input.TextEntered(e);
+        }
+
+        private void Input_OnSubmit(string text, Textbox sender)
+        {
+            if (!String.IsNullOrWhiteSpace(text))
+            {
+                TextSubmitted(this, text);
+                _inputHistory.Insert(0, text);
+
+                /*
+                while (_inputHistory.Count() > MaxHistory)
+                {
+                    _inputHistory.RemoveAt(MaxHistory);
+                }
             }
 
             

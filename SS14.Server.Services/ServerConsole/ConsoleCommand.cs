@@ -1,8 +1,8 @@
-﻿using SS14.Shared.Command;
+﻿using SS14.Server.Interfaces.Commands;
 
 namespace SS14.Server.Services.ServerConsole
 {
-    public abstract class ConsoleCommand : ICommand
+    public abstract class ConsoleCommand : IConsoleCommand
     {
         public abstract string Command { get; }
         public abstract string Description { get; }

@@ -193,7 +193,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 foreach (string line in subdivided)
                 {
-                    var label = new Label(line, "MICROGBE", _resourceManager)
+                    var label = new Label(line, "CALIBRI", _resourceManager)
                     {
                         Position = new Vector2i(5, last_y),
                         Text =

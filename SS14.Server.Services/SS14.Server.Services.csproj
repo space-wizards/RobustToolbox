@@ -150,7 +150,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Chat\ChatCommand.cs" />
     <Compile Include="Chat\ChatManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -159,6 +158,9 @@
     <Compile Include="ClientConsoleHost\ClientConsoleHost.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ClientConsoleHost\Commands\Atmospherics.cs" />
+    <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
+    <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -1,5 +1,4 @@
 ﻿using Lidgren.Network;
-using SS14.Server.Interfaces.Commands;
 using SS14.Shared;
 using System.Collections.Generic;
 
@@ -12,6 +11,6 @@ namespace SS14.Server.Interfaces.Chat
         void Initialize(ISS14Server server);
         void HandleNetMessage(NetIncomingMessage message);
 
-        Dictionary<string, IClientCommand> GetCommands();
+        IDictionary<string, IChatCommand> Commands { get; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.Command;
 
-namespace SS14.Server.Interfaces.Commands
+namespace SS14.Server.Interfaces.ServerConsole
 {
     public interface IConsoleCommand : ICommand
     {

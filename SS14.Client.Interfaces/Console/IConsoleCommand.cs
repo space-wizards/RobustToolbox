@@ -4,6 +4,10 @@ namespace SS14.Client.Interfaces.Console
 {
     public interface IConsoleCommand : ICommand
     {
-        void Execute(params string[] args);
+        /// <summary>
+        /// Executes the command
+        /// </summary>
+        /// <returns>Whether or not the command should also be forwarded to the server. True to allow forwarding, false to block.</returns>
+        bool Execute(IDebugConsole console, params string[] args);
     }
 }

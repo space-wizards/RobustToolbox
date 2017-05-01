@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using System;
@@ -10,6 +11,8 @@ namespace SS14.Client.Interfaces.UserInterface
     {
         IDragDropInfo DragInfo { get; }
         IPlayerAction currentTargetingAction { get; }
+
+        IDebugConsole Console { get; }
 
         void AddComponent(IGuiComponent component);
         void RemoveComponent(IGuiComponent component);

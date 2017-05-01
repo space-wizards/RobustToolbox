@@ -55,9 +55,17 @@ namespace SS14.Server.Services.Log
         /// </summary>
         public void Start()
         {
-            logStream = new StreamWriter(LogPath, true);
-            logStream.AutoFlush = true;
+            try
+            {
+                logStream = new StreamWriter(LogPath, true);
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine("Log file ('{0}') in use, unable to open file for logging.", LogPath);
+                Environment.Exit(1);
+            }
 
+            logStream.AutoFlush = true;
             LogOne("LogManager started.", LogLevel.Information);
         }
 

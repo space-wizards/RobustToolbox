@@ -19,7 +19,6 @@ namespace SS14.Client
     public class GameController 
     {
 
-
         #region Fields
 
         private IPlayerConfigurationManager _configurationManager;
@@ -61,14 +60,11 @@ namespace SS14.Client
             _stateManager = IoCManager.Resolve<IStateManager>();
             _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-          
-
             _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
             EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
-            
 
             while (CluwneLib.IsRunning == true) 
             {
@@ -260,9 +256,7 @@ namespace SS14.Client
             uint displayHeight = _configurationManager.GetDisplayHeight();
             bool isFullscreen  = _configurationManager.GetFullscreen();
             var refresh        = _configurationManager.GetDisplayRefresh();
-
-          
-
+            
             CluwneLib.Video.SetFullscreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);
             CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
@@ -289,13 +283,9 @@ namespace SS14.Client
             CluwneLib.Screen.MouseLeft           += MouseLeft;
             CluwneLib.Screen.TextEntered         += TextEntered;
           
-
-
             CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
-
-  
 
         #endregion
 

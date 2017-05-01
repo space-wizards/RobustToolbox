@@ -198,8 +198,6 @@ namespace SS14.Server.Services.ServerConsole
                     .Where(t => typeof(ConsoleCommand).IsAssignableFrom(t) && t != typeof(ConsoleCommand)));
             foreach (Type t in CommandTypes)
             {
-                if (t == typeof(ConsoleCommand))
-                    continue;
                 var instance = Activator.CreateInstance(t, null) as ConsoleCommand;
                 RegisterCommand(instance);
             }

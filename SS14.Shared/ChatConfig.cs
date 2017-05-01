@@ -2,15 +2,45 @@
 {
     public enum ChatChannel
     {
+        /// <summary>
+        /// Default, unspecified
+        /// </summary>
         Default,
-        Lobby, // Players in the lobby chat on this channel.
-        Ingame, // This is local chat.
-        Server, // Messages from the server
-        Damage, // Damage messages
-        Player, // Messages that are sent by the player
-        Radio, // Radio messages
-        Emote, // Emotes
-        OOC, // Out-of-character channel
-        Visual, // Things the character can see
+        /// <summary>
+        /// Players in the lobby chat
+        /// </summary>
+        Lobby, 
+        /// <summary>
+        /// Chat heard by players within earshot
+        /// </summary>
+        Ingame, 
+        /// <summary>
+        /// Messages from the server
+        /// </summary>
+        Server, 
+        /// <summary>
+        /// Damage messages
+        /// </summary>
+        Damage, 
+        /// <summary>
+        /// Messages that are sent by the player directly
+        /// </summary>
+        Player, 
+        /// <summary>
+        /// Radio messages
+        /// </summary>
+        Radio, 
+        /// <summary>
+        /// Emotes
+        /// </summary>
+        Emote, 
+        /// <summary>
+        /// Out-of-character channel
+        /// </summary>
+        OOC,
+        /// <summary>
+        /// Things the character can see
+        /// </summary>
+        Visual,
     }
 }

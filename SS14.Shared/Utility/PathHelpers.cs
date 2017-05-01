@@ -11,9 +11,8 @@ namespace SS14.Shared.Utility
         /// </summary>
         public static string GetExecutableDirectory()
         {
-            string path = Assembly.GetEntryAssembly().CodeBase;
-            path = Path.GetDirectoryName(path);
-            return new Uri(path).LocalPath;
+            string path = new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath;
+            return Path.GetDirectoryName(path);
         }
 
         /// <summary>

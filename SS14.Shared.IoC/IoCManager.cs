@@ -17,7 +17,8 @@ namespace SS14.Shared.IoC
             ServiceTypes = new List<Type>();
 
             string AssemblyName = Assembly.GetEntryAssembly().GetName().Name;
-            string AssemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase);
+            string AssembleCodeBase = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+            string AssemblyLocation = Path.GetDirectoryName(AssembleCodeBase);
             List<string> Assemblies = new List<string>();
 
             switch (AssemblyName)
@@ -38,7 +39,7 @@ namespace SS14.Shared.IoC
 
             foreach (string assembly in Assemblies)
             {
-                string path = new Uri(Path.Combine(AssemblyLocation, assembly)).LocalPath;
+                string path = Path.Combine(AssemblyLocation, assembly);
                 ServiceTypes.AddRange(Assembly.LoadFrom(path).GetTypes());
             }
         }

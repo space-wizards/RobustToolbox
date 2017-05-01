@@ -654,6 +654,10 @@ namespace SS14.Server
                 case NetMessage.ConsoleCommand:
                     IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msg.ReadString(), msg.SenderConnection);
                     break;
+
+                case NetMessage.ConsoleCommandRegister:
+                    IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(msg.SenderConnection);
+                    break;
             }
         }
 

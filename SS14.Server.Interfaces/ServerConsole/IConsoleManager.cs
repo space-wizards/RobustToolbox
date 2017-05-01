@@ -1,5 +1,4 @@
-﻿using SS14.Server.Interfaces.Commands;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.ServerConsole
 {

@@ -16,26 +16,30 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
-    public class DebugConsole : ScrollableContainer
+    public class DebugConsole : ScrollableContainer, IDebugConsole
     {
         private Textbox input;
         private List<Label> lines = new List<Label>();
         private int last_y = 0;
-        private Dictionary<string, IConsoleCommand> Commands = new Dictionary<string, IConsoleCommand>();
+        private Dictionary<string, IConsoleCommand> commands = new Dictionary<string, IConsoleCommand>();
+        private bool sentCommandRequestToServer = false;
+
+        public IDictionary<string, IConsoleCommand> Commands => commands;
 
         public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
         {
             input = new Textbox(size.X, resourceManager)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
-                textColor = new SFML.Graphics.Color(255, 250, 240)
+                drawColor = new Color(128, 128, 128, 100),
+                textColor = new Color(255, 250, 240)
             };
             input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
-            this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            this.BackgroundColor = new Color(128, 128, 128, 100);
             this.DrawBackground = true;
             this.DrawBorder = true;
             Update(0);
@@ -45,15 +49,19 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private void input_OnSubmit(string text, Textbox sender)
         {
-            AddLine(text, new SFML.Graphics.Color(255, 250, 240));
+            AddLine("> " + text, new Color(255, 250, 240));
             ProcessCommand(text);
         }
 
-        public void AddLine(string text, SFML.Graphics.Color color)
+        public void AddLine(string text, Color color)
         {
-            Label newLabel = new Label(text, "MICROGBE", this._resourceManager);
-            newLabel.Position = new Vector2i(5, last_y);
-            newLabel.TextColor = color;
+            bool atBottom = scrollbarV.Value >= scrollbarV.max;
+            Label newLabel = new Label(text, "CALIBRI", this._resourceManager)
+            {
+                Position = new Vector2i(5, last_y),
+                TextColor = color
+            };
+
             newLabel.Update(0);
             last_y = newLabel.ClientArea.Bottom();
             components.Add(newLabel);
@@ -75,24 +83,59 @@ namespace SS14.Client.Services.UserInterface.Components
             base.ToggleVisible();
             if (IsVisible())
             {
-                IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
-                netMgr.MessageArrived += new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
+                // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                // uiMgr.SetFocus(input);
+                // Though TextBox does like focus for the caret and handling KeyDown.
+                input.Focus = true;
+                netMgr.MessageArrived += new EventHandler<IncomingNetworkMessageArgs>(NetMgr_MessageArrived);
+                if (netMgr.IsConnected && !sentCommandRequestToServer)
+                {
+                    SendServerCommandRequest();
+                }
             }
             else
             {
-                netMgr.MessageArrived -= new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
+                // uiMgr.RemoveFocus(input);
+                input.Focus = true;
+                netMgr.MessageArrived -= new EventHandler<IncomingNetworkMessageArgs>(NetMgr_MessageArrived);
             }
         }
 
-        private void netMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
+        private void NetMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
         {
             //Make sure we reset the position - we might recieve this message after the gamestates.
-            if (e.Message.Position > 0) e.Message.Position = 0;
-            if (e.Message.MessageType == NetIncomingMessageType.Data && (NetMessage)e.Message.PeekByte() == NetMessage.ConsoleCommandReply)
+            if (e.Message.Position > 0)
+                e.Message.Position = 0;
+
+            if (e.Message.MessageType != NetIncomingMessageType.Data)
+                return;
+
+            switch ((NetMessage)e.Message.PeekByte())
             {
-                e.Message.ReadByte();
-                AddLine("Server: " + e.Message.ReadString(), new SFML.Graphics.Color(65, 105, 225));
+                case NetMessage.ConsoleCommandReply:
+                    e.Message.ReadByte();
+                    AddLine("< " + e.Message.ReadString(), new Color(65, 105, 225));
+                    break;
+
+                case NetMessage.ConsoleCommandRegister:
+                    e.Message.ReadByte();
+                    for (ushort amount = e.Message.ReadUInt16(); amount > 0; amount--)
+                    {
+                        string name = e.Message.ReadString();
+                        // Do not do duplicate commands.
+                        if (commands.ContainsKey(name))
+                        {
+                            System.Console.WriteLine("Server sent console command {}, but we already have one with the same name. Ignoring.", name);
+                            break;
+                        }
+                        string help = e.Message.ReadString();
+                        string description = e.Message.ReadString();
+
+                        var command = new ServerDummyCommand(name, help, description);
+                    }
+                    break;
             }
+
             //Again, make sure we reset the position - we might get it before the gamestate and then that would break.
             e.Message.Position = 0;
         }
@@ -165,7 +208,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             CommandParsing.ParseArguments(text, args);
 
-            string command = args[0];
+            string commandname = args[0];
 
             //Entity player;
             //var entMgr = IoCManager.Resolve<IEntityManager>();
@@ -173,6 +216,25 @@ namespace SS14.Client.Services.UserInterface.Components
             //player = plrMgr.ControlledEntity;
             //IoCManager.Resolve<INetworkManager>().
 
+            bool forward = true;
+            if (commands.ContainsKey(commandname))
+            {
+                IConsoleCommand command = commands[commandname];
+                args.RemoveAt(0);
+                forward = command.Execute(this, args.ToArray());
+            }
+            else if (!IoCManager.Resolve<INetworkManager>().IsConnected)
+            {
+                AddLine("Unknown command: " + commandname, Color.Red);
+                return;
+            }
+
+            if (forward)
+            {
+                SendServerConsoleCommand(text);
+            }
+
+            /*
             switch (command)
             {
                 case "cls":
@@ -274,19 +336,21 @@ namespace SS14.Client.Services.UserInterface.Components
                 default:
                     SendServerConsoleCommand(text); //Forward to server.
                     break;
-            }
+            }*/
         }
 
         private void InitializeCommands()
         {
             foreach (Type t in Assembly.GetCallingAssembly().GetTypes())
             {
-                if (!typeof(IConsoleCommand).IsAssignableFrom(t) || t == typeof(IConsoleCommand))
+                if (!typeof(IConsoleCommand).IsAssignableFrom(t) || t == typeof(ServerDummyCommand))
                     continue;
 
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
-                RegisterCommand(instance);
+                if (commands.ContainsKey(instance.Command))
+                    throw new Exception(string.Format("Command already registered: {}", instance.Command));
 
+                commands[instance.Command] = instance;
             }
         }
 
@@ -301,9 +365,32 @@ namespace SS14.Client.Services.UserInterface.Components
                 netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
         }
+
+        private void SendServerCommandRequest()
+        {
+            var netMgr = IoCManager.Resolve<INetworkManager>();
+            if (!netMgr.IsConnected)
+                return;
+
+            NetOutgoingMessage outMsg = netMgr.CreateMessage();
+            outMsg.Write((byte)NetMessage.ConsoleCommandRegister);
+            netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            sentCommandRequestToServer = true;
+        }
+
+        public void Clear()
+        {
+            components.Clear();
+            last_y = 0;
+            //this.scrollbarH.Value = 0;
+            scrollbarV.Value = 0;
+        }
     }
 
-    internal class ServerConsoleCommand : IConsoleCommand
+    /// <summary>
+    /// These dummies are made purely so list and help can list server-side commands.
+    /// </summary>
+    internal class ServerDummyCommand : IConsoleCommand
     {
         private readonly string command;
         private readonly string help;
@@ -313,9 +400,17 @@ namespace SS14.Client.Services.UserInterface.Components
         public string Help => help;
         public string Description => description;
 
-        public void Execute(params string[] args)
+        internal ServerDummyCommand(string command, string help, string description)
         {
+            this.command = command;
+            this.help = help;
+            this.description = description;
+        }
 
+        // Always forward to server.
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            return true;
         }
     }
 }

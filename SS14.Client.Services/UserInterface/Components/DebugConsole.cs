@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces.Console;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -14,6 +15,7 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -22,18 +24,23 @@ namespace SS14.Client.Services.UserInterface.Components
         private Textbox input;
         private List<Label> lines = new List<Label>();
         private int last_y = 0;
+        private Dictionary<string, IConsoleCommand> Commands = new Dictionary<string, IConsoleCommand>();
 
         public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
         {
-            input = new Textbox(size.X, resourceManager);
-            input.ClearFocusOnSubmit = false;
-            input.drawColor = new SFML.Graphics.Color(128, 128, 128, 100);
-            input.textColor = new SFML.Graphics.Color(255, 250, 240);
+            input = new Textbox(size.X, resourceManager)
+            {
+                ClearFocusOnSubmit = false,
+                drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
+                textColor = new SFML.Graphics.Color(255, 250, 240)
+            };
             input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
             this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
             this.DrawBackground = true;
             this.DrawBorder = true;
             Update(0);
+
+            InitializeCommands();
         }
 
         private void input_OnSubmit(string text, Textbox sender)
@@ -270,6 +277,19 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
 
+        private void InitializeCommands()
+        {
+            foreach (Type t in Assembly.GetCallingAssembly().GetTypes())
+            {
+                if (!typeof(IConsoleCommand).IsAssignableFrom(t) || t == typeof(IConsoleCommand))
+                    continue;
+
+                var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
+                RegisterCommand(instance);
+
+            }
+        }
+
         private void SendServerConsoleCommand(string text)
         {
             var netMgr = IoCManager.Resolve<INetworkManager>();
@@ -280,6 +300,22 @@ namespace SS14.Client.Services.UserInterface.Components
                 outMsg.Write(text);
                 netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
+        }
+    }
+
+    internal class ServerConsoleCommand : IConsoleCommand
+    {
+        private readonly string command;
+        private readonly string help;
+        private readonly string description;
+
+        public string Command => command;
+        public string Help => help;
+        public string Description => description;
+
+        public void Execute(params string[] args)
+        {
+
         }
     }
 }

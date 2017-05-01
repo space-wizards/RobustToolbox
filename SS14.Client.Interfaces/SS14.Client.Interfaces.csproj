@@ -160,6 +160,7 @@
     <Compile Include="Configuration\IPlayerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Console\IConsoleCommand.cs" />
     <Compile Include="GameStates\IGameStateManager.cs">
       <SubType>Code</SubType>
     </Compile>

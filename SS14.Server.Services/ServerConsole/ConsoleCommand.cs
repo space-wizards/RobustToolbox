@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces.Commands;
+﻿using SS14.Server.Interfaces.ServerConsole;
 
 namespace SS14.Server.Services.ServerConsole
 {

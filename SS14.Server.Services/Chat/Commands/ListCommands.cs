@@ -1,42 +1,20 @@
 ﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.Commands;
 using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Server.Services.Chat.Commands
 {
-    public class ListCommands : ChatCommand
+    public class ListCommands : IChatCommand
     {
-        public override string Command
-        {
-            get
-            {
-                return "list";
-            }
-        }
+        public string Command => "list";
+        public string Description => "Lists all available commands.";
+        public string Help => "Outputs a list of all commands which are currently available to you, and a total command number.";
 
-        public override string Description
-        {
-            get
-            {
-                return "Lists all available commands.";
-            }
-        }
-
-        public override string Help
-        {
-            get
-            {
-                return "Outputs a list of all commands which are currently available to you, and a total command number.";
-            }
-        }
-
-        public override void Execute(IClient client, params string[] args)
+        public void Execute(IChatManager manager, IClient client, params string[] args)
         {
             string message = "Available commands:\n";
-            IChatManager manager = IoCManager.Resolve<IChatManager>();
-            foreach (IClientCommand command in manager.GetCommands().Values)
+            foreach (IChatCommand command in manager.Commands.Values)
             {
                 message += String.Format("{0}: {1}\n", command.Command, command.Description);
             }

@@ -1,7 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
-using SS14.Server.Interfaces.Commands;
 using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
@@ -25,8 +24,10 @@ namespace SS14.Server.Services.Chat
         private ISS14Server _serverMain;
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
-        private Dictionary<string, IClientCommand> _commands = new Dictionary<string, IClientCommand>();
+        private Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
         private string _emotePath = @"emotes.xml";
+
+        public IDictionary<string, IChatCommand> Commands => _commands;
 
         #region IChatManager Members
 
@@ -116,11 +117,6 @@ namespace SS14.Server.Services.Chat
             return message;
         }
 
-        public Dictionary<string, IClientCommand> GetCommands()
-        {
-            return _commands;
-        }
-
         #endregion IChatManager Members
 
         private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
@@ -184,15 +180,18 @@ namespace SS14.Server.Services.Chat
         {
             List<Type> CommandTypes = new List<Type>();
             CommandTypes.AddRange(
-                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ChatCommand).IsAssignableFrom(t))
+                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(IChatCommand).IsAssignableFrom(t))
             );
 
             foreach (Type t in CommandTypes)
             {
-                if (t == typeof(ChatCommand))
+                IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
+                if (_commands.ContainsKey(instance.Command))
+                {
+                    LogManager.Log(string.Format("Command has duplicate name: {}", instance.Command), Shared.ServerEnums.LogLevel.Error);
                     continue;
-                ChatCommand instance = (ChatCommand)Activator.CreateInstance(t, null);
-                instance.Register(_commands); // Done like this so scripted commands can be less hardcoded.
+                }
+                _commands[instance.Command] = instance;
             }
         }
 
@@ -258,7 +257,7 @@ namespace SS14.Server.Services.Chat
                 return;
             }
 
-            _commands[command].Execute(client, args.ToArray());
+            _commands[command].Execute(this, client, args.ToArray());
         }
     }
 

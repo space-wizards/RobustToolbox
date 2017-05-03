@@ -16,30 +16,30 @@ using System;
 
 namespace SS14.Server.Services.ClientConsoleHost
 {
-	class ClientConsoleHost : IClientConsoleHost
-	{
-		public void HandleRegistrationRequest(NetConnection senderConnection)
-		{
-			// TODO, send command names, descriptions and help back to client so client-side help commands can show it.
-		}
+    class ClientConsoleHost : IClientConsoleHost
+    {
+        public void HandleRegistrationRequest(NetConnection senderConnection)
+        {
+            // TODO, send command names, descriptions and help back to client so client-side help commands can show it.
+        }
 
-		public void ProcessCommand(string text, NetConnection sender)
-		{
-			var args = new List<string>();
+        public void ProcessCommand(string text, NetConnection sender)
+        {
+            var args = new List<string>();
 
-			CommandParsing.ParseArguments(text, args);
+            CommandParsing.ParseArguments(text, args);
 
-			if (args.Count == 0)
-			{
-				return;
-			}
-			string command = args[0];
+            if (args.Count == 0)
+            {
+                return;
+            }
+            string command = args[0];
 
-			SendConsoleReply(string.Format("Command '{0}' not recognized.", command), sender);
+            SendConsoleReply(string.Format("Command '{0}' not recognized.", command), sender);
 
-			// TODO: Server side IClientCommand handling.
+            // TODO: Server side IClientCommand handling.
 
-			/*
+            /*
 			Vector2f position;
 			Entity player;
 
@@ -110,15 +110,15 @@ namespace SS14.Server.Services.ClientConsoleHost
 					break;
 			}
 			*/
-		}
+        }
 
-		public void SendConsoleReply(string text, NetConnection target)
-		{
-			var netMgr = IoCManager.Resolve<ISS14NetServer>();
-			NetOutgoingMessage replyMsg = netMgr.CreateMessage();
-			replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
-			replyMsg.Write(text);
-			netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
-		}
-	}
+        public void SendConsoleReply(string text, NetConnection target)
+        {
+            var netMgr = IoCManager.Resolve<ISS14NetServer>();
+            NetOutgoingMessage replyMsg = netMgr.CreateMessage();
+            replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
+            replyMsg.Write(text);
+            netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
+        }
+    }
 }

@@ -69,10 +69,7 @@ namespace SS14.Server
             }
         }
 
-        public bool Active
-        {
-            get { return _active; }
-        }
+        public bool Active => _active;
 
         #region Server Settings
 
@@ -104,7 +101,7 @@ namespace SS14.Server
             TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
         }
-        
+
         public float ServerRate // desired server frame (tick) time in milliseconds
         { get; private set; }
 
@@ -125,6 +122,15 @@ namespace SS14.Server
             SendGameStateUpdate(true, true);
             DisposeForRestart();
             StartLobby();
+        }
+
+        public void Shutdown(string reason=null)
+        {
+            if (reason == null)
+                LogManager.Log("Shutting down...");
+            else
+                LogManager.Log(string.Format("{0}, shutting down...", reason));
+            _active = false;
         }
 
         public IClient GetClient(NetConnection clientConnection)
@@ -157,7 +163,7 @@ namespace SS14.Server
         #region server mainloop
 
         // The main server loop
-        public void MainLoop() 
+        public void MainLoop()
         {
             basePeriod = 1;
             period = basePeriod;
@@ -166,15 +172,18 @@ namespace SS14.Server
             stopWatch.Start();
             mainLoopTimer = timerObject.mainLoopTimer.CreateMainLoopTimer(() =>
                                                        {
-                                                       RunLoop();
+                                                           RunLoop();
                                                        }, period);
-            
+
             while (Active)
             {
                 are.WaitOne(-1);
 
                 DoMainLoopStuff();
             }
+
+            Cleanup();
+
             /*   TimerCallback tcb = RunLoop;
             var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
@@ -184,16 +193,16 @@ namespace SS14.Server
 
         public void RunLoop()
         {
-            are.Set();  
+            are.Set();
         }
 
         private void DoMainLoopStuff()
         {
             float elapsedTime;
             elapsedTime = (stopWatch.ElapsedTicks / (float)Stopwatch.Frequency);
-            float elapsedMilliseconds = elapsedTime*1000;
-            
-            if(elapsedMilliseconds < ServerRate && ServerRate - elapsedMilliseconds >= 0.5f)
+            float elapsedMilliseconds = elapsedTime * 1000;
+
+            if (elapsedMilliseconds < ServerRate && ServerRate - elapsedMilliseconds >= 0.5f)
             {
                 return;
             }
@@ -225,6 +234,11 @@ namespace SS14.Server
             Update(elapsedTime);
 
             IoCManager.Resolve<IConsoleManager>().Update();
+        }
+
+        private void Cleanup()
+        {
+            Console.Title = "";
         }
 
         private string UpdateBPS()
@@ -345,7 +359,7 @@ namespace SS14.Server
         {
             //Obey the updates per second limit
             TimeSpan elapsed = Time - _lastStateTime;
-            if (force || elapsed.TotalMilliseconds > (1000/updateRate))
+            if (force || elapsed.TotalMilliseconds > (1000 / updateRate))
             {
                 //Save last state time
                 _lastStateTime = Time;
@@ -384,7 +398,7 @@ namespace SS14.Server
                         }
                         else
                         {
-                            stateMessage.Write((byte) NetMessage.StateUpdate);
+                            stateMessage.Write((byte)NetMessage.StateUpdate);
                             GameStateDelta delta = stateManager.GetDelta(c, _lastState);
                             delta.WriteDelta(stateMessage);
                             //LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
@@ -500,7 +514,7 @@ namespace SS14.Server
         public void SendWelcomeInfo(NetConnection connection)
         {
             NetOutgoingMessage welcomeMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            welcomeMessage.Write((byte) NetMessage.WelcomeMessage);
+            welcomeMessage.Write((byte)NetMessage.WelcomeMessage);
             welcomeMessage.Write(_serverName);
             welcomeMessage.Write(_serverPort);
             welcomeMessage.Write(_serverWelcomeMessage);
@@ -515,22 +529,22 @@ namespace SS14.Server
         public void SendNewPlayerCount()
         {
             NetOutgoingMessage playercountMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            playercountMessage.Write((byte) NetMessage.PlayerCount);
-            playercountMessage.Write((byte) ClientList.Count);
+            playercountMessage.Write((byte)NetMessage.PlayerCount);
+            playercountMessage.Write((byte)ClientList.Count);
             IoCManager.Resolve<ISS14NetServer>().SendToAll(playercountMessage);
         }
 
         public void SendPlayerList(NetConnection connection)
         {
             NetOutgoingMessage playerListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            playerListMessage.Write((byte) NetMessage.PlayerList);
-            playerListMessage.Write((byte) ClientList.Count);
+            playerListMessage.Write((byte)NetMessage.PlayerList);
+            playerListMessage.Write((byte)ClientList.Count);
 
             foreach (NetConnection conn in ClientList.Keys)
             {
                 IPlayerSession plrSession = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(conn);
                 playerListMessage.Write(plrSession.name);
-                playerListMessage.Write((byte) plrSession.status);
+                playerListMessage.Write((byte)plrSession.status);
                 playerListMessage.Write(ClientList[conn].NetConnection.AverageRoundtripTime);
             }
             IoCManager.Resolve<ISS14NetServer>().SendMessage(playerListMessage, connection,
@@ -585,7 +599,7 @@ namespace SS14.Server
         /// <param name="msg"></param>
         public void HandleData(NetIncomingMessage msg)
         {
-            var messageType = (NetMessage) msg.ReadByte();
+            var messageType = (NetMessage)msg.ReadByte();
             switch (messageType)
             {
                 case NetMessage.CraftMessage:
@@ -666,7 +680,7 @@ namespace SS14.Server
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
                             adminPermissions.isAdmin || true)
-                        //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     {
                         Entity delEnt = EntityManager.GetEntity(entId);
                         if (delEnt != null) EntityManager.DeleteEntity(delEnt);
@@ -690,15 +704,15 @@ namespace SS14.Server
                             adminPermissions.isAdmin)
                     {
                         NetOutgoingMessage adminPlayerListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        adminPlayerListMessage.Write((byte) NetMessage.RequestAdminPlayerlist);
-                        adminPlayerListMessage.Write((byte) ClientList.Count);
+                        adminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
+                        adminPlayerListMessage.Write((byte)ClientList.Count);
                         foreach (
                             IPlayerSession plrSession in
                                 ClientList.Keys.Select(
                                     conn => IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(conn)))
                         {
                             adminPlayerListMessage.Write(plrSession.name);
-                            adminPlayerListMessage.Write((byte) plrSession.status);
+                            adminPlayerListMessage.Write((byte)plrSession.status);
                             adminPlayerListMessage.Write(plrSession.assignedJob.Name);
                             adminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndPoint.Address.ToString());
                             adminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
@@ -710,7 +724,7 @@ namespace SS14.Server
                     else
                     {
                         NetOutgoingMessage loginMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        loginMessage.Write((byte) NetMessage.RequestAdminLogin);
+                        loginMessage.Write((byte)NetMessage.RequestAdminLogin);
                         IoCManager.Resolve<ISS14NetServer>().SendMessage(loginMessage, messageBody.SenderConnection,
                                                                          NetDeliveryMethod.ReliableOrdered);
                     }
@@ -751,7 +765,7 @@ namespace SS14.Server
                             adminPermissions.isAdmin)
                     {
                         NetOutgoingMessage banListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        banListMessage.Write((byte) NetMessage.RequestBanList);
+                        banListMessage.Write((byte)NetMessage.RequestBanList);
                         banListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
                         foreach (BanEntry t in BanlistMgr.Singleton.banlist.List)
                         {
@@ -760,7 +774,7 @@ namespace SS14.Server
                             banListMessage.Write(t.tempBan);
                             int compare = t.expiresAt.CompareTo(DateTime.Now);
                             TimeSpan timeLeft = compare < 0 ? new TimeSpan(0) : t.expiresAt.Subtract(DateTime.Now);
-                            var minutesLeft = (uint) Math.Truncate(timeLeft.TotalMinutes);
+                            var minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
                             banListMessage.Write(minutesLeft);
                         }
                         IoCManager.Resolve<ISS14NetServer>().SendMessage(banListMessage, messageBody.SenderConnection,
@@ -792,7 +806,7 @@ namespace SS14.Server
             session.assignedJob = pickedJob;
 
             NetOutgoingMessage jobSelectedMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobSelectedMessage.Write((byte) NetMessage.JobSelected);
+            jobSelectedMessage.Write((byte)NetMessage.JobSelected);
             jobSelectedMessage.Write(pickedJob.Name);
             IoCManager.Resolve<ISS14NetServer>().SendMessage(jobSelectedMessage, msg.SenderConnection,
                                                              NetDeliveryMethod.ReliableOrdered);
@@ -801,7 +815,7 @@ namespace SS14.Server
         public void HandleJobListRequest(NetIncomingMessage msg)
         {
             NetOutgoingMessage jobListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobListMessage.Write((byte) NetMessage.JobList);
+            jobListMessage.Write((byte)NetMessage.JobList);
             byte[] compressedStr = ZipString.ZipStr(JobHandler.Singleton.GetDefinitionsString());
             jobListMessage.Write(compressedStr.Length);
             jobListMessage.Write(compressedStr);
@@ -849,7 +863,7 @@ namespace SS14.Server
         public void SendChangeTile(int x, int y, Tile newTile)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);

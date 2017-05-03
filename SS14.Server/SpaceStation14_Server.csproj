@@ -14,7 +14,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>
@@ -108,6 +107,7 @@
       <Name>System.Xml.Linq</Name>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mono.Posix" Condition="'$(__MonoCS__)' == ''"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -170,6 +170,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SS14Server.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Signals.cs" Condition="'$(__MonoCS__)' == ''">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Timing\MainLoopTimer.cs">

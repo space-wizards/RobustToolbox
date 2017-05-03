@@ -18,8 +18,8 @@ namespace SS14.Server
             //Process command-line args
             processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
-      
-    
+
+
             var main = new EntryPoint();
             main._server = new SS14Server();
             LogManager.Log("Server -> Starting");
@@ -33,6 +33,10 @@ namespace SS14.Server
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             LogManager.Log("Server Version " + strVersion + " -> Ready");
+
+            #if __MonoCS__
+            SignalHander.InstallSignals();
+            #endif
 
             main._server.MainLoop();
         }

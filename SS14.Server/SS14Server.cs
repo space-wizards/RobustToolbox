@@ -90,7 +90,7 @@ namespace SS14.Server
         private int lastRecievedBytes;
         private int lastSentBytes;
 
-        public SS14Server()
+        public SS14Server(ICommandLineArgs args)
         {
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
@@ -101,7 +101,12 @@ namespace SS14.Server
             _singleton = this;
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
-            configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+            string configPath = args.ConfigFile;
+            if (!Path.IsPathRooted(configPath))
+            {
+                configPath = PathHelpers.ExecutableRelativeFile(configPath);
+            }
+            configMgr.Initialize(configPath);
             string logPath = configMgr.LogPath;
             if (!Path.IsPathRooted(logPath))
             {
@@ -202,6 +207,7 @@ namespace SS14.Server
             float elapsedMilliseconds = elapsedTime * 1000;
 
             if (elapsedMilliseconds < ServerRate && ServerRate - elapsedMilliseconds >= 0.5f)
+
             {
                 return;
             }

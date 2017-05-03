@@ -79,13 +79,16 @@ namespace SS14.Server.Services.Log
             if (singleton == null)
                 throw new TypeInitializationException("LogManager Not Initialized.", null);
 
-            if ((int) logLevel >= (int) singleton.currentLogLevel)
+            if ((int)logLevel >= (int)singleton.currentLogLevel)
             {
                 string logType = logLevel.ToString();
                 if (logType == "Information")
                     logType = "Info";
                 logStream.WriteLine(DateTime.Now.ToString("o") + " - " + logType + ": " + Message);
-                Console.Write(logType + ": " + Message + "\n");
+                Console.ForegroundColor = LogLevelToConsoleColor(logLevel);
+                Console.Write(logType);
+                Console.ResetColor();
+                Console.WriteLine(": " + Message);
             }
         }
 
@@ -103,6 +106,28 @@ namespace SS14.Server.Services.Log
             catch (NullReferenceException)
             {
                 Console.WriteLine(Message);
+            }
+        }
+
+        public static ConsoleColor LogLevelToConsoleColor(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug:
+                    return ConsoleColor.DarkBlue;
+
+                case LogLevel.Information:
+                    return ConsoleColor.Cyan;
+
+                case LogLevel.Warning:
+                    return ConsoleColor.Yellow;
+
+                case LogLevel.Error:
+                case LogLevel.Fatal:
+                    return ConsoleColor.Red;
+
+                default:
+                    return ConsoleColor.White;
             }
         }
     }

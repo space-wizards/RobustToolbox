@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.ServerConsole;
+using SS14.Shared.Command;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace SS14.Server.Services.ServerConsole
 {
     public class ConsoleManager : IConsoleManager
     {
-        private readonly Dictionary<string, ConsoleCommand> availableCommands = new Dictionary<string, ConsoleCommand>();
+        private IDictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";
         private int historyIndex;
@@ -20,6 +21,12 @@ namespace SS14.Server.Services.ServerConsole
         private List<string> tabCompleteList = new List<string>();
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
+
+        public IDictionary<string, IConsoleCommand> AvailableCommands
+        {
+            get { return availableCommands; }
+            protected set { availableCommands = value; }
+        }
 
         public ConsoleManager()
         {
@@ -64,6 +71,7 @@ namespace SS14.Server.Services.ServerConsole
                             currentBuffer = "";
                             internalCursor = 0;
                             break;
+
                         case ConsoleKey.Backspace:
                             if (currentBuffer.Length > 0)
                             {
@@ -72,6 +80,7 @@ namespace SS14.Server.Services.ServerConsole
                                 internalCursor--;
                             }
                             break;
+
                         case ConsoleKey.Delete:
                             if (currentBuffer.Length > 0 && internalCursor < currentBuffer.Length)
                             {
@@ -79,6 +88,7 @@ namespace SS14.Server.Services.ServerConsole
                                 //internalCursor--;
                             }
                             break;
+
                         case ConsoleKey.UpArrow:
                             if (historyIndex > 0)
                                 historyIndex--;
@@ -88,6 +98,7 @@ namespace SS14.Server.Services.ServerConsole
                                 currentBuffer = "";
                             internalCursor = currentBuffer.Length;
                             break;
+
                         case ConsoleKey.DownArrow:
                             if (historyIndex < commandHistory.Count)
                                 historyIndex++;
@@ -97,19 +108,23 @@ namespace SS14.Server.Services.ServerConsole
                                 currentBuffer = "";
                             internalCursor = currentBuffer.Length;
                             break;
+
                         case ConsoleKey.Escape:
                             historyIndex = commandHistory.Count;
                             currentBuffer = "";
                             internalCursor = 0;
                             break;
+
                         case ConsoleKey.LeftArrow:
                             if (internalCursor > 0)
                                 internalCursor--;
                             break;
+
                         case ConsoleKey.RightArrow:
                             if (internalCursor < currentBuffer.Length)
                                 internalCursor++;
                             break;
+
                         case ConsoleKey.Tab:
                             if (lastKeyPressed != ConsoleKey.Tab)
                             {
@@ -130,42 +145,35 @@ namespace SS14.Server.Services.ServerConsole
             }
         }
 
-        #endregion
+        #endregion IConsoleManager Members
 
         private void ExecuteCommand(string commandLine)
         {
-            string[] args = commandLine.Split(' ');
-            if (args.Length == 0)
+            List<string> args = new List<string>(commandLine.Split(' '));
+            if (args.Count == 0)
             {
                 return;
             }
             string cmd = args[0].ToLower();
-            bool handled = false;
-            switch (cmd)
+
+            try
             {
-                case "list":
-                    ListCommands();
-                    handled = true;
-                    break;
-                case "help":
-                    if (args.Length > 1 && args[1].Length > 0)
-                        HelpCommand(args[1]);
-                    else
-                    {
-                        Help();
-                        ListCommands();
-                    }
-                    handled = true;
-                    break;
+                IConsoleCommand command = AvailableCommands[cmd];
+                args.RemoveAt(0);
+                command.Execute(args.ToArray());
             }
-            if (handled)
-                return;
-            if (availableCommands.ContainsKey(cmd))
-                availableCommands[cmd].Execute(args);
-            else if (cmd.Length == 0)
-                return;
-            else
-                Con.WriteLine("Unknown command: " + cmd);
+            catch (KeyNotFoundException)
+            {
+                Con.ForegroundColor = ConsoleColor.Red;
+                Con.WriteLine("Unknown command: '{0}'", cmd);
+                Con.ResetColor();
+            }
+            catch (Exception e)
+            {
+                Con.ForegroundColor = ConsoleColor.Red;
+                Con.WriteLine("There was an error while executing the command:\n{0}", e);
+                Con.ResetColor();
+            }
         }
 
         public void DrawCommandLine()
@@ -189,11 +197,10 @@ namespace SS14.Server.Services.ServerConsole
         {
             var CommandTypes = new List<Type>();
             CommandTypes.AddRange(
-                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(ConsoleCommand).IsAssignableFrom(t)));
+                Assembly.GetCallingAssembly().GetTypes()
+                    .Where(t => typeof(ConsoleCommand).IsAssignableFrom(t) && t != typeof(ConsoleCommand)));
             foreach (Type t in CommandTypes)
             {
-                if (t == typeof(ConsoleCommand))
-                    continue;
                 var instance = Activator.CreateInstance(t, null) as ConsoleCommand;
                 RegisterCommand(instance);
             }
@@ -201,66 +208,8 @@ namespace SS14.Server.Services.ServerConsole
 
         private void RegisterCommand(ConsoleCommand commandObj)
         {
-            if (!availableCommands.ContainsKey(commandObj.Command.ToLower()))
-                availableCommands.Add(commandObj.Command.ToLower(), commandObj);
-        }
-
-        private void ListCommands()
-        {
-            Con.ForegroundColor = ConsoleColor.Yellow;
-            Con.WriteLine("\nAvailable commands:\n");
-
-            List<string> names = availableCommands.Keys.ToList();
-            names.Add("list");
-            names.Add("help");
-            names.Sort();
-            foreach (string c in names)
-            {
-                string name = String.Format("{0, 16}", c);
-                Con.ForegroundColor = ConsoleColor.Cyan;
-                Con.SetCursorPosition(0, Console.CursorTop);
-                Con.Write(name);
-                Con.ForegroundColor = ConsoleColor.Green;
-                Con.Write(" - ");
-                Con.ForegroundColor = ConsoleColor.White;
-                switch (c)
-                {
-                    case "list":
-                        Con.WriteLine("Lists available commands");
-                        break;
-                    case "help":
-                        Con.WriteLine("Lists general help. Type 'help <command>' for specific help on a command.");
-                        break;
-                    default:
-                        Con.WriteLine(availableCommands[c].Description);
-                        break;
-                }
-                Con.ResetColor();
-            }
-            Con.ForegroundColor = ConsoleColor.White;
-            Con.Write("\n\t\t\t" + availableCommands.Count);
-            Con.ForegroundColor = ConsoleColor.Yellow;
-            Con.WriteLine(" commands available.\n");
-            Con.ResetColor();
-        }
-
-        private void Help()
-        {
-            Con.ForegroundColor = ConsoleColor.White;
-            Con.WriteLine("Help!");
-        }
-
-        private void HelpCommand(params string[] args)
-        {
-            if (availableCommands.ContainsKey(args[0].ToLower()))
-            {
-                Con.WriteLine("Help for " + args[0] + ":");
-                Con.WriteLine(availableCommands[args[0].ToLower()].Help);
-            }
-            else
-            {
-                Con.WriteLine("Command '" + args[0] + "' not found.");
-            }
+            if (!AvailableCommands.ContainsKey(commandObj.Command.ToLower()))
+                AvailableCommands.Add(commandObj.Command.ToLower(), commandObj);
         }
 
         private string TabComplete()
@@ -272,7 +221,7 @@ namespace SS14.Server.Services.ServerConsole
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = availableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;

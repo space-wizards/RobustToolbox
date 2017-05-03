@@ -44,6 +44,7 @@ namespace SS14.Client.Services.State.States
 
         //Keep track of previous tick screen width and height for use in update.
         private int _prevScreenWidth = 0;
+
         private int _prevScreenHeight = 0;
 
         private readonly TabContainer _tabCharacter;
@@ -58,7 +59,7 @@ namespace SS14.Client.Services.State.States
         private FloatRect _recStatus;
         private TabContainer _tabActive;
 
-        List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>> sortedJobs = new List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>>();
+        private List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>> sortedJobs = new List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>>();
         private Chatbox _lobbyChat;
 
         private string _serverName;
@@ -69,11 +70,7 @@ namespace SS14.Client.Services.State.States
         private string _serverMapName;
         private string _gameType;
 
-        #endregion
-
-        #region Properties
-
-        #endregion
+        #endregion Fields
 
         public Lobby(IDictionary<Type, object> managers)
             : base(managers)
@@ -82,14 +79,14 @@ namespace SS14.Client.Services.State.States
             _background.Texture.Smooth = true;
 
             _imgMainBg = new SimpleImage
-                          {
-                              Sprite = "lobby_mainbg"
-                          };
+            {
+                Sprite = "lobby_mainbg"
+            };
 
             _imgStatus = new SimpleImage
-                             {
-                                 Sprite = "lobby_statusbar"
-                             };
+            {
+                Sprite = "lobby_statusbar"
+            };
 
             _lblServer = new Label("SERVER:", "MICROGME", ResourceManager);
             _lblServer.Text.Color = new SFML.Graphics.Color(245, 245, 245);
@@ -124,47 +121,42 @@ namespace SS14.Client.Services.State.States
             _serverLabels.Add(_lblPortInfo);
 
             _tabs = new TabbedMenu
-                        {
-                            TopSprite = "lobby_tab_top",
-                            MidSprite = "lobby_tab_mid",
-                            BotSprite = "lobby_tab_bot",
-                            TabOffset = new Vector2i(-8, 300),
-                            ZDepth = 2
-                        };
+            {
+                TopSprite = "lobby_tab_top",
+                MidSprite = "lobby_tab_mid",
+                BotSprite = "lobby_tab_bot",
+                TabOffset = new Vector2i(-8, 300),
+                ZDepth = 2
+            };
 
             _tabJob = new JobTab("lobbyTabJob", new Vector2i(793, 450), ResourceManager)
-                          {
-                              tabSpriteName = "lobby_tab_bcase"
-                          };
+            {
+                tabSpriteName = "lobby_tab_bcase"
+            };
             _tabs.AddTab(_tabJob);
             _tabJob._shwDepa.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwDepa_SelectionChanged);
             _tabJob._shwJobs.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwJobs_SelectionChanged);
 
             _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceManager)
-                                {
-                                    tabSpriteName = "lobby_tab_person"
-                                };
+            {
+                tabSpriteName = "lobby_tab_person"
+            };
             _tabs.AddTab(_tabCharacter);
 
             _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceManager)
-                              {
-                                  tabSpriteName = "lobby_tab_eye"
-                              };
+            {
+                tabSpriteName = "lobby_tab_eye"
+            };
             _tabs.AddTab(_tabObserve);
 
             _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceManager)
-                             {
-                                 tabSpriteName = "lobby_tab_info"
-                             };
+            {
+                tabSpriteName = "lobby_tab_info"
+            };
             _tabs.AddTab(_tabServer);
-
             _tabs.SelectTab(_tabJob);
 
-            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager)
-                {
-                    Size = new Vector2f(780,225),
-                };
-
+            _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceManager);
             _lobbyChat.Update(0);
 
             _imgChatBg = new SimpleImage()
@@ -188,15 +180,15 @@ namespace SS14.Client.Services.State.States
             _lblPlayersInfo.FixedWidth = 60;
             _lblPortInfo.FixedWidth = 50;
 
-
             UpdateGUIPosition();
         }
 
-        void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
+        private void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
         {
         }
 
         #region Network
+
         private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
         {
             NetIncomingMessage message = args.Message;
@@ -213,6 +205,7 @@ namespace SS14.Client.Services.State.States
                                                                                         disconnectMessage));
                     }
                     break;
+
                 case NetIncomingMessageType.Data:
                     var messageType = (NetMessage)message.ReadByte();
                     switch (messageType)
@@ -221,21 +214,27 @@ namespace SS14.Client.Services.State.States
                             string text = message.ReadString();
                             //AddChat(text);
                             break;
+
                         case NetMessage.PlayerList:
                             HandlePlayerList(message);
                             break;
+
                         case NetMessage.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
+
                         case NetMessage.ChatMessage:
                             HandleChatMessage(message);
                             break;
+
                         case NetMessage.JobList:
                             HandleJobList(message);
                             break;
+
                         case NetMessage.JobSelected:
                             //HandleJobSelected(message); THIS IS THE ACK FROM THE SERVER FOR JOB SELECTION TODO STILL NEEDED?
                             break;
+
                         case NetMessage.JoinGame:
                             HandleJoinGame();
                             break;
@@ -300,10 +299,10 @@ namespace SS14.Client.Services.State.States
             foreach (DepartmentDefinition dep in JobHandler.Singleton.JobSettings.DepartmentDefinitions)
             {
                 var depJobs = (from x in JobHandler.Singleton.JobSettings.JobDefinitions
-                              where x.Department.ToLowerInvariant() == dep.Name.ToLowerInvariant()
-                              where x.Available
-                              orderby x.Name
-                              select x).ToList();
+                               where x.Department.ToLowerInvariant() == dep.Name.ToLowerInvariant()
+                               where x.Available
+                               orderby x.Name
+                               select x).ToList();
 
                 var newEntry = new KeyValuePair<DepartmentDefinition, List<JobDefinition>>(dep, depJobs);
                 sortedJobs.Add(newEntry);
@@ -314,22 +313,22 @@ namespace SS14.Client.Services.State.States
                 };
 
                 DepartmentInfo newInfo = new DepartmentInfo()
-                    {
-                        Department = dep,
-                        JobDefs = depJobs
-                    };
+                {
+                    Department = dep,
+                    JobDefs = depJobs
+                };
 
                 _tabJob._shwDepa.AddItem(newDep, newInfo);
             }
         }
 
-        void _shwDepa_SelectionChanged(ImageButton sender, object associatedData)
+        private void _shwDepa_SelectionChanged(ImageButton sender, object associatedData)
         {
             _tabJob._shwJobs.ClearItems();
 
             if (associatedData is DepartmentInfo)
             {
-                DepartmentInfo info = (DepartmentInfo) associatedData;
+                DepartmentInfo info = (DepartmentInfo)associatedData;
 
                 _tabJob._imgJobGrad.Color = ColorUtils.FromHex(info.Department.DepartmentColorHex).WithAlpha(_tabJob._imgJobGrad.Color.A);
 
@@ -347,18 +346,18 @@ namespace SS14.Client.Services.State.States
             }
         }
 
-        void _shwJobs_SelectionChanged(ImageButton sender, object associatedData)
+        private void _shwJobs_SelectionChanged(ImageButton sender, object associatedData)
         {
             if (associatedData != null && associatedData is JobDefinition)
             {
-                JobDefinition jobDef = (JobDefinition) associatedData;
+                JobDefinition jobDef = (JobDefinition)associatedData;
 
                 _tabJob._lbljobName.Text.Text = jobDef.Name;
                 _tabJob._lbljobDesc.Text.Text = jobDef.Description;
 
                 var netManager = IoCManager.Resolve<INetworkManager>();
                 NetOutgoingMessage playerJobSpawnMsg = netManager.CreateMessage();
-                playerJobSpawnMsg.Write((byte) NetMessage.RequestJob);
+                playerJobSpawnMsg.Write((byte)NetMessage.RequestJob);
                 playerJobSpawnMsg.Write(jobDef.Name);
                 netManager.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
             }
@@ -368,7 +367,8 @@ namespace SS14.Client.Services.State.States
         {
             StateManager.RequestStateChange<GameScreen>();
         }
-        #endregion
+
+        #endregion Network
 
         #region Startup, Shutdown, Update
 
@@ -431,7 +431,7 @@ namespace SS14.Client.Services.State.States
         public void UpdateGUIPosition()
         {
             _imgMainBg.Position = new Vector2i(
-                (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)) ,
+                (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
                 (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
             _imgMainBg.Update(0);
 
@@ -452,7 +452,6 @@ namespace SS14.Client.Services.State.States
             _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right(), _lblMode.ClientArea.Top);
             _lblModeInfo.Update(0);
 
-
             _lblPlayers.Position = new Vector2i(_lblModeInfo.ClientArea.Right() + (int)_lastLblSpacing,
                                              _lblModeInfo.ClientArea.Top);
             _lblPlayers.Update(0);
@@ -460,14 +459,12 @@ namespace SS14.Client.Services.State.States
             _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right(), _lblPlayers.ClientArea.Top);
             _lblPlayersInfo.Update(0);
 
-
             _lblPort.Position = new Vector2i(_lblPlayersInfo.ClientArea.Right() + (int)_lastLblSpacing,
                                           _lblPlayersInfo.ClientArea.Top);
             _lblPort.Update(0);
 
             _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right(), _lblPort.ClientArea.Top);
             _lblPortInfo.Update(0);
-
 
             _tabs.Position = _imgMainBg.Position + new Vector2i(5, 90);
             _tabs.Update(0);
@@ -482,20 +479,19 @@ namespace SS14.Client.Services.State.States
             _btnReady.Update(0);
         }
 
-        void _btnReady_Clicked(ImageButton sender)
+        private void _btnReady_Clicked(ImageButton sender)
         {
             var playerManager = IoCManager.Resolve<IPlayerManager>();
             playerManager.SendVerb("joingame", 0);
         }
 
-        #endregion
+        #endregion Startup, Shutdown, Update
 
         #region IState Members
 
         public void Render(FrameEventArgs e)
         {
-            
-           _background.Draw();
+            _background.Draw();
             UserInterfaceManager.Render();
         }
 
@@ -503,51 +499,53 @@ namespace SS14.Client.Services.State.States
         {
         }
 
-        #endregion
+        #endregion IState Members
 
         #region Input
 
-        public void KeyDown ( KeyEventArgs e )
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp ( KeyEventArgs e )
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp ( MouseButtonEventArgs e )
+        public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown ( MouseButtonEventArgs e )
+        public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved ( MouseMoveEventArgs e )
+        public void MouseMoved(MouseMoveEventArgs e)
         {
-
         }
-        public void MousePressed ( MouseButtonEventArgs e )
+
+        public void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove ( MouseMoveEventArgs e )
+
+        public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove ( MouseWheelEventArgs e )
+        public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered ( EventArgs e )
+        public void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
+
         public void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
@@ -558,7 +556,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
         }
 
-        #endregion
+        #endregion Input
     }
 
     public struct DepartmentInfo

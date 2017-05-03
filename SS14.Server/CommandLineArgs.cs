@@ -7,7 +7,7 @@ namespace SS14.Server
 {
     class CommandLineArgs : ICommandLineArgs
     {
-        [Option("config-file", Required=false, DefaultValue="./server_config.xml", HelpText="Config file to read from.")]
+        [Option("config-file", Required=false, DefaultValue="./server_config.xml", HelpText="Config file to read from. Note that this is relative to the server binary, not the current working directory!")]
         public string ConfigFile { get; set; }
 
         [HelpOption]

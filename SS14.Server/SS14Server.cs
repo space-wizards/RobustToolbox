@@ -87,7 +87,7 @@ namespace SS14.Server
         private int lastRecievedBytes;
         private int lastSentBytes;
 
-        public SS14Server()
+        public SS14Server(ICommandLineArgs args)
         {
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
@@ -97,14 +97,14 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            IoCManager.Resolve<IServerConfigurationManager>().Initialize("./server_config.xml");
+            IoCManager.Resolve<IServerConfigurationManager>().Initialize(args.ConfigFile);
             LogManager.Initialize(IoCManager.Resolve<IServerConfigurationManager>().LogPath,
                                   IoCManager.Resolve<IServerConfigurationManager>().LogLevel);
 
             TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
         }
-        
+
         public float ServerRate // desired server frame (tick) time in milliseconds
         { get; private set; }
 
@@ -157,7 +157,7 @@ namespace SS14.Server
         #region server mainloop
 
         // The main server loop
-        public void MainLoop() 
+        public void MainLoop()
         {
             basePeriod = 1;
             period = basePeriod;
@@ -168,7 +168,7 @@ namespace SS14.Server
                                                        {
                                                        RunLoop();
                                                        }, period);
-            
+
             while (Active)
             {
                 are.WaitOne(-1);
@@ -184,7 +184,7 @@ namespace SS14.Server
 
         public void RunLoop()
         {
-            are.Set();  
+            are.Set();
         }
 
         private void DoMainLoopStuff()
@@ -192,7 +192,7 @@ namespace SS14.Server
             float elapsedTime;
             elapsedTime = (stopWatch.ElapsedTicks / (float)Stopwatch.Frequency);
             float elapsedMilliseconds = elapsedTime*1000;
-            
+
             if(elapsedMilliseconds < ServerRate && ServerRate - elapsedMilliseconds >= 0.5f)
             {
                 return;

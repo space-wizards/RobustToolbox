@@ -72,6 +72,7 @@ namespace SS14.Client.GameObjects
             var toRemove = new List<Entity>();
             foreach (var e in ContainedEntities)
             {
+                Console.WriteLine(e.Uid);
                 if(newEntities.Contains(e.Uid))
                 {
                     newEntities.Remove(e.Uid);

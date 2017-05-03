@@ -1,5 +1,6 @@
 ﻿using SFML.System;
 using SS14.Server.Interfaces.Network;
+using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -119,5 +120,11 @@ namespace SS14.Server.GameObjects
                                                      .ToString()));
             return el;
         }
+
+        protected override void ServerWarningLog(string message)
+        {
+            LogManager.Log(message, Shared.ServerEnums.LogLevel.Warning);
+        }
+
     }
 }

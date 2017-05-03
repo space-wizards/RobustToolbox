@@ -27,6 +27,11 @@
           <ObjectType>Shoes</ObjectType>
         </SpawnEquipDefinition>
       </SpawnEquipment>
+      <SpawnInventory>
+        <SpawnInventoryDefinition>
+          <ObjectType>Sword</ObjectType>
+        </SpawnInventoryDefinition>
+      </SpawnInventory>
     </JobDefinition>
 
     <JobDefinition>

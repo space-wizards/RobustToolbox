@@ -40,6 +40,12 @@ namespace SS14.Shared
     }
 
     [Serializable]
+    public struct SpawnInventoryDefinition // Created an enum just in case more paramaters needed to be added.
+    {
+        public string ObjectType { get; set; }
+    }
+
+    [Serializable]
     public class JobDefinition
     {
         public bool Available = true;
@@ -49,6 +55,7 @@ namespace SS14.Shared
         public string Name = "JOB_NULL";
         public string Department = "";
         public List<SpawnEquipDefinition> SpawnEquipment = new List<SpawnEquipDefinition>();
+        public List<SpawnInventoryDefinition> SpawnInventory = new List<SpawnInventoryDefinition>();
     }
 
     public class JobHandler
@@ -91,6 +98,7 @@ namespace SS14.Shared
             jobDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Head, ObjectType = "Atom.Item.Wearable.Head.Helmet" });
             jobDef.SpawnEquipment.Add(new SpawnEquipDefinition() { Location = EquipmentSlot.Feet, ObjectType = "Atom.Item.Wearable.Feet.Shoes" });
             jobDef.Department = "Security";
+            jobDef.SpawnInventory.Add(new SpawnInventoryDefinition() { ObjectType = "Sword" });
 
             JobSettingsTemplate.JobDefinitions = new List<JobDefinition> {jobDef};
 

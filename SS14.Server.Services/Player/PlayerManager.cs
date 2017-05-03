@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.System;
+using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObject;
 using SS14.Server.Interfaces.GOC;
@@ -11,6 +12,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -56,6 +58,13 @@ namespace SS14.Server.Services.Player
                     newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                         human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
                     human.GetComponent<IEquipmentComponent>(ComponentFamily.Equipment).RaiseEquipItem(newItem);
+                }
+
+                foreach (
+                    Entity newItem in
+                        s.assignedJob.SpawnInventory.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
+                {
+                    human.GetComponent<IInventoryComponent>(ComponentFamily.Inventory).RaiseInventoryAdd(newItem);
                 }
             }
             s.AttachToEntity(a);

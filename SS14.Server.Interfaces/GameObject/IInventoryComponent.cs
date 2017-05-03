@@ -8,5 +8,6 @@ namespace SS14.Server.Interfaces.GOC
         List<Entity> containedEntities { get; }
         int maxSlots { get; }
         bool containsEntity(Entity toSearch);
+        void RaiseInventoryAdd(Entity entity);
     }
 }

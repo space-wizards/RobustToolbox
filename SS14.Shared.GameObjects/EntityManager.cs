@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GO;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -207,7 +208,14 @@ namespace SS14.Shared.GameObjects
             {
                 foreach (Delegate handler in _eventSubscriptions[eventType])
                 {
-                    handler.DynamicInvoke(sender, args);
+                    try
+                    {
+                        handler.DynamicInvoke(sender, args);
+                    } catch (NotImplementedException e)
+                    {
+                        if (this.EngineType == EngineType.Server)
+                            ServerWarningLog("Function attempting to be invoked is not yet implemented!");
+                    }
                 }
             }
         }
@@ -389,5 +397,10 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion
+
+        protected virtual void ServerWarningLog(string msg)
+        {
+
+        }
     }
 }

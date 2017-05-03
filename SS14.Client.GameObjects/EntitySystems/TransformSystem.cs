@@ -135,7 +135,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                             Vector2f? _newPosition = calculateNewPosition(entity, newPosition, transform);
                             if (_newPosition != null)
                             {
-                                newPosition = (Vector2f) _newPosition;
+                                newPosition = _newPosition.Value;
                                 doTranslate = true;
                             }
                         }

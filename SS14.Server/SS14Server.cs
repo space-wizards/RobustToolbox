@@ -296,32 +296,43 @@ namespace SS14.Server
 
         public void Update(float frameTime)
         {
-            if (Runlevel == RunLevel.Game)
+
+            switch (Runlevel)
             {
-                EntityManager.ComponentManager.Update(frameTime);
-                EntityManager.Update(frameTime);
-                var start = stopWatch.ElapsedTicks;
-                //((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
-                var end = stopWatch.ElapsedTicks;
-                var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
-                IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-                IoCManager.Resolve<ICraftingManager>().Update();
-                GC.KeepAlive(atmosTime);
-            }
-            else if (Runlevel == RunLevel.Lobby)
-            {
-                TimeSpan countdown = _startAt.Subtract(DateTime.Now);
-                if (_lastAnnounced != countdown.Seconds)
-                {
-                    _lastAnnounced = countdown.Seconds;
-                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server,
-                                                                       "Starting in " + _lastAnnounced + " seconds...",
-                                                                       "", 0);
-                }
-                if (countdown.Seconds <= 0)
-                {
-                    StartGame();
-                }
+                case RunLevel.Game:
+
+                    EntityManager.ComponentManager.Update(frameTime);
+                    EntityManager.Update(frameTime);
+                    var start = stopWatch.ElapsedTicks;
+                    //((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
+                    var end = stopWatch.ElapsedTicks;
+                    var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
+                    IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
+                    IoCManager.Resolve<ICraftingManager>().Update();
+                    GC.KeepAlive(atmosTime);
+
+                    break;
+
+                case RunLevel.Lobby:
+
+                    TimeSpan countdown = _startAt.Subtract(DateTime.Now);
+                    if (_lastAnnounced != countdown.Seconds)
+                    {
+                        _lastAnnounced = countdown.Seconds;
+                        IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server,
+                                                                           "Starting in " + _lastAnnounced + " seconds...",
+                                                                           "", 0);
+                    }
+                    if (countdown.Seconds <= 0)
+                    {
+                        StartGame();
+                    }
+
+                    break;
+
+                default:
+                    // Unknown game state
+                    break;
             }
             LastUpdate = Time;
             SendGameStateUpdate();

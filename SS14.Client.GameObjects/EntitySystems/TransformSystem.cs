@@ -21,6 +21,37 @@ namespace SS14.Client.GameObjects.EntitySystems
             EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
         }
 
+        private Vector2f? calculateNewPosition(Entity entity, Vector2f newPosition, TransformComponent transform)
+        {
+            //Check for collision
+            var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
+            bool collided = collider.TryCollision(newPosition - transform.Position, true);
+            if (!collided)
+            {
+                return newPosition;
+            }
+
+            Vector2f newPositionX = newPosition;
+            newPositionX.X = transform.Position.X;
+            bool collidedX = collider.TryCollision(newPositionX - transform.Position, true);
+            if (!collidedX)
+            {
+                return newPositionX;
+            }
+
+            Vector2f newPositionY = newPosition;
+            newPositionY.Y = transform.Position.Y;
+            bool collidedY = collider.TryCollision(newPositionY - transform.Position, true);
+            if (!collidedY)
+            {
+                return newPositionY;
+            }
+
+            return null;
+
+
+        }
+
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
@@ -101,16 +132,12 @@ namespace SS14.Client.GameObjects.EntitySystems
                         // Check for collision so we don't get shit stuck in objects
                         if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
                         {
-                            //Check for collision
-                            var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
-                            bool collided = collider.TryCollision(newPosition - transform.Position, true);
-                            if (!collided)
-                                doTranslate = true;
-                            else
+                            Vector2f? _newPosition = calculateNewPosition(entity, newPosition, transform);
+                            if (_newPosition != null)
                             {
-                                //Debugger.Break();
+                                newPosition = _newPosition.Value;
+                                doTranslate = true;
                             }
-                                
                         }
                         else
                         {

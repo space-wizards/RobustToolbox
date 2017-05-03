@@ -54,5 +54,12 @@ _ReSharper*/
 /Resources/SpriteRenderer/Ogre.log
 /Media
 /setenv.bat
+
+# NuGet stuff.
 /.nuget
+*.nupkg
+project.lock.json
+*.nuget.props
+
 .vs/
+/packages/

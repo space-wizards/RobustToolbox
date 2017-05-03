@@ -1,27 +1,24 @@
 ﻿using SS14.Server.Services.Log;
-
 using SS14.Shared.ServerEnums;
 using System;
 using System.Reflection;
-using System.Threading;
+
 
 namespace SS14.Server
 {
     internal class EntryPoint
     {
         private SS14Server _server;
-        private Timer t;
-        private static bool fullDump = false;
 
         private static void Main(string[] args)
         {
             //Process command-line args
-            processArgs(args);
+            var parsedArgs = processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
-      
-    
+
+
             var main = new EntryPoint();
-            main._server = new SS14Server();
+            main._server = new SS14Server(parsedArgs);
             LogManager.Log("Server -> Starting");
 
             if (main._server.Start())
@@ -37,17 +34,16 @@ namespace SS14.Server
             main._server.MainLoop();
         }
 
-        private static void processArgs(string[] args)
+        private static CommandLineArgs processArgs(string[] args)
         {
-            for(var i = 0; i < args.Length;i++)
+            var options = new CommandLineArgs();
+            bool result = CommandLine.Parser.Default.ParseArguments(args, options);
+            if (!result)
             {
-                switch(args[i])
-                {
-                    case "--fulldump":
-                        fullDump = true;
-                        break;
-                }
+                Environment.Exit(0);
             }
+
+            return options;
         }
     }
 }

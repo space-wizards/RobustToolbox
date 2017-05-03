@@ -203,6 +203,9 @@
     <Compile Include="IClient.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ICommandLineArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ISS14Server.cs">
       <SubType>Code</SubType>
     </Compile>

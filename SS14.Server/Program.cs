@@ -39,7 +39,9 @@ namespace SS14.Server
             var options = new CommandLineArgs();
             bool result = CommandLine.Parser.Default.ParseArguments(args, options);
             if (!result)
+            {
                 Environment.Exit(0);
+            }
 
             return options;
         }

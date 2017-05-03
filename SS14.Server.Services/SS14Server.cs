@@ -47,7 +47,10 @@ namespace SS14.Server.Services
             instance.Restart();
         }
 
-        public void Shutdown(string reason=null) => instance.Shutdown(reason);
+        public void Shutdown(string reason=null)
+        {
+            instance.Shutdown(reason);
+        }
 
         public IMapManager GetMap()
         {

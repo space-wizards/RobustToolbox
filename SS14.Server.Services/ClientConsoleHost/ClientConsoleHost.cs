@@ -16,99 +16,109 @@ using System;
 
 namespace SS14.Server.Services.ClientConsoleHost
 {
-    class ClientConsoleHost : IClientConsoleHost
-    {
-        public void HandleRegistrationRequest(NetConnection senderConnection)
-        {
-            throw new NotImplementedException();
-        }
+	class ClientConsoleHost : IClientConsoleHost
+	{
+		public void HandleRegistrationRequest(NetConnection senderConnection)
+		{
+			// TODO, send command names, descriptions and help back to client so client-side help commands can show it.
+		}
 
-        public void ProcessCommand(string text, NetConnection sender)
-        {
-            var args = new List<string>();
+		public void ProcessCommand(string text, NetConnection sender)
+		{
+			var args = new List<string>();
 
-            CommandParsing.ParseArguments(text, args);
+			CommandParsing.ParseArguments(text, args);
 
-            string command = args[0];
+			if (args.Count == 0)
+			{
+				return;
+			}
+			string command = args[0];
 
-            Vector2f position;
-            Entity player;
+			SendConsoleReply(string.Format("Command '{0}' not recognized.", command), sender);
 
-            var playerMgr = IoCManager.Resolve<IPlayerManager>();
+			// TODO: Server side IClientCommand handling.
 
-            player = playerMgr.GetSessionByConnection(sender).attachedEntity;
+			/*
+			Vector2f position;
+			Entity player;
 
-            var map = IoCManager.Resolve<IMapManager>();
-            switch (command)
-            {
-                case "addparticles":
-                    if (args.Count >= 3)
-                    {
-                        var _serverMain = IoCManager.Resolve<ISS14Server>();
-                        Entity target = null;
-                        if (args[1].ToLowerInvariant() == "player")
-                            target = player;
-                        else
-                        {
-                            int entUid = int.Parse(args[1]);
-                            target = _serverMain.EntityManager.GetEntity(entUid);
-                        }
+			var playerMgr = IoCManager.Resolve<IPlayerManager>();
 
-                        if (target != null)
-                        {
-                            if (target.HasComponent(ComponentFamily.Particles))
-                            {
-                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-                                compo.AddParticleSystem(args[2], true);
-                            }
-                            else
-                            {
-                                var compo = (IParticleSystemComponent)_serverMain.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
-                                target.AddComponent(ComponentFamily.Particles, compo);
-                                compo.AddParticleSystem(args[2], true);
-                                //Can't find a way to add clientside compo from here.
-                            }
-                        }
-                    }
-                    break;
-                case "removeparticles":
-                    if (args.Count >= 3)
-                    {
-                        var _serverMain = IoCManager.Resolve<ISS14Server>();
-                        Entity target = null;
-                        if (args[1].ToLowerInvariant() == "player")
-                            target = player;
-                        else
-                        {
-                            int entUid = int.Parse(args[1]);
-                            target = _serverMain.EntityManager.GetEntity(entUid);
-                        }
+			player = playerMgr.GetSessionByConnection(sender).attachedEntity;
 
-                        if (target != null)
-                        {
-                            if (target.HasComponent(ComponentFamily.Particles))
-                            {
-                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-                                compo.RemoveParticleSystem(args[2]);
-                            }
-                        }
-                    }
-                    break;
+			var map = IoCManager.Resolve<IMapManager>();
+			switch (command)
+			{
+				case "addparticles":
+					if (args.Count >= 3)
+					{
+						var _serverMain = IoCManager.Resolve<ISS14Server>();
+						Entity target = null;
+						if (args[1].ToLowerInvariant() == "player")
+							target = player;
+						else
+						{
+							int entUid = int.Parse(args[1]);
+							target = _serverMain.EntityManager.GetEntity(entUid);
+						}
 
-                default:
-                    string message = "Command '" + command + "' not recognized.";
-                    SendConsoleReply(message, sender);
-                    break;
-            }
-        }
+						if (target != null)
+						{
+							if (target.HasComponent(ComponentFamily.Particles))
+							{
+								IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
+								compo.AddParticleSystem(args[2], true);
+							}
+							else
+							{
+								var compo = (IParticleSystemComponent)_serverMain.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
+								target.AddComponent(ComponentFamily.Particles, compo);
+								compo.AddParticleSystem(args[2], true);
+								//Can't find a way to add clientside compo from here.
+							}
+						}
+					}
+					break;
+				case "removeparticles":
+					if (args.Count >= 3)
+					{
+						var _serverMain = IoCManager.Resolve<ISS14Server>();
+						Entity target = null;
+						if (args[1].ToLowerInvariant() == "player")
+							target = player;
+						else
+						{
+							int entUid = int.Parse(args[1]);
+							target = _serverMain.EntityManager.GetEntity(entUid);
+						}
 
-        public void SendConsoleReply(string text, NetConnection target)
-        {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
-            NetOutgoingMessage replyMsg = netMgr.CreateMessage();
-            replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
-            replyMsg.Write(text);
-            netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
-        }
-    }
+						if (target != null)
+						{
+							if (target.HasComponent(ComponentFamily.Particles))
+							{
+								IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
+								compo.RemoveParticleSystem(args[2]);
+							}
+						}
+					}
+					break;
+
+				default:
+					string message = "Command '" + command + "' not recognized.";
+					SendConsoleReply(message, sender);
+					break;
+			}
+			*/
+		}
+
+		public void SendConsoleReply(string text, NetConnection target)
+		{
+			var netMgr = IoCManager.Resolve<ISS14NetServer>();
+			NetOutgoingMessage replyMsg = netMgr.CreateMessage();
+			replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
+			replyMsg.Write(text);
+			netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
+		}
+	}
 }

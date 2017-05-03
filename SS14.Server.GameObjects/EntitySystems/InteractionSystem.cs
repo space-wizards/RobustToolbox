@@ -112,7 +112,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         private bool DoEmptyHandToActorInteraction(Entity user, Entity obj)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         private bool DoHandsToLargeObjectInteraction(Entity user, Entity obj)

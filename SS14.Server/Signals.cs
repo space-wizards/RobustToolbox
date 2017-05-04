@@ -23,9 +23,7 @@ namespace SS14.Server
             {
                 while (true)
                 {
-                    Console.WriteLine("hrm?");
                     int index = UnixSignal.WaitAny(signals, -1);
-                    Console.WriteLine("hrm?");
                     Signum signum = signals[index].Signum;
                     switch (signum)
                     {
@@ -38,6 +36,7 @@ namespace SS14.Server
             });
 
             SignalThread.IsBackground = true;
+            SignalThread.Name = "signal handler"; 
             SignalThread.Start();
         }
     }

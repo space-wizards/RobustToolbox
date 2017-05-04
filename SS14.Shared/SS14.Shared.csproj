@@ -323,6 +323,7 @@
     <Compile Include="Utility\NetParamsPacker.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Utility\PathHelpers.cs" />
     <Compile Include="Utility\PlatformDetector.cs">
       <SubType>Code</SubType>
     </Compile>

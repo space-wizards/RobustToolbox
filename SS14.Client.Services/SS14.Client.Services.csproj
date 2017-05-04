@@ -10,7 +10,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
@@ -172,6 +171,9 @@
     <Compile Include="Configuration\PlayerConfiguration.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Console\ConsoleCommands.cs" />
+    <Compile Include="Console\HelpCommands.cs" />
+    <Compile Include="Console\QuitCommand.cs" />
     <Compile Include="GameStates\GameStateManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -484,23 +486,13 @@
     <Compile Include="Utility\RobustSortedDrawing.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="Input\KeyBindings.xsd">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>KeyBindings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <None Include="Input\KeyBindings.xsc">
-      <DependentUpon>KeyBindings.xsd</DependentUpon>
-    </None>
-    <None Include="Input\KeyBindings.xss">
-      <DependentUpon>KeyBindings.xsd</DependentUpon>
-    </None>
     <None Include="MessageLogging\messageLoggerService.config">
     </None>
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf">
     </EmbeddedResource>
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png">
     </EmbeddedResource>
+    <Compile Include="Console\ParticleCommands.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

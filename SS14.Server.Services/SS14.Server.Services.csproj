@@ -49,6 +49,7 @@
     </NoWarn>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
@@ -72,6 +73,7 @@
     </NoWarn>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp">
@@ -155,19 +157,26 @@
     <Compile Include="Chat\ChatManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Chat\Commands\ListCommands.cs" />
+    <Compile Include="Chat\Commands\Test.cs" />
     <Compile Include="ClientConsoleHost\ClientConsoleHost.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ClientConsoleHost\Commands\Atmospherics.cs" />
+    <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
+    <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Map\HardcodedTileDefinitions.cs" />
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
+    <Compile Include="ServerConsole\Commands\HelpCommand.cs" />
+    <Compile Include="ServerConsole\Commands\ListCommands.cs" />
     <Compile Include="ServerConsole\Commands\ListPlayers.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServerConsole\Commands\RestartServer.cs">
+    <Compile Include="ServerConsole\Commands\ServerManagement.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServerConsole\Commands\SaveConfig.cs">
@@ -176,6 +185,7 @@
     <Compile Include="ServerConsole\Commands\TestCommand.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServerConsole\Commands\ThrowException.cs" />
     <Compile Include="ServerConsole\ConsoleCommand.cs">
       <SubType>Code</SubType>
     </Compile>

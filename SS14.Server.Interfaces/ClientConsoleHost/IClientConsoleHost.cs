@@ -6,5 +6,6 @@ namespace SS14.Server.Interfaces.ClientConsoleHost
     {
         void ProcessCommand(string text, NetConnection sender);
         void SendConsoleReply(string text, NetConnection target);
+        void HandleRegistrationRequest(NetConnection senderConnection);
     }
 }

@@ -10,7 +10,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
@@ -110,6 +109,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ColorUtils.cs" />
+    <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs">
       <SubType>Code</SubType>
     </Compile>

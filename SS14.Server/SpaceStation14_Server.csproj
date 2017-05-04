@@ -108,6 +108,9 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Posix" Condition="'$(__MonoCS__)' == ''"/>
+    <Reference Include="CommandLine">
+      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -279,6 +282,8 @@
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
+    <Compile Include="CommandLineArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

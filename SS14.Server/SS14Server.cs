@@ -84,7 +84,7 @@ namespace SS14.Server
         private int lastRecievedBytes;
         private int lastSentBytes;
 
-        public SS14Server()
+        public SS14Server(ICommandLineArgs args)
         {
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
@@ -94,7 +94,7 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            IoCManager.Resolve<IServerConfigurationManager>().Initialize("./server_config.xml");
+            IoCManager.Resolve<IServerConfigurationManager>().Initialize(args.ConfigFile);
             LogManager.Initialize(IoCManager.Resolve<IServerConfigurationManager>().LogPath,
                                   IoCManager.Resolve<IServerConfigurationManager>().LogLevel);
 

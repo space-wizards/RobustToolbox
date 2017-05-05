@@ -112,6 +112,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         private bool DoEmptyHandToActorInteraction(Entity user, Entity obj)
         {
+            // TODO Implementation for this
             return true;
         }
 

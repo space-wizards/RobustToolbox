@@ -263,7 +263,7 @@ namespace SS14.Client.Services.State.States
         private void InitializeGUI()
         {
             //Init GUI components
-            _gameChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
+            _gameChat = new Chatbox("gamechat", new Vector2i(475, 175), ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 

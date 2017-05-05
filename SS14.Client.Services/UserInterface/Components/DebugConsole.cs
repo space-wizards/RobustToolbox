@@ -20,293 +20,271 @@ using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
-	public class DebugConsole : ScrollableContainer, IDebugConsole
-	{
-		private Textbox input;
-		private int last_y = 0;
-		private Dictionary<string, IConsoleCommand> commands = new Dictionary<string, IConsoleCommand>();
-		private bool sentCommandRequestToServer = false;
 
-		public IDictionary<string, IConsoleCommand> Commands => commands;
+    public class DebugConsole : ScrollableContainer
+    {
+        private Textbox input;
+        private int last_y = 0;
 
-		public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
-		{
-			input = new Textbox(size.X, resourceManager)
-			{
-				ClearFocusOnSubmit = false,
-				drawColor = new Color(128, 128, 128, 100),
-				textColor = new Color(255, 250, 240)
-			};
-			input.OnSubmit += input_OnSubmit;
-			this.BackgroundColor = new Color(128, 128, 128, 200);
-			this.DrawBackground = true;
-			this.DrawBorder = true;
-			// Update(0);
+        public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        {
+            input = new Textbox(size.X, resourceManager);
+            input.ClearFocusOnSubmit = false;
+            input.drawColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            input.textColor = new SFML.Graphics.Color(255, 250, 240);
+            input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
+            this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            this.DrawBackground = true;
+            this.DrawBorder = true;
+            Update(0);
+        }
 
-			InitializeCommands();
-		}
+        void input_OnSubmit(string text, Textbox sender)
+        {
+            AddLine(text, new SFML.Graphics.Color(255, 250, 240));
+            ProcessCommand(text);
+        }
 
-		private void input_OnSubmit(string text, Textbox sender)
-		{
-			AddLine("> " + text, new Color(255, 250, 240));
-			ProcessCommand(text);
-		}
+        public void AddLine(string text, SFML.Graphics.Color color)
+        {
+            bool atBottom = scrollbarV.Value >= scrollbarV.max;
+            Label newLabel = new Label(text, "MICROGBE", this._resourceManager)
+            {
+                Position = new Vector2i(5, last_y),
+                TextColor = color
+            };
+            newLabel.Update(0);
+            last_y = newLabel.ClientArea.Bottom();
+            components.Add(newLabel);
+            if (atBottom)
+            {
+                Update(0);
+                scrollbarV.Value = scrollbarV.max;
+            }
+        }
 
-		public void AddLine(string text, Color color)
-		{
-			bool atBottom = scrollbarV.Value >= scrollbarV.max;
-			Label newLabel = new Label(text, "CALIBRI", this._resourceManager)
-			{
-				Position = new Vector2i(5, last_y),
-				TextColor = color
-			};
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+            if (input != null)
+            {
+                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
+                input.Update(frameTime);
+            }
+        }
 
-			newLabel.Update(0);
-			last_y = newLabel.ClientArea.Bottom();
-			components.Add(newLabel);
-			if (atBottom)
-			{
-				Update(0);
-				scrollbarV.Value = scrollbarV.max;
-			}
-		}
+        public override void ToggleVisible()
+        {
+            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
+            base.ToggleVisible();
+            if (IsVisible())
+            {
+                // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                // uiMgr.SetFocus(input);
+                // Though TextBox does like focus for the caret and handling KeyDown.
+                input.Focus = true;
+                netMgr.MessageArrived += new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
+            }
+            else
+            {
+                // uiMgr.RemoveFocus(input);
+                input.Focus = true;
+                netMgr.MessageArrived -= new EventHandler<IncomingNetworkMessageArgs>(netMgr_MessageArrived);
+            }
+        }
 
-		public override void Update(float frameTime)
-		{
-			base.Update(frameTime);
-			if (input != null)
-			{
-				input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
-				input.Update(frameTime);
-			}
-		}
+        void netMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
+        {
+            //Make sure we reset the position - we might recieve this message after the gamestates.
+            if (e.Message.Position > 0) e.Message.Position = 0;
+            if (e.Message.MessageType == NetIncomingMessageType.Data && (NetMessage)e.Message.PeekByte() == NetMessage.ConsoleCommandReply)
+            {
+                e.Message.ReadByte();
+                AddLine("Server: " + e.Message.ReadString(), new SFML.Graphics.Color(65, 105, 225));
+            }
+            //Again, make sure we reset the position - we might get it before the gamestate and then that would break.
+            e.Message.Position = 0;
+        }
 
-		public override void ToggleVisible()
-		{
-			var netMgr = IoCManager.Resolve<INetworkManager>();
-			// var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
-			base.ToggleVisible();
-			if (IsVisible())
-			{
-				// Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-				// uiMgr.SetFocus(input);
-				// Though TextBox does like focus for the caret and passing KeyDown.
-				input.Focus = true;
-				netMgr.MessageArrived += NetMgr_MessageArrived;
-				if (netMgr.IsConnected && !sentCommandRequestToServer)
-				{
-					SendServerCommandRequest();
-				}
-			}
-			else
-			{
-				// uiMgr.RemoveFocus(input);
-				input.Focus = false;
-				netMgr.MessageArrived -= NetMgr_MessageArrived;
-			}
-		}
+        public override void Render()
+        {
+            base.Render();
+            if (input != null) input.Render();
+        }
 
-		private void NetMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
-		{
-			//Make sure we reset the position - we might recieve this message after the gamestates.
-			if (e.Message.Position > 0)
-				e.Message.Position = 0;
+        public override void Dispose()
+        {
+            base.Dispose();
+            input.Dispose();
+        }
 
-			if (e.Message.MessageType != NetIncomingMessageType.Data)
-				return;
+        public override bool MouseDown(MouseButtonEventArgs e)
+        {
+            if (!base.MouseDown(e))
+                if (input.MouseDown(e))
+                {
+                    // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                    // IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
+                    return true;
+                }
+            return false;
+        }
 
-			switch ((NetMessage)e.Message.PeekByte())
-			{
-				case NetMessage.ConsoleCommandReply:
-					e.Message.ReadByte();
-					AddLine("< " + e.Message.ReadString(), new Color(65, 105, 225));
-					break;
+        public override bool MouseUp(MouseButtonEventArgs e)
+        {
+            if (!base.MouseUp(e))
+                return input.MouseUp(e);
+            else return false;
+        }
 
-				case NetMessage.ConsoleCommandRegister:
-					e.Message.ReadByte();
-					for (ushort amount = e.Message.ReadUInt16(); amount > 0; amount--)
-					{
-						string commandName = e.Message.ReadString();
-						// Do not do duplicate commands.
-						if (commands.ContainsKey(name))
-						{
-							System.Console.WriteLine("Server sent console command {0}, but we already have one with the same name. Ignoring.", commandName);
-							break;
-						}
-						string help = e.Message.ReadString();
-						string description = e.Message.ReadString();
+        public override void MouseMove(MouseMoveEventArgs e)
+        {
+            base.MouseMove(e);
+            input.MouseMove(e);
+        }
 
-						var command = new ServerDummyCommand(name, help, description);
-						commands[commandName] = command;
-					}
-					break;
-			}
+        public override bool KeyDown(KeyEventArgs e)
+        {
+            if (!base.KeyDown(e))
+                return input.KeyDown(e);
+            else return false;
+        }
 
-			//Again, make sure we reset the position - we might get it before the gamestate and then that would break.
-			e.Message.Position = 0;
-		}
+        public override bool TextEntered(TextEventArgs e)
+        {
+            if (!base.TextEntered(e))
+                return input.TextEntered(e);
+            else return false;
+        }
 
-		public override void Render()
-		{
-			base.Render();
-			if (input != null) input.Render();
-		}
+        /// <summary>
+        /// Processes commands (chat messages starting with /)
+        /// </summary>
+        /// <param name="text">input text</param>
+        private void ProcessCommand(string text)
+        {   
+            //Commands are processed locally and then sent to the server to be processed there again.
+            var args = new List<string>();
 
-		public override void Dispose()
-		{
-			base.Dispose();
-			input.Dispose();
-		}
+            CommandParsing.ParseArguments(text, args);
 
-		public override bool MouseDown(MouseButtonEventArgs e)
-		{
-			if (!base.MouseDown(e))
-				if (input.MouseDown(e))
-				{
-					// Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-					// IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
-					return true;
-				}
-			return false;
-		}
+            string command = args[0];
 
-		public override bool MouseUp(MouseButtonEventArgs e)
-		{
-			if (!base.MouseUp(e))
-				return input.MouseUp(e);
-			else return false;
-		}
+            //Entity player;
+            //var entMgr = IoCManager.Resolve<IEntityManager>();
+            //var plrMgr = IoCManager.Resolve<IPlayerManager>();
+            //player = plrMgr.ControlledEntity;
+            //IoCManager.Resolve<INetworkManager>().
 
-		public override void MouseMove(MouseMoveEventArgs e)
-		{
-			base.MouseMove(e);
-			input.MouseMove(e);
-		}
+            switch (command)
+            {
+                case "cls":
+                    components.Clear();
+                    last_y = 0;
+                    //this.scrollbarH.Value = 0;
+                    this.scrollbarV.Value = 0;
+                    break;
+                case "quit":
+                    Environment.Exit(0);
+                    break;
+                case "addparticles": //This is only clientside.
+                    if (args.Count >= 3)
+                    {
+                        Entity target = null;
+                        if (args[1].ToLowerInvariant() == "player")
+                        {
+                            var plrMgr = IoCManager.Resolve<IPlayerManager>();
+                            if (plrMgr != null)
+                                if (plrMgr.ControlledEntity != null) target = plrMgr.ControlledEntity;
+                        }
+                        else
+                        {
+                            var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
+                            if (entMgr != null)
+                            {
+                                int entUid = int.Parse(args[1]);
+                                target = entMgr.EntityManager.GetEntity(entUid);
+                            }
+                        }
 
-		public override bool KeyDown(KeyEventArgs e)
-		{
-			if (!base.KeyDown(e))
-				return input.KeyDown(e);
-			else return false;
-		}
+                        if (target != null)
+                        {
+                            if (!target.HasComponent(ComponentFamily.Particles))
+                            {
+                                var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
+                                var compo = (IParticleSystemComponent)entMgr.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
+                                target.AddComponent(ComponentFamily.Particles, compo);
+                            }
+                            else
+                            {
+                                var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
+                                var compo = (IParticleSystemComponent)entMgr.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
+                                target.AddComponent(ComponentFamily.Particles, compo);                                
+                            }
+                        }
+                    }
+                    SendServerConsoleCommand(text); //Forward to server.
+                    break;
+                case "removeparticles":
+                    if (args.Count >= 3)
+                    {
+                        Entity target = null;
+                        if (args[1].ToLowerInvariant() == "player")
+                        {
+                            var plrMgr = IoCManager.Resolve<IPlayerManager>();
+                            if (plrMgr != null)
+                                if (plrMgr.ControlledEntity != null) target = plrMgr.ControlledEntity;
+                        }
+                        else
+                        {
+                            var entMgr = IoCManager.Resolve<IEntityManagerContainer>();
+                            if (entMgr != null)
+                            {
+                                int entUid = int.Parse(args[1]);
+                                target = entMgr.EntityManager.GetEntity(entUid);
+                            }
+                        }
 
-		public override bool TextEntered(TextEventArgs e)
-		{
-			if (!base.TextEntered(e))
-				return input.TextEntered(e);
-			else return false;
-		}
+                        if (target != null)
+                        {
+                            if (target.HasComponent(ComponentFamily.Particles))
+                            {
+                                IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
+                                compo.RemoveParticleSystem(args[2]);
+                            }
+                        }
+                    }
+                    SendServerConsoleCommand(text); //Forward to server.
+                    break;
 
-		/// <summary>
-		/// Processes commands (chat messages starting with /)
-		/// </summary>
-		/// <param name="text">input text</param>
-		private void ProcessCommand(string text)
-		{
-			//Commands are processed locally and then sent to the server to be processed there again.
-			var args = new List<string>();
+                // To debug console scrolling and stuff.
+                case "fill":
+                    SFML.Graphics.Color[] colors = { SFML.Graphics.Color.Green, SFML.Graphics.Color.Blue, SFML.Graphics.Color.Red };
+                    Random random = new Random();
+                    for (int x = 0; x < 50; x++)
+                    {
+                        AddLine("filling...", colors[random.Next(0, colors.Length)]);
+                    }
+                    break;
 
-			CommandParsing.ParseArguments(text, args);
+                default:
+                    SendServerConsoleCommand(text); //Forward to server.
+                    break;
+            }
+        }
 
-			string commandname = args[0];
+        private void SendServerConsoleCommand(string text)
+        {
+            var netMgr = IoCManager.Resolve<INetworkManager>();
+            if (netMgr != null && netMgr.IsConnected)
+            {
+                NetOutgoingMessage outMsg = netMgr.CreateMessage();
+                outMsg.Write((byte) NetMessage.ConsoleCommand);
+                outMsg.Write(text);
+                netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            }
+        }
+    }
 
-			//Entity player;
-			//var entMgr = IoCManager.Resolve<IEntityManager>();
-			//var plrMgr = IoCManager.Resolve<IPlayerManager>();
-			//player = plrMgr.ControlledEntity;
-			//IoCManager.Resolve<INetworkManager>().
-
-			bool forward = true;
-			if (commands.ContainsKey(commandname))
-			{
-				IConsoleCommand command = commands[commandname];
-				args.RemoveAt(0);
-				forward = command.Execute(this, args.ToArray());
-			}
-			else if (!IoCManager.Resolve<INetworkManager>().IsConnected)
-			{
-				AddLine("Unknown command: " + commandname, Color.Red);
-				return;
-			}
-
-			if (forward)
-			{
-				SendServerConsoleCommand(text);
-			}
-		}
-
-		private void InitializeCommands()
-		{
-			foreach (Type t in Assembly.GetCallingAssembly().GetTypes())
-			{
-				if (!typeof(IConsoleCommand).IsAssignableFrom(t) || t == typeof(ServerDummyCommand))
-					continue;
-
-				var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
-				if (commands.ContainsKey(instance.Command))
-					throw new Exception(string.Format("Command already registered: {}", instance.Command));
-
-				commands[instance.Command] = instance;
-			}
-		}
-
-		private void SendServerConsoleCommand(string text)
-		{
-			var netMgr = IoCManager.Resolve<INetworkManager>();
-			if (netMgr != null && netMgr.IsConnected)
-			{
-				NetOutgoingMessage outMsg = netMgr.CreateMessage();
-				outMsg.Write((byte)NetMessage.ConsoleCommand);
-				outMsg.Write(text);
-				netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-			}
-		}
-
-		private void SendServerCommandRequest()
-		{
-			var netMgr = IoCManager.Resolve<INetworkManager>();
-			if (!netMgr.IsConnected)
-				return;
-
-			NetOutgoingMessage outMsg = netMgr.CreateMessage();
-			outMsg.Write((byte)NetMessage.ConsoleCommandRegister);
-			netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-			sentCommandRequestToServer = true;
-		}
-
-		public void Clear()
-		{
-			components.Clear();
-			last_y = 0;
-			//this.scrollbarH.Value = 0;
-			scrollbarV.Value = 0;
-		}
-	}
-
-	/// <summary>
-	/// These dummies are made purely so list and help can list server-side commands.
-	/// </summary>
-	class ServerDummyCommand : IConsoleCommand
-	{
-		readonly string command;
-		readonly string help;
-		readonly string description;
-
-		public string Command => command;
-		public string Help => help;
-		public string Description => description;
-
-		internal ServerDummyCommand(string command, string help, string description)
-		{
-			this.command = command;
-			this.help = help;
-			this.description = description;
-		}
-
-		// Always forward to server.
-		public bool Execute(IDebugConsole console, params string[] args)
-		{
-			return true;
-		}
-	}
 }

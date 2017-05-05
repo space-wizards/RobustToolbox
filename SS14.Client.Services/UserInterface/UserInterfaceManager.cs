@@ -30,6 +30,7 @@ namespace SS14.Client.Services.UserInterface
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
         private readonly List<IGuiComponent> _components;
+
         private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
@@ -52,7 +53,7 @@ namespace SS14.Client.Services.UserInterface
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
             _config = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Screen.Size.X, 400), resourceManager);
+            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), resourceManager);
             _console.SetVisible(false);
         }
 
@@ -123,7 +124,7 @@ namespace SS14.Client.Services.UserInterface
         public void DisposeAllComponents<T>()
         {
             List<IGuiComponent> componentsOfType = (from IGuiComponent component in _components
-                                                    where component.GetType() == typeof (T)
+                                                    where component.GetType() == typeof(T)
                                                     select component).ToList();
 
             foreach (IGuiComponent current in componentsOfType)
@@ -161,12 +162,13 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var uiMsg = (UiManagerMessage) msg.ReadByte();
+            var uiMsg = (UiManagerMessage)msg.ReadByte();
             switch (uiMsg)
             {
                 case UiManagerMessage.ComponentMessage:
                     HandleComponentMessage(msg);
                     break;
+
                 case UiManagerMessage.CreateUiElement:
                     HandleElementCreation(msg);
                     break;
@@ -182,15 +184,10 @@ namespace SS14.Client.Services.UserInterface
         {
             if (_currentFocus != null)
             {
-                _currentFocus.Focus = false;
-                _currentFocus = newFocus;
-                newFocus.Focus = true;
+                RemoveFocus();
             }
-            else
-            {
-                _currentFocus = newFocus;
-                newFocus.Focus = true;
-            }
+            _currentFocus = newFocus;
+            newFocus.Focus = true;
         }
 
         /// <summary>
@@ -198,7 +195,22 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void RemoveFocus()
         {
-            if (_currentFocus == null) return;
+            if (_currentFocus == null)
+                return;
+
+            _currentFocus.Focus = false;
+            _currentFocus = null;
+        }
+
+        /// <summary>
+        ///  Removes focus for given control if control has focus.
+        /// </summary>
+        public void RemoveFocus(IGuiComponent remFocus)
+        {
+            if (_currentFocus != remFocus)
+                return;
+
+            _currentFocus.Focus = false;
             _currentFocus = null;
         }
 
@@ -210,7 +222,7 @@ namespace SS14.Client.Services.UserInterface
             }
         }
 
-        #endregion
+        #endregion IUserInterfaceManager Members
 
         #region Input
 
@@ -400,7 +412,8 @@ namespace SS14.Client.Services.UserInterface
 
             return inputList.Any(current => current.TextEntered(e));
         }
-        #endregion
+
+        #endregion Input
 
         #region Component retrieval
 
@@ -444,14 +457,14 @@ namespace SS14.Client.Services.UserInterface
                    select comp;
         }
 
-        #endregion
+        #endregion Component retrieval
 
         /// <summary>
         ///  Handles creation of ui elements over network.
         /// </summary>
         public void HandleElementCreation(NetIncomingMessage msg) //I've opted for hardcoding these in for the moment.
         {
-            var uiType = (CreateUiType) msg.ReadByte();
+            var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
                 case CreateUiType.HealthScannerWindow:
@@ -471,19 +484,10 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void HandleComponentMessage(NetIncomingMessage msg)
         {
-            var component = (GuiComponentType) msg.ReadByte();
+            var component = (GuiComponentType)msg.ReadByte();
             IEnumerable<IGuiComponent> targetComponents = GetComponentsByGuiComponentType(component);
             foreach (IGuiComponent current in targetComponents)
                 current.HandleNetworkMessage(msg);
-        }
-
-        /// <summary>
-        ///  Removes focus for given control if control has focus.
-        /// </summary>
-        public void RemoveFocus(IGuiComponent remFocus)
-        {
-            if (_currentFocus != remFocus) return;
-            _currentFocus = null;
         }
 
         #region Update & Render
@@ -495,7 +499,7 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void Update(float frameTime)
         {
-            if(_console.IsVisible()) _console.Update(frameTime);
+            if (_console.IsVisible()) _console.Update(frameTime);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = (MousePos - dragOffset);
@@ -528,7 +532,8 @@ namespace SS14.Client.Services.UserInterface
                     CluwneLib.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
                                             component.ClientArea.Height, Color.LightGreen);
                    CluwneLib.Screen.BlendingMode = BlendingModes.None;
-                */}
+                */
+                }
             }
 
             if (_console.IsVisible()) _console.Render();
@@ -551,6 +556,6 @@ namespace SS14.Client.Services.UserInterface
             }
         }
 
-        #endregion
+        #endregion Update & Render
     }
-} 
+}

@@ -24,6 +24,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         int ZDepth { get; set; }
 
+        string name { get; }
+
         void Update(float frameTime);
         void Render();
         void Resize();

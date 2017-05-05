@@ -15,6 +15,8 @@ namespace SS14.Client.Services.UserInterface.Components
         private bool _recieveInput = true;
         private bool _visible = true;
 
+        public string name { get; protected set; }
+
         #region IGuiComponent Members
 
         public GuiComponentType ComponentClass { get; protected set; }
@@ -29,7 +31,7 @@ namespace SS14.Client.Services.UserInterface.Components
             set { _recieveInput = value; }
         }
 
-        public bool Focus { get; set; }
+        public virtual bool Focus { get; set; }
 
         public virtual void ComponentUpdate(params object[] args)
         {
@@ -102,6 +104,6 @@ namespace SS14.Client.Services.UserInterface.Components
             return false;
         }
 
-        #endregion
+        #endregion IGuiComponent Members
     }
 }

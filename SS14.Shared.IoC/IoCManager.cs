@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -16,38 +17,42 @@ namespace SS14.Shared.IoC
             ServiceTypes = new List<Type>();
 
             string AssemblyName = Assembly.GetEntryAssembly().GetName().Name;
+            string AssembleCodeBase = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+            string AssemblyLocation = Path.GetDirectoryName(AssembleCodeBase);
+            List<string> Assemblies = new List<string>();
 
             switch (AssemblyName)
             {
                 case "SS14.UnitTesting":
-                    {
-                        ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Client.Services.dll").GetTypes());
-                        ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Server.Services.dll").GetTypes());
-                        break;
-                    }
+                    Assemblies.Add("SS14.Server.Services.dll");
+                    Assemblies.Add("SS14.Client.Services.dll");
+                    break;
+
                 case "SpaceStation14":
-                    {
-                        ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Client.Services.dll").GetTypes());
-                        break;
-                    }
+                    Assemblies.Add("SS14.Client.Services.dll");
+                    break;
+
                 case "SpaceStation14_Server":
-                    {
-                        ServiceTypes.AddRange(Assembly.LoadFrom("SS14.Server.Services.dll").GetTypes());
-                        break;
-                    }
-            }                 
-        
+                    Assemblies.Add("SS14.Server.Services.dll");
+                    break;
+            }
+
+            foreach (string assembly in Assemblies)
+            {
+                string path = Path.Combine(AssemblyLocation, assembly);
+                ServiceTypes.AddRange(Assembly.LoadFrom(path).GetTypes());
+            }
         }
 
         public static T Resolve<T>()
         {
-            Type type = typeof (T);
-            if (!Services.ContainsKey(typeof (T)))
+            Type type = typeof(T);
+            if (!Services.ContainsKey(typeof(T)))
             {
                 BuildType(type);
             }
 
-            return (T) Services[typeof (T)];
+            return (T)Services[typeof(T)];
         }
 
         private static void BuildType(Type type)

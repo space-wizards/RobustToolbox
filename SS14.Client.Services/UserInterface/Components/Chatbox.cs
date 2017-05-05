@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
+
     public class Chatbox : ScrollableContainer
     {
         #region Delegates
@@ -145,10 +146,15 @@ namespace SS14.Client.Services.UserInterface.Components
                 if (!stringChunks.Any()) break;
 
                 if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
+
+	
+				/*
+                while (_inputHistory.Count() > MaxHistory)
+
                 {
-                    lineList[i] += stringChunks.First() + " ";
-                    stringChunks.RemoveAt(0);
+                    _inputHistory.RemoveAt(MaxHistory);
                 }
+
                 else if ((i == 0 && totalChunks == stringChunks.Count()) ||
                          (lineList[i] == " " &&
                           input.Label.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength) ||
@@ -343,5 +349,5 @@ namespace SS14.Client.Services.UserInterface.Components
             base.Render();
             input.Render();
         }
-    }
+
 }

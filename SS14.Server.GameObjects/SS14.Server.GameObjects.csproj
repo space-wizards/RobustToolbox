@@ -14,7 +14,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
@@ -75,9 +74,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="KopiLua">
-      <HintPath>..\Third-Party\KopiLua.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
       <Private>False</Private>
@@ -86,9 +82,6 @@
       <Name>NetSerializer</Name>
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
       <Private>False</Private>
-    </Reference>
-    <Reference Include="NLua">
-      <HintPath>..\Third-Party\NLua.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -208,7 +201,6 @@
     <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\Script\Script.cs" />
     <Compile Include="Component\StatusEffects\StatusEffectComp.cs">
       <SubType>Code</SubType>
     </Compile>

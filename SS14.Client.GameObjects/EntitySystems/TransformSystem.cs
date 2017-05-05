@@ -31,11 +31,18 @@ namespace SS14.Client.GameObjects.EntitySystems
                 return newPosition;
             }
 
+            // When modifying the movement diagonally we need to scale it down
+            // as the magnitude is too high for cardinal movements
+            float diagonalMovementScale = 0.75f;
+
             Vector2f newPositionX = newPosition;
             newPositionX.X = transform.Position.X;
             bool collidedX = collider.TryCollision(newPositionX - transform.Position, true);
             if (!collidedX)
             {
+                // Add back the lost speed from colliding with the wall
+                // but because we was moving diagonally we need to scale it down
+                newPositionX.Y += (newPositionX.Y - transform.Position.Y) * diagonalMovementScale;
                 return newPositionX;
             }
 
@@ -44,12 +51,13 @@ namespace SS14.Client.GameObjects.EntitySystems
             bool collidedY = collider.TryCollision(newPositionY - transform.Position, true);
             if (!collidedY)
             {
+                // Add back the lost speed from colliding with the wall
+                // but because we was moving diagonally we need to scale it down
+                newPositionY.X += (newPositionY.X - transform.Position.X) * diagonalMovementScale;
                 return newPositionY;
             }
 
             return null;
-
-
         }
 
         public override void Update(float frametime)

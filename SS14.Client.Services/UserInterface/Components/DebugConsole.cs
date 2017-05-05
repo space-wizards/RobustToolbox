@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces.Console;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -14,9 +15,12 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using SFML.Graphics;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
+
     public class DebugConsole : ScrollableContainer
     {
         private Textbox input;
@@ -282,4 +286,5 @@ namespace SS14.Client.Services.UserInterface.Components
             }
         }
     }
+
 }

@@ -38,7 +38,8 @@
         StateAck,
         FullState,
         ConsoleCommand,
-        ConsoleCommandReply
+        ConsoleCommandReply,
+        ConsoleCommandRegister
     }
 
     public enum ItemMessage
@@ -148,7 +149,7 @@
         West,
         NorthWest
     }
-    
+
     [System.Flags]
     public enum DirectionFlags
     {

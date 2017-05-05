@@ -14,7 +14,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
@@ -137,12 +136,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chat\IChatCommand.cs" />
     <Compile Include="Chat\IChatManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ClientConsoleHost\IClientCommand.cs" />
     <Compile Include="ClientConsoleHost\IClientConsoleHost.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServerConsole\IConsoleCommand.cs" />
     <Compile Include="Configuration\IServerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -245,6 +247,10 @@
     <Compile Include="Serialization\ISS14Serializer.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands\" />
+    <Folder Include="NewFolder1\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

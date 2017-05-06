@@ -12,113 +12,87 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
+using System.Reflection;
 using System;
 
 namespace SS14.Server.Services.ClientConsoleHost
 {
-	class ClientConsoleHost : IClientConsoleHost
-	{
-		public void HandleRegistrationRequest(NetConnection senderConnection)
-		{
-			// TODO, send command names, descriptions and help back to client so client-side help commands can show it.
-		}
+    class ClientConsoleHost : IClientConsoleHost
+    {
+        private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
+        public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
 
-		public void ProcessCommand(string text, NetConnection sender)
-		{
-			var args = new List<string>();
+        public void HandleRegistrationRequest(NetConnection senderConnection)
+        {
+            var netMgr = IoCManager.Resolve<ISS14NetServer>();
+            var message = netMgr.CreateMessage();
+            message.Write((byte)NetMessage.ConsoleCommandRegister);
+            message.Write((UInt16) AvailableCommands.Count);
+            foreach (var command in AvailableCommands.Values)
+            {
+                message.Write(command.Command);
+                message.Write(command.Description);
+                message.Write(command.Help);
+            }
 
-			CommandParsing.ParseArguments(text, args);
+            netMgr.SendMessage(message, senderConnection);
+        }
 
-			if (args.Count == 0)
-			{
-				return;
-			}
-			string command = args[0];
+        public ClientConsoleHost()
+        {
+            foreach(Type type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (!typeof(IClientCommand).IsAssignableFrom(type))
+                {
+                    continue;
+                }
 
-			SendConsoleReply(string.Format("Command '{0}' not recognized.", command), sender);
+                var instance = Activator.CreateInstance(type, null) as IClientCommand;
+                if (AvailableCommands.ContainsKey(instance.Command))
+                {
+                    throw new Exception("Command name already registered: " + instance.Command);
+                }
 
-			// TODO: Server side IClientCommand handling.
+                AvailableCommands[instance.Command] = instance;
+            }
+        }
 
-			/*
-			Vector2f position;
-			Entity player;
+        public void ProcessCommand(string text, NetConnection sender)
+        {
+            var args = new List<string>();
 
-			var playerMgr = IoCManager.Resolve<IPlayerManager>();
+            CommandParsing.ParseArguments(text, args);
 
-			player = playerMgr.GetSessionByConnection(sender).attachedEntity;
+            if (args.Count == 0)
+            {
+                return;
+            }
+            string cmd = args[0];
 
-			var map = IoCManager.Resolve<IMapManager>();
-			switch (command)
-			{
-				case "addparticles":
-					if (args.Count >= 3)
-					{
-						var _serverMain = IoCManager.Resolve<ISS14Server>();
-						Entity target = null;
-						if (args[1].ToLowerInvariant() == "player")
-							target = player;
-						else
-						{
-							int entUid = int.Parse(args[1]);
-							target = _serverMain.EntityManager.GetEntity(entUid);
-						}
+            try
+            {
+                IClientCommand command = AvailableCommands[cmd];
+                args.RemoveAt(0);
+                var client = IoCManager.Resolve<ISS14Server>().GetClient(sender);
+                command.Execute(this, client, args.ToArray());
+            }
+            catch (KeyNotFoundException)
+            {
+                SendConsoleReply(string.Format("Unknown command: '{0}'", cmd), sender);
+            }
+            catch (Exception e)
+            {
+                SendConsoleReply(string.Format("There was an error while executing the command: {0}", e.Message), sender);
+            }
+        }
 
-						if (target != null)
-						{
-							if (target.HasComponent(ComponentFamily.Particles))
-							{
-								IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-								compo.AddParticleSystem(args[2], true);
-							}
-							else
-							{
-								var compo = (IParticleSystemComponent)_serverMain.EntityManager.ComponentFactory.GetComponent("ParticleSystemComponent");
-								target.AddComponent(ComponentFamily.Particles, compo);
-								compo.AddParticleSystem(args[2], true);
-								//Can't find a way to add clientside compo from here.
-							}
-						}
-					}
-					break;
-				case "removeparticles":
-					if (args.Count >= 3)
-					{
-						var _serverMain = IoCManager.Resolve<ISS14Server>();
-						Entity target = null;
-						if (args[1].ToLowerInvariant() == "player")
-							target = player;
-						else
-						{
-							int entUid = int.Parse(args[1]);
-							target = _serverMain.EntityManager.GetEntity(entUid);
-						}
-
-						if (target != null)
-						{
-							if (target.HasComponent(ComponentFamily.Particles))
-							{
-								IParticleSystemComponent compo = (IParticleSystemComponent)target.GetComponent(ComponentFamily.Particles);
-								compo.RemoveParticleSystem(args[2]);
-							}
-						}
-					}
-					break;
-
-				default:
-					string message = "Command '" + command + "' not recognized.";
-					SendConsoleReply(message, sender);
-					break;
-			}
-			*/
-		}
-
-		public void SendConsoleReply(string text, NetConnection target)
-		{
-			var netMgr = IoCManager.Resolve<ISS14NetServer>();
-			NetOutgoingMessage replyMsg = netMgr.CreateMessage();
-			replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
-			replyMsg.Write(text);
-			netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
-		}
-	}
+        public void SendConsoleReply(string text, NetConnection target)
+        {
+            var netMgr = IoCManager.Resolve<ISS14NetServer>();
+            NetOutgoingMessage replyMsg = netMgr.CreateMessage();
+            replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
+            replyMsg.Write(text);
+            netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
+        }
+    }
 }

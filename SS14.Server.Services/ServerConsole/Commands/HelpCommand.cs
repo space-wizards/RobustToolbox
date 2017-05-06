@@ -1,18 +1,17 @@
 ﻿using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
-using SS14.Shared.Command;
 using System;
 using System.Collections.Generic;
 
 namespace SS14.Server.Services.ServerConsole.Commands
 {
-    public class HelpCommand : ConsoleCommand
+    public class HelpCommand : IConsoleCommand
     {
-        public override string Command => "help";
-        public override string Description => "Show general or command specific help text.";
-        public override string Help => "help [command]\nIf command is not given, display general purpose help. If it is, print the help text for the specified command.";
+        public string Command => "help";
+        public string Description => "Show general or command specific help text.";
+        public string Help => "help [command]\nIf command is not given, display general purpose help. If it is, print the help text for the specified command.";
 
-        public override void Execute(params string[] args)
+        public void Execute(params string[] args)
         {
             switch (args.Length)
             {
@@ -37,7 +36,7 @@ namespace SS14.Server.Services.ServerConsole.Commands
                         Console.ResetColor();
                         return;
                     }
-                    ICommand command = commands[commandName];
+                    var command = commands[commandName];
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.Write(commandName);
                     Console.ForegroundColor = ConsoleColor.Yellow;

@@ -33,9 +33,14 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
-        private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>(); 
+        private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>();
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
-       
+
+        private readonly Dictionary<Texture, string> _textureToKey = new Dictionary<Texture, string>();
+        public Dictionary<Texture, string> textureToKey
+        {
+            get { return _textureToKey; }
+        }
 
         public int done = 0;
 
@@ -263,8 +268,8 @@ namespace SS14.Client.Services.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
-            if (TextureCache.Textures.Contains(ResourceName))
-                return TextureCache.Textures[ResourceName];
+            if (TextureCache.Textures.ContainsKey(ResourceName))
+                return TextureCache.Textures[ResourceName].Item1;
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -276,8 +281,28 @@ namespace SS14.Client.Services.Resources
                 StreamUtils.Copy(zipStream, memStream, byteBuffer);
                 memStream.Position = 0;
 
+                Image img = new Image(memStream);
+                bool[] clickthrough = new bool[img.Size.X * img.Size.Y];
+                int pos = 0; //easier than to calculate the position every time down in the loops
+                for(int y = 0; y < img.Size.Y; y++)
+                {
+                    for(int x = 0; x < img.Size.X; x++)
+                    {
+                        Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
+                        if(pColor.A > Limits.ClickthroughLimit)
+                        {
+                            clickthrough[pos] = true;
+                        }
+                        else
+                        {
+                            clickthrough[pos] = false;
+                        }
+                    }
+                }
+
                 Texture loadedImg = new Texture(memStream);
-                TextureCache.Add(ResourceName, loadedImg);
+                TextureCache.Add(ResourceName, loadedImg, clickthrough);
+                _textureToKey.Add(loadedImg, ResourceName);
 
                 memStream.Close();
                 zipStream.Close();
@@ -478,10 +503,10 @@ namespace SS14.Client.Services.Resources
 
                 string imageName = splitResourceName[0].ToLowerInvariant();
 
-                if (!TextureCache.Textures.Contains(splitResourceName[0]))
+                if (!TextureCache.Textures.ContainsKey(imageName))
                     continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-                Texture atlasTex = TextureCache.Textures[splitResourceName[0]];
+                Texture atlasTex = TextureCache.Textures[imageName].Item1;
                 //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();

@@ -2,11 +2,17 @@
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
+using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.Resource
 {
     public interface IResourceManager
     {
+        Dictionary<Texture, string> textureToKey
+        {
+            get;
+        }
+
         void LoadResourceZip(string path = null, string pw = null);
         void ClearLists();
         Sprite GetSpriteFromImage(string key);

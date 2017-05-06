@@ -89,9 +89,16 @@ async def main():
                         dest="force_animations",
                         action="store_true",
                         help=argparse.SUPPRESS)
-    
+
+    parser.add_argument("--to-stderr",
+                        dest="stderr",
+                        action="store_true",
+                        help="Redirect all output to stderr.")
 
     args = parser.parse_args()
+
+    if args.stderr:
+        sys.stdout = sys.stderr
 
     animations = args.animations
     atlas = args.atlas
@@ -104,7 +111,7 @@ async def main():
             print(Fore.YELLOW + "WARNING: animations generation will be disabled because you are not on Windows.")
             print("  Pass --no-animations to surpress this warning." + Style.RESET_ALL)
             animations = False
-        
+
         # Maybe softcode this to allow using .NET core?
         atlas_command.insert(0, "mono")
 
@@ -113,7 +120,7 @@ async def main():
         outfile = outfile.with_suffix(".tmp")
 
     zip_target = zipfile.ZipFile(str(outfile), "w", zipfile.ZIP_DEFLATED, allowZip64=False)
-    
+
     if atlas:
         atlas_dir = tempfile.TemporaryDirectory()
         atlas_dir.path = Path(atlas_dir.name)
@@ -191,7 +198,7 @@ async def build_animations(path: Path, atlas_args: typing.Dict[str, typing.Any])
         print(Fore.CYAN + "Deleting previous output from the animation renderer..." + Style.RESET_ALL)
         def handle_errors(function, path, excinfo):
             print(Fore.RED + "  ERROR: failed to remove {0}: {1}".format(path, excinfo[1].strerror) + Style.RESET_ALL)
-        
+
         shutil.rmtree(str(outdir), onerror=handle_errors)
 
     outdir.mkdir()

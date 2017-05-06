@@ -78,6 +78,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
@@ -119,9 +123,6 @@
     </Reference>
     <Reference Include="System.Xml.Linq">
       <Name>System.Xml.Linq</Name>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -485,6 +486,7 @@
     <Compile Include="Utility\RobustSortedDrawing.cs">
       <SubType>Code</SubType>
     </Compile>
+    <None Include="app.config" />
     <None Include="MessageLogging\messageLoggerService.config">
     </None>
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf">

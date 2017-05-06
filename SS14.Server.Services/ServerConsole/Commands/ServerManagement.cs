@@ -1,29 +1,30 @@
 ﻿using SS14.Server.Interfaces;
+using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Server.Services.ServerConsole.Commands
 {
-    public class RestartServer : ConsoleCommand
+    public class RestartServer : IConsoleCommand
     {
-        public override string Command => "restartserver";
-        public override string Description => "Restarts the server";
-        public override string Help => "Restarts the server.";
+        public string Command => "restartserver";
+        public string Description => "Restarts the server";
+        public string Help => "Restarts the server.";
 
-        public override void Execute(params string[] args)
+        public void Execute(params string[] args)
         {
             IoCManager.Resolve<ISS14Server>().Restart();
         }
     }
 
     // Crashes for some reason.
-    public class StopServer : ConsoleCommand
+    public class StopServer : IConsoleCommand
     {
-        public override string Command => "stop";
-        public override string Description => "Stops the server";
-        public override string Help => "Stops the server brutally without telling clients.";
+        public string Command => "stop";
+        public string Description => "Stops the server";
+        public string Help => "Stops the server brutally without telling clients.";
 
-        public override void Execute(params string[] args)
+        public  void Execute(params string[] args)
         {
             Environment.Exit(0);
         }

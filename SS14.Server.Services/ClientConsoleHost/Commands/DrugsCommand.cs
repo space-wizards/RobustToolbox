@@ -11,7 +11,7 @@ using SS14.Shared;
 
 namespace SS14.Server.Services.ClientConsoleHost.Commands
 {
-    class DrugsCommand : IClientCommand
+    public class DrugsCommand : IClientCommand
     {
         public string Command => "everyoneondrugs";
         public string Description => "Fuck no idea what this does honestly.";

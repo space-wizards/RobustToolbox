@@ -186,9 +186,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServerConsole\Commands\ThrowException.cs" />
-    <Compile Include="ServerConsole\ConsoleCommand.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ServerConsole\ConsoleManager.cs">
       <SubType>Code</SubType>
     </Compile>

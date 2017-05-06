@@ -1,8 +1,12 @@
-# Space Station 14 #
+# Space Station 14 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/q8yqg9j9spq5s9j4?svg=true)](https://ci.appveyor.com/project/PJB3005/space-station-14-xeyy5) [![](https://travis-ci.org/space-wizards/space-station-14.svg?branch=master)](https://travis-ci.org/space-wizards/space-station-14) #
 
 Space Station 14 is a renewed attempt at an SS13 remake.
 
 The original sprites for the game, created by Adam Riches, have been withheld for use in a future project at his discretion. The original sprites have been replaced with placeholder images.
+
+## GETTING IN TOUCH ##
+
+We have an IRC channel at `irc.rizon.net#spacebus`. It is set up to relay to a Discord server too. We might change Discord server so ask for a link in IRC.
 
 ## ATTRIBUTION ##
 
@@ -17,7 +21,7 @@ The original sprites for the game, created by Adam Riches, have been withheld fo
 
 ## COPYRIGHT ##
 
-The Authors retain all copyright to their respective work here submitted.  
+The Authors retain all copyright to their respective work here submitted.
 
 ## LICENSE ##
 

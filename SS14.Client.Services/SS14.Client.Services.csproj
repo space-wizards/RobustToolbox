@@ -78,10 +78,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <Name>ICSharpCode.SharpZipLib</Name>
-      <HintPath>..\Third-Party\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
@@ -123,6 +119,9 @@
     </Reference>
     <Reference Include="System.Xml.Linq">
       <Name>System.Xml.Linq</Name>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -493,6 +492,7 @@
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png">
     </EmbeddedResource>
     <Compile Include="Console\ParticleCommands.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

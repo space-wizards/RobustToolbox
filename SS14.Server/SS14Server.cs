@@ -72,10 +72,7 @@ namespace SS14.Server
             }
         }
 
-        public bool Active
-        {
-            get { return _active; }
-        }
+        public bool Active => _active;
 
         #region Server Settings
 
@@ -136,6 +133,15 @@ namespace SS14.Server
             StartLobby();
         }
 
+        public void Shutdown(string reason=null)
+        {
+            if (reason == null)
+                LogManager.Log("Shutting down...");
+            else
+                LogManager.Log(string.Format("{0}, shutting down...", reason));
+            _active = false;
+        }
+
         public IClient GetClient(NetConnection clientConnection)
         {
             return ClientList[clientConnection];
@@ -183,6 +189,9 @@ namespace SS14.Server
 
                 DoMainLoopStuff();
             }
+
+            Cleanup();
+
             /*   TimerCallback tcb = RunLoop;
             var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
@@ -233,6 +242,11 @@ namespace SS14.Server
             Update(elapsedTime);
 
             IoCManager.Resolve<IConsoleManager>().Update();
+        }
+
+        private void Cleanup()
+        {
+            Console.Title = "";
         }
 
         private string UpdateBPS()

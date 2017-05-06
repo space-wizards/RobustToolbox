@@ -107,6 +107,7 @@
       <Name>System.Xml.Linq</Name>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Mono.Posix" Condition="'$(__MonoCS__)' == ''"/>
     <Reference Include="CommandLine">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
@@ -172,6 +173,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SS14Server.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Signals.cs" Condition="'$(__MonoCS__)' == ''">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Timing\MainLoopTimer.cs">

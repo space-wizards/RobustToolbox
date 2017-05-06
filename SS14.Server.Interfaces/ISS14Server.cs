@@ -15,6 +15,7 @@ namespace SS14.Server.Interfaces
         void SaveMap();
         void SaveEntities();
         void Restart();
+        void Shutdown(string reason=null);
         IMapManager GetMap();
     }
 }

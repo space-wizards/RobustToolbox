@@ -14,7 +14,6 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
@@ -160,6 +159,8 @@
     <Compile Include="Configuration\IPlayerConfigurationManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Console\IConsoleCommand.cs" />
+    <Compile Include="Console\IDebugConsole.cs" />
     <Compile Include="GameStates\IGameStateManager.cs">
       <SubType>Code</SubType>
     </Compile>

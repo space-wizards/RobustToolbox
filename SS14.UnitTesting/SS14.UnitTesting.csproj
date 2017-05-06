@@ -161,6 +161,7 @@
     <Content Include="CSFML\csfml-window-2.dll" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>

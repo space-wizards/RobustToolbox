@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !HEADLESS
+using NUnit.Framework;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
 {
@@ -12,3 +13,4 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
         }
     }
 }
+#endif

@@ -15,32 +15,13 @@ namespace SS14.Shared.IoC
         static IoCManager()
         {
             ServiceTypes = new List<Type>();
+        }
 
-            string AssemblyName = Assembly.GetEntryAssembly().GetName().Name;
-            string AssembleCodeBase = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-            string AssemblyLocation = Path.GetDirectoryName(AssembleCodeBase);
-            List<string> Assemblies = new List<string>();
-
-            switch (AssemblyName)
+        public static void AddAssemblies(IEnumerable<Assembly> assemblies)
+        {
+            foreach (var assembly in assemblies)
             {
-                case "SS14.UnitTesting":
-                    Assemblies.Add("SS14.Server.Services.dll");
-                    Assemblies.Add("SS14.Client.Services.dll");
-                    break;
-
-                case "SpaceStation14":
-                    Assemblies.Add("SS14.Client.Services.dll");
-                    break;
-
-                case "SpaceStation14_Server":
-                    Assemblies.Add("SS14.Server.Services.dll");
-                    break;
-            }
-
-            foreach (string assembly in Assemblies)
-            {
-                string path = Path.Combine(AssemblyLocation, assembly);
-                ServiceTypes.AddRange(Assembly.LoadFrom(path).GetTypes());
+                ServiceTypes.AddRange(assembly.GetTypes());
             }
         }
 

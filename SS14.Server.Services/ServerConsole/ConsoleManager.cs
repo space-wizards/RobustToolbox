@@ -201,15 +201,15 @@ namespace SS14.Server.Services.ServerConsole
             var CommandTypes = new List<Type>();
             CommandTypes.AddRange(
                 Assembly.GetCallingAssembly().GetTypes()
-                    .Where(t => typeof(ConsoleCommand).IsAssignableFrom(t) && t != typeof(ConsoleCommand)));
+                    .Where(t => typeof(IConsoleCommand).IsAssignableFrom(t) && t != typeof(IConsoleCommand)));
             foreach (Type t in CommandTypes)
             {
-                var instance = Activator.CreateInstance(t, null) as ConsoleCommand;
+                var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
                 RegisterCommand(instance);
             }
         }
 
-        private void RegisterCommand(ConsoleCommand commandObj)
+        private void RegisterCommand(IConsoleCommand commandObj)
         {
             if (!AvailableCommands.ContainsKey(commandObj.Command.ToLower()))
                 AvailableCommands.Add(commandObj.Command.ToLower(), commandObj);

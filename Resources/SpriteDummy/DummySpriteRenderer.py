@@ -15,3 +15,7 @@ if not os.path.exists("output"):
     os.mkdir("output")
 
 image.save(os.path.join("output", "test.png"))
+
+with open(os.path.join("output", "test.xml"), "w"):
+    # Create empty file.
+    pass

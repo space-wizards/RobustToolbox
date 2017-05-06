@@ -2,3 +2,6 @@ version: '0.1.0.{build}'
 image: Visual Studio 2017
 build:
     project: SpaceStation14.sln
+
+before_build:
+- cmd: nuget restore SpaceStation14.sln

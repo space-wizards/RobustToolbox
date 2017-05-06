@@ -1,5 +1,7 @@
 ﻿using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.ServerConsole;
+using SS14.Server.Interfaces;
+using SS14.Shared.Command;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -40,6 +42,8 @@ namespace SS14.Server.Services.ServerConsole
                 Con.WriteLine("Resizing Failure:");
                 Con.WriteLine(e.Message);
             }
+
+            Con.CancelKeyPress += CancelKeyHandler;
         }
 
         #region IConsoleManager Members
@@ -234,6 +238,13 @@ namespace SS14.Server.Services.ServerConsole
             string result = tabCompleteList[tabCompleteIndex];
             tabCompleteIndex++;
             return result;
+        }
+
+        private static void CancelKeyHandler(object sender, ConsoleCancelEventArgs args)
+        {
+            // Handle process exiting ourself.
+            args.Cancel = true;
+            IoCManager.Resolve<ISS14Server>().Shutdown();
         }
     }
 }

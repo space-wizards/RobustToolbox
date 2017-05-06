@@ -42,9 +42,8 @@ async def main():
     parser = argparse.ArgumentParser(description="Builds the SS14 resource pack zip file.")
     parser.add_argument("--no-atlas",
                         dest="atlas",
-                        help=("Disable sprite atlas generation. "
-                              "Instead of atlasing, textures will be loaded as loose files. "
-                              "This will cause severe slowdown, but a .NET runtime will not be required"),
+                        help=("Disable texture atlas generation. "
+                              "This severely ruins rendering performance in game. Beware."),
                         action="store_true")
 
     parser.add_argument("--no-animations",
@@ -55,7 +54,7 @@ async def main():
     parser.add_argument("--sprite-renderer",
                         dest="renderer",
                         type=pathlib.Path,
-                        default=pathlib.Path("SpriteRenderer"),
+                        default=pathlib.Path("SpriteRenderer/MSpriteRenderer.exe"),
                         help="Provide a custom path to the animations sprite renderer's directory.")
 
     parser.add_argument("--atlas-tool",
@@ -85,7 +84,7 @@ async def main():
                         help="Set the directory to pull resources from.")
 
     # For debugging on non-Windows systems.
-    # You're probably gonna want to pass --sprite-renderer SpriteDummy too.
+    # You're probably gonna want to pass --sprite-renderer SpriteDummy/DummySpriteRenderer.py too.
     parser.add_argument("--force-animations-build",
                         dest="force_animations",
                         action="store_true",
@@ -113,7 +112,7 @@ async def main():
     if not args.no_temp_out:
         outfile = outfile.with_suffix(".tmp")
 
-    zip_target = zipfile.ZipFile(str(outfile), "w")
+    zip_target = zipfile.ZipFile(str(outfile), "w", zipfile.ZIP_DEFLATED, allowZip64=False)
     
     if atlas:
         atlas_dir = tempfile.TemporaryDirectory()
@@ -125,7 +124,7 @@ async def main():
         "zip_target": zip_target,
         "atlas": atlas,
         "atlas_command": atlas_command,
-        "atlas_out_dir": atlas_dir.name
+        "atlas_out_dir": atlas_dir.name if atlas_dir else ""
     }
 
     # Animations atlas building gets done after build_animations.
@@ -158,14 +157,20 @@ async def main():
             zip_path = pathlib.Path("TAI" if filename.endswith(".TAI") else "Textures")
             zip_target.write(os.path.join(atlas_dir.name, filename), str(zip_path.joinpath(filename)))
 
+        write_zip_dir_node(zip_target, "TAI/")
+
+    write_zip_dir_node(zip_target, "Textures/")
+
     # Copy over non-image files.
     for otherassets in ["Fonts", "ParticleSystems", "Shaders"]:
         for (dirpath, dirnames, filenames) in os.walk(args.source.joinpath(otherassets)):
+            dirpathpath = pathlib.Path(dirpath)
+            write_zip_dir_node(zip_target, str(dirpathpath.relative_to(args.source)))
             for filename in filenames:
                 filepath = pathlib.Path(dirpath).joinpath(filename)
                 targetpath = filepath.relative_to(args.source)
-                
-                print(Fore.CYAN + "Writing {0} -> {1}".format(filepath, targetpath) + Style.RESET_ALL)
+
+                print(Fore.CYAN + "Wrote {0} -> {1}".format(filepath, targetpath) + Style.RESET_ALL)
                 zip_target.write(filepath, targetpath)
 
 
@@ -188,13 +193,24 @@ async def build_animations(path: pathlib.Path, atlas_args: typing.Dict[str, typi
         
         shutil.rmtree(outdir, onerror=handle_errors)
 
-    print(Fore.GREEN + "Running MSpriteRenderer.exe, this will take a while..." + Style.RESET_ALL)
+    print(Fore.GREEN + "Running the animation renderer, this will take a while..." + Style.RESET_ALL)
     exec_path = path.resolve()
     process = await asyncio.create_subprocess_exec(str(exec_path), cwd=dirpath)
     await process.wait()
 
     await handle_texture_directory(input_dir=outdir, atlas_name="Animations", **atlas_args)
 
+    zip_target = atlas_args["zip_target"]
+    write_zip_dir_node(zip_target, "Animations/")
+    # Write animation XML files to ZIP/Animations/
+    for xmlfile in os.listdir(outdir):
+        if not xmlfile.endswith(".xml"):
+            continue
+        
+        filepath = outdir.joinpath(xmlfile)
+        targetpath = os.path.join("Animations", xmlfile)
+        print(Fore.CYAN + "Wrote {0} -> {1}".format(filepath, targetpath) + Style.RESET_ALL)
+        zip_target.write(str(filepath), targetpath)
 
 async def handle_texture_directory(input_dir: pathlib.Path,
                                    zip_target: zipfile.ZipFile,
@@ -204,13 +220,17 @@ async def handle_texture_directory(input_dir: pathlib.Path,
                                    atlas_out_dir: pathlib.Path = None):
 
     if not atlas:
-        # Absolutely slow as crap no idea why anybody'd want to use this.
         for (dirpath, dirnames, filenames) in os.walk(input_dir):
             for filename in filenames:
+                if not filename.endswith(".png"):
+                    # NOTE: Hardcoding for .png is probably bad.
+                    # But it prevents the animation XML files from being copied so...
+                    continue
+
                 fullpath = os.path.join(dirpath, filename)
                 texturepath = os.path.join("Textures", filename)
                 zip_target.write(str(fullpath), str(texturepath))
-                print(Fore.CYAN + "Writing {0} -> {1}".format(fullpath, texturepath) + Style.RESET_ALL)
+                print(Fore.CYAN + "Wrote {0} -> {1}".format(fullpath, texturepath) + Style.RESET_ALL)
 
         return
 
@@ -225,6 +245,24 @@ async def handle_texture_directory(input_dir: pathlib.Path,
     print(Fore.GREEN + "Done generating atlas for {0}.".format(atlas_name) + Style.RESET_ALL)
 
     await process.wait()
+
+
+# If it's stupid and it works, is it still stupid?
+def write_zip_dir_node(file: zipfile.ZipFile, path: str):
+    """
+    Attempt to write a dummy directory node into the zip file.
+    Does nothing if the node already exists.
+    """
+
+    if not path.endswith("/"):
+        path += "/"
+
+    try:
+        info = file.getinfo()
+
+    except:
+        file.writestr(zipfile.ZipInfo.from_file(".", path), "")
+        print(Fore.CYAN + Style.DIM + "Wrote " + path + " zip directory." + Style.RESET_ALL)
 
 
 if __name__ == "__main__":

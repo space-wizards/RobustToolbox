@@ -43,7 +43,7 @@ namespace SS14.Client.Services.State.States
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
-            _lobbyChat = new Chatbox(ResourceManager, UserInterfaceManager, KeyBindingManager);
+            _lobbyChat = new Chatbox("lobbychat", new Vector2i(475, 175), ResourceManager);
             _lobbyChat.TextSubmitted += LobbyChatTextSubmitted;
 
             _lobbyChat.Update(0);
@@ -51,31 +51,31 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(_lobbyChat);
 
             _lobbyText = new TextSprite("lobbyText", "", ResourceManager.GetFont("CALIBRI"))
-                             {
-                                 Color = SFML.Graphics.Color.Black,
-                                 ShadowColor = SFML.Graphics.Color.Transparent,
-                                 Shadowed = true,
-                                 //TODO CluwneSprite ShadowOffset
-                                 // ShadowOffset = new Vector2(1, 1)
-                             };
+            {
+                Color = SFML.Graphics.Color.Black,
+                ShadowColor = SFML.Graphics.Color.Transparent,
+                Shadowed = true,
+                //TODO CluwneSprite ShadowOffset
+                // ShadowOffset = new Vector2(1, 1)
+            };
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessage.WelcomeMessage); //Request Welcome msg.
+            message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName()); //Send name.
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte) NetMessage.PlayerList); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
             NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
             _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
 
             NetOutgoingMessage jobListMsg = NetworkManager.CreateMessage();
-            jobListMsg.Write((byte) NetMessage.JobList); //Request Joblist.
+            jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
             NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
 
-            var joinButton = new Button("Join Game", ResourceManager) {mouseOverColor = new SFML.Graphics.Color(176, 222, 196)};
+            var joinButton = new Button("Join Game", ResourceManager) { mouseOverColor = new SFML.Graphics.Color(176, 222, 196) };
             joinButton.Position = new Vector2i(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
@@ -83,9 +83,9 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(joinButton);
 
             _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Vector2i(375, 400), ResourceManager)
-                                      {
-                                          Position = new Vector2i(630, 10)
-                                      };
+            {
+                Position = new Vector2i(630, 10)
+            };
 
             UserInterfaceManager.AddComponent(_jobButtonContainer);
 
@@ -95,7 +95,6 @@ namespace SS14.Client.Services.State.States
         public void Render(FrameEventArgs e)
         {
             //public Vertex(Vector2f position, Color color, Vector2f texCoords);
-        
 
             CluwneLib.CurrentRenderTarget.Clear();
 
@@ -136,7 +135,7 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.DisposeAllComponents();
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-            //TODO RenderTargetCache.DestroyAll(); 
+            //TODO RenderTargetCache.DestroyAll();
         }
 
         public void Update(FrameEventArgs e)
@@ -145,14 +144,14 @@ namespace SS14.Client.Services.State.States
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-                playerListMsg.Write((byte) NetMessage.PlayerList); // Request Playerlist.
+                playerListMsg.Write((byte)NetMessage.PlayerList); // Request Playerlist.
                 NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
                 _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
             }
         }
 
-        #endregion
+        #endregion IState Members
 
         private void JoinButtonClicked(Button sender)
         {
@@ -170,7 +169,7 @@ namespace SS14.Client.Services.State.States
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus) message.ReadByte();
+                    var statMsg = (NetConnectionStatus)message.ReadByte();
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         string disconnectMessage = message.ReadString();
@@ -180,32 +179,40 @@ namespace SS14.Client.Services.State.States
                                                                                         disconnectMessage));
                     }
                     break;
+
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessage) message.ReadByte();
+                    var messageType = (NetMessage)message.ReadByte();
                     switch (messageType)
                     {
                         case NetMessage.LobbyChat:
                             string text = message.ReadString();
                             AddChat(text);
                             break;
+
                         case NetMessage.PlayerCount:
                             //TODO var newCount = message.ReadByte();
                             break;
+
                         case NetMessage.PlayerList:
                             HandlePlayerList(message);
                             break;
+
                         case NetMessage.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
+
                         case NetMessage.ChatMessage:
                             HandleChatMessage(message);
                             break;
+
                         case NetMessage.JobList:
                             HandleJobList(message);
                             break;
+
                         case NetMessage.JobSelected:
                             HandleJobSelected(message);
                             break;
+
                         case NetMessage.JoinGame:
                             HandleJoinGame();
                             break;
@@ -218,7 +225,7 @@ namespace SS14.Client.Services.State.States
         {
             string jobName = msg.ReadString();
             foreach (GuiComponent comp in _jobButtonContainer.components)
-                ((JobSelectButton) comp).Selected = ((JobDefinition) comp.UserData).Name == jobName;
+                ((JobSelectButton)comp).Selected = ((JobDefinition)comp.UserData).Name == jobName;
         }
 
         private void HandleJobList(NetIncomingMessage msg)
@@ -235,10 +242,10 @@ namespace SS14.Client.Services.State.States
             {
                 var current = new JobSelectButton(definition.Name, definition.JobIcon, definition.Description,
                                                   ResourceManager)
-                                  {
-                                      Available = definition.Available,
-                                      Position = new Vector2i(5, pos)
-                                  };
+                {
+                    Available = definition.Available,
+                    Position = new Vector2i(5, pos)
+                };
 
                 current.Clicked += CurrentClicked;
                 current.UserData = definition;
@@ -250,8 +257,8 @@ namespace SS14.Client.Services.State.States
         private void CurrentClicked(JobSelectButton sender)
         {
             NetOutgoingMessage playerJobSpawnMsg = NetworkManager.CreateMessage();
-            var picked = (JobDefinition) sender.UserData;
-            playerJobSpawnMsg.Write((byte) NetMessage.RequestJob); //Request job.
+            var picked = (JobDefinition)sender.UserData;
+            playerJobSpawnMsg.Write((byte)NetMessage.RequestJob); //Request job.
             playerJobSpawnMsg.Write(picked.Name);
             NetworkManager.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
         }
@@ -263,10 +270,10 @@ namespace SS14.Client.Services.State.States
             for (int i = 0; i < playerCount; i++)
             {
                 string currName = msg.ReadString();
-                var currStatus = (SessionStatus) msg.ReadByte();
+                var currStatus = (SessionStatus)msg.ReadByte();
                 float currRoundtrip = msg.ReadFloat();
                 _playerListStrings.Add(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " +
-                                       Math.Truncate(currRoundtrip*1000) + " ms");
+                                       Math.Truncate(currRoundtrip * 1000) + " ms");
             }
         }
 
@@ -283,8 +290,8 @@ namespace SS14.Client.Services.State.States
         public void SendLobbyChat(string text)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessage.ChatMessage);
-            message.Write((byte) ChatChannel.Lobby);
+            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)ChatChannel.Lobby);
             message.Write(text);
 
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
@@ -302,46 +309,48 @@ namespace SS14.Client.Services.State.States
 
         private void HandleChatMessage(NetIncomingMessage msg)
         {
-            var channel = (ChatChannel) msg.ReadByte();
+            var channel = (ChatChannel)msg.ReadByte();
             string text = msg.ReadString();
             string message = "[" + channel + "] " + text;
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
         #region Input
-        public void KeyDown ( KeyEventArgs e )
+
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp ( KeyEventArgs e )
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp ( MouseButtonEventArgs e )
+        public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown ( MouseButtonEventArgs e )
+        public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved ( MouseMoveEventArgs e )
+        public void MouseMoved(MouseMoveEventArgs e)
         {
-
         }
-        public void MousePressed ( MouseButtonEventArgs e )
+
+        public void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove ( MouseMoveEventArgs e )
+
+        public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove ( MouseWheelEventArgs e )
+        public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -350,6 +359,7 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.MouseEntered(e);
         }
+
         public void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
@@ -359,6 +369,7 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion
+
+        #endregion Input
     }
 }

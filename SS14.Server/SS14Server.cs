@@ -26,7 +26,9 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using EntityManager = SS14.Server.GameObjects.EntityManager;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
@@ -47,6 +49,7 @@ namespace SS14.Server
 
         // State update vars
         private float serverClock;
+
         private uint _lastState;
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
@@ -94,9 +97,15 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
             _singleton = this;
 
-            IoCManager.Resolve<IServerConfigurationManager>().Initialize(args.ConfigFile);
-            LogManager.Initialize(IoCManager.Resolve<IServerConfigurationManager>().LogPath,
-                                  IoCManager.Resolve<IServerConfigurationManager>().LogLevel);
+            var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
+            configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+            string logPath = configMgr.LogPath;
+            if (!Path.IsPathRooted(logPath))
+            {
+                logPath = PathHelpers.ExecutableRelativeFile(logPath);
+            }
+
+            LogManager.Initialize(logPath, configMgr.LogLevel);
 
             TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
@@ -108,7 +117,7 @@ namespace SS14.Server
         public float TickRate // desired server frames (ticks) per second
         { get; private set; }
 
-        #endregion
+        #endregion Server Settings
 
         #region ISS13Server Members
 
@@ -153,12 +162,11 @@ namespace SS14.Server
             return IoCManager.Resolve<IMapManager>();
         }
 
-
         public void SetServerInstance(ISS14Server server)
         {
         }
 
-        #endregion
+        #endregion ISS13Server Members
 
         #region server mainloop
 
@@ -291,6 +299,7 @@ namespace SS14.Server
                     case NetIncomingMessageType.StatusChanged:
                         HandleStatusChanged(msg);
                         break;
+
                     default:
                         LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
@@ -411,7 +420,7 @@ namespace SS14.Server
             }
         }
 
-        #endregion
+        #endregion server mainloop
 
         public void LoadSettings()
         {
@@ -463,7 +472,7 @@ namespace SS14.Server
 
             LoadSettings();
 
-            if (JobHandler.Singleton.LoadDefinitionsFromFile("JobDefinitions.xml"))
+            if (JobHandler.Singleton.LoadDefinitionsFromFile(PathHelpers.ExecutableRelativeFile("JobDefinitions.xml")))
             {
                 LogManager.Log("Job Definitions File not found. A Template has been created.", LogLevel.Fatal);
                 Environment.Exit(1);
@@ -582,6 +591,7 @@ namespace SS14.Server
                         LogManager.Log(senderIp + ": Connection denied. User banned.");
                     }
                     break;
+
                 case NetConnectionStatus.Disconnected:
                     LogManager.Log(senderIp + ": Disconnected");
                     IoCManager.Resolve<IPlayerManager>().EndSession(sender);
@@ -605,68 +615,93 @@ namespace SS14.Server
                 case NetMessage.CraftMessage:
                     IoCManager.Resolve<ICraftingManager>().HandleNetMessage(msg);
                     break;
+
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
                     break;
+
                 case NetMessage.RequestJob:
                     HandleJobRequest(msg);
                     break;
+
                 case NetMessage.ForceRestart:
                     Restart();
                     break;
+
                 case NetMessage.RequestMap:
                     SendMap(msg.SenderConnection);
                     break;
+
                 case NetMessage.PlayerList:
                     SendPlayerList(msg.SenderConnection);
                     break;
+
                 case NetMessage.ClientName:
                     HandleClientName(msg);
                     break;
+
                 case NetMessage.ChatMessage:
                     IoCManager.Resolve<IChatManager>().HandleNetMessage(msg);
                     break;
+
                 case NetMessage.PlayerSessionMessage:
                     IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage(msg);
                     break;
+
                 case NetMessage.MapMessage:
                     IoCManager.Resolve<IMapManager>().HandleNetworkMessage(msg);
                     break;
+
                 case NetMessage.JobList:
                     HandleJobListRequest(msg);
                     break;
+
                 case NetMessage.PlacementManagerMessage:
                     IoCManager.Resolve<IPlacementManager>().HandleNetMessage(msg);
                     break;
+
                 case NetMessage.EntityMessage:
                     EntityManager.HandleEntityNetworkMessage(msg);
                     break;
+
                 case NetMessage.RequestAdminLogin:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestAdminPlayerlist:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestAdminKick:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestAdminBan:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestAdminUnBan:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestBanList:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.RequestEntityDeletion:
                     HandleAdminMessage(messageType, msg);
                     break;
+
                 case NetMessage.StateAck:
                     HandleStateAck(msg);
                     break;
+
                 case NetMessage.ConsoleCommand:
                     IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msg.ReadString(), msg.SenderConnection);
+                    break;
+
+                case NetMessage.ConsoleCommandRegister:
+                    IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(msg.SenderConnection);
                     break;
             }
         }
@@ -686,6 +721,7 @@ namespace SS14.Server
                         if (delEnt != null) EntityManager.DeleteEntity(delEnt);
                     }
                     break;
+
                 case NetMessage.RequestAdminLogin:
                     string password = messageBody.ReadString();
                     if (password == IoCManager.Resolve<IServerConfigurationManager>().AdminPassword)
@@ -698,6 +734,7 @@ namespace SS14.Server
                         LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address +
                                        " -> ' " + password + " '");
                     break;
+
                 case NetMessage.RequestAdminPlayerlist:
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
@@ -729,6 +766,7 @@ namespace SS14.Server
                                                                          NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
+
                 case NetMessage.RequestAdminKick:
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
@@ -743,6 +781,7 @@ namespace SS14.Server
                         }
                     }
                     break;
+
                 case NetMessage.RequestAdminBan:
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
@@ -759,6 +798,7 @@ namespace SS14.Server
                         }
                     }
                     break;
+
                 case NetMessage.RequestBanList:
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
@@ -781,6 +821,7 @@ namespace SS14.Server
                                                                          NetDeliveryMethod.ReliableOrdered);
                     }
                     break;
+
                 case NetMessage.RequestAdminUnBan:
                     if (
                         IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).

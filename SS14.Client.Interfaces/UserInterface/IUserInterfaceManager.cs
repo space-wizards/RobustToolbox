@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using System;
@@ -11,6 +12,8 @@ namespace SS14.Client.Interfaces.UserInterface
         IDragDropInfo DragInfo { get; }
         IPlayerAction currentTargetingAction { get; }
 
+        IDebugConsole Console { get; }
+
         void AddComponent(IGuiComponent component);
         void RemoveComponent(IGuiComponent component);
         void ComponentUpdate(GuiComponentType type, params object[] args);
@@ -19,6 +22,10 @@ namespace SS14.Client.Interfaces.UserInterface
         void ResizeComponents();
         void SetFocus(IGuiComponent newFocus);
         void RemoveFocus();
+        /// <summary>
+        /// Remove focus, but only if the target is currently focused.
+        /// </summary>
+        void RemoveFocus(IGuiComponent target);
         void Update(float frameTime);
         void Render();
 

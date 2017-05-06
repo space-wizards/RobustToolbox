@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.texture;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -250,11 +251,15 @@ namespace SS14.Client.GameObjects
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
-            // Copy the texture to image
-            var img = spriteToCheck.Texture.CopyToImage();
-            // Check if the clicked pixel is opaque
-            if (img.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A == 0)
+            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
+            Dictionary<Texture, string> tmp = _resManager.textureToKey;
+            if(!tmp.ContainsKey(spriteToCheck.Texture)) return false; //if it doesn't exist, something's fucked
+            string textureKey = tmp[spriteToCheck.Texture];
+            bool[] clickthrough = TextureCache.Textures[textureKey].Item2; //get our clickthrough 'map'
+            if(!clickthrough[spritePosition.Y * spritePosition.X]) // Check if the clicked pixel is opaque
+            {
                 return false;
+            }
 
             return true;
         }

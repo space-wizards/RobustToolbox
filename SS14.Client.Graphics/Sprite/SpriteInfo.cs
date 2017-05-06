@@ -2,6 +2,11 @@
 
 namespace SS14.Client.Graphics.Sprite
 {
+    public static class Limits
+    {
+        public const byte ClickthroughLimit = 64;
+    }
+
     public struct SpriteInfo
     {
         public string Name;

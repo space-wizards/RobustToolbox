@@ -40,12 +40,14 @@ namespace SS14.Server.Services.Chat
 
         public void HandleNetMessage(NetIncomingMessage message)
         {
-            //Read the chat message and pass it on
             var channel = (ChatChannel)message.ReadByte();
             string text = message.ReadString();
+
             IClient client = _serverMain.GetClient(message.SenderConnection);
-            string name = client.PlayerName;
-            LogManager.Log("CHAT- Channel " + channel.ToString() + " - Player " + name + "Message: " + text + "\n");
+            string playerName = client.PlayerName;
+
+            LogManager.Log("CHAT:: Channel: " + channel.ToString() + " :: Player: " + playerName + " :: Message: " + text, Shared.ServerEnums.LogLevel.Debug);
+
             var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).AttachedEntityUid;
 
             bool hasChannelIdentifier = false;
@@ -54,12 +56,13 @@ namespace SS14.Server.Services.Chat
             if (hasChannelIdentifier)
                 text = text.Substring(1);
             text = text.Trim(); // Remove whitespace
+
             if (text[0] == '/')
-                ProcessCommand(text, name, channel, entityId, client);
+                ProcessCommand(text, playerName, channel, entityId, client);
             else if (text[0] == '*')
-                ProcessEmote(text, name, channel, entityId, message.SenderConnection);
+                ProcessEmote(text, playerName, channel, entityId, message.SenderConnection);
             else
-                SendChatMessage(channel, text, name, entityId);
+                SendChatMessage(channel, text, playerName, entityId);
         }
 
         public void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)

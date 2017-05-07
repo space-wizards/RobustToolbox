@@ -200,12 +200,13 @@ namespace SS14.Server.Services.Chat
 
         private void SendToPlayersInRange(NetOutgoingMessage message, int? entityId)
         {
+            int withinRange = 512;
             if (entityId == null)
                 return;
             List<NetConnection> recipients =
                 IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(
                     _serverMain.EntityManager.GetEntity((int)entityId).GetComponent<ITransformComponent>(
-                        ComponentFamily.Transform).Position, 512).Select(p => p.ConnectedClient).ToList();
+                        ComponentFamily.Transform).Position, withinRange).Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS14NetServer>().SendToMany(message, recipients);
         }
 

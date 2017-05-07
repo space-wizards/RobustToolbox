@@ -99,7 +99,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             scrollbarH.max = (int)max_x - ClientArea.Width +
                              (max_y > clippingRI.Height ? scrollbarV.ClientArea.Width : 0);
-            if (max_x > clippingRI.Height) scrollbarH.SetVisible(true);
+            if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
             else scrollbarH.SetVisible(false);
 
             scrollbarV.max = (int)max_y - ClientArea.Height +

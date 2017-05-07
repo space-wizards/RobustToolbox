@@ -87,8 +87,20 @@ namespace SS14.Client.Services.State.States
 
         #region UI Variables
 
+        private int _prevScreenWidth = 0;
+        private int _prevScreenHeight = 0;
+
         private Chatbox _gameChat;
         private HandsGui _handsGui;
+        private StatusEffectBar _statusBar;
+        private Hotbar _hotbar;
+        private HumanComboGui _combo;
+        private HealthPanel _healthPanel;
+        private TargetingGui _targetingUi;
+        private ImageButton _inventoryButton;
+        private ImageButton _statusButton;
+        private ImageButton _craftButton;
+        private ImageButton _menuButton;  
 
         #endregion
 
@@ -260,80 +272,107 @@ namespace SS14.Client.Services.State.States
             _wallBatch = new SpriteBatch();
         }
 
+        private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
+    
+        private void UpdateGUIPosition()
+        {
+            _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
+
+            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X / 2, 400);
+
+            _hotbar.Position = new Vector2i(0, (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
+
+            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
+
+            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
+                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+
+            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
+
+            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
+
+            _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
+            _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
+
+            _craftButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
+            _menuButton.Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y);
+
+    }
+
         private void InitializeGUI()
         {
             //Init GUI components
-            _gameChat = new Chatbox("gamechat", new Vector2i(475, 175), ResourceManager);
+            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
-            var statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X /2, 400);
-            UserInterfaceManager.AddComponent(statusBar);
+            _statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
+            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X /2, 400);
+            UserInterfaceManager.AddComponent(_statusBar);
 
-            var hotbar = new Hotbar(ResourceManager);
-            hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - hotbar.ClientArea.Height - 5);
-            hotbar.Update(0);
-            UserInterfaceManager.AddComponent(hotbar);
+            _hotbar = new Hotbar(ResourceManager);
+            _hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
+            _hotbar.Update(0);
+            UserInterfaceManager.AddComponent(_hotbar);
 
             _handsGui = new HandsGui();
-            _handsGui.Position = new Vector2i(hotbar.Position.X + 5, hotbar.Position.Y + 7);
+            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
             UserInterfaceManager.AddComponent(_handsGui);
 
-            var combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            combo.Update(0);
-            combo.Position = new Vector2i(hotbar.ClientArea.Right() - combo.ClientArea.Width + 5,
-                                       hotbar.Position.Y - combo.ClientArea.Height - 5);
-            UserInterfaceManager.AddComponent(combo);
+            _combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
+            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
+                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+            _combo.Update(0);
+            UserInterfaceManager.AddComponent(_combo);
 
-            var healthPanel = new HealthPanel();
-            healthPanel.Position = new Vector2i(hotbar.ClientArea.Right() - 1, hotbar.Position.Y + 11);
-            healthPanel.Update(0);
-            UserInterfaceManager.AddComponent(healthPanel);
+            _healthPanel = new HealthPanel();
+            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
+            _healthPanel.Update(0);
+            UserInterfaceManager.AddComponent(_healthPanel);
 
-            var targetingUi = new TargetingGui();
-            targetingUi.Update(0);
-            targetingUi.Position = new Vector2i(healthPanel.Position.X + healthPanel.ClientArea.Width, healthPanel.Position.Y - 40);
-            UserInterfaceManager.AddComponent(targetingUi);
+            _targetingUi = new TargetingGui();
+            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
+            _targetingUi.Update(0);
+            UserInterfaceManager.AddComponent(_targetingUi);
 
-            var inventoryButton = new ImageButton
+            _inventoryButton = new ImageButton
             {
                 ImageNormal = "button_inv",
-                Position = new Vector2i(hotbar.Position.X + 172, hotbar.Position.Y + 2)
+                Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2)
             };
-            inventoryButton.Update(0);
-            inventoryButton.Clicked += inventoryButton_Clicked;
-            UserInterfaceManager.AddComponent(inventoryButton);
+            _inventoryButton.Update(0);
+            _inventoryButton.Clicked += inventoryButton_Clicked;
+            UserInterfaceManager.AddComponent(_inventoryButton);
 
-            var statusButton = new ImageButton
+            _statusButton = new ImageButton
             {
                 ImageNormal = "button_status",
                 Position =
-                    new Vector2i(inventoryButton.ClientArea.Right(), inventoryButton.Position.Y)
+                    new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y)
             };
-            statusButton.Update(0);
-            statusButton.Clicked += statusButton_Clicked;
-            UserInterfaceManager.AddComponent(statusButton);
+            _statusButton.Update(0);
+            _statusButton.Clicked += statusButton_Clicked;
+            UserInterfaceManager.AddComponent(_statusButton);
 
-            var craftButton = new ImageButton
+            _craftButton = new ImageButton
             {
                 ImageNormal = "button_craft",
-                Position = new Vector2i(statusButton.ClientArea.Right(), statusButton.Position.Y)
+                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
             };
-            craftButton.Update(0);
-            craftButton.Clicked += craftButton_Clicked;
-            UserInterfaceManager.AddComponent(craftButton);
+            _craftButton.Update(0);
+            _craftButton.Clicked += craftButton_Clicked;
+            UserInterfaceManager.AddComponent(_craftButton);
 
-            var menuButton = new ImageButton
+            _menuButton = new ImageButton
             {
                 ImageNormal = "button_menu",
-                Position = new Vector2i(craftButton.ClientArea.Right(), craftButton.Position.Y)
+                Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y)
             };
-            menuButton.Update(0);
-            menuButton.Clicked += menuButton_Clicked;
-            UserInterfaceManager.AddComponent(menuButton);
+            _menuButton.Update(0);
+            _menuButton.Clicked += menuButton_Clicked;
+            UserInterfaceManager.AddComponent(_menuButton);
         }
 
         private void InitalizeLighting()
@@ -381,6 +420,12 @@ namespace SS14.Client.Services.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
+            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
+            {
+                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
+                UpdateGUIPosition();
+            }
 
             CluwneLib.TileSize = MapManager.TileSize;
 

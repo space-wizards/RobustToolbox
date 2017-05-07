@@ -2,8 +2,10 @@
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics.VertexData;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.UserInterface.Components
 {
@@ -39,6 +41,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private void CloseButtonClicked(ImageButton sender)
         {
+            IoCManager.Resolve<IUserInterfaceManager>().RemoveFocus();
             Dispose();
         }
 

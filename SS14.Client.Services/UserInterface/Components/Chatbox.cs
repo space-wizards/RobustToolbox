@@ -102,7 +102,7 @@ namespace SS14.Client.Services.UserInterface.Components
             this.DrawBorder = true;
         }
 
-        private bool Active
+        public bool Active
         {
             get { return _active; }
             set

@@ -16,6 +16,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.Lighting;
 using SS14.Client.Services.UserInterface.Components;
@@ -373,6 +374,9 @@ namespace SS14.Client.Services.State.States
             _menuButton.Update(0);
             _menuButton.Clicked += menuButton_Clicked;
             UserInterfaceManager.AddComponent(_menuButton);
+
+            // Ensure nothing has focus
+            UserInterfaceManager.RemoveFocus();
         }
 
         private void InitalizeLighting()
@@ -657,11 +661,7 @@ namespace SS14.Client.Services.State.States
                 message.Write((byte)NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.Code == Keyboard.Key.Escape)
-            {
-                UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
-            }
+            
             if (e.Code == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
@@ -939,7 +939,9 @@ namespace SS14.Client.Services.State.States
         private void menuButton_Clicked(ImageButton sender)
         {
             UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-            UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+            MenuWindow menu = new MenuWindow();
+            UserInterfaceManager.AddComponent(menu); //Create a new one.
+            UserInterfaceManager.SetFocus(menu);
         }
 
         private void craftButton_Clicked(ImageButton sender)

@@ -6,6 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -187,6 +188,8 @@ namespace SS14.Client.Services.UserInterface
                 RemoveFocus();
             }
             _currentFocus = newFocus;
+
+            IoCManager.Resolve<IKeyBindingManager>().Enabled = false;
             newFocus.Focus = true;
         }
 
@@ -197,6 +200,8 @@ namespace SS14.Client.Services.UserInterface
         {
             if (_currentFocus == null)
                 return;
+
+            IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
 
             _currentFocus.Focus = false;
             _currentFocus = null;
@@ -209,6 +214,8 @@ namespace SS14.Client.Services.UserInterface
         {
             if (_currentFocus != remFocus)
                 return;
+
+            IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
 
             _currentFocus.Focus = false;
             _currentFocus = null;
@@ -376,6 +383,34 @@ namespace SS14.Client.Services.UserInterface
             if (e.Code == _config.GetConsoleKey())
             {
                 _console.ToggleVisible();
+                return true;
+            }
+            if (e.Code == Keyboard.Key.Escape)
+            {
+                long hasMenuWindow = (from IGuiComponent component in _components
+                                                        where component.GetType() == typeof(MenuWindow)
+                                                        select component).LongCount();
+
+                if (hasMenuWindow > 0)
+                {
+                    DisposeAllComponents<MenuWindow>(); //Remove old ones.
+                    RemoveFocus();
+                    return true;
+                }
+                if (_currentFocus != null)
+                {
+                    // Handle special case where we are mid-typing.
+                    if (_currentFocus.GetType() == typeof(Chatbox) 
+                        && ((Chatbox)_currentFocus).Active)
+                        ((Chatbox)_currentFocus).Active = false;
+
+                    RemoveFocus();
+                    return true;
+                }
+
+                MenuWindow menu = new MenuWindow();
+                AddComponent(menu); //Create a new one.
+                SetFocus(menu);
                 return true;
             }
 

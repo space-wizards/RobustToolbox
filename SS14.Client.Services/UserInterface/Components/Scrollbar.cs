@@ -167,7 +167,6 @@ namespace SS14.Client.Services.UserInterface.Components
             DEBUG.Position = new Vector2i(ClientArea.Left + 20, ClientArea.Top + 20);
             DEBUG.Text = "current: " + actualVal.ToString();
             if (DRAW_DEBUG) DEBUG.Draw();
-            CluwneLib.drawRectangle(ClientArea.Left + 0, ClientArea.Top + 0, ClientArea.Width - 0, ClientArea.Height - 0, Color.Black);
         }
     }
 }

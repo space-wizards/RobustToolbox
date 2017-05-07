@@ -1,2 +1,21 @@
 language: csharp
-solution: SpaceStation14.sln
+
+os:
+- linux
+- osx
+
+addons:
+  apt:
+    packages:
+    - nunit-console
+
+env:
+- HEADLESS=1
+
+before_script:
+- "curl http://84.195.252.227/static/ResourcePack.zip -o Resources/ResourcePack.zip"
+- "nuget restore SpaceStation14.sln"
+
+script:
+- "xbuild /p:Configuration=Release SpaceStation14.sln"
+- "nunit-console SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"

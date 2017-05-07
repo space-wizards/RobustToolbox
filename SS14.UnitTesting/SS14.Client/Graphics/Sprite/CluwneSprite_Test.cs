@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !HEADLESS
+using NUnit.Framework;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -22,7 +23,7 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
             SS14UnitTest.InjectedMethod += DefaultDrawMethod_ShouldDrawToScreen;
             test = new RenderImage("testtst", 1280, 720);
             base.StartCluwneLibLoop();
-            
+
         }
 
         [Test]
@@ -36,3 +37,4 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
         }
     }
 }
+#endif

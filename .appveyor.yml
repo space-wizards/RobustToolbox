@@ -1,3 +1,8 @@
+environment:
+  global:
+    PYTHONUNBUFFERED: True
+    HEADLESS: 1  # For the unit tests.
+
 version: 0.1.0.{build}
 pull_requests:
   do_not_increment_build_number: true
@@ -12,4 +17,8 @@ build:
   parallel: true
   verbosity: minimal
 
-test: off
+#after_build:
+#- cmd: py -3.5 Resources\buildResourcePack.py --resources-dir .\Resources --out .\Resources\ResourcePack.zip --sprite-renderer .\Resources\SpriteRenderer\MSpriteRenderer.exe --atlas-tool .\Tools\AtlasTool.exe --to-stderr
+
+before_test:
+- ps: 'Invoke-WebRequest -Uri "http://84.195.252.227/static/ResourcePack.zip" -OutFile "Resources\ResourcePack.zip"'

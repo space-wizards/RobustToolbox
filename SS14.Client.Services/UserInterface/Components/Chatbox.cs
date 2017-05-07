@@ -185,6 +185,8 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (_disposing) return;
 
+            int lineHeight = 12;
+
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
 
             foreach (string content in CheckInboundMessage(message))
@@ -194,7 +196,7 @@ namespace SS14.Client.Services.UserInterface.Components
                     Position = new Vector2i(5, last_y),
                     Text =
                     {
-                        Size = new Vector2i(ClientArea.Width - 10, 12),
+                        Size = new Vector2i(ClientArea.Width - 10, lineHeight),
                         Color = _chatColors[channel],
                     }
                 };
@@ -205,7 +207,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 // If the message had newlines adjust the bottom to fix the extra lines
                 if (message.Split('\n').Length > 0)
                 {
-                    last_y += 12 * (message.Split('\n').Length - 1);
+                    last_y += lineHeight * (message.Split('\n').Length - 1);
                 }
             }
 

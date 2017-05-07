@@ -62,4 +62,11 @@ project.lock.json
 *.nuget.props
 
 .vs/
+.vscode/
 /packages/
+
+
+.sync/
+
+# MacOS finder makes these.
+.DS_Store

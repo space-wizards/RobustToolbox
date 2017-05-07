@@ -201,6 +201,12 @@ namespace SS14.Client.Services.UserInterface.Components
                 label.Update(0);
                 last_y = label.ClientArea.Bottom();
                 components.Add(label);
+
+                // If the message had newlines adjust the bottom to fix the extra lines
+                if (message.Split('\n').Length > 0)
+                {
+                    last_y += 12 * (message.Split('\n').Length - 1);
+                }
             }
 
             if (atBottom)

@@ -8,5 +8,5 @@ indent_size = 4
 trim_trailing_whitespace = true
 charset = utf-8
 
-[*.{csproj, xml}]
+[*.{csproj, xml, yml}]
 indent_size = 2

@@ -13,17 +13,17 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         {
            var temp = IoCManager.Resolve<IServerConfigurationManager>();
 
-           Assert.IsTrue(temp == typeof(IServerConfigurationManager));
+           Assert.IsNotNull(temp, "IoC failed to return an IServerConfigurationManager.");
         }
 
-        [Test]    
+        [Test]
         public void ResolveIResourceManager_ShouldReturnResourceManager()
         {
             var temp = IoCManager.Resolve<IResourceManager>();
 
-            Assert.IsTrue(temp == typeof(IResourceManager));
+            Assert.IsNotNull(temp, "IoC failed to return an IResourceManager.");
         }
 
-       
+
     }
 }

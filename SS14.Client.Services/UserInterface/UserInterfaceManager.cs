@@ -189,7 +189,8 @@ namespace SS14.Client.Services.UserInterface
             }
             _currentFocus = newFocus;
 
-            IoCManager.Resolve<IKeyBindingManager>().Enabled = false;
+            if(_currentFocus.GetType() == typeof(Chatbox))
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = false;
             newFocus.Focus = true;
         }
 
@@ -201,7 +202,8 @@ namespace SS14.Client.Services.UserInterface
             if (_currentFocus == null)
                 return;
 
-            IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
+            if (_currentFocus.GetType() == typeof(Chatbox))
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
 
             _currentFocus.Focus = false;
             _currentFocus = null;
@@ -215,7 +217,8 @@ namespace SS14.Client.Services.UserInterface
             if (_currentFocus != remFocus)
                 return;
 
-            IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
+            if (_currentFocus.GetType() == typeof(Chatbox))
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
 
             _currentFocus.Focus = false;
             _currentFocus = null;

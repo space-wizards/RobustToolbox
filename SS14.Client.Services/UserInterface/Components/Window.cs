@@ -41,8 +41,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private void CloseButtonClicked(ImageButton sender)
         {
-            IoCManager.Resolve<IUserInterfaceManager>().RemoveFocus();
             Dispose();
+            IoCManager.Resolve<IUserInterfaceManager>().RemoveFocus();
         }
 
         public override void Update(float frameTime)

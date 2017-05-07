@@ -91,8 +91,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                        selected ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(255, 250, 240));
-           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                 Color.Black);
+
             objectSprite.Draw();
             name.Draw();
         }

@@ -1,5 +1,8 @@
 language: csharp
 
+# Beta distribution for running SonarQube
+dist: trusty
+
 os:
 - linux
 - osx
@@ -8,6 +11,11 @@ addons:
   apt:
     packages:
     - nunit-console
+  # Linter and quality checker
+  sonarqube:
+    organization: "space-wizards"
+    token:
+      secure: "hXzQo3SGASwibdLwPuarxlL9uHig9GGEHja3Tu6MwuPv95EGkm1c/oO0NkeLa6DvOqDM6DkEXAObstx88T7u7alWaoaOAvlPs6pmbs++VNcXM1lz4zqOrhUXaZJyuTNhErIzCUjPx/gC32lDDLhw1s486+uDUNDFriwQKUuvkjs="      
 
 env:
 - HEADLESS=1
@@ -19,3 +27,4 @@ before_script:
 script:
 - "xbuild /p:Configuration=Release SpaceStation14.sln"
 - "nunit-console SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
+- sonar-scanner

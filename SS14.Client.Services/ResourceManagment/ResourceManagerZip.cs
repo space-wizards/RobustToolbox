@@ -37,7 +37,7 @@ namespace SS14.Client.Services.Resources
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         private readonly Dictionary<Texture, string> _textureToKey = new Dictionary<Texture, string>();
-        public Dictionary<Texture, string> textureToKey => _textureToKey;
+        public Dictionary<Texture, string> TextureToKey => _textureToKey;
 
         public int done = 0;
 

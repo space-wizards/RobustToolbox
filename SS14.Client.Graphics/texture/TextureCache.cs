@@ -1,43 +1,27 @@
-﻿using SS14.Client.Graphics.Collection;
-using SFMLTexture = SFML.Graphics.Texture;
+﻿using SFMLTexture = SFML.Graphics.Texture;
+using System.Collections.Generic;
+using System;
 
 namespace SS14.Client.Graphics.texture
 {
-    public class TextureList : BaseCollection<SFMLTexture>
-    {
-        public SFMLTexture this[int index]
-        {
-            get { return GetItem(index); }
-        }
-
-        public SFMLTexture this[string key]
-        {
-            get { return GetItem(key); }
-        }
-        public void Add(string name, SFMLTexture tex)
-        {
-            AddItem(name, tex);
-        }
-        internal TextureList() : base(16, false) {}
-    }
     public static class TextureCache
     {
-        private static TextureList _textures = null;
+        private static Dictionary<string, Tuple<SFMLTexture, bool[,]>> _textures = null;
 
-        public static TextureList Textures
+        public static Dictionary<string, Tuple<SFMLTexture, bool[,]>> Textures
         {
             get { return _textures; }
         }
         static TextureCache()
         {
-            _textures = new TextureList();
+            _textures = new Dictionary<string, Tuple<SFMLTexture, bool[,]>>();
         }
-        public static bool Add(string name, SFMLTexture image)
+        public static bool Add(string name, SFMLTexture image, bool[,] arr)
         {
-            if (_textures.Contains(name))
+            if (_textures.ContainsKey(name))
                 return true;
 
-            _textures.Add(name, new SFMLTexture(image));
+            _textures.Add(name, new Tuple<SFMLTexture, bool[,]>(new SFMLTexture(image), arr));
 
             return true;
         }

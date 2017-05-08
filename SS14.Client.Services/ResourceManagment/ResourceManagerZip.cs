@@ -37,10 +37,7 @@ namespace SS14.Client.Services.Resources
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
         private readonly Dictionary<Texture, string> _textureToKey = new Dictionary<Texture, string>();
-        public Dictionary<Texture, string> textureToKey
-        {
-            get { return _textureToKey; }
-        }
+        public Dictionary<Texture, string> textureToKey => _textureToKey;
 
         public int done = 0;
 
@@ -282,8 +279,7 @@ namespace SS14.Client.Services.Resources
                 memStream.Position = 0;
 
                 Image img = new Image(memStream);
-                bool[] clickthrough = new bool[img.Size.X * img.Size.Y];
-                int pos = 0; //easier than to calculate the position every time down in the loops
+                bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
                 for(int y = 0; y < img.Size.Y; y++)
                 {
                     for(int x = 0; x < img.Size.X; x++)
@@ -291,17 +287,17 @@ namespace SS14.Client.Services.Resources
                         Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
                         if(pColor.A > Limits.ClickthroughLimit)
                         {
-                            clickthrough[pos] = true;
+                            opacityMap[x, y] = true;
                         }
                         else
                         {
-                            clickthrough[pos] = false;
+                            opacityMap[x, y] = false;
                         }
                     }
                 }
 
                 Texture loadedImg = new Texture(memStream);
-                TextureCache.Add(ResourceName, loadedImg, clickthrough);
+                TextureCache.Add(ResourceName, loadedImg, opacityMap);
                 _textureToKey.Add(loadedImg, ResourceName);
 
                 memStream.Close();

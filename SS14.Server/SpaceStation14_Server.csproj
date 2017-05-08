@@ -79,6 +79,10 @@
       <HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="sfmlnet-system-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
@@ -172,6 +176,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SS14Server.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Signals.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Timing\MainLoopTimer.cs">

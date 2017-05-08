@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !HEADLESS
+using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -15,8 +16,8 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
     public class GaussianBlur_Test : SS14UnitTest
     {
 
-        private IPlayerConfigurationManager _configurationManager;      
-        private IResourceManager _resourceManager; 
+        private IPlayerConfigurationManager _configurationManager;
+        private IResourceManager _resourceManager;
 
         private GaussianBlur _gaussianBlur;
         private RenderImage preblur;
@@ -27,14 +28,14 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
         private Clock clock;
 
         private Sprite sprite;
-        
+
         public GaussianBlur_Test()
-        {  
+        {
             //PreTest Setup
             base.InitializeCluwneLib(1280, 720, false, 60);
-        
+
             _resourceManager = base.GetResourceManager;
-            _configurationManager = base.GetConfigurationManager;         
+            _configurationManager = base.GetConfigurationManager;
             clock = base.GetClock;
         }
 
@@ -45,13 +46,13 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
             _gaussianBlur = new GaussianBlur(_resourceManager);
-        
-           
+
+
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
-            
-       
+
+
 
             while (CluwneLib.IsRunning)
             {
@@ -60,28 +61,28 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
-               
-                
+
+
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
-                //preblur.Clear();       //Clear 
+                //preblur.Clear();       //Clear
                 sprite = _resourceManager.GetSprite("flashlight_mask");
                 sprite.Position = new Vector2f();
                 sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
-              
-                
+
+
 
                 //_gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
 
-           
-                preblur.Blit(0,0, preblur.Width, preblur.Height,Color.White, BlitterSizeMode.Crop ); // draw blurred nosprite logo
-             
 
-                
+                preblur.Blit(0,0, preblur.Width, preblur.Height,Color.White, BlitterSizeMode.Crop ); // draw blurred nosprite logo
+
+
+
                 CluwneLib.Screen.Display();
-                
-            }    
-       
+
+            }
+
         }
 
         [Test]
@@ -107,7 +108,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 
                 preblur.BeginDrawing(); // set temp as CRT
-                preblur.Clear();       //Clear 
+                preblur.Clear();       //Clear
                 _resourceManager.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
@@ -149,7 +150,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 
                 preblur.BeginDrawing(); // set temp as CRT
-                preblur.Clear();       //Clear 
+                preblur.Clear();       //Clear
                 _resourceManager.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
@@ -191,7 +192,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 
                 preblur.BeginDrawing(); // set temp as CRT
-                preblur.Clear();       //Clear 
+                preblur.Clear();       //Clear
                 _resourceManager.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
@@ -233,7 +234,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 
                 preblur.BeginDrawing(); // set temp as CRT
-                preblur.Clear();       //Clear 
+                preblur.Clear();       //Clear
                 _resourceManager.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
@@ -256,3 +257,4 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 }
 
+#endif

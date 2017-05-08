@@ -8,6 +8,8 @@ using SS14.Shared.IoC;
 using System;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.IO;
 
 namespace SS14.UnitTesting
 {
@@ -16,7 +18,7 @@ namespace SS14.UnitTesting
     public class SS14UnitTest
     {
 
-       
+
         private FrameEventArgs frameEvent;
         public delegate void EventHandler();
         public static event EventHandler InjectedMethod;
@@ -48,37 +50,26 @@ namespace SS14.UnitTesting
 
         public SS14UnitTest()
         {
-            /* 
-             * Assembly.getEntryAssembly() returns null because Unit tests 
-             * are unmanaged and have no app domain managers.
-             * this causes IOCManager to never load or build any of the types 
-             * 
-             * Fixed by Setting the Entry assembly values manually here
-             */
-            Assembly assembly = Assembly.GetCallingAssembly();
+            var assemblies = new List<Assembly>();
+            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
 
-            AppDomainManager manager = new AppDomainManager();
-            FieldInfo entryAssemblyfield = manager.GetType().GetField("m_entryAssembly", BindingFlags.Instance | BindingFlags.NonPublic);
-            entryAssemblyfield.SetValue(manager, assembly);
+            IoCManager.AddAssemblies(assemblies);
 
-            AppDomain domain = AppDomain.CurrentDomain;
-            FieldInfo domainManagerField = domain.GetType().GetField("_domainManager", BindingFlags.Instance | BindingFlags.NonPublic);
-            domainManagerField.SetValue(domain, manager);
-
-            /* end fix */
-            
-           
             //ConfigurationManager setup
             GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
             GetConfigurationManager.Initialize("./player_config.xml");
 
+            #if !HEADLESS
             //ResourceManager Setup
             GetResourceManager = IoCManager.Resolve<IResourceManager>();
             InitializeResources();
+            #endif
 
         }
 
-        #region Setup 
+        #region Setup
         public void InitializeResources()
         {
             GetResourceManager.LoadBaseResources();
@@ -98,7 +89,7 @@ namespace SS14.UnitTesting
             CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.Screen.Closed += MainWindowRequestClose;
 
-            CluwneLib.Go();            
+            CluwneLib.Go();
         }
 
         public void InitializeCluwneLib(uint width, uint height, bool fullscreen, uint refreshrate)
@@ -110,10 +101,10 @@ namespace SS14.UnitTesting
             CluwneLib.Video.SetRefreshRate(refreshrate);
 
             CluwneLib.Initialize();
-            CluwneLib.Screen.BackgroundColor = Color.Black;          
+            CluwneLib.Screen.BackgroundColor = Color.Black;
             CluwneLib.Screen.Closed += MainWindowRequestClose;
-         
-            CluwneLib.Go();           
+
+            CluwneLib.Go();
         }
 
 
@@ -135,7 +126,7 @@ namespace SS14.UnitTesting
         {
             CluwneLib.Stop();
             Application.Exit();
-        }    
+        }
 
         #endregion
 

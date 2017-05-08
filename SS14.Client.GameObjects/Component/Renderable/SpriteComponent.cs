@@ -252,7 +252,7 @@ namespace SS14.Client.GameObjects
                 return false;
 
             IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
-            Dictionary<Texture, string> tmp = _resManager.textureToKey;
+            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
             if(!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Item2; //get our clickthrough 'map'

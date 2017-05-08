@@ -322,13 +322,17 @@ namespace SS14.Server.Services.Map
             DateTime date = DateTime.Now;
             mapName = string.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
 
-            LogManager.Log(string.Format("We are attempting to save map with map named {0}", mapName));
+            LogManager.Log(string.Format("We are attempting to save map with name {0}", mapName));
 
             var badChars = Path.GetInvalidFileNameChars();
             if (mapName.Any(c => badChars.Contains(c)))
                 throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-            string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
+            string pathName = Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps");
+            Directory.CreateDirectory(pathName);
+
+            string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
+
 
             using (var fs = new FileStream(fileName, FileMode.Create))
             {

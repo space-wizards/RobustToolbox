@@ -7,13 +7,13 @@ using Con = System.Console;
 
 namespace SS14.Server.Services.ServerConsole.Commands
 {
-    public class ListCommands : ConsoleCommand
+    public class ListCommands : IConsoleCommand
     {
-        public override string Command => "list";
-        public override string Description => "Lists all available commands";
-        public override string Help => "Lists all available commands and their short description.";
+        public string Command => "list";
+        public string Description => "Lists all available commands";
+        public string Help => "Lists all available commands and their short description.";
 
-        public override void Execute(params string[] args)
+        public void Execute(params string[] args)
         {
             var availableCommands = IoCManager.Resolve<IConsoleManager>().AvailableCommands;
             Con.ForegroundColor = ConsoleColor.Yellow;

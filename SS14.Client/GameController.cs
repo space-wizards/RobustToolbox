@@ -12,11 +12,14 @@ using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using System;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Collections.Generic;
+using System.IO;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
 {
-    public class GameController 
+    public class GameController
     {
 
         #region Fields
@@ -43,6 +46,12 @@ namespace SS14.Client
 
         public GameController()
         {
+            var assemblies = new List<Assembly>();
+            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
+
+            IoCManager.AddAssemblies(assemblies);
+
             _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
             _configurationManager.Initialize("./player_config.xml");
 
@@ -66,7 +75,7 @@ namespace SS14.Client
             EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
 
-            while (CluwneLib.IsRunning == true) 
+            while (CluwneLib.IsRunning == true)
             {
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
@@ -144,7 +153,7 @@ namespace SS14.Client
         /// <param name="e">The KeyArgs instance containing the event data.</param>
         private void KeyUpEvent(object sender, KeyArgs e)
         {
-            if (_stateManager != null) 
+            if (_stateManager != null)
                 _stateManager.KeyUp(e);
         }
 
@@ -155,7 +164,7 @@ namespace SS14.Client
         /// <param name="e">The MouseWheelEventArgs instance containing the event data.</param>
         private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
         {
-            if (_stateManager != null) 
+            if (_stateManager != null)
                 _stateManager.MouseWheelMove(e);
         }
 
@@ -166,7 +175,7 @@ namespace SS14.Client
         /// <param name="e">The MouseMoveEventArgs instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseMoveEventArgs e)
         {
-            if (_stateManager != null) 
+            if (_stateManager != null)
                 _stateManager.MouseMove(e);
         }
 
@@ -177,7 +186,7 @@ namespace SS14.Client
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseButtonEventArgs e)
         {
-            if (_stateManager != null) 
+            if (_stateManager != null)
                 _stateManager.MouseDown(e);
         }
 
@@ -188,7 +197,7 @@ namespace SS14.Client
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseButtonEventArgs e)
         {
-            if (_stateManager != null) 
+            if (_stateManager != null)
                 _stateManager.MouseUp(e);
         }
 
@@ -256,7 +265,7 @@ namespace SS14.Client
             uint displayHeight = _configurationManager.GetDisplayHeight();
             bool isFullscreen  = _configurationManager.GetFullscreen();
             var refresh        = _configurationManager.GetDisplayRefresh();
-            
+
             CluwneLib.Video.SetFullscreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);
             CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
@@ -282,7 +291,7 @@ namespace SS14.Client
             CluwneLib.Screen.MouseEntered        += MouseEntered;
             CluwneLib.Screen.MouseLeft           += MouseLeft;
             CluwneLib.Screen.TextEntered         += TextEntered;
-          
+
             CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
@@ -292,4 +301,4 @@ namespace SS14.Client
         #endregion
     }
 }
-    
+

@@ -1,14 +1,15 @@
-﻿using System;
+﻿using SS14.Server.Interfaces.ServerConsole;
+using System;
 
 namespace SS14.Server.Services.ServerConsole.Commands
 {
-    public class TestCommand : ConsoleCommand
+    public class TestCommand : IConsoleCommand
     {
-        public override string Command => "test";
-        public override string Help => "This is a test command.";
-        public override string Description => "This is a dummy test command.";
+        public string Command => "test";
+        public string Help => "This is a test command.";
+        public string Description => "This is a dummy test command.";
 
-        public override void Execute(params string[] args)
+        public void Execute(params string[] args)
         {
             Console.WriteLine("Test!");
         }

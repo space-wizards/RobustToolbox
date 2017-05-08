@@ -31,6 +31,8 @@ namespace SS14.Server
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             LogManager.Log("Server Version " + strVersion + " -> Ready");
 
+            SignalHander.InstallSignals();
+
             main._server.MainLoop();
         }
 

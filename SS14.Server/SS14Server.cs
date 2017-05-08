@@ -72,10 +72,7 @@ namespace SS14.Server
             }
         }
 
-        public bool Active
-        {
-            get { return _active; }
-        }
+        public bool Active => _active;
 
         #region Server Settings
 
@@ -92,6 +89,13 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
+            var assemblies = new List<Assembly>();
+            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
+
+            IoCManager.AddAssemblies(assemblies);
+
+
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
             //Init serializer
@@ -134,6 +138,15 @@ namespace SS14.Server
             SendGameStateUpdate(true, true);
             DisposeForRestart();
             StartLobby();
+        }
+
+        public void Shutdown(string reason=null)
+        {
+            if (reason == null)
+                LogManager.Log("Shutting down...");
+            else
+                LogManager.Log(string.Format("{0}, shutting down...", reason));
+            _active = false;
         }
 
         public IClient GetClient(NetConnection clientConnection)
@@ -183,6 +196,9 @@ namespace SS14.Server
 
                 DoMainLoopStuff();
             }
+
+            Cleanup();
+
             /*   TimerCallback tcb = RunLoop;
             var due = 1;// (long)ServerRate / 3;
             stopWatch.Start(); //Start the clock
@@ -233,6 +249,11 @@ namespace SS14.Server
             Update(elapsedTime);
 
             IoCManager.Resolve<IConsoleManager>().Update();
+        }
+
+        private void Cleanup()
+        {
+            Console.Title = "";
         }
 
         private string UpdateBPS()

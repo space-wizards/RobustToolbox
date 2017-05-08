@@ -8,11 +8,7 @@ namespace SS14.Client.Interfaces.Resource
 {
     public interface IResourceManager
     {
-        Dictionary<Texture, string> textureToKey
-        {
-            get;
-        }
-
+        Dictionary<Texture, string> textureToKey { get; }
         void LoadResourceZip(string path = null, string pw = null);
         void ClearLists();
         Sprite GetSpriteFromImage(string key);

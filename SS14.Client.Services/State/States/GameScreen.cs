@@ -374,9 +374,6 @@ namespace SS14.Client.Services.State.States
             _menuButton.Update(0);
             _menuButton.Clicked += menuButton_Clicked;
             UserInterfaceManager.AddComponent(_menuButton);
-
-            // Ensure nothing has focus
-            UserInterfaceManager.RemoveFocus();
         }
 
         private void InitalizeLighting()

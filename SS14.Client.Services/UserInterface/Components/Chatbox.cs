@@ -56,7 +56,6 @@ namespace SS14.Client.Services.UserInterface.Components
         public event TextSubmitHandler TextSubmitted;
 
         private bool _focus;
-
         public override bool Focus
         {
             get
@@ -111,12 +110,24 @@ namespace SS14.Client.Services.UserInterface.Components
                 var manager = IoCManager.Resolve<IUserInterfaceManager>();
                 if (value)
                 {
+                    KeyBindingsEnabled = false;
                     manager.SetFocus(this);
                 }
                 else
                 {
+                    KeyBindingsEnabled = true;
                     manager.RemoveFocus(this);
                 }
+            }
+        }
+
+        private bool _keyBindingsEnabled;
+        public bool KeyBindingsEnabled
+        {
+            get { return _keyBindingsEnabled; } 
+            set {
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = value;
+                _keyBindingsEnabled = value;
             }
         }
 

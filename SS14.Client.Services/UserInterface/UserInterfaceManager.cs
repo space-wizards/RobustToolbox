@@ -187,10 +187,8 @@ namespace SS14.Client.Services.UserInterface
             {
                 RemoveFocus();
             }
-            _currentFocus = newFocus;
 
-            if(_currentFocus.GetType() == typeof(Chatbox))
-                IoCManager.Resolve<IKeyBindingManager>().Enabled = false;
+            _currentFocus = newFocus;
             newFocus.Focus = true;
         }
 
@@ -200,10 +198,9 @@ namespace SS14.Client.Services.UserInterface
         public void RemoveFocus()
         {
             if (_currentFocus == null)
+            {
                 return;
-
-            if (_currentFocus.GetType() == typeof(Chatbox))
-                IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
+            }
 
             _currentFocus.Focus = false;
             _currentFocus = null;
@@ -215,10 +212,9 @@ namespace SS14.Client.Services.UserInterface
         public void RemoveFocus(IGuiComponent remFocus)
         {
             if (_currentFocus != remFocus)
+            {
                 return;
-
-            if (_currentFocus.GetType() == typeof(Chatbox))
-                IoCManager.Resolve<IKeyBindingManager>().Enabled = true;
+            }
 
             _currentFocus.Focus = false;
             _currentFocus = null;

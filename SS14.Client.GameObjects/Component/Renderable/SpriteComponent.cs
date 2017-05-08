@@ -253,7 +253,7 @@ namespace SS14.Client.GameObjects
 
             IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
             Dictionary<Texture, string> tmp = _resManager.textureToKey;
-            if(!tmp.ContainsKey(spriteToCheck.Texture)) return false; //if it doesn't exist, something's fucked
+            if(!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Item2; //get our clickthrough 'map'
             if(!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque

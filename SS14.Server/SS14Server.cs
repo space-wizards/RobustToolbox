@@ -89,6 +89,13 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
+            var assemblies = new List<Assembly>();
+            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
+
+            IoCManager.AddAssemblies(assemblies);
+
+
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
             //Init serializer

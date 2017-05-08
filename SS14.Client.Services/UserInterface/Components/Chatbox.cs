@@ -27,7 +27,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         // private const int MaxHistory = 20;
         // private const int MaxLines = 10;
-        private const int MaxLinePixelLength = 450;
+        private const int MaxLinePixelLength = 500;
 
         private readonly Dictionary<ChatChannel, SFML.Graphics.Color> _chatColors;
 
@@ -71,6 +71,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public Chatbox(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
         {
+            scrollbarH.SetVisible(false);
+
             Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
             // ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
@@ -96,9 +98,9 @@ namespace SS14.Client.Services.UserInterface.Components
                 [ChatChannel.Visual] = Color.Yellow,
             };
 
-            this.BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
-            this.DrawBackground = true;
-            this.DrawBorder = true;
+            BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            DrawBackground = true;
+            DrawBorder = true;
         }
 
         public bool Active
@@ -195,22 +197,30 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             if (_disposing) return;
 
+            int lineHeight = 12;
+
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "MICROGBE", _resourceManager)
+                var label = new Label(content, "CALABRI", _resourceManager)
                 {
                     Position = new Vector2i(5, last_y),
                     Text =
                     {
-                        Size = new Vector2i(ClientArea.Width - 10, 12),
+                        Size = new Vector2i(ClientArea.Width - 10, lineHeight),
                         Color = _chatColors[channel],
                     }
                 };
                 label.Update(0);
                 last_y = label.ClientArea.Bottom();
                 components.Add(label);
+
+                // If the message had newlines adjust the bottom to fix the extra lines
+                if (message.Split('\n').Length > 0)
+                {
+                    last_y += lineHeight * (message.Split('\n').Length - 1);
+                }
             }
 
             if (atBottom)

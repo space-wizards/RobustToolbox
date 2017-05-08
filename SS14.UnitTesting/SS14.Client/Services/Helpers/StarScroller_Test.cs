@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !HEADLESS
+using NUnit.Framework;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -11,7 +12,7 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
     public class StarScroller : SS14UnitTest
     {
         private RenderImage renderimage;
-        
+
         private FrameEventArgs _frameEvent;
         private EventArgs _frameEventArgs;
         private Clock clock;
@@ -35,16 +36,17 @@ namespace SS14.UnitTesting.SS14.Client.Services.Helpers
 
 
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)
-                renderimage.Clear();       //Clear 
+                renderimage.Clear();       //Clear
                 base.GetResourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
-    
+
                 renderimage.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
-                  
+
                 renderimage.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
-                
+
                 CluwneLib.Screen.Display();
 
-            }    
+            }
         }
     }
 }
+#endif

@@ -10,6 +10,7 @@ namespace SS14.Client.Graphics
         public bool DebugEntities  { get; private set; }
         public bool DebugSprite    { get; private set; }
         public bool DebugColliders { get; private set; }
+        public bool DebugGridDisplay { get; private set; }
 
         public Debug()
         {
@@ -17,6 +18,12 @@ namespace SS14.Client.Graphics
             DebugEntities = false;
             DebugTextboxes = false;
             DebugWalls = false;
+            DebugGridDisplay = false;
+        }
+
+        public void ToggleGridDisplayDebug()
+        {
+            DebugGridDisplay = !DebugGridDisplay;
         }
 
         public void ToggleAtmosDebug()

@@ -9,6 +9,7 @@ using SS14.Client.Graphics.Timing;
 using SS14.Client.Graphics.View;
 using System;
 
+
 namespace SS14.Client.Graphics
 {
     public class CluwneLib
@@ -288,9 +289,6 @@ namespace SS14.Client.Graphics
             HollowRect.OutlineColor = OutlineColor;
 
             CurrentRenderTarget.Draw(HollowRect);
-           
-
-
         }
         #endregion
 
@@ -410,79 +408,118 @@ namespace SS14.Client.Graphics
         }
 
         #endregion
-   
+
+        #region Text
+        /// <summary>
+        /// Draws text to the Current RenderTarget
+        /// </summary>
+        /// <param name="posX"> Pos X of rectangle </param>
+        /// <param name="posY"> Pos Y of rectangle </param>
+        /// <param name="text"> Text to render </param>
+        /// <param name="size"> Size of the font </param>
+        /// <param name="textColor"> Color of the text </param>
+        public static void drawText(float posX, float posY, string text, uint size, Color textColor)
+        {
+            Text _text = new Text(text, new Font(@"..\..\Resources\Fonts\bluehigh.ttf"));
+            _text.Position = new SFML.System.Vector2f(posX, posY);
+            _text.Color = textColor;
+            _text.CharacterSize = size;
+
+            CurrentRenderTarget.Draw(_text);
+        }
+        #endregion
+
         #endregion
 
         #region Client Window Data  
-   
-       /// <summary>
-       /// Transforms a point from the world (tile) space, to screen (pixel) space.
-       /// </summary>
-       public static Vector2f WorldToScreen(Vector2f point)
-       {
-           var center = WorldCenter;
-           return new Vector2f(
+
+        /// <summary>
+        /// Transforms a point from the world (tile) space, to screen (pixel) space.
+        /// </summary>
+        public static Vector2f WorldToScreen(Vector2f point)
+        {
+            var center = WorldCenter;
+            return new Vector2f(
                (point.X - center.X) * TileSize + ScreenViewportSize.X / 2,
                (point.Y - center.Y) * TileSize + ScreenViewportSize.Y / 2
                );
-       }
-       /// <summary>
-       /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
-       /// </summary>
-       public static FloatRect WorldToScreen(FloatRect rect)
-       {
-           var center = WorldCenter;
-           return new FloatRect(
-               (rect.Left - center.X) * TileSize + ScreenViewportSize.X / 2,
-               (rect.Top - center.Y) * TileSize + ScreenViewportSize.Y / 2,
-               rect.Width * TileSize,
-               rect.Height * TileSize
-               );
-       }
+        }
 
-       /// <summary>
-       /// Transforms a point from the screen (pixel) space, to world (tile) space.
-       /// </summary>
-       public static Vector2f ScreenToWorld(Vector2i point)
-       {
-           var center = WorldCenter;
-           return new Vector2f(
-               (point.X - ScreenViewportSize.X / 2) / TileSize + center.X,
-               (point.Y - ScreenViewportSize.Y / 2) / TileSize + center.Y
-               );
-       }
-       /// <summary>
-       /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
-       /// </summary>
-       public static FloatRect ScreenToWorld(IntRect rect)
+        /// <summary>
+        /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
+        /// </summary>
+        public static FloatRect WorldToScreen(FloatRect rect)
+        {
+            var center = WorldCenter;
+            return new FloatRect(
+                (rect.Left - center.X) * TileSize + ScreenViewportSize.X / 2,
+                (rect.Top - center.Y) * TileSize + ScreenViewportSize.Y / 2,
+                rect.Width * TileSize,
+                rect.Height * TileSize
+                );
+        }
+
+        public static Vector2f WorldToTile(Vector2f point)
+        {
+            return new Vector2f(
+                (float)Math.Floor(point.X),
+                (float)Math.Floor(point.Y)
+                );
+        }
+
+        public static Vector2f TileToWorld(Vector2f point)
+        {
+            return new Vector2f(
+                point.X + 0.5f,
+                point.Y + 0.5f
+                );
+        }
+
+        /// <summary>
+        /// Transforms a point from the screen (pixel) space, to world (tile) space.
+        /// </summary>
+        public static Vector2f ScreenToWorld(Vector2i point)
+        {
+            var center = WorldCenter;
+            return new Vector2f(
+                ((float)point.X - ScreenViewportSize.X / 2 ) / TileSize + WorldCenter.X,
+                ((float)point.Y - ScreenViewportSize.Y / 2 ) / TileSize + WorldCenter.Y
+                );
+        }
+
+        /// <summary>
+        /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
+        /// </summary>
+        public static FloatRect ScreenToWorld(IntRect rect)
        {
            var center = WorldCenter;
            return new FloatRect(
-               (rect.Left - ScreenViewportSize.X / 2) / TileSize + center.X,
-               (rect.Top - ScreenViewportSize.Y / 2) / TileSize + center.Y,
+               ((float)rect.Left - ScreenViewportSize.X / 2) / TileSize + center.X,
+               ((float)rect.Top  - ScreenViewportSize.Y / 2) / TileSize + center.Y,
                rect.Width / TileSize,
                rect.Height / TileSize
                );
        }
 
-       /// <summary>
-       /// Scales a vector from pixel coordinates to tile coordinates.
-       /// </summary>
-       /// <param name="size"></param>
-       /// <returns></returns>
-       public static Vector2f PixelToTile(Vector2f vec)
-       {
-           return new Vector2f(
-               vec.X / TileSize,
-               vec.Y / TileSize
-               );
-       }
-       /// <summary>
-       /// Scales a rectangle from pixel coordinates to tile coordinates.
-       /// </summary>
-       /// <param name="size"></param>
-       /// <returns></returns>
-       public static FloatRect PixelToTile(FloatRect rect)
+        /// <summary>
+        /// Scales a vector from pixel coordinates to tile coordinates.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static Vector2f PixelToTile(Vector2f vec)
+        {
+            return new Vector2f(
+                vec.X / TileSize,
+                vec.Y / TileSize
+                );
+        }
+
+        /// <summary>
+        /// Scales a rectangle from pixel coordinates to tile coordinates.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static FloatRect PixelToTile(FloatRect rect)
        {
            return new FloatRect(
                rect.Left / TileSize,
@@ -491,21 +528,18 @@ namespace SS14.Client.Graphics
                rect.Height / TileSize
                );
        }
- 
-       /// <summary>
-       /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
-       /// </summary>
-       public static Vector2f GetNearestPixel(Vector2f worldPoint)
-       {
-           return new Vector2f(
-               (float)Math.Round(worldPoint.X * TileSize) / TileSize,
-               (float)Math.Round(worldPoint.Y * TileSize) / TileSize
-               );
-       }
-       
-       #endregion
 
+        /// <summary>
+        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
+        /// </summary>
+        public static Vector2f GetNearestPixel(Vector2f worldPoint)
+        {
+            return new Vector2f(
+                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
+                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+                );
+        }
 
-       
+        #endregion
     }
 }

@@ -37,9 +37,6 @@ namespace SS14.Client.Services.State.States
     public class GameScreen : State, IState
     {
         #region Variables
-
-        //UI Vars
-
         public DateTime LastUpdate;
         public DateTime Now;
 
@@ -72,21 +69,16 @@ namespace SS14.Client.Services.State.States
         private SpriteBatch _decalBatch;
 
         #region gameState stuff
-
         private readonly Dictionary<uint, GameState> _lastStates = new Dictionary<uint, GameState>();
         private uint _currentStateSequence; //We only ever want a newer state than the current one
-
         #endregion
 
         #region Mouse/Camera stuff
-
         public Vector2i MousePosScreen = new Vector2i();
         public Vector2f MousePosWorld = new Vector2f();
-
         #endregion
 
         #region UI Variables
-
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
@@ -101,11 +93,9 @@ namespace SS14.Client.Services.State.States
         private ImageButton _statusButton;
         private ImageButton _craftButton;
         private ImageButton _menuButton;  
-
         #endregion
 
         #region Lighting
-
         private Sprite _lightTargetIntermediateSprite;
         private Sprite _lightTargetSprite;
 
@@ -438,31 +428,25 @@ namespace SS14.Client.Services.State.States
             if (PlayerManager != null && PlayerManager.ControlledEntity != null)
             {
                 CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
-            MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen);
         }
 
         bool onetime = true;
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);
-
-            // CluwneLib.Screen.DefaultView.Reset(new FloatRect(new Vector2(0,0), new Vector2(400, 400)));
-
             CluwneLib.TileSize = MapManager.TileSize;
 
             CalculateAllLights();
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = CluwneLib.GetNearestPixel(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
                 CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-
                 var vp = CluwneLib.WorldViewport;
 
                 // Get nearby lights
                 ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
-
                
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
@@ -494,6 +478,7 @@ namespace SS14.Client.Services.State.States
 
 
                 RenderDebug(vp);
+
                 //Render the placement manager shit
                 PlacementManager.Render();
             }
@@ -577,6 +562,32 @@ namespace SS14.Client.Services.State.States
                         hitbox.Color.WithAlpha(128));
                 }
             }
+            if (CluwneLib.Debug.DebugGridDisplay)
+            {
+                int startX = 10;
+                int startY = 10;
+                CluwneLib.drawRectangle(startX, startY, 200, 300,
+                        Color.Blue.WithAlpha(64));
+
+                // Player position debug
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
+                Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
+                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
+                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White);
+                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White);
+                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White);
+                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White);
+
+                // Mouse position debug
+                Vector2i mouseScreenPos = MousePosScreen; // default to screen space
+                Vector2f mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
+                Vector2f mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
+                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White);
+                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White);
+                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White);
+                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White);
+            }
         }
 
         public void Shutdown()
@@ -630,6 +641,7 @@ namespace SS14.Client.Services.State.States
                 _showDebug = !_showDebug;
                 CluwneLib.Debug.ToggleWallDebug();
                 CluwneLib.Debug.ToggleAABBDebug();
+                CluwneLib.Debug.ToggleGridDisplayDebug();
             }
             if (e.Code == Keyboard.Key.F3)
             {

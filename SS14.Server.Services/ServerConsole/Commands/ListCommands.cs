@@ -23,7 +23,7 @@ namespace SS14.Server.Services.ServerConsole.Commands
             names.Sort();
             foreach (string c in names)
             {
-                string name = String.Format("{0, 16}", c);
+                string name = String.Format("{0,16}", c);
                 Con.ForegroundColor = ConsoleColor.Cyan;
                 Con.SetCursorPosition(0, Con.CursorTop);
                 Con.Write(name);

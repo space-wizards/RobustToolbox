@@ -486,6 +486,7 @@ namespace SS14.Client.Graphics
                 ((ScreenViewportSize.Y / 2 - (float)point.Y) * -1) / TileSize + WorldCenter.Y
                 );
         }
+
         /// <summary>
         /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
         /// </summary>
@@ -539,11 +540,6 @@ namespace SS14.Client.Graphics
                 );
         }
 
-
-
         #endregion
-
-
-
     }
 }

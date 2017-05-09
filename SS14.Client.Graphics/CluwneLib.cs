@@ -507,9 +507,10 @@ namespace SS14.Client.Graphics
         /// <returns></returns>
         public static Vector2f PixelToTile(Vector2f vec)
         {
-            float x = vec.X / TileSize;
-            float y = vec.Y / TileSize;
-            return new Vector2f(x, y);
+            return new Vector2f(
+                vec.X / TileSize,
+                vec.Y / TileSize
+                );
         }
 
         /// <summary>

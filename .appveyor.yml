@@ -12,7 +12,7 @@ pull_requests:
 image: Visual Studio 2017
 clone_depth: 1
 install:
-- cinst: msbuild-sonarqube-runner
+- cinst msbuild-sonarqube-runner
 
 before_build:
 - cmd: nuget restore SpaceStation14.sln

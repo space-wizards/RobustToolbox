@@ -417,12 +417,12 @@ namespace SS14.Client.Graphics
         /// <param name="posY"> Pos Y of rectangle </param>
         /// <param name="text"> Text to render </param>
         /// <param name="size"> Size of the font </param>
-        /// <param name="textColour"> Colour of the text </param>
-        public static void drawText(float posX, float posY, string text, uint size, Color textColour)
+        /// <param name="textColor"> Color of the text </param>
+        public static void drawText(float posX, float posY, string text, uint size, Color textColor)
         {
             Text _text = new Text(text, new Font(@"..\..\Resources\Fonts\bluehigh.ttf"));
             _text.Position = new SFML.System.Vector2f(posX, posY);
-            _text.Color = textColour;
+            _text.Color = textColor;
             _text.CharacterSize = size;
 
             CurrentRenderTarget.Draw(_text);
@@ -462,8 +462,8 @@ namespace SS14.Client.Graphics
         public static Vector2f WorldToTile(Vector2f point)
         {
             return new Vector2f(
-                (float)Math.Floor((decimal)point.X),
-                (float)Math.Floor((decimal)point.Y)
+                (float)Math.Floor(point.X),
+                (float)Math.Floor(point.Y)
                 );
         }
 
@@ -482,8 +482,8 @@ namespace SS14.Client.Graphics
         {
             var center = WorldCenter;
             return new Vector2f(
-                ((ScreenViewportSize.X / 2 - (float)point.X) * -1) / TileSize + WorldCenter.X,
-                ((ScreenViewportSize.Y / 2 - (float)point.Y) * -1) / TileSize + WorldCenter.Y
+                ((float)point.X - ScreenViewportSize.X / 2 ) / TileSize + WorldCenter.X,
+                ((float)point.Y - ScreenViewportSize.Y / 2 ) / TileSize + WorldCenter.Y
                 );
         }
 
@@ -494,8 +494,8 @@ namespace SS14.Client.Graphics
        {
            var center = WorldCenter;
            return new FloatRect(
-               ((ScreenViewportSize.X / 2 - (float)rect.Left) *-1) / TileSize + center.X,
-               ((ScreenViewportSize.Y / 2 - (float)rect.Top) * -1) / TileSize + center.Y,
+               ((float)rect.Left - ScreenViewportSize.X / 2) / TileSize + center.X,
+               ((float)rect.Top  - ScreenViewportSize.Y / 2) / TileSize + center.Y,
                rect.Width / TileSize,
                rect.Height / TileSize
                );

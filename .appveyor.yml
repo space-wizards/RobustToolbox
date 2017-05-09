@@ -16,7 +16,7 @@ install:
 
 before_build:
 - cmd: nuget restore SpaceStation14.sln
-- cmd: MSBuild.SonarQube.Runner.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=$env:sonarqubekey" /d:"sonar.organization=space-wizards"
+- cmd: MSBuild.SonarQube.Runner.exe begin /k:"ss14" /d:"sonar.host.url=https://sonarqube.com" /d:"sonar.login=%sonarqubekey%" /d:"sonar.organization=space-wizards"
 
 build:
   project: SpaceStation14.sln
@@ -24,7 +24,7 @@ build:
   verbosity: minimal
 
 after_build:
-- cmd: MSBuild.SonarQube.Runner.exe end /d:"sonar.login=$env.sonarqubekey"
+- cmd: MSBuild.SonarQube.Runner.exe end /d:"sonar.login=%sonarqubekey%"
 #- cmd: py -3.5 Resources\buildResourcePack.py --resources-dir .\Resources --out .\Resources\ResourcePack.zip --sprite-renderer .\Resources\SpriteRenderer\MSpriteRenderer.exe --atlas-tool .\Tools\AtlasTool.exe --to-stderr
 
 before_test:

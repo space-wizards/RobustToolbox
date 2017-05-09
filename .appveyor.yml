@@ -1,6 +1,6 @@
 environment:
   sonarqubekey:
-    secure: hks000+vvAV9lBFLKVfxW25UdOqLKxJ3I7KvN95bQTbz3G4fE6iKTYp9S8q7ipBN
+    secure: h3llq6OeVa94hJ71UOEQSQDq75vFt+doso7iFry0gvt/fFcyeonY9wY+ETOIVITK
   global:
     PYTHONUNBUFFERED: True
     HEADLESS: 1  # For the unit tests.

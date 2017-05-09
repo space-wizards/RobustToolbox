@@ -1,4 +1,4 @@
-# Space Station 14 [![Master Fork status](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master) 
+# Space Station 14 [![Build status](https://ci.appveyor.com/api/projects/status/ygb7t8hsj3wt7pnm/branch/master?svg=true)](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master)
 
 
 Space Station 14 is a renewed attempt at an SS13 remake.

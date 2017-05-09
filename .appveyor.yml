@@ -10,7 +10,7 @@ pull_requests:
   do_not_increment_build_number: true
 
 image: Visual Studio 2017
-clone_depth: 1
+clone_depth: 10
 install:
 - cinst msbuild-sonarqube-runner
 

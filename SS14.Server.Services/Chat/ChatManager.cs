@@ -191,7 +191,7 @@ namespace SS14.Server.Services.Chat
                 IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
                 {
-                    LogManager.Log(string.Format("Command has duplicate name: {}", instance.Command), Shared.ServerEnums.LogLevel.Error);
+                    LogManager.Log(string.Format("Command has duplicate name: {0}", instance.Command), Shared.ServerEnums.LogLevel.Error);
                     continue;
                 }
                 _commands[instance.Command] = instance;

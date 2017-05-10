@@ -3,7 +3,6 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Configuration;
-using SS14.Server.Interfaces.Crafting;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
@@ -329,7 +328,6 @@ namespace SS14.Server
                     var end = stopWatch.ElapsedTicks;
                     var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-                    IoCManager.Resolve<ICraftingManager>().Update();
                     GC.KeepAlive(atmosTime);
 
                     break;
@@ -482,7 +480,6 @@ namespace SS14.Server
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<ICraftingManager>().Initialize("CraftingRecipes.xml", this);
             IoCManager.Resolve<IPlacementManager>().Initialize(this);
 
             StartLobby();
@@ -598,10 +595,6 @@ namespace SS14.Server
             var messageType = (NetMessage)msg.ReadByte();
             switch (messageType)
             {
-                case NetMessage.CraftMessage:
-                    IoCManager.Resolve<ICraftingManager>().HandleNetMessage(msg);
-                    break;
-
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
                     break;

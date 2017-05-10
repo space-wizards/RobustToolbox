@@ -17,13 +17,6 @@
     {
         UpdateHands,
         SelectHand,
-        CancelCraftBar,
-        ShowCraftBar,
-        CraftNeedInventorySpace,
-        CraftSuccess,
-        CraftItemsMissing,
-        CraftAlreadyCrafting,
-        CraftNoRecipe,
         ToggleShowPage
     }
 }

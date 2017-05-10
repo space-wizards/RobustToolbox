@@ -89,7 +89,6 @@ namespace SS14.Client.Services.State.States
         private HealthPanel _healthPanel;
         private ImageButton _inventoryButton;
         private ImageButton _statusButton;
-        private ImageButton _craftButton;
         private ImageButton _menuButton;
         #endregion
 
@@ -278,8 +277,7 @@ namespace SS14.Client.Services.State.States
             _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
 
-            _craftButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
-            _menuButton.Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y);
+            _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
 
     }
 
@@ -331,19 +329,11 @@ namespace SS14.Client.Services.State.States
             _statusButton.Clicked += statusButton_Clicked;
             UserInterfaceManager.AddComponent(_statusButton);
 
-            _craftButton = new ImageButton
-            {
-                ImageNormal = "button_craft",
-                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
-            };
-            _craftButton.Update(0);
-            _craftButton.Clicked += craftButton_Clicked;
-            UserInterfaceManager.AddComponent(_craftButton);
 
             _menuButton = new ImageButton
             {
                 ImageNormal = "button_menu",
-                Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y)
+                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
             };
             _menuButton.Update(0);
             _menuButton.Clicked += menuButton_Clicked;
@@ -937,11 +927,6 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
             UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
-        }
-
-        private void craftButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 3);
         }
 
         private void statusButton_Clicked(ImageButton sender)

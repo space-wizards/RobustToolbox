@@ -175,9 +175,6 @@
     <Compile Include="ServerConsole\IConsoleManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Crafting\ICraftingManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GameMode\IGameMode.cs">
       <SubType>Code</SubType>
     </Compile>

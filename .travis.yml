@@ -13,7 +13,7 @@ env:
 - HEADLESS=1
 
 before_script:
-- "curl http://84.195.252.227/static/ResourcePack.zip -o Resources/ResourcePack.zip"
+- "python3.5 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 
 script:

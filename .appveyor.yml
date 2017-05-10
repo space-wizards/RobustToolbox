@@ -25,7 +25,4 @@ build:
 
 after_build:
 - ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER) { MSBuild.SonarQube.Runner.exe end /d:"sonar.login=$env:sonarqubekey" }
-#- cmd: py -3.5 Resources\buildResourcePack.py --resources-dir .\Resources --out .\Resources\ResourcePack.zip --sprite-renderer .\Resources\SpriteRenderer\MSpriteRenderer.exe --atlas-tool .\Tools\AtlasTool.exe --to-stderr
-
-before_test:
-- ps: 'Invoke-WebRequest -Uri "http://84.195.252.227/static/ResourcePack.zip" -OutFile "Resources\ResourcePack.zip"'
+- cmd: py -3.5 Resources\buildResourcePack.py --resources-dir .\Resources --out .\Resources\ResourcePack.zip --atlas-tool .\Tools\AtlasTool.exe --no-animations --to-stderr

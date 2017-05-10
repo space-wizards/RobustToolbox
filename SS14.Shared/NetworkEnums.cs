@@ -11,9 +11,6 @@
         PlayerCount,
         PlayerList,
         RequestMap,
-        JobList,
-        RequestJob,
-        JobSelected,
         MapMessage,
         ItemMessage, // It's something the item system needs to handle
         CraftMessage,

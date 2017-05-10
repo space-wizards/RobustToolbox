@@ -479,14 +479,6 @@ namespace SS14.Server
 
             LoadSettings();
 
-            if (JobHandler.Singleton.LoadDefinitionsFromFile(PathHelpers.ExecutableRelativeFile("JobDefinitions.xml")))
-            {
-                LogManager.Log("Job Definitions File not found. A Template has been created.", LogLevel.Fatal);
-                Environment.Exit(1);
-            }
-            else
-                LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobSettings.JobDefinitions.Count + " Jobs loaded. " + JobHandler.Singleton.JobSettings.DepartmentDefinitions.Count + " Departments loaded.");
-
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
@@ -614,10 +606,6 @@ namespace SS14.Server
                     SendWelcomeInfo(msg.SenderConnection);
                     break;
 
-                case NetMessage.RequestJob:
-                    HandleJobRequest(msg);
-                    break;
-
                 case NetMessage.ForceRestart:
                     Restart();
                     break;
@@ -644,10 +632,6 @@ namespace SS14.Server
 
                 case NetMessage.MapMessage:
                     IoCManager.Resolve<IMapManager>().HandleNetworkMessage(msg);
-                    break;
-
-                case NetMessage.JobList:
-                    HandleJobListRequest(msg);
                     break;
 
                 case NetMessage.PlacementManagerMessage:
@@ -693,37 +677,6 @@ namespace SS14.Server
                     break;
 
             }
-        }
-
-        public void HandleJobRequest(NetIncomingMessage msg)
-        {
-            string name = msg.ReadString();
-            JobDefinition pickedJob = (from JobDefinition def in JobHandler.Singleton.JobSettings.JobDefinitions
-                                       where def.Name == name
-                                       select def).First();
-
-            if (pickedJob == null) return;
-
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
-            session.assignedJob = pickedJob;
-
-            NetOutgoingMessage jobSelectedMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobSelectedMessage.Write((byte)NetMessage.JobSelected);
-            jobSelectedMessage.Write(pickedJob.Name);
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(jobSelectedMessage, msg.SenderConnection,
-                                                             NetDeliveryMethod.ReliableOrdered);
-        }
-
-        public void HandleJobListRequest(NetIncomingMessage msg)
-        {
-            NetOutgoingMessage jobListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobListMessage.Write((byte)NetMessage.JobList);
-            byte[] compressedStr = ZipString.ZipStr(JobHandler.Singleton.GetDefinitionsString());
-            jobListMessage.Write(compressedStr.Length);
-            jobListMessage.Write(compressedStr);
-            //LogManager.Log("Jobs sent: " + compressedStr.Length.ToString());
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(jobListMessage, msg.SenderConnection,
-                                                             NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleClientName(NetIncomingMessage msg)

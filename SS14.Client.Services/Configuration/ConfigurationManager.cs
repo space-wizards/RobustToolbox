@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Configuration
 {
-    [IoCTargetAttribute]
+    [IoCTarget]
     public sealed class ConfigurationManager : IPlayerConfigurationManager
     {
         private string _configFile;

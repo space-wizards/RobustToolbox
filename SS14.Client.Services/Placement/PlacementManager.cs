@@ -143,7 +143,6 @@ namespace SS14.Client.Services.Placement
         {
             Clear();
 
-            IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
             IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
 
             CurrentPermission = info;

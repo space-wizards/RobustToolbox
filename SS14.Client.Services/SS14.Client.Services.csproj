@@ -357,18 +357,6 @@
     <Compile Include="UserInterface\Components\TemplateGuiComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Components\Hotbar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\HotbarSlot.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\PlayerActionsWindow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\PlayerActionButton.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs">
       <SubType>Code</SubType>
     </Compile>

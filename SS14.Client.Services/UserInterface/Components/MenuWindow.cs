@@ -25,7 +25,6 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IStateManager _stateManager = IoCManager.Resolve<IStateManager>();
         private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
-        private readonly Button button_actions;
         private readonly Button button_entity;
         private readonly Button button_quit;
         private readonly Button button_tile;
@@ -35,15 +34,9 @@ namespace SS14.Client.Services.UserInterface.Components
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
-            button_actions = new Button("Player Actions", _resMgr);
-            button_actions.Clicked += button_actions_Clicked;
-            button_actions.Position = new Vector2i(5, 5);
-            button_actions.Update(0);
-            components.Add(button_actions);
-
             button_entity = new Button("Spawn Entities", _resMgr);
             button_entity.Clicked += button_entity_Clicked;
-            button_entity.Position = new Vector2i(5, button_actions.ClientArea.Bottom() + 5);
+            button_entity.Position = new Vector2i(5, 5);
             button_entity.Update(0);
             components.Add(button_entity);
 
@@ -79,16 +72,6 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             _userInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
-            //Create a new one.
-            Dispose();
-        }
-
-        private void button_actions_Clicked(Button sender)
-        {
-            _userInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-            var actComp = (PlayerActionComp) _playerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
-            if (actComp != null)
-                _userInterfaceManager.AddComponent(new PlayerActionsWindow(new Vector2i(150, 150), _resMgr, actComp));
             //Create a new one.
             Dispose();
         }

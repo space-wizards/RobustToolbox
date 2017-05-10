@@ -222,9 +222,6 @@
     <Compile Include="Component\Physics\PhysicsComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\PlayerActionComp\PlayerActionCompC.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -288,12 +285,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EntitySystems\TestSystem.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlayerActions\ExampleAction.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlayerActions\PlayerActionC.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">

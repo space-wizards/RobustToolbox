@@ -186,9 +186,6 @@
     <Compile Include="Component\Objectives\ObjectivesComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\PlayerActionComp\PlayerActionCompS.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\Renderable\AnimatedSpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -303,9 +300,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MessageEnums.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlayerActions\PlayerActionS.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">

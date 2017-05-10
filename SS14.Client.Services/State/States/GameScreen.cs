@@ -84,7 +84,6 @@ namespace SS14.Client.Services.State.States
 
         private Chatbox _gameChat;
         private HandsGui _handsGui;
-        private Hotbar _hotbar;
         private HumanComboGui _combo;
         private HealthPanel _healthPanel;
         private ImageButton _inventoryButton;
@@ -265,16 +264,17 @@ namespace SS14.Client.Services.State.States
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
 
-            _hotbar.Position = new Vector2i(0, (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
+            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
-            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
+            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
 
-            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
-                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+            // 712 is width of hotbar background I think?
+            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
+                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
 
-            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
+            _healthPanel.Position = new Vector2i(712 - 1, hotbar_pos_y + 11);
 
-            _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
+            _inventoryButton.Position = new Vector2i(172, hotbar_pos_y + 2);
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
 
             _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
@@ -290,30 +290,27 @@ namespace SS14.Client.Services.State.States
 
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
-            _hotbar = new Hotbar(ResourceManager);
-            _hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
-            _hotbar.Update(0);
-            UserInterfaceManager.AddComponent(_hotbar);
+            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
             _handsGui = new HandsGui();
-            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
+            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
             UserInterfaceManager.AddComponent(_handsGui);
 
             _combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
-                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
+                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
             _combo.Update(0);
             UserInterfaceManager.AddComponent(_combo);
 
             _healthPanel = new HealthPanel();
-            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
+            _healthPanel.Position = new Vector2i(711, hotbar_pos_y + 11);
             _healthPanel.Update(0);
             UserInterfaceManager.AddComponent(_healthPanel);
 
             _inventoryButton = new ImageButton
             {
                 ImageNormal = "button_inv",
-                Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2)
+                Position = new Vector2i(172, hotbar_pos_y + 2)
             };
             _inventoryButton.Update(0);
             _inventoryButton.Clicked += inventoryButton_Clicked;
@@ -665,15 +662,6 @@ namespace SS14.Client.Services.State.States
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
-            if (e.Code == Keyboard.Key.F12)
-            {
-                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-                var actComp =
-                    (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
-                if (actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Vector2i(150, 150), ResourceManager,
-                                                                              actComp)); //Create a new one.
-            }
 
             PlayerManager.KeyDown(e.Code);
         }
@@ -766,67 +754,22 @@ namespace SS14.Client.Services.State.States
                     return;
                 }
 
+                ClickableComponent c;
                 switch (e.Button)
                 {
                     case Mouse.Button.Left:
-                        if (UserInterfaceManager.currentTargetingAction != null &&
-                            (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
-                                UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
-                            UserInterfaceManager.SelectTarget(entToClick);
-                        else
-                        {
-                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
-                        }
+                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         break;
                     case Mouse.Button.Right:
-                        if (UserInterfaceManager.currentTargetingAction != null)
-                            UserInterfaceManager.CancelTargeting();
-                        else
-                        {
-                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
-                        }
+                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         break;
                     case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
                                                                              entToClick));
                         break;
-                }
-            }
-            else
-            {
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        {
-                            if (UserInterfaceManager.currentTargetingAction != null &&
-                                UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
-                            {
-                                UserInterfaceManager.SelectTarget(new Vector2f(MousePosWorld.X, MousePosWorld.Y));
-                            }
-                            else
-                            {
-                                /*Point clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
-                                if (clickedPoint.X > 0 && clickedPoint.Y > 0)
-                                {
-                                    NetOutgoingMessage message = NetworkManager.CreateMessage();
-                                    message.Write((byte) NetMessage.MapMessage);
-                                    message.Write((byte) MapMessage.TurfClick);
-                                    message.Write((short) clickedPoint.X);
-                                    message.Write((short) clickedPoint.Y);
-                                    NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                                }*/
-                            }
-                            break;
-                        }
-                    case Mouse.Button.Right:
-                        {
-                            if (UserInterfaceManager.currentTargetingAction != null)
-                                UserInterfaceManager.CancelTargeting();
-                            break;
-                        }
                 }
             }
 

@@ -263,9 +263,6 @@
     <Compile Include="GO\ItemFlags.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="JobHandler.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="KeyFunctions.cs">
       <SubType>Code</SubType>
     </Compile>

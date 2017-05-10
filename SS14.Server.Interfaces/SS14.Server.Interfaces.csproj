@@ -226,12 +226,6 @@
     <Compile Include="Network\ISS14NetServer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Objectives\IObjective.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Objectives\IObjectiveSet.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Player\IPlayerManager.cs">
       <SubType>Code</SubType>
     </Compile>

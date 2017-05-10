@@ -47,17 +47,6 @@ namespace SS14.Server.Services.Player
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
             Entity human = a;
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
-            if (s.assignedJob != null)
-            {
-                foreach (
-                    Entity newItem in
-                        s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
-                {
-                    newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
-                        human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
-                    human.GetComponent<IEquipmentComponent>(ComponentFamily.Equipment).RaiseEquipItem(newItem);
-                }
-            }
             s.AttachToEntity(a);
         }
 

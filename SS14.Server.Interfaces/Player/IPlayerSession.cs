@@ -13,7 +13,6 @@ namespace SS14.Server.Interfaces.Player
         int? AttachedEntityUid { get; }
         string name { get; set; }
         SessionStatus status { get; set; }
-        JobDefinition assignedJob { get; set; }
         NetConnection connectedClient { get; }
         DateTime ConnectedTime { get; }
 

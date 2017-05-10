@@ -61,7 +61,6 @@ namespace SS14.Server.Services.Player
             get { return targetedArea; }
         }
 
-        public JobDefinition assignedJob { get; set; }
         public DateTime ConnectedTime { get; private set; }
 
         public void AttachToEntity(Entity a)

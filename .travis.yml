@@ -9,11 +9,14 @@ addons:
     packages:
     - nunit-console
 
+before_install:
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
+
 env:
 - HEADLESS=1
 
 before_script:
-- "python3.5 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
+- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 
 script:

@@ -467,15 +467,7 @@ namespace SS14.Client.Services.UserInterface
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
-                case CreateUiType.HealthScannerWindow:
-                    Entity ent = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(msg.ReadInt32());
-                    if (ent != null)
-                    {
-                        DisposeAllComponents<HealthScannerWindow>();
-                        var scannerWindow = new HealthScannerWindow(ent, MousePos, this, _resourceManager);
-                        AddComponent(scannerWindow);
-                    }
-                    break;
+
             }
         }
 

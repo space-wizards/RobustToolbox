@@ -174,12 +174,6 @@
     <Compile Include="Component\Inventory\InventoryComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\Item\ItemCapability\BreatherCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Item\ItemCapability\HealthScanCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\Light\LightComponent.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -201,43 +195,7 @@
     <Compile Include="Component\Renderable\WearableAnimatedSpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\StatusEffects\StatusEffectComp.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\SVars\SVarsComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Think\ThinkComponent\IThinkComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Think\ThinkComponent\PuddleThinkComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Think\ThinkComponent\ThinkComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\Organs\Organ.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\Organs\External\External.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\Organs\External\HumanExternal.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\Organs\Internal\Internal.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\Organs\Internal\HumanInternal.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Think\ThinkHostComponent.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Component\Transform\TransformComponent.cs">
@@ -285,19 +243,7 @@
     <Compile Include="Component\Item\BasicItemComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\Item\ItemCapability\GunCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\Item\ItemCapability\ItemCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Item\ItemCapability\MedicalCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Item\ItemCapability\ToolCapability.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Item\ItemCapability\MeleeWeaponCapability.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Component\LargeObject\BasicLargeObjectComponent.cs">
@@ -359,31 +305,10 @@
     <Compile Include="MessageEnums.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PlayerActions\ExampleAction.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="PlayerActions\PlayerActionS.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\Bleeding.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\Hypoxia.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\ToxinInhalation.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\Rooted.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\ExampleEffect.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\StatusEffect.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EntitySystems\TestSystem.cs">

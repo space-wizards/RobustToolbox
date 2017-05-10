@@ -8,7 +8,6 @@ namespace SS14.Server.Interfaces.Player
     public interface IPlayerSession
     {
         NetConnection ConnectedClient { get; }
-        BodyPart TargetedArea { get; }
         GO.Entity attachedEntity { get; }
         int? AttachedEntityUid { get; }
         string name { get; set; }

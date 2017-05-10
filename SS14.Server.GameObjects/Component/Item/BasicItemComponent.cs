@@ -102,7 +102,7 @@ namespace SS14.Server.GameObjects
         }
 
         /// <summary>
-        /// Applies this item to the target entity. 
+        /// Applies this item to the target entity.
         /// </summary>
         /// <param name="targetEntity">Target entity</param>
         /// <param name="targetType">Type of entity, Item, LargeObject, or Actor</param>
@@ -161,8 +161,8 @@ namespace SS14.Server.GameObjects
 
         /// <summary>
         /// Apply this item's capabilities to a target entity
-        /// This finds all onboard capability modules that can interact with a given object type, 
-        /// sorted by priority. Only one thing will actually execute, depending on priority. 
+        /// This finds all onboard capability modules that can interact with a given object type,
+        /// sorted by priority. Only one thing will actually execute, depending on priority.
         /// ApplyTo returns true if it successfully interacted with the target, false if not.
         /// </summary>
         /// <param name="target">Target entity for interaction</param>
@@ -286,27 +286,6 @@ namespace SS14.Server.GameObjects
                 IEnumerable<XElement> Verbs = itemcapability.Descendants("ItemCapabilityVerb");
                 IEnumerable<XElement> Parameters = itemcapability.Descendants("ItemCapabilityParameter");
                 ItemCapability cap = null;
-                switch (itemcapability.Attribute("name").Value)
-                {
-                    case "MeleeWeaponCapability":
-                        cap = new MeleeWeaponCapability();
-                        break;
-                    case "ToolCapability":
-                        cap = new ToolCapability();
-                        break;
-                    case "GunCapability":
-                        cap = new GunCapability();
-                        break;
-                    case "MedicalCapability":
-                        cap = new MedicalCapability();
-                        break;
-                    case "HealthScanCapability":
-                        cap = new HealthScanCapability();
-                        break;
-                    case "BreatherCapability":
-                        cap = new BreatherCapability();
-                        break;
-                }
 
                 if (cap == null)
                     return;

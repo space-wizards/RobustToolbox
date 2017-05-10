@@ -161,12 +161,6 @@
     <Compile Include="GO\Component\Hitbox\HitboxComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GO\Component\Direction\DirectionComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -194,9 +188,6 @@
     <Compile Include="GO\Component\Renderable\SpriteComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\Component\StatusEffect\StatusEffectComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GO\Component\Transform\TransformComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -222,9 +213,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GO\Server\ServerDelegates.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\StatusEffect\StatusEffectState.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Lighting.cs">
@@ -288,9 +276,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SessionStatusEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BodypartEnum.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TypeEventArgs.cs">

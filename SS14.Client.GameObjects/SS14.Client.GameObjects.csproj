@@ -168,12 +168,6 @@
     <Compile Include="Component\Damageable\DamageableComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\Damageable\Health\LocationalHealth\DamageLocation.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Component\Damageable\Health\LocationalHealth\HumanHealthComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\Direction\DirectionComponent.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -255,9 +249,6 @@
     <Compile Include="Component\Renderable\SpriteComponent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Component\StatusEffects\StatusEffectComp.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Component\SVars\SVarsComponent.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -310,24 +301,6 @@
     </Compile>
     <None Include="Component\Renderable\RenderableComponent.cs">
     </None>
-    <Compile Include="Status Effects\Bleeding.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\Hypoxia.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\ToxinInhalation.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\Rooted.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\ExampleEffect.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Status Effects\StatusEffect.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

@@ -84,11 +84,9 @@ namespace SS14.Client.Services.State.States
 
         private Chatbox _gameChat;
         private HandsGui _handsGui;
-        private StatusEffectBar _statusBar;
         private Hotbar _hotbar;
         private HumanComboGui _combo;
         private HealthPanel _healthPanel;
-        private TargetingGui _targetingUi;
         private ImageButton _inventoryButton;
         private ImageButton _statusButton;
         private ImageButton _craftButton;
@@ -268,8 +266,6 @@ namespace SS14.Client.Services.State.States
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
 
-            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X / 2, 400);
-
             _hotbar.Position = new Vector2i(0, (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
 
             _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
@@ -278,8 +274,6 @@ namespace SS14.Client.Services.State.States
                                        _hotbar.Position.Y - _combo.ClientArea.Height - 5);
 
             _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
-
-            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
 
             _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
@@ -297,10 +291,6 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(_gameChat);
 
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
-
-            _statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X /2, 400);
-            UserInterfaceManager.AddComponent(_statusBar);
 
             _hotbar = new Hotbar(ResourceManager);
             _hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
@@ -321,11 +311,6 @@ namespace SS14.Client.Services.State.States
             _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
             _healthPanel.Update(0);
             UserInterfaceManager.AddComponent(_healthPanel);
-
-            _targetingUi = new TargetingGui();
-            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
-            _targetingUi.Update(0);
-            UserInterfaceManager.AddComponent(_targetingUi);
 
             _inventoryButton = new ImageButton
             {

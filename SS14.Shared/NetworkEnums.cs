@@ -118,7 +118,6 @@
         AttachToEntity,
         Verb,
         JoinLobby,
-        SetTargetArea,
         AddPostProcessingEffect
     }
 

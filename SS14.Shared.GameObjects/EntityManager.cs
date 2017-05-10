@@ -1,12 +1,13 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GO;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IEntityManager
+    public interface IEntityManager : IIoCInterface
     {
         ComponentFactory ComponentFactory { get; }
         ComponentManager ComponentManager { get; }
@@ -50,8 +51,8 @@ namespace SS14.Shared.GameObjects
         public readonly List<ComponentFamily> SynchedComponentTypes = new List<ComponentFamily>
                                                                   {
                                                                       ComponentFamily.Mover
-                                                                  }; 
-        
+                                                                  };
+
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
             EngineType = engineType;
@@ -151,7 +152,7 @@ namespace SS14.Shared.GameObjects
             if (!_inverseEventSubscriptions.ContainsKey(s))
             {
                 _inverseEventSubscriptions.Add(
-                    s, 
+                    s,
                     new Dictionary<Type, Delegate>()
                 );
             }
@@ -159,7 +160,7 @@ namespace SS14.Shared.GameObjects
             {
                 _inverseEventSubscriptions[s].Add(eventType, eventHandler);
             }
-            
+
         }
 
         public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
@@ -331,7 +332,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Handle an incoming network message by passing the message to the EntityNetworkManager 
+        /// Handle an incoming network message by passing the message to the EntityNetworkManager
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg">Incoming raw network message</param>

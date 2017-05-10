@@ -2,10 +2,11 @@
 using SFML.System;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Player
 {
-    public interface IPlayerManager
+    public interface IPlayerManager : IIoCInterface
     {
         void SpawnPlayerMob(IPlayerSession player);
         IPlayerSession GetSessionByConnection(NetConnection senderConnection);

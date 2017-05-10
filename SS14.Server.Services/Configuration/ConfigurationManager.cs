@@ -4,12 +4,14 @@ using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.IoC;
 using System;
 using System.IO;
 using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Configuration
 {
+    [IoCTarget]
     public sealed class ConfigurationManager : IServerConfigurationManager, IService
     {
         private string ConfigFile;

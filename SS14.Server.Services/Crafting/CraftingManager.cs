@@ -35,6 +35,7 @@ namespace SS14.Server.Services.Crafting
         public Entity sourceEntity;
     }
 
+    [IoCTarget]
     public sealed class CraftingManager : ICraftingManager
     {
         private readonly ISS14NetServer _netServer;

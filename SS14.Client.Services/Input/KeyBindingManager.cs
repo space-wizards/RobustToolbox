@@ -2,6 +2,7 @@
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,7 @@ using System.Xml;
 
 namespace SS14.Client.Services.Input
 {
+    [IoCTarget]
     public class KeyBindingManager : IKeyBindingManager
     {
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;

@@ -2,9 +2,11 @@
 using SFML.Window;
 using System.IO;
 using System.Xml.Serialization;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Configuration
 {
+    [IoCTargetAttribute]
     public sealed class ConfigurationManager : IPlayerConfigurationManager
     {
         private string _configFile;

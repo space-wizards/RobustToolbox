@@ -11,6 +11,7 @@ using System.Linq;
 
 namespace SS14.Client.Services.Map
 {
+    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
@@ -298,7 +299,7 @@ namespace SS14.Client.Services.Map
 
         //    return created;
         //}
-        
+
         // An actual modulus implementation, because apparently % is not modulus.  Srsly
         // Should probably stick this in some static class.
         [System.Diagnostics.DebuggerStepThrough]

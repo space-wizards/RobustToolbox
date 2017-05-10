@@ -57,7 +57,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
                 }
                 else
                 {
-                    Assert.Fail("IoCManager returned too much types.");
+                    Assert.Fail("IoCManager returned too many types.");
                 }
             }
             Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);

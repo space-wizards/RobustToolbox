@@ -42,22 +42,15 @@ namespace SS14.Shared.IoC
             // TODO: handle types with multiple implemented interfaces in a special way?
             foreach (var type in ServiceTypes)
             {
+                var attribute = (IoCTargetAttribute) Attribute.GetCustomAttribute(type, typeof(IoCTargetAttribute));
+                if (attribute == null || attribute.Disabled)
+                {
+                    continue;
+                }
                 foreach (var interfaceType in type.GetInterfaces())
                 {
                     if (interfaceType.GetInterfaces().Any((Type t) => t == typeof(IIoCInterface)))
                     {
-                        int priority = 0;
-                        var attribute = (IoCTargetAttribute) Attribute.GetCustomAttribute(type, typeof(IoCTargetAttribute));
-                        if (attribute != null)
-                        {
-                            if (attribute.Disabled)
-                            {
-                                break;
-                            }
-
-                            priority = attribute.Priority;
-                        }
-
                         if (!ResolveListTypes.ContainsKey(interfaceType))
                         {
                             ResolveListTypes[interfaceType] = new List<Type>(1);
@@ -65,12 +58,12 @@ namespace SS14.Shared.IoC
 
                         ResolveListTypes[interfaceType].Add(type);
 
-                        if (resolvedPriorities.ContainsKey(interfaceType) && resolvedPriorities[interfaceType] >= priority)
+                        if (resolvedPriorities.ContainsKey(interfaceType) && resolvedPriorities[interfaceType] >= attribute.Priority)
                         {
                             continue;
                         }
 
-                        resolvedPriorities[interfaceType] = priority;
+                        resolvedPriorities[interfaceType] = attribute.Priority;
                         ResolveTypes[interfaceType] = type;
                     }
                 }

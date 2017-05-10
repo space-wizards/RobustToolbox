@@ -223,9 +223,6 @@
     <Compile Include="Player\IPlayerSession.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="IService.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Network\ISS14NetServer.cs">
       <SubType>Code</SubType>
     </Compile>

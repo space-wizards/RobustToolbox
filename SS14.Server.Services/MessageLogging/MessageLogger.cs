@@ -10,7 +10,7 @@ using System.Timers;
 
 namespace SS14.Server.Services.MessageLogging
 {
-    public class MessageLogger : IMessageLogger, IService
+    public class MessageLogger : IMessageLogger
     {
         private static Timer _pingTimer;
         private readonly MessageLoggerServiceClient _loggerServiceClient;
@@ -32,7 +32,7 @@ namespace SS14.Server.Services.MessageLogging
         #region IMessageLogger Members
 
         /// <summary>
-        /// Check to see if the server is still running 
+        /// Check to see if the server is still running
         /// </summary>
         public void Ping()
         {
@@ -105,15 +105,6 @@ namespace SS14.Server.Services.MessageLogging
             catch (CommunicationException e)
             {
             }
-        }
-
-        #endregion
-
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.MessageLogger; }
         }
 
         #endregion

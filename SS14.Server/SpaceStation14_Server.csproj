@@ -163,9 +163,6 @@
     <Compile Include="Helper Classes\InterpolationPacket.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Modules\Banlist.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Modules\Client\Client.cs">
       <SubType>Code</SubType>
     </Compile>

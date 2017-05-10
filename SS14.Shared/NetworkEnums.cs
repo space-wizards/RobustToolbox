@@ -27,12 +27,6 @@
         AtmosDisplayUpdate,
         EntityMessage,
         EntityManagerMessage,
-        RequestAdminLogin, //Server asks client to login OR client tries to login.
-        RequestAdminPlayerlist, //Client request playerlist for admin panel OR server sends it.
-        RequestAdminBan,
-        RequestAdminKick,
-        RequestBanList,
-        RequestAdminUnBan,
         RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
         StateUpdate,
         StateAck,

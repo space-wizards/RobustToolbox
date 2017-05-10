@@ -32,7 +32,6 @@ namespace SS14.Server.Services.Player
             if (client != null)
             {
                 connectedClient = client;
-                adminPermissions = new AdminPermissions();
                 OnConnect();
             }
             else
@@ -56,7 +55,6 @@ namespace SS14.Server.Services.Player
         }
         public string name { get; set; }
         public SessionStatus status { get; set; }
-        public AdminPermissions adminPermissions { get; set; }
 
         public BodyPart TargetedArea
         {

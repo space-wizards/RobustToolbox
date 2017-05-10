@@ -309,15 +309,6 @@
     <Compile Include="GameTimer\GameTimer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Components\AdminPasswordDialog.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\AdminPlayerPanel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\AdminUnbanPanel.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Components\BlueprintButton.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -42,18 +42,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
         #endregion
 
-        #region Crafting UI
-
-        private readonly ScrollableContainer _blueprints;
-        private readonly ImageButton _craftButton;
-        private readonly CraftSlotUi _craftSlot1;
-        private readonly CraftSlotUi _craftSlot2;
-        private readonly TextSprite _craftStatus;
-        private int _blueprintsOffset;
-        private Timer_Bar _craftTimer;
-
-        #endregion
-
         #region Status UI
 
         private readonly ArmorInfoLabel _ResBlunt;
@@ -76,7 +64,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
         private readonly INetworkManager _networkManager;
         private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
-        private readonly ImageButton _tabCraft;
         private readonly ImageButton _tabEquip;
         private readonly ImageButton _tabHealth;
         private readonly TextSprite _txtDbg;
@@ -127,12 +114,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
                              };
             _tabHealth.Clicked += TabClicked;
 
-            _tabCraft = new ImageButton
-                            {
-                                ImageNormal = "tab_craft",
-                            };
-            _tabCraft.Clicked += TabClicked;
-
             _comboClose.Clicked += ComboCloseClicked;
 
             //Left Side - head, eyes, outer, hands, feet
@@ -171,51 +152,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _slotBack.Dropped += SlotDropped;
 
             _txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", _resourceManager.GetFont("CALIBRI"));
-
-            _craftSlot1 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
-            _craftSlot2 = new CraftSlotUi(_resourceManager, _userInterfaceManager);
-
-            _craftButton = new ImageButton
-                               {
-                                   ImageNormal = "wrenchbutt"
-                               };
-            _craftButton.Clicked += CraftButtonClicked;
-
-            _craftStatus = new TextSprite("craftText", "Status", _resourceManager.GetFont("CALIBRI"))
-                               {
-                                   ShadowColor = new Color(105, 105, 105),
-                                   ShadowOffset = new Vector2f(1, 1),
-                                   Shadowed = true
-                               };
-
-            _blueprints = new ScrollableContainer("blueprintCont", new Vector2i(210, 100), _resourceManager);
-        }
-
-        private void CraftButtonClicked(ImageButton sender)
-        {
-            //craftTimer = new Timer_Bar(new Vector2i(200,15), new TimeSpan(0,0,0,10));
-            if (_craftSlot1.ContainingEntity == null || _craftSlot2.ContainingEntity == null) return;
-
-            if (_playerManager != null)
-                if (_playerManager.ControlledEntity != null)
-                    if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
-                    {
-                        var invComp =
-                            (InventoryComponent) _playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
-                        if (invComp.ContainedEntities.Count >= invComp.MaxSlots)
-                        {
-                            _craftStatus.Text = "Status: Not enough Space";
-                            _craftStatus.Color = new Color(139, 0, 0);
-                            return;
-                        }
-                    }
-
-            NetOutgoingMessage msg = _networkManager.CreateMessage();
-            msg.Write((byte) NetMessage.CraftMessage);
-            msg.Write((byte) CraftMessage.StartCraft);
-            msg.Write(_craftSlot1.ContainingEntity.Uid);
-            msg.Write(_craftSlot2.ContainingEntity.Uid);
-            _networkManager.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void SlotDropped(EquipmentSlotUi sender, Entity dropped)
@@ -274,22 +210,17 @@ namespace SS14.Client.Services.UserInterface.Inventory
         {
             if (sender == _tabEquip) ActivateTab(1);
             if (sender == _tabHealth) ActivateTab(2);
-            if (sender == _tabCraft) ActivateTab(3);
         }
 
         private void ComboOpenClicked(ImageButton sender)
             //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         {
             _showTabbedWindow = !_showTabbedWindow;
-            _craftStatus.Text = "Status";
-            _craftStatus.Color = Color.White;
         }
 
         private void ComboCloseClicked(ImageButton sender)
         {
             _showTabbedWindow = false;
-            _craftStatus.Text = "Status";
-            _craftStatus.Color = Color.White;
         }
 
         public override bool KeyDown(KeyEventArgs e)
@@ -297,132 +228,10 @@ namespace SS14.Client.Services.UserInterface.Inventory
             if (e.Code == Keyboard.Key.I)
             {
                 _showTabbedWindow = !_showTabbedWindow;
-                _craftStatus.Text = "Status";
-                _craftStatus.Color = Color.White;
                 return true;
             }
 
             return false;
-        }
-
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
-            var messageType = (ComboGuiMessage) message.ReadByte();
-
-            switch (messageType)
-            {
-                case ComboGuiMessage.CancelCraftBar:
-                    if (_craftTimer != null)
-                    {
-                        _craftTimer.Dispose();
-                        _craftTimer = null;
-                    }
-                    _craftStatus.Text = "Status: Canceled."; //Temp to debug.
-                    _craftStatus.Color = new SFML.Graphics.Color(139, 0, 0);
-                    break;
-                case ComboGuiMessage.ShowCraftBar:
-                    int seconds = message.ReadInt32();
-                    _craftTimer = new Timer_Bar(new Vector2i(210, 15), new TimeSpan(0, 0, 0, seconds), _resourceManager);
-                    _craftStatus.Text = "Status: Crafting...";
-                    _craftStatus.Color = new SFML.Graphics.Color(176, 196, 222);
-                    break;
-                case ComboGuiMessage.CraftNoRecipe:
-                    _craftStatus.Text = "Status: There is no such Recipe.";
-                    _craftStatus.Color = new Color(139, 0, 0);
-                    break;
-                case ComboGuiMessage.CraftNeedInventorySpace:
-                    if (_craftTimer != null)
-                    {
-                        _craftTimer.Dispose();
-                        _craftTimer = null;
-                    }
-                    _craftStatus.Text = "Status: Not enough Space";
-                    _craftStatus.Color = new Color(139, 0, 0);
-                    break;
-                case ComboGuiMessage.CraftItemsMissing:
-                    if (_craftTimer != null)
-                    {
-                        _craftTimer.Dispose();
-                        _craftTimer = null;
-                    }
-                    _craftSlot1.ResetEntity();
-                    _craftSlot2.ResetEntity();
-                    _craftStatus.Text = "Status: Items missing.";
-                    _craftStatus.Color = new Color(139, 0, 0);
-                    break;
-                case ComboGuiMessage.CraftSuccess:
-                    if (_craftTimer != null)
-                    {
-                        _craftTimer.Dispose();
-                        _craftTimer = null;
-                    }
-                    _craftSlot1.ResetEntity();
-                    _craftSlot2.ResetEntity();
-                    AddBlueprint(message);
-                    break;
-                case ComboGuiMessage.CraftAlreadyCrafting:
-                    _craftStatus.Text = "Status: You are already working on an item.";
-                    _craftStatus.Color = new Color(139, 0, 0);
-                    break;
-            }
-        }
-
-        private void AddBlueprint(NetIncomingMessage message)
-        {
-            string compo1Temp = message.ReadString();
-            string compo1Name = message.ReadString();
-            string compo2Temp = message.ReadString();
-            string compo2Name = message.ReadString();
-            string resultTemp = message.ReadString();
-            string resultName = message.ReadString();
-
-            _craftStatus.Text = "Status: You successfully create '" + resultName + "'";
-            _craftStatus.Color = new Color(0, 128, 0);
-
-            foreach (BlueprintButton bpbutt in _blueprints.components)
-            {
-                var req = new List<string> {compo1Temp, compo2Temp};
-                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant()))
-                    req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo1.ToLowerInvariant()));
-                if (req.Exists(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant()))
-                    req.Remove(req.First(x => x.ToLowerInvariant() == bpbutt.Compo2.ToLowerInvariant()));
-                if (!req.Any()) return;
-            }
-
-            var newBpb = new BlueprintButton(compo1Temp, compo1Name, compo2Temp, compo2Name, resultTemp, resultName,
-                                             _resourceManager);
-            newBpb.Update(0);
-
-            newBpb.Clicked += BlueprintClicked;
-
-            newBpb.Position = new Vector2i(0, _blueprintsOffset);
-            _blueprintsOffset += newBpb.ClientArea.Height;
-
-            _blueprints.components.Add(newBpb);
-        }
-
-        private void BlueprintClicked(BlueprintButton sender)
-        {
-            //craftTimer = new Timer_Bar(new Vector2i(200,15), new TimeSpan(0,0,0,10));
-            if (_playerManager != null)
-                if (_playerManager.ControlledEntity != null)
-                    if (_playerManager.ControlledEntity.HasComponent(ComponentFamily.Inventory))
-                    {
-                        var invComp =
-                            (InventoryComponent) _playerManager.ControlledEntity.GetComponent(ComponentFamily.Inventory);
-                        if (!invComp.ContainsEntity(sender.Compo1) || !invComp.ContainsEntity(sender.Compo2))
-                        {
-                            _craftStatus.Text = "Status: You do not have the required items.";
-                            _craftStatus.Color = new Color(139, 0, 0);
-                        }
-                        else
-                        {
-                            _craftSlot1.SetEntity(invComp.GetEntity(sender.Compo1));
-                            _craftSlot2.SetEntity(invComp.GetEntity(sender.Compo2));
-
-                            CraftButtonClicked(null); //This is pretty dumb but i hate duplicate code.
-                        }
-                    }
         }
 
         public override void Render()
@@ -433,13 +242,11 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 _comboClose.Render();
                 _tabHealth.Render();
                 _tabEquip.Render();
-                _tabCraft.Render();
 
                 _txtDbg.Position = new Vector2i(Position.X + 20, Position.Y + 15);
                 _txtDbg.Color = new SFML.Graphics.Color(255, 222, 173);
                 if (_currentTab == 1) _txtDbg.Text = "Equipment";
                 if (_currentTab == 2) _txtDbg.Text = "Status";
-                if (_currentTab == 3) _txtDbg.Text = "Crafting";
                 _txtDbg.Draw();
 
                 switch (_currentTab)
@@ -485,21 +292,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
                             #endregion
                         }
-                    case (3): //Craft tab
-                        {
-                            #region Crafting
-
-                            if (_craftTimer != null) _craftTimer.Render();
-                            if (_inventory != null) _inventory.Render();
-                            _craftSlot1.Render();
-                            _craftSlot2.Render();
-                            _craftButton.Render();
-                            _craftStatus.Draw();
-                            _blueprints.Render();
-                            break;
-
-                            #endregion
-                        }
                 }
             }
         }
@@ -541,12 +333,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
             _tabHealth.Color = _currentTab == 2 ? Color.White : _inactiveColor;
             _tabHealth.Update(frameTime);
 
-            var tabCraftPos = tabHealthPos;
-            tabCraftPos += new Vector2i(0, 3 + _tabHealth.ClientArea.Height);
-            _tabCraft.Position = tabCraftPos;
-            _tabCraft.Color = _currentTab == 3 ? Color.White : _inactiveColor;
-            _tabCraft.Update(frameTime);
-
             ClientArea = new IntRect(Position.X, Position.Y, (int)bounds.Width, (int)bounds.Height);
 
             switch (_currentTab)
@@ -560,7 +346,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
                         slotLeftStart += new Vector2i(28, 40);
                         _slotHead.Position = slotLeftStart;
                         _slotHead.Update(frameTime);
-                        
+
                         var slotRightStart = Position;
                         slotRightStart += new Vector2i((int) (bounds.Width - _slotMask.ClientArea.Width - 28), 40);
                         _slotMask.Position = slotRightStart;
@@ -650,49 +436,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
                         #endregion
                     }
-                case (3): //Craft tab
-                    {
-                        #region Crafting
-
-                        _craftSlot1.Position = new Vector2i(Position.X + 40, Position.Y + 80);
-                        _craftSlot1.Update(frameTime);
-
-                        _craftSlot2.Position =
-                            new Vector2i(Position.X + ClientArea.Width - _craftSlot2.ClientArea.Width - 40, Position.Y + 80);
-                        _craftSlot2.Update(frameTime);
-
-                        _craftButton.Position =
-                            new Vector2i(
-                                Position.X + (int) (ClientArea.Width/2f) - (int) (_craftButton.ClientArea.Width/2f),
-                                Position.Y + 70);
-                        _craftButton.Update(frameTime);
-
-                        if (_craftTimer != null)
-                            _craftTimer.Position =
-                                new Vector2i(
-                                    Position.X + (int) (ClientArea.Width/2f) - (int) (_craftTimer.ClientArea.Width/2f),
-                                    Position.Y + 155);
-
-                        _craftStatus.Position =
-                            new Vector2i(Position.X + (int) (ClientArea.Width/2f) - (int) (_craftStatus.Width/2f),
-                                         Position.Y + 40);
-
-                        _blueprints.Position = new Vector2i(Position.X + 40, Position.Y + 180);
-                        _blueprints.Update(frameTime);
-
-                        if (_inventory != null)
-                        {
-                            _inventory.Position = new Vector2i(Position.X + 12, Position.Y + 315);
-                            _inventory.Update(frameTime);
-                        }
-                        break;
-
-                        #endregion
-                    }
             }
-
-            if (_craftTimer != null)
-                _craftTimer.Update(frameTime);
             //Needs to update even when its not on the crafting tab so it continues to count.
         }
 
@@ -709,7 +453,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
                 if (_comboClose.MouseDown(e)) return true;
                 if (_tabEquip.MouseDown(e)) return true;
                 if (_tabHealth.MouseDown(e)) return true;
-                if (_tabCraft.MouseDown(e)) return true;
 
                 switch (_currentTab)
                 {
@@ -739,21 +482,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     case (2): //Health tab
                         {
                             #region Status
-
-                            break;
-
-                            #endregion
-                        }
-                    case (3): //Craft tab
-                        {
-                            #region Crafting
-
-                            if (_craftTimer != null) if (_craftTimer.MouseDown(e)) return true;
-                            if (_craftSlot1.MouseDown(e)) return true;
-                            if (_craftSlot2.MouseDown(e)) return true;
-                            if (_craftButton.MouseDown(e)) return true;
-                            if (_blueprints.MouseDown(e)) return true;
-                            if (_inventory != null) if (_inventory.MouseDown(e)) return true;
 
                             break;
 
@@ -824,28 +552,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
 
                         #endregion
                     }
-                case (3): //Craft tab
-                    {
-                        #region Crafting
-
-                        if (_craftTimer != null) if (_craftTimer.MouseUp(e)) return true;
-                        if (_craftSlot1.MouseUp(e))
-                        {
-                            if (_craftSlot2.ContainingEntity == _craftSlot1.ContainingEntity) _craftSlot2.ResetEntity();
-                            return true;
-                        }
-                        if (_craftSlot2.MouseUp(e))
-                        {
-                            if (_craftSlot1.ContainingEntity == _craftSlot2.ContainingEntity) _craftSlot1.ResetEntity();
-                            return true;
-                        }
-                        if (_craftButton.MouseUp(e)) return true;
-                        if (_blueprints.MouseUp(e)) return true;
-                        if (_inventory != null) if (_inventory.MouseUp(e)) return true;
-                        break;
-
-                        #endregion
-                    }
             }
 
             return false;
@@ -882,20 +588,6 @@ namespace SS14.Client.Services.UserInterface.Inventory
                     {
                         #region Status
 
-                        break;
-
-                        #endregion
-                    }
-                case (3): //Craft tab
-                    {
-                        #region Crafting
-
-                        if (_craftTimer != null) _craftTimer.MouseMove(e);
-                        _craftSlot1.MouseMove(e);
-                        _craftSlot2.MouseMove(e);
-                        _craftButton.MouseMove(e);
-                        _blueprints.MouseMove(e);
-                        if (_inventory != null) _inventory.MouseMove(e);
                         break;
 
                         #endregion

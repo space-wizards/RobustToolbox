@@ -194,9 +194,6 @@
     <Compile Include="GO\Component\Velocity\VelocityComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\Crafting\CraftingEntry.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GO\ComponentState.cs">
       <SubType>Code</SubType>
     </Compile>

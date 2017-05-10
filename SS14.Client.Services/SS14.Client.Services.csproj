@@ -417,9 +417,6 @@
     <Compile Include="UserInterface\DragDropInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Inventory\CraftSlotUi.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs">
       <SubType>Code</SubType>
     </Compile>

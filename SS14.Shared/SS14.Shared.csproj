@@ -102,9 +102,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdminPermissions.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="BoundKeyEventArgs.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -236,19 +233,10 @@
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
-    <Compile Include="Objectives\ObjectiveParameterType.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Objectives\ObjectiveType.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="PlayerActionEnum.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EntityBaseClass.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Banlist.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CSharpExtensions.cs">
@@ -300,9 +288,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServerEnums\RunLevel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServicesEnum.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SessionStatusEnum.cs">

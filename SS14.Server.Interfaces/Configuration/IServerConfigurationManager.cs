@@ -10,7 +10,6 @@ namespace SS14.Server.Interfaces.Configuration
         string ServerName { get; set; }
         string ServerMapName { get; set; }
         string ServerWelcomeMessage { get; set; }
-        string AdminPassword { get; set; }
         string LogPath { get; set; }
         LogLevel LogLevel { get; set; }
         int Version { get; }

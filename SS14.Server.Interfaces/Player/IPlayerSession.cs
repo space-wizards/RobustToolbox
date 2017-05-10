@@ -11,7 +11,6 @@ namespace SS14.Server.Interfaces.Player
         BodyPart TargetedArea { get; }
         GO.Entity attachedEntity { get; }
         int? AttachedEntityUid { get; }
-        AdminPermissions adminPermissions { get; }
         string name { get; set; }
         SessionStatus status { get; set; }
         JobDefinition assignedJob { get; set; }

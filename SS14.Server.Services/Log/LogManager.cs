@@ -6,7 +6,7 @@ using System.IO;
 
 namespace SS14.Server.Services.Log
 {
-    public class LogManager : IService
+    public class LogManager
     {
         /// <summary>
         /// Singleton
@@ -27,15 +27,6 @@ namespace SS14.Server.Services.Log
                 return singleton;
             }
         }
-
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.LogManager; }
-        }
-
-        #endregion
 
         /// <summary>
         /// Initialize log

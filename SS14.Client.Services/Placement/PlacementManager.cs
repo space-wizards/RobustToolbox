@@ -23,6 +23,7 @@ using System.Reflection;
 
 namespace SS14.Client.Services.Placement
 {
+    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         public readonly ICollisionManager CollisionManager;

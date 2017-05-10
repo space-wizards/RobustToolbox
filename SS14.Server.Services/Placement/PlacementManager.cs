@@ -18,6 +18,7 @@ using System.Linq;
 
 namespace SS14.Server.Services.Placement
 {
+    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         //TO-DO: Expand for multiple permission per mob?

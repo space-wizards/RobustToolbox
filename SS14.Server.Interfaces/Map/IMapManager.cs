@@ -3,12 +3,13 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Shared;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public interface IMapManager
+    public interface IMapManager : IIoCInterface
     {
         bool LoadMap(string mapName);
         void SaveMap(string mapName);

@@ -1,10 +1,11 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Interfaces.Network
 {
-    public interface INetworkManager
+    public interface INetworkManager : IIoCInterface
     {
         NetPeerStatistics CurrentStatistics { get; }
         NetClient NetClient { get; }

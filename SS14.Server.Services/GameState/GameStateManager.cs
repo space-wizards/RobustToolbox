@@ -1,11 +1,13 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces.GameState;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.Services.GameState
 {
+    [IoCTarget]
     public class GameStateManager : Dictionary<uint, SS14.Shared.GameStates.GameState>, IGameStateManager
     {
         private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();

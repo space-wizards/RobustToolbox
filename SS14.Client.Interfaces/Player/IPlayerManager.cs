@@ -3,13 +3,14 @@ using SS14.Client.Graphics.Render;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using KeyboardKeys = SFML.Window.Keyboard.Key;
 
 namespace SS14.Client.Interfaces.Player
 {
-    public interface IPlayerManager
+    public interface IPlayerManager : IIoCInterface
     {
         Entity ControlledEntity { get; }
 

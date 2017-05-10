@@ -11,11 +11,13 @@ using SS14.Shared.GameStates;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.Services.Player
 {
+    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* This class will manage connected player sessions. */

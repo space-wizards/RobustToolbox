@@ -12,6 +12,10 @@ namespace SS14.Shared.IoC
         private static readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
         private static readonly List<Type> ServiceTypes = new List<Type>();
         private static readonly Dictionary<Type, Type> ResolveTypes = new Dictionary<Type, Type>();
+        // Could probably merge these two lists but I'll hold off
+        // On the basis of premature optimization.
+        // Any laziness.
+        private static readonly Dictionary<Type, List<Type>> ResolveListTypes= new Dictionary<Type, List<Type>>();
 
         public static void AddAssemblies(IEnumerable<Assembly> assemblies)
         {
@@ -30,6 +34,7 @@ namespace SS14.Shared.IoC
         public static void SortTypes()
         {
             ResolveTypes.Clear();
+            ResolveListTypes.Clear();
             // Cache of interface = last resolved priority to make sorting easier.
             // Yeah I could sort with LINQ but fuck that.
             var resolvedPriorities = new Dictionary<Type, int>();
@@ -52,6 +57,13 @@ namespace SS14.Shared.IoC
 
                             priority = attribute.Priority;
                         }
+
+                        if (!ResolveListTypes.ContainsKey(interfaceType))
+                        {
+                            ResolveListTypes[interfaceType] = new List<Type>(1);
+                        }
+
+                        ResolveListTypes[interfaceType].Add(type);
 
                         if (resolvedPriorities.ContainsKey(interfaceType) && resolvedPriorities[interfaceType] >= priority)
                         {
@@ -92,6 +104,17 @@ namespace SS14.Shared.IoC
                 throw new MissingImplementationException(type);
             }
             return ResolveTypes[type];
+        }
+
+        public static IEnumerable<Type> ResolveEnumerable<T>() where T: IIoCInterface
+        {
+            var type = typeof(T);
+            if (!ResolveListTypes.ContainsKey(type))
+            {
+                throw new MissingImplementationException(type);
+            }
+
+            return ResolveListTypes[type];
         }
 
         public static T NewType<T>(params object[] args) where T: IIoCInterface

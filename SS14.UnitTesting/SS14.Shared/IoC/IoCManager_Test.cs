@@ -38,6 +38,30 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         {
             Assert.That(IoCManager.Resolve<IIoCTestPriories>(), Is.TypeOf<IoCTestPriorities1>());
         }
+
+        [Test]
+        public void IoCTestIter()
+        {
+            // I have no idea how to better do this.
+            bool did1 = false;
+            bool did2 = false;
+            foreach (var type in IoCManager.ResolveEnumerable<IIoCTestPriories>())
+            {
+                if (!did1 && type == typeof(IoCTestPriorities1))
+                {
+                    did1 = true;
+                }
+                else if (!did2 && type == typeof(IoCTestPriorities2))
+                {
+                    did2 = true;
+                }
+                else
+                {
+                    Assert.Fail("IoCManager returned too much types.");
+                }
+            }
+            Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
+        }
     }
 
     public interface IIoCFailInterface : IIoCInterface {}

@@ -1,5 +1,8 @@
 language: csharp
 
+dist: trusty
+sudo: false
+
 os:
 - linux
 - osx
@@ -9,9 +12,6 @@ addons:
     packages:
     - nunit-console
     - python3.5
-
-  sources:
-    - deadsnakes
 
 before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi

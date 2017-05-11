@@ -91,6 +91,7 @@ namespace SS14.Client.Services.State.States
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
+        private MenuWindow _menu;
         private Chatbox _gameChat;
         private HandsGui _handsGui;
         private StatusEffectBar _statusBar;
@@ -278,23 +279,15 @@ namespace SS14.Client.Services.State.States
         private void UpdateGUIPosition()
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
-
             _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X / 2, 400);
-
             _hotbar.Position = new Vector2i(0, (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
-
             _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
-
             _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
                                        _hotbar.Position.Y - _combo.ClientArea.Height - 5);
-
             _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
-
             _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
-
             _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
-
             _craftButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
             _menuButton.Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y);
 
@@ -302,6 +295,12 @@ namespace SS14.Client.Services.State.States
 
         private void InitializeGUI()
         {
+
+
+            _menu = new MenuWindow();
+            UserInterfaceManager.AddComponent(_menu);
+            _menu.SetVisible(false);
+
             //Init GUI components
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
@@ -935,10 +934,7 @@ namespace SS14.Client.Services.State.States
         #region Buttons
         private void menuButton_Clicked(ImageButton sender)
         {
-            UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-            MenuWindow menu = new MenuWindow();
-            UserInterfaceManager.AddComponent(menu); //Create a new one.
-            UserInterfaceManager.SetFocus(menu);
+            _menu.ToggleVisible();
         }
 
         private void craftButton_Clicked(ImageButton sender)

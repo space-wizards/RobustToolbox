@@ -20,6 +20,8 @@ namespace SS14.Client.Interfaces.UserInterface
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
+
+        IGuiComponent CurrentFocus { get; set; }
         void SetFocus(IGuiComponent newFocus);
         void RemoveFocus();
         /// <summary>

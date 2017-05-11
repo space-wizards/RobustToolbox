@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
@@ -34,8 +35,8 @@ namespace SS14.Client.Services.UserInterface.Components
         public MenuWindow()
             : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceManager>())
         {
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
 
             button_actions = new Button("Player Actions", _resMgr);
             button_actions.Clicked += button_actions_Clicked;
@@ -78,7 +79,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private void button_admin_Clicked(Button sender)
         {
             NetOutgoingMessage message = _netMgr.CreateMessage();
-            message.Write((byte) NetMessage.RequestAdminPlayerlist);
+            message.Write((byte)NetMessage.RequestAdminPlayerlist);
             _netMgr.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             Dispose();
         }
@@ -102,11 +103,32 @@ namespace SS14.Client.Services.UserInterface.Components
         private void button_actions_Clicked(Button sender)
         {
             _userInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-            var actComp = (PlayerActionComp) _playerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
+            var actComp = (PlayerActionComp)_playerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
             if (actComp != null)
                 _userInterfaceManager.AddComponent(new PlayerActionsWindow(new Vector2i(150, 150), _resMgr, actComp));
             //Create a new one.
             Dispose();
+        }
+
+        public override bool KeyDown(KeyEventArgs e)
+        {
+            if (e.Code != Keyboard.Key.Escape)
+            {
+                return false;
+            }
+
+            if (!Focus)
+            {
+                SetVisible(true);
+                Focus = true;
+                return true;
+            }
+            else
+            {
+                SetVisible(false);
+                Focus = false;
+                return true;
+            }
         }
     }
 }

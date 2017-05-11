@@ -34,7 +34,6 @@ namespace SS14.Client.Services.UserInterface
 
         private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
-        private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
         private DebugConsole _console;
 
@@ -47,6 +46,19 @@ namespace SS14.Client.Services.UserInterface
         ///  Currently targeting action.
         /// </summary>
         private IPlayerAction targetingAction;
+
+        private IGuiComponent _currentFocus;
+        public IGuiComponent CurrentFocus
+        {
+            get
+            {
+                return _currentFocus;
+            }
+            set
+            {
+                _currentFocus = value;
+            }
+        }
 
         public UserInterfaceManager(IResourceManager resourceManager)
         {
@@ -382,34 +394,6 @@ namespace SS14.Client.Services.UserInterface
             if (e.Code == _config.GetConsoleKey())
             {
                 _console.ToggleVisible();
-                return true;
-            }
-            if (e.Code == Keyboard.Key.Escape)
-            {
-                long hasMenuWindow = (from IGuiComponent component in _components
-                                                        where component.GetType() == typeof(MenuWindow)
-                                                        select component).LongCount();
-
-                if (hasMenuWindow > 0)
-                {
-                    DisposeAllComponents<MenuWindow>(); //Remove old ones.
-                    RemoveFocus();
-                    return true;
-                }
-                if (_currentFocus != null)
-                {
-                    // Handle special case where we are mid-typing.
-                    if (_currentFocus.GetType() == typeof(Chatbox) 
-                        && ((Chatbox)_currentFocus).Active)
-                        ((Chatbox)_currentFocus).Active = false;
-
-                    RemoveFocus();
-                    return true;
-                }
-
-                MenuWindow menu = new MenuWindow();
-                AddComponent(menu); //Create a new one.
-                SetFocus(menu);
                 return true;
             }
 

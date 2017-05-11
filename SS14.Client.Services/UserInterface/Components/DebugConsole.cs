@@ -245,7 +245,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
                 if (commands.ContainsKey(instance.Command))
-                    throw new Exception(string.Format("Command already registered: {}", instance.Command));
+                    throw new Exception(string.Format("Command already registered: {0}", instance.Command));
 
                 commands[instance.Command] = instance;
             }

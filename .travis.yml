@@ -1,7 +1,7 @@
 language: csharp
 
-# Beta distribution for running SonarQube
 dist: trusty
+sudo: false
 
 os:
 - linux
@@ -11,20 +11,18 @@ addons:
   apt:
     packages:
     - nunit-console
-  # Linter and quality checker
-  sonarqube:
-    organization: "space-wizards"
-    token:
-      secure: "fQs1fUYpbK1mf/vlEimYmJdGSV0iKhd7w6rp/B8RuiZJxKIdntaJhXdqKcgixq71lf1IlXVasKYNCNiuy73KonJIDK47FhlglQCLoDQLIKvTr3Is7gTZQAuYqUzMJ7rPk4TP+/aUUhxQWtWKgJPgdkekr9ai5FWv94xDv8d57Yw="
- 
+
+before_install:
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
+
 env:
 - HEADLESS=1
 
 before_script:
-- "curl http://84.195.252.227/static/ResourcePack.zip -o Resources/ResourcePack.zip"
+- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 
 script:
 - "xbuild /p:Configuration=Release SpaceStation14.sln"
 - "nunit-console SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
-- sonar-scanner
+

@@ -250,7 +250,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
-    <Folder Include="NewFolder1\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

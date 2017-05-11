@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+
 
 namespace SS14.Server.Services.Map
 {
@@ -316,11 +318,21 @@ namespace SS14.Server.Services.Map
 
         public void SaveMap(string mapName)
         {
+            mapName = Regex.Replace(mapName, @"-\d\d-\d\d_\d\d-\d\d-\d\d", ""); //Strip timestamp, same format as below
+            DateTime date = DateTime.Now;
+            mapName = string.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
+
+            LogManager.Log(string.Format("We are attempting to save map with name {0}", mapName));
+
             var badChars = Path.GetInvalidFileNameChars();
             if (mapName.Any(c => badChars.Contains(c)))
                 throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-            string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
+            string pathName = Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps");
+            Directory.CreateDirectory(pathName);
+
+            string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
+
 
             using (var fs = new FileStream(fileName, FileMode.Create))
             {

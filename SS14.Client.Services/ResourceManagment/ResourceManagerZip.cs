@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -131,14 +132,17 @@ namespace SS14.Client.Services.Resources
             sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
             #endregion
 
+            LogManager.Log("Loading resources...");
+
             #region Load Resources
             foreach (KeyValuePair<string, List<ZipEntry>> current in sorted)
             {
                 switch (current.Key)
                 {
                     case("textures/"):
+
                         Task<Texture>[] taskArray = new Task<Texture>[current.Value.Count];
-                        for (int i = 0; i < current.Value.Count(); i++)
+
                         {
                             ZipEntry texture = current.Value[i];
 
@@ -163,6 +167,7 @@ namespace SS14.Client.Services.Resources
                         break;
 
                     case("tai/"): // Tai? HANK HANK
+                        LogManager.Log("Loading tai...");
                         foreach (ZipEntry tai in current.Value)
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
@@ -175,6 +180,7 @@ namespace SS14.Client.Services.Resources
                         break;
 
                     case("fonts/"):
+                        LogManager.Log("Loading fonts...");
                         foreach (ZipEntry font in current.Value)
                         {
                             if (Path.GetExtension(font.Name).ToLowerInvariant() == ".ttf")
@@ -188,6 +194,7 @@ namespace SS14.Client.Services.Resources
                         break;
 
                     case("particlesystems/"):
+                        LogManager.Log("Loading particlesystems...");
                         foreach (ZipEntry particles in current.Value)
                         {
                             if (Path.GetExtension(particles.Name).ToLowerInvariant() == ".xml")
@@ -201,6 +208,7 @@ namespace SS14.Client.Services.Resources
 
                     case ("shaders/"):
                         {
+                            LogManager.Log("Loading shaders...");
                             GLSLShader LoadedShader;
                             TechniqueList List;
 
@@ -239,6 +247,7 @@ namespace SS14.Client.Services.Resources
                         }
 
                     case("animations/"):
+                        LogManager.Log("Loading animations...");
                         foreach (ZipEntry animation in current.Value)
                         {
                             if (Path.GetExtension(animation.Name).ToLowerInvariant() == ".xml")

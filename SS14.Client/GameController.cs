@@ -10,11 +10,13 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
+using SS14.Shared.ServerEnums;
 using System;
-using System.Windows.Forms;
-using System.Reflection;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -46,6 +48,7 @@ namespace SS14.Client
 
         public GameController()
         {
+            LogManager.Log("Initialising GameController.", LogLevel.Debug);
             var assemblies = new List<Assembly>();
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
@@ -86,7 +89,7 @@ namespace SS14.Client
                 CluwneLib.Screen.Display();
             }
             CluwneLib.Terminate();
-            Console.WriteLine("Gameloop terminated.");
+            LogManager.Log("GameController terminated.");
         }
         #endregion
 

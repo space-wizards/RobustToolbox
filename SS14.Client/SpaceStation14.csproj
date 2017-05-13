@@ -288,6 +288,6 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-     <DefineConstants Condition="Exists('Microsoft.VisualStudio.DebuggerVisualizers.dll') ">$(DefineConstants);VS_DEBUGGERVISUALIZERS_EXISTS</DefineConstants>
+    <DefineConstants Condition="Exists('Microsoft.VisualStudio.DebuggerVisualizers.dll') ">$(DefineConstants);VS_DEBUGGERVISUALIZERS_EXISTS</DefineConstants>
   </PropertyGroup>
 </Project>

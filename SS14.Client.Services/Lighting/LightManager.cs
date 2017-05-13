@@ -3,6 +3,7 @@ using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.Maths;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Reflection;
 
 namespace SS14.Client.Services.Lighting
 {
+    [IoCTarget]
     public class LightManager : ILightManager
     {
         private readonly List<Type> LightModes = new List<Type>();
@@ -78,7 +80,7 @@ namespace SS14.Client.Services.Lighting
         }
 
         public ILight[] LightsIntersectingRect(FloatRect rect)
-        {   
+        {
             return _lights
                 .FindAll(l => new FloatRect(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
                 .ToArray();

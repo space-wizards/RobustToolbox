@@ -1,5 +1,8 @@
 language: csharp
 
+dist: trusty
+sudo: false
+
 os:
 - linux
 - osx
@@ -9,11 +12,14 @@ addons:
     packages:
     - nunit-console
 
+before_install:
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
+
 env:
 - HEADLESS=1
 
 before_script:
-- "curl http://84.195.252.227/static/ResourcePack.zip -o Resources/ResourcePack.zip"
+- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 
 script:

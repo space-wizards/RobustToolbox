@@ -1,9 +1,11 @@
 ﻿using SS14.Server.Interfaces.Map;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Services.Map
 {
+    [IoCTarget]
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();

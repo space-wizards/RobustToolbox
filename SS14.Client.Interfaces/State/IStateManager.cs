@@ -2,11 +2,12 @@
 
 using SFML.Window;
 using SS14.Client.Graphics.Event;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Interfaces.State
 {
-    public interface IStateManager
+    public interface IStateManager : IIoCInterface
     {
         IState CurrentState { get; }
         void RequestStateChange<T>() where T : IState;

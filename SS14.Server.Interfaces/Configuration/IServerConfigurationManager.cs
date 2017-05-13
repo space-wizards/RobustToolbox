@@ -1,10 +1,11 @@
 ﻿using SFML.System;
 using SS14.Shared;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Configuration
 {
-    public interface IServerConfigurationManager
+    public interface IServerConfigurationManager : IIoCInterface
     {
         bool MessageLogging { get; set; }
         string ServerName { get; set; }

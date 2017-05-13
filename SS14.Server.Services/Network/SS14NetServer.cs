@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace SS14.Server.Services.Network
 {
+    [IoCTarget]
     public class SS14NetServer : NetServer, ISS14NetServer
     {
         public SS14NetServer()

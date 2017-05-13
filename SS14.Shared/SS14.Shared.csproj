@@ -215,6 +215,7 @@
     <Compile Include="Lighting.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Log\LogManager.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />

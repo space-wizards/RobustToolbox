@@ -18,10 +18,11 @@ using System.Linq;
 
 namespace SS14.Client.Services.Player
 {
+    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
-         * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated. 
+         * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
          * This class also communicates with the server to let the server control what entity it is attached to. */
 
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();

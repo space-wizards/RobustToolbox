@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Network
 {
-    public interface ISS14NetServer
+    public interface ISS14NetServer : IIoCInterface
     {
         /// <summary>
         /// Gets the NetPeerStatus of the NetPeer
@@ -15,8 +16,8 @@ namespace SS14.Server.Interfaces.Network
 
         /// <summary>
         /// Signalling event which can be waited on to determine when a message is queued for reading.
-        /// Note that there is no guarantee that after the event is signaled the blocked thread will 
-        /// find the message in the queue. Other user created threads could be preempted and dequeue 
+        /// Note that there is no guarantee that after the event is signaled the blocked thread will
+        /// find the message in the queue. Other user created threads could be preempted and dequeue
         /// the message before the waiting thread wakes up.
         /// </summary>
         AutoResetEvent MessageReceivedEvent { get; }

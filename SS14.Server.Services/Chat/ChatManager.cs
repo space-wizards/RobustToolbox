@@ -4,11 +4,10 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Services.Chat.Commands;
-using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -19,6 +18,7 @@ using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Chat
 {
+    [IoCTarget]
     public class ChatManager : IChatManager
     {
         private ISS14Server _serverMain;

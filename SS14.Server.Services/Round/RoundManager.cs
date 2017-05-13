@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.Round;
 
 namespace SS14.Server.Services.Round
 {
+    [IoCTarget]
     internal class RoundManager : IRoundManager
     {
         private bool _ready;

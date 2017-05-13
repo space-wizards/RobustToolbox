@@ -1,6 +1,6 @@
-﻿using SS14.Server.Services.Log;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
 

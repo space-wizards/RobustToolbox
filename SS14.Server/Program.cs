@@ -1,4 +1,4 @@
-﻿using SS14.Server.Services.Log;
+﻿using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using System;
 using System.Reflection;

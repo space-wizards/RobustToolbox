@@ -1,5 +1,5 @@
-﻿using SS14.Server.Services.Log;
-using SS14.Shared;
+﻿using SS14.Shared;
+using SS14.Shared.Log;
 using System;
 using System.IO;
 using System.Linq;

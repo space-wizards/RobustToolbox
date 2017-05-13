@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.IO;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Shared.Log;
 
 namespace SS14.Client
 {
@@ -86,7 +87,7 @@ namespace SS14.Client
                 CluwneLib.Screen.Display();
             }
             CluwneLib.Terminate();
-            Console.WriteLine("Gameloop terminated.");
+            LogManager.Log("Gameloop terminated.");
         }
         #endregion
 

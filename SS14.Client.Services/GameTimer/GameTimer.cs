@@ -1,7 +1,9 @@
 ﻿using SS14.Client.Interfaces.GameTimer;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.GameTimer
 {
+    [IoCTarget]
     public class GameTimer : IGameTimer
     {
         public GameTimer()

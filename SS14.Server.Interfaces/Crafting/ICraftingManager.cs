@@ -1,10 +1,11 @@
 using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO.Crafting;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Crafting
 {
-    public interface ICraftingManager
+    public interface ICraftingManager : IIoCInterface
     {
         void removeTicketByConnection(NetConnection connection);
         bool isValidRecipe(string compo1, string compo2);

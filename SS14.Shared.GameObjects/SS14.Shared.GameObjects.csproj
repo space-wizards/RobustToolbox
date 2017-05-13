@@ -97,6 +97,10 @@
       <Project>{0529F740-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.IoC\SS14.Shared.IoC.csproj">
+      <Project>{FEC26501-0000-0000-0000-000000000000}</Project>
+      <Name>SS14.Shared.IoC</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Component.cs">

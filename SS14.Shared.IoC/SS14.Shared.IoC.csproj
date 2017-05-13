@@ -113,6 +113,12 @@
     <Compile Include="IoCManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="IoCAttributes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IIoCInterface.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

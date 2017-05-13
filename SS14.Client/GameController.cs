@@ -16,6 +16,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.IO;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Shared.Utility;
 
 namespace SS14.Client
 {
@@ -46,6 +47,9 @@ namespace SS14.Client
 
         public GameController()
         {
+
+            ShowSplashScreen();
+
             var assemblies = new List<Assembly>();
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
@@ -62,6 +66,7 @@ namespace SS14.Client
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
+            CleanupSplashScreen();
 
             //Initialization of private members
             _networkManager = IoCManager.Resolve<INetworkManager>();
@@ -88,6 +93,19 @@ namespace SS14.Client
             CluwneLib.Terminate();
             Console.WriteLine("Gameloop terminated.");
         }
+
+        private void ShowSplashScreen()
+        {
+            string splashTexturePath = PathHelpers.ExecutableRelativeFile("./splash.png");
+            CluwneLib.ShowSplashScreen(new VideoMode(600, 300), splashTexturePath);
+        }
+
+        private void CleanupSplashScreen()
+        {
+            CluwneLib.CleanupSplashScreen();
+        }
+
+        
         #endregion
 
         #region EventHandlers
@@ -122,9 +140,6 @@ namespace SS14.Client
         {
             CluwneLib.Stop();
         }
-
-
-
 
         #region Input Handling
 

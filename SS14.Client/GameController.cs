@@ -96,7 +96,7 @@ namespace SS14.Client
 
         private void ShowSplashScreen()
         {
-            string splashTexturePath = PathHelpers.ExecutableRelativeFile("./splash.png");
+            string splashTexturePath = PathHelpers.ExecutableRelativeFile("./Data/Splash/Splash.png");
             CluwneLib.ShowSplashScreen(new VideoMode(600, 300), splashTexturePath);
         }
 

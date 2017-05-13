@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextureCache = SS14.Client.Graphics.texture.TextureCache;
 
 namespace SS14.Client.Services.Resources
@@ -139,16 +140,30 @@ namespace SS14.Client.Services.Resources
                 switch (current.Key)
                 {
                     case("textures/"):
-                        LogManager.Log("Loading textures...");
-                        foreach (ZipEntry texture in current.Value)
+
+                        Task<Texture>[] taskArray = new Task<Texture>[current.Value.Count];
+
                         {
+                            ZipEntry texture = current.Value[i];
+
                             if(supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {
-                                Texture loadedImg = LoadTextureFrom(zipFile, texture);
-                                if (loadedImg == null) continue;
-                                else _textures.Add(Path.GetFileNameWithoutExtension(texture.Name), loadedImg);
+                                taskArray[i] = Task<Texture>.Factory.StartNew(() =>
+                                {
+                                    return LoadTextureFrom(zipFile, texture);
+                                });
+
                             }
                         }
+
+                        Task.WaitAll(taskArray);
+                        for (int i = 0; i < taskArray.Count(); i++)
+                        {
+                            Texture loadedImg = taskArray[i].Result;
+                            if (loadedImg == null) continue;
+                            else _textures.Add(Path.GetFileNameWithoutExtension(current.Value[i].Name), loadedImg);
+                        }
+
                         break;
 
                     case("tai/"): // Tai? HANK HANK

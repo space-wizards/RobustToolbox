@@ -11,6 +11,7 @@ using Con = System.Console;
 
 namespace SS14.Server.Services.ServerConsole
 {
+    [IoCTarget]
     public class ConsoleManager : IConsoleManager
     {
         private IDictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();

@@ -10,12 +10,14 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.Services.State
 {
+    [IoCTarget]
     public class StateManager : IStateManager
     {
         private readonly Dictionary<Type, IState> _loadedStates;

@@ -2,12 +2,13 @@
 using SFML.Graphics;
 using SFML.System;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public interface IMapManager
+    public interface IMapManager : IIoCInterface
     {
         event TileChangedEventHandler TileChanged;
 

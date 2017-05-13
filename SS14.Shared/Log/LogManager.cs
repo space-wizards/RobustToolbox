@@ -1,10 +1,8 @@
-﻿using SS14.Server.Interfaces;
-using SS14.Shared;
-using SS14.Shared.ServerEnums;
+﻿using SS14.Shared.ServerEnums;
 using System;
 using System.IO;
 
-namespace SS14.Server.Services.Log
+namespace SS14.Shared.Log
 {
     public class LogManager
     {

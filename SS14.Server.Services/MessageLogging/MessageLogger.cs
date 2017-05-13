@@ -10,6 +10,7 @@ using System.Timers;
 
 namespace SS14.Server.Services.MessageLogging
 {
+    [IoCTarget]
     public class MessageLogger : IMessageLogger
     {
         private static Timer _pingTimer;

@@ -3,9 +3,9 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
-using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System;
@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 
 namespace SS14.Server.Services.Map
 {
+    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();

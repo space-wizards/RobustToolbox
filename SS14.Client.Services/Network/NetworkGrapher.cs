@@ -4,11 +4,13 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
 namespace SS14.Client.Services.Network
 {
+    [IoCTarget]
     public class NetworkGrapher : INetworkGrapher
     {
         private const int MaxDataPoints = 200;

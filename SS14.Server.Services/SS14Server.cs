@@ -2,10 +2,12 @@
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.ServerEnums;
 
 namespace SS14.Server.Services
 {
+    [IoCTarget]
     public class SS14Server : ISS14Server
     {
         private ISS14Server instance;

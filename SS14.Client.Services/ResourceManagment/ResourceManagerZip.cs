@@ -139,8 +139,8 @@ namespace SS14.Client.Services.Resources
                 switch (current.Key)
                 {
                     case("textures/"):
-                        foreach (ZipEntry texture in current.Value)
                         LogManager.Log("Loading textures...");
+                        foreach (ZipEntry texture in current.Value)
                         {
                             if(supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {

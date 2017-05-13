@@ -141,8 +141,9 @@ namespace SS14.Client.Services.Resources
                 {
                     case("textures/"):
 
-                        Task<Texture>[] taskArray = new Task<Texture>[current.Value.Count];
-
+                        int itemCount = current.Value.Count();
+                        Task<Texture>[] taskArray = new Task<Texture>[itemCount];
+                        for(int i = 0; i < itemCount; i++)
                         {
                             ZipEntry texture = current.Value[i];
 

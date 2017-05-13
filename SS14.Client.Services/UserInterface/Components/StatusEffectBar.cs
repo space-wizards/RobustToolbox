@@ -66,7 +66,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            if (assignedEnt != null)
+            if (assignedEnt != null && _playerManager.ControlledEntity != null)
             {
                 if (assignedEnt.Uid != _playerManager.ControlledEntity.Uid) //Seems like the controled ent changed.
                 {

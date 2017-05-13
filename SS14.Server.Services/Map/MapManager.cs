@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 
 namespace SS14.Server.Services.Map
 {
+    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();

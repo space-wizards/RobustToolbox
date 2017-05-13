@@ -24,6 +24,7 @@ namespace SS14.Client.Services.UserInterface
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
+    [IoCTarget]
     public class UserInterfaceManager : IUserInterfaceManager
     {
         /// <summary>

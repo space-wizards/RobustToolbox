@@ -2,9 +2,11 @@
 using SS14.Client.Interfaces.Map;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Services.Map
 {
+    [IoCTarget]
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();
@@ -17,7 +19,7 @@ namespace SS14.Client.Services.Map
             Register(new FloorTileDefinition());
             Register(new WallTileDefinition());
         }
-        
+
         public ushort Register(ITileDefinition tileDef)
         {
             ushort id;

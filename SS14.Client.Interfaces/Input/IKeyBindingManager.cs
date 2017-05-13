@@ -1,9 +1,10 @@
 ﻿using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Interfaces.Input
 {
-    public interface IKeyBindingManager
+    public interface IKeyBindingManager : IIoCInterface
     {
         bool Enabled { get; set; }
 

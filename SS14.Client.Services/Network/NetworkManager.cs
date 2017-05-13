@@ -9,6 +9,7 @@ using System;
 
 namespace SS14.Client.Services.Network
 {
+    [IoCTarget]
     public class NetworkManager : INetworkManager
     {
         private const string ServerName = "SS13 Server";

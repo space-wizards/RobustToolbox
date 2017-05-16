@@ -39,17 +39,10 @@ namespace SS14.Server.GameObjects
         internal void HandleSetSVar(byte[] serializedParameter, NetConnection client)
         {
             MarshalComponentParameter parameter = MarshalComponentParameter.Deserialize(serializedParameter);
-            //Check admin status -- only admins can get svars.
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
-            if (!player.adminPermissions.isAdmin)
-            {
-                LogManager.Log("Player " + player.name + " tried to set an SVar, but is not an admin!", LogLevel.Warning);
-            }
-            else
-            {
-                Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
-                LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
-            }
+
+            Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
+            LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
         }
 
         /// <summary>
@@ -79,22 +72,13 @@ namespace SS14.Server.GameObjects
 
         /// <summary>
         /// Handle a getSVars message
-        /// checks for admin access
         /// </summary>
         /// <param name="client"></param>
         private void HandleGetSVars(NetConnection client)
         {
-            //Check admin status -- only admins can get svars.
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
-            if (!player.adminPermissions.isAdmin)
-            {
-                LogManager.Log("Player " + player.name + " tried to get SVars on Entity " + Owner.Uid + ", but is not an admin!", LogLevel.Warning);
-            }
-            else
-            {
-                SendSVars(client);
-                LogManager.Log("Sending SVars to " + player.name + " for entity " + Owner.Uid + ":" + Owner.Name);
-            }
+            SendSVars(client);
+            LogManager.Log("Sending SVars to " + player.name + " for entity " + Owner.Uid + ":" + Owner.Name);
         }
     }
 }

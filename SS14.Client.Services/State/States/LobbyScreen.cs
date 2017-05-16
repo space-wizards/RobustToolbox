@@ -19,8 +19,6 @@ namespace SS14.Client.Services.State.States
 
         private readonly List<String> _playerListStrings = new List<string>();
         private string _gameType;
-
-        private ScrollableContainer _jobButtonContainer;
         private Chatbox _lobbyChat;
         private TextSprite _lobbyText;
         private DateTime _playerListTime;
@@ -71,23 +69,12 @@ namespace SS14.Client.Services.State.States
 
             _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
 
-            NetOutgoingMessage jobListMsg = NetworkManager.CreateMessage();
-            jobListMsg.Write((byte)NetMessage.JobList); //Request Joblist.
-            NetworkManager.SendMessage(jobListMsg, NetDeliveryMethod.ReliableOrdered);
-
             var joinButton = new Button("Join Game", ResourceManager) { mouseOverColor = new SFML.Graphics.Color(176, 222, 196) };
             joinButton.Position = new Vector2i(605 - joinButton.ClientArea.Width - 5,
                                             200 - joinButton.ClientArea.Height - 5);
             joinButton.Clicked += JoinButtonClicked;
 
             UserInterfaceManager.AddComponent(joinButton);
-
-            _jobButtonContainer = new ScrollableContainer("LobbyJobCont", new Vector2i(375, 400), ResourceManager)
-            {
-                Position = new Vector2i(630, 10)
-            };
-
-            UserInterfaceManager.AddComponent(_jobButtonContainer);
 
             CluwneLib.CurrentRenderTarget.Clear();
         }
@@ -205,62 +192,12 @@ namespace SS14.Client.Services.State.States
                             HandleChatMessage(message);
                             break;
 
-                        case NetMessage.JobList:
-                            HandleJobList(message);
-                            break;
-
-                        case NetMessage.JobSelected:
-                            HandleJobSelected(message);
-                            break;
-
                         case NetMessage.JoinGame:
                             HandleJoinGame();
                             break;
                     }
                     break;
             }
-        }
-
-        private void HandleJobSelected(NetIncomingMessage msg)
-        {
-            string jobName = msg.ReadString();
-            foreach (GuiComponent comp in _jobButtonContainer.components)
-                ((JobSelectButton)comp).Selected = ((JobDefinition)comp.UserData).Name == jobName;
-        }
-
-        private void HandleJobList(NetIncomingMessage msg)
-        {
-            int byteNum = msg.ReadInt32();
-            byte[] compressedXml = msg.ReadBytes(byteNum);
-
-            string jobListXml = ZipString.UnZipStr(compressedXml);
-
-            JobHandler.Singleton.LoadDefinitionsFromString(jobListXml);
-            int pos = 5;
-            _jobButtonContainer.components.Clear(); //Properly dispose old buttons !!!!!!!
-            foreach (JobDefinition definition in JobHandler.Singleton.JobSettings.JobDefinitions)
-            {
-                var current = new JobSelectButton(definition.Name, definition.JobIcon, definition.Description,
-                                                  ResourceManager)
-                {
-                    Available = definition.Available,
-                    Position = new Vector2i(5, pos)
-                };
-
-                current.Clicked += CurrentClicked;
-                current.UserData = definition;
-                _jobButtonContainer.components.Add(current);
-                pos += current.ClientArea.Height + 20;
-            }
-        }
-
-        private void CurrentClicked(JobSelectButton sender)
-        {
-            NetOutgoingMessage playerJobSpawnMsg = NetworkManager.CreateMessage();
-            var picked = (JobDefinition)sender.UserData;
-            playerJobSpawnMsg.Write((byte)NetMessage.RequestJob); //Request job.
-            playerJobSpawnMsg.Write(picked.Name);
-            NetworkManager.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandlePlayerList(NetIncomingMessage msg)

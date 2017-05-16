@@ -11,7 +11,7 @@ using System.Timers;
 namespace SS14.Server.Services.MessageLogging
 {
     [IoCTarget]
-    public class MessageLogger : IMessageLogger, IService
+    public class MessageLogger : IMessageLogger
     {
         private static Timer _pingTimer;
         private readonly MessageLoggerServiceClient _loggerServiceClient;
@@ -106,15 +106,6 @@ namespace SS14.Server.Services.MessageLogging
             catch (CommunicationException e)
             {
             }
-        }
-
-        #endregion
-
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.MessageLogger; }
         }
 
         #endregion

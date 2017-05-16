@@ -102,9 +102,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdminPermissions.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="BoundKeyEventArgs.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -164,12 +161,6 @@
     <Compile Include="GO\Component\Hitbox\HitboxComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\HumanHealthComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Damageable\Health\LocationalHealth\LocationHealthState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GO\Component\Direction\DirectionComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -197,16 +188,10 @@
     <Compile Include="GO\Component\Renderable\SpriteComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\Component\StatusEffect\StatusEffectComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GO\Component\Transform\TransformComponentState.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GO\Component\Velocity\VelocityComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Crafting\CraftingEntry.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GO\ComponentState.cs">
@@ -227,9 +212,6 @@
     <Compile Include="GO\Server\ServerDelegates.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GO\StatusEffect\StatusEffectState.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Lighting.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -237,19 +219,7 @@
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
-    <Compile Include="Objectives\ObjectiveParameterType.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Objectives\ObjectiveType.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlayerActionEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="EntityBaseClass.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Banlist.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CSharpExtensions.cs">
@@ -276,16 +246,10 @@
     <Compile Include="GO\ItemFlags.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="JobHandler.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="KeyFunctions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PostProcessingEffects.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ProfilerEnums.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="QuadTree.cs">
@@ -303,13 +267,7 @@
     <Compile Include="ServerEnums\RunLevel.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServicesEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="SessionStatusEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BodypartEnum.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TypeEventArgs.cs">

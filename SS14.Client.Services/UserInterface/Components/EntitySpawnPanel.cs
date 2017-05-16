@@ -73,7 +73,7 @@ namespace SS14.Client.Services.UserInterface.Components
                                   });
 
             _lstOverride = new Listbox(150, 125, resourceManager, initOpts);
-            _lstOverride.SelectItem("None");
+            _lstOverride.SelectItem("AlignFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
             components.Add(_lstOverride);

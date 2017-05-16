@@ -285,6 +285,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
+            if (e.Code == Keyboard.Key.Return && input.Text == "" && Active)
+            {
+                Active = false;
+
+                return true;
+            }
+
             return input.KeyDown(e);
         }
 

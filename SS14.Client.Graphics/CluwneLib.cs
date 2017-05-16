@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
@@ -47,11 +48,12 @@ namespace SS14.Client.Graphics
         public static bool IsRunning { get; set; }
         public static bool FrameStatsVisible { get; set; }
         
-        public static CluwneWindow  Screen        { get; set; }
-        public static TimingData    FrameStats    { get; set; }
-        public static VideoSettings Video         { get; private set; }
-        public static Debug Debug         { get; private set; }
-        public static GLSLShader    CurrentShader { get; internal set; }
+        public static CluwneWindow SplashScreen { get; set; }
+        public static CluwneWindow Screen { get; set; }
+        public static TimingData FrameStats { get; set; }
+        public static VideoSettings Video { get; private set; }
+        public static Debug Debug { get; private set; }
+        public static GLSLShader CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }    
         public static RenderTarget CurrentRenderTarget
@@ -74,9 +76,6 @@ namespace SS14.Client.Graphics
       
         #endregion
 
-
-
-
         static CluwneLib()
         {
             Video = new VideoSettings();
@@ -91,8 +90,6 @@ namespace SS14.Client.Graphics
         public static void Go()
         {        
             
-            
-
             if (!IsInitialized)
             {
                 Initialize();
@@ -128,6 +125,24 @@ namespace SS14.Client.Graphics
             IsRunning = true;
         }
 
+        public static void ShowSplashScreen(VideoMode vMode, string splashPath)
+        {
+            if (SplashScreen == null)
+            {
+                SplashScreen = new CluwneWindow(vMode, "Space Station 14", Styles.None);
+                Texture splashTexture = new Texture(splashPath);
+                SFML.Graphics.Sprite splashSprite = new SFML.Graphics.Sprite(splashTexture);
+                SplashScreen.Draw(splashSprite);
+                SplashScreen.Display();
+            }
+        }
+
+        public static void CleanupSplashScreen()
+        {
+            SplashScreen.Close();
+            SplashScreen = null;
+        }
+
         public static void drawRectangle(int x, int y, int width, int height, object p)
         {
             throw new NotImplementedException();
@@ -146,22 +161,18 @@ namespace SS14.Client.Graphics
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
             IsInitialized = true;
 
-
-
             //Hook OpenTK into SFMLs Opengl 
-        OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
                 // Non-Native backend doesn't have a default GetAddress method
-        Backend = OpenTK.PlatformBackend.PreferNative
-        });
-        new GraphicsContext(OpenTK.ContextHandle.Zero, null);
-    }
+                Backend = OpenTK.PlatformBackend.PreferNative
+            });
+            new GraphicsContext(OpenTK.ContextHandle.Zero, null);
+        }
        
         public static void RequestGC(Action action)
         {
           action.Invoke();         
         }           
-
-  
 
         public static void ClearCurrentRendertarget(Color color)
         {

@@ -19,8 +19,6 @@ namespace SS14.Server.Services.Player
 
         private readonly PlayerManager _playerManager;
         public PlayerState PlayerState;
-        public BodyPart targetedArea = BodyPart.Torso;
-
         public PlayerSession(NetConnection client, PlayerManager playerManager)
         {
             _playerManager = playerManager;
@@ -32,7 +30,6 @@ namespace SS14.Server.Services.Player
             if (client != null)
             {
                 connectedClient = client;
-                adminPermissions = new AdminPermissions();
                 OnConnect();
             }
             else
@@ -56,14 +53,7 @@ namespace SS14.Server.Services.Player
         }
         public string name { get; set; }
         public SessionStatus status { get; set; }
-        public AdminPermissions adminPermissions { get; set; }
 
-        public BodyPart TargetedArea
-        {
-            get { return targetedArea; }
-        }
-
-        public JobDefinition assignedJob { get; set; }
         public DateTime ConnectedTime { get; private set; }
 
         public void AttachToEntity(Entity a)
@@ -107,10 +97,6 @@ namespace SS14.Server.Services.Player
                     break;
                 case PlayerSessionMessage.JoinLobby:
                     JoinLobby();
-                    break;
-                case PlayerSessionMessage.SetTargetArea:
-                    var selected = (BodyPart) message.ReadByte();
-                    targetedArea = selected;
                     break;
             }
         }

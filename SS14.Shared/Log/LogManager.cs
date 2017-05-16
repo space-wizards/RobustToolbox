@@ -26,15 +26,6 @@ namespace SS14.Shared.Log
             }
         }
 
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.LogManager; }
-        }
-
-        #endregion
-
         /// <summary>
         /// Initialize log
         /// </summary>

@@ -48,7 +48,6 @@ namespace SS14.Client.Services.State.States
         private int _prevScreenHeight = 0;
 
         private readonly TabContainer _tabCharacter;
-        private readonly JobTab _tabJob;
         private readonly TabContainer _tabObserve;
         private readonly PlayerListTab _tabServer;
         private readonly TabbedMenu _tabs;
@@ -59,7 +58,6 @@ namespace SS14.Client.Services.State.States
         private FloatRect _recStatus;
         private TabContainer _tabActive;
 
-        private List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>> sortedJobs = new List<KeyValuePair<DepartmentDefinition, List<JobDefinition>>>();
         private Chatbox _lobbyChat;
 
         private string _serverName;
@@ -129,14 +127,6 @@ namespace SS14.Client.Services.State.States
                 ZDepth = 2
             };
 
-            _tabJob = new JobTab("lobbyTabJob", new Vector2i(793, 450), ResourceManager)
-            {
-                tabSpriteName = "lobby_tab_bcase"
-            };
-            _tabs.AddTab(_tabJob);
-            _tabJob._shwDepa.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwDepa_SelectionChanged);
-            _tabJob._shwJobs.SelectionChanged += new Showcase.ShowcaseSelectionChangedHandler(_shwJobs_SelectionChanged);
-
             _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceManager)
             {
                 tabSpriteName = "lobby_tab_person"
@@ -154,7 +144,7 @@ namespace SS14.Client.Services.State.States
                 tabSpriteName = "lobby_tab_info"
             };
             _tabs.AddTab(_tabServer);
-            _tabs.SelectTab(_tabJob);
+            _tabs.SelectTab(_tabServer);
 
             _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceManager);
             _lobbyChat.Update(0);
@@ -227,14 +217,6 @@ namespace SS14.Client.Services.State.States
                             HandleChatMessage(message);
                             break;
 
-                        case NetMessage.JobList:
-                            HandleJobList(message);
-                            break;
-
-                        case NetMessage.JobSelected:
-                            //HandleJobSelected(message); THIS IS THE ACK FROM THE SERVER FOR JOB SELECTION TODO STILL NEEDED?
-                            break;
-
                         case NetMessage.JoinGame:
                             HandleJoinGame();
                             break;
@@ -279,87 +261,6 @@ namespace SS14.Client.Services.State.States
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.components.Add(newLabel);
-            }
-        }
-
-        private void HandleJobList(NetIncomingMessage msg)
-        {
-            int byteNum = msg.ReadInt32();
-            byte[] compressedXml = msg.ReadBytes(byteNum);
-
-            string jobListXml = ZipString.UnZipStr(compressedXml);
-
-            JobHandler.Singleton.LoadDefinitionsFromString(jobListXml);
-
-            _tabJob._shwDepa.ClearItems();
-            _tabJob._shwJobs.ClearItems();
-
-            sortedJobs.Clear();
-
-            foreach (DepartmentDefinition dep in JobHandler.Singleton.JobSettings.DepartmentDefinitions)
-            {
-                var depJobs = (from x in JobHandler.Singleton.JobSettings.JobDefinitions
-                               where x.Department.ToLowerInvariant() == dep.Name.ToLowerInvariant()
-                               where x.Available
-                               orderby x.Name
-                               select x).ToList();
-
-                var newEntry = new KeyValuePair<DepartmentDefinition, List<JobDefinition>>(dep, depJobs);
-                sortedJobs.Add(newEntry);
-
-                var newDep = new ImageButton
-                {
-                    ImageNormal = dep.DepartmentIcon,
-                };
-
-                DepartmentInfo newInfo = new DepartmentInfo()
-                {
-                    Department = dep,
-                    JobDefs = depJobs
-                };
-
-                _tabJob._shwDepa.AddItem(newDep, newInfo);
-            }
-        }
-
-        private void _shwDepa_SelectionChanged(ImageButton sender, object associatedData)
-        {
-            _tabJob._shwJobs.ClearItems();
-
-            if (associatedData is DepartmentInfo)
-            {
-                DepartmentInfo info = (DepartmentInfo)associatedData;
-
-                _tabJob._imgJobGrad.Color = ColorUtils.FromHex(info.Department.DepartmentColorHex).WithAlpha(_tabJob._imgJobGrad.Color.A);
-
-                _tabJob._lblDep.Text.Text = info.Department.Name;
-
-                foreach (JobDefinition def in info.JobDefs)
-                {
-                    var newJob = new ImageButton
-                    {
-                        ImageNormal = def.JobIcon
-                    };
-
-                    _tabJob._shwJobs.AddItem(newJob, def);
-                }
-            }
-        }
-
-        private void _shwJobs_SelectionChanged(ImageButton sender, object associatedData)
-        {
-            if (associatedData != null && associatedData is JobDefinition)
-            {
-                JobDefinition jobDef = (JobDefinition)associatedData;
-
-                _tabJob._lbljobName.Text.Text = jobDef.Name;
-                _tabJob._lbljobDesc.Text.Text = jobDef.Description;
-
-                var netManager = IoCManager.Resolve<INetworkManager>();
-                NetOutgoingMessage playerJobSpawnMsg = netManager.CreateMessage();
-                playerJobSpawnMsg.Write((byte)NetMessage.RequestJob);
-                playerJobSpawnMsg.Write(jobDef.Name);
-                netManager.SendMessage(playerJobSpawnMsg, NetDeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -557,11 +458,5 @@ namespace SS14.Client.Services.State.States
         }
 
         #endregion Input
-    }
-
-    public struct DepartmentInfo
-    {
-        public DepartmentDefinition Department;
-        public List<JobDefinition> JobDefs;
     }
 }

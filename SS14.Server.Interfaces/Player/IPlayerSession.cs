@@ -8,13 +8,10 @@ namespace SS14.Server.Interfaces.Player
     public interface IPlayerSession
     {
         NetConnection ConnectedClient { get; }
-        BodyPart TargetedArea { get; }
         GO.Entity attachedEntity { get; }
         int? AttachedEntityUid { get; }
-        AdminPermissions adminPermissions { get; }
         string name { get; set; }
         SessionStatus status { get; set; }
-        JobDefinition assignedJob { get; set; }
         NetConnection connectedClient { get; }
         DateTime ConnectedTime { get; }
 

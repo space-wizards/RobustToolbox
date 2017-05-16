@@ -9,9 +9,6 @@ namespace SS14.Client.Graphics.Render
     {
         public CluwneWindow(VideoMode mode, string title) : base(mode, title)
         {
-           
-            
-
         }
 
         public CluwneWindow(VideoMode mode, string title, Styles style) : base(mode, title, style)

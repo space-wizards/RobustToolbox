@@ -7,7 +7,6 @@ namespace SS14.Client.Interfaces.UserInterface
     public interface IDragDropInfo
     {
         Entity DragEntity { get; }
-        IPlayerAction DragAction { get; }
         Sprite DragSprite { get; }
         bool IsEntity { get; }
         bool IsActive { get; }
@@ -15,6 +14,5 @@ namespace SS14.Client.Interfaces.UserInterface
         void Reset();
 
         void StartDrag(Entity entity);
-        void StartDrag(IPlayerAction action);
     }
 }

@@ -175,10 +175,10 @@ namespace SS14.Client.Services.Collision
             if (ourAABB.Key.Collidable == null)
                 return;
 
-            //foreach (CollidablePoint p in ourAABB.Key.Points)
-            //{
-            //    RemovePoint(p);
-            //}
+            foreach (CollidablePoint p in ourAABB.Key.Points)
+            {
+                RemovePoint(p);
+            }
             _aabbs.Remove(ourAABB.Key);
         }
 

@@ -21,12 +21,6 @@ namespace SS14.Server.GameObjects
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             bool shouldMove = true;
-            if (Owner.HasComponent(ComponentFamily.StatusEffects))
-            {
-                var statComp = (StatusEffectComp) Owner.GetComponent(ComponentFamily.StatusEffects);
-                if (statComp.HasFamily(StatusEffectFamily.Root) || statComp.HasFamily(StatusEffectFamily.Stun))
-                    shouldMove = false;
-            }
 
             if (shouldMove)
             {

@@ -46,7 +46,6 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Currently targeting action.
         /// </summary>
-        private IPlayerAction targetingAction;
 
         public UserInterfaceManager(IResourceManager resourceManager)
         {
@@ -64,11 +63,6 @@ namespace SS14.Client.Services.UserInterface
 
         public IDragDropInfo DragInfo { get; private set; }
 
-        public IPlayerAction currentTargetingAction
-        {
-            get { return targetingAction; }
-        }
-
         public IDebugConsole Console => _console;
 
         /// <summary>
@@ -77,37 +71,6 @@ namespace SS14.Client.Services.UserInterface
         public void ToggleMoveMode()
         {
             moveMode = !moveMode;
-        }
-
-        /// <summary>
-        ///  Enters targeting mode for given action.
-        /// </summary>
-        public void StartTargeting(IPlayerAction act)
-        {
-            if (act.TargetType == PlayerActionTargetType.None) return;
-
-            IoCManager.Resolve<IPlacementManager>().Clear();
-            DragInfo.Reset();
-
-            targetingAction = act;
-        }
-
-        /// <summary>
-        ///  Passes target to currently active action (and tells it to activate). Also ends targeting mode.
-        /// </summary>
-        public void SelectTarget(object target)
-        {
-            if (targetingAction == null) return;
-            targetingAction.Use(target);
-            CancelTargeting();
-        }
-
-        /// <summary>
-        ///  Cancels targeting mode.
-        /// </summary>
-        public void CancelTargeting()
-        {
-            targetingAction = null;
         }
 
         /// <summary>
@@ -468,15 +431,7 @@ namespace SS14.Client.Services.UserInterface
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
-                case CreateUiType.HealthScannerWindow:
-                    Entity ent = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(msg.ReadInt32());
-                    if (ent != null)
-                    {
-                        DisposeAllComponents<HealthScannerWindow>();
-                        var scannerWindow = new HealthScannerWindow(ent, MousePos, this, _resourceManager);
-                        AddComponent(scannerWindow);
-                    }
-                    break;
+
             }
         }
 
@@ -541,16 +496,9 @@ namespace SS14.Client.Services.UserInterface
 
             if (showCursor)
             {
-                if (targetingAction != null)
-                {
-                    _cursorSprite = _resourceManager.GetSprite("cursor_target");
-                }
-                else
-                {
-                    _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
-                                        ? DragInfo.DragSprite
-                                        : _resourceManager.GetSprite("cursor");
-                }
+                _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
+                                    ? DragInfo.DragSprite
+                                    : _resourceManager.GetSprite("cursor");
 
                 _cursorSprite.Position = MousePos.ToFloat();
                 _cursorSprite.Draw();

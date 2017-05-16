@@ -84,15 +84,11 @@ namespace SS14.Client.Services.State.States
 
         private Chatbox _gameChat;
         private HandsGui _handsGui;
-        private StatusEffectBar _statusBar;
-        private Hotbar _hotbar;
         private HumanComboGui _combo;
         private HealthPanel _healthPanel;
-        private TargetingGui _targetingUi;
         private ImageButton _inventoryButton;
         private ImageButton _statusButton;
-        private ImageButton _craftButton;
-        private ImageButton _menuButton;  
+        private ImageButton _menuButton;
         #endregion
 
         #region Lighting
@@ -166,7 +162,7 @@ namespace SS14.Client.Services.State.States
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
 
-            // Create new 
+            // Create new
             _gaussianBlur = new GaussianBlur(ResourceManager);
 
             _realScreenWidthTiles = (float)CluwneLib.Screen.Size.X / MapManager.TileSize;
@@ -195,7 +191,7 @@ namespace SS14.Client.Services.State.States
             _overlayTarget = new RenderImage("OverlayTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
             _cleanupList.Add(_overlayTarget);
 
-            //_overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;  
+            //_overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
             //_overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
             //_overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
             //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
@@ -263,29 +259,25 @@ namespace SS14.Client.Services.State.States
         }
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
-    
+
         private void UpdateGUIPosition()
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
 
-            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X / 2, 400);
+            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
-            _hotbar.Position = new Vector2i(0, (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
+            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
 
-            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
+            // 712 is width of hotbar background I think?
+            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
+                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
 
-            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
-                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+            _healthPanel.Position = new Vector2i(712 - 1, hotbar_pos_y + 11);
 
-            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
-
-            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
-
-            _inventoryButton.Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2);
+            _inventoryButton.Position = new Vector2i(172, hotbar_pos_y + 2);
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
 
-            _craftButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
-            _menuButton.Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y);
+            _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
 
     }
 
@@ -298,39 +290,27 @@ namespace SS14.Client.Services.State.States
 
             //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
 
-            _statusBar = new StatusEffectBar(ResourceManager, PlayerManager);
-            _statusBar.Position = new Vector2i((int)CluwneLib.Screen.Size.X /2, 400);
-            UserInterfaceManager.AddComponent(_statusBar);
-
-            _hotbar = new Hotbar(ResourceManager);
-            _hotbar.Position = new Vector2i(0 , (int)CluwneLib.Screen.Size.Y - _hotbar.ClientArea.Height - 5);
-            _hotbar.Update(0);
-            UserInterfaceManager.AddComponent(_hotbar);
+            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
             _handsGui = new HandsGui();
-            _handsGui.Position = new Vector2i(_hotbar.Position.X + 5, _hotbar.Position.Y + 7);
+            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
             UserInterfaceManager.AddComponent(_handsGui);
 
             _combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            _combo.Position = new Vector2i(_hotbar.ClientArea.Right() - _combo.ClientArea.Width + 5,
-                                       _hotbar.Position.Y - _combo.ClientArea.Height - 5);
+            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
+                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
             _combo.Update(0);
             UserInterfaceManager.AddComponent(_combo);
 
             _healthPanel = new HealthPanel();
-            _healthPanel.Position = new Vector2i(_hotbar.ClientArea.Right() - 1, _hotbar.Position.Y + 11);
+            _healthPanel.Position = new Vector2i(711, hotbar_pos_y + 11);
             _healthPanel.Update(0);
             UserInterfaceManager.AddComponent(_healthPanel);
-
-            _targetingUi = new TargetingGui();
-            _targetingUi.Position = new Vector2i(_healthPanel.Position.X + _healthPanel.ClientArea.Width, _healthPanel.Position.Y - 40);
-            _targetingUi.Update(0);
-            UserInterfaceManager.AddComponent(_targetingUi);
 
             _inventoryButton = new ImageButton
             {
                 ImageNormal = "button_inv",
-                Position = new Vector2i(_hotbar.Position.X + 172, _hotbar.Position.Y + 2)
+                Position = new Vector2i(172, hotbar_pos_y + 2)
             };
             _inventoryButton.Update(0);
             _inventoryButton.Clicked += inventoryButton_Clicked;
@@ -346,19 +326,11 @@ namespace SS14.Client.Services.State.States
             _statusButton.Clicked += statusButton_Clicked;
             UserInterfaceManager.AddComponent(_statusButton);
 
-            _craftButton = new ImageButton
-            {
-                ImageNormal = "button_craft",
-                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
-            };
-            _craftButton.Update(0);
-            _craftButton.Clicked += craftButton_Clicked;
-            UserInterfaceManager.AddComponent(_craftButton);
 
             _menuButton = new ImageButton
             {
                 ImageNormal = "button_menu",
-                Position = new Vector2i(_craftButton.ClientArea.Right(), _craftButton.Position.Y)
+                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
             };
             _menuButton.Update(0);
             _menuButton.Clicked += menuButton_Clicked;
@@ -376,7 +348,7 @@ namespace SS14.Client.Services.State.States
             lightArea1024 = new LightArea(ShadowmapSize.Size1024);
 
             screenShadows = new RenderImage("screenShadows", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, ImageBufferFormats.BufferRGB888A8);
-            
+
             _cleanupList.Add(screenShadows);
             screenShadows.UseDepthBuffer = false;
             shadowIntermediate = new RenderImage("shadowIntermediate", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
@@ -447,7 +419,7 @@ namespace SS14.Client.Services.State.States
 
                 // Get nearby lights
                 ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
-               
+
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);
@@ -456,7 +428,7 @@ namespace SS14.Client.Services.State.States
                 _sceneTarget.BeginDrawing();
                 _sceneTarget.Clear(Color.Black);
 
-                //PreOcclusion 
+                //PreOcclusion
                 RenderTiles();
 
                 //ComponentManager.Singleton.Render(0, CluwneLib.ScreenViewport);
@@ -690,15 +662,6 @@ namespace SS14.Client.Services.State.States
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceManager,
                                                                        PlacementManager)); //Create a new one.
             }
-            if (e.Code == Keyboard.Key.F12)
-            {
-                UserInterfaceManager.DisposeAllComponents<PlayerActionsWindow>(); //Remove old ones.
-                var actComp =
-                    (PlayerActionComp)PlayerManager.ControlledEntity.GetComponent(ComponentFamily.PlayerActions);
-                if (actComp != null)
-                    UserInterfaceManager.AddComponent(new PlayerActionsWindow(new Vector2i(150, 150), ResourceManager,
-                                                                              actComp)); //Create a new one.
-            }
 
             PlayerManager.KeyDown(e.Code);
         }
@@ -791,67 +754,22 @@ namespace SS14.Client.Services.State.States
                     return;
                 }
 
+                ClickableComponent c;
                 switch (e.Button)
                 {
                     case Mouse.Button.Left:
-                        if (UserInterfaceManager.currentTargetingAction != null &&
-                            (UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Any ||
-                                UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Other))
-                            UserInterfaceManager.SelectTarget(entToClick);
-                        else
-                        {
-                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
-                        }
+                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         break;
                     case Mouse.Button.Right:
-                        if (UserInterfaceManager.currentTargetingAction != null)
-                            UserInterfaceManager.CancelTargeting();
-                        else
-                        {
-                            var c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                            c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
-                        }
+                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         break;
                     case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
                         UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
                                                                              entToClick));
                         break;
-                }
-            }
-            else
-            {
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        {
-                            if (UserInterfaceManager.currentTargetingAction != null &&
-                                UserInterfaceManager.currentTargetingAction.TargetType == PlayerActionTargetType.Point)
-                            {
-                                UserInterfaceManager.SelectTarget(new Vector2f(MousePosWorld.X, MousePosWorld.Y));
-                            }
-                            else
-                            {
-                                /*Point clickedPoint = MapManager.GetTileArrayPositionFromWorldPosition(MousePosWorld);
-                                if (clickedPoint.X > 0 && clickedPoint.Y > 0)
-                                {
-                                    NetOutgoingMessage message = NetworkManager.CreateMessage();
-                                    message.Write((byte) NetMessage.MapMessage);
-                                    message.Write((byte) MapMessage.TurfClick);
-                                    message.Write((short) clickedPoint.X);
-                                    message.Write((short) clickedPoint.Y);
-                                    NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
-                                }*/
-                            }
-                            break;
-                        }
-                    case Mouse.Button.Right:
-                        {
-                            if (UserInterfaceManager.currentTargetingAction != null)
-                                UserInterfaceManager.CancelTargeting();
-                            break;
-                        }
                 }
             }
 
@@ -943,7 +861,7 @@ namespace SS14.Client.Services.State.States
 
         #endregion
 
-        #endregion       
+        #endregion
 
         #region Event Handlers
 
@@ -952,11 +870,6 @@ namespace SS14.Client.Services.State.States
         {
             UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
             UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
-        }
-
-        private void craftButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 3);
         }
 
         private void statusButton_Clicked(ImageButton sender)
@@ -1018,15 +931,6 @@ namespace SS14.Client.Services.State.States
                         case NetMessage.EntityMessage:
                             _entityManager.HandleEntityNetworkMessage(message);
                             break;
-                        case NetMessage.RequestAdminLogin:
-                            HandleAdminMessage(messageType, message);
-                            break;
-                        case NetMessage.RequestAdminPlayerlist:
-                            HandleAdminMessage(messageType, message);
-                            break;
-                        case NetMessage.RequestBanList:
-                            HandleAdminMessage(messageType, message);
-                            break;
                         case NetMessage.StateUpdate:
                             HandleStateUpdate(message);
                             break;
@@ -1038,52 +942,13 @@ namespace SS14.Client.Services.State.States
             }
         }
 
-        public void HandleAdminMessage(NetMessage adminMsgType, NetIncomingMessage messageBody)
-        {
-            switch (adminMsgType)
-            {
-                case NetMessage.RequestAdminLogin:
-                    UserInterfaceManager.DisposeAllComponents<AdminPasswordDialog>(); //Remove old ones.
-                    UserInterfaceManager.AddComponent(new AdminPasswordDialog(new Vector2i(200, 50), NetworkManager,
-                                                                              ResourceManager)); //Create a new one.
-                    break;
-                case NetMessage.RequestAdminPlayerlist:
-                    UserInterfaceManager.DisposeAllComponents<AdminPlayerPanel>();
-                    UserInterfaceManager.AddComponent(new AdminPlayerPanel(new Vector2i(600, 200), NetworkManager,
-                                                                           ResourceManager, messageBody));
-                    break;
-                case NetMessage.RequestBanList:
-                    var banList = new Banlist();
-                    int entriesCount = messageBody.ReadInt32();
-                    for (int i = 0; i < entriesCount; i++)
-                    {
-                        string ipAddress = messageBody.ReadString();
-                        string reason = messageBody.ReadString();
-                        bool tempBan = messageBody.ReadBoolean();
-                        uint minutesLeft = messageBody.ReadUInt32();
-                        var entry = new BanEntry
-                        {
-                            ip = ipAddress,
-                            reason = reason,
-                            tempBan = tempBan,
-                            expiresAt = DateTime.Now.AddMinutes(minutesLeft)
-                        };
-                        banList.List.Add(entry);
-                    }
-                    UserInterfaceManager.DisposeAllComponents<AdminUnbanPanel>();
-                    UserInterfaceManager.AddComponent(new AdminUnbanPanel(new Vector2i(620, 200), banList, NetworkManager,
-                                                                          ResourceManager));
-                    break;
-            }
-        }
-
         #endregion
 
         #region State
 
         /// <summary>
         /// HandleStateUpdate
-        /// 
+        ///
         /// Recieves a state update message and unpacks the delicious GameStateDelta hidden inside
         /// Then it applies the gamestatedelta to a past state to form: a full game state!
         /// </summary>
@@ -1120,7 +985,7 @@ namespace SS14.Client.Services.State.States
 
         /// <summary>
         /// CullOldStates
-        /// 
+        ///
         /// Deletes states that are no longer relevant
         /// </summary>
         /// <param name="sequence">state sequence number</param>
@@ -1132,7 +997,7 @@ namespace SS14.Client.Services.State.States
 
         /// <summary>
         /// HandleFullState
-        /// 
+        ///
         /// Handles full gamestates - for initializing.
         /// </summary>
         /// <param name="message">incoming full state message</param>
@@ -1157,7 +1022,7 @@ namespace SS14.Client.Services.State.States
 
         /// <summary>
         /// SendStateAck
-        /// 
+        ///
         /// Acknowledge a game state being recieved
         /// </summary>
         /// <param name="sequence">State sequence number</param>
@@ -1202,8 +1067,8 @@ namespace SS14.Client.Services.State.States
         /**
          *  Calculate lights In player view
          *  Render Lights in view to lightmap  > Screenshadows
-         * 
-         * 
+         *
+         *
          **/
 
 
@@ -1215,7 +1080,7 @@ namespace SS14.Client.Services.State.States
                 CalculateLightArea(l);
             }
         }
-          
+
         /// <summary>
         /// Renders a set of lights into a single lightmap.
         /// If a light hasn't been prerendered yet, it renders that light.
@@ -1233,12 +1098,12 @@ namespace SS14.Client.Services.State.States
                 CalculateLightArea(l);
             }
 
-            //Step 2 - Set up the render targets for the composite lighting.                    
+            //Step 2 - Set up the render targets for the composite lighting.
             screenShadows.Clear(Color.Black);
 
             RenderImage source = screenShadows;
             source.Clear(Color.Black);
-          
+
             RenderImage desto = shadowIntermediate;
             RenderImage copy = null;
 
@@ -1262,7 +1127,7 @@ namespace SS14.Client.Services.State.States
 
                 //Set the drawing position.
                 Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
-           
+
 
                 //Set shader parameters
                 var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
@@ -1297,9 +1162,9 @@ namespace SS14.Client.Services.State.States
                 }
                 if (draw)
                 {
-                  
+
                     desto.BeginDrawing();
-                   
+
                     Lightmap.SetParameter("LightPosData", r_pos);
                     Lightmap.SetParameter("Colors", r_col);
                     Lightmap.SetParameter("light0", r_img[0]);
@@ -1307,21 +1172,21 @@ namespace SS14.Client.Services.State.States
                     Lightmap.SetParameter("light2", r_img[2]);
                     Lightmap.SetParameter("light3", r_img[3]);
                     Lightmap.SetParameter("light4", r_img[4]);
-                    Lightmap.SetParameter("light5", r_img[5]);              
+                    Lightmap.SetParameter("light5", r_img[5]);
                     Lightmap.SetParameter("sceneTexture", source);
-                    
+
                     // Blit the shadow image on top of the screen
                     source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
-                  
+
                     desto.EndDrawing();
-             
-           
+
+
                     //Swap rendertargets to set up for the next light
                     copy = source;
                     source = desto;
                     desto = copy;
                     i = 0;
-              
+
                     draw = false;
                     fill = false;
                     r_img = new Texture[num_lights];
@@ -1332,7 +1197,7 @@ namespace SS14.Client.Services.State.States
                 {
                     r_img[i] = lightTextures[0];
                     lightTextures.RemoveAt(0);
-                    
+
 
                     r_col[i] = colors[0];
                     colors.RemoveAt(0);
@@ -1356,12 +1221,12 @@ namespace SS14.Client.Services.State.States
             {
                 screenShadows.BeginDrawing();
                 source.Blit(0, 0, source.Width, source.Height);
-                screenShadows.EndDrawing();              
+                screenShadows.EndDrawing();
             }
 
             var texunflipx = screenShadows.Texture.CopyToImage();
             texunflipx.FlipVertically();
-            screenShadows.Texture.Update(texunflipx);           
+            screenShadows.Texture.Update(texunflipx);
         }
 
         private void CalculateSceneBatches(FloatRect vision)
@@ -1408,11 +1273,11 @@ namespace SS14.Client.Services.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);            
-                            
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+
 
                 LightArea area =  GetLightArea(RadiusToShadowMapSize( playerVision.Radius));
-                area.LightPosition =  playerVision.Position  ; // Set the light position            
+                area.LightPosition =  playerVision.Position  ; // Set the light position
 
                 TileRef TileReference = MapManager.GetTileRef(playerVision.Position);
 
@@ -1420,7 +1285,7 @@ namespace SS14.Client.Services.State.States
                 {
 
                     area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
-                    
+
 
                 }
 
@@ -1435,17 +1300,17 @@ namespace SS14.Client.Services.State.States
 
                 if (debugWallOccluders)
                 {
-                    
+
                     _occluderDebugTarget.BeginDrawing();
                     _occluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
                     _occluderDebugTarget.EndDrawing();
-                 
+
                 }
-           
+
                 shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
-               
+
                 if (debugPlayerShadowMap)
                 {
                     _occluderDebugTarget.BeginDrawing();
@@ -1456,8 +1321,8 @@ namespace SS14.Client.Services.State.States
 
                 playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 
-                //area.renderTarget.SourceBlend = AlphaBlendOperation.One; 
-                //area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero; 
+                //area.renderTarget.SourceBlend = AlphaBlendOperation.One;
+                //area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero;
                 area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
 

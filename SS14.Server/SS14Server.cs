@@ -3,7 +3,6 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Configuration;
-using SS14.Server.Interfaces.Crafting;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
@@ -329,7 +328,6 @@ namespace SS14.Server
                     var end = stopWatch.ElapsedTicks;
                     var atmosTime = (end - start) / (float)Stopwatch.Frequency * 1000;
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-                    IoCManager.Resolve<ICraftingManager>().Update();
                     GC.KeepAlive(atmosTime);
 
                     break;
@@ -479,20 +477,9 @@ namespace SS14.Server
 
             LoadSettings();
 
-            if (JobHandler.Singleton.LoadDefinitionsFromFile(PathHelpers.ExecutableRelativeFile("JobDefinitions.xml")))
-            {
-                LogManager.Log("Job Definitions File not found. A Template has been created.", LogLevel.Fatal);
-                Environment.Exit(1);
-            }
-            else
-                LogManager.Log("Job Definitions Found. " + JobHandler.Singleton.JobSettings.JobDefinitions.Count + " Jobs loaded. " + JobHandler.Singleton.JobSettings.DepartmentDefinitions.Count + " Departments loaded.");
-
-            BanlistMgr.Singleton.Initialize("BanList.xml");
-
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<ICraftingManager>().Initialize("CraftingRecipes.xml", this);
             IoCManager.Resolve<IPlacementManager>().Initialize(this);
 
             StartLobby();
@@ -582,21 +569,10 @@ namespace SS14.Server
                         LogManager.Log(senderIp + ": Already connected", LogLevel.Error);
                         return;
                     }
-                    if (!BanlistMgr.Singleton.IsBanned(sender.RemoteEndPoint.Address.ToString()))
-                    {
-                        HandleConnectionApproval(sender);
-                        IoCManager.Resolve<IPlayerManager>().NewSession(sender);
-                        // TODO move this to somewhere that makes more sense.
-                    }
-                    else
-                    {
-                        //You're banned bro.
-                        BanEntry ban = BanlistMgr.Singleton.GetBanByIp(senderIp);
-                        sender.Disconnect("You have been banned from this Server." + Environment.NewLine + "Reason: " +
-                                          ban.reason + Environment.NewLine + "Expires: " +
-                                          (ban.tempBan ? ban.expiresAt.ToString("d/M/yyyy HH:mm:ss") : "Never"));
-                        LogManager.Log(senderIp + ": Connection denied. User banned.");
-                    }
+                    HandleConnectionApproval(sender);
+                    IoCManager.Resolve<IPlayerManager>().NewSession(sender);
+                    // TODO move this to somewhere that makes more sense.
+
                     break;
 
                 case NetConnectionStatus.Disconnected:
@@ -619,16 +595,8 @@ namespace SS14.Server
             var messageType = (NetMessage)msg.ReadByte();
             switch (messageType)
             {
-                case NetMessage.CraftMessage:
-                    IoCManager.Resolve<ICraftingManager>().HandleNetMessage(msg);
-                    break;
-
                 case NetMessage.WelcomeMessage:
                     SendWelcomeInfo(msg.SenderConnection);
-                    break;
-
-                case NetMessage.RequestJob:
-                    HandleJobRequest(msg);
                     break;
 
                 case NetMessage.ForceRestart:
@@ -659,40 +627,12 @@ namespace SS14.Server
                     IoCManager.Resolve<IMapManager>().HandleNetworkMessage(msg);
                     break;
 
-                case NetMessage.JobList:
-                    HandleJobListRequest(msg);
-                    break;
-
                 case NetMessage.PlacementManagerMessage:
                     IoCManager.Resolve<IPlacementManager>().HandleNetMessage(msg);
                     break;
 
                 case NetMessage.EntityMessage:
                     EntityManager.HandleEntityNetworkMessage(msg);
-                    break;
-
-                case NetMessage.RequestAdminLogin:
-                    HandleAdminMessage(messageType, msg);
-                    break;
-
-                case NetMessage.RequestAdminPlayerlist:
-                    HandleAdminMessage(messageType, msg);
-                    break;
-
-                case NetMessage.RequestAdminKick:
-                    HandleAdminMessage(messageType, msg);
-                    break;
-
-                case NetMessage.RequestAdminBan:
-                    HandleAdminMessage(messageType, msg);
-                    break;
-
-                case NetMessage.RequestAdminUnBan:
-                    HandleAdminMessage(messageType, msg);
-                    break;
-
-                case NetMessage.RequestBanList:
-                    HandleAdminMessage(messageType, msg);
                     break;
 
                 case NetMessage.RequestEntityDeletion:
@@ -719,157 +659,17 @@ namespace SS14.Server
             {
                 case NetMessage.RequestEntityDeletion:
                     int entId = messageBody.ReadInt32();
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin || true)
+                    //if (
+                    //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
+                    //        adminPermissions.isAdmin || true)
                     //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    {
-                        Entity delEnt = EntityManager.GetEntity(entId);
-                        if (delEnt != null) EntityManager.DeleteEntity(delEnt);
-                    }
+                    //{
+                    Entity delEnt = EntityManager.GetEntity(entId);
+                    if (delEnt != null) EntityManager.DeleteEntity(delEnt);
+                    //}
                     break;
 
-                case NetMessage.RequestAdminLogin:
-                    string password = messageBody.ReadString();
-                    if (password == IoCManager.Resolve<IServerConfigurationManager>().AdminPassword)
-                    {
-                        LogManager.Log("Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address);
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin = true;
-                    }
-                    else
-                        LogManager.Log("Failed Admin login: " + messageBody.SenderConnection.RemoteEndPoint.Address +
-                                       " -> ' " + password + " '");
-                    break;
-
-                case NetMessage.RequestAdminPlayerlist:
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin)
-                    {
-                        NetOutgoingMessage adminPlayerListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        adminPlayerListMessage.Write((byte)NetMessage.RequestAdminPlayerlist);
-                        adminPlayerListMessage.Write((byte)ClientList.Count);
-                        foreach (
-                            IPlayerSession plrSession in
-                                ClientList.Keys.Select(
-                                    conn => IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(conn)))
-                        {
-                            adminPlayerListMessage.Write(plrSession.name);
-                            adminPlayerListMessage.Write((byte)plrSession.status);
-                            adminPlayerListMessage.Write(plrSession.assignedJob.Name);
-                            adminPlayerListMessage.Write(plrSession.connectedClient.RemoteEndPoint.Address.ToString());
-                            adminPlayerListMessage.Write(plrSession.adminPermissions.isAdmin);
-                        }
-                        IoCManager.Resolve<ISS14NetServer>().SendMessage(adminPlayerListMessage,
-                                                                         messageBody.SenderConnection,
-                                                                         NetDeliveryMethod.ReliableOrdered);
-                    }
-                    else
-                    {
-                        NetOutgoingMessage loginMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        loginMessage.Write((byte)NetMessage.RequestAdminLogin);
-                        IoCManager.Resolve<ISS14NetServer>().SendMessage(loginMessage, messageBody.SenderConnection,
-                                                                         NetDeliveryMethod.ReliableOrdered);
-                    }
-                    break;
-
-                case NetMessage.RequestAdminKick:
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin)
-                    {
-                        string ipKick = messageBody.ReadString();
-                        IPlayerSession kickSession = IoCManager.Resolve<IPlayerManager>().GetSessionByIp(ipKick);
-                        if (kickSession != null)
-                        {
-                            IoCManager.Resolve<IPlayerManager>().EndSession(kickSession.connectedClient);
-                            kickSession.connectedClient.Disconnect("Kicked by Administrator.");
-                        }
-                    }
-                    break;
-
-                case NetMessage.RequestAdminBan:
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin)
-                    {
-                        string ipBan = messageBody.ReadString();
-                        IPlayerSession banSession = IoCManager.Resolve<IPlayerManager>().GetSessionByIp(ipBan);
-                        if (banSession != null)
-                        {
-                            if (BanlistMgr.Singleton.IsBanned(ipBan)) return;
-                            BanlistMgr.Singleton.AddBan(ipBan, "No reason specified.");
-                            IoCManager.Resolve<IPlayerManager>().EndSession(banSession.connectedClient);
-                            banSession.connectedClient.Disconnect("Banned by Administrator.");
-                        }
-                    }
-                    break;
-
-                case NetMessage.RequestBanList:
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin)
-                    {
-                        NetOutgoingMessage banListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                        banListMessage.Write((byte)NetMessage.RequestBanList);
-                        banListMessage.Write(BanlistMgr.Singleton.banlist.List.Count);
-                        foreach (BanEntry t in BanlistMgr.Singleton.banlist.List)
-                        {
-                            banListMessage.Write(t.ip);
-                            banListMessage.Write(t.reason);
-                            banListMessage.Write(t.tempBan);
-                            int compare = t.expiresAt.CompareTo(DateTime.Now);
-                            TimeSpan timeLeft = compare < 0 ? new TimeSpan(0) : t.expiresAt.Subtract(DateTime.Now);
-                            var minutesLeft = (uint)Math.Truncate(timeLeft.TotalMinutes);
-                            banListMessage.Write(minutesLeft);
-                        }
-                        IoCManager.Resolve<ISS14NetServer>().SendMessage(banListMessage, messageBody.SenderConnection,
-                                                                         NetDeliveryMethod.ReliableOrdered);
-                    }
-                    break;
-
-                case NetMessage.RequestAdminUnBan:
-                    if (
-                        IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(messageBody.SenderConnection).
-                            adminPermissions.isAdmin)
-                    {
-                        string ip = messageBody.ReadString();
-                        BanlistMgr.Singleton.RemoveBanByIp(ip);
-                    }
-                    break;
             }
-        }
-
-        public void HandleJobRequest(NetIncomingMessage msg)
-        {
-            string name = msg.ReadString();
-            JobDefinition pickedJob = (from JobDefinition def in JobHandler.Singleton.JobSettings.JobDefinitions
-                                       where def.Name == name
-                                       select def).First();
-
-            if (pickedJob == null) return;
-
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
-            session.assignedJob = pickedJob;
-
-            NetOutgoingMessage jobSelectedMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobSelectedMessage.Write((byte)NetMessage.JobSelected);
-            jobSelectedMessage.Write(pickedJob.Name);
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(jobSelectedMessage, msg.SenderConnection,
-                                                             NetDeliveryMethod.ReliableOrdered);
-        }
-
-        public void HandleJobListRequest(NetIncomingMessage msg)
-        {
-            NetOutgoingMessage jobListMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            jobListMessage.Write((byte)NetMessage.JobList);
-            byte[] compressedStr = ZipString.ZipStr(JobHandler.Singleton.GetDefinitionsString());
-            jobListMessage.Write(compressedStr.Length);
-            jobListMessage.Write(compressedStr);
-            //LogManager.Log("Jobs sent: " + compressedStr.Length.ToString());
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(jobListMessage, msg.SenderConnection,
-                                                             NetDeliveryMethod.ReliableOrdered);
         }
 
         public void HandleClientName(NetIncomingMessage msg)

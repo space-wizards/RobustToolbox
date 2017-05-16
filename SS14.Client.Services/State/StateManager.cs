@@ -20,7 +20,7 @@ namespace SS14.Client.Services.State
     [IoCTarget]
     public class StateManager : IStateManager
     {
-        private readonly Dictionary<String, IState> _loadedStates;
+        private readonly Dictionary<Type, IState> _loadedStates;
         private readonly Dictionary<Type, object> _managers;
 
         #region IStateManager Members
@@ -49,7 +49,7 @@ namespace SS14.Client.Services.State
                                 {typeof (IStateManager), this}
                             };
 
-            _loadedStates = new Dictionary<String, IState>();
+            _loadedStates = new Dictionary<Type, IState>();
             CurrentState = null;
 
             playerManager.RequestedStateSwitch += HandleStateChange;
@@ -142,37 +142,16 @@ namespace SS14.Client.Services.State
         private void SwitchToState<T>() where T : IState
         {
             IState newState;
-            Type stateType = typeof(T);
-            if (_loadedStates.ContainsKey(stateType.Name))
+
+            if (_loadedStates.ContainsKey(typeof (T)))
             {
-                newState = (T) _loadedStates[stateType.Name];
+                newState = (T) _loadedStates[typeof (T)];
             }
             else
             {
                 var parameters = new object[] {_managers};
-                newState = (T) Activator.CreateInstance(stateType, parameters);
-                _loadedStates.Add(stateType.Name, newState);
-            }
-
-            if (CurrentState != null) CurrentState.Shutdown();
-
-            CurrentState = newState;
-            CurrentState.Startup();
-        }
-
-        private void SwitchToState(Type type)
-        {
-            IState newState;
-
-            if (_loadedStates.ContainsKey(type.Name))
-            {
-                newState = _loadedStates[type.Name];
-            }
-            else
-            {
-                var parameters = new object[] { _managers };
-                newState = (IState)Activator.CreateInstance(type, parameters);
-                _loadedStates.Add(type.Name, newState);
+                newState = (T) Activator.CreateInstance(typeof (T), parameters);
+                _loadedStates.Add(typeof (T), newState);
             }
 
             if (CurrentState != null) CurrentState.Shutdown();
@@ -187,6 +166,27 @@ namespace SS14.Client.Services.State
             {
                 SwitchToState(type);
             }
+        }
+
+        private void SwitchToState(Type type)
+        {
+            IState newState;
+
+            if (_loadedStates.ContainsKey(type))
+            {
+                newState = _loadedStates[type];
+            }
+            else
+            {
+                var parameters = new object[] {_managers};
+                newState = (IState) Activator.CreateInstance(type, parameters);
+                _loadedStates.Add(type, newState);
+            }
+
+            if (CurrentState != null) CurrentState.Shutdown();
+
+            CurrentState = newState;
+            CurrentState.Startup();
         }
 
         private void HandleStateChange(object sender, TypeEventArgs args)

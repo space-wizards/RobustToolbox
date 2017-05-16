@@ -115,7 +115,10 @@ namespace SS14.Client.Services.UserInterface
         /// </summary>
         public void DisposeAllComponents()
         {
-            _components.ForEach(x => x.Dispose());
+            foreach (IGuiComponent x in _components.ToList())
+            {
+                x.Dispose();
+            }
             _components.Clear();
         }
 

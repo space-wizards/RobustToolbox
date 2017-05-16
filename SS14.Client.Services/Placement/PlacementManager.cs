@@ -23,6 +23,7 @@ using System.Reflection;
 
 namespace SS14.Client.Services.Placement
 {
+    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         public readonly ICollisionManager CollisionManager;
@@ -143,7 +144,6 @@ namespace SS14.Client.Services.Placement
         {
             Clear();
 
-            IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
             IoCManager.Resolve<IUserInterfaceManager>().DragInfo.Reset();
 
             CurrentPermission = info;

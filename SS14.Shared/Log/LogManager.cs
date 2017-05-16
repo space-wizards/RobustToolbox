@@ -1,12 +1,10 @@
-﻿using SS14.Server.Interfaces;
-using SS14.Shared;
-using SS14.Shared.ServerEnums;
+﻿using SS14.Shared.ServerEnums;
 using System;
 using System.IO;
 
-namespace SS14.Server.Services.Log
+namespace SS14.Shared.Log
 {
-    public class LogManager : IService
+    public class LogManager
     {
         /// <summary>
         /// Singleton
@@ -27,15 +25,6 @@ namespace SS14.Server.Services.Log
                 return singleton;
             }
         }
-
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.LogManager; }
-        }
-
-        #endregion
 
         /// <summary>
         /// Initialize log

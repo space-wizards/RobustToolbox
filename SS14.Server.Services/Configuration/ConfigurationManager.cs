@@ -1,8 +1,9 @@
 ﻿using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Configuration;
-using SS14.Server.Services.Log;
 using SS14.Shared;
+using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using System;
 using System.IO;
@@ -10,7 +11,8 @@ using System.Xml.Serialization;
 
 namespace SS14.Server.Services.Configuration
 {
-    public sealed class ConfigurationManager : IServerConfigurationManager, IService
+    [IoCTarget]
+    public sealed class ConfigurationManager : IServerConfigurationManager
     {
         private string ConfigFile;
         public PersistentConfiguration Configuration;
@@ -74,12 +76,6 @@ namespace SS14.Server.Services.Configuration
             set { Configuration.serverWelcomeMessage = value; }
         }
 
-        public string AdminPassword
-        {
-            get { return Configuration.AdminPassword; }
-            set { Configuration.AdminPassword = value; }
-        }
-
         public string LogPath
         {
             get { return Configuration.LogPath; }
@@ -134,15 +130,6 @@ namespace SS14.Server.Services.Configuration
         }
 
         #endregion IConfigurationManager Members
-
-        #region IService Members
-
-        public ServerServiceType ServiceType
-        {
-            get { return ServerServiceType.ConfigManager; }
-        }
-
-        #endregion IService Members
 
         public void LoadResources()
         {

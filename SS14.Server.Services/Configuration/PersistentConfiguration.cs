@@ -9,7 +9,6 @@ namespace SS14.Server.Services.Configuration
     public class PersistentConfiguration
     {
         public const int _Version = 1;
-        public string AdminPassword = "admin123"; // so secure very wow
         public Vector2i ConsoleSize = new Vector2i(120, 60);
         public LogLevel LogLevel = LogLevel.Information;
 

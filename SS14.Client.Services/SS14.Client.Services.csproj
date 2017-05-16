@@ -309,15 +309,6 @@
     <Compile Include="GameTimer\GameTimer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Components\AdminPasswordDialog.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\AdminPlayerPanel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\AdminUnbanPanel.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Components\BlueprintButton.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -357,9 +348,6 @@
     <Compile Include="UserInterface\Components\SVarEditWindow.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Components\TargetingGui.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Components\HealthPanel.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -367,27 +355,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\Components\TemplateGuiComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\HealthScannerWindow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\Hotbar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\HotbarSlot.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\PlayerActionsWindow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\PlayerActionButton.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\StatusEffectBar.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\StatusEffectButton.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs">
@@ -403,9 +370,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\Components\GuiComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\JobSelectButton.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\Components\Label.cs">
@@ -426,12 +390,6 @@
     <Compile Include="UserInterface\Components\ImageButton.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Components\TargetingDummy.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\Components\TargetingDummyElement.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Components\Textbox.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -447,9 +405,6 @@
     <Compile Include="UserInterface\DragDropInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UserInterface\Inventory\CraftSlotUi.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -463,9 +418,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\LobbyState\TabContainer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UserInterface\LobbyState\JobTab.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs">

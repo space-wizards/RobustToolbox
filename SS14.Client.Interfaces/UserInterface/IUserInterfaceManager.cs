@@ -3,14 +3,14 @@ using SFML.Window;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
-    public interface IUserInterfaceManager
+    public interface IUserInterfaceManager : IIoCInterface
     {
         IDragDropInfo DragInfo { get; }
-        IPlayerAction currentTargetingAction { get; }
 
         IDebugConsole Console { get; }
 
@@ -30,10 +30,6 @@ namespace SS14.Client.Interfaces.UserInterface
         void RemoveFocus(IGuiComponent target);
         void Update(float frameTime);
         void Render();
-
-        void StartTargeting(IPlayerAction action);
-        void SelectTarget(object target);
-        void CancelTargeting();
 
         void ToggleMoveMode();
 

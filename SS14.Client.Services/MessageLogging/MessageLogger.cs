@@ -9,6 +9,7 @@ using System.Timers;
 
 namespace SS14.Client.Services.MessageLogging
 {
+    [IoCTarget]
     public class MessageLogger : IMessageLogger
     {
         private static Timer _pingTimer;
@@ -31,7 +32,7 @@ namespace SS14.Client.Services.MessageLogging
         #region IMessageLogger Members
 
         /// <summary>
-        /// Check to see if the server is still running 
+        /// Check to see if the server is still running
         /// </summary>
         public void Ping()
         {

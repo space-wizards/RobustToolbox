@@ -8,6 +8,8 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,10 +17,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextureCache = SS14.Client.Graphics.texture.TextureCache;
 
 namespace SS14.Client.Services.Resources
 {
+    [IoCTarget]
     public class ResourceManager : IResourceManager
     {
         private const int zipBufferSize = 4096;
@@ -32,7 +36,7 @@ namespace SS14.Client.Services.Resources
         private readonly Dictionary<string, TechniqueList> _TechniqueList = new Dictionary<string, TechniqueList>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
-        private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>(); 
+        private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>();
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>();
         private readonly List<string> supportedImageExtensions = new List<string> {".png"};
 
@@ -66,7 +70,7 @@ namespace SS14.Client.Services.Resources
             {
                 Texture nospriteimage = new Texture( _stream);
                 _textures.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite(nospriteimage));  
+                _sprites.Add("nosprite", new Sprite(nospriteimage));
             }
             _stream = null;
         }
@@ -90,7 +94,7 @@ namespace SS14.Client.Services.Resources
 
             if (Assembly.GetEntryAssembly().GetName().Name == "SS14.UnitTesting")
             {
-                string debugPath = "..\\"; 
+                string debugPath = "..\\";
                 debugPath += zipPath;
                 zipPath = debugPath;
             }
@@ -104,11 +108,11 @@ namespace SS14.Client.Services.Resources
             var zipFile = new ZipFile(zipFileStream);
 
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
-            
+
             #region Sort Resource pack
             var directories = from ZipEntry a in zipFile
                               where a.IsDirectory
-                              orderby a.Name.ToLowerInvariant() == "textures" descending 
+                              orderby a.Name.ToLowerInvariant() == "textures" descending
                               select a;
 
             Dictionary<string, List<ZipEntry>> sorted = new Dictionary<string, List<ZipEntry>>();
@@ -128,24 +132,43 @@ namespace SS14.Client.Services.Resources
             sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
             #endregion
 
+            LogManager.Log("Loading resources...");
+
             #region Load Resources
             foreach (KeyValuePair<string, List<ZipEntry>> current in sorted)
             {
                 switch (current.Key)
                 {
                     case("textures/"):
-                        foreach (ZipEntry texture in current.Value)
+
+                        int itemCount = current.Value.Count();
+                        Task<Texture>[] taskArray = new Task<Texture>[itemCount];
+                        for(int i = 0; i < itemCount; i++)
                         {
+                            ZipEntry texture = current.Value[i];
+
                             if(supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {
-                                Texture loadedImg = LoadTextureFrom(zipFile, texture);
-                                if (loadedImg == null) continue;
-                                else _textures.Add(Path.GetFileNameWithoutExtension(texture.Name), loadedImg);
+                                taskArray[i] = Task<Texture>.Factory.StartNew(() =>
+                                {
+                                    return LoadTextureFrom(zipFile, texture);
+                                });
+
                             }
                         }
+
+                        Task.WaitAll(taskArray);
+                        for (int i = 0; i < taskArray.Count(); i++)
+                        {
+                            Texture loadedImg = taskArray[i].Result;
+                            if (loadedImg == null) continue;
+                            else _textures.Add(Path.GetFileNameWithoutExtension(current.Value[i].Name), loadedImg);
+                        }
+
                         break;
 
                     case("tai/"): // Tai? HANK HANK
+                        LogManager.Log("Loading tai...");
                         foreach (ZipEntry tai in current.Value)
                         {
                             if (Path.GetExtension(tai.Name).ToLowerInvariant() == ".tai")
@@ -158,6 +181,7 @@ namespace SS14.Client.Services.Resources
                         break;
 
                     case("fonts/"):
+                        LogManager.Log("Loading fonts...");
                         foreach (ZipEntry font in current.Value)
                         {
                             if (Path.GetExtension(font.Name).ToLowerInvariant() == ".ttf")
@@ -171,6 +195,7 @@ namespace SS14.Client.Services.Resources
                         break;
 
                     case("particlesystems/"):
+                        LogManager.Log("Loading particlesystems...");
                         foreach (ZipEntry particles in current.Value)
                         {
                             if (Path.GetExtension(particles.Name).ToLowerInvariant() == ".xml")
@@ -184,29 +209,30 @@ namespace SS14.Client.Services.Resources
 
                     case ("shaders/"):
                         {
+                            LogManager.Log("Loading shaders...");
                             GLSLShader LoadedShader;
-                            TechniqueList List;              
-                                                                        
+                            TechniqueList List;
+
                             foreach (ZipEntry shader in current.Value)
                             {
                                 int FirstIndex = shader.Name.IndexOf('/') ;
                                 int LastIndex = shader.Name.LastIndexOf('/');
-                               
+
                                 if (FirstIndex != LastIndex)  // if the shader pixel/fragment files are in folder/technique group, construct shader and add it to a technique list.
                                 {
                                     string FolderName = shader.Name.Substring(FirstIndex + 1 , LastIndex - FirstIndex - 1);
-                                               
+
                                     if(!_TechniqueList.Keys.Contains(FolderName))
                                     {
                                         List = new TechniqueList();
                                         List.Name = FolderName;
                                         _TechniqueList.Add(FolderName,List);
                                     }
-                                   
+
 
                                     LoadedShader = LoadShaderFrom(zipFile, shader);
                                     if (LoadedShader == null) continue;
-                                    else _TechniqueList[FolderName].Add(LoadedShader);                                                                     
+                                    else _TechniqueList[FolderName].Add(LoadedShader);
                                 }
 
                                 // if the shader is not in a folder/technique group, add it to the shader dictionary
@@ -219,9 +245,10 @@ namespace SS14.Client.Services.Resources
                                 }
                             }
                             break;
-                        }         
-                                          
+                        }
+
                     case("animations/"):
+                        LogManager.Log("Loading animations...");
                         foreach (ZipEntry animation in current.Value)
                         {
                             if (Path.GetExtension(animation.Name).ToLowerInvariant() == ".xml")
@@ -244,7 +271,7 @@ namespace SS14.Client.Services.Resources
 
             GC.Collect();
         }
-              
+
         /// <summary>
         ///  <para>Clears all Resource lists</para>
         /// </summary>
@@ -313,7 +340,7 @@ namespace SS14.Client.Services.Resources
             }
 
             return null;
-          
+
         }
 
         /// <summary>
@@ -322,13 +349,13 @@ namespace SS14.Client.Services.Resources
         private GLSLShader LoadShaderFrom(ZipFile zipFile, ZipEntry shaderEntry)
         {
             string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
-                      
+
 
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
             GLSLShader loadedShader;
-            
+
             //Will throw exception if missing or wrong password. Handle this.
 
 
@@ -354,19 +381,19 @@ namespace SS14.Client.Services.Resources
                 FragmentShader.Dispose();
                 VertexShader = null;
                 FragmentShader = null;
-               
+
             }
             else
-                loadedShader = null;       
-           
+                loadedShader = null;
 
-         
+
+
             zipStream.Close();
             zipStream.Dispose();
 
             return loadedShader;
         }
-        
+
         /// <summary>
         ///  <para>Loads Font from given Zip-File and Entry.</para>
         /// </summary>
@@ -492,7 +519,7 @@ namespace SS14.Client.Services.Resources
                 string PlatformPathname = SS14.Shared.Utility.PlatformTools.SanePath(fullPath[0]);
 
                 string originalName = Path.GetFileNameWithoutExtension(PlatformPathname).ToLowerInvariant();
-                //The name of the original picture without extension, before it became part of the atlas. 
+                //The name of the original picture without extension, before it became part of the atlas.
                 //This will be the name we can find this under in our Resource lists.
 
                 string[] splitResourceName = fullPath[2].Split('.');
@@ -586,12 +613,12 @@ namespace SS14.Client.Services.Resources
         public List<Sprite> GetSprites()
         {
             return _sprites.Values.ToList();
-        } 
+        }
 
         public List<string> GetSpriteKeys()
         {
             return _sprites.Keys.ToList();
-        } 
+        }
 
         public object GetAnimatedSprite(string key)
         {
@@ -657,9 +684,9 @@ namespace SS14.Client.Services.Resources
         {
             if (_TechniqueList.ContainsKey(key)) return _TechniqueList[key];
             else return null;
-             
+
         }
-        
+
         /// <summary>
         ///  Retrieves the ParticleSettings with the given key from the Resource List. Returns null if not found.
         /// </summary>

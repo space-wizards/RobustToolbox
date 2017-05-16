@@ -2,11 +2,12 @@
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.GOC
 {
-    public interface IEntityManager : SS14.Shared.GameObjects.IEntityManager
+    public interface IEntityManager : SS14.Shared.GameObjects.IEntityManager, IIoCInterface
     {
         void Shutdown();
         void HandleEntityNetworkMessage(NetIncomingMessage message);

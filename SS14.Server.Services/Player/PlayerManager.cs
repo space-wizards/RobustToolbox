@@ -4,11 +4,12 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObject;
 using SS14.Server.Interfaces.GOC;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Services.Log;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.GO;
+using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ using System.Linq;
 
 namespace SS14.Server.Services.Player
 {
+    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* This class will manage connected player sessions. */
@@ -47,17 +49,6 @@ namespace SS14.Server.Services.Player
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
             Entity human = a;
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
-            if (s.assignedJob != null)
-            {
-                foreach (
-                    Entity newItem in
-                        s.assignedJob.SpawnEquipment.Select(def => server.EntityManager.SpawnEntity(def.ObjectType)))
-                {
-                    newItem.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
-                        human.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position);
-                    human.GetComponent<IEquipmentComponent>(ComponentFamily.Equipment).RaiseEquipItem(newItem);
-                }
-            }
             s.AttachToEntity(a);
         }
 

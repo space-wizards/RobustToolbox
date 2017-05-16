@@ -1,8 +1,9 @@
 ﻿using SFML.Window;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Configuration
 {
-    public interface IPlayerConfigurationManager
+    public interface IPlayerConfigurationManager : IIoCInterface
     {
         void Initialize(string configFile);
         void SetPlayerName(string name);

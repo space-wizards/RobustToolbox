@@ -1,9 +1,10 @@
 ﻿using Lidgren.Network;
 using System.Collections.Generic;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.ClientConsoleHost
 {
-    public interface IClientConsoleHost
+    public interface IClientConsoleHost : IIoCInterface
     {
         IDictionary<string, IClientCommand> AvailableCommands { get; }
         void ProcessCommand(string text, NetConnection sender);

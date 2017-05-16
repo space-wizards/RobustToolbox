@@ -60,7 +60,7 @@ namespace SS14.Server.GameObjects
             }
             return stateEntities;
         }
-        
+
         #endregion
 
         /// <summary>

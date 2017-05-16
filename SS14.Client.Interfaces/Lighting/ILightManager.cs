@@ -1,10 +1,11 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Lighting
 {
-    public interface ILightManager
+    public interface ILightManager : IIoCInterface
     {
         ILight CreateLight();
         void AddLight(ILight light);

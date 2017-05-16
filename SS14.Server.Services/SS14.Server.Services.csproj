@@ -189,13 +189,7 @@
     <Compile Include="ServerConsole\ConsoleManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Crafting\CraftingManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GameState\GameStateManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Log\LogManager.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Map\MapManager.cs">

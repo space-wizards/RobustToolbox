@@ -15,7 +15,6 @@ namespace SS14.Client.Services.UserInterface
 
         public Entity DragEntity { get; private set; }
         public Sprite DragSprite { get; private set; }
-        public IPlayerAction DragAction { get; private set; }
         public bool IsEntity { get; private set; }
 
         public bool IsActive
@@ -27,7 +26,6 @@ namespace SS14.Client.Services.UserInterface
         {
             DragEntity = null;
             DragSprite = null;
-            DragAction = null;
             IsEntity = true;
         }
 
@@ -35,7 +33,6 @@ namespace SS14.Client.Services.UserInterface
         {
             Reset();
 
-            IoCManager.Resolve<IUserInterfaceManager>().CancelTargeting();
             IoCManager.Resolve<IPlacementManager>().Clear();
 
             DragEntity = entity;
@@ -43,19 +40,11 @@ namespace SS14.Client.Services.UserInterface
             IsEntity = true;
         }
 
-        public void StartDrag(IPlayerAction action)
-        {
-            Reset();
-            DragAction = action;
-            DragSprite = IoCManager.Resolve<IResourceManager>().GetSprite(action.Icon);
-            IsEntity = false;
-        }
-
         #endregion
 
         public bool Active()
         {
-            return (DragAction != null || DragEntity != null);
+            return DragEntity != null;
         }
     }
 }

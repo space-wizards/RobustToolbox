@@ -6,18 +6,19 @@ using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Services.Log;
 using SS14.Server.Services.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.Services.Placement
 {
+    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         //TO-DO: Expand for multiple permission per mob?
@@ -77,9 +78,6 @@ namespace SS14.Server.Services.Placement
                 return; //Don't accept placement requests from nobodys
 
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-            Boolean isAdmin =
-                IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.
-                    isAdmin;
 
             float a = (float)Math.Floor(xRcv);
             float b = (float)Math.Floor(yRcv);

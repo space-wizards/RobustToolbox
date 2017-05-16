@@ -78,9 +78,6 @@ namespace SS14.Server.Services.Placement
                 return; //Don't accept placement requests from nobodys
 
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-            Boolean isAdmin =
-                IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).adminPermissions.
-                    isAdmin;
 
             float a = (float)Math.Floor(xRcv);
             float b = (float)Math.Floor(yRcv);

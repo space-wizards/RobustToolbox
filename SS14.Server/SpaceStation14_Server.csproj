@@ -163,9 +163,6 @@
     <Compile Include="Helper Classes\InterpolationPacket.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Modules\Banlist.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Modules\Client\Client.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -203,10 +200,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="server_config.xml">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="CraftingRecipes.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -271,10 +264,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="EntityTemplates\Internals.xml">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="JobDefinitions.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -201,7 +201,7 @@ namespace SS14.Server.GameObjects
             return equippedEntities.ContainsValue(e);
         }
 
-        // Unequips entity e 
+        // Unequips entity e
         public void UnEquipEntity(Entity e)
         {
             EquipmentSlot key;
@@ -277,10 +277,6 @@ namespace SS14.Server.GameObjects
 
         public bool HasInternals()
         {
-            List<ItemCapability> caps = GetEquipmentCapabilities();
-            ItemCapability cap = caps.FirstOrDefault(c => c.GetType() == typeof (BreatherCapability));
-            if (cap != null)
-                return true;
             return false;
         }
 

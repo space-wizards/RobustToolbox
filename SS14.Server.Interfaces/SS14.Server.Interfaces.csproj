@@ -175,9 +175,6 @@
     <Compile Include="ServerConsole\IConsoleManager.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Crafting\ICraftingManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GameMode\IGameMode.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -223,16 +220,7 @@
     <Compile Include="Player\IPlayerSession.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="IService.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Network\ISS14NetServer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Objectives\IObjective.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Objectives\IObjectiveSet.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Player\IPlayerManager.cs">

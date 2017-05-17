@@ -243,6 +243,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
+            if (input.Focus == true && !Active)
+            {
+                Active = true;
+
+                return true;
+            }
+
             if (!Active)
             {
                 return false;

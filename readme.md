@@ -7,7 +7,16 @@ The original sprites for the game, created by Adam Riches, have been withheld fo
 
 ## GETTING IN TOUCH ##
 
-We have an IRC channel at `irc.rizon.net#spacebus`. It is set up to relay to a Discord server too. We might change Discord server so ask for a link in IRC.
+Website: [space-wizards.github.io](https://space-wizards.github.io/)
+
+IRC: `irc.rizon.net#spacebus`
+
+Discord: [Invite Link](https://discord.gg/t2jac3p)
+
+The IRC is setup to relay back and forth to the Discord server so IRC nerds will not be left out.
+
+# Attribution and Legal Info
+
 
 ## ATTRIBUTION ##
 

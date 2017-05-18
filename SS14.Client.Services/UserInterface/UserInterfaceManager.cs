@@ -6,6 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -34,7 +35,6 @@ namespace SS14.Client.Services.UserInterface
 
         private readonly IPlayerConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
-        private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
         private DebugConsole _console;
 
@@ -46,6 +46,19 @@ namespace SS14.Client.Services.UserInterface
         /// <summary>
         ///  Currently targeting action.
         /// </summary>
+
+        private IGuiComponent _currentFocus;
+        public IGuiComponent CurrentFocus
+        {
+            get
+            {
+                return _currentFocus;
+            }
+            set
+            {
+                _currentFocus = value;
+            }
+        }
 
         public UserInterfaceManager(IResourceManager resourceManager)
         {
@@ -153,6 +166,7 @@ namespace SS14.Client.Services.UserInterface
             {
                 RemoveFocus();
             }
+
             _currentFocus = newFocus;
             newFocus.Focus = true;
         }
@@ -163,7 +177,9 @@ namespace SS14.Client.Services.UserInterface
         public void RemoveFocus()
         {
             if (_currentFocus == null)
+            {
                 return;
+            }
 
             _currentFocus.Focus = false;
             _currentFocus = null;
@@ -175,7 +191,9 @@ namespace SS14.Client.Services.UserInterface
         public void RemoveFocus(IGuiComponent remFocus)
         {
             if (_currentFocus != remFocus)
+            {
                 return;
+            }
 
             _currentFocus.Focus = false;
             _currentFocus = null;

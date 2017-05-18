@@ -16,6 +16,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Services.Helpers;
 using SS14.Client.Services.Lighting;
 using SS14.Client.Services.UserInterface.Components;
@@ -82,6 +83,7 @@ namespace SS14.Client.Services.State.States
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
+        private MenuWindow _menu;
         private Chatbox _gameChat;
         private HandsGui _handsGui;
         private HumanComboGui _combo;
@@ -285,7 +287,7 @@ namespace SS14.Client.Services.State.States
         private void UpdateGUIPosition()
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
-
+            
             int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
             _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
@@ -305,6 +307,12 @@ namespace SS14.Client.Services.State.States
 
         private void InitializeGUI()
         {
+
+
+            _menu = new MenuWindow();
+            UserInterfaceManager.AddComponent(_menu);
+            _menu.SetVisible(false);
+
             //Init GUI components
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
@@ -638,11 +646,7 @@ namespace SS14.Client.Services.State.States
                 message.Write((byte)NetMessage.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.Code == Keyboard.Key.Escape)
-            {
-                UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
-            }
+            
             if (e.Code == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
@@ -865,8 +869,7 @@ namespace SS14.Client.Services.State.States
         #region Buttons
         private void menuButton_Clicked(ImageButton sender)
         {
-            UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-            UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+            _menu.ToggleVisible();
         }
 
         private void statusButton_Clicked(ImageButton sender)

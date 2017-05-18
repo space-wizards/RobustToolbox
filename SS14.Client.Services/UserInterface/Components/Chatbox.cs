@@ -33,7 +33,6 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private readonly IList<String> _inputHistory = new List<String>();
 
-        private bool _active;
         private bool _disposing;
 
         // To prevent the TextEntered from the key toggling chat being registered.
@@ -56,7 +55,6 @@ namespace SS14.Client.Services.UserInterface.Components
         public event TextSubmitHandler TextSubmitted;
 
         private bool _focus;
-
         public override bool Focus
         {
             get
@@ -67,6 +65,18 @@ namespace SS14.Client.Services.UserInterface.Components
             {
                 _focus = value;
                 input.Focus = value;
+                KeyBindingsEnabled = !value;
+            }
+        }
+
+        private bool _keyBindingsEnabled;
+        public bool KeyBindingsEnabled
+        {
+            get { return _keyBindingsEnabled; }
+            set
+            {
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = value;
+                _keyBindingsEnabled = value;
             }
         }
 
@@ -74,7 +84,7 @@ namespace SS14.Client.Services.UserInterface.Components
         {
             scrollbarH.SetVisible(false);
 
-            Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
+            Position = new Vector2i(CluwneLib.CurrentClippingViewport.Width - Size.X - 10, 10);
 
             // ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
@@ -104,24 +114,7 @@ namespace SS14.Client.Services.UserInterface.Components
             DrawBorder = true;
         }
 
-        private bool Active
-        {
-            get { return _active; }
-            set
-            {
-                _active = value;
-                var manager = IoCManager.Resolve<IUserInterfaceManager>();
-                if (value)
-                {
-                    manager.SetFocus(this);
-                }
-                else
-                {
-                    manager.RemoveFocus(this);
-                }
-            }
-        }
-
+        //
         private IEnumerable<string> CheckInboundMessage(string message)
         {
             var lineList = new List<string>();
@@ -236,18 +229,23 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == Keyboard.Key.T && !Active)
+            if (e.Code == Keyboard.Key.T && !Focus)
             {
-                Active = true;
+                Focus = true;
                 ignoreFirstText = true;
                 return true;
             }
 
-            if (!Active)
+            if (!Focus)
             {
                 return false;
             }
 
+            if (e.Code == Keyboard.Key.Escape)
+            {
+                Focus = false;
+                return true;
+            }
             if (e.Code == Keyboard.Key.Up)
             {
                 if (_inputIndex == -1 && _inputHistory.Any())
@@ -290,7 +288,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public override bool TextEntered(TextEventArgs e)
         {
-            if (!Active)
+            if (!Focus)
             {
                 return false;
             }
@@ -300,6 +298,7 @@ namespace SS14.Client.Services.UserInterface.Components
                 ignoreFirstText = false;
                 return false;
             }
+
             return input.TextEntered(e);
         }
 
@@ -320,7 +319,7 @@ namespace SS14.Client.Services.UserInterface.Components
 
             _inputIndex = -1;
 
-            Active = false;
+            Focus = false;
         }
 
         public override void Dispose()

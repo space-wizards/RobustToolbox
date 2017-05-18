@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.System;
+using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
@@ -31,8 +32,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         public MenuWindow() : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceManager>())
         {
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
 
             button_entity = new Button("Spawn Entities", _resMgr);
             button_entity.Clicked += button_entity_Clicked;
@@ -74,6 +75,27 @@ namespace SS14.Client.Services.UserInterface.Components
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
             Dispose();
+        }
+
+        public override bool KeyDown(KeyEventArgs e)
+        {
+            if (e.Code != Keyboard.Key.Escape)
+            {
+                return false;
+            }
+
+            if (!Focus)
+            {
+                SetVisible(true);
+                Focus = true;
+                return true;
+            }
+            else
+            {
+                SetVisible(false);
+                Focus = false;
+                return true;
+            }
         }
     }
 }

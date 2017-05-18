@@ -22,6 +22,7 @@ namespace SS14.Client.Services.UserInterface.Components
         private readonly IResourceManager _resourceManager;
         public bool ClearFocusOnSubmit = true;
         public bool ClearOnSubmit = true;
+        public bool AllowEmptySubmit = true;
 
         public TextSprite Label;
         public int MaxCharacters = 255;
@@ -194,9 +195,16 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Return && Text.Length >= 1)
+            if (e.Code == Keyboard.Key.Return && (AllowEmptySubmit || Text.Length >= 1))
             {
                 Submit();
+                return true;
+            }
+
+            if (e.Control && e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
+            {
+                Clear();
+                ignoreNextText = true;
                 return true;
             }
 

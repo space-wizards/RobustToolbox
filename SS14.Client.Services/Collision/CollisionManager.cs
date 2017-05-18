@@ -221,9 +221,10 @@ namespace SS14.Client.Services.Collision
         /// <returns></returns>
         private CollidableBucket GetBucket(Vector2f coordinate)
         {
-            return _bucketIndex.ContainsKey(GetBucketCoordinate(coordinate))
-                       ? _buckets[_bucketIndex[GetBucketCoordinate(coordinate)]]
-                       : CreateBucket(GetBucketCoordinate(coordinate));
+            var key = GetBucketCoordinate(coordinate);
+            return _bucketIndex.ContainsKey(key)
+                       ? _buckets[_bucketIndex[key]]
+                       : CreateBucket(key);
         }
 
         private static Vector2i GetBucketCoordinate(Vector2f coordinate)

@@ -51,6 +51,10 @@ namespace SS14.Client.Services.Player
 
         public void Attach(Entity newEntity)
         {
+
+            // Detach and cleanup first
+            Detach();
+
             ControlledEntity = newEntity;
             ControlledEntity.AddComponent(ComponentFamily.Input,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.

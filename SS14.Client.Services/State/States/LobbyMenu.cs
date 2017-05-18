@@ -332,8 +332,6 @@ namespace SS14.Client.Services.State.States
                 UpdateGUIPosition();
             }
 
-            //SEARCHMARK
-
             // This might be a hacky solution, but the button loses focus way too fast.
             _btnReady.Focus = true;
 

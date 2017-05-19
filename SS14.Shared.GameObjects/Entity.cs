@@ -451,7 +451,7 @@ namespace SS14.Shared.GameObjects
         {
             foreach (IComponent component in _components.Values)
             {
-                component.OnRemove();
+                component.Shutdown();
             }
             _components.Clear();
             ComponentTypes.Clear();

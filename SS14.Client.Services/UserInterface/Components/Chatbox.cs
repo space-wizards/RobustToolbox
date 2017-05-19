@@ -243,6 +243,13 @@ namespace SS14.Client.Services.UserInterface.Components
                 return true;
             }
 
+            if (input.Focus == true && !Active)
+            {
+                Active = true;
+
+                return true;
+            }
+
             if (!Active)
             {
                 return false;
@@ -281,6 +288,13 @@ namespace SS14.Client.Services.UserInterface.Components
                     _inputIndex--;
                     input.Text = _inputHistory[_inputIndex];
                 }
+
+                return true;
+            }
+
+            if (e.Code == Keyboard.Key.Return && input.Text == "" && Active)
+            {
+                Active = false;
 
                 return true;
             }

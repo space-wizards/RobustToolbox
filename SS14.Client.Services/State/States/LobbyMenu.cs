@@ -39,6 +39,7 @@ namespace SS14.Client.Services.State.States
         private readonly SimpleImage _imgMainBg;
         private SimpleImage _imgChatBg;
         private ImageButton _btnReady;
+        private ImageButton _btnBack;
 
         private readonly List<Label> _serverLabels = new List<Label>();
 
@@ -165,6 +166,15 @@ namespace SS14.Client.Services.State.States
             _btnReady.Clicked += _btnReady_Clicked;
             _btnReady.Update(0);
 
+            _btnBack = new ImageButton()
+            {
+                ImageNormal = "lobby_back",
+                ImageHover = "lobby_back_green",
+                ZDepth = 1
+            };
+            _btnBack.Clicked += _btnBack_Clicked;
+            _btnBack.Update(0);
+
             _lblServerInfo.FixedWidth = 100;
             _lblModeInfo.FixedWidth = 90;
             _lblPlayersInfo.FixedWidth = 60;
@@ -281,6 +291,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.AddComponent(_imgChatBg);
             UserInterfaceManager.AddComponent(_lobbyChat);
             UserInterfaceManager.AddComponent(_btnReady);
+            UserInterfaceManager.AddComponent(_btnBack);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.AddComponent(curr);
@@ -304,6 +315,7 @@ namespace SS14.Client.Services.State.States
             UserInterfaceManager.RemoveComponent(_imgChatBg);
             UserInterfaceManager.RemoveComponent(_lobbyChat);
             UserInterfaceManager.RemoveComponent(_btnReady);
+            UserInterfaceManager.RemoveComponent(_btnBack);
 
             foreach (Label curr in _serverLabels)
                 UserInterfaceManager.RemoveComponent(curr);
@@ -338,52 +350,73 @@ namespace SS14.Client.Services.State.States
 
             _recStatus = new FloatRect(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
 
-            _imgStatus.Position = new Vector2i((int)_recStatus.Left, (int)_recStatus.Top);
+            _imgStatus.Position = new Vector2i((int)_recStatus.Left,
+                                               (int)_recStatus.Top);
             _imgStatus.Update(0);
 
-            _lblServer.Position = new Vector2i((int)_recStatus.Left + 5, (int)_recStatus.Top + 2);
+            _lblServer.Position = new Vector2i((int)_recStatus.Left + 5,
+                                               (int)_recStatus.Top + 2);
             _lblServer.Update(0);
-            _lblServerInfo.Position = new Vector2i(_lblServer.ClientArea.Right(), _lblServer.ClientArea.Top);
+
+            _lblServerInfo.Position = new Vector2i(_lblServer.ClientArea.Right(),
+                                                   _lblServer.ClientArea.Top);
             _lblServerInfo.Update(0);
 
             _lblMode.Position = new Vector2i(_lblServerInfo.ClientArea.Right() + (int)_lastLblSpacing,
-                                          _lblServerInfo.ClientArea.Top);
+                                             _lblServerInfo.ClientArea.Top);
             _lblMode.Update(0);
 
-            _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right(), _lblMode.ClientArea.Top);
+            _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right(),
+                                                 _lblMode.ClientArea.Top);
             _lblModeInfo.Update(0);
 
             _lblPlayers.Position = new Vector2i(_lblModeInfo.ClientArea.Right() + (int)_lastLblSpacing,
-                                             _lblModeInfo.ClientArea.Top);
+                                                _lblModeInfo.ClientArea.Top);
             _lblPlayers.Update(0);
 
-            _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right(), _lblPlayers.ClientArea.Top);
+            _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right(),
+                                                    _lblPlayers.ClientArea.Top);
             _lblPlayersInfo.Update(0);
 
             _lblPort.Position = new Vector2i(_lblPlayersInfo.ClientArea.Right() + (int)_lastLblSpacing,
-                                          _lblPlayersInfo.ClientArea.Top);
+                                             _lblPlayersInfo.ClientArea.Top);
             _lblPort.Update(0);
 
-            _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right(), _lblPort.ClientArea.Top);
+            _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right(),
+                                                 _lblPort.ClientArea.Top);
             _lblPortInfo.Update(0);
 
             _tabs.Position = _imgMainBg.Position + new Vector2i(5, 90);
             _tabs.Update(0);
 
-            _lobbyChat.Position = new Vector2i(_imgMainBg.ClientArea.Left + 12, _imgMainBg.ClientArea.Bottom() - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+            _lobbyChat.Position = new Vector2i(_imgMainBg.ClientArea.Left + 12,
+                                               _imgMainBg.ClientArea.Bottom() - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
             _lobbyChat.Update(0);
 
-            _imgChatBg.Position = new Vector2i(_lobbyChat.ClientArea.Left - 6, _lobbyChat.ClientArea.Top - 9);
+            _imgChatBg.Position = new Vector2i(_lobbyChat.ClientArea.Left - 6,
+                                               _lobbyChat.ClientArea.Top - 9);
             _imgChatBg.Update(0);
 
-            _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right() - _btnReady.ClientArea.Width - 5, _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
+            _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right() - _btnReady.ClientArea.Width - 5,
+                                              _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
             _btnReady.Update(0);
+            
+            _btnBack.Position = new Vector2i(_lobbyChat.ClientArea.Left - _btnBack.ClientArea.Width - 20,
+                                             _lobbyChat.ClientArea.Bottom() - _btnBack.ClientArea.Height);
+            _btnBack.Update(0);
         }
 
         private void _btnReady_Clicked(ImageButton sender)
         {
             var playerManager = IoCManager.Resolve<IPlayerManager>();
             playerManager.SendVerb("joingame", 0);
+        }
+
+        private void _btnBack_Clicked(ImageButton sender)
+        {
+            StateManager.RequestStateChange<MainScreen>();
+            
+            NetworkManager.Disconnect();
         }
 
         #endregion Startup, Shutdown, Update

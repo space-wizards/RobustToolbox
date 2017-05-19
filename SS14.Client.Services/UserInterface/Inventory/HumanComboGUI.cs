@@ -313,7 +313,7 @@ namespace SS14.Client.Services.UserInterface.Inventory
             var bounds = _comboBg.GetLocalBounds();
             var equipBgPos = Position;
             _equipBg.Position = new Vector2f (Position.X,Position.Y);
-            equipBgPos += new Vector2i((int) (bounds.Width/2f - bounds.Width/2f), 40);
+            equipBgPos += new Vector2i((int)(bounds.Width / 2f - _equipBg.GetLocalBounds().Width / 2f), 40);
             _equipBg.Position = new Vector2f(equipBgPos.X,equipBgPos.Y);
 
             var comboClosePos = Position;

@@ -5,6 +5,7 @@ using System;
 
 namespace SS14.Server.Services.Chat.Commands
 {
+    [IoCTarget]
     public class ListCommands : IChatCommand
     {
         public string Command => "list";

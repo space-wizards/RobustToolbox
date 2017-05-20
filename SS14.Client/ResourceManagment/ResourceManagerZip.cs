@@ -57,15 +57,15 @@ namespace SS14.Client.Services.Resources
         /// </summary>
         public void LoadBaseResources()
         {
-            Assembly _assembly = Assembly.GetExecutingAssembly(); ;
+            Assembly _assembly = Assembly.GetExecutingAssembly();
             Stream _stream;
 
-            _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.bluehigh.ttf");
+            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf");
             if (_stream != null)
                 _fonts.Add("base_font", new Font( _stream));
             _stream = null;
 
-            _stream = _assembly.GetManifestResourceStream("SS14.Client.Services._EmbeddedBaseResources.noSprite.png");
+            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png");
             if (_stream != null)
             {
                 Texture nospriteimage = new Texture( _stream);

@@ -11,6 +11,7 @@ using SS14.Shared;
 
 namespace SS14.Server.Services.ClientConsoleHost.Commands
 {
+    [IoCTarget]
     public class DrugsCommand : IClientCommand
     {
         public string Command => "everyoneondrugs";

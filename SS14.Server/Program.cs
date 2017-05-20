@@ -1,6 +1,10 @@
 ﻿using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
+using SS14.Server.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 
@@ -8,20 +12,22 @@ namespace SS14.Server
 {
     internal class EntryPoint
     {
-        private SS14Server _server;
-
         private static void Main(string[] args)
         {
             //Process command-line args
             var parsedArgs = processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
 
+            var assemblies = new List<Assembly>();
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
+            IoCManager.AddAssemblies(assemblies);
 
-            var main = new EntryPoint();
-            main._server = new SS14Server(parsedArgs);
+            var server = IoCManager.Resolve<ISS14Server>();
+
             LogManager.Log("Server -> Starting");
 
-            if (main._server.Start())
+            if (server.Start())
             {
                 LogManager.Log("Server -> Can not start server", LogLevel.Fatal);
                 //Not like you'd see this, haha. Perhaps later for logging.
@@ -33,7 +39,7 @@ namespace SS14.Server
 
             SignalHander.InstallSignals();
 
-            main._server.MainLoop();
+            server.MainLoop();
         }
 
         private static CommandLineArgs processArgs(string[] args)

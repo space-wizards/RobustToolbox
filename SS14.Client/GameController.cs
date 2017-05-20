@@ -12,6 +12,7 @@ using SS14.Client.Services.State.States;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,12 +51,12 @@ namespace SS14.Client
         public GameController()
         {
             LogManager.Log("Initialising GameController.", LogLevel.Debug);
-          
+
             ShowSplashScreen();
-          
+
             var assemblies = new List<Assembly>();
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
 
@@ -108,7 +109,7 @@ namespace SS14.Client
             CluwneLib.CleanupSplashScreen();
         }
 
-        
+
         #endregion
 
         #region EventHandlers

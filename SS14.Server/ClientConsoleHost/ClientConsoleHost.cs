@@ -28,7 +28,7 @@ namespace SS14.Server.Services.ClientConsoleHost
             var netMgr = IoCManager.Resolve<ISS14NetServer>();
             var message = netMgr.CreateMessage();
             message.Write((byte)NetMessage.ConsoleCommandRegister);
-            message.Write((UInt16) AvailableCommands.Count);
+            message.Write((UInt16)AvailableCommands.Count);
             foreach (var command in AvailableCommands.Values)
             {
                 message.Write(command.Command);
@@ -41,13 +41,8 @@ namespace SS14.Server.Services.ClientConsoleHost
 
         public ClientConsoleHost()
         {
-            foreach(Type type in Assembly.GetExecutingAssembly().GetTypes())
+            foreach(Type type in IoCManager.ResolveEnumerable<IClientCommand>())
             {
-                if (!typeof(IClientCommand).IsAssignableFrom(type))
-                {
-                    continue;
-                }
-
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
                 if (AvailableCommands.ContainsKey(instance.Command))
                 {

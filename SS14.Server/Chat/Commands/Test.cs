@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Services.Chat.Commands
 {
+    [IoCTarget]
     public class Test : IChatCommand
     {
         public string Command => "test";

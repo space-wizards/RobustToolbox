@@ -207,6 +207,7 @@
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
+    <Compile Include="Utility\AppDomainHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

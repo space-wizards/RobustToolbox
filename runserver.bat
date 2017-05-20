@@ -1,7 +1,7 @@
 @echo off
 set PDIR=%~dp0
 cd %PDIR%Bin\Server
-call SpaceStation14_Server.exe %*
+call SS14.Server.exe %*
 cd %PDIR%
 set PDIR=
 pause

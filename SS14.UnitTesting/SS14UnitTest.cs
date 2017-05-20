@@ -54,8 +54,8 @@ namespace SS14.UnitTesting
         {
             var assemblies = new List<Assembly>();
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SpaceStation14.exe")));
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SpaceStation14_Server.exe")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.exe")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.exe")));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);

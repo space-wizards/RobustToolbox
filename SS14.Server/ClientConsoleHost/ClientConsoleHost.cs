@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System;
 
-namespace SS14.Server.Services.ClientConsoleHost
+namespace SS14.Server.ClientConsoleHost
 {
     [IoCTarget]
     class ClientConsoleHost : IClientConsoleHost

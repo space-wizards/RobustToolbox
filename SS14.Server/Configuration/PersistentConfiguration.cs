@@ -3,7 +3,7 @@ using SS14.Shared;
 using SS14.Shared.ServerEnums;
 using System;
 
-namespace SS14.Server.Services.Configuration
+namespace SS14.Server.Configuration
 {
     [Serializable]
     public class PersistentConfiguration

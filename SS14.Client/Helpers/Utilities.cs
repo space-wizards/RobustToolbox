@@ -8,7 +8,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.Helpers
+namespace SS14.Client.Helpers
 {
     internal static class Utilities
     {

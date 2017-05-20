@@ -4,7 +4,7 @@ using SS14.Shared.GameStates;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.GameStates
+namespace SS14.Client.GameStates
 {
     public class GameStateManager : Dictionary<uint, GameState>, IGameStateManager
     {

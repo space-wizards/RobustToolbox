@@ -3,7 +3,7 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Server.Services.ServerConsole.Commands
+namespace SS14.Server.ServerConsole.Commands
 {
     public class RestartServer : IConsoleCommand
     {

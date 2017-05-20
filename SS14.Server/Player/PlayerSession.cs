@@ -11,7 +11,7 @@ using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using System;
 
-namespace SS14.Server.Services.Player
+namespace SS14.Server.Player
 {
     public class PlayerSession : IPlayerSession
     {

@@ -6,7 +6,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Services.Map
+namespace SS14.Client.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public sealed class SpaceTileDefinition : ITileDefinition

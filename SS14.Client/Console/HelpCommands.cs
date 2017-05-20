@@ -9,7 +9,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Network;
 using SFML.Graphics;
 
-namespace SS14.Client.Services.Console
+namespace SS14.Client.Console
 {
     [IoCTarget]
     class HelpCommand : IConsoleCommand

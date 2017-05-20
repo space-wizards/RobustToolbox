@@ -11,7 +11,7 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.Map;
+using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SS14.Client.Services.Placement
+namespace SS14.Client.Placement
 {
     [IoCTarget]
     public class PlacementManager : IPlacementManager

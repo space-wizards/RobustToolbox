@@ -9,7 +9,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Linq;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class TileSpawnPanel : Window
     {

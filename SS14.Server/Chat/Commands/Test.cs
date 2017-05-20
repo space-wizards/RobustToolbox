@@ -3,7 +3,7 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.IoC;
 
-namespace SS14.Server.Services.Chat.Commands
+namespace SS14.Server.Chat.Commands
 {
     [IoCTarget]
     public class Test : IChatCommand

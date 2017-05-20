@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 
-namespace SS14.Client.Services.Helpers
+namespace SS14.Client.Helpers
 {
     public struct InterpolationPacket
     {

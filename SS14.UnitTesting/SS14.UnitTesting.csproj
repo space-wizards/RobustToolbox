@@ -103,49 +103,17 @@
       <Project>{59250baf-0000-0000-0000-000000000000}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.GameObjects\SS14.Client.GameObjects.csproj">
-      <Project>{53369e66-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.GameObjects</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
       <Project>{302b877e-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Client.Graphics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.Interfaces\SS14.Client.Interfaces.csproj">
-      <Project>{b8519348-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.Interfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.Services\SS14.Client.Services.csproj">
-      <Project>{c61458b0-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.Services</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client\SpaceStation14.csproj">
+    <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
       <Project>{0c31dfdf-0000-0000-0000-000000000000}</Project>
       <Name>SpaceStation14</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Server.GameObjects\SS14.Server.GameObjects.csproj">
-      <Project>{de7a8232-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Server.GameObjects</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Server.Interfaces\SS14.Server.Interfaces.csproj">
-      <Project>{d4598c6c-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Server.Interfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Server.Services\SS14.Server.Services.csproj">
-      <Project>{cea4f5dc-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Server.Services</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Server\SpaceStation14_Server.csproj">
+    <ProjectReference Include="..\SS14.Server\SS14.Server.csproj">
       <Project>{b04aae71-0000-0000-0000-000000000000}</Project>
       <Name>SpaceStation14_Server</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Shared.GameObjects\SS14.Shared.GameObjects.csproj">
-      <Project>{d7860944-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Shared.GameObjects</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Shared.IoC\SS14.Shared.IoC.csproj">
-      <Project>{fec26501-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Shared.IoC</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>

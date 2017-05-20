@@ -358,7 +358,7 @@
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\Commands\ThrowException.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

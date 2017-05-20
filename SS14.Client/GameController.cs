@@ -80,7 +80,7 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
-            EventArgs _frameEventArgs;
+            // EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
 
             while (CluwneLib.IsRunning == true)

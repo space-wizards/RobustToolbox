@@ -48,7 +48,7 @@ namespace SS14.Shared.Log
             {
                 logStream = new StreamWriter(LogPath, true);
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 Console.WriteLine("Log file ('{0}') in use, unable to open file for logging.", LogPath);
                 Environment.Exit(1);

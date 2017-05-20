@@ -317,7 +317,7 @@
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

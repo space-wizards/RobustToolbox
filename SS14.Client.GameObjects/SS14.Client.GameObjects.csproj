@@ -293,7 +293,7 @@
     <None Include="Component\Renderable\RenderableComponent.cs">
     </None>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

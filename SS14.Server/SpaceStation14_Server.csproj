@@ -274,7 +274,7 @@
     <None Include="packages.config" />
     <Compile Include="CommandLineArgs.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

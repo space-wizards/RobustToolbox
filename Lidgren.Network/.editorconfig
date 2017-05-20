@@ -1,0 +1,4 @@
+root = false
+
+[*.cs]
+indent_style = tab

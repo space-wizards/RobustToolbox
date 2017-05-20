@@ -53,9 +53,9 @@ namespace SS14.UnitTesting
         public SS14UnitTest()
         {
             var assemblies = new List<Assembly>();
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SpaceStation14"));
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SpaceStation14_Server"));
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SpaceStation14.exe")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SpaceStation14_Server.exe")));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
@@ -132,9 +132,5 @@ namespace SS14.UnitTesting
         }
 
         #endregion
-
-        // To convince the runtime to load SpaceStation14_Server into the AppDomain.
-        private IClient IGNORE_THIS;
-
     }
 }

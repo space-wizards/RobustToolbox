@@ -120,21 +120,21 @@ namespace Lidgren.Network
 				m_socket.Blocking = false;
 				m_socket.Bind(ep);
 
-				// Disabled by SS14: Seems to segfault on Mono 5.0 on MacOS.
-				// Meh seems optional anyways.
-				/*
-				try
+				var platform = Environment.OSVersion.Platform;
+				if (platform != PlatformID.MacOSX && platform != PlatformID.Unix)
 				{
-					const uint IOC_IN = 0x80000000;
-					const uint IOC_VENDOR = 0x18000000;
-					uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-					m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+					try
+					{
+						const uint IOC_IN = 0x80000000;
+						const uint IOC_VENDOR = 0x18000000;
+						uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+						m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+					}
+					catch
+					{
+						// ignore; SIO_UDP_CONNRESET not supported on this platform
+					}
 				}
-				catch
-				{
-					// ignore; SIO_UDP_CONNRESET not supported on this platform
-				}
-				*/
 
 				IPEndPoint boundEp = m_socket.LocalEndPoint as IPEndPoint;
 				LogDebug("Socket bound to " + boundEp + ": " + m_socket.IsBound);

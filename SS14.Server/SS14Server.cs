@@ -35,7 +35,6 @@ using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
 
 namespace SS14.Server
 {
-    [IoCTarget]
     public class SS14Server : ISS14Server
     {
         private const int GameCountdown = 15;

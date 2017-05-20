@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 using System;
 
 
-namespace SS14.Client.Services.Player.PostProcessing
+namespace SS14.Client.Player.PostProcessing
 {
     public class DeathPostProcessingEffect : PostProcessingEffect
     {

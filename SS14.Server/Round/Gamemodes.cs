@@ -5,7 +5,7 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.IoC;
 
-namespace SS14.Server.Services.Round
+namespace SS14.Server.Round
 {
     public class Gamemode : IGameMode
     {

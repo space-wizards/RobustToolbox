@@ -5,7 +5,7 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Server.Services.GameState
+namespace SS14.Server.GameStates
 {
     [IoCTarget]
     public class GameStateManager : Dictionary<uint, SS14.Shared.GameStates.GameState>, IGameStateManager

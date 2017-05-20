@@ -16,7 +16,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
-namespace SS14.Server.Services.Chat
+namespace SS14.Server.Chat
 {
     [IoCTarget]
     public class ChatManager : IChatManager
@@ -181,12 +181,7 @@ namespace SS14.Server.Services.Chat
         // Load all command types.
         private void LoadCommands()
         {
-            List<Type> CommandTypes = new List<Type>();
-            CommandTypes.AddRange(
-                Assembly.GetCallingAssembly().GetTypes().Where(t => typeof(IChatCommand).IsAssignableFrom(t))
-            );
-
-            foreach (Type t in CommandTypes)
+            foreach (Type t in IoCManager.ResolveEnumerable<IChatCommand>())
             {
                 IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))

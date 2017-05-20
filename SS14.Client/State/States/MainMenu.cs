@@ -5,14 +5,14 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace SS14.Client.Services.State.States
+namespace SS14.Client.State.States
 {
     public class MainScreen : State, IState
     {

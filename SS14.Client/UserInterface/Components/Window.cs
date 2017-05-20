@@ -5,7 +5,7 @@ using SS14.Client.Graphics.VertexData;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class Window : ScrollableContainer
     {

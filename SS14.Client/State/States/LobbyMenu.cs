@@ -7,7 +7,7 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.State.States
+namespace SS14.Client.State.States
 {
     public class Lobby : State, IState
     {

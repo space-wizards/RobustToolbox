@@ -15,7 +15,7 @@ using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Server.Services.Player
+namespace SS14.Server.Player
 {
     [IoCTarget]
     public class PlayerManager : IPlayerManager

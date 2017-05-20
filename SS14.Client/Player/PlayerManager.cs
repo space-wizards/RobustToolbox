@@ -5,8 +5,8 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
-using SS14.Client.Services.Player.PostProcessing;
-using SS14.Client.Services.State.States;
+using SS14.Client.Player.PostProcessing;
+using SS14.Client.State.States;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.Player
+namespace SS14.Client.Player
 {
     [IoCTarget]
     public class PlayerManager : IPlayerManager

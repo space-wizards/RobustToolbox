@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SS14.Client.Services.Lighting
+namespace SS14.Client.Lighting
 {
     [IoCTarget]
     public class LightManager : ILightManager

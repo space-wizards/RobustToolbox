@@ -2,12 +2,12 @@
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
-using SS14.Client.Services.Map;
+using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.Network
+namespace SS14.Client.Network
 {
     [IoCTarget]
     public class NetworkManager : INetworkManager

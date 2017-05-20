@@ -1,7 +1,7 @@
 ﻿using System;
 using SFML.Window;
 
-namespace SS14.Client.Services.Configuration
+namespace SS14.Client.Configuration
 {
     [Serializable]
     public class PlayerConfiguration

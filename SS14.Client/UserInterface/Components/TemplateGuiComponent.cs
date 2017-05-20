@@ -3,7 +3,7 @@ using SFML.Window;
 using SS14.Shared;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class TemplateGuiComponent : GuiComponent
     {

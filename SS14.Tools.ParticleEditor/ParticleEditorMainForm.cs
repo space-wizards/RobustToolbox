@@ -1,6 +1,6 @@
 ﻿using GorgonLibrary;
-using SS14.Client.Services.Configuration;
-using SS14.Client.Services.Resources;
+using SS14.Client.Configuration;
+using SS14.Client.Resources;
 using SS14.Shared.GameObjects;
 using System;
 using System.IO;

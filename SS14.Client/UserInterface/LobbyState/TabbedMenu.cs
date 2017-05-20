@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class TabbedMenu : GuiComponent
     {

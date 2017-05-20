@@ -2,7 +2,7 @@
 using SFML.System;
 using SS14.Client.Interfaces.Map;
 
-namespace SS14.Client.Services.Placement
+namespace SS14.Client.Placement
 {
     public class PlacementMode
     {

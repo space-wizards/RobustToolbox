@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Con = System.Console;
 
-namespace SS14.Server.Services.ServerConsole.Commands
+namespace SS14.Server.ServerConsole.Commands
 {
     public class ListCommands : IConsoleCommand
     {

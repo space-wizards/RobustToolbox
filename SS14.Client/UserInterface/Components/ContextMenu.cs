@@ -11,7 +11,7 @@ using SS14.Shared.GO;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class ContextMenu : GuiComponent
     {

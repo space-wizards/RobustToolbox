@@ -8,7 +8,7 @@ using System;
 using System.ServiceModel;
 using System.Timers;
 
-namespace SS14.Server.Services.MessageLogging
+namespace SS14.Server.MessageLogging
 {
     [IoCTarget]
     public class MessageLogger : IMessageLogger

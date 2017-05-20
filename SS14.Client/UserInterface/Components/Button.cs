@@ -7,7 +7,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class Button : GuiComponent
     {

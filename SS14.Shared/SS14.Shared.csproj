@@ -206,7 +206,7 @@
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="Utility\AppDomainHelpers.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

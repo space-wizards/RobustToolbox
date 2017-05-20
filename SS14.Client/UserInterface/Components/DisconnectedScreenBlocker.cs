@@ -4,10 +4,10 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.State.States;
+using SS14.Client.State.States;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class DisconnectedScreenBlocker : GuiComponent
     {

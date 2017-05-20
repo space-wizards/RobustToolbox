@@ -7,7 +7,7 @@ using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.Helpers
+namespace SS14.Client.Helpers
 {
     public class GaussianBlur
     {

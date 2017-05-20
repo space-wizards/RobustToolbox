@@ -9,7 +9,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
     //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.

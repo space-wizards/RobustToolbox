@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using SFML.Graphics;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {

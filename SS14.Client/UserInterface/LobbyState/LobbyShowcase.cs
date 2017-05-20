@@ -6,7 +6,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class LobbyShowcase : Showcase
     {

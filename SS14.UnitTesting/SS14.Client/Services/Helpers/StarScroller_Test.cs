@@ -6,7 +6,7 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using System;
 
-namespace SS14.UnitTesting.SS14.Client.Services.Helpers
+namespace SS14.UnitTesting.SS14.Client.Helpers
 {
     [TestFixture]
     public class StarScroller : SS14UnitTest

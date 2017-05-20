@@ -8,7 +8,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.Placement.Modes
+namespace SS14.Client.Placement.Modes
 {
     public class AlignWall : PlacementMode
     {

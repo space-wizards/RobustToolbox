@@ -16,7 +16,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
-namespace SS14.Server.Services.Chat
+namespace SS14.Server.Chat
 {
     [IoCTarget]
     public class ChatManager : IChatManager

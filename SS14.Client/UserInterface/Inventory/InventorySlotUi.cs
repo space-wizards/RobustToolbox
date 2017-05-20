@@ -3,12 +3,12 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Helpers;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Helpers;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared.GameObjects;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Inventory
+namespace SS14.Client.UserInterface.Inventory
 {
     internal class InventorySlotUi : GuiComponent
     {

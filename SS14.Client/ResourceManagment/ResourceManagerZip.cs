@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TextureCache = SS14.Client.Graphics.texture.TextureCache;
 
-namespace SS14.Client.Services.Resources
+namespace SS14.Client.Resources
 {
     [IoCTarget]
     public class ResourceManager : IResourceManager

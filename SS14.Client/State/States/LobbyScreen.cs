@@ -5,13 +5,13 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.State.States
+namespace SS14.Client.State.States
 {
     public class LobbyScreen : State, IState
     {

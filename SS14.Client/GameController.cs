@@ -8,7 +8,7 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.State.States;
+using SS14.Client.State.States;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
@@ -19,7 +19,6 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Shared.Utility;
 
 namespace SS14.Client
 {

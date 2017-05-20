@@ -1,11 +1,11 @@
 ﻿using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Helpers;
+using SS14.Client.Helpers;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.Player.PostProcessing
+namespace SS14.Client.Player.PostProcessing
 {
     public class BlurPostProcessingEffect : PostProcessingEffect
     {

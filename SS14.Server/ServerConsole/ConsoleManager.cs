@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using Con = System.Console;
 
-namespace SS14.Server.Services.ServerConsole
+namespace SS14.Server.ServerConsole
 {
     [IoCTarget]
     public class ConsoleManager : IConsoleManager

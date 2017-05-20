@@ -1,7 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 
-namespace SS14.Client.Services.Lighting
+namespace SS14.Client.Lighting
 {
     public class QuadRenderer
     {

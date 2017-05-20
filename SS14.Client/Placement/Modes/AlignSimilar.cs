@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 
-namespace SS14.Client.Services.Placement.Modes
+namespace SS14.Client.Placement.Modes
 {
     public class AlignSimilar : PlacementMode
     {

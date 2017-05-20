@@ -16,10 +16,10 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Services.Helpers;
-using SS14.Client.Services.Lighting;
-using SS14.Client.Services.UserInterface.Components;
-using SS14.Client.Services.UserInterface.Inventory;
+using SS14.Client.Helpers;
+using SS14.Client.Lighting;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -32,7 +32,7 @@ using System.Linq;
 using EntityManager = SS14.Client.GameObjects.EntityManager;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
-namespace SS14.Client.Services.State.States
+namespace SS14.Client.State.States
 {
     public class GameScreen : State, IState
     {

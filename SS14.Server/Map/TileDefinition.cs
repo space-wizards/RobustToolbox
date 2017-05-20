@@ -2,7 +2,7 @@
 using SS14.Shared.IoC;
 using System.Diagnostics;
 
-namespace SS14.Server.Services.Map
+namespace SS14.Server.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public class TileDefinition : ITileDefinition

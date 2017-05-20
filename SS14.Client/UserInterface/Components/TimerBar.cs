@@ -5,7 +5,7 @@ using SS14.Client.Interfaces.Resource;
 using System;
 using System.Diagnostics;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class Timer_Bar : Progress_Bar
     {

@@ -4,7 +4,7 @@ using SS14.Server.Interfaces.Network;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
-namespace SS14.Server.Services.Network
+namespace SS14.Server.Network
 {
     [IoCTarget]
     public class SS14NetServer : NetServer, ISS14NetServer

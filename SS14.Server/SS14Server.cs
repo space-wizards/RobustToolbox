@@ -13,8 +13,8 @@ using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Modules;
 using SS14.Server.Modules.Client;
-using SS14.Server.Services.Map;
-using SS14.Server.Services.Round;
+using SS14.Server.Map;
+using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -35,6 +35,7 @@ using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
 
 namespace SS14.Server
 {
+    [IoCTarget]
     public class SS14Server : ISS14Server
     {
         private const int GameCountdown = 15;
@@ -88,15 +89,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            var assemblies = new List<Assembly>();
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
-
-            IoCManager.AddAssemblies(assemblies);
-
-
-            IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
-
             //Init serializer
             var serializer = IoCManager.Resolve<ISS14Serializer>();
 

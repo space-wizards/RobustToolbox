@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SS14.Server.Services.ClientConsoleHost.Commands
+namespace SS14.Server.ClientConsoleHost.Commands
 {
     class Particles
     {/*

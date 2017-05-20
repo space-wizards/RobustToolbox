@@ -8,7 +8,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.Network
+namespace SS14.Client.Network
 {
     [IoCTarget]
     public class NetworkGrapher : INetworkGrapher

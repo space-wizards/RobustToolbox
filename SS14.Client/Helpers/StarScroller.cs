@@ -2,7 +2,7 @@
 using SS14.Client.Graphics;
 using System;
 
-namespace SS14.Client.Services.Helpers
+namespace SS14.Client.Helpers
 {
     public class StarScroller
     {

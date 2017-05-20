@@ -1,6 +1,6 @@
 @echo off
 set PDIR=%~dp0
 cd %PDIR%Bin\Client
-start SpaceStation14.exe %*
+start SS14.Client.exe %*
 cd %PDIR%
 set PDIR=

@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 
-namespace SS14.Client.Services.Input
+namespace SS14.Client.Input
 {
     [IoCTarget]
     public class KeyBindingManager : IKeyBindingManager

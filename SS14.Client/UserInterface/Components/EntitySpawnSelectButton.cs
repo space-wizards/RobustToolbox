@@ -8,7 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 using System.Linq;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class EntitySpawnSelectButton : GuiComponent
     {

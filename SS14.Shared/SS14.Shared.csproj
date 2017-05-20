@@ -204,6 +204,7 @@
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
+    <Compile Include="Utility\AppDomainHelpers.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

@@ -16,7 +16,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 
-namespace SS14.Server.Services.Map
+namespace SS14.Server.Map
 {
     [IoCTarget]
     public class MapManager : IMapManager

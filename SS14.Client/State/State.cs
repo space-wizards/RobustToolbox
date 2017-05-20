@@ -10,7 +10,7 @@ using SS14.Client.Interfaces.UserInterface;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.State
+namespace SS14.Client.State
 {
     public abstract class State
     {

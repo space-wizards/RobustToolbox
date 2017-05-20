@@ -127,8 +127,8 @@
 		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
 		<Private>True</Private>
 	  </ProjectReference>
-	  <ProjectReference Include="..\SS14.Client.Services\SS14.Client.Services.csproj">
-		<Name>SS14.Client.Services</Name>
+	  <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
+		<Name>SS14.Client</Name>
 		<Project>{C61458B0-0000-0000-0000-000000000000}</Project>
 		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
 		<Private>True</Private>

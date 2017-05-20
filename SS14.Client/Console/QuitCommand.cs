@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SS14.Client.Interfaces.Console;
+using SS14.Shared.IoC;
 
-namespace SS14.Client.Services.Console
+namespace SS14.Client.Console
 {
+    [IoCTarget]
     class QuitCommand : IConsoleCommand
     {
         public string Command => "quit";

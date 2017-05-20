@@ -2,7 +2,7 @@
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.Utility
+namespace SS14.Client.Utility
 {
     [IoCTarget]
     public class Rand : IRand

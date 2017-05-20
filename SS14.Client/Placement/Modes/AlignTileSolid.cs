@@ -6,7 +6,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Shared.GO;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.Services.Placement.Modes
+namespace SS14.Client.Placement.Modes
 {
     public class AlignTileSolid : PlacementMode
     {

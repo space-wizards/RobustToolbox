@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
-namespace SS14.Client.Services.State
+namespace SS14.Client.State
 {
     [IoCTarget]
     public class StateManager : IStateManager

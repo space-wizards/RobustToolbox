@@ -6,7 +6,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class PlayerListTab : TabContainer
     {

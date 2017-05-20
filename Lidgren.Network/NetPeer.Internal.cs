@@ -120,6 +120,9 @@ namespace Lidgren.Network
 				m_socket.Blocking = false;
 				m_socket.Bind(ep);
 
+				// Disabled by SS14: Seems to segfault on Mono 5.0 on MacOS.
+				// Meh seems optional anyways.
+				/*
 				try
 				{
 					const uint IOC_IN = 0x80000000;
@@ -131,6 +134,7 @@ namespace Lidgren.Network
 				{
 					// ignore; SIO_UDP_CONNRESET not supported on this platform
 				}
+				*/
 
 				IPEndPoint boundEp = m_socket.LocalEndPoint as IPEndPoint;
 				LogDebug("Socket bound to " + boundEp + ": " + m_socket.IsBound);
@@ -380,7 +384,7 @@ namespace Lidgren.Network
 				{
 					if (sx.SocketErrorCode == SocketError.ConnectionReset)
 					{
-						// connection reset by peer, aka connection forcibly closed aka "ICMP port unreachable" 
+						// connection reset by peer, aka connection forcibly closed aka "ICMP port unreachable"
 						// we should shut down the connection; but m_senderRemote seemingly cannot be trusted, so which connection should we shut down?!
 						// So, what to do?
 						LogWarning("ConnectionReset");

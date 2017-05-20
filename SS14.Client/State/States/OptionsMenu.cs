@@ -4,15 +4,15 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.UserInterface.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
-using Label = SS14.Client.Services.UserInterface.Components.Label;
+using Label = SS14.Client.UserInterface.Components.Label;
 
-namespace SS14.Client.Services.State.States
+namespace SS14.Client.State.States
 {
     public class OptionsMenu : State, IState
     {

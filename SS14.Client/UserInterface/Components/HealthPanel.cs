@@ -14,7 +14,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class HealthPanel : GuiComponent
     {

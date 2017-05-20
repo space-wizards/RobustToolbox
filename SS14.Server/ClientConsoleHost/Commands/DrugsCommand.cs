@@ -9,8 +9,9 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared.IoC;
 using SS14.Shared;
 
-namespace SS14.Server.Services.ClientConsoleHost.Commands
+namespace SS14.Server.ClientConsoleHost.Commands
 {
+    [IoCTarget]
     public class DrugsCommand : IClientCommand
     {
         public string Command => "everyoneondrugs";

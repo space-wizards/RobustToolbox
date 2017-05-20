@@ -2,7 +2,7 @@
 using NUnit.Framework;
 
 
-namespace SS14.UnitTesting.SS14.Client.Services.Player.PostProcessing
+namespace SS14.UnitTesting.SS14.Client.Player.PostProcessing
 {
     [TestFixture]
     public class DeathPostProcessingEffect_Test : SS14UnitTest

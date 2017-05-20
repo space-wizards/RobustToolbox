@@ -9,7 +9,7 @@ using System;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace SS14.Server.Services.Configuration
+namespace SS14.Server.Configuration
 {
     [IoCTarget]
     public sealed class ConfigurationManager : IServerConfigurationManager

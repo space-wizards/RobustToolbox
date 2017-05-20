@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.Map
+namespace SS14.Client.Map
 {
     [IoCTarget]
     public class MapManager : IMapManager
@@ -262,7 +262,7 @@ namespace SS14.Client.Services.Map
 
         //public Tile GenerateNewTile(string typeName, TileState state, Vector2D pos, Direction dir = Direction.North)
         //{
-        //    Type tileType = Type.GetType("SS14.Client.Services.Tiles." + typeName, false);
+        //    Type tileType = Type.GetType("SS14.Client.Tiles." + typeName, false);
 
         //    if (tileType == null) throw new ArgumentException("Invalid Tile Type specified : '" + typeName + "' .");
         //    RectangleF rect = new FloatRect();

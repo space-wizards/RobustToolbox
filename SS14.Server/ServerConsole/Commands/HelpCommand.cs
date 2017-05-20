@@ -3,7 +3,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Server.Services.ServerConsole.Commands
+namespace SS14.Server.ServerConsole.Commands
 {
     public class HelpCommand : IConsoleCommand
     {

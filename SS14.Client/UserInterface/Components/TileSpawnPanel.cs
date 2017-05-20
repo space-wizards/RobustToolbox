@@ -15,14 +15,12 @@ namespace SS14.Client.UserInterface.Components
     {
         private readonly Label _clearLabel;
         private readonly IPlacementManager _placementManager;
-        private readonly IResourceManager _resourceManager;
         private readonly ScrollableContainer _tileList;
         private readonly Textbox _tileSearchTextbox;
 
         public TileSpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
             : base("Tile Spawn Panel", size, resourceManager)
         {
-            _resourceManager = resourceManager;
             _placementManager = placementManager;
 
             _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceManager)

@@ -21,7 +21,9 @@ namespace SS14.Client.UserInterface.Components
         private string botSprite;
         private string midSprite;
 
+        #pragma warning disable CS0649
         public Vector2f size;
+        #pragma warning restore CS0649
 
         private string topSprite;
 

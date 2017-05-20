@@ -13,7 +13,6 @@ namespace SS14.Client.GameObjects
     public class SlaveMoverComponent : Component
     {
         private Entity _master;
-        private Direction _movedir = Direction.South;
 
         public SlaveMoverComponent()
         {

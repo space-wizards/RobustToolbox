@@ -21,7 +21,21 @@ namespace SS14.Shared.IoC
         {
             foreach (var assembly in assemblies)
             {
-                ServiceTypes.AddRange(assembly.GetTypes());
+                
+                try
+                {
+                    var assTypes = assembly.GetTypes();
+                    ServiceTypes.AddRange(assembly.GetTypes());
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    // now look at ex.LoaderExceptions - this is an Exception[], so:
+                    foreach (Exception inner in ex.LoaderExceptions)
+                    {
+                        throw inner;
+                    }
+                }
+                
             }
 
             SortTypes();

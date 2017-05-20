@@ -121,7 +121,7 @@
     <Reference Include="NetSerializer">
       <Name>NetSerializer</Name>
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.ServiceModel">
       <Name>System.ServiceModel</Name>

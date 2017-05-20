@@ -20,6 +20,6 @@ before_script:
 - "nuget restore SpaceStation14.sln"
 
 script:
-- "msbuild /p:Configuration=Release /p:HEADLESS=1 SpaceStation14.sln"
+- "xbuild /p:Configuration=Release /p:HEADLESS=1 SpaceStation14.sln"
 - "nunit-console SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
 

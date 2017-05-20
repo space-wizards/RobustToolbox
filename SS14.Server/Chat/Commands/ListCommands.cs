@@ -3,8 +3,9 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Server.Services.Chat.Commands
+namespace SS14.Server.Chat.Commands
 {
+    [IoCTarget]
     public class ListCommands : IChatCommand
     {
         public string Command => "list";

@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml.Serialization;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Services.Configuration
+namespace SS14.Client.Configuration
 {
     [IoCTarget]
     public sealed class ConfigurationManager : IPlayerConfigurationManager

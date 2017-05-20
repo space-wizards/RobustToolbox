@@ -7,14 +7,14 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.Helpers;
-using SS14.Client.Services.UserInterface.Components;
+using SS14.Client.Helpers;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Inventory
+namespace SS14.Client.UserInterface.Inventory
 {
     internal class EquipmentSlotUi : GuiComponent
     {

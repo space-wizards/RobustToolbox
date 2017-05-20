@@ -4,7 +4,9 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
+using SS14.Server.Interfaces;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Reflection;
 using System.Windows.Forms;
@@ -52,8 +54,8 @@ namespace SS14.UnitTesting
         {
             var assemblies = new List<Assembly>();
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.exe")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.exe")));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
@@ -130,6 +132,5 @@ namespace SS14.UnitTesting
         }
 
         #endregion
-
     }
 }

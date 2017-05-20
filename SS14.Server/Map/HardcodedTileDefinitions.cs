@@ -1,6 +1,6 @@
 ﻿using SS14.Server.Interfaces.Map;
 
-namespace SS14.Server.Services.Map
+namespace SS14.Server.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public sealed class SpaceTileDefinition : ITileDefinition

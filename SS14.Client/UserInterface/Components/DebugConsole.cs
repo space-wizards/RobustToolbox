@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using SFML.Graphics;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {
@@ -238,11 +238,8 @@ namespace SS14.Client.Services.UserInterface.Components
 
         private void InitializeCommands()
         {
-            foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
+            foreach (Type t in IoCManager.ResolveEnumerable<IConsoleCommand>())
             {
-                if (!typeof(IConsoleCommand).IsAssignableFrom(t) || t == typeof(ServerDummyCommand))
-                    continue;
-
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
                 if (commands.ContainsKey(instance.Command))
                     throw new Exception(string.Format("Command already registered: {0}", instance.Command));
@@ -287,6 +284,7 @@ namespace SS14.Client.Services.UserInterface.Components
     /// <summary>
     /// These dummies are made purely so list and help can list server-side commands.
     /// </summary>
+    [IoCTarget(Disabled=true)]
     class ServerDummyCommand : IConsoleCommand
     {
         readonly string command;

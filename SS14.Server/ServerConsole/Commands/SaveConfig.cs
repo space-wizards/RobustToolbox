@@ -2,7 +2,7 @@
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 
-namespace SS14.Server.Services.ServerConsole.Commands
+namespace SS14.Server.ServerConsole.Commands
 {
     public class SaveConfig : IConsoleCommand
     {

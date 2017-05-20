@@ -3,7 +3,7 @@ using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 
-namespace SS14.Client.Services.Placement.Modes
+namespace SS14.Client.Placement.Modes
 {
     public class AlignFree : PlacementMode
     {

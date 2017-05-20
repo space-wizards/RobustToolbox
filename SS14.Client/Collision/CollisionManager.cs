@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Client.Services.Collision
+namespace SS14.Client.Collision
 {
     //Its the bucket list!
     /// <summary>

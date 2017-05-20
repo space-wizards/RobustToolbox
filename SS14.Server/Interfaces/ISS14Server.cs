@@ -15,6 +15,7 @@ namespace SS14.Server.Interfaces
         IClient GetClient(NetConnection clientConnection);
         void SaveMap();
         void SaveEntities();
+        bool Start();
         void Restart();
         void Shutdown(string reason=null);
         IMapManager GetMap();

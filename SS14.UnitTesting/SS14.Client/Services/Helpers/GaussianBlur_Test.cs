@@ -7,10 +7,10 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Services.Helpers;
+using SS14.Client.Helpers;
 using System;
 
-namespace SS14.UnitTesting.SS14.Client.Services.Helpers
+namespace SS14.UnitTesting.SS14.Client.Helpers
 {
     [TestFixture]
     public class GaussianBlur_Test : SS14UnitTest

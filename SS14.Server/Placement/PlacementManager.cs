@@ -6,7 +6,7 @@ using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Services.Map;
+using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GO;
@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Server.Services.Placement
+namespace SS14.Server.Placement
 {
     [IoCTarget]
     public class PlacementManager : IPlacementManager

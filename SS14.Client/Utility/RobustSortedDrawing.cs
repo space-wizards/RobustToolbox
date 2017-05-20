@@ -1,7 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
 using System.Collections.Generic;
 
-namespace SS14.Client.Services.Utility
+namespace SS14.Client.Utility
 {
     class RobustSortedDrawing
     {

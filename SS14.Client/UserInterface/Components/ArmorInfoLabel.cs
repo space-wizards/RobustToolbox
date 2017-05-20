@@ -10,7 +10,7 @@ using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class ArmorInfoLabel : GuiComponent
     {

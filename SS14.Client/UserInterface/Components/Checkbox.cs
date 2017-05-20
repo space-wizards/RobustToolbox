@@ -4,7 +4,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using System;
 
-namespace SS14.Client.Services.UserInterface.Components
+namespace SS14.Client.UserInterface.Components
 {
     internal class Checkbox : GuiComponent
     {

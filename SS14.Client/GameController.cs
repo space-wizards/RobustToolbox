@@ -63,7 +63,7 @@ namespace SS14.Client
             IoCManager.AddAssemblies(assemblies);
 
             _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("config/player_config.xml"));
+            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 

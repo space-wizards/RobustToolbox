@@ -89,9 +89,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            PathHelpers.EnsureRelativePath("config");
-            PathHelpers.EnsureRelativePath("data");
-            PathHelpers.EnsureRelativePath("logs");
 
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 

@@ -119,17 +119,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
         private ItemCapabilityQueryResultType resultStatus;
         private ItemCapability[] returnedCapabilities;
 
-        public ItemCapabilityQueryResultType ResultStatus
-        {
-            get
-            {
-                if (resultStatus == null)
-                    return ItemCapabilityQueryResultType.Null;
-                else
-                    return resultStatus;
-            }
-            set { resultStatus = value; }
-        }
+        public ItemCapabilityQueryResultType ResultStatus { get => resultStatus; set => resultStatus = value; }
 
         public string ErrorMessage { get; set; }
 

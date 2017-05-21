@@ -132,6 +132,7 @@ namespace SS14.Client.Graphics
                 SplashScreen = new CluwneWindow(vMode, "Space Station 14", Styles.None);
                 Texture splashTexture = new Texture(splashPath);
                 SFML.Graphics.Sprite splashSprite = new SFML.Graphics.Sprite(splashTexture);
+                splashSprite.Position = new Vector2f(150,75);
                 SplashScreen.Draw(splashSprite);
                 SplashScreen.Display();
             }

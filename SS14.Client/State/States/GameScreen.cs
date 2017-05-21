@@ -126,7 +126,7 @@ namespace SS14.Client.State.States
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
 
-        private QuadRenderer quadRenderer;
+        //private QuadRenderer quadRenderer;
         private ShadowMapResolver shadowMapResolver;
 
         #endregion
@@ -431,8 +431,6 @@ namespace SS14.Client.State.States
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
-
-        bool onetime = true;
 
         public void Render(FrameEventArgs e)
         {

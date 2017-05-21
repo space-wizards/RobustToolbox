@@ -1,6 +1,5 @@
-﻿using Lidgren.Network;
-using SFML.System;
-using SS14.Client.GameObjects;
+﻿using SFML.System;
+using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
@@ -9,8 +8,6 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -74,6 +71,26 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
             Dispose();
+        }
+        public override bool KeyDown(KeyEventArgs e)
+        {
+            if (e.Code != Keyboard.Key.Escape)
+            {
+                return false;
+            }
+ 
+            if (!Focus)
+            {
+                SetVisible(true);
+                Focus = true;
+                return true;
+            }
+            else
+            {
+                SetVisible(false);
+                Focus = false;
+                return true;
+            }
         }
     }
 }

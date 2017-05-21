@@ -12,7 +12,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
 using System.Linq;

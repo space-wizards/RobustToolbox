@@ -3,7 +3,7 @@ using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Placement.Modes
@@ -52,7 +52,7 @@ namespace SS14.Client.Placement.Modes
                 mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
                                          currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
-                
+
                 spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),
                                                  mouseWorld.Y - (bounds.Height/2f), bounds.Width,
                                                  bounds.Height);

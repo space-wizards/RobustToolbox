@@ -2,7 +2,7 @@
 using NetSerializer;
 using SS14.Shared.GameObjects.Exceptions;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,7 +47,7 @@ namespace SS14.Shared.GameObjects
             {
                 throw new MissingImplementationException(type);
             }
-            
+
             return (T) _systems[type];
         }
 

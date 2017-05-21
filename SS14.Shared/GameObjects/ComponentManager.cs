@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GO;
+﻿using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;

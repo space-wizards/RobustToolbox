@@ -5,7 +5,6 @@ using SS14.Server.Interfaces.MessageLogging;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -72,7 +71,7 @@ namespace SS14.Server.GameObjects
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
         /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>   
+        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
@@ -223,7 +222,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Sends a message to the relevant system(s) on the target client.
         /// </summary>
-        public void SendSystemNetworkMessage(EntitySystemMessage message, 
+        public void SendSystemNetworkMessage(EntitySystemMessage message,
                                      NetConnection targetConnection = null,
                                      NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered)
         {
@@ -249,7 +248,7 @@ namespace SS14.Server.GameObjects
             {
                 m_netServer.SendToAll(newMsg, method);
             }
-            
+
         }
 
         #endregion

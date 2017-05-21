@@ -2,7 +2,6 @@
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +24,7 @@ namespace SS14.Client.GameObjects
         public KeyBindingInputComponent()
         {
             Family = ComponentFamily.Input;
-            
+
             //Bind to the key binding manager
             var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
             keyBindingManager.BoundKeyDown += KeyDown;
@@ -143,7 +142,7 @@ namespace SS14.Client.GameObjects
                 k(keyHandler.state);
             }
 
-            //Delete false states from the dictionary so they don't get reprocessed and fuck up other stuff. 
+            //Delete false states from the dictionary so they don't get reprocessed and fuck up other stuff.
             foreach (var state in _keyStates.ToList())
             {
                 if (state.Value == false)

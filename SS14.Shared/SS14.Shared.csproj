@@ -102,222 +102,111 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BoundKeyEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="ColorUtils.cs" />
     <Compile Include="ConsoleCommand.cs" />
-    <Compile Include="EntityEvents.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Equippable\EquippableComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Item\ItemComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Equipment\EquipmentComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Renderable\WearableAnimatedSpriteComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Events\InputEvents.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Hands\HandsComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Inventory\InventoryComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InventoryLocEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GameStateDelta.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GameStates\GameState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GameStates\PlayerState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\ComponentParameter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\ComponentReplyMessage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Collidable\CollidableComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Damageable\DamageableComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Hitbox\HitboxComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Direction\DirectionComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Light\LightComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Mover\MoverComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Particles\ParticleSystemComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Physics\PhysicsComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Renderable\AnimatedSpriteComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Renderable\RenderableComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Renderable\SpriteComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Transform\TransformComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Component\Velocity\VelocityComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\ComponentState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\EntityState.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\EntitySystemMessage\InventorySystemMessages.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\EntitySystemMessage\EntitySystemMessage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\MarshalComponentParameter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\Server\ServerDelegates.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Lighting.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="EntityEvents.cs" />
+    <Compile Include="GO\Component\Equippable\EquippableComponentState.cs" />
+    <Compile Include="GO\Component\Item\ItemComponentState.cs" />
+    <Compile Include="GO\Component\Equipment\EquipmentComponentState.cs" />
+    <Compile Include="GO\Component\Renderable\WearableAnimatedSpriteComponentState.cs" />
+    <Compile Include="GO\Events\InputEvents.cs" />
+    <Compile Include="GO\Component\Hands\HandsComponentState.cs" />
+    <Compile Include="GO\Component\Inventory\InventoryComponentState.cs" />
+    <Compile Include="InventoryLocEnum.cs" />
+    <Compile Include="GameStateDelta.cs" />
+    <Compile Include="GameStates\GameState.cs" />
+    <Compile Include="GameStates\PlayerState.cs" />
+    <Compile Include="GO\ComponentParameter.cs" />
+    <Compile Include="GO\ComponentReplyMessage.cs" />
+    <Compile Include="GO\Component\Collidable\CollidableComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\DamageableComponentState.cs" />
+    <Compile Include="GO\Component\Damageable\Health\HealthComponentState.cs" />
+    <Compile Include="GO\Component\Hitbox\HitboxComponentState.cs" />
+    <Compile Include="GO\Component\Direction\DirectionComponentState.cs" />
+    <Compile Include="GO\Component\EntityStats\EntityStatsComponentState.cs" />
+    <Compile Include="GO\Component\Light\LightComponentState.cs" />
+    <Compile Include="GO\Component\Mover\MoverComponentState.cs" />
+    <Compile Include="GO\Component\Particles\ParticleSystemComponentState.cs" />
+    <Compile Include="GO\Component\Physics\PhysicsComponentState.cs" />
+    <Compile Include="GO\Component\Renderable\AnimatedSpriteComponentState.cs" />
+    <Compile Include="GO\Component\Renderable\RenderableComponentState.cs" />
+    <Compile Include="GO\Component\Renderable\SpriteComponentState.cs" />
+    <Compile Include="GO\Component\Transform\TransformComponentState.cs" />
+    <Compile Include="GO\Component\Velocity\VelocityComponentState.cs" />
+    <Compile Include="GO\ComponentState.cs" />
+    <Compile Include="GO\EntityState.cs" />
+    <Compile Include="GO\EntitySystemMessage\InventorySystemMessages.cs" />
+    <Compile Include="GO\EntitySystemMessage\EntitySystemMessage.cs" />
+    <Compile Include="GO\MarshalComponentParameter.cs" />
+    <Compile Include="GO\Server\ServerDelegates.cs" />
+    <Compile Include="Lighting.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
-    <Compile Include="EntityBaseClass.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CSharpExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GlobalConstants.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IncomingEntityComponentMessage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IncomingEntityMessage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="IncomingNetworkMessageArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlacementInformation.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\ComponentEnums.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="GO\ItemFlags.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="KeyFunctions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PostProcessingEffects.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="QuadTree.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Serialization\SS14Serializer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Serialization\INetSerializableType.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServerEnums\LogLevel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServerEnums\RunLevel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SessionStatusEnum.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TypeEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\BitStream.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\CommandParsing.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\NetParamsPacker.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="EntityBaseClass.cs" />
+    <Compile Include="CSharpExtensions.cs" />
+    <Compile Include="GlobalConstants.cs" />
+    <Compile Include="IncomingEntityComponentMessage.cs" />
+    <Compile Include="IncomingEntityMessage.cs" />
+    <Compile Include="IncomingNetworkMessageArgs.cs" />
+    <Compile Include="PlacementInformation.cs" />
+    <Compile Include="GO\ComponentEnums.cs" />
+    <Compile Include="GO\ItemFlags.cs" />
+    <Compile Include="KeyFunctions.cs" />
+    <Compile Include="PostProcessingEffects.cs" />
+    <Compile Include="QuadTree.cs" />
+    <Compile Include="Serialization\SS14Serializer.cs" />
+    <Compile Include="Serialization\INetSerializableType.cs" />
+    <Compile Include="ServerEnums\LogLevel.cs" />
+    <Compile Include="ServerEnums\RunLevel.cs" />
+    <Compile Include="SessionStatusEnum.cs" />
+    <Compile Include="TypeEventArgs.cs" />
+    <Compile Include="Utility\BitStream.cs" />
+    <Compile Include="Utility\CommandParsing.cs" />
+    <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PathHelpers.cs" />
-    <Compile Include="Utility\PlatformDetector.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\PlatformTools.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\RandomString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\Range.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utility\unZipString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NetworkEnums.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ChatConfig.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="UIComponents.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VectorEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Utility\PlatformDetector.cs" />
+    <Compile Include="Utility\PlatformTools.cs" />
+    <Compile Include="Utility\RandomString.cs" />
+    <Compile Include="Utility\Range.cs" />
+    <Compile Include="Utility\unZipString.cs" />
+    <Compile Include="NetworkEnums.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ChatConfig.cs" />
+    <Compile Include="UIComponents.cs" />
+    <Compile Include="VectorEventArgs.cs" />
     <EmbeddedResource Include="Utility\BitStream.resx">
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
+    <Compile Include="IoC\IIoCInterface.cs" />
+    <Compile Include="IoC\IoCAttributes.cs" />
+    <Compile Include="IoC\IoCManager.cs" />
+    <Compile Include="IoC\Exceptions\MissingImplementationException.cs" />
+    <Compile Include="IoC\Exceptions\NoPublicConstructorException.cs" />
+    <Compile Include="GameObjects\Component.cs" />
+    <Compile Include="GameObjects\ComponentFactory.cs" />
+    <Compile Include="GameObjects\ComponentManager.cs" />
+    <Compile Include="GameObjects\Entity.cs" />
+    <Compile Include="GameObjects\EntityFactory.cs" />
+    <Compile Include="GameObjects\EntityManager.cs" />
+    <Compile Include="GameObjects\EntityQuery.cs" />
+    <Compile Include="GameObjects\EntitySystemManager.cs" />
+    <Compile Include="GameObjects\EntityTemplate.cs" />
+    <Compile Include="GameObjects\EntityTemplateDatabase.cs" />
+    <Compile Include="GameObjects\Enums.cs" />
+    <Compile Include="GameObjects\IEntityNetworkManager.cs" />
+    <Compile Include="GameObjects\ParticleSettings.cs" />
+    <Compile Include="GameObjects\StaticConstants.cs" />
+    <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
+    <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
+    <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
+    <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
+    <Compile Include="GameObjects\System\EntitySystem.cs" />
+    <Compile Include="Utility\AppDomainHelpers.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

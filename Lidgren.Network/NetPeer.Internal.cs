@@ -120,16 +120,20 @@ namespace Lidgren.Network
 				m_socket.Blocking = false;
 				m_socket.Bind(ep);
 
-				try
+				var platform = Environment.OSVersion.Platform;
+				if (platform != PlatformID.MacOSX && platform != PlatformID.Unix)
 				{
-					const uint IOC_IN = 0x80000000;
-					const uint IOC_VENDOR = 0x18000000;
-					uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-					m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-				}
-				catch
-				{
-					// ignore; SIO_UDP_CONNRESET not supported on this platform
+					try
+					{
+						const uint IOC_IN = 0x80000000;
+						const uint IOC_VENDOR = 0x18000000;
+						uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+						m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+					}
+					catch
+					{
+						// ignore; SIO_UDP_CONNRESET not supported on this platform
+					}
 				}
 
 				IPEndPoint boundEp = m_socket.LocalEndPoint as IPEndPoint;
@@ -380,7 +384,7 @@ namespace Lidgren.Network
 				{
 					if (sx.SocketErrorCode == SocketError.ConnectionReset)
 					{
-						// connection reset by peer, aka connection forcibly closed aka "ICMP port unreachable" 
+						// connection reset by peer, aka connection forcibly closed aka "ICMP port unreachable"
 						// we should shut down the connection; but m_senderRemote seemingly cannot be trusted, so which connection should we shut down?!
 						// So, what to do?
 						LogWarning("ConnectionReset");

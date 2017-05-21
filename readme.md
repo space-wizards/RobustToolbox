@@ -1,19 +1,16 @@
-# Space Station 14 [![Build status](https://ci.appveyor.com/api/projects/status/ygb7t8hsj3wt7pnm/branch/master?svg=true)](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master)
-
+# Space Station 14 [![Build status](https://ci.appveyor.com/api/projects/status/ygb7t8hsj3wt7pnm/branch/master?svg=true)](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master) [![Build Status](https://travis-ci.org/space-wizards/space-station-14.svg?branch=master)](https://travis-ci.org/space-wizards/space-station-14)
 
 Space Station 14 is a renewed attempt at an SS13 remake.
 
-The original sprites for the game, created by Adam Riches, have been withheld for use in a future project at his discretion. The original sprites have been replaced with placeholder images.
+**If you want to run the game and contribute, see our [wiki](https://github.com/space-wizards/space-station-14/wiki).**
 
 ## GETTING IN TOUCH ##
 
-Website: [space-wizards.github.io](https://space-wizards.github.io/)
+* Website: [space-wizards.github.io](https://space-wizards.github.io/)
+* IRC: `irc.rizon.net#spacebus`
+* Discord: [Invite Link](https://discord.gg/t2jac3p)
 
-IRC: `irc.rizon.net#spacebus`
-
-Discord: [Invite Link](https://discord.gg/t2jac3p)
-
-The IRC is setup to relay back and forth to the Discord server so IRC nerds will not be left out.
+The IRC is setup to relay back and forth to the Discord server so [IRC nerds](https://xkcd.com/1782/) will not be left out.
 
 # Attribution and Legal Info
 

@@ -54,7 +54,6 @@ namespace SS14.Client
             LogManager.Log("Initialising GameController.", LogLevel.Debug);
 
             ShowSplashScreen();
-            System.Threading.Thread.Sleep(20000);
 
             var assemblies = new List<Assembly>();
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));

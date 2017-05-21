@@ -153,10 +153,6 @@
     <Compile Include="Timing\MainLoopTimer.cs" />
     <Compile Include="Timing\TimerMainLoopTimer.cs" />
     <Compile Include="Timing\TimerQueueTimer.cs" />
-    <Content Include="Tables.xml" />
-    <Content Include="Tools.xml" />
-    <Content Include="Wallmounted.xml" />
-    <Content Include="Weapons.xml" />
     <None Include="Timing\TimerQueueTimer_.cs">
     </None>
     <None Include="app.config">
@@ -165,17 +161,6 @@
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Clothing.xml" />
-    <Content Include="Containers.xml" />
-    <Content Include="Doors.xml" />
-    <Content Include="GlassWalls.xml" />
-    <Content Include="Internals.xml" />
-    <Content Include="JanitorItems.xml" />
-    <Content Include="Lights.xml" />
-    <Content Include="Lockers.xml" />
-    <Content Include="MedicalItems.xml" />
-    <Content Include="Misc.xml" />
-    <Content Include="Mobs.xml" />
     <Content Include="server_config.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

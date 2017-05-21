@@ -15,7 +15,7 @@ namespace SS14.Client.Lighting
     {
         private readonly IResourceManager _resourceManager;
         private readonly int baseSize;
-    
+
         private readonly int reductionChainCount;
 
         private int depthBufferSize;
@@ -24,8 +24,7 @@ namespace SS14.Client.Lighting
         private RenderImage distortRT;
         private RenderImage processedShadowsRT;
         private RenderImage shadowMap;
-        private RenderImage shadowsRT;    
-        private RenderImage debugRt;    
+        private RenderImage shadowsRT;
         private RenderImage[] reductionRT;
 
         private TechniqueList resolveShadowsEffectTechnique;
@@ -36,7 +35,7 @@ namespace SS14.Client.Lighting
                                  IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-         
+
 
             reductionChainCount = (int) maxShadowmapSize;
             baseSize = 2 << reductionChainCount;
@@ -46,9 +45,9 @@ namespace SS14.Client.Lighting
         public void LoadContent()
         {
             reductionEffectTechnique = _resourceManager.GetTechnique("reductionEffect");
-            resolveShadowsEffectTechnique = _resourceManager.GetTechnique("resolveShadowsEffect"); 
-             
-            //// BUFFER TYPES ARE VERY IMPORTANT HERE AND IT WILL BREAK IF YOU CHANGE THEM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HONK HONK 
+            resolveShadowsEffectTechnique = _resourceManager.GetTechnique("resolveShadowsEffect");
+
+            //// BUFFER TYPES ARE VERY IMPORTANT HERE AND IT WILL BREAK IF YOU CHANGE THEM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HONK HONK
             //these work fine
             distortRT = new RenderImage("distortRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
             distancesRT = new RenderImage("distancesRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferGR1616F);
@@ -153,17 +152,17 @@ namespace SS14.Client.Lighting
 
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
-            
+
                 //reductionEffectTechnique["HorizontalReduction"].SetParameter("secondTexture", src);
                 reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",1.0f/src.Width);
 
                 // Sourcetexture not needed... just blit!
-                src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR   
+                src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR
                                                                                                               //fix
                                                                                                               //GLHorizontalReduction.Blit(src.Texture, CluwneLib.CurrentShader);
 
                 HorizontalReduction.EndDrawing();
-                src = HorizontalReduction; // hr becomes new src 
+                src = HorizontalReduction; // hr becomes new src
                 //Debug.DebugRendertarget(HorizontalReduction);
                 step--;
             }
@@ -175,7 +174,7 @@ namespace SS14.Client.Lighting
             destination.Clear(Color.White);
 
             HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
-                //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader); 
+                //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader);
             destination.EndDrawing();
             //Debug.DebugRendertarget(destination);
             CluwneLib.ResetRenderTarget();
@@ -183,16 +182,16 @@ namespace SS14.Client.Lighting
 
         public void Dispose()
         {
-          
+
             distancesRT.Dispose();
             distortRT.Dispose();
             processedShadowsRT.Dispose();
             foreach(var rt in reductionRT)
             {
-           
+
                 rt.Dispose();
             }
-        
+
             shadowMap.Dispose();
             shadowsRT.Dispose();
         }

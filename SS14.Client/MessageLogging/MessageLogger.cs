@@ -41,7 +41,7 @@ namespace SS14.Client.MessageLogging
             {
                 bool up = _loggerServiceClient.ServiceStatus();
             }
-            catch (CommunicationException e)
+            catch (CommunicationException)
             {
                 failed = true;
             }
@@ -66,7 +66,7 @@ namespace SS14.Client.MessageLogging
             {
                 _loggerServiceClient.LogClientOutgoingNetMessage(uid, (int) family, parameters);
             }
-            catch (CommunicationException e)
+            catch (CommunicationException)
             {
             }
         }
@@ -87,7 +87,7 @@ namespace SS14.Client.MessageLogging
                 _loggerServiceClient.LogClientIncomingNetMessage(uid, (int) entityMessage, (int) componentFamily,
                                                                  parameters);
             }
-            catch (CommunicationException e)
+            catch (CommunicationException)
             {
             }
         }
@@ -102,7 +102,7 @@ namespace SS14.Client.MessageLogging
             {
                 _loggerServiceClient.LogClientComponentMessage(uid, (int) senderfamily, sendertype, (int) type);
             }
-            catch (CommunicationException e)
+            catch (CommunicationException)
             {
             }
         }

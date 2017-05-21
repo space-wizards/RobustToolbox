@@ -42,7 +42,7 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Particles;
             DrawDepth = DrawDepth.ItemsOnTables;
         }
-        
+
         public override Type StateType
         {
             get { return typeof(ParticleSystemComponentState); }
@@ -58,7 +58,7 @@ namespace SS14.Client.GameObjects
             }
             //_emitter.MoveEmitter(_emitter.EmitterPosition + offset);
         }
-        
+
         public override void OnAdd(Entity owner)
         {
             base.OnAdd(owner);
@@ -73,21 +73,6 @@ namespace SS14.Client.GameObjects
             base.OnRemove();
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-
-            if (sender == this) //Don't listen to our own messages!
-                return ComponentReplyMessage.Empty;
-
-            switch (type)
-            {
-            }
-
-            return reply;
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
@@ -98,7 +83,7 @@ namespace SS14.Client.GameObjects
         }
 
         public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
-        {            
+        {
             Vector2f renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 

@@ -24,7 +24,7 @@ namespace SS14.Client.UserInterface.Components
         private readonly string associatedTemplateName;
         private readonly Font font;
 
-        private readonly TextSprite name;
+        private new readonly TextSprite name;
         private readonly Sprite objectSprite;
 
         public int fixed_width = -1;

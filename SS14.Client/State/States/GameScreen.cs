@@ -125,7 +125,7 @@ namespace SS14.Client.State.States
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
 
-        private QuadRenderer quadRenderer;
+        //private QuadRenderer quadRenderer;
         private ShadowMapResolver shadowMapResolver;
 
         #endregion
@@ -426,7 +426,6 @@ namespace SS14.Client.State.States
             }
         }
 
-        bool onetime = true;
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);

@@ -8,17 +8,17 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.State.States;
+using SS14.Client.State.States;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Shared.Utility;
 
 namespace SS14.Client
 {
@@ -50,12 +50,12 @@ namespace SS14.Client
         public GameController()
         {
             LogManager.Log("Initialising GameController.", LogLevel.Debug);
-          
+
             ShowSplashScreen();
-          
+
             var assemblies = new List<Assembly>();
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
 
@@ -99,7 +99,7 @@ namespace SS14.Client
 
         private void ShowSplashScreen()
         {
-            string splashTexturePath = PathHelpers.ExecutableRelativeFile("./Data/Splash/Splash.png");
+            string splashTexturePath = PathHelpers.ExecutableRelativeFile("logo.png");
             CluwneLib.ShowSplashScreen(new VideoMode(600, 300), splashTexturePath);
         }
 
@@ -108,7 +108,7 @@ namespace SS14.Client
             CluwneLib.CleanupSplashScreen();
         }
 
-        
+
         #endregion
 
         #region EventHandlers

@@ -57,7 +57,6 @@ namespace SS14.Client.State.States
         //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
 
         private FloatRect _recStatus;
-        private TabContainer _tabActive;
 
         private Chatbox _lobbyChat;
 
@@ -400,7 +399,7 @@ namespace SS14.Client.State.States
             _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right() - _btnReady.ClientArea.Width - 5,
                                               _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
             _btnReady.Update(0);
-            
+
             _btnBack.Position = new Vector2i(_lobbyChat.ClientArea.Left - _btnBack.ClientArea.Width - 20,
                                              _lobbyChat.ClientArea.Bottom() - _btnBack.ClientArea.Height);
             _btnBack.Update(0);
@@ -415,7 +414,7 @@ namespace SS14.Client.State.States
         private void _btnBack_Clicked(ImageButton sender)
         {
             StateManager.RequestStateChange<MainScreen>();
-            
+
             NetworkManager.Disconnect();
         }
 

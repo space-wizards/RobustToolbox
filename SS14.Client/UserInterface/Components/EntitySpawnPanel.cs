@@ -23,12 +23,9 @@ namespace SS14.Client.UserInterface.Components
         private readonly Listbox _lstOverride;
         private readonly Label _overLabel;
         private readonly IPlacementManager _placementManager;
-        private readonly IResourceManager _resourceManager;
-
         public EntitySpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
             : base("Entity Spawn Panel", size, resourceManager)
         {
-            _resourceManager = resourceManager;
             _placementManager = placementManager;
 
             _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceManager)

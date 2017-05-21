@@ -73,7 +73,7 @@ namespace SS14.Server.GameObjects
             {
                 tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 var saveFile = new XDocument(new XElement("SavedEntities"));
                 saveFile.Save("SavedEntities.xml");

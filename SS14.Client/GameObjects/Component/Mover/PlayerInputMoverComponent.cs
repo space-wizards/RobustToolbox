@@ -22,14 +22,11 @@ namespace SS14.Client.GameObjects
         private bool _moveUp;
         public bool ShouldSendPositionUpdate;
 
-        private Direction _movedir;
-
         public PlayerInputMoverComponent()
         {
             Family = ComponentFamily.Mover;
             ;
             _currentMoveSpeed = BaseMoveSpeed;
-            _movedir = Direction.South;
         }
 
         private Vector2f Velocity

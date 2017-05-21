@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EntityTemplates>
+  <EntityTemplate name="Toolbox">
+    <Components>
+      <Component name="TransformComponent"></Component>
+      <Component name="VelocityComponent"></Component>
+      <Component name="DirectionComponent"></Component>
+      <Component name="ClickableComponent"></Component>
+      <Component name="WearableAnimatedSpriteComponent">
+        <Parameters>
+          <Parameter name="sprite" type="string" value="player_toolbox" />
+        </Parameters>
+      </Component>
+      <Component name="BasicInteractableComponent"></Component>
+      <Component name="BasicMoverComponent"></Component>
+      <Component name="PhysicsComponent">
+        <Parameters>
+          <Parameter name="Mass" type="float" value="5" />
+        </Parameters>
+      </Component>
+      <Component name="BasicItemComponent">
+        <ExtendedParameters>
+          <ItemCapability name="MeleeWeaponCapability">
+            <ItemCapabilityParameters>
+              <ItemCapabilityParameter name="damageAmount" type="int" value="200" />
+              <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+            </ItemCapabilityParameters>
+          </ItemCapability>
+        </ExtendedParameters>
+      </Component>
+    </Components>
+  </EntityTemplate>
+</EntityTemplates>

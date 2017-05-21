@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SS14.Shared
+namespace SS14.Shared.Utility
 {
     internal static class Extensions
     {

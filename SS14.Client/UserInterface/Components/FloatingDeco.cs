@@ -29,7 +29,9 @@ namespace SS14.Client.UserInterface.Components
         public Vector2f SpriteLocation;
         //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2 unless i fix 235+ errors. Do this later.
 
+        #pragma warning disable CS0649
         public Vector2f Velocity; //Direction and speed this is moving in.
+        #pragma warning restore CS0649
 
         private float spriteRotation;
 

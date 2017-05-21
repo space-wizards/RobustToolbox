@@ -14,7 +14,6 @@ namespace SS14.Client.UserInterface.Components
     internal struct PropWindowStruct
     {
         public bool CanEdit;
-        public GuiComponent EditField;
         public bool IsListItem;
         public Label LabelName;
         public object ListItem;

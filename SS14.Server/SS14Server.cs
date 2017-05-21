@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using EntityManager = SS14.Server.GameObjects.EntityManager;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;

@@ -93,11 +93,6 @@ namespace SS14.Server
             PathHelpers.EnsureRelativePath("data");
             PathHelpers.EnsureRelativePath("logs");
 
-            var assemblies = new List<Assembly>();
-            var path = PathHelpers.ExecutableRelativeFile("lib/SS14.Server.Services.dll");
-            assemblies.Add(Assembly.LoadFrom(path));
-            IoCManager.AddAssemblies(assemblies);
-
             IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
 
             //Init serializer

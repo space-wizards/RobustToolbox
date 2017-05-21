@@ -25,7 +25,7 @@ namespace SS14.Shared.GameObjects
 
         private void LoadAllTemplates()
         {
-            string[] templatePaths = Directory.GetFiles(PathHelpers.ExecutableRelativeFile("data/EntityTemplates"), "*.xml");
+            string[] templatePaths = Directory.GetFiles(PathHelpers.ExecutableRelativeFile("EntityTemplates"), "*.xml");
             foreach (string path in templatePaths)
                 LoadTemplateFromXML(path);
         }

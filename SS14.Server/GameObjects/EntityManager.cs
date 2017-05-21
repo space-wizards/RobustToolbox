@@ -34,7 +34,7 @@ namespace SS14.Server.GameObjects
                                              select ToXML(e);
 
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
-            saveFile.Save(PathHelpers.ExecutableRelativeFile("data/SavedEntities.xml"));
+            saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
         }
 
         /// <summary>
@@ -72,13 +72,13 @@ namespace SS14.Server.GameObjects
             XElement tmp;
             try
             {
-                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("data/SavedEntities.xml")).Element("SavedEntities");
+                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
             }
             catch (FileNotFoundException)
             {
                 var saveFile = new XDocument(new XElement("SavedEntities"));
-                saveFile.Save(PathHelpers.ExecutableRelativeFile("data/SavedEntities.xml"));
-                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("data/SavedEntities.xml")).Element("SavedEntities");
+                saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
+                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
             }
             IEnumerable<XElement> SavedEntities = tmp.Descendants("SavedEntity");
             foreach (XElement e in SavedEntities)

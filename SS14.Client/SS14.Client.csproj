@@ -173,9 +173,6 @@
     <Compile Include="GameController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="Data\Splash\Splash.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="app.config">
     </None>
     <Content Include="EntityTemplates\Atmos.xml">
@@ -312,6 +309,9 @@
     <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />

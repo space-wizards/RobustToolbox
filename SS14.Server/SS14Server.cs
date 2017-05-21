@@ -103,10 +103,9 @@ namespace SS14.Server
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
             configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+
             string logPath = configMgr.LogPath;
             string logFormat = configMgr.LogFormat;
-
-
             string logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             string fullPath = Path.Combine(logPath, logFilename);
             if (!Path.IsPathRooted(fullPath))

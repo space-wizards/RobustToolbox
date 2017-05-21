@@ -311,6 +311,9 @@
     <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\RobustSortedDrawing.cs" />
     <Compile Include="Collision\CollisionManager.cs" />

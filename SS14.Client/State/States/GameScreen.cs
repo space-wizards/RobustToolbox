@@ -82,6 +82,7 @@ namespace SS14.Client.State.States
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
+        private MenuWindow _menu;
         private Chatbox _gameChat;
         private HandsGui _handsGui;
         private HumanComboGui _combo;
@@ -125,7 +126,7 @@ namespace SS14.Client.State.States
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
 
-        private QuadRenderer quadRenderer;
+        //private QuadRenderer quadRenderer;
         private ShadowMapResolver shadowMapResolver;
 
         #endregion
@@ -305,6 +306,11 @@ namespace SS14.Client.State.States
 
         private void InitializeGUI()
         {
+            // Setup the ESC Menu
+            _menu = new MenuWindow();
+            UserInterfaceManager.AddComponent(_menu);
+            _menu.SetVisible(false);
+
             //Init GUI components
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
@@ -426,7 +432,6 @@ namespace SS14.Client.State.States
             }
         }
 
-        bool onetime = true;
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);
@@ -640,8 +645,7 @@ namespace SS14.Client.State.States
             }
             if (e.Code == Keyboard.Key.Escape)
             {
-                UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+                _menu.ToggleVisible();
             }
             if (e.Code == Keyboard.Key.F9)
             {
@@ -865,8 +869,7 @@ namespace SS14.Client.State.States
         #region Buttons
         private void menuButton_Clicked(ImageButton sender)
         {
-            UserInterfaceManager.DisposeAllComponents<MenuWindow>(); //Remove old ones.
-            UserInterfaceManager.AddComponent(new MenuWindow()); //Create a new one.
+            _menu.ToggleVisible();
         }
 
         private void statusButton_Clicked(ImageButton sender)

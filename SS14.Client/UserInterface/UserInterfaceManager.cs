@@ -431,11 +431,13 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void HandleElementCreation(NetIncomingMessage msg) //I've opted for hardcoding these in for the moment.
         {
+            /*
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
 
             }
+            */
         }
 
         /// <summary>

@@ -21,17 +21,17 @@ namespace SS14.Client.Graphics.Render
 
         /// <summary>
         /// BlendMode.Alpha == Alpha Blending (default)
-        /// 
-        /// 
+        ///
+        ///
         /// Custom BlendMode
-        /// SourceBlend           == Color Source Factor 
+        /// SourceBlend           == Color Source Factor
         /// DestinationBlend      == Color Destination Factor
         /// SourceBlendAlpha      == Alpha Source Factor
         /// DestinationBlendAlpha == Alpha Destionation Factor
-        /// 
-        /// SourceAlpha           == SrcAlpha 
+        ///
+        /// SourceAlpha           == SrcAlpha
         /// InverseSourceAlpha    == OneMinusSrcAlpha
-        /// </summary>        
+        /// </summary>
         public BlendMode BlendSettings = BlendMode.Alpha;
 
         #region Accessors
@@ -41,7 +41,7 @@ namespace SS14.Client.Graphics.Render
             get {return _key;}
             set {_key = value;}
         }
-        
+
         public float X
         {
             get
@@ -50,7 +50,7 @@ namespace SS14.Client.Graphics.Render
                     return blitsprite.Position.X;
                 return 0;
             }
-            
+
         }
 
         public float Y
@@ -61,24 +61,24 @@ namespace SS14.Client.Graphics.Render
                     return blitsprite.Position.Y;
                 return 0;
             }
-            
+
         }
 
-        public uint Width 
-        { 
-            get { return Size.X; } 
-        }
-
-        public uint Height 
+        public uint Width
         {
-            get { return Size.Y; } 
+            get { return Size.X; }
+        }
+
+        public uint Height
+        {
+            get { return Size.Y; }
         }
 
         new public Texture Texture
         {
             get { return base.Texture; }
         }
-    
+
         public IntRect Crop
         {
             get;
@@ -102,12 +102,12 @@ namespace SS14.Client.Graphics.Render
             get;
             set;
         }
-       
+
         #endregion
 
         #region Constructors
         /// <summary>
-        /// Constructs a new RenderImage that can be rendered to 
+        /// Constructs a new RenderImage that can be rendered to
         /// </summary>
         /// <param name="key"> ID/key Of Instance</param>
         /// <param name="width"> Width of RenderImage </param>
@@ -122,7 +122,7 @@ namespace SS14.Client.Graphics.Render
         {}
 
         /// <summary>
-        /// Constructs a new RenderImage that can be rendered to 
+        /// Constructs a new RenderImage that can be rendered to
         /// </summary>
         /// <param name="key"> ID/key Of Instance</param>
         /// <param name="width"> Width of RenderImage </param>
@@ -135,7 +135,7 @@ namespace SS14.Client.Graphics.Render
         }
 
         /// <summary>
-        /// Constructs a new RenderImage that can be rendered to 
+        /// Constructs a new RenderImage that can be rendered to
         /// </summary>
         /// <param name="key"> ID/key Of Instance</param>
         /// <param name="width"> Width of RenderImage </param>
@@ -148,7 +148,7 @@ namespace SS14.Client.Graphics.Render
         }
 
         /// <summary>
-        /// Constructs a new RenderImage that can be rendered to 
+        /// Constructs a new RenderImage that can be rendered to
         /// </summary>
         /// <param name="key"> Idenfication of RenderImage </param>
         /// <param name="width"> Width of RenderImage </param>
@@ -161,7 +161,7 @@ namespace SS14.Client.Graphics.Render
         }
 
         /// <summary>
-        /// Constructs a new RenderImage that can be rendered to 
+        /// Constructs a new RenderImage that can be rendered to
         /// </summary>
         /// <param name="key"> Idenfication of RenderImage </param>
         /// <param name="width"> Width of RenderImage </param>
@@ -173,7 +173,7 @@ namespace SS14.Client.Graphics.Render
             _key = Key;
             BlendSettings = BlendMode.Alpha;
         }
-        
+
         #endregion
 
         #region Helper Methods
@@ -188,12 +188,12 @@ namespace SS14.Client.Graphics.Render
             {
                 throw new Exception("key Cannot be null!");
             }
-        } 
+        }
 
         private void isStillDrawing()
         {
             if (DrawingToThis)
-            { 
+            {
                 throw new Exception("Still Drawing to " + this._key );
             }
         }
@@ -202,7 +202,7 @@ namespace SS14.Client.Graphics.Render
         {
             if (UseDepthBuffer)
             {
-                
+
             }
         }
 
@@ -213,7 +213,7 @@ namespace SS14.Client.Graphics.Render
         {
             DrawingToThis = true;
             temp = CluwneLib.CurrentRenderTarget;
-            CluwneLib.CurrentRenderTarget = this; 
+            CluwneLib.CurrentRenderTarget = this;
         }
 
         /// <summary>
@@ -233,13 +233,12 @@ namespace SS14.Client.Graphics.Render
             CluwneLib.ResetRenderTarget();
         }
 
-            
+
         /// <summary>
         /// Deconstructs and disposes this instance
         /// </summary>
-        public void Dispose()
+        protected override void Destroy(bool disposing)
         {
-            base.Dispose();
             GC.Collect();
         }
 
@@ -357,8 +356,8 @@ namespace SS14.Client.Graphics.Render
             {
                 SFML.System.Vector2f scale = new SFML.System.Vector2f(( Size.X / bounds.Width ),( Size.Y / bounds.Height ));
                 blitsprite.Scale = scale;
-               
-                
+
+
             }
             else if (Mode == BlitterSizeMode.Crop)
             {
@@ -366,13 +365,13 @@ namespace SS14.Client.Graphics.Render
                 blitsprite.TextureRect = crop;
 
             }
-            
+
 
             if (CluwneLib.CurrentRenderTarget == this)
                 return;
 
             blitsprite.Draw();
-           
+
 
         }
 

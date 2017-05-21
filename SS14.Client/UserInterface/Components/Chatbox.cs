@@ -4,14 +4,12 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SS14.Client.UserInterface.Components
@@ -33,7 +31,6 @@ namespace SS14.Client.UserInterface.Components
 
         private readonly IList<String> _inputHistory = new List<String>();
 
-        private bool _active;
         private bool _disposing;
 
         // To prevent the TextEntered from the key toggling chat being registered.
@@ -67,6 +64,18 @@ namespace SS14.Client.UserInterface.Components
             {
                 _focus = value;
                 input.Focus = value;
+                KeyBindingsEnabled = !value;
+            }
+        }
+
+        private bool _keyBindingsEnabled;
+        public bool KeyBindingsEnabled
+        {
+            get { return _keyBindingsEnabled; }
+            set
+            {
+                IoCManager.Resolve<IKeyBindingManager>().Enabled = value;
+                _keyBindingsEnabled = value;
             }
         }
 
@@ -102,24 +111,6 @@ namespace SS14.Client.UserInterface.Components
             BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
             DrawBackground = true;
             DrawBorder = true;
-        }
-
-        private bool Active
-        {
-            get { return _active; }
-            set
-            {
-                _active = value;
-                var manager = IoCManager.Resolve<IUserInterfaceManager>();
-                if (value)
-                {
-                    manager.SetFocus(this);
-                }
-                else
-                {
-                    manager.RemoveFocus(this);
-                }
-            }
         }
 
         private IEnumerable<string> CheckInboundMessage(string message)
@@ -236,16 +227,22 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == Keyboard.Key.T && !Active)
+            if (e.Code == Keyboard.Key.T && !Focus)
             {
-                Active = true;
+                Focus = true;
                 ignoreFirstText = true;
                 return true;
             }
 
-            if (!Active)
+            if (!Focus)
             {
                 return false;
+            }
+
+            if (e.Code == Keyboard.Key.Escape)
+            {
+                Focus = false;
+                return true;
             }
 
             if (e.Code == Keyboard.Key.Up)
@@ -290,7 +287,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool TextEntered(TextEventArgs e)
         {
-            if (!Active)
+            if (!Focus)
             {
                 return false;
             }
@@ -320,7 +317,7 @@ namespace SS14.Client.UserInterface.Components
 
             _inputIndex = -1;
 
-            Active = false;
+            Focus = false;
         }
 
         public override void Dispose()

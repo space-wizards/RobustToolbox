@@ -248,10 +248,9 @@ namespace SS14.Client.GameObjects
         #region Variables
 
         private Particle[] _particles;
-        private SpriteBatch _batch;
         private Random _rnd = new Random();
         private float _particlesToEmit;
-        private List<Particle> _newParticles = new List<Particle>(); 
+        private List<Particle> _newParticles = new List<Particle>();
 
         #endregion
 
@@ -289,7 +288,7 @@ namespace SS14.Client.GameObjects
 
         /// <summary>
         /// Maximum Particles To Display
-        /// This controls how many particles will be 'alive' at once. If the number of particles generated exceeds this, 
+        /// This controls how many particles will be 'alive' at once. If the number of particles generated exceeds this,
         /// the oldest particles will be culled first.
         /// </summary>
         public int MaximumParticleCount
@@ -316,7 +315,7 @@ namespace SS14.Client.GameObjects
 
         /// <summary>
         /// Emission Radius
-        /// This controls the range in radius from the emission position where the particles 
+        /// This controls the range in radius from the emission position where the particles
         /// will start. If the radius is 0, they will all be emitted at the EmitPosition.
         /// </summary>
         public SS14.Shared.Utility.Range<float> EmissionRadiusRange { get; set; }
@@ -437,7 +436,7 @@ namespace SS14.Client.GameObjects
         /// This controls how much particle color will vary between particles
         /// </summary>
         public float ColorVariance { get; set; }
-        
+
         /// <summary>
         /// Retrieves the set of live particles, ordered by oldest (nearest to death) first
         /// </summary>
@@ -524,7 +523,7 @@ namespace SS14.Client.GameObjects
             var val = VariedFloat(value, variance);
             return Math.Max(val, 0);
         }
-        
+
         private Vector2f VariedVector2(Vector2f value, float variance)
         {
             return new Vector2f(
@@ -613,7 +612,7 @@ namespace SS14.Client.GameObjects
         {
             Emit = true;
         }
-        
+
         private void EmitParticle(Particle p)
         {
             p.Acceleration = VariedVector2(Acceleration, AccelerationVariance);
@@ -662,7 +661,7 @@ namespace SS14.Client.GameObjects
 
             //I hope this is correct.
             this.ColorRange = new SS14.Shared.Utility.Range<Vector4f>(
-                new Vector4f(settings.ColorRange.Start.A, settings.ColorRange.Start.R, settings.ColorRange.Start.G, settings.ColorRange.Start.B), 
+                new Vector4f(settings.ColorRange.Start.A, settings.ColorRange.Start.R, settings.ColorRange.Start.G, settings.ColorRange.Start.B),
                 new Vector4f(settings.ColorRange.End.A, settings.ColorRange.End.R, settings.ColorRange.End.G, settings.ColorRange.End.B));
 
             this.ColorVariance = settings.ColorVariance;
@@ -673,7 +672,7 @@ namespace SS14.Client.GameObjects
             this.Lifetime = settings.Lifetime;
             this.LifetimeVariance = settings.LifetimeVariance;
             this.MaximumParticleCount = settings.MaximumParticleCount;
-            this.ParticleSprite = IoCManager.Resolve<IResourceManager>().GetSprite(settings.Sprite); 
+            this.ParticleSprite = IoCManager.Resolve<IResourceManager>().GetSprite(settings.Sprite);
             this.RadialAcceleration = settings.RadialAcceleration;
             this.RadialAccelerationVariance = settings.RadialAccelerationVariance;
             this.RadialVelocity = settings.RadialVelocity;
@@ -714,7 +713,7 @@ namespace SS14.Client.GameObjects
             var offset = toPosition - EmitterPosition;
             MoveParticlesOffset(offset);
         }
-        
+
         /// <summary>
         /// Move JUST the particles, moving the emitter to offset
         /// </summary>
@@ -735,7 +734,7 @@ namespace SS14.Client.GameObjects
         /// Move the whole system, both emitter and particles
         /// </summary>
         /// <remarks>
-        /// Practically, this simply changes the emitter logical position. Since the particles are positioned relative to the 
+        /// Practically, this simply changes the emitter logical position. Since the particles are positioned relative to the
         /// emitter, they "move" as well.
         /// </remarks>
         /// <param name="toPosition"></param>
@@ -759,7 +758,7 @@ namespace SS14.Client.GameObjects
             var newParticleCount = (int)Math.Floor(_particlesToEmit);
             //This should go down to zero.
             _particlesToEmit -= newParticleCount;
-            
+
             //Clear out last update
             _newParticles.Clear();
 

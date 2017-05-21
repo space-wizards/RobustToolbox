@@ -10,13 +10,11 @@ namespace SS14.Client.UserInterface.Components
     internal sealed class ExamineWindow : Window
     {
         private readonly Label _entityDescription;
-        private readonly IResourceManager _resourceManager;
         private Sprite _entitySprite;
 
         public ExamineWindow(Vector2i size, Entity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
         {
-            _resourceManager = resourceManager;
             _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceManager);
 
             components.Add(_entityDescription);

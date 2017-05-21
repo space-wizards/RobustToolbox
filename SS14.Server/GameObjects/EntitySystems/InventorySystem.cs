@@ -3,7 +3,6 @@ using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
 using EntityQuery = SS14.Shared.GameObjects.EntityQuery;
 
 namespace SS14.Server.GameObjects.EntitySystems
@@ -46,7 +45,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             EntityManager.SubscribeEvent<InventoryAddItemToInventoryEventArgs>
                 (new EntityEventHandler<InventoryAddItemToInventoryEventArgs>(HandleAddItemToInventory), this);
         }
-        
+
         public override void HandleNetMessage(EntitySystemMessage sysMsg)
         {
             if (sysMsg is InventorySystemPickUp)
@@ -113,23 +112,23 @@ namespace SS14.Server.GameObjects.EntitySystems
                 holdingHand = actorHands.CurrentHand;
                 item = actorHands.GetEntity(holdingHand);
             }
-            if(item != null) 
+            if(item != null)
                 RemoveEntity(args.Actor, args.Actor, item, holdingHand);
         }
 
         public void HandleExchangeItem(object sender, InventoryExchangedItemEventArgs args)
         {
-            
+
         }
 
         public void HandleRemovedItem(object sender, InventoryRemovedItemEventArgs args)
         {
-            
+
         }
 
         public void HandleAddedItem(object sender, InventoryAddedItemEventArgs args)
         {
-            
+
         }
 
         public void HandleEquipItem(object sender, InventoryEquipItemEventArgs args)
@@ -148,7 +147,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             {
                 // TODO check if target slot can recieve entity
                 var ent = handsComp.GetEntity(handsComp.CurrentHand);
-                
+
                 AddEntity(actor, actor, ent, InventoryLocation.Equipment);
             }
         }
@@ -230,7 +229,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             if (!RemoveEntity(user, prevInventory, obj)) return false;
             if (!PickUpEntity(newInventory, obj)) return false;
             return true;
-        } 
+        }
 
         public bool RemoveEntity(Entity user, Entity inventory, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
         {
@@ -363,7 +362,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                     //Do sprite stuff and attaching.
                     return true;
                 }
-            }     
+            }
             else if (location == InventoryLocation.Any)
             {
                 //Do sprite stuff and attaching.

@@ -2,7 +2,6 @@
 using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 
 namespace SS14.Server.GameObjects
 {

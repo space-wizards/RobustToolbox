@@ -5,7 +5,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System.Collections.Generic;

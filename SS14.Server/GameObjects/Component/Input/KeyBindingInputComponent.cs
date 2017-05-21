@@ -2,7 +2,6 @@
 using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
@@ -23,9 +22,9 @@ namespace SS14.Server.GameObjects
 
             SetKeyState(keyFunction, boolState);
         }
-        
+
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();
-        
+
         public KeyBindingInputComponent()
         {
             Family = ComponentFamily.Input;

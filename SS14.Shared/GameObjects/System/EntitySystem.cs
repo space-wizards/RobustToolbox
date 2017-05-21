@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GO;
+﻿using SS14.Shared.GameObjects;
 using System.Collections.Generic;
 
 namespace SS14.Shared.GameObjects.System
@@ -24,7 +24,7 @@ namespace SS14.Shared.GameObjects.System
         public virtual void RegisterMessageTypes()
         {}
 
-        public virtual void SubscribeEvents() 
+        public virtual void SubscribeEvents()
         {}
 
         protected List<Entity> RelevantEntities

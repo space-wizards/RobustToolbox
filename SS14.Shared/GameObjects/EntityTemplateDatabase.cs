@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SS14.Shared.Utility;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 
@@ -24,7 +25,7 @@ namespace SS14.Shared.GameObjects
 
         private void LoadAllTemplates()
         {
-            string[] templatePaths = Directory.GetFiles(@"EntityTemplates", "*.xml");
+            string[] templatePaths = Directory.GetFiles(PathHelpers.ExecutableRelativeFile("data/EntityTemplates"), "*.xml");
             foreach (string path in templatePaths)
                 LoadTemplateFromXML(path);
         }

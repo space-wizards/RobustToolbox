@@ -25,7 +25,7 @@ namespace SS14.Server.Chat
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
         private Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
-        private string _emotePath = @"emotes.xml";
+        private string _emotePath = PathHelpers.ExecutableRelativeFile("data/emotes.xml");
 
         public IDictionary<string, IChatCommand> Commands => _commands;
 

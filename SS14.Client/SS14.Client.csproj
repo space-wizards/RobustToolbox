@@ -41,6 +41,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
@@ -312,7 +313,6 @@
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
     <Compile Include="Utility\Rand.cs" />
-    <Compile Include="Utility\RobustSortedDrawing.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\PlayerConfiguration.cs" />

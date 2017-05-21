@@ -32,6 +32,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /*
         /// <summary>
         /// Recieve a component message
         /// </summary>
@@ -49,7 +50,7 @@ namespace SS14.Server.GameObjects
 
             switch (type)
             {
-                /*case ComponentMessageType.DisassociateEntity:
+                case ComponentMessageType.DisassociateEntity:
                     var entDrop = (Entity) list[0];
                     Drop(entDrop);
                     break;
@@ -100,11 +101,11 @@ namespace SS14.Server.GameObjects
                     break;
                 case ComponentMessageType.Die:
                     DropAll();
-                    break;*/
+                    break;
             }
 
             return reply;
-        }
+        }*/
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
@@ -160,7 +161,7 @@ namespace SS14.Server.GameObjects
             else
                 return null;
         }
-        
+
         /// <summary>
         /// Get the entity in the specified hand
         /// </summary>
@@ -379,7 +380,7 @@ namespace SS14.Server.GameObjects
             var entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int?>(x.Key, x.Value != null?(int?)x.Value.Uid:null)).ToDictionary(key => key.Key, va => va.Value);
             return new HandsComponentState(CurrentHand, entities);
         }
-        
+
         public bool IsInHand(Entity e)
         {
             return Handslots.ContainsValue(e);

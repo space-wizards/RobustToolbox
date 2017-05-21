@@ -26,6 +26,7 @@
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <TargetFrameworkProfile />
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>

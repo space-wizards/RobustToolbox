@@ -88,9 +88,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-
-            IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
-
             //Init serializer
             var serializer = IoCManager.Resolve<ISS14Serializer>();
 

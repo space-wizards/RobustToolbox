@@ -24,7 +24,6 @@ namespace SS14.Shared.Utility
             return Path.Combine(GetExecutableDirectory(), file);
         }
 
-<<<<<<< HEAD
         public static IEnumerable<string> GetFiles(string path)
         {
             return GetFiles(path, (Exception e) => Console.WriteLine(e));

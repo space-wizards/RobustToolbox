@@ -1,7 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Damageable.Health;
+using SS14.Shared.GameObjects.Components.Damageable.Health;
 
 namespace SS14.Server.GameObjects
 {

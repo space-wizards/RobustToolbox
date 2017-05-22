@@ -2,7 +2,7 @@
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -33,7 +33,7 @@ namespace SS14.Server.GameObjects
                                              select ToXML(e);
 
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
-            saveFile.Save("SavedEntities.xml");
+            saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
         }
 
         /// <summary>
@@ -71,13 +71,13 @@ namespace SS14.Server.GameObjects
             XElement tmp;
             try
             {
-                tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
             }
             catch (FileNotFoundException)
             {
                 var saveFile = new XDocument(new XElement("SavedEntities"));
-                saveFile.Save("SavedEntities.xml");
-                tmp = XDocument.Load("SavedEntities.xml").Element("SavedEntities");
+                saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
+                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
             }
             IEnumerable<XElement> SavedEntities = tmp.Descendants("SavedEntity");
             foreach (XElement e in SavedEntities)

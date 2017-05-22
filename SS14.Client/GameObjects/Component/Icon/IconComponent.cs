@@ -1,7 +1,6 @@
 ﻿using SFML.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects

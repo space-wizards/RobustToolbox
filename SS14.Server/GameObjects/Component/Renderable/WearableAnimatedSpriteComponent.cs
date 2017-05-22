@@ -1,5 +1,5 @@
-﻿using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Renderable;
 
 namespace SS14.Server.GameObjects
 {
@@ -7,7 +7,7 @@ namespace SS14.Server.GameObjects
     {
         public bool IsCurrentlyWorn = false;
         public bool IsCurrentlyCarried = false;
-        
+
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                       params object[] list)
         {

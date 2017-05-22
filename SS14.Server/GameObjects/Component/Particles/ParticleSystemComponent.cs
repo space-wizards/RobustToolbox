@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Particles;
+using SS14.Shared.GameObjects.Components.Particles;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -67,7 +66,7 @@ namespace SS14.Server.GameObjects
         public void SetParticleSystemActive(string name, bool active)
         {
             if (emitters.ContainsKey(name))
-                emitters[name] = active;           
+                emitters[name] = active;
         }
 
         public override void HandleExtendedParameters(XElement extendedParameters)

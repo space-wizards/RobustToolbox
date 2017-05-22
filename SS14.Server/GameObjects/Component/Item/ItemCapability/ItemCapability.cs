@@ -1,5 +1,4 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -119,11 +118,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
         private ItemCapabilityQueryResultType resultStatus;
         private ItemCapability[] returnedCapabilities;
 
-        public ItemCapabilityQueryResultType ResultStatus
-        {
-            get { return resultStatus; }
-            set { resultStatus = value; }
-        }
+        public ItemCapabilityQueryResultType ResultStatus { get; set; }
         public string ErrorMessage { get; set; }
 
         public ItemCapability[] Capabilities

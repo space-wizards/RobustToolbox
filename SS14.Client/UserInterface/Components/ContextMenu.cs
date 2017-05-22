@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System.Collections.Generic;
 using System.Linq;
 

@@ -1,7 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Equippable;
+using SS14.Shared.GameObjects.Components.Equippable;
 
 namespace SS14.Client.GameObjects
 {
@@ -16,7 +15,7 @@ namespace SS14.Client.GameObjects
         /// What entity is wearing this equipment
         /// </summary>
         public Entity currentWearer { get; set; }
-        
+
         public EquippableComponent()
         {
             Family = ComponentFamily.Equippable;

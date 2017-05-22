@@ -7,8 +7,7 @@ using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -51,12 +50,12 @@ namespace SS14.Client.GameObjects
         }
 
         #region ISpriteComponent Members
-        
+
         public FloatRect AverageAABB
         {
             get { return AABB; }
         }
-        
+
         public FloatRect AABB
         {
             get
@@ -240,10 +239,10 @@ namespace SS14.Client.GameObjects
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (bounds.Width/2),
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (bounds.Height/2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
-            
+
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
-            
+
             // Get the clicked position relative to the texture
             var spritePosition = new Vector2i((int) (worldPos.X - AABB.Left + texRect.Left),
                                               (int) (worldPos.Y - AABB.Top + texRect.Top));
@@ -317,7 +316,7 @@ namespace SS14.Client.GameObjects
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
-          
+
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves

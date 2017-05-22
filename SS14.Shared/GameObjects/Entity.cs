@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Match
-        /// 
+        ///
         /// Allows us to fetch entities with a defined SET of components
         /// </summary>
         /// <param name="query"></param>
@@ -38,7 +38,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Public method to remove a component from an entity.
-        /// Calls the onRemove method of the component, which handles removing it 
+        /// Calls the onRemove method of the component, which handles removing it
         /// from the component manager and shutting down the component.
         /// </summary>
         /// <param name="family"></param>
@@ -150,7 +150,7 @@ namespace SS14.Shared.GameObjects
 
         #endregion
 
-        #region constructor 
+        #region constructor
 
         public Entity(EntityManager entityManager)
         {
@@ -240,7 +240,7 @@ namespace SS14.Shared.GameObjects
 
         #endregion
 
-        #region Network messaging 
+        #region Network messaging
 
         /// <summary>
         /// Sends a message to the counterpart component on the server side
@@ -344,7 +344,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Match
-        /// 
+        ///
         /// Allows us to fetch entities with a defined SET of components
         /// </summary>
         /// <param name="query"></param>
@@ -385,7 +385,7 @@ namespace SS14.Shared.GameObjects
         public void RaiseEvent(EntityEventArgs toRaise)
         {
             EntityManager.RaiseEvent(this, toRaise);
-        } 
+        }
         #endregion
 
         #region Components
@@ -407,7 +407,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Public method to remove a component from an entity.
-        /// Calls the onRemove method of the component, which handles removing it 
+        /// Calls the onRemove method of the component, which handles removing it
         /// from the component manager and shutting down the component.
         /// </summary>
         /// <param name="family"></param>
@@ -493,7 +493,7 @@ namespace SS14.Shared.GameObjects
             {
                 if(HasComponent(t.Item1) && GetComponent(t.Item1).GetType().Name != t.Item2)
                     RemoveComponent(t.Item1);
-                
+
                 if(!HasComponent(t.Item1))
                     AddComponent(t.Item1, EntityManager.ComponentFactory.GetComponent(t.Item2));
             }

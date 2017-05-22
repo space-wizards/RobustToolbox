@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +20,13 @@ namespace SS14.Shared.GameObjects
         void OnRemove();
 
         /// <summary>
-        /// Called when the component gets added to an entity. 
+        /// Called when the component gets added to an entity.
         /// </summary>
         /// <param name="owner"></param>
         void OnAdd(Entity owner);
 
         /// <summary>
-        /// Base method to shut down the component. 
+        /// Base method to shut down the component.
         /// </summary>
         void Shutdown();
 
@@ -78,7 +78,7 @@ namespace SS14.Shared.GameObjects
         List<ComponentParameter> GetParameters();
 
         /// <summary>
-        /// Gets all available SVars for the entity. 
+        /// Gets all available SVars for the entity.
         /// This gets current values, or at least it should...
         /// </summary>
         /// <returns>Returns a list of component parameters for marshaling</returns>
@@ -86,7 +86,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this 
+        /// parameters that are registered as sVars will be set through this
         /// function.
         /// </summary>
         /// <param name="sVar">ComponentParameter</param>
@@ -128,7 +128,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Called when the component gets added to an entity. 
+        /// Called when the component gets added to an entity.
         /// </summary>
         /// <param name="owner"></param>
         public virtual void OnAdd(Entity owner)
@@ -141,7 +141,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Base method to shut down the component. 
+        /// Base method to shut down the component.
         /// </summary>
         public virtual void Shutdown()
         {
@@ -251,7 +251,7 @@ namespace SS14.Shared.GameObjects
         #region SVars Stuff
 
         /// <summary>
-        /// Gets all available SVars for the entity. 
+        /// Gets all available SVars for the entity.
         /// This gets current values, or at least it should...
         /// </summary>
         /// <returns>Returns a list of component parameters for marshaling</returns>
@@ -264,7 +264,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this 
+        /// parameters that are registered as sVars will be set through this
         /// function.
         /// </summary>
         /// <param name="sVar">ComponentParameter</param>
@@ -313,7 +313,7 @@ namespace SS14.Shared.GameObjects
                 _sVars.Remove(name);
         }
         #endregion
-        
+
         protected virtual void SubscribeEvents()
         {}
     }

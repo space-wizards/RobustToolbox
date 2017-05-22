@@ -1,7 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Item;
+using SS14.Shared.GameObjects.Components.Item;
 
 namespace SS14.Client.GameObjects
 {
@@ -36,7 +35,7 @@ namespace SS14.Client.GameObjects
             {
                 Holder = null;
                 HoldingHand = state.InventoryLocation;
-            } 
+            }
         }
     }
 }

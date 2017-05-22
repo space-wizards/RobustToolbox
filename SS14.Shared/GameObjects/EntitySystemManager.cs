@@ -13,7 +13,6 @@ namespace SS14.Shared.GameObjects
 {
     public class EntitySystemManager
     {
-        private readonly List<Type> _systemTypes;
         private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
         private readonly Dictionary<Type, EntitySystem> _systemMessageTypes = new Dictionary<Type, EntitySystem>();
         private EntityManager _entityManager;
@@ -24,7 +23,7 @@ namespace SS14.Shared.GameObjects
         public EntitySystemManager(EntityManager em)
         {
             _entityManager = em;
-            _systemTypes = new List<Type>();
+            List<Type> _systemTypes = new List<Type>();
 
             _systemTypes.AddRange(
                 Assembly.GetEntryAssembly().GetTypes().Where(

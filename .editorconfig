@@ -10,3 +10,6 @@ charset = utf-8
 
 [*.{csproj, xml, yml}]
 indent_size = 2
+
+[*.dll.config]
+indent_size = 2

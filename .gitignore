@@ -70,3 +70,6 @@ project.lock.json
 
 # MacOS finder makes these.
 .DS_Store
+
+# Created by NUnit.
+TestResult.xml

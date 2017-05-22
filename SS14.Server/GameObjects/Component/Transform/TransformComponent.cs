@@ -2,8 +2,7 @@
 using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Transform;
+using SS14.Shared.GameObjects.Components.Transform;
 using System;
 
 namespace SS14.Server.GameObjects

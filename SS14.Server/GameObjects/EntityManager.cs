@@ -2,7 +2,6 @@
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Physics;
+using SS14.Shared.GameObjects.Components.Physics;
 using System;
 
 namespace SS14.Client.GameObjects

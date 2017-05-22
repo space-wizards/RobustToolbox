@@ -2,7 +2,7 @@
 using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.MessageLogging;
 using SS14.Shared;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.ServiceModel;

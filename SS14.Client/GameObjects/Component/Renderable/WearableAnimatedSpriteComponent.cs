@@ -2,8 +2,8 @@
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace SS14.Client.GameObjects
         {
             get { return typeof(WearableAnimatedSpriteComponentState); }
         }
-        
+
         public override void HandleComponentState(dynamic state)
         {
             base.HandleComponentState((WearableAnimatedSpriteComponentState)state);

@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,7 +104,7 @@ namespace SS14.Server.GameObjects
                 return;
             }
 
-            //Send a message that whatever last damaged us killed us. 
+            //Send a message that whatever last damaged us killed us.
             _damageHistory.Last().Damager.SendMessage(this, ComponentMessageType.KilledEntity, this);
 
             Owner.SendMessage(this, ComponentMessageType.Die);

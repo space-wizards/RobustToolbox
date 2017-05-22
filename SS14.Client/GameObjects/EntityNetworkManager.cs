@@ -5,7 +5,6 @@ using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -71,7 +70,7 @@ namespace SS14.Client.GameObjects
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
         /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>   
+        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>

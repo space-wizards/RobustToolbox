@@ -1,7 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -26,14 +26,14 @@ namespace SS14.Server.GameObjects.EntitySystems
                 {
                     var animation = entity.GetComponent<AnimatedSpriteComponent>(ComponentFamily.Renderable);
                     if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
-                        inputs.GetKeyState(BoundKeyFunctions.MoveDown) || 
+                        inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveLeft) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveUp))
                     {
                         if (inputs.GetKeyState(BoundKeyFunctions.Run))
                         {
                             animation.SetAnimationState("run");
-                        } 
+                        }
                         else
                         {
                             animation.SetAnimationState("walk");

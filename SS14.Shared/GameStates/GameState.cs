@@ -1,6 +1,6 @@
 using Lidgren.Network;
 using NetSerializer;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;

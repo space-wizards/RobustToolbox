@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.GameObjects
 {
@@ -11,7 +11,7 @@ namespace SS14.Shared.GameObjects
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
         /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>   
+        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
@@ -25,7 +25,7 @@ namespace SS14.Shared.GameObjects
         /// Server: Sends the message to the relevant systems of all connected clients.
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
-        /// <param name="sendingEntity">Entity sending the message</param>   
+        /// <param name="sendingEntity">Entity sending the message</param>
         /// <param name="targetSystem">Type of the System that should recieve the message. Also includes derived systems.</param>
         /// <param name="message">Message that should be sent.</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
@@ -36,7 +36,7 @@ namespace SS14.Shared.GameObjects
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
         /// </summary>
-        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>   
+        /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Intended recipient of the message</param>

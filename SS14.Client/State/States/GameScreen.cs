@@ -23,7 +23,6 @@ using SS14.Client.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;

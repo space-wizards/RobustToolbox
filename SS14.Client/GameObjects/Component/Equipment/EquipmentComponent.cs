@@ -1,8 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Equipment;
+using SS14.Shared.GameObjects.Components.Equipment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +22,7 @@ namespace SS14.Client.GameObjects
         {
             get { return typeof(EquipmentComponentState); }
         }
-        
+
         public void DispatchEquip(int uid)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, ComponentMessageType.EquipItem,

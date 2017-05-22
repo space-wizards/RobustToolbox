@@ -3,8 +3,8 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components.Renderable;
 using System;
 
 namespace SS14.Client.GameObjects

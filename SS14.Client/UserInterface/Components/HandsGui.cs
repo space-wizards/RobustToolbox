@@ -9,7 +9,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Helpers;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using System;
 using System.Linq;
@@ -72,7 +71,7 @@ namespace SS14.Client.UserInterface.Components
                 handSlot.Color = Color.White;
                 handSlot.SetTransformToRect(handL);
                 handSlot.Draw();
-            
+
                 handSlot.Color = _inactiveColor;
                 handSlot.SetTransformToRect(handR);
                 handSlot.Draw();

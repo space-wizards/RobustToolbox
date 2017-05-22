@@ -22,5 +22,13 @@ namespace SS14.Shared.Utility
         {
             return Path.Combine(GetExecutableDirectory(), file);
         }
+
+        /// <summary>
+        /// Ensures that the path from the current executable exists.
+        /// </summary>
+        public static DirectoryInfo EnsureRelativePath(string path)
+        {
+            return Directory.CreateDirectory(ExecutableRelativeFile(path));
+        }
     }
 }

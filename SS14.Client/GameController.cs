@@ -21,6 +21,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Shared.Utility;
 
 namespace SS14.Client
 {
@@ -62,7 +63,7 @@ namespace SS14.Client
             IoCManager.AddAssemblies(assemblies);
 
             _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _configurationManager.Initialize("./player_config.xml");
+            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 

@@ -34,9 +34,6 @@ namespace SS14.Client.Placement.Modes
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
             var spriteSize = CluwneLib.PixelToTile(new Vector2f(spriteBounds.Width, spriteBounds.Height)); // TODO: Doublecheck this.  Use SizeF?
-            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
-                                                 mouseWorld.Y - (spriteSize.Y / 2f),
-                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -102,7 +99,7 @@ namespace SS14.Client.Placement.Modes
                 }
             }
 
-            spriteRectWorld = new FloatRect(mouseWorld.X - (spriteBounds.Width/2f), mouseWorld.Y - (spriteBounds.Height/2f),
+            FloatRect spriteRectWorld = new FloatRect(mouseWorld.X - (spriteBounds.Width/2f), mouseWorld.Y - (spriteBounds.Height/2f),
                                              spriteBounds.Width, spriteBounds.Height);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
             return true;

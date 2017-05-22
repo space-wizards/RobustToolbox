@@ -13,6 +13,7 @@ namespace SS14.Shared.GameObjects
 {
     public class EntitySystemManager
     {
+        private readonly List<Type> _systemTypes;
         private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
         private readonly Dictionary<Type, EntitySystem> _systemMessageTypes = new Dictionary<Type, EntitySystem>();
         private EntityManager _entityManager;
@@ -23,6 +24,24 @@ namespace SS14.Shared.GameObjects
         public EntitySystemManager(EntityManager em)
         {
             _entityManager = em;
+            _systemTypes = new List<Type>();
+
+            _systemTypes.AddRange(
+                Assembly.GetEntryAssembly().GetTypes().Where(
+                    t => typeof(EntitySystem).IsAssignableFrom(t)));
+
+            foreach (Type type in _systemTypes)
+            {
+                if (type == typeof(EntitySystem))
+                    continue; //Don't run the base EntitySystem.
+                //Force initialization of all systems
+                var instance = (EntitySystem)Activator.CreateInstance(type, _entityManager, this);
+                MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
+                generic.Invoke(this, new[] { instance });
+                instance.RegisterMessageTypes();
+                instance.SubscribeEvents();
+
+            }
         }
 
         public void RegisterMessageType<T>(EntitySystem regSystem) where T : EntitySystemMessage

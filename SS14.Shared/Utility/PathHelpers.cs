@@ -24,6 +24,7 @@ namespace SS14.Shared.Utility
             return Path.Combine(GetExecutableDirectory(), file);
         }
 
+<<<<<<< HEAD
         public static IEnumerable<string> GetFiles(string path)
         {
             return GetFiles(path, (Exception e) => Console.WriteLine(e));
@@ -56,6 +57,14 @@ namespace SS14.Shared.Utility
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Ensures that the path from the current executable exists.
+        /// </summary>
+        public static DirectoryInfo EnsureRelativePath(string path)
+        {
+            return Directory.CreateDirectory(ExecutableRelativeFile(path));
         }
     }
 }

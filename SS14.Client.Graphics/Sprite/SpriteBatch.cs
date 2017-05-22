@@ -90,12 +90,9 @@ namespace SS14.Client.Graphics.Sprite
             float sin = 0, cos = 1;
             //FloatMath.SinCos(rotation, out sin, out cos);
 
-            if (true)
-            {
-                S.Rotation = S.Rotation / 180 * (float)Math.PI;
-                sin = (float)Math.Sin(S.Rotation);
-                cos = (float)Math.Cos(S.Rotation);
-            }
+            S.Rotation = S.Rotation / 180 * (float)Math.PI;
+            sin = (float)Math.Sin(S.Rotation);
+            cos = (float)Math.Cos(S.Rotation);
 
             var pX = -S.Origin.X * S.Scale.X;
             var pY = -S.Origin.Y * S.Scale.Y;

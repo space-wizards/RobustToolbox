@@ -286,7 +286,7 @@ namespace SS14.Server.GameObjects
                 IEnumerable<XElement> Parameters = itemcapability.Descendants("ItemCapabilityParameter");
                 ItemCapability cap = null;
 
-                if (cap == null)
+                if (cap == null) // TODO: make this method actually do something because right now it always returns
                     return;
                 foreach (XElement verb in Verbs)
                 {

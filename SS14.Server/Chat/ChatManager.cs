@@ -25,7 +25,7 @@ namespace SS14.Server.Chat
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
         private Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
-        private string _emotePath = @"emotes.xml";
+        private string _emotePath = PathHelpers.ExecutableRelativeFile("emotes.xml");
 
         public IDictionary<string, IChatCommand> Commands => _commands;
 
@@ -46,7 +46,7 @@ namespace SS14.Server.Chat
             IClient client = _serverMain.GetClient(message.SenderConnection);
             string playerName = client.PlayerName;
 
-            LogManager.Log("CHAT:: Channel: " + channel.ToString() + " :: Player: " + playerName + " :: Message: " + text, Shared.ServerEnums.LogLevel.Debug);
+            LogManager.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
 
             var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).AttachedEntityUid;
 
@@ -186,7 +186,7 @@ namespace SS14.Server.Chat
                 IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
                 {
-                    LogManager.Log(string.Format("Command has duplicate name: {0}", instance.Command), Shared.ServerEnums.LogLevel.Error);
+                    LogManager.Error("Command has duplicate name: {0}", instance.Command);
                     continue;
                 }
                 _commands[instance.Command] = instance;

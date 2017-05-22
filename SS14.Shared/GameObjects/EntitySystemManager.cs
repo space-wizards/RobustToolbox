@@ -23,16 +23,14 @@ namespace SS14.Shared.GameObjects
         public EntitySystemManager(EntityManager em)
         {
             _entityManager = em;
-            List<Type> _systemTypes = new List<Type>();
-
-            _systemTypes.AddRange(
-                Assembly.GetEntryAssembly().GetTypes().Where(
-                    t => typeof(EntitySystem).IsAssignableFrom(t)));
+            List<Type> _systemTypes = Assembly.GetEntryAssembly().GetTypes().Where(
+                t => typeof(EntitySystem).IsAssignableFrom(t))
 
             foreach (Type type in _systemTypes)
             {
                 if (type == typeof(EntitySystem))
                     continue; //Don't run the base EntitySystem.
+                
                 //Force initialization of all systems
                 var instance = (EntitySystem)Activator.CreateInstance(type, _entityManager, this);
                 MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);

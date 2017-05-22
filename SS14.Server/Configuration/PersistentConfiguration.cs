@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 using System;
 
 namespace SS14.Server.Configuration
@@ -12,7 +13,8 @@ namespace SS14.Server.Configuration
         public Vector2i ConsoleSize = new Vector2i(120, 60);
         public LogLevel LogLevel = LogLevel.Information;
 
-        public string LogPath = "log.txt";
+        public string LogPath = "logs";
+        public string LogFormat = "log_%(date)s-%(time)s.txt";
         public bool MessageLogging = false;
 
         public int Port = 1212;

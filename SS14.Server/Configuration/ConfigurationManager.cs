@@ -81,6 +81,12 @@ namespace SS14.Server.Configuration
             set { Configuration.LogPath = value; }
         }
 
+        public string LogFormat
+        {
+            get { return Configuration.LogFormat; }
+            set { Configuration.LogFormat = value; }
+        }
+
         public int Version
         {
             get { return PersistentConfiguration._Version; }

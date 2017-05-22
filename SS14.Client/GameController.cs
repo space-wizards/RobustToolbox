@@ -21,6 +21,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Shared.Utility;
 
 namespace SS14.Client
 {
@@ -29,13 +30,13 @@ namespace SS14.Client
 
         #region Fields
 
-        private IPlayerConfigurationManager _configurationManager;
+        readonly private IPlayerConfigurationManager _configurationManager;
       //  private Input _input;
-        private INetworkGrapher _netGrapher;
-        private INetworkManager _networkManager;
-        private IStateManager _stateManager;
-        private IUserInterfaceManager _userInterfaceManager;
-        private IResourceManager _resourceManager;
+        readonly private INetworkGrapher _netGrapher;
+        readonly private INetworkManager _networkManager;
+        readonly private IStateManager _stateManager;
+        readonly private IUserInterfaceManager _userInterfaceManager;
+        readonly private IResourceManager _resourceManager;
 
         private SFML.System.Clock _clock;
 
@@ -62,7 +63,7 @@ namespace SS14.Client
             IoCManager.AddAssemblies(assemblies);
 
             _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _configurationManager.Initialize("./player_config.xml");
+            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
 
             _resourceManager = IoCManager.Resolve<IResourceManager>();
 
@@ -104,8 +105,8 @@ namespace SS14.Client
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
             // Size of the NT logo in the bottom left.
-            const float NT_SIZE_X = SIZE_X / 10;
-            const float NT_SIZE_Y = SIZE_Y / 10;
+            const float NT_SIZE_X = SIZE_X / 10f;
+            const float NT_SIZE_Y = SIZE_Y / 10f;
             CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
 
             var assembly = Assembly.GetExecutingAssembly();
@@ -285,26 +286,6 @@ namespace SS14.Client
 
         #region Privates
 
-//        private void SetupCluwneLib()
-//        {
-//            uint displayWidth = _configurationManager.GetDisplayWidth();
-//            uint displayHeight = _configurationManager.GetDisplayHeight();
-//            bool fullscreen = _configurationManager.GetFullscreen();
-//            var refresh = (int) _configurationManager.GetDisplayRefresh();
-//            Size = new Vector2i((int) displayWidth, (int) displayHeight);
-//
-//            //TODO. Find first compatible videomode and set it if no configuration is present. Else the client might crash due to invalid videomodes on the first start.
-//
-//            CluwneLib.Initialize();
-//            //CluwneLib.SetMode(this);
-//            CluwneLib.SetMode(this, (int) displayWidth, (int) displayHeight, BackBufferFormats.BufferRGB888, !fullscreen,
-//                           false, false, refresh);
-//            CluwneLib.Screen.BackgroundColor = Color.FromArgb(50, 50, 50);
-//            CluwneLib.CurrentClippingViewport = new Viewport(0, 0, CluwneLib.Screen.Width, CluwneLib.Screen.Height);
-//            CluwneLib.DeviceReset += MainWindowResizeEnd;
-//            //CluwneLib.MinimumFrameTime = PreciseTimer.FpsToMilliseconds(66);
-//            CluwneLib.Idle += CluwneLibIdle;
-//        }
         bool onetime = true;
 
         private void SetupCluwne()

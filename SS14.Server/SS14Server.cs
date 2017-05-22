@@ -316,7 +316,7 @@ namespace SS14.Server
         {
             DateTime currentTime = DateTime.Now;
             NetConnection sender = msg.SenderConnection;
-            if (sender == null)
+            if (sender == null || sender.Status == NetConnectionStatus.Disconnected || sender.Status == NetConnectionStatus.Disconnecting)
             {
                 return;
             }
@@ -587,7 +587,7 @@ namespace SS14.Server
         {
             NetConnection sender = msg.SenderConnection;
             string senderIp = sender.RemoteEndPoint.Address.ToString();
-            LogManager.Log(senderIp + ": Status change");
+            LogManager.Log(String.Format("{0}: Status changed to {1}", senderIp, sender.Status.ToString()));
 
             switch (sender.Status)
             {

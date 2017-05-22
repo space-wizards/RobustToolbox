@@ -1,20 +1,25 @@
 ﻿using SFML.Graphics;
 using SFML.Window;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Services.State.States;
+using SS14.Client.State.States;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
+using SS14.Shared.ServerEnums;
+using SS14.Shared.Utility;
 using System;
-using System.Windows.Forms;
-using System.Reflection;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -46,9 +51,13 @@ namespace SS14.Client
 
         public GameController()
         {
+            LogManager.Log("Initialising GameController.", LogLevel.Debug);
+
+            ShowSplashScreen();
+
             var assemblies = new List<Assembly>();
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.Services.dll")));
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
 
@@ -62,6 +71,7 @@ namespace SS14.Client
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
+            CleanupSplashScreen();
 
             //Initialization of private members
             _networkManager = IoCManager.Resolve<INetworkManager>();
@@ -72,7 +82,7 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen> ();
 
             FrameEventArgs _frameEvent;
-            EventArgs _frameEventArgs;
+            // EventArgs _frameEventArgs;
             _clock = new SFML.System.Clock();
 
             while (CluwneLib.IsRunning == true)
@@ -87,8 +97,49 @@ namespace SS14.Client
             }
             _networkManager.Disconnect();
             CluwneLib.Terminate();
-            Console.WriteLine("Gameloop terminated.");
+            LogManager.Log("GameController terminated.");
         }
+
+        private void ShowSplashScreen()
+        {
+            const uint SIZE_X = 600;
+            const uint SIZE_Y = 300;
+            // Size of the NT logo in the bottom left.
+            const float NT_SIZE_X = SIZE_X / 10;
+            const float NT_SIZE_Y = SIZE_Y / 10;
+            CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
+
+            var assembly = Assembly.GetExecutingAssembly();
+
+            var logoTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.logo.png"));
+            var logo = new SFML.Graphics.Sprite(logoTexture);
+            var logoSize = logoTexture.Size;
+            logo.Position = new Vector2f(SIZE_X/2 - logoSize.X/2,SIZE_Y/2 - logoSize.Y/2);
+
+            var backgroundTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.background.png"));
+            var background = new SFML.Graphics.Sprite(backgroundTexture);
+            var backgroundSize = backgroundTexture.Size;
+            background.Scale = new Vector2f((float)SIZE_X / backgroundSize.X, (float)SIZE_Y / backgroundSize.Y);
+
+            var nanotrasenTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.nanotrasen.png"));
+            var nanotrasen = new SFML.Graphics.Sprite(nanotrasenTexture);
+            var nanotrasenSize = nanotrasenTexture.Size;
+            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasenSize.X, NT_SIZE_Y / nanotrasenSize.Y);
+            nanotrasen.Position = new Vector2f(SIZE_X - NT_SIZE_X - 5, SIZE_Y - NT_SIZE_Y - 5);
+            nanotrasen.Color = new Color(255, 255, 255, 64);
+
+            window.Draw(background);
+            window.Draw(logo);
+            window.Draw(nanotrasen);
+            window.Display();
+        }
+
+        private void CleanupSplashScreen()
+        {
+            CluwneLib.CleanupSplashScreen();
+        }
+
+
         #endregion
 
         #region EventHandlers
@@ -123,9 +174,6 @@ namespace SS14.Client
         {
             CluwneLib.Stop();
         }
-
-
-
 
         #region Input Handling
 

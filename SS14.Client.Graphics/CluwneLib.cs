@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
+using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
@@ -8,6 +9,7 @@ using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Timing;
 using SS14.Client.Graphics.View;
 using System;
+using System.Reflection;
 
 
 namespace SS14.Client.Graphics
@@ -17,7 +19,7 @@ namespace SS14.Client.Graphics
 
         private static RenderTarget[] renderTargetArray;
         private static Clock _timer;
-  
+
         public static event FrameEventHandler FrameEvent;
         public static Viewport CurrentClippingViewport;
 
@@ -34,26 +36,27 @@ namespace SS14.Client.Graphics
             {
                 return ScreenToWorld(ScreenViewport);
             }
-        }      
+        }
         public static IntRect ScreenViewport
         {
             get
             {
                 return new IntRect(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
             }
-        }     
+        }
 
         public static bool IsInitialized { get; set; }
         public static bool IsRunning { get; set; }
         public static bool FrameStatsVisible { get; set; }
-        
-        public static CluwneWindow  Screen        { get; set; }
-        public static TimingData    FrameStats    { get; set; }
-        public static VideoSettings Video         { get; private set; }
-        public static Debug Debug         { get; private set; }
-        public static GLSLShader    CurrentShader { get; internal set; }
 
-        public static BlendingModes BlendingMode { get; set; }    
+        public static CluwneWindow SplashScreen { get; set; }
+        public static CluwneWindow Screen { get; set; }
+        public static TimingData FrameStats { get; set; }
+        public static VideoSettings Video { get; private set; }
+        public static Debug Debug { get; private set; }
+        public static GLSLShader CurrentShader { get; internal set; }
+
+        public static BlendingModes BlendingMode { get; set; }
         public static RenderTarget CurrentRenderTarget
         {
             get
@@ -71,16 +74,13 @@ namespace SS14.Client.Graphics
                 setAdditionalRenderTarget(0, value);
             }
         }
-      
+
         #endregion
-
-
-
 
         static CluwneLib()
         {
             Video = new VideoSettings();
-            Debug = new Debug();        
+            Debug = new Debug();
         }
 
         #region CluwneEngine
@@ -89,9 +89,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// Shamelessly taken from Gorgon.
         public static void Go()
-        {        
-            
-            
+        {
 
             if (!IsInitialized)
             {
@@ -99,9 +97,9 @@ namespace SS14.Client.Graphics
             }
 
             FrameEvent += (delegate(object sender, FrameEventArgs e) {
-               
+
                 System.Threading.Thread.Sleep(10); // maybe pickup vsync here?
-               
+
             });
 
             if ((Screen != null) && (renderTargetArray == null))
@@ -128,6 +126,22 @@ namespace SS14.Client.Graphics
             IsRunning = true;
         }
 
+        public static CluwneWindow ShowSplashScreen(VideoMode vMode)
+        {
+            if (SplashScreen == null)
+            {
+                SplashScreen = new CluwneWindow(vMode, "Space Station 14", Styles.None);
+            }
+
+            return SplashScreen;
+        }
+
+        public static void CleanupSplashScreen()
+        {
+            SplashScreen.Close();
+            SplashScreen = null;
+        }
+
         public static void drawRectangle(int x, int y, int width, int height, object p)
         {
             throw new NotImplementedException();
@@ -137,7 +151,7 @@ namespace SS14.Client.Graphics
         {
             if (IsInitialized)
                 Terminate();
-           
+
             Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
 
             _timer = new Clock();
@@ -146,22 +160,18 @@ namespace SS14.Client.Graphics
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
             IsInitialized = true;
 
-
-
-            //Hook OpenTK into SFMLs Opengl 
-        OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+            //Hook OpenTK into SFMLs Opengl
+            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
                 // Non-Native backend doesn't have a default GetAddress method
-        Backend = OpenTK.PlatformBackend.PreferNative
-        });
-        new GraphicsContext(OpenTK.ContextHandle.Zero, null);
-    }
-       
+                Backend = OpenTK.PlatformBackend.PreferNative
+            });
+            new GraphicsContext(OpenTK.ContextHandle.Zero, null);
+        }
+
         public static void RequestGC(Action action)
         {
-          action.Invoke();         
-        }           
-
-  
+          action.Invoke();
+        }
 
         public static void ClearCurrentRendertarget(Color color)
         {
@@ -169,7 +179,7 @@ namespace SS14.Client.Graphics
         }
 
         public static void Terminate()
-        {                   
+        {
             CurrentClippingViewport = null;
             IsInitialized = false;
             Screen.Close();
@@ -196,7 +206,7 @@ namespace SS14.Client.Graphics
 
         #region RenderTarget Stuff
 
-     
+
 
         public static void setAdditionalRenderTarget(int index, RenderTarget _target)
         {
@@ -248,7 +258,7 @@ namespace SS14.Client.Graphics
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
             rectangle.FillColor = Color;
 
-            CurrentRenderTarget.Draw(rectangle);           
+            CurrentRenderTarget.Draw(rectangle);
         }
 
         /// <summary>
@@ -431,7 +441,7 @@ namespace SS14.Client.Graphics
 
         #endregion
 
-        #region Client Window Data  
+        #region Client Window Data
 
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.

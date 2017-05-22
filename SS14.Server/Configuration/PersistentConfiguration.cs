@@ -1,7 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared;
+using SS14.Shared.Log;
 using SS14.Shared.Utility;
-using SS14.Shared.ServerEnums;
 using System;
 
 namespace SS14.Server.Configuration

@@ -141,6 +141,7 @@
     <Compile Include="GO\MarshalComponentParameter.cs" />
     <Compile Include="GO\Server\ServerDelegates.cs" />
     <Compile Include="Lighting.cs" />
+    <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
@@ -158,7 +159,6 @@
     <Compile Include="QuadTree.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="Serialization\INetSerializableType.cs" />
-    <Compile Include="ServerEnums\LogLevel.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="TypeEventArgs.cs" />

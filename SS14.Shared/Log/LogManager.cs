@@ -81,23 +81,6 @@ namespace SS14.Shared.Log
             }
         }
 
-        /// <summary>
-        /// Log a message. Only works if the logmanager is initialized. Static method because its easier to type
-        /// </summary>
-        /// <param name="Message">the message</param>
-        /// <param name="logLevel">the level of the log item</param>
-        public static void Log(string Message, LogLevel logLevel = LogLevel.Information)
-        {
-            try
-            {
-                singleton.LogOne(Message, logLevel);
-            }
-            catch (NullReferenceException)
-            {
-                Console.WriteLine(Message);
-            }
-        }
-
         public static ConsoleColor LogLevelToConsoleColor(LogLevel level)
         {
             switch (level)
@@ -119,5 +102,60 @@ namespace SS14.Shared.Log
                     return ConsoleColor.White;
             }
         }
+
+        /// <summary>
+        /// Log a message. Only works if the logmanager is initialized. Static method because its easier to type
+        /// </summary>
+        /// <param name="Message">the message</param>
+        /// <param name="logLevel">the level of the log item</param>
+        public static void Log(string Message, LogLevel logLevel = LogLevel.Information)
+        {
+            try
+            {
+                singleton.LogOne(Message, logLevel);
+            }
+            catch (NullReferenceException)
+            {
+                Console.WriteLine(Message);
+            }
+        }
+
+        /// <summary>
+        /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        public static void Log(string message, LogLevel logLevel = LogLevel.Information, params object[] args)
+        {
+            Log(string.Format(message, args), logLevel);
+        }
+
+        /// <summary>
+        /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="LogManager.Log" />
+        public static void Debug(string message, params object[] args) => Log(message, LogLevel.Debug, args);
+
+        /// <summary>
+        /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="LogManager.Log" />
+        public static void Info(string message, params object[] args) => Log(message, LogLevel.Information, args);
+
+        /// <summary>
+        /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="LogManager.Log" />
+        public static void Warning(string message, params object[] args) => Log(message, LogLevel.Warning, args);
+
+        /// <summary>
+        /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="LogManager.Log" />
+        public static void Error(string message, params object[] args) => Log(message, LogLevel.Error, args);
+
+        /// <summary>
+        /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="LogManager.Log" />
+        public static void Fatal(string message, params object[] args) => Log(message, LogLevel.Fatal, args);
     }
 }

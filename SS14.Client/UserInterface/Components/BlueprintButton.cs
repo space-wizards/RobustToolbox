@@ -74,8 +74,10 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             if (_bgcol != Color.Transparent)
-            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,
-                                                           ClientArea.Height, _bgcol);
+            {
+                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,
+                                                               ClientArea.Height, _bgcol);
+            }
             _icon.Draw();
             Label.Draw();
         }

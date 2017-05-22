@@ -3,6 +3,7 @@ using SS14.Shared.ServerEnums;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Server.Interfaces;
+using SS14.Shared.ContentLoader;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,10 +19,7 @@ namespace SS14.Server
             var parsedArgs = processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
 
-            var assemblies = new List<Assembly>();
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
-            assemblies.Add(Assembly.GetExecutingAssembly());
-            IoCManager.AddAssemblies(assemblies);
+            LoadAssemblies();
 
             var server = IoCManager.Resolve<ISS14Server>();
 
@@ -52,6 +50,30 @@ namespace SS14.Server
             }
 
             return options;
+        }
+
+        private static void LoadAssemblies()
+        {
+            var assemblies = new List<Assembly>(2);
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
+            IoCManager.AddAssemblies(assemblies);
+
+            assemblies.Clear();
+
+            // So we can't actually access this until IoC has loaded the initial assemblies. Yay.
+            var loader = IoCManager.Resolve<IContentLoader>();
+            assemblies.Clear();
+
+            var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
+            loader.LoadAssembly(contentAssembly);
+            assemblies.Add(contentAssembly);
+
+            contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
+            loader.LoadAssembly(contentAssembly);
+            assemblies.Add(contentAssembly);
+
+            IoCManager.AddAssemblies(assemblies);
         }
     }
 }

@@ -95,6 +95,7 @@
     <Compile Include="SS14.Client\Services\Helpers\StarScroller_Test.cs" />
     <Compile Include="SS14.Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
     <Compile Include="SS14.Shared\IoC\IoCManager_Test.cs" />
+    <Compile Include="SS14.Shared\Prototypes\PrototypeManager_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

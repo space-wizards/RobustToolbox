@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,10 @@ using System.Xml.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IComponent:IEntityEventSubscriber
+    /// <remarks>
+    /// All discoverable implementations of IComponent must have a <see cref="ComponentAttribute"/> to give it a type ID to reference.
+    /// </remarks>
+    public interface IComponent: IEntityEventSubscriber, IIoCInterface
     {
         ComponentFamily Family { get; }
         Entity Owner { get; set; }
@@ -316,5 +320,15 @@ namespace SS14.Shared.GameObjects
 
         protected virtual void SubscribeEvents()
         {}
+    }
+
+    public class ComponentAttribute : Attribute
+    {
+        public string ID { get; private set; }
+
+        public ComponentAttribute(string id)
+        {
+            ID = id;
+        }
     }
 }

@@ -12,6 +12,7 @@ namespace SS14.Server.Interfaces.Configuration
         string ServerMapName { get; set; }
         string ServerWelcomeMessage { get; set; }
         string LogPath { get; set; }
+        string LogFormat { get; set; }
         LogLevel LogLevel { get; set; }
         int Version { get; }
         int Port { get; set; }
@@ -19,6 +20,7 @@ namespace SS14.Server.Interfaces.Configuration
         float TickRate { get; set; }
         GameType GameType { get; set; }
         Vector2i ConsoleSize { get; set; }
+
         void Initialize(string configFilePath);
         void Save();
     }

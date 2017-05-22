@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using EntityManager = SS14.Server.GameObjects.EntityManager;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
@@ -97,10 +96,14 @@ namespace SS14.Server
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
             configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+
             string logPath = configMgr.LogPath;
-            if (!Path.IsPathRooted(logPath))
+            string logFormat = configMgr.LogFormat;
+            string logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            string fullPath = Path.Combine(logPath, logFilename);
+            if (!Path.IsPathRooted(fullPath))
             {
-                logPath = PathHelpers.ExecutableRelativeFile(logPath);
+                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
             }
 
             LogManager.Initialize(logPath, configMgr.LogLevel);

@@ -23,11 +23,8 @@ namespace SS14.Shared.GameObjects
         public EntitySystemManager(EntityManager em)
         {
             _entityManager = em;
-            List<Type> _systemTypes = new List<Type>();
-
-            _systemTypes.AddRange(
-                Assembly.GetEntryAssembly().GetTypes().Where(
-                    t => typeof(EntitySystem).IsAssignableFrom(t)));
+            IEnumerable<Type> _systemTypes = Assembly.GetEntryAssembly().GetTypes().Where(
+                 t => typeof(EntitySystem).IsAssignableFrom(t));
 
             foreach (Type type in _systemTypes)
             {

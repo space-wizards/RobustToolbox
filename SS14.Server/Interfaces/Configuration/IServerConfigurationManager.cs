@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared;
-using SS14.Shared.ServerEnums;
+using SS14.Shared.Log;
+
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Configuration

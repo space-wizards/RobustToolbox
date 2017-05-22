@@ -23,7 +23,6 @@ using SS14.Client.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -425,7 +424,7 @@ namespace SS14.Client.State.States
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
 
-            if (PlayerManager != null && PlayerManager.ControlledEntity != null)
+            if (PlayerManager.ControlledEntity != null)
             {
                 CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
@@ -1454,8 +1453,8 @@ namespace SS14.Client.State.States
             _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
             Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
-            float texratiox = CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
-            float texratioy = CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
+            float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
+            float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4f(texratiox, texratioy, 0, 0);
 
             LightblendTechnique["FinalLightBlend"].SetParameter("PlayerViewTexture", playerOcclusionTarget);

@@ -1,5 +1,4 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System.Linq;
 
 namespace SS14.Server.GameObjects

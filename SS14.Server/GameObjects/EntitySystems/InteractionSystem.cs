@@ -2,7 +2,6 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
 using System;
 
 namespace SS14.Server.GameObjects.EntitySystems
@@ -164,7 +163,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 itemComponent.ApplyTo(target, interaction, user);
             }
             return true;
-        } 
+        }
         private bool DoEmptyHandToItemInteraction(Entity user, Entity obj)
         {
             var itemComponent = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);

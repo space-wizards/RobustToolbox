@@ -1,6 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Damageable;
+using SS14.Shared.GameObjects.Components.Damageable;
 using System;
 
 namespace SS14.Client.GameObjects

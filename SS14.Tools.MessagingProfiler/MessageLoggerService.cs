@@ -1,5 +1,5 @@
 ﻿using SS14.Shared;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System.ServiceModel;
 
 namespace SS14.Tools.MessagingProfiler
@@ -103,7 +103,7 @@ namespace SS14.Tools.MessagingProfiler
             i.SenderType = senderType;
             i.MessageType = (ComponentMessageType)componentMessageType;
             i.MessageSource = LogItem.LogMessageType.ClientComponentMessage;
-            
+
             LogHolder.Singleton.LogItems.Add(i);
         }
 

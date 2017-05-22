@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects.Components.Renderable;
 using System;
 using System.Collections.Generic;
 
@@ -36,7 +35,7 @@ namespace SS14.Server.GameObjects
                     return ((AnimatedSpriteComponent)master).Loop;
                 }
                 return _loop;
-            }    
+            }
             set { _loop = value; }
         }
         public DrawDepth DrawDepth = DrawDepth.FloorTiles;
@@ -55,7 +54,7 @@ namespace SS14.Server.GameObjects
             var masterUid = master != null ? (int?)master.Owner.Uid : null;
             return new AnimatedSpriteComponentState(Visible, DrawDepth, Name, CurrentAnimation, Loop, masterUid);
         }
-        
+
         public override void SetParameter(ComponentParameter parameter)
         {
             base.SetParameter(parameter);

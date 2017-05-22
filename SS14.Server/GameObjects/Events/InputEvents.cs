@@ -2,7 +2,7 @@
 
 namespace SS14.Server.GameObjects.Events
 {
-    public class BoundKeyChangeEventArgs:SS14.Shared.GO.Events.BoundKeyChangeEventArgs
+    public class BoundKeyChangeEventArgs : SS14.Shared.GameObjects.Events.BoundKeyChangeEventArgs
     {
         public Entity Actor;
     }

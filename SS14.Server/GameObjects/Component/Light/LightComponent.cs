@@ -1,8 +1,7 @@
 ﻿using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Light;
+using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.IoC;
 using System;
 
@@ -85,7 +84,7 @@ namespace SS14.Server.GameObjects
         {
             _state = state;
         }
-        
+
         public override ComponentState GetComponentState()
         {
             return new LightComponentState(_state, _colorR, _colorG, _colorB, _mode);

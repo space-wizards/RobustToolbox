@@ -1,7 +1,6 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Velocity;
+using SS14.Shared.GameObjects.Components.Velocity;
 using System;
 
 namespace SS14.Client.GameObjects

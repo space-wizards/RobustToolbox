@@ -1,6 +1,6 @@
 ﻿using SFML.System;
 using SS14.Shared;
-using SS14.Shared.ServerEnums;
+using SS14.Shared.Log;
 using System;
 
 namespace SS14.Server.Configuration

@@ -4,7 +4,6 @@ using SS14.Server.Interfaces.Configuration;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.ServerEnums;
 using System;
 using System.IO;
 using System.Xml.Serialization;
@@ -80,6 +79,12 @@ namespace SS14.Server.Configuration
         {
             get { return Configuration.LogPath; }
             set { Configuration.LogPath = value; }
+        }
+
+        public string LogFormat
+        {
+            get { return Configuration.LogFormat; }
+            set { Configuration.LogFormat = value; }
         }
 
         public int Version

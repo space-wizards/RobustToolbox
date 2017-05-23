@@ -8,8 +8,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -27,7 +26,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
-        
+
         public AnimatedSpriteComponent()
         {
             Family = ComponentFamily.Renderable;
@@ -209,7 +208,7 @@ namespace SS14.Client.GameObjects
             // Get the clicked position relative to the texture
             var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
                                               (int)(worldPos.Y - AABB.Top + texRect.Top));
-            
+
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
@@ -263,7 +262,7 @@ namespace SS14.Client.GameObjects
             if (sprite == null) return;
 
             var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-            
+
             Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
             var bounds = sprite.AABB;
@@ -273,7 +272,7 @@ namespace SS14.Client.GameObjects
                 || ownerPos.Y + bounds.Top + bounds.Height < topLeft.Y
                 || ownerPos.Y > bottomRight.Y)
                 return;
-            
+
             sprite.HorizontalFlip = HorizontalFlip;
             sprite.Draw();
 
@@ -363,13 +362,13 @@ namespace SS14.Client.GameObjects
                 if (mUid == null)
                 {
                     UnsetMaster();
-                } 
+                }
                 else if (mUid != master.Owner.Uid)
                 {
                     UnsetMaster();
                     SetMaster(Owner.EntityManager.GetEntity((int)mUid));
                 }
-            } 
+            }
             else if (mUid != null)
             {
                 SetMaster(Owner.EntityManager.GetEntity((int)mUid));
@@ -405,7 +404,7 @@ namespace SS14.Client.GameObjects
             {
                 if(state.CurrentAnimation == null)
                     sprite.SetAnimationState("idle");
-                else 
+                else
                     sprite.SetAnimationState(state.CurrentAnimation);
             }
             SetMaster((int?)state.MasterUid);

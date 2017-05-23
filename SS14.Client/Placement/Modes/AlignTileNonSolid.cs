@@ -3,7 +3,7 @@ using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Placement.Modes
@@ -26,9 +26,6 @@ namespace SS14.Client.Placement.Modes
 
             var bounds = spriteToDraw.GetLocalBounds();
             var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
-            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
-                                                 mouseWorld.Y - (spriteSize.Y / 2f),
-                                                 spriteSize.X, spriteSize.Y);
 
             currentTile = currentMap.GetTileRef(mouseWorld);
 
@@ -54,7 +51,7 @@ namespace SS14.Client.Placement.Modes
                                          currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 
-                spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),
+                FloatRect spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),
                                                  mouseWorld.Y - (bounds.Height/2f), bounds.Width,
                                                  bounds.Height);
                 if (pManager.CollisionManager.IsColliding(spriteRectWorld))

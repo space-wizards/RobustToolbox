@@ -2,7 +2,7 @@
 using NetSerializer;
 using SS14.Shared.GameObjects.Exceptions;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,6 +23,21 @@ namespace SS14.Shared.GameObjects
         public EntitySystemManager(EntityManager em)
         {
             _entityManager = em;
+            IEnumerable<Type> _systemTypes = Assembly.GetEntryAssembly().GetTypes().Where(
+                 t => typeof(EntitySystem).IsAssignableFrom(t));
+
+            foreach (Type type in _systemTypes)
+            {
+                if (type == typeof(EntitySystem))
+                    continue; //Don't run the base EntitySystem.
+                //Force initialization of all systems
+                var instance = (EntitySystem)Activator.CreateInstance(type, _entityManager, this);
+                MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
+                generic.Invoke(this, new[] { instance });
+                instance.RegisterMessageTypes();
+                instance.SubscribeEvents();
+
+            }
         }
 
         public void RegisterMessageType<T>(EntitySystem regSystem) where T : EntitySystemMessage
@@ -47,7 +62,7 @@ namespace SS14.Shared.GameObjects
             {
                 throw new MissingImplementationException(type);
             }
-            
+
             return (T) _systems[type];
         }
 

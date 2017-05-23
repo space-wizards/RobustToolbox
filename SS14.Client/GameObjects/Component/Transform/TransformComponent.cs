@@ -2,8 +2,7 @@
 using SS14.Client.Interfaces.Configuration;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Transform;
+using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;

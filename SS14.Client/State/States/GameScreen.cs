@@ -425,7 +425,7 @@ namespace SS14.Client.State.States
                 ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
 
                 // Render the lightmap
-                RenderLightsIntoMap(lights);
+            //    RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);
 
                 //Draw all rendertargets to the scenetarget
@@ -447,10 +447,10 @@ namespace SS14.Client.State.States
 
                 //Debug.DebugRendertarget(_sceneTarget);
 
-                if (bFullVision)
+             //   if (bFullVision)
                     _sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-                else
-                    LightScene();
+           //     else
+           //         LightScene();
 
 
                 RenderDebug(vp);

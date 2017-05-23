@@ -2,22 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.IoC;
+using SS14.Shared.IoC.Exceptions;
 
 namespace SS14.Shared.GameObjects
 {
     public class ComponentFactory
     {
-        private readonly string _componentNamespace;
-        private readonly List<Type> _types;
+        private readonly Dictionary<string, Type> componentTypes;
 
-        public ComponentFactory(EntityManager entityManager, string componentNamespace)
+        public ComponentFactory(EntityManager entityManager)
         {
             EntityManager = entityManager;
-            _componentNamespace = componentNamespace;
+            componentTypes = new Dictionary<string, Type>();
 
-            Type type = typeof (IComponent);
-            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            _types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
+            ReloadComponents();
+
+            IoCManager.AssemblyAdded += ReloadComponents;
         }
 
         public EntityManager EntityManager { get; private set; }
@@ -29,14 +30,16 @@ namespace SS14.Shared.GameObjects
         /// <returns>A Component</returns>
         public IComponent GetComponent(Type componentType)
         {
-            if (componentType.GetInterface("IComponent") == null)
-                return null;
+            if (componentType.GetInterface(nameof(IComponent)) == null)
+            {
+                throw new Exception(string.Format("{0} does not implement {1}", nameof(IComponent)));
+            }
             return (IComponent) Activator.CreateInstance(componentType);
         }
 
-        public T GetComponent<T>() where T:IComponent
+        public T GetComponent<T>() where T: IComponent
         {
-            return (T) Activator.CreateInstance(typeof (T));
+            return (T)Activator.CreateInstance(typeof(T));
         }
 
         /// <summary>
@@ -44,22 +47,33 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="componentType">type of component to make</param>
         /// <returns>A Component</returns>
-        public IComponent GetComponent(string componentTypeName)
+        public IComponent GetComponent(string componentType)
         {
-            if (componentTypeName == "KeyBindingInputMoverComponent")
-                componentTypeName = "PlayerInputMoverComponent";
-            if (componentTypeName == "NetworkMoverComponent")
-                componentTypeName = "BasicMoverComponent";
-            if (string.IsNullOrWhiteSpace(componentTypeName))
-                return null;
-            string fullName = _componentNamespace + "." + componentTypeName;
-            //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
-            Type t = _types.FirstOrDefault(type => type.FullName == fullName);
-            //Type t = Type.GetType(_componentNamespace + "." + componentTypeName); //Get the type
-            if (t == null || t.GetInterface("IComponent") == null)
-                throw new TypeLoadException("Cannot find specified component type: " + fullName);
+            return (IComponent)Activator.CreateInstance(componentTypes[componentType]);
+        }
 
-            return (IComponent) Activator.CreateInstance(t); // Return an instance
+        public Type GetComponentType(string componentType)
+        {
+            return componentTypes[componentType];
+        }
+
+        private void ReloadComponents()
+        {
+            foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
+            {
+                var attribute = (ComponentAttribute)Attribute.GetCustomAttribute(type, typeof(ComponentAttribute));
+                if (attribute == null)
+                {
+                    throw new InvalidImplementationException(type, typeof(ComponentAttribute), "No " + nameof(ComponentAttribute));
+                }
+
+                if (componentTypes.ContainsKey(attribute.ID))
+                {
+                    throw new Exception("Duplicate ID for component: " + attribute.ID);
+                }
+
+                componentTypes[attribute.ID] = type;
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ using SS14.Shared.GameObjects.Components.Collidable;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -166,31 +167,38 @@ namespace SS14.Client.GameObjects
         /// Settable params:
         /// TweakAABB - Vector4
         /// </summary>
-        /// <param name="parameter"></param>
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("tweakAABB"), out node))
             {
-                case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4f>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBtop":
-                    tweakAABB.X = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBright":
-                    tweakAABB.Y = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBbottom":
-                    tweakAABB.Z = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBleft":
-                    tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Red);
-                    break;
+                TweakAABB = node.AsVector4f() / mapManager.TileSize;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBtop"), out node))
+            {
+                tweakAABB.X = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBright"), out node))
+            {
+                tweakAABB.Y = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBbottom"), out node))
+            {
+                tweakAABB.Z = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBleft"), out node))
+            {
+                tweakAABB.W = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("DebugColor"), out node))
+            {
+                DebugColor = ColorUtils.FromHex(node.AsString(), Color.Red);
             }
         }
 

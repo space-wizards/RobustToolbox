@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
 using SS14.Shared.IoC;
 using System;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -37,16 +38,13 @@ namespace SS14.Server.GameObjects
             return reply;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
+            base.LoadParameters(mapping);
 
-            switch (parameter.MemberName)
-            {
-                case "wearloc":
-                    wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), parameter.GetValue<string>());
-                    break;
-            }
+            var node = (YamlScalarNode)mapping["wearloc"];
+
+            wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), node.Value);
         }
 
         public override ComponentState GetComponentState()

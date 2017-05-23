@@ -20,18 +20,7 @@ namespace SS14.Shared.GameObjects
         public EntityPrototype Parent { get; private set; }
         // Used to store the parent id until we sync when all templates are done loading.
         private string parentTemp;
-        public IDictionary<Type, YamlMappingNode> Components => components;
-        private Dictionary<Type, YamlMappingNode> components = new Dictionary<Type, YamlMappingNode>();
-
-        private static Dictionary<string, Type> componentTypes;
-
-        public EntityPrototype()
-        {
-            if (componentTypes == null)
-            {
-                ReloadComponents();
-            }
-        }
+        private Dictionary<string, YamlMappingNode> components = new Dictionary<string, YamlMappingNode>();
 
         public void LoadFrom(YamlMappingNode mapping)
         {
@@ -70,37 +59,27 @@ namespace SS14.Shared.GameObjects
             Parent = manager.Index<EntityPrototype>(parentTemp);
         }
 
-        private void ReadComponent(YamlMappingNode mapping)
+        public Entity CreateEntity(EntityManager manager)
         {
-            var type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
-            var componentType = componentTypes[type];
+            var entity = new Entity(manager);
 
-            components[componentType] = mapping;
-            // TODO: figure out a better way to exclude the type node.
-            mapping.Children.Remove(new YamlScalarNode("type"));
+            foreach (KeyValuePair<string, YamlMappingNode> componentData in components)
+            {
+                IComponent component = manager.ComponentFactory.GetComponent(componentData.Key);
+
+            }
+
+            return entity;
         }
 
-        private static void ReloadComponents()
+        private void ReadComponent(YamlMappingNode mapping)
         {
-            if (componentTypes == null)
-            {
-                 componentTypes = new Dictionary<string, Type>();
-            }
-            foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
-            {
-                var attribute = (ComponentAttribute)Attribute.GetCustomAttribute(type, typeof(ComponentAttribute));
-                if (attribute == null)
-                {
-                    throw new InvalidImplementationException(type, typeof(ComponentAttribute), "No " + nameof(ComponentAttribute));
-                }
+            // TODO: nonexistant component types are not checked here.
+            var type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
 
-                if (componentTypes.ContainsKey(attribute.ID))
-                {
-                    throw new Exception("Duplicate ID for component: " + attribute.ID);
-                }
-
-                componentTypes[attribute.ID] = type;
-            }
+            components[type] = mapping;
+            // TODO: figure out a better way to exclude the type node.
+            mapping.Children.Remove(new YamlScalarNode("type"));
         }
     }
 }

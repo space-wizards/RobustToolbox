@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -16,19 +17,12 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Icon;
         }
 
-        /// <summary>
-        /// Set parameters :)
-        /// </summary>
-        /// <param name="parameter"></param>
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            //base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("icon"), out node))
             {
-                case "icon":
-                    var iconName = parameter.GetValue<string>();
-                    SetIcon(iconName);
-                    break;
+                SetIcon(((YamlScalarNode)node).Value);
             }
         }
 

@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -176,34 +177,36 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = true;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("openSprite"), out node))
             {
-                case "OpenSprite":
-                    openSprite = parameter.GetValue<string>();
-                    break;
-                case "ClosedSprite":
-                    closedSprite = parameter.GetValue<string>();
-                    break;
-                case "OpenOnBump":
-                    openonbump = parameter.GetValue<bool>();
-                    break;
-                case "AutoCloseInterval":
-                    var autocloseinterval = parameter.GetValue<int>();
-                    if (autocloseinterval == 0)
-                        autoclose = false;
-                    else
-                    {
-                        autoclose = true;
-                        openLength = autocloseinterval;
-                    }
-                    break;
-                default:
-                    base.SetParameter(parameter);
-                    break;
+                openSprite = ((YamlScalarNode)node).Value;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("closedSprite"), out node))
+            {
+                closedSprite = ((YamlScalarNode)node).Value;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("openOnBump"), out node))
+            {
+                openonbump = bool.Parse(((YamlScalarNode)node).Value);
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("autoCloseInterval"), out node))
+            {
+                var autocloseinterval = int.Parse(((YamlScalarNode)node).Value);
+                if (autocloseinterval == 0)
+                {
+                    autoclose = false;
+                }
+                else
+                {
+                    autoclose = true;
+                    openLength = autocloseinterval;
+                }
             }
         }
 

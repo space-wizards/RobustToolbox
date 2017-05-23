@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -61,13 +62,13 @@ namespace SS14.Server.GameObjects
             base.Update(frameTime);
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            foreach (XElement entityStat in extendedParameters.Descendants("EntityArmor"))
+            foreach (KeyValuePair<YamlNode, YamlNode> stat in (YamlMappingNode)mapping["armor"])
             {
-                var type = (DamageType) Enum.Parse(typeof (DamageType), entityStat.Attribute("type").Value, true);
+                var type = (DamageType) Enum.Parse(typeof (DamageType), ((YamlScalarNode)stat.Key).Value, true);
                 //Add check for parsing. Handle exceptions if invalid name.
-                int value = int.Parse(entityStat.Attribute("value").Value); //See comment above.
+                int value = int.Parse(((YamlScalarNode)stat.Value).Value); //See comment above.
 
                 armorStats[type] = value;
             }

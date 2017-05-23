@@ -8,11 +8,12 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("InventoryComponent")]
+    [Component("Inventory")]
     public class InventoryComponent : Component, IInventoryComponent, IInventoryContainer
     {
         public InventoryComponent()
@@ -78,19 +79,17 @@ namespace SS14.Server.GameObjects
 
         public bool containsEntity(string templatename)
         {
-            if (containedEntities.Exists(x => x.Template.Name == templatename)) return true;
-            else return false;
+            return containedEntities.Exists(x => x.Prototype.Name == templatename);
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            foreach (XElement param in extendedParameters.Descendants("InventoryProperties"))
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("size"), out node))
             {
-                if (param.Attribute("inventorySize") != null)
-                    maxSlots = int.Parse(param.Attribute("inventorySize").Value);
-
-                //TODO: Add support for objects that are created inside inventories (Lockers, crates etc)
+                maxSlots = int.Parse(((YamlScalarNode)node).Value);
             }
+            // TODO: Add support for objects that are created inside inventories (Lockers, crates etc)
         }
 
         //Adds item to inventory and dispatches hide message to sprite compo.

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -281,8 +282,12 @@ namespace SS14.Server.GameObjects
             cap.owner = this;
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode yaml)
         {
+            /*
+            TODO: figure something out for this cancerous mess.
+            Yeah it's basically ANOTHER FUCKING COMPONENT SYSTEM built into the item component.
+
             foreach (XElement itemcapability in extendedParameters.Descendants("ItemCapability"))
             {
                 IEnumerable<XElement> Verbs = itemcapability.Descendants("ItemCapabilityVerb");
@@ -308,6 +313,7 @@ namespace SS14.Server.GameObjects
                 }
                 AddCapability(cap);
             }
+            */
         }
 
         public override ComponentState GetComponentState()

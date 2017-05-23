@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -71,8 +72,10 @@ namespace SS14.Server.GameObjects
                 emitters[name] = active;
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
+            /*
+            TODO: reimplement
             foreach (XElement param in extendedParameters.DescendantNodes())
             {
                 if(param.Name == "ParticleSystem")
@@ -91,6 +94,7 @@ namespace SS14.Server.GameObjects
                         }
                     }
             }
+            */
         }
     }
 }

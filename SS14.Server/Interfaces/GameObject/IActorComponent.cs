@@ -4,6 +4,6 @@ namespace SS14.Server.Interfaces.GOC
 {
     public interface IActorComponent
     {
-        IPlayerSession GetPlayerSession();
+        IPlayerSession playerSession { get; }
     }
 }

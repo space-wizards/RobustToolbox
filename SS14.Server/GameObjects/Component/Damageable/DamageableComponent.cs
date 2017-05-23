@@ -4,6 +4,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -118,19 +119,19 @@ namespace SS14.Server.GameObjects
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("maxHealth"), out node))
             {
-                case "MaxHealth":
-                    maxHealth = parameter.GetValue<int>();
-                    currentHealth = maxHealth;
-                    break;
-                case "CurrentHealth":
-                    currentHealth = parameter.GetValue<int>();
-                    break;
+                maxHealth = int.Parse(((YamlScalarNode)node).Value);
+                currentHealth = maxHealth;
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("currentHealth"), out node))
+            {
+                currentHealth = int.Parse(((YamlScalarNode)node).Value);
+
             }
         }
 

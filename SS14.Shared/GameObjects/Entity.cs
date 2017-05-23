@@ -16,7 +16,7 @@ namespace SS14.Shared.GameObjects
 
         bool Initialized { get; set; }
 
-        EntityTemplate Template { get; set; }
+        EntityPrototype Prototype { get; set; }
         event EntityShutdownEvent OnShutdown;
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace SS14.Shared.GameObjects
         protected IEntityNetworkManager EntityNetworkManager;
 
         public int Uid { get; set; }
-        public EntityTemplate Template { get; set; }
+        public EntityPrototype Prototype { get; set; }
         public string Name { get; set; }
 
         public bool Initialized { get; set; }
@@ -335,7 +335,7 @@ namespace SS14.Shared.GameObjects
                     replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0];
             //If you dont answer with a string then fuck you.
 
-            return Template.Description;
+            return null;
         }
 
         #endregion
@@ -529,7 +529,7 @@ namespace SS14.Shared.GameObjects
             var es = new EntityState(
                 Uid,
                 compStates,
-                Template.Name,
+                Prototype.Name,
                 Name,
                 synchedComponentTypes);
             return es;

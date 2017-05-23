@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -58,18 +59,17 @@ namespace SS14.Server.GameObjects
             return new AnimatedSpriteComponentState(Visible, DrawDepth, Name, CurrentAnimation, Loop, masterUid);
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("drawdepth"), out node))
             {
-                case "drawdepth":
-                    DrawDepth = (DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true);
-                    break;
+                DrawDepth = (DrawDepth)Enum.Parse(typeof(DrawDepth), ((YamlScalarNode)node).Value, true);
+            }
 
-                case "sprite":
-                    Name = parameter.GetValue<string>();
-                    break;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("sprite"), out node))
+            {
+                Name = ((YamlScalarNode)node).Value;
             }
         }
 

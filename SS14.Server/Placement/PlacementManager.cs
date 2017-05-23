@@ -151,7 +151,7 @@ namespace SS14.Server.Placement
 
             if(mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if(playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,
@@ -175,7 +175,7 @@ namespace SS14.Server.Placement
             message.Write(alignOption);
             if (mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if (playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,
@@ -195,7 +195,7 @@ namespace SS14.Server.Placement
 
             if (mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if (playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -23,14 +24,14 @@ namespace SS14.Server.GameObjects
             Handslots = new Dictionary<InventoryLocation, Entity>();
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
+            base.LoadParameters(mapping);
             Handslots.Clear();
 
-            foreach (XElement param in extendedParameters.Descendants("handSlot"))
+            foreach (YamlScalarNode node in (YamlSequenceNode)mapping["slots"])
             {
-                if (param.Attribute("slot") != null)
-                    Handslots.Add((InventoryLocation)Enum.Parse(typeof(InventoryLocation), param.Attribute("slot").Value), null);
+                Handslots.Add((InventoryLocation)Enum.Parse(typeof(InventoryLocation), node.Value), null);
             }
         }
 

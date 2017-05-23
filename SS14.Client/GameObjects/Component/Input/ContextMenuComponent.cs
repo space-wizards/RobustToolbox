@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -60,31 +61,41 @@ namespace SS14.Client.GameObjects
             _entries.Add(entry);
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            foreach (XElement param in extendedParameters.Descendants("ContextEntry"))
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("entries"), out node))
             {
-                string name = "NULL";
-                string icon = "NULL";
-                string message = "NULL";
+                foreach (YamlMappingNode entry in (YamlSequenceNode)node)
+                {
+                    string name = "";
+                    string icon = "";
+                    string message = "";
 
-                if (param.Attribute("name") != null)
-                    name = param.Attribute("name").Value;
+                    if (entry.Children.TryGetValue(new YamlScalarNode("name"), out node))
+                    {
+                        name = ((YamlScalarNode)node).Value;
+                    }
 
-                if (param.Attribute("icon") != null)
-                    icon = param.Attribute("icon").Value;
+                    if (entry.Children.TryGetValue(new YamlScalarNode("icon"), out node))
+                    {
+                        icon = ((YamlScalarNode)node).Value;
+                    }
 
-                if (param.Attribute("message") != null)
-                    message = param.Attribute("message").Value;
+                    if (entry.Children.TryGetValue(new YamlScalarNode("message"), out node))
+                    {
+                        message = ((YamlScalarNode)node).Value;
+                    }
 
                 var newEntry = new ContextMenuEntry
-                                   {
-                                       EntryName = name,
-                                       IconName = icon,
-                                       ComponentMessage = message
-                                   };
+                {
+                    EntryName = name,
+                    IconName = icon,
+                    ComponentMessage = message
+                };
 
                 _entries.Add(newEntry);
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.IoC;
 using System;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
@@ -22,24 +23,27 @@ namespace SS14.Server.GameObjects
             Family = ComponentFamily.Light;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.Children.TryGetValue(new YamlScalarNode("startState"), out node))
             {
-                case "startState":
-                    _state = (LightState) Enum.Parse(typeof (LightState), parameter.GetValue<string>(), true);
-                    break;
-                case "lightColorR":
-                    _colorR = int.Parse(parameter.GetValue<string>());
-                    break;
-                case "lightColorG":
-                    _colorG = int.Parse(parameter.GetValue<string>());
-                    break;
-                case "lightColorB":
-                    _colorB = int.Parse(parameter.GetValue<string>());
-                    break;
+                _state = (LightState) Enum.Parse(typeof (LightState), ((YamlScalarNode)node).Value, true);
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("lightColorR"), out node))
+            {
+                _colorR = int.Parse(((YamlScalarNode)node).Value);
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("lightColorG"), out node))
+            {
+                _colorG = int.Parse(((YamlScalarNode)node).Value);
+            }
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("lightColorB"), out node))
+            {
+                _colorB = int.Parse(((YamlScalarNode)node).Value);
             }
         }
 

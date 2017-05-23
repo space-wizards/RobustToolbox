@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,28 +56,18 @@ namespace SS14.Shared.GameObjects
 
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
-            EngineType = engineType;
-            switch (EngineType)
-            {
-                case EngineType.Client:
-                    _componentNamespace = "SS14.Client.GameObjects";
-                    break;
-                case EngineType.Server:
-                    _componentNamespace = "SS14.Server.GameObjects";
-                    break;
-            }
             EntitySystemManager = new EntitySystemManager(this);
-            ComponentFactory = new ComponentFactory(this, _componentNamespace);
+            ComponentFactory = new ComponentFactory(this);
             EntityNetworkManager = entityNetworkManager;
             ComponentManager = new ComponentManager();
-            EntityTemplateDatabase = new EntityTemplateDatabase(this);
-            EntityFactory = new EntityFactory(EntityTemplateDatabase);
+            PrototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            EntityFactory = new EntityFactory(PrototypeManager, this);
             Clock = 0f;
             Initialize();
         }
 
         protected EntityFactory EntityFactory { get; private set; }
-        public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
+        public IPrototypeManager PrototypeManager { get; private set; }
         public EntitySystemManager EntitySystemManager { get; private set; }
         public bool Initialized { get; protected set; }
         public float Clock { get; private set; }

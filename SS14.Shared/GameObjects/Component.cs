@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
@@ -35,14 +36,11 @@ namespace SS14.Shared.GameObjects
         void Shutdown();
 
         /// <summary>
-        /// This allows setting of the component's parameters once it is instantiated.
+        /// This allows setting of the component's parameters from YAML once it is instantiated.
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
-        void SetParameter(ComponentParameter parameter);
-
-        void HandleExtendedParameters(XElement extendedParameters);
+        void LoadParameters(YamlMappingNode mapping);
 
         /// <summary>
         /// Main method for updating the component. This is called from a big loop in Componentmanager.
@@ -157,18 +155,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        /// <param name="parameter">ComponentParameter object describing the parameter and the value</param>
-        public virtual void SetParameter(ComponentParameter parameter)
-        {
-            switch (parameter.MemberName)
-            {
-                case "ExtendedParameters":
-                    HandleExtendedParameters(parameter.GetValue<XElement>());
-                    break;
-            }
-        }
-
-        public virtual void HandleExtendedParameters(XElement extendedParameters)
+        public virtual void LoadParameters(YamlMappingNode mapping)
         {
         }
 
@@ -275,12 +262,14 @@ namespace SS14.Shared.GameObjects
         /// <param name="sVar">ComponentParameter</param>
         public void SetSVar(MarshalComponentParameter sVar)
         {
+            /*
             ComponentParameter param = sVar.Parameter;
 
             //If it is registered, and the types match, set it.
             if (_sVars.ContainsKey(param.MemberName) &&
                 _sVars[param.MemberName] == param.ParameterType)
                 SetParameter(param);
+            */
         }
 
         /// <summary>

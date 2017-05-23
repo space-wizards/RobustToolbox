@@ -58,10 +58,5 @@ namespace SS14.Server.GameObjects
         protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
         {
         }
-
-        public override void SetParameter(ComponentParameter parameter)
-        {
-            base.SetParameter(parameter);
-        }
     }
 }

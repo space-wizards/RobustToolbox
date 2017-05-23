@@ -142,6 +142,7 @@
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\unZipString.cs" />
+    <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
     <Compile Include="NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -165,9 +166,6 @@
     <Compile Include="GameObjects\EntityManager.cs" />
     <Compile Include="GameObjects\EntityQuery.cs" />
     <Compile Include="GameObjects\EntitySystemManager.cs" />
-    <Compile Include="GameObjects\EntityTemplate.cs" />
-    <Compile Include="GameObjects\EntityTemplateDatabase.cs" />
-    <Compile Include="GameObjects\Enums.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="GameObjects\StaticConstants.cs" />
@@ -210,6 +208,7 @@
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="GameObjects\ItemFlags.cs" />
     <Compile Include="GameObjects\MarshalComponentParameter.cs" />
+    <Compile Include="GameObjects\Enums.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />

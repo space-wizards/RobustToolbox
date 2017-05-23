@@ -1,8 +1,7 @@
 ﻿using SS14.Server.GameObjects.Item.ItemCapability;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Item;
+using SS14.Shared.GameObjects.Components.Item;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -287,7 +286,7 @@ namespace SS14.Server.GameObjects
                 IEnumerable<XElement> Parameters = itemcapability.Descendants("ItemCapabilityParameter");
                 ItemCapability cap = null;
 
-                if (cap == null)
+                if (cap == null) // TODO: make this method actually do something because right now it always returns
                     return;
                 foreach (XElement verb in Verbs)
                 {

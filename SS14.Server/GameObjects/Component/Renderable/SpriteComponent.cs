@@ -1,8 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Renderable;
+using SS14.Shared.GameObjects.Components.Renderable;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects

@@ -2,6 +2,7 @@
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
+using SS14.Shared.Utility;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -59,7 +60,7 @@ namespace SS14.Client.Input
         private void LoadKeys()
         {
             var xml = new XmlDocument();
-            var kb = new StreamReader("KeyBindings.xml");
+            var kb = new StreamReader(PathHelpers.ExecutableRelativeFile("KeyBindings.xml"));
             xml.Load(kb);
             XmlNodeList resources = xml.SelectNodes("KeyBindings/Binding");
             _boundKeys = new Dictionary<Keyboard.Key, BoundKeyFunctions>();

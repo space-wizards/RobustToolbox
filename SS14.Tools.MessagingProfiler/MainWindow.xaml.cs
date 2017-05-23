@@ -1,5 +1,5 @@
 ﻿using SS14.Shared;
-using SS14.Shared.GO;
+using SS14.Shared.GameObjects;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -60,12 +60,12 @@ namespace SS14.Tools.MessagingProfiler
             LogItem i = item as LogItem;
             if (i == null)
                 return selected;
-            if (_entityMessageFilter == EntityMessage.Null 
-                && _componentFamilyFilter == ComponentFamily.Null 
-                && _logMessageTypeFilter == LogItem.LogMessageType.None 
+            if (_entityMessageFilter == EntityMessage.Null
+                && _componentFamilyFilter == ComponentFamily.Null
+                && _logMessageTypeFilter == LogItem.LogMessageType.None
                 && _componentMessageTypeFilter == ComponentMessageType.Null)
                 selected = true;
-            else 
+            else
             {
                 if (_booleanFilter == "any")
                 {
@@ -118,6 +118,6 @@ namespace SS14.Tools.MessagingProfiler
             UpdateItemsView();
         }
 
-        
+
     }
 }

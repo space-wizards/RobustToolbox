@@ -11,7 +11,6 @@ using SS14.Client.Helpers;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
 using System;
 
 namespace SS14.Client.UserInterface.Inventory

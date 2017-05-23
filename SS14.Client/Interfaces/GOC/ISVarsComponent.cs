@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GO;
+﻿using SS14.Shared.GameObjects;
 using System;
 
 namespace SS14.Client.Interfaces.GOC

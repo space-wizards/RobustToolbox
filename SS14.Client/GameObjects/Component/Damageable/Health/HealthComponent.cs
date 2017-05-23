@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GO.Component.Damageable.Health;
+﻿using SS14.Shared.GameObjects.Components.Damageable.Health;
 using System;
 
 namespace SS14.Client.GameObjects

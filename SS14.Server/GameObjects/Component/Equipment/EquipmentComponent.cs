@@ -4,8 +4,7 @@ using SS14.Server.GameObjects.Item.ItemCapability;
 using SS14.Server.Interfaces.GameObject;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Equipment;
+using SS14.Shared.GameObjects.Components.Equipment;
 using System.Collections.Generic;
 using System.Linq;
 

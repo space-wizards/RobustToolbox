@@ -1,8 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
-
 namespace SS14.Client.GameObjects.EntitySystems
 {
     public class InputSystem : EntitySystem
@@ -25,7 +23,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (entity.GetComponent(ComponentFamily.Renderable) is AnimatedSpriteComponent)
                 {
                     var animation = entity.GetComponent<AnimatedSpriteComponent>(ComponentFamily.Renderable);
-                    
+
                     //Char is moving
                     if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||

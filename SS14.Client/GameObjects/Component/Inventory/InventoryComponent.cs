@@ -1,7 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Inventory;
+using SS14.Shared.GameObjects.Components.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +32,7 @@ namespace SS14.Client.GameObjects
         }
 
         public event InventoryComponentUpdateHandler Changed;
-        
+
         public bool ContainsEntity(Entity entity)
         {
             return ContainedEntities.Contains(entity);
@@ -91,7 +90,7 @@ namespace SS14.Client.GameObjects
             {
                 ContainedEntities.Add(Owner.EntityManager.GetEntity(uid));
             }
-            
+
             if (stateChanged && Changed != null) Changed(this, MaxSlots, ContainedEntities);
         }
     }

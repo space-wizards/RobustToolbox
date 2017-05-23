@@ -4,7 +4,6 @@ using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.GO;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -79,12 +78,12 @@ namespace SS14.Client.GameObjects.EntitySystems
 
                 //Limit to how far a human can move
                 var humanMoveLimit = 6 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;
-                
-                // If the "to" interp position is equal to the "from" interp position, 
+
+                // If the "to" interp position is equal to the "from" interp position,
                 // OR we're actually trying to interpolate past the "to" state
                 // OR we're trying to interpolate a point older than the oldest state in memory
-                if (transform.lerpStateTo == transform.lerpStateFrom || 
-                    currentTime > transform.lerpStateTo.ReceivedTime || 
+                if (transform.lerpStateTo == transform.lerpStateFrom ||
+                    currentTime > transform.lerpStateTo.ReceivedTime ||
                     currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
                     // Fall back to setting the position to the "To" state
@@ -113,9 +112,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                 //Handle player movement
                 if (isLocallyControlled)
                 {
-                    //var playerPosition = transform.Position + 
+                    //var playerPosition = transform.Position +
                     var velocityComponent = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                    if (velocityComponent != null) 
+                    if (velocityComponent != null)
                     {
                         var movement = velocityComponent.Velocity * frametime;
                         var playerPosition = movement + transform.Position;
@@ -163,12 +162,12 @@ namespace SS14.Client.GameObjects.EntitySystems
 
             }
         }
-        
+
         private Vector2f EaseExponential(float time, Vector2f v1, Vector2f v2, float duration)
         {
             var dx = (v2.X - v1.X);
             var x = EaseExponential(time, v1.X, dx, duration);
-            
+
             var dy = (v2.Y - v1.Y);
             var y = EaseExponential(time, v1.Y, dy, duration);
             return new Vector2f(x,y);

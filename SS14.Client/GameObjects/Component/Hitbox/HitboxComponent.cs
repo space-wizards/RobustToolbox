@@ -1,8 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GO;
-using SS14.Shared.GO.Component.Hitbox;
+using SS14.Shared.GameObjects.Components.Hitbox;
 using System;
 
 namespace SS14.Client.GameObjects

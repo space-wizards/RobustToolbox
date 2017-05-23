@@ -174,29 +174,7 @@ namespace SS14.Client.State.States
             InitializeGUI();
 
         }
-
-        public void Shutdown()
-        {
-            IoCManager.Resolve<IPlayerManager>().Detach();
-
-            _cleanupSpriteList.ForEach(s => s.Texture = null);
-            _cleanupSpriteList.Clear();
-            _cleanupList.ForEach(t => { t.Dispose(); });
-            _cleanupList.Clear();
-
-            shadowMapResolver.Dispose();
-            _gaussianBlur.Dispose();
-            _entityManager.Shutdown();
-            UserInterfaceManager.DisposeAllComponents();
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-            _decalBatch.Dispose();
-            _floorBatch.Dispose();
-            _gasBatch.Dispose();
-            _wallBatch.Dispose();
-            _wallTopsBatch.Dispose();
-            GC.Collect();
-        }
-
+       
         private void InitializeRenderTargets()
         {
             _baseTarget = new RenderImage("baseTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
@@ -587,6 +565,29 @@ namespace SS14.Client.State.States
                 CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White);
             }
         }
+
+        public void Shutdown()
+        {
+            IoCManager.Resolve<IPlayerManager>().Detach();
+
+            _cleanupSpriteList.ForEach(s => s.Texture = null);
+            _cleanupSpriteList.Clear();
+            _cleanupList.ForEach(t => { t.Dispose(); });
+            _cleanupList.Clear();
+
+            shadowMapResolver.Dispose();
+            _gaussianBlur.Dispose();
+            _entityManager.Shutdown();
+            UserInterfaceManager.DisposeAllComponents();
+            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
+            _decalBatch.Dispose();
+            _floorBatch.Dispose();
+            _gasBatch.Dispose();
+            _wallBatch.Dispose();
+            _wallTopsBatch.Dispose();
+            GC.Collect();
+        }
+
 
         #endregion
 

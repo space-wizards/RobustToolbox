@@ -1,10 +1,13 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Velocity;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Velocity")]
     public class VelocityComponent : Component
     {
         private VelocityComponentState _lastState;

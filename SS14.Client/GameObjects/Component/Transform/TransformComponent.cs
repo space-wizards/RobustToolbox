@@ -10,6 +10,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Transform")]
     public class TransformComponent : Component
     {
         private Vector2f _position = new Vector2f();

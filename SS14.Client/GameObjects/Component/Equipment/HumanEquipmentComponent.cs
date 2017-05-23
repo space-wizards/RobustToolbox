@@ -1,7 +1,11 @@
 ﻿using SS14.Shared;
+using SS14.Shared.IoC;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("HumanEquipment")]
     public class HumanEquipmentComponent : EquipmentComponent
     {
         public HumanEquipmentComponent()

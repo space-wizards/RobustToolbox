@@ -14,6 +14,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("ParticleSystem")]
     public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
     {
         #region Variables.

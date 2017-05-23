@@ -9,6 +9,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("HumanHands")]
     public class HumanHandsComponent : Component
     {
         public Dictionary<InventoryLocation, Entity> HandSlots { get; private set; }

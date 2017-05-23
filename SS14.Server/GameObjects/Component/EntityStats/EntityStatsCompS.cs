@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.EntityStats;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ using System.Xml.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("EntityStats")]
     public class EntityStatsComp : Component
     {
         private readonly Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();

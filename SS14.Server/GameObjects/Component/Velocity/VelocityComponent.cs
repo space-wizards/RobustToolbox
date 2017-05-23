@@ -1,9 +1,12 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Velocity;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Velocity")]
     public class VelocityComponent : Component
     {
         private Vector2f _velocity = new Vector2f();

@@ -8,6 +8,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("KeyBindingInput")]
     public class KeyBindingInputComponent : Component
     {
         #region Delegates

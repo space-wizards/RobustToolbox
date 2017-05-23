@@ -9,6 +9,8 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("PointLight")]
     public class PointLightComponent : Component
     {
         //Contains a standard light

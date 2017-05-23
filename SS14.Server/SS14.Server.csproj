@@ -273,10 +273,8 @@
     <Compile Include="GameObjects\Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\SlaveMoverComponent.cs" />
-    <Compile Include="GameObjects\Component\Objectives\ObjectivesComponent.cs" />
     <Compile Include="GameObjects\Component\Particles\ParticleSystemComponent.cs" />
     <Compile Include="GameObjects\Component\Physics\PhysicsComponent.cs" />
-    <Compile Include="GameObjects\Component\PlayerControl\PlayerControlComponent.cs" />
     <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="GameObjects\Component\Renderable\SpriteComponent.cs" />
     <Compile Include="GameObjects\Component\Renderable\WearableAnimatedSpriteComponent.cs" />

@@ -9,6 +9,8 @@ using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("SVars")]
     public class SVarsComponent : Component
     {
         public SVarsComponent()

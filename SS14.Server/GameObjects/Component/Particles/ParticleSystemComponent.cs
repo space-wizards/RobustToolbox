@@ -1,13 +1,15 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Particles;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace SS14.Server.GameObjects
 {
-
+    [IoCTarget]
+    [Component("ParticleSystem")]
     public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();

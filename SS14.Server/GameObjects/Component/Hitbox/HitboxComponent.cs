@@ -7,6 +7,8 @@ using Component = SS14.Shared.GameObjects.Component;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Hitbox")]
     public class HitboxComponent : Component
     {
         public FloatRect AABB { get; set; }

@@ -8,6 +8,8 @@ using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("BasicDoor")]
     public class BasicDoorComponent : BasicLargeObjectComponent
     {
         private bool Open;

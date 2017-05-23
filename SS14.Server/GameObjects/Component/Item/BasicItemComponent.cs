@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ using System.Xml.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("BasicItem")]
     public class BasicItemComponent : Component
     {
         private readonly Dictionary<string, ItemCapability> capabilities;

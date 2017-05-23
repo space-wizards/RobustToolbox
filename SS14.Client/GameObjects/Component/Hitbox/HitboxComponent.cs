@@ -2,10 +2,13 @@
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hitbox;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Hitbox")]
     public class HitboxComponent : Component {
 
         public FloatRect AABB { get; set; }

@@ -1,12 +1,15 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("ContextMenu")]
     public class ContextMenuComponent : Component
     {
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();

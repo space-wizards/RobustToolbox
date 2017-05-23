@@ -4,12 +4,15 @@ using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("InventoryComponent")]
     public class InventoryComponent : Component, IInventoryComponent, IInventoryContainer
     {
         public InventoryComponent()

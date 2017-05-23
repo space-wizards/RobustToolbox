@@ -11,6 +11,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("WearableAnimatedSprite")]
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
         public bool IsCurrentlyWorn;

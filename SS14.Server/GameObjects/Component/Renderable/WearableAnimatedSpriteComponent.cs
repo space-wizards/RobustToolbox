@@ -1,8 +1,11 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("WearableAniamtedSpriteComponent")]
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
         public bool IsCurrentlyWorn = false;

@@ -5,11 +5,14 @@ using SS14.Server.Interfaces.GameObject;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equipment;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Equipment")]
     public class EquipmentComponent : Component, IEquipmentComponent
     {
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();

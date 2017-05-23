@@ -5,6 +5,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -19,7 +20,7 @@ namespace SS14.Shared.GameObjects
         public EntityPrototype Parent { get; private set; }
         // Used to store the parent id until we sync when all templates are done loading.
         private string parentTemp;
-        public IReadOnlyDictionary<Type, YamlMappingNode> Components => components;
+        public IDictionary<Type, YamlMappingNode> Components => components;
         private Dictionary<Type, YamlMappingNode> components = new Dictionary<Type, YamlMappingNode>();
 
         private static Dictionary<string, Type> componentTypes;
@@ -71,11 +72,20 @@ namespace SS14.Shared.GameObjects
 
         private void ReadComponent(YamlMappingNode mapping)
         {
+            var type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
+            var componentType = componentTypes[type];
 
+            components[componentType] = mapping;
+            // TODO: figure out a better way to exclude the type node.
+            mapping.Children.Remove(new YamlScalarNode("type"));
         }
 
         private static void ReloadComponents()
         {
+            if (componentTypes == null)
+            {
+                 componentTypes = new Dictionary<string, Type>();
+            }
             foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
             {
                 var attribute = (ComponentAttribute)Attribute.GetCustomAttribute(type, typeof(ComponentAttribute));

@@ -9,6 +9,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("PlayerAction")]
     public class PlayerActionComp : Component
     {
         #region Delegates

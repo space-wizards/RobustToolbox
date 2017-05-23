@@ -11,6 +11,8 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Collidable")]
     public class CollidableComponent : Component, ICollidable
     {
         public SFML.Graphics.Color DebugColor { get; set; }

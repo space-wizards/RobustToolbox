@@ -1,11 +1,14 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Damageable")]
     public class DamageableComponent : Component
     {
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();

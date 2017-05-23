@@ -1,12 +1,15 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Inventory")]
     public class InventoryComponent : Component
     {
         #region Delegates

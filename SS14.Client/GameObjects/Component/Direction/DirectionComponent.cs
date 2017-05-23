@@ -3,10 +3,13 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Direction;
 using SS14.Shared.Maths;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Direction")]
     public class DirectionComponent : Component
     {
         private Direction _lastDeterminedDirection = Direction.South;

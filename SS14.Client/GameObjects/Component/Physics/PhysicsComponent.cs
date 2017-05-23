@@ -1,9 +1,12 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Physics")]
     internal class PhysicsComponent : Component
     {
         public float Mass { get; set; }

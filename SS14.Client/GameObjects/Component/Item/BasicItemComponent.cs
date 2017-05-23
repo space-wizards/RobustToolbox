@@ -1,9 +1,12 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("BasicItem")]
     public class BasicItemComponent : Component
     {
         public Entity Holder;

@@ -1,10 +1,13 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Equippable")]
     public class EquippableComponent : Component
     {
         public EquipmentSlot wearloc;

@@ -16,6 +16,8 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("AnimatedSprite")]
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
         protected string baseSprite;

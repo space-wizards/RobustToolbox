@@ -1,10 +1,13 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Worktop")]
     public class WorktopComponent : BasicLargeObjectComponent
     {
         public WorktopComponent()

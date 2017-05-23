@@ -1,8 +1,11 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("BasicLargeObject")]
     public class BasicLargeObjectComponent : Component
     {
         public BasicLargeObjectComponent()

@@ -7,6 +7,8 @@ using System;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Light")]
     public class LightComponent : Component
     {
         private int _colorB = 200;

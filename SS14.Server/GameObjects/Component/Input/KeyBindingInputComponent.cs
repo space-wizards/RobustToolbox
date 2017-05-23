@@ -2,6 +2,7 @@
 using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
@@ -9,6 +10,8 @@ namespace SS14.Server.GameObjects
     /// <summary>
     /// This class recieves keypresses from the attached client and forwards them to other components.
     /// </summary>
+    [IoCTarget]
+    [Component("KeyBindingInput")]
     public class KeyBindingInputComponent : Component
     {
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)

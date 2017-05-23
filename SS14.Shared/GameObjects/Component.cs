@@ -97,6 +97,7 @@ namespace SS14.Shared.GameObjects
         void SetSVar(MarshalComponentParameter sVar);
     }
 
+    [IoCTarget(Disabled=true)]
     public class Component : IComponent
     {
         private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();

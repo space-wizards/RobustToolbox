@@ -1,11 +1,13 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
-
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
-    internal class PhysicsComponent : Component
+    [IoCTarget]
+    [Component("Physics")]
+    public class PhysicsComponent : Component
     {
         public float Mass { get; set; }
 

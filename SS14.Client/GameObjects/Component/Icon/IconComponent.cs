@@ -5,6 +5,8 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Icon")]
     public class IconComponent : Component
     {
         public Sprite Icon;

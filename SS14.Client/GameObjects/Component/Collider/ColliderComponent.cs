@@ -8,6 +8,8 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Collider")]
     public class ColliderComponent : Component
     {
         public SFML.Graphics.Color DebugColor { get; set; }

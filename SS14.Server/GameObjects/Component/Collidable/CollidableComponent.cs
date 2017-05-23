@@ -2,9 +2,12 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Collidable;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Collidable")]
     public class CollidableComponent : Component
     {
         private bool _collisionEnabled = true;

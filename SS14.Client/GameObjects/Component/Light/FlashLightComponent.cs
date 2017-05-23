@@ -1,8 +1,11 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("FlashLight")]
     public class FlashLightComponent : PointLightComponent
     {
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

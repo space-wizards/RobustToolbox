@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
@@ -8,6 +9,8 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
+    [IoCTarget]
+    [Component("BasicMover")]
     public class BasicMoverComponent : Component
     {
         private bool interpolating;

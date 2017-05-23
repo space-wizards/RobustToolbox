@@ -1,9 +1,12 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("Clickable")]
     public class ClickableComponent : Component
     {
         public ClickableComponent()

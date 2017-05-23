@@ -1,9 +1,12 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("Clickable")]
     public class ClickableComponent : Component
     {
         public ClickableComponent()

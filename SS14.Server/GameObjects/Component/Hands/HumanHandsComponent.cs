@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hands;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ using System.Xml.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
+    [Component("HumanHands")]
     public class HumanHandsComponent : Component, IInventoryContainer
     {
         public readonly Dictionary<InventoryLocation, Entity> Handslots;

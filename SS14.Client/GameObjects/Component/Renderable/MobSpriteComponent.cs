@@ -5,10 +5,13 @@ using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
+    [Component("MobSprite")]
     public class MobSpriteComponent : SpriteComponent
     {
         private string _basename;

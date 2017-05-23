@@ -2,10 +2,13 @@
 using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
+    [IoCTarget]
+    [Component("PlayerInputMover")]
     public class PlayerInputMoverComponent : Component
     {
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;

@@ -60,7 +60,7 @@ namespace SS14.Client.Graphics
         {
             string path = "..\\DEBUGTEXTURE\\" + fileName + ".png";
 
-           // Rendertarget.Texture.CopyToImage().SaveToFile(path);
+            Rendertarget.Texture.CopyToImage().SaveToFile(path);
         }
 
 

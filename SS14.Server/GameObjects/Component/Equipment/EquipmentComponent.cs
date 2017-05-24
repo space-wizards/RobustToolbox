@@ -185,7 +185,6 @@ namespace SS14.Server.GameObjects
 
         public void UnEquipEntityToHand(Entity e, InventoryLocation h)
         {
-            var hands = (HumanHandsComponent) Owner.GetComponent(ComponentFamily.Hands);
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
                                                             ComponentMessageType.IsHandEmpty, h);
             if (reply.MessageType == ComponentMessageType.IsHandEmptyReply && (bool) reply.ParamsList[0])

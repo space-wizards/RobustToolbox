@@ -24,7 +24,6 @@ namespace SS14.Shared.IoC
                 
                 try
                 {
-                    var assTypes = assembly.GetTypes();
                     ServiceTypes.AddRange(assembly.GetTypes());
                 }
                 catch (ReflectionTypeLoadException ex)

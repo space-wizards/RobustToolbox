@@ -195,8 +195,6 @@ namespace SS14.Client.Placement
                                         IsTile = msg.ReadBoolean()
                                     };
 
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
-
             if (CurrentPermission.IsTile) CurrentPermission.TileType = msg.ReadUInt16();
             else CurrentPermission.EntityType = msg.ReadString();
             CurrentPermission.PlacementOption = msg.ReadString();
@@ -245,8 +243,7 @@ namespace SS14.Client.Placement
         {
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
-
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
+            
             NetOutgoingMessage message = NetworkManager.CreateMessage();
 
             message.Write((byte) NetMessage.PlacementManagerMessage);

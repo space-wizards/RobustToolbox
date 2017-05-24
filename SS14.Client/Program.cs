@@ -11,8 +11,7 @@ namespace SS14.Client
         [STAThread]
         private static void Main()
         {
-            var args = Environment.GetCommandLineArgs();
-            GameController GC = new GameController();
+            GameController GC = new GameController(); // No, sonarqube, this isn't unused. A side-effect of this is to "run the game"
         }
     }
 }

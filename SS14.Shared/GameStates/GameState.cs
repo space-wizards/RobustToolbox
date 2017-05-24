@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Serialization;
@@ -146,7 +146,7 @@ namespace SS14.Shared.GameStates
         /// <returns></returns>
         public static GameState ReadStateMessage(NetIncomingMessage message)
         {
-            uint sequence = message.ReadUInt32();
+            uint sequence = message.ReadUInt32(); // This unused variable is vitally important, and the client will crash without it
             int length = message.ReadInt32();
             byte[] stateData = Decompress(message.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))

@@ -67,9 +67,7 @@ namespace SS14.Client.Lighting
 
         public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
         {
-            Texture shadowCastersTexture = Area.RenderTarget.Texture;
             RenderImage Result = Area.RenderTarget;
-            SFML.System.Vector2f LightPosition = Area.LightPosition;
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
             Vector4f MaskProps = Vector4f.Zero;
             Vector4f diffuseColor = Vector4f.One;

@@ -96,6 +96,7 @@ namespace SS14.Client
                 CluwneLib.RunIdle (this, _frameEvent);
                 CluwneLib.Screen.Display();
             }
+            _networkManager.Disconnect();
             CluwneLib.Terminate();
             LogManager.Log("GameController terminated.");
         }

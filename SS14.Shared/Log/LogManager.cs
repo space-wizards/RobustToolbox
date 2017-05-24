@@ -46,6 +46,11 @@ namespace SS14.Shared.Log
         {
             try
             {
+                if (!Directory.Exists(LogPath))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(LogPath));
+                }
+
                 logStream = new StreamWriter(LogPath, true);
             }
             catch (IOException)

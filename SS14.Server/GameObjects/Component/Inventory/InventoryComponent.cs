@@ -14,9 +14,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Inventory")]
     public class InventoryComponent : Component, IInventoryComponent, IInventoryContainer
     {
+        public override string Name => "Inventory";
         public InventoryComponent()
         {
             Family = ComponentFamily.Inventory;
@@ -80,7 +80,7 @@ namespace SS14.Server.GameObjects
 
         public bool containsEntity(string templatename)
         {
-            return containedEntities.Exists(x => x.Prototype.Name == templatename);
+            return containedEntities.Exists(x => x.Prototype.ID == templatename);
         }
 
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)

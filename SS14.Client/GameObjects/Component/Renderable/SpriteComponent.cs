@@ -18,9 +18,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Sprite")]
     public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
     {
+        public override string Name => "Sprite";
         protected Sprite currentBaseSprite;
         protected string currentBaseSpriteKey;
         protected Dictionary<string, Sprite> dirSprites;

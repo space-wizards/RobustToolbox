@@ -8,9 +8,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("BasicActor")]
     public class BasicActorComponent : Component, IActorComponent
     {
+        public override string Name => "BasicActor";
         public IPlayerSession playerSession { get; internal set; }
 
         public BasicActorComponent()

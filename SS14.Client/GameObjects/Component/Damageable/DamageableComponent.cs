@@ -9,9 +9,9 @@ namespace SS14.Client.GameObjects
     /// Basic damageable component only tracks whether its dead or not
     /// </summary>
     [IoCTarget]
-    [Component("Damageable")]
     public class DamageableComponent : Component
     {
+        public override string Name => "Damageable";
         //Used for things that are binary. Either broken or not broken. (windows?)
         protected bool IsDead;
 

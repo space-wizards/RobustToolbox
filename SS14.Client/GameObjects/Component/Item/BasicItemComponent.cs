@@ -6,9 +6,9 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("BasicItem")]
     public class BasicItemComponent : Component
     {
+        public override string Name => "BasicItem";
         public Entity Holder;
         public InventoryLocation HoldingHand;
 

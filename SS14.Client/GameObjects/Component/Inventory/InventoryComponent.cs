@@ -9,9 +9,9 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Inventory")]
     public class InventoryComponent : Component
     {
+        public override string Name => "Inventory";
         #region Delegates
 
         public delegate void InventoryComponentUpdateHandler(
@@ -43,13 +43,13 @@ namespace SS14.Client.GameObjects
 
         public bool ContainsEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Prototype.Name == templatename);
+            return ContainedEntities.Exists(x => x.Prototype.ID == templatename);
         }
 
         public Entity GetEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Prototype.Name == templatename)
-                       ? ContainedEntities.First(x => x.Prototype.Name == templatename)
+            return ContainedEntities.Exists(x => x.Prototype.ID == templatename)
+                       ? ContainedEntities.First(x => x.Prototype.ID == templatename)
                        : null;
         }
 

@@ -13,9 +13,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("BasicItem")]
     public class BasicItemComponent : Component
     {
+        public override string Name => "BasicItem";
         private readonly Dictionary<string, ItemCapability> capabilities;
         public InventoryLocation HoldingHand = InventoryLocation.None;
         public bool CanBePickedUp = true;

@@ -9,9 +9,9 @@ using System;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Transform")]
     public class TransformComponent : Component, ITransformComponent
     {
+        public override string Name => "Transform";
         private Vector2f _position = new Vector2f();
         private bool firstState = true;
         public TransformComponent()

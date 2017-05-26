@@ -11,9 +11,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("ContextMenu")]
     public class ContextMenuComponent : Component
     {
+        public override string Name => "ContextMenu";
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
         public ContextMenuComponent()

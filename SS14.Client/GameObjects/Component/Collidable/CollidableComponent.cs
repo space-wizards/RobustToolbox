@@ -15,9 +15,10 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Collidable")]
     public class CollidableComponent : Component, ICollidable
     {
+        public override string Name => "Collidable";
+
         public SFML.Graphics.Color DebugColor { get; set; }
 
         private bool collisionEnabled = true;

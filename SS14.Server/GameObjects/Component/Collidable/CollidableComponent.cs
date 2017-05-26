@@ -7,9 +7,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Collidable")]
     public class CollidableComponent : Component
     {
+        public override string Name => "Collidable";
         private bool _collisionEnabled = true;
 
         public CollidableComponent()

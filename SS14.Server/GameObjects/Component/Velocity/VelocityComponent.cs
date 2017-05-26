@@ -6,9 +6,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Velocity")]
     public class VelocityComponent : Component
     {
+        public override string Name => "Velocity";
         private Vector2f _velocity = new Vector2f();
 
 

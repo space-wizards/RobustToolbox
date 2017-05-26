@@ -9,9 +9,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Icon")]
     public class IconComponent : Component
     {
+        public override string Name => "Icon";
         public Sprite Icon;
 
         public IconComponent()

@@ -1,0 +1,18 @@
+- type: entity
+  id: Table
+  name: Table
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: Sprite
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: Worktop
+  - type: Hitbox
+    sizeX: 64
+    sizeY: 47
+    offsetY: 8
+
+  - type: Collidable

@@ -6,9 +6,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Clickable")]
     public class ClickableComponent : Component
     {
+        public override string Name => "Clickable";
         public ClickableComponent()
         {
             Family = ComponentFamily.Click;

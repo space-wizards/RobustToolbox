@@ -7,9 +7,9 @@ using System.Linq;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Worktop")]
     public class WorktopComponent : BasicLargeObjectComponent
     {
+        public override string Name => "Worktop";
         public WorktopComponent()
         {
             Family = ComponentFamily.LargeObject;

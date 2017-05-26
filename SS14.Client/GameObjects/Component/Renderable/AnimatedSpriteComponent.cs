@@ -19,9 +19,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("AnimatedSprite")]
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
+        public override string Name => "AnimatedSprite";
         protected string baseSprite;
         protected string currentSprite;
         protected AnimatedSprite sprite;

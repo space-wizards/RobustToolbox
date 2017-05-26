@@ -8,9 +8,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Physics")]
     public class PhysicsComponent : Component
     {
+        public override string Name => "Physics";
         public float Mass { get; set; }
 
         public PhysicsComponent()

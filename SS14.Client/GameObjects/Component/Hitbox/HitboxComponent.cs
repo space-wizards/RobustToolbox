@@ -8,15 +8,18 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Hitbox")]
-    public class HitboxComponent : Component {
-
+    public class HitboxComponent : Component
+    {
+        public override string Name => "Hitbox";
         public FloatRect AABB { get; set; }
-        public Vector2f Size {
-            get {
+        public Vector2f Size
+        {
+            get
+            {
                 return new Vector2f(AABB.Width, AABB.Height);
             }
-            set {
+            set
+            {
                 AABB = new FloatRect(
                     AABB.Left + (AABB.Width - value.X),
                     AABB.Top + (AABB.Height - value.Y),
@@ -25,11 +28,14 @@ namespace SS14.Client.GameObjects
                     );
             }
         }
-        public Vector2f Offset {
-            get {
+        public Vector2f Offset
+        {
+            get
+            {
                 return new Vector2f(AABB.Left + AABB.Width / 2f, AABB.Top + AABB.Height / 2f);
             }
-            set {
+            set
+            {
                 AABB = new FloatRect(
                     value.X - AABB.Width / 2f,
                     value.Y - AABB.Height / 2f,
@@ -40,19 +46,23 @@ namespace SS14.Client.GameObjects
         }
 
 
-        public HitboxComponent() {
+        public HitboxComponent()
+        {
             Family = ComponentFamily.Hitbox;
             Size = new Vector2f();
             Offset = new Vector2f();
         }
 
-        public override Type StateType {
-            get {
+        public override Type StateType
+        {
+            get
+            {
                 return typeof(HitboxComponentState);
             }
         }
 
-        public override void HandleComponentState(dynamic state) {
+        public override void HandleComponentState(dynamic state)
+        {
             AABB = state.AABB;
         }
 

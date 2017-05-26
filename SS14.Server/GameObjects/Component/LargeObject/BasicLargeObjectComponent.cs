@@ -5,9 +5,9 @@ using System.Linq;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("BasicLargeObject")]
     public class BasicLargeObjectComponent : Component
     {
+        public override string Name => "BasicLargeObject";
         public BasicLargeObjectComponent()
         {
             Family = ComponentFamily.LargeObject;

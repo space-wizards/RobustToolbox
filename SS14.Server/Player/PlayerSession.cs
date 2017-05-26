@@ -189,7 +189,7 @@ namespace SS14.Server.Player
         private void ResetAttachedEntityName()
         {
             if(attachedEntity != null)
-                attachedEntity.Name = attachedEntity.Prototype.Name;
+                attachedEntity.Name = attachedEntity.Prototype.ID;
         }
 
         public void JoinLobby()

@@ -10,9 +10,9 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("PlayerAction")]
     public class PlayerActionComp : Component
     {
+        public override string Name => "PlayerAction";
         #region Delegates
 
         public delegate void PlayerActionsChangedHandler(PlayerActionComp sender);

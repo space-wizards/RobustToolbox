@@ -10,9 +10,9 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("EntityStats")]
     public class EntityStatsComp : Component
     {
+        public override string Name => "EntityStats";
         private Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
         public EntityStatsComp()

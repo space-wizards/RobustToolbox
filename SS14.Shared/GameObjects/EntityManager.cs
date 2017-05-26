@@ -36,7 +36,6 @@ namespace SS14.Shared.GameObjects
 
     public class EntityManager : IEntityManager
     {
-        private readonly string _componentNamespace;
         protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
@@ -282,7 +281,7 @@ namespace SS14.Shared.GameObjects
                 if (!Initialized)
                     e.Initialize();
                 if (!e.HasComponent(ComponentFamily.SVars))
-                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVarsComponent"));
+                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVars"));
             }
             return e;
         }

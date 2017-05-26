@@ -9,12 +9,13 @@ namespace SS14.Shared.GameObjects
 {
     public class ComponentFactory
     {
+        private readonly Dictionary<string, Type> componentNames;
         private readonly Dictionary<string, Type> componentTypes;
 
         public ComponentFactory(EntityManager entityManager)
         {
             EntityManager = entityManager;
-            componentTypes = new Dictionary<string, Type>();
+            componentNames = new Dictionary<string, Type>();
 
             ReloadComponents();
 
@@ -43,37 +44,55 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Gets a new component instantiated of the specified type.
+        /// Gets a new component instantiated of the specified name.
         /// </summary>
-        /// <param name="componentType">type of component to make</param>
+        /// <param name="componentName">name of component to make</param>
         /// <returns>A Component</returns>
-        public IComponent GetComponent(string componentType)
+        public IComponent GetComponent(string componentName)
         {
-            return (IComponent)Activator.CreateInstance(componentTypes[componentType]);
+            try
+            {
+                return (IComponent)Activator.CreateInstance(componentNames[componentName]);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnknowComponentException(componentName);
+            }
         }
 
         public Type GetComponentType(string componentType)
         {
-            return componentTypes[componentType];
+            return componentNames[componentType];
         }
 
         private void ReloadComponents()
         {
             foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
             {
-                var attribute = (ComponentAttribute)Attribute.GetCustomAttribute(type, typeof(ComponentAttribute));
-                if (attribute == null)
+                IComponent instance = (IComponent)Activator.CreateInstance(type);
+                if (instance.Name == null || instance.Name == "")
                 {
-                    throw new InvalidImplementationException(type, typeof(ComponentAttribute), "No " + nameof(ComponentAttribute));
+                    throw new InvalidImplementationException(type, typeof(IComponent), "Does not have a " + nameof(IComponent.Name));
                 }
 
-                if (componentTypes.ContainsKey(attribute.ID))
+                if (componentNames.ContainsKey(instance.Name))
                 {
-                    throw new Exception("Duplicate ID for component: " + attribute.ID);
+                    throw new Exception("Duplicate Name for component: " + instance.Name);
                 }
 
-                componentTypes[attribute.ID] = type;
+                componentNames[instance.Name] = type;
             }
         }
+    }
+
+    public class UnknowComponentException : Exception
+    {
+        public readonly string ComponentType;
+        public UnknowComponentException(string componentType)
+        {
+            ComponentType = componentType;
+        }
+
+        public override string Message => "Unknown component type: " + ComponentType;
     }
 }

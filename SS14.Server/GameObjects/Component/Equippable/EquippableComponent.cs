@@ -10,9 +10,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Equippable")]
     public class EquippableComponent : Component
     {
+        public override string Name => "Equippable";
         public EquipmentSlot wearloc;
 
         public Entity currentWearer { get; set; }

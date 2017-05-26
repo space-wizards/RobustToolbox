@@ -7,9 +7,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("WallMounted")]
     public class WallMountedComponent : Component, IWallMountedComponent
     {
+        public override string Name => "WallMounted";
         public WallMountedComponent()
         {
             Family = ComponentFamily.WallMounted;

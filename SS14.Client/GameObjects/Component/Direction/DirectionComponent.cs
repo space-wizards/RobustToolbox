@@ -9,9 +9,9 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Direction")]
     public class DirectionComponent : Component
     {
+        public override string Name => "Direction";
         private Direction _lastDeterminedDirection = Direction.South;
 
         public DirectionComponent()

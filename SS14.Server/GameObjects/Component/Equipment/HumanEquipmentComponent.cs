@@ -5,9 +5,9 @@ using SS14.Shared.GameObjects;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("HumanEquipment")]
     public class HumanEquipmentComponent : EquipmentComponent
     {
+        public override string Name => "HumanEquipment";
         public HumanEquipmentComponent()
         {
             //These shit lines allow the fucking shit to be added to the shit

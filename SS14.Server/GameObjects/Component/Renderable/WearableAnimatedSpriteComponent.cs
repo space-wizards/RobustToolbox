@@ -5,9 +5,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("WearableAniamtedSpriteComponent")]
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
+        public override string Name => "WearableAnimatedSpriteComponent";
         public bool IsCurrentlyWorn = false;
         public bool IsCurrentlyCarried = false;
 

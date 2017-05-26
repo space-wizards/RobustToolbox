@@ -94,7 +94,14 @@ namespace SS14.Shared.Prototypes
 
         public T Index<T>(string id) where T: class, IIndexedPrototype
         {
-            return indexedPrototypes[typeof(T)][id] as T;
+            try
+            {
+                return indexedPrototypes[typeof(T)][id] as T;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnknowPrototypeException(id);
+            }
         }
 
         public IIndexedPrototype Index(Type type, string id)
@@ -252,5 +259,16 @@ namespace SS14.Shared.Prototypes
         public PrototypeLoadException() {}
         public PrototypeLoadException(string message) : base(message) {}
         public PrototypeLoadException(string message, Exception inner) : base(message, inner) {}
+    }
+
+    public class UnknowPrototypeException : Exception
+    {
+        public readonly string Prototype;
+        public UnknowPrototypeException(string prototype)
+        {
+            Prototype = prototype;
+        }
+
+        public override string Message => "Unknown prototype: " + Prototype;
     }
 }

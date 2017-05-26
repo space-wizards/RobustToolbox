@@ -7,9 +7,9 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Velocity")]
     public class VelocityComponent : Component
     {
+        public override string Name => "Velocity";
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
         private Vector2f _velocity = new Vector2f();

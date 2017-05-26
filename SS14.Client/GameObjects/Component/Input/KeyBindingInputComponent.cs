@@ -9,9 +9,9 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("KeyBindingInput")]
     public class KeyBindingInputComponent : Component
     {
+        public override string Name => "KeyBindingInput";
         #region Delegates
 
         public delegate void KeyEvent(bool state);

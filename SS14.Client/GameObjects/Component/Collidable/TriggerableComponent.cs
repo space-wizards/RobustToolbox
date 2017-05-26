@@ -4,9 +4,9 @@ using SS14.Shared.GameObjects;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Triggerable")]
     public class TriggerableComponent : CollidableComponent
     {
+        public override string Name => "Triggerable";
         public TriggerableComponent()
         {
             isHardCollidable = false;

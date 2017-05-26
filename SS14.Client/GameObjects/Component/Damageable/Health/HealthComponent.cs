@@ -9,9 +9,9 @@ namespace SS14.Client.GameObjects
     /// Behaves like the damageable component but tracks health as well
     /// </summary>
     [IoCTarget]
-    [Component("Health")]
     public class HealthComponent : DamageableComponent
     {
+        public override string Name => "Health";
         //Useful for objects that need to show different stages of damage clientside.
         protected float Health;
         protected float MaxHealth;

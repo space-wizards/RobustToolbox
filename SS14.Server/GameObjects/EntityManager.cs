@@ -29,7 +29,7 @@ namespace SS14.Server.GameObjects
         {
             //List<XElement> entities = new List<XElement>();
             IEnumerable<XElement> entities = from Entity e in _entities.Values
-                                             where e.Prototype.Name != "HumanMob"
+                                             where e.Prototype.ID != "HumanMob"
                                              select ToXML(e);
 
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
@@ -112,7 +112,7 @@ namespace SS14.Server.GameObjects
                                   new XAttribute("Y",
                                                  e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
                                                      Y.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("template", e.Prototype.Name),
+                                  new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction",
                                                  e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction

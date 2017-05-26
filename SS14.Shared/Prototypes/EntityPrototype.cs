@@ -101,6 +101,10 @@ namespace SS14.Shared.GameObjects
                 ClassType = manager.GetType(((YamlScalarNode)node).Value);
                 // TODO: logging of when the ClassType doesn't exist: Safety for typos.
             }
+            else
+            {
+                ClassType = typeof(Entity);
+            }
 
             if (mapping.Children.TryGetValue(new YamlScalarNode("parent"), out node))
             {
@@ -108,7 +112,6 @@ namespace SS14.Shared.GameObjects
             }
 
             // COMPONENTS
-
             if (mapping.Children.TryGetValue(new YamlScalarNode("components"), out node))
             {
                 var sequence = (YamlSequenceNode)node;
@@ -243,10 +246,25 @@ namespace SS14.Shared.GameObjects
 
             foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in components)
             {
-                IComponent component = manager.ComponentFactory.GetComponent(componentData.Key);
+                IComponent component;
+                try
+                {
+                    component = manager.ComponentFactory.GetComponent(componentData.Key);
+                }
+                catch (UnknowComponentException)
+                {
+                    // Ignore nonexistant ones.
+                    // This is kind of inefficient but we'll do the sanity on prototype creation
+                    // Once the dependency injection stack is fixed.
+                    continue;
+                }
                 component.LoadParameters(componentData.Value);
+
+                entity.AddComponent(component.Family, component);
             }
 
+            entity.Name = Name;
+            entity.Prototype = this;
             return entity;
         }
 

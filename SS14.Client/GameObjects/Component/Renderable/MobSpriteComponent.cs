@@ -14,9 +14,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("MobSprite")]
     public class MobSpriteComponent : SpriteComponent
     {
+        public override string Name => "MobSprite";
         private string _basename;
         private SpeechBubble _speechBubble;
 

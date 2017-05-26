@@ -10,9 +10,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("ParticleSystem")]
     public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
+        public override string Name => "ParticleSystem";
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 
         //Notes: The server doesn't actually care about whether the client can't find a particle system when we tell it to add it.

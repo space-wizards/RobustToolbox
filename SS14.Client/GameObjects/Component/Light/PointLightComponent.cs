@@ -13,9 +13,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("PointLight")]
     public class PointLightComponent : Component
     {
+        public override string Name => "PointLight";
         //Contains a standard light
         public ILight _light;
         public Vector3f _lightColor = new Vector3f(190, 190, 190);

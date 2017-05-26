@@ -6,9 +6,9 @@ using SS14.Shared.IoC;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Health")]
     public class HealthComponent : DamageableComponent
     {
+        public override string Name => "Health";
         // TODO use state system
         public override void HandleInstantiationMessage(NetConnection netConnection)
         {

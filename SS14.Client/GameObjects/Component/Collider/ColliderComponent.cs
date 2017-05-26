@@ -12,9 +12,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Collider")]
     public class ColliderComponent : Component
     {
+        public override string Name => "Collider";
         public SFML.Graphics.Color DebugColor { get; set; }
 
         private FloatRect AABB

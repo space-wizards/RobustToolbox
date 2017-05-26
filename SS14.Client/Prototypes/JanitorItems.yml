@@ -1,0 +1,40 @@
+- type: entity
+  id: BlueBucket
+  name: Blue Bucket
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: Physics
+    mass: 5
+
+  - type: BasicItem
+    # <ItemCapability name="MeleeWeaponCapability">
+    # <ItemCapabilityParameter name="damageAmount" type="int" value="10" />
+    # <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+
+- type: entity
+  id: WetFloorSign
+  name: Wet Floor Sign
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: Physics
+    mass: 5
+
+  - type: BasicItem
+    # <ItemCapabilityParameter name="damageAmount" type="int" value="6" />
+    # <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />

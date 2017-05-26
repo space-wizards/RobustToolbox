@@ -10,12 +10,12 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("AnimatedSprite")]
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
+        public override string Name => "AnimatedSprite";
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        public string Name;
+        public string SpriteName;
         private string _currentAnimation;
         public string CurrentAnimation
         {
@@ -57,7 +57,7 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             var masterUid = master != null ? (int?)master.Owner.Uid : null;
-            return new AnimatedSpriteComponentState(Visible, DrawDepth, Name, CurrentAnimation, Loop, masterUid);
+            return new AnimatedSpriteComponentState(Visible, DrawDepth, SpriteName, CurrentAnimation, Loop, masterUid);
         }
 
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)
@@ -70,7 +70,7 @@ namespace SS14.Server.GameObjects
 
             if (mapping.TryGetValue("sprite", out node))
             {
-                Name = node.AsString();
+                SpriteName = node.AsString();
             }
         }
 

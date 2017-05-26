@@ -10,9 +10,9 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Equipment")]
     public class EquipmentComponent : Component
     {
+        public override string Name => "Equipment";
         public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
         public Dictionary<EquipmentSlot, Entity> EquippedEntities = new Dictionary<EquipmentSlot, Entity>();
 

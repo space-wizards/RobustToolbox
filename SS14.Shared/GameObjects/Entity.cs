@@ -523,13 +523,13 @@ namespace SS14.Shared.GameObjects
             List<Tuple<ComponentFamily, string>> synchedComponentTypes = _components
                 .Where(t => EntityManager.SynchedComponentTypes.Contains(t.Key))
                 .Select(
-                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.GetType().Name)
+                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.Name)
                 ).ToList();
 
             var es = new EntityState(
                 Uid,
                 compStates,
-                Prototype.Name,
+                Prototype.ID,
                 Name,
                 synchedComponentTypes);
             return es;

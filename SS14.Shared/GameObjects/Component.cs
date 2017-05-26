@@ -10,13 +10,18 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Shared.GameObjects
 {
     /// <remarks>
-    /// All discoverable implementations of IComponent must have a <see cref="ComponentAttribute"/> to give it a type ID to reference.
+    /// All discoverable implementations of IComponent must override the Name property.
     /// </remarks>
     public interface IComponent: IEntityEventSubscriber, IIoCInterface
     {
         ComponentFamily Family { get; }
         Entity Owner { get; set; }
         Type StateType { get; }
+
+        /// <summary>
+        /// Name that this component is represented with in prototypes and over the network.
+        /// </summary>
+        string Name { get; }
 
         /// <summary>
         /// Called when the component is removed from an entity.
@@ -98,6 +103,7 @@ namespace SS14.Shared.GameObjects
     [IoCTarget(Disabled=true)]
     public class Component : IComponent
     {
+        public virtual string Name { get; }
         private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();
 
         public Component()
@@ -310,15 +316,5 @@ namespace SS14.Shared.GameObjects
 
         protected virtual void SubscribeEvents()
         {}
-    }
-
-    public class ComponentAttribute : Attribute
-    {
-        public string ID { get; private set; }
-
-        public ComponentAttribute(string id)
-        {
-            ID = id;
-        }
     }
 }

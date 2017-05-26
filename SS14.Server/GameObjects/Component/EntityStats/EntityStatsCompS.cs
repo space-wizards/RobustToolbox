@@ -13,9 +13,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("EntityStats")]
     public class EntityStatsComp : Component
     {
+        public override string Name => "EntityStats";
         private readonly Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
         public EntityStatsComp()

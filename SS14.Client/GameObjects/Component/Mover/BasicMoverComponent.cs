@@ -10,9 +10,9 @@ namespace SS14.Client.GameObjects
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
     [IoCTarget]
-    [Component("BasicMover")]
     public class BasicMoverComponent : Component
     {
+        public override string Name => "BasicMover";
         private bool interpolating;
         private float movedtime; // Amount of time we've been moving since the last update packet.
         private float movetime = 0.05f; // Milliseconds it should take to move.

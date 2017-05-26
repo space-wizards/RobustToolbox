@@ -9,9 +9,9 @@ using System.Collections.Generic;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("SVars")]
     public class SVarsComponent : Component, ISVarsComponent
     {
+        public override string Name => "SVars";
         public SVarsComponent()
         {
             Family = ComponentFamily.SVars;

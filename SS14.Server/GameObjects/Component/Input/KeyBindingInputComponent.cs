@@ -11,9 +11,9 @@ namespace SS14.Server.GameObjects
     /// This class recieves keypresses from the attached client and forwards them to other components.
     /// </summary>
     [IoCTarget]
-    [Component("KeyBindingInput")]
     public class KeyBindingInputComponent : Component
     {
+        public override string Name => "KeyBindingInput";
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];

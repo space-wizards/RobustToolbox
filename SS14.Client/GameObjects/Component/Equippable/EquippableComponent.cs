@@ -6,9 +6,9 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("Equippable")]
     public class EquippableComponent : Component
     {
+        public override string Name => "Equippable";
         /// <summary>
         /// Where is this equipment being worn
         /// </summary>

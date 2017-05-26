@@ -14,9 +14,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("WearableAnimatedSprite")]
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
+        public override string Name => "WearableAnimatedSprite";
         public bool IsCurrentlyWorn;
         public Sprite NotWornSprite;
 
@@ -46,6 +46,8 @@ namespace SS14.Client.GameObjects
 
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
+            base.LoadParameters(mapping);
+
             YamlNode node;
             if (mapping.TryGetValue("notWornSprite", out node))
             {

@@ -69,24 +69,6 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
 
             var componentData = prototype.Components["TestBasicPrototypeComponent"];
 
-            // Assert these before trying to access them.
-            Assert.That(componentData.Keys, Is.EquivalentTo(new string[]
-            {
-                "str",
-                "int",
-                "float",
-                "float2",
-                "boolt",
-                "boolf",
-                "vec2",
-                "vec2i",
-                "vec3",
-                "vec4",
-                "color",
-                "enumf",
-                "enumb"
-            }));
-
             Assert.That(componentData["str"].AsString(), Is.EqualTo("hi!"));
             Assert.That(componentData["int"].AsInt(), Is.EqualTo(10));
             Assert.That(componentData["float"].AsFloat(), Is.EqualTo(10f));
@@ -100,6 +82,17 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC)));
             Assert.That(componentData["enumf"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Foo));
             Assert.That(componentData["enumb"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Bar));
+        }
+
+        [Test]
+        public void TestPlacementProperties()
+        {
+            var prototype = manager.Index<EntityPrototype>("mounttester");
+
+            Assert.That(prototype.MountingPoints, Is.EquivalentTo(new int[] {1, 2, 3}));
+            Assert.That(prototype.PlacementMode, Is.EqualTo("AlignWall"));
+            Assert.That(prototype.PlacementRange, Is.EqualTo(300));
+            Assert.That(prototype.PlacementOffset, Is.EqualTo(new Vector2i(30, 45)));
         }
 
         private enum YamlTestEnum
@@ -145,21 +138,31 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
     float2: 10.5
     boolt: true
     boolf: false
-    vec2: 1.5,1.5
-    vec2i: 1,1
-    vec3: 1.5,1.5,1.5
-    vec4: 1.5,1.5,1.5,1.5
+    vec2: 1.5, 1.5
+    vec2i: 1, 1
+    vec3: 1.5, 1.5, 1.5
+    vec4: 1.5, 1.5, 1.5, 1.5
     color: '#aabbcc'
     enumf: Foo
     enumb: Bar
+
+- type: entity
+  id: mounttester
+  placement:
+    mode: AlignWall
+    range: 300
+    offset: 30, 45
+    nodes:
+    - 1
+    - 2
+    - 3
 ";
     }
 
     [IoCTarget]
-    [Component("TestBasicPrototypeComponent")]
     public class TestBasicPrototypeComponent : Component
     {
-
+        public override string Name => "TestBasicPrototypeComponent";
     }
 }
 

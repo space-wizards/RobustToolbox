@@ -8,9 +8,9 @@ using System.Collections.Generic;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Sprite")]
     public class SpriteComponent : Component, IRenderableComponent
     {
+        public override string Name => "Sprite";
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         private string _currentBaseName;

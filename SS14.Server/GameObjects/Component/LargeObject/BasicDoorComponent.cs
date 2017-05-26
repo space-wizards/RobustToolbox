@@ -11,9 +11,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("BasicDoor")]
     public class BasicDoorComponent : BasicLargeObjectComponent
     {
+        public override string Name => "BasicDoor";
         private bool Open;
         private bool autoclose = true;
         private string closedSprite = "";

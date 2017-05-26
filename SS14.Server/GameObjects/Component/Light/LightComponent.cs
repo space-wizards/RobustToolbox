@@ -11,9 +11,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Light")]
     public class LightComponent : Component
     {
+        public override string Name => "Light";
         private int _colorB = 200;
         private int _colorG = 200;
         private int _colorR = 200;

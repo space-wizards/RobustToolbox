@@ -15,6 +15,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -74,6 +75,7 @@ namespace SS14.Client
             CleanupSplashScreen();
 
             //Initialization of private members
+            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();

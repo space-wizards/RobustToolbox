@@ -10,9 +10,9 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Damageable")]
     public class DamageableComponent : Component
     {
+        public override string Name => "Damageable";
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
 

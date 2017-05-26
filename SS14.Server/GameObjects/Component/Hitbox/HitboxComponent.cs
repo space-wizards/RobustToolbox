@@ -11,9 +11,9 @@ using System.Collections.Generic;
 namespace SS14.Server.GameObjects
 {
     [IoCTarget]
-    [Component("Hitbox")]
     public class HitboxComponent : Component
     {
+        public override string Name => "Hitbox";
         public FloatRect AABB { get; set; }
 
         public HitboxComponent()

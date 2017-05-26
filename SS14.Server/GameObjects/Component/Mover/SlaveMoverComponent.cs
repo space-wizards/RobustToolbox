@@ -10,9 +10,9 @@ namespace SS14.Server.GameObjects
     /// Mover component that responds to movement by an entity.
     /// </summary>
     [IoCTarget]
-    [Component("SlaveMover")]
     public class SlaveMoverComponent : Component
     {
+        public override string Name => "SlaveMover";
         private Entity master;
 
         public SlaveMoverComponent()

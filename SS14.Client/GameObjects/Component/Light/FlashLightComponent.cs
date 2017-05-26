@@ -5,9 +5,9 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    [Component("FlashLight")]
     public class FlashLightComponent : PointLightComponent
     {
+        public override string Name => "FlashLight";
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {

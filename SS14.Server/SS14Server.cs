@@ -13,8 +13,8 @@ using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Modules;
 using SS14.Server.Modules.Client;
-using SS14.Server.Services.Map;
-using SS14.Server.Services.Round;
+using SS14.Server.Map;
+using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using EntityManager = SS14.Server.GameObjects.EntityManager;
 using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
@@ -35,6 +34,7 @@ using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
 
 namespace SS14.Server
 {
+    [IoCTarget]
     public class SS14Server : ISS14Server
     {
         private const int GameCountdown = 15;
@@ -42,6 +42,8 @@ namespace SS14.Server
         private readonly List<float> frameTimes = new List<float>();
 
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
+        private Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
+
         public DateTime Time;
         private bool _active;
         private int _lastAnnounced;
@@ -88,15 +90,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            var assemblies = new List<Assembly>();
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.Services.dll")));
-
-            IoCManager.AddAssemblies(assemblies);
-
-
-            IoCManager.Resolve<ISS14Server>().SetServerInstance(this);
-
             //Init serializer
             var serializer = IoCManager.Resolve<ISS14Serializer>();
 
@@ -105,10 +98,14 @@ namespace SS14.Server
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
             configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+
             string logPath = configMgr.LogPath;
-            if (!Path.IsPathRooted(logPath))
+            string logFormat = configMgr.LogFormat;
+            string logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            string fullPath = Path.Combine(logPath, logFilename);
+            if (!Path.IsPathRooted(fullPath))
             {
-                logPath = PathHelpers.ExecutableRelativeFile(logPath);
+                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
             }
 
             LogManager.Initialize(logPath, configMgr.LogLevel);
@@ -310,7 +307,39 @@ namespace SS14.Server
                         LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
                 }
+                UpdateLastSeen(msg);                
                 IoCManager.Resolve<ISS14NetServer>().Recycle(msg);
+            }
+        }
+
+        private void UpdateLastSeen(NetIncomingMessage msg)
+        {
+            DateTime currentTime = DateTime.Now;
+            NetConnection sender = msg.SenderConnection;
+            if (sender == null || sender.Status == NetConnectionStatus.Disconnected || sender.Status == NetConnectionStatus.Disconnecting)
+            {
+                return;
+            }
+            if (_clientListLastSeen.ContainsKey(sender))
+            {
+                _clientListLastSeen[sender] = currentTime;
+            }
+            else
+            {
+                _clientListLastSeen.Add(sender, currentTime);
+            }
+            List<NetConnection> cleanupConnections = new List<NetConnection>();
+            foreach (KeyValuePair<NetConnection, DateTime> client in _clientListLastSeen)
+            {
+                if (currentTime.Subtract(client.Value).TotalSeconds >= 5) {
+                    LogManager.Log(String.Format("Client Timeout: Kicking client {0}", client.Key.RemoteEndPoint));
+                    client.Key.Disconnect("No message was recieved in 60 seconds, you have been kicked from the server.");
+                    cleanupConnections.Add(sender);
+                }
+            }
+            foreach (NetConnection conn in cleanupConnections)
+            {
+                CleanupClientConnection(conn);
             }
         }
 
@@ -558,13 +587,13 @@ namespace SS14.Server
         {
             NetConnection sender = msg.SenderConnection;
             string senderIp = sender.RemoteEndPoint.Address.ToString();
-            LogManager.Log(senderIp + ": Status change");
+            LogManager.Log(String.Format("{0}: Status changed to {1}", senderIp, sender.Status.ToString()));
 
             switch (sender.Status)
             {
                 case NetConnectionStatus.Connected:
                     LogManager.Log(senderIp + ": Connection request");
-                    if (ClientList.ContainsKey(sender))
+                    if (ClientList.ContainsKey(sender)) // TODO Move this to a config to allow or disallowed shared IPAddress
                     {
                         LogManager.Log(senderIp + ": Already connected", LogLevel.Error);
                         return;
@@ -580,10 +609,16 @@ namespace SS14.Server
                     IoCManager.Resolve<IPlayerManager>().EndSession(sender);
                     if (ClientList.ContainsKey(sender))
                     {
-                        ClientList.Remove(sender);
+                        CleanupClientConnection(sender);
                     }
                     break;
             }
+        }
+
+        private void CleanupClientConnection(NetConnection sender)
+        {
+            _clientListLastSeen.Remove(sender);
+            ClientList.Remove(sender);
         }
 
         /// <summary>

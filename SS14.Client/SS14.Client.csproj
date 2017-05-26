@@ -1,0 +1,469 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>12.0.31101.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{0C31DFDF-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>SS14.Client</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>SS14.Client</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <StartArguments>
+    </StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\bin\Client\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\bin\Client\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Diagnostics.Runtime, Version=0.8.31.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Diagnostics.Runtime.0.8.31-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="sfmlnet-graphics-2">
+      <Name>sfmlnet-graphics-2</Name>
+      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="sfmlnet-system-2">
+      <Name>sfmlnet-system-2</Name>
+      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="sfmlnet-window-2">
+      <Name>sfmlnet-window-2</Name>
+      <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Name>System.Core</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <Name>System.Xml.Linq</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel">
+      <Name>System.ServiceModel</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NetSerializer">
+      <Name>NetSerializer</Name>
+      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <Name>Microsoft.CSharp</Name>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Name>Lidgren.Network</Name>
+      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
+      <Project>{302b877e-0000-0000-0000-000000000000}</Project>
+      <Name>SS14.Client.Graphics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
+      <Name>SS14.Shared</Name>
+      <Project>{0529F740-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GameController.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="app.config">
+    </None>
+    <Content Include="EntityTemplates\Atmos.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Clothing.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Containers.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Doors.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\GlassWalls.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\JanitorItems.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Lights.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Lockers.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\MedicalItems.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Misc.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tables.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Tools.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Human.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\WallMounted.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Weapons.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EntityTemplates\Internals.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="KeyBindings.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="plugins.cfg">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="player_config.xml">
+      <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="packages.config" />
+    <Compile Include="GameObjects\AnimatedSprite.cs" />
+    <Compile Include="GameObjects\Component\ClickableComponent.cs" />
+    <Compile Include="GameObjects\Component\Collidable\CollidableComponent.cs" />
+    <Compile Include="GameObjects\Component\Collidable\TriggerableComponent.cs" />
+    <Compile Include="GameObjects\Component\Collider\ColliderComponent.cs" />
+    <Compile Include="GameObjects\Component\Damageable\DamageableComponent.cs" />
+    <Compile Include="GameObjects\Component\Direction\DirectionComponent.cs" />
+    <Compile Include="GameObjects\Component\EntityStats\EntityStatsCompC.cs" />
+    <Compile Include="GameObjects\Component\Equipment\EquipmentComponent.cs" />
+    <Compile Include="GameObjects\Component\Equipment\HumanEquipmentComponent.cs" />
+    <Compile Include="GameObjects\Component\Equippable\EquippableComponent.cs" />
+    <Compile Include="GameObjects\Component\Hands\HumanHandsComponent.cs" />
+    <Compile Include="GameObjects\Component\Hitbox\HitboxComponent.cs" />
+    <Compile Include="GameObjects\Component\Damageable\Health\HealthComponent.cs" />
+    <Compile Include="GameObjects\Component\Icon\IconComponent.cs" />
+    <Compile Include="GameObjects\Component\Input\ContextMenuComponent.cs" />
+    <Compile Include="GameObjects\Component\Inventory\InventoryComponent.cs" />
+    <Compile Include="GameObjects\Component\Item\BasicItemComponent.cs" />
+    <Compile Include="GameObjects\Component\Light\FlashLightComponent.cs" />
+    <Compile Include="GameObjects\Component\Light\PointLightComponent.cs" />
+    <Compile Include="GameObjects\Component\Mover\PlayerInputMoverComponent.cs" />
+    <Compile Include="GameObjects\Component\Mover\BasicMoverComponent.cs" />
+    <Compile Include="GameObjects\Component\Mover\SlaveMoverComponent.cs" />
+    <Compile Include="GameObjects\Component\Physics\PhysicsComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\ParticleSystem.cs" />
+    <Compile Include="GameObjects\Component\Renderable\ParticleSystemComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\Speechbubble.cs" />
+    <Compile Include="GameObjects\Component\Renderable\WearableAnimatedSpriteComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\ItemSpriteComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\MobSpriteComponent.cs" />
+    <Compile Include="GameObjects\Component\Renderable\SpriteComponent.cs" />
+    <Compile Include="GameObjects\Component\SVars\SVarsComponent.cs" />
+    <Compile Include="GameObjects\Component\Transform\TransformComponent.cs" />
+    <Compile Include="GameObjects\Component\Velocity\VelocityComponent.cs" />
+    <Compile Include="GameObjects\ContextMenuEntry.cs" />
+    <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
+    <Compile Include="GameObjects\EntityManager.cs" />
+    <Compile Include="GameObjects\EntityNetworkManager.cs" />
+    <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
+    <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
+    <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" />
+    <Compile Include="Utility\Rand.cs" />
+    <Compile Include="Collision\CollisionManager.cs" />
+    <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Configuration\PlayerConfiguration.cs" />
+    <None Include="Configuration\player_config.xml" />
+    <Compile Include="Console\ConsoleCommands.cs" />
+    <Compile Include="Console\HelpCommands.cs" />
+    <Compile Include="Console\ParticleCommands.cs" />
+    <Compile Include="Console\QuitCommand.cs" />
+    <Compile Include="GOC\EntityManagerContainer.cs" />
+    <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="GameTimer\GameTimer.cs" />
+    <Compile Include="Helpers\GaussianBlur.cs" />
+    <Compile Include="Helpers\InterpolationPacket.cs" />
+    <Compile Include="Helpers\StarScroller.cs" />
+    <Compile Include="Helpers\Utilities.cs" />
+    <Compile Include="Input\KeyBindingManager.cs" />
+    <Compile Include="Interfaces\Collision\ICollidable.cs" />
+    <Compile Include="Interfaces\Collision\ICollider.cs" />
+    <Compile Include="Interfaces\Collision\ICollisionManager.cs" />
+    <Compile Include="Interfaces\Configuration\IPlayerConfigurationManager.cs" />
+    <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
+    <Compile Include="Interfaces\Console\IDebugConsole.cs" />
+    <Compile Include="Interfaces\GOC\GetSVarsEventArgs.cs" />
+    <Compile Include="Interfaces\GOC\IEntityManagerContainer.cs" />
+    <Compile Include="Interfaces\GOC\IParticleSystemComponent.cs" />
+    <Compile Include="Interfaces\GOC\IRenderableComponent.cs" />
+    <Compile Include="Interfaces\GOC\ISVarsComponent.cs" />
+    <Compile Include="Interfaces\GOC\ISpriteComponent.cs" />
+    <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
+    <Compile Include="Interfaces\GameTimer\IGameTimer.cs" />
+    <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
+    <Compile Include="Interfaces\Lighting\ILight.cs" />
+    <Compile Include="Interfaces\Lighting\ILightArea.cs" />
+    <Compile Include="Interfaces\Lighting\ILightManager.cs" />
+    <Compile Include="Interfaces\Lighting\LightMode.cs" />
+    <Compile Include="Interfaces\Map\Chunk.cs" />
+    <Compile Include="Interfaces\Map\IMapManager.cs" />
+    <Compile Include="Interfaces\Map\ITileCollection.cs" />
+    <Compile Include="Interfaces\Map\ITileDefinition.cs" />
+    <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Map\Tile.cs" />
+    <Compile Include="Interfaces\Map\TileRef.cs" />
+    <Compile Include="Interfaces\MessageLogging\IMessageLogger.cs" />
+    <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
+    <Compile Include="Interfaces\Network\INetworkManager.cs" />
+    <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
+    <Compile Include="Interfaces\Player\IPlayerManager.cs" />
+    <Compile Include="Interfaces\Resource\IResourceManager.cs" />
+    <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
+    <Compile Include="Interfaces\State\IState.cs" />
+    <Compile Include="Interfaces\State\IStateManager.cs" />
+    <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
+    <Compile Include="Interfaces\UserInterface\IGuiComponent.cs" />
+    <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
+    <Compile Include="Interfaces\Utility\IRand.cs" />
+    <Compile Include="Lighting\Light.cs" />
+    <Compile Include="Lighting\LightArea.cs" />
+    <Compile Include="Lighting\LightManager.cs" />
+    <Compile Include="Lighting\QuadRenderer.cs" />
+    <Compile Include="Lighting\ShadowMapResolver.cs" />
+    <Compile Include="Lighting\ShadowmapSize.cs" />
+    <Compile Include="Lighting\LightModes\Flicker.cs" />
+    <Compile Include="Map\HardcodedTileDefinitions.cs" />
+    <Compile Include="Map\MapManager.cs" />
+    <Compile Include="Map\TileDefinition.cs" />
+    <Compile Include="Map\TileDefinitionManager.cs" />
+    <Compile Include="MessageLogging\MessageLogger.cs" />
+    <Compile Include="MessageLogging\MessageLoggerService.cs" />
+    <None Include="MessageLogging\messageLoggerService.config" />
+    <Compile Include="Network\NetworkGrapher.cs" />
+    <Compile Include="Network\NetworkManager.cs" />
+    <Compile Include="Placement\PlacementManager.cs" />
+    <Compile Include="Placement\PlacementMode.cs" />
+    <Compile Include="Placement\Modes\AlignFree.cs" />
+    <Compile Include="Placement\Modes\AlignNone.cs" />
+    <Compile Include="Placement\Modes\AlignSimilar.cs" />
+    <Compile Include="Placement\Modes\AlignTileAny.cs" />
+    <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
+    <Compile Include="Placement\Modes\AlignTileNonSolid.cs" />
+    <Compile Include="Placement\Modes\AlignTileSolid.cs" />
+    <Compile Include="Placement\Modes\AlignWall.cs" />
+    <Compile Include="Player\PlayerManager.cs" />
+    <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
+    <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
+    <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
+    <Compile Include="ResourceManagment\ResourceManagerZip.cs" />
+    <Compile Include="Serialization\SS14Serializer.cs" />
+    <Compile Include="State\State.cs" />
+    <Compile Include="State\StateManager.cs" />
+    <Compile Include="State\States\GameScreen.cs" />
+    <Compile Include="State\States\LobbyMenu.cs" />
+    <Compile Include="State\States\LobbyScreen.cs" />
+    <Compile Include="State\States\MainMenu.cs" />
+    <Compile Include="State\States\OptionsMenu.cs" />
+    <Compile Include="UserInterface\DragDropInfo.cs" />
+    <Compile Include="UserInterface\UserInterfaceManager.cs" />
+    <Compile Include="UserInterface\Components\ArmorInfoLabel.cs" />
+    <Compile Include="UserInterface\Components\BlueprintButton.cs" />
+    <Compile Include="UserInterface\Components\Button.cs" />
+    <Compile Include="UserInterface\Components\Chatbox.cs" />
+    <Compile Include="UserInterface\Components\Checkbox.cs" />
+    <Compile Include="UserInterface\Components\ContextMenu.cs" />
+    <Compile Include="UserInterface\Components\DebugConsole.cs" />
+    <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
+    <Compile Include="UserInterface\Components\EntitySpawnPanel.cs" />
+    <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />
+    <Compile Include="UserInterface\Components\ExamineWindow.cs" />
+    <Compile Include="UserInterface\Components\FloatingDeco.cs" />
+    <Compile Include="UserInterface\Components\GuiComponent.cs" />
+    <Compile Include="UserInterface\Components\HandsGui.cs" />
+    <Compile Include="UserInterface\Components\HealthPanel.cs" />
+    <Compile Include="UserInterface\Components\ImageButton.cs" />
+    <Compile Include="UserInterface\Components\Label.cs" />
+    <Compile Include="UserInterface\Components\Listbox.cs" />
+    <Compile Include="UserInterface\Components\MenuWindow.cs" />
+    <Compile Include="UserInterface\Components\ProgressBar.cs" />
+    <Compile Include="UserInterface\Components\PropEditWindow.cs" />
+    <Compile Include="UserInterface\Components\SVarEditWindow.cs" />
+    <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
+    <Compile Include="UserInterface\Components\Scrollbar.cs" />
+    <Compile Include="UserInterface\Components\Showcase.cs" />
+    <Compile Include="UserInterface\Components\SimpleImage.cs" />
+    <Compile Include="UserInterface\Components\TemplateGuiComponent.cs" />
+    <Compile Include="UserInterface\Components\Textbox.cs" />
+    <Compile Include="UserInterface\Components\TileSpawnPanel.cs" />
+    <Compile Include="UserInterface\Components\TimerBar.cs" />
+    <Compile Include="UserInterface\Components\Window.cs" />
+    <Compile Include="UserInterface\Inventory\EquipmentSlotUi.cs" />
+    <Compile Include="UserInterface\Inventory\HumanComboGUI.cs" />
+    <Compile Include="UserInterface\Inventory\InventorySlotUi.cs" />
+    <Compile Include="UserInterface\Inventory\InventoryViewer.cs" />
+    <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs" />
+    <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs" />
+    <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
+    <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition="Exists('Microsoft.VisualStudio.DebuggerVisualizers.dll') ">$(DefineConstants);VS_DEBUGGERVISUALIZERS_EXISTS</DefineConstants>
+  </PropertyGroup>
+</Project>

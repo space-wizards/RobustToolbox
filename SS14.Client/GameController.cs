@@ -21,7 +21,6 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using KeyArgs = SFML.Window.KeyEventArgs;
-using SS14.Shared.Utility;
 
 namespace SS14.Client
 {

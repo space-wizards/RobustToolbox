@@ -3,6 +3,7 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
@@ -177,27 +178,27 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = true;
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("openSprite"), out node))
+            if (mapping.TryGetValue("openSprite", out node))
             {
-                openSprite = ((YamlScalarNode)node).Value;
+                openSprite = node.AsString();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("closedSprite"), out node))
+            if (mapping.TryGetValue("closedSprite", out node))
             {
-                closedSprite = ((YamlScalarNode)node).Value;
+                closedSprite = node.AsString();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("openOnBump"), out node))
+            if (mapping.TryGetValue("openOnBump", out node))
             {
-                openonbump = bool.Parse(((YamlScalarNode)node).Value);
+                openonbump = node.AsBool();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("autoCloseInterval"), out node))
+            if (mapping.TryGetValue("autoCloseInterval", out node))
             {
-                var autocloseinterval = int.Parse(((YamlScalarNode)node).Value);
+                var autocloseinterval = node.AsInt();
                 if (autocloseinterval == 0)
                 {
                     autoclose = false;

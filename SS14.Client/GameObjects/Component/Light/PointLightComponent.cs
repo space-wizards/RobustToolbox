@@ -5,7 +5,10 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -58,33 +61,42 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("lightoffsetx", out node))
             {
-                case "lightoffsetx":
-                    _lightOffset.X = parameter.GetValue<float>();
-                    //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    break;
-                case "lightoffsety":
-                    _lightOffset.Y = parameter.GetValue<float>();
-                    //float.Parse((string)parameter.Parameter, System.Globalization.CultureInfo.InvariantCulture);
-                    break;
-                case "lightradius":
-                    _lightRadius = parameter.GetValue<int>(); //int.Parse((string) parameter.Parameter);
-                    break;
-                case "lightColorR":
-                    _lightColor.X = parameter.GetValue<int>(); //int.Parse((string) parameter.Parameter);
-                    break;
-                case "lightColorG":
-                    _lightColor.Y = parameter.GetValue<int>(); //int.Parse((string)parameter.Parameter);
-                    break;
-                case "lightColorB":
-                    _lightColor.Z = parameter.GetValue<int>(); //int.Parse((string)parameter.Parameter);
-                    break;
-                case "mask":
-                    _mask = parameter.GetValue<string>(); // parameter.Parameter;
-                    break;
+                _lightOffset.X = node.AsFloat();
+            }
+
+            if (mapping.TryGetValue("lightoffsety", out node))
+            {
+                _lightOffset.Y = node.AsFloat();
+            }
+
+            if (mapping.TryGetValue("lightradius", out node))
+            {
+                _lightRadius = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("lightColorR", out node))
+            {
+                _lightColor.X = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("lightColorG", out node))
+            {
+                _lightColor.Y = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("lightColorB", out node))
+            {
+                _lightColor.Z = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("mask", out node))
+            {
+                _mask = node.AsString();
             }
         }
 

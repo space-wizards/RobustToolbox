@@ -2,6 +2,8 @@
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
+using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -17,12 +19,12 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Icon;
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("icon"), out node))
+            if (mapping.TryGetValue("icon", out node))
             {
-                SetIcon(((YamlScalarNode)node).Value);
+                SetIcon(node.AsString());
             }
         }
 

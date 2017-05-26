@@ -21,7 +21,7 @@ namespace SS14.Shared.Prototypes
     /// <summary>
     /// Extension on <see cref="IPrototype"/> that allows it to be "indexed" by a string ID.
     /// </summary>
-    public interface IIndexedPrototype : IPrototype
+    public interface IIndexedPrototype
     {
         /// <summary>
         /// An ID for this prototype instance.
@@ -36,6 +36,17 @@ namespace SS14.Shared.Prototypes
     /// </summary>
     public interface ISyncingPrototype
     {
-        void Sync(IPrototypeManager manager);
+        /// <summary>
+        /// Sync and update cross-referencing data.
+        /// Syncing works in stages, each time it will be called with the stage it's currently on.
+        /// Each prototype will be called in a stage, then the stage count goes up.
+        /// </summary>
+        /// <remarks>
+        /// The order of syncing is in no way guaranteed to be consistent across stages.
+        /// This means that on stage 1 prototype A might sync first, but on stage 2 prototype B might.
+        /// </remarks>
+        /// <param name="stage">The current sync stage.</param>
+        /// <returns>Whether or not the prototype will be included in the next sync stage</returns>
+        bool Sync(IPrototypeManager manager, int stage);
     }
 }

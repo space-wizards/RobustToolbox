@@ -7,7 +7,9 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Collidable;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -167,36 +169,36 @@ namespace SS14.Client.GameObjects
         /// Settable params:
         /// TweakAABB - Vector4
         /// </summary>
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("tweakAABB"), out node))
+            if (mapping.TryGetValue("tweakAABB", out node))
             {
                 TweakAABB = node.AsVector4f() / mapManager.TileSize;
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBtop"), out node))
+            if (mapping.TryGetValue("TweakAABBtop", out node))
             {
                 tweakAABB.X = node.AsFloat() / mapManager.TileSize;
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBright"), out node))
+            if (mapping.TryGetValue("TweakAABBright", out node))
             {
                 tweakAABB.Y = node.AsFloat() / mapManager.TileSize;
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBbottom"), out node))
+            if (mapping.TryGetValue("TweakAABBbottom", out node))
             {
                 tweakAABB.Z = node.AsFloat() / mapManager.TileSize;
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("TweakAABBleft"), out node))
+            if (mapping.TryGetValue("TweakAABBleft", out node))
             {
                 tweakAABB.W = node.AsFloat() / mapManager.TileSize;
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("DebugColor"), out node))
+            if (mapping.TryGetValue("DebugColor", out node))
             {
                 DebugColor = ColorUtils.FromHex(node.AsString(), Color.Red);
             }

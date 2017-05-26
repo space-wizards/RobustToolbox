@@ -5,9 +5,11 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -42,17 +44,17 @@ namespace SS14.Client.GameObjects
             CarriedSprite = spritename;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("notWornSprite", out node))
             {
-                case "notWornSprite":
-                    SetNotWornSprite(parameter.GetValue<string>());
-                    break;
-                case "carriedSprite":
-                    SetCarriedSprite(parameter.GetValue<string>());
-                    break;
+                SetNotWornSprite(node.AsString());
+            }
+
+            if (mapping.TryGetValue("carriedSprite", out node))
+            {
+                SetCarriedSprite(node.AsString());
             }
         }
 

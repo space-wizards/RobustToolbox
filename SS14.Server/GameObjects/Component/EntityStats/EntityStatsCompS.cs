@@ -3,6 +3,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.EntityStats;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,15 +63,19 @@ namespace SS14.Server.GameObjects
             base.Update(frameTime);
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            foreach (KeyValuePair<YamlNode, YamlNode> stat in (YamlMappingNode)mapping["armor"])
+            YamlNode node;
+            if (mapping.TryGetValue("armor", out node))
             {
-                var type = (DamageType) Enum.Parse(typeof (DamageType), ((YamlScalarNode)stat.Key).Value, true);
-                //Add check for parsing. Handle exceptions if invalid name.
-                int value = int.Parse(((YamlScalarNode)stat.Value).Value); //See comment above.
+                foreach (KeyValuePair<YamlNode, YamlNode> stat in (YamlMappingNode)node)
+                {
+                    var type = stat.Key.AsEnum<DamageType>();
+                    //Add check for parsing. Handle exceptions if invalid name.
+                    int value = stat.Value.AsInt(); //See comment above.
 
-                armorStats[type] = value;
+                    armorStats[type] = value;
+                }
             }
         }
 

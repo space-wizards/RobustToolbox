@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -82,12 +83,12 @@ namespace SS14.Server.GameObjects
             return containedEntities.Exists(x => x.Prototype.Name == templatename);
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("size"), out node))
+            if (mapping.TryGetValue("size", out node))
             {
-                maxSlots = int.Parse(((YamlScalarNode)node).Value);
+                maxSlots = node.AsInt();
             }
             // TODO: Add support for objects that are created inside inventories (Lockers, crates etc)
         }

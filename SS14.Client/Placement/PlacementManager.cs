@@ -15,6 +15,7 @@ using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace SS14.Client.Placement
         public string CurrentBaseSpriteKey = "";
         public PlacementMode CurrentMode;
         public PlacementInformation CurrentPermission;
-        public EntityTemplate CurrentTemplate;
+        public EntityPrototype CurrentPrototype;
         public Direction Direction = Direction.South;
         public bool ValidPosition;
 
@@ -86,7 +87,7 @@ namespace SS14.Client.Placement
         public void Clear()
         {
             CurrentBaseSprite = null;
-            CurrentTemplate = null;
+            CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
             if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
@@ -206,10 +207,8 @@ namespace SS14.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
-            EntityTemplate template =
-                IoCManager.Resolve<IEntityManagerContainer>().EntityManager.EntityTemplateDatabase.GetTemplate(
-                    templateName);
-            if (template == null) return;
+            EntityPrototype prototype =
+                IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(templateName);
 
             ComponentParameter spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault();
             //Will break if states not ordered correctly.

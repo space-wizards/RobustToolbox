@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -119,18 +120,17 @@ namespace SS14.Server.GameObjects
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("maxHealth"), out node))
+            if (mapping.TryGetValue("maxHealth", out node))
             {
-                maxHealth = int.Parse(((YamlScalarNode)node).Value);
-                currentHealth = maxHealth;
+                currentHealth = maxHealth = node.AsInt();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("currentHealth"), out node))
+            if (mapping.TryGetValue("currentHealth", out node))
             {
-                currentHealth = int.Parse(((YamlScalarNode)node).Value);
+                currentHealth = node.AsInt();
 
             }
         }

@@ -52,7 +52,7 @@ namespace SS14.Client.Placement.Modes
 
             var nodes = new List<Vector2f>();
 
-            if (pManager.CurrentTemplate.MountingPoints != null)
+            if (pManager.CurrentPrototype.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentTemplate.MountingPoints.Select(

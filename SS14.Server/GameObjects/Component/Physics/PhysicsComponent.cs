@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
@@ -43,12 +44,12 @@ namespace SS14.Server.GameObjects
         //    }
         //}
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("mass"), out node))
+            if (mapping.TryGetValue("mass", out node))
             {
-                Mass = float.Parse(((YamlScalarNode)node).Value);
+                Mass = node.AsFloat();
             }
         }
 

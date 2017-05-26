@@ -3,6 +3,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -282,7 +283,7 @@ namespace SS14.Server.GameObjects
             cap.owner = this;
         }
 
-        public override void LoadParameters(YamlMappingNode yaml)
+        public override void LoadParameters(Dictionary<string, YamlNode> yaml)
         {
             /*
             TODO: figure something out for this cancerous mess.

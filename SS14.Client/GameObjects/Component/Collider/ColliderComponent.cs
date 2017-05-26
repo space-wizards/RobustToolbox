@@ -5,6 +5,9 @@ using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -58,11 +61,12 @@ namespace SS14.Client.GameObjects
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
 
-        public override void SetParameter(ComponentParameter parameter) {
-            switch (parameter.MemberName) {
-                case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Blue);
-                    break;
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        {
+            YamlNode node;
+            if (mapping.TryGetValue("debugColor", out node))
+            {
+                DebugColor = node.AsHexColor(Color.Blue);
             }
         }
     }

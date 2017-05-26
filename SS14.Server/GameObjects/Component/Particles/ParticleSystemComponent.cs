@@ -72,7 +72,7 @@ namespace SS14.Server.GameObjects
                 emitters[name] = active;
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             /*
             TODO: reimplement

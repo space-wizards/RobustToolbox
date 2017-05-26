@@ -15,20 +15,17 @@ namespace SS14.Server.GameObjects
     [Component("HumanHands")]
     public class HumanHandsComponent : Component, IInventoryContainer
     {
-        public readonly Dictionary<InventoryLocation, Entity> Handslots;
+        public readonly Dictionary<InventoryLocation, Entity> Handslots = new Dictionary<InventoryLocation, Entity>();
         public InventoryLocation CurrentHand = InventoryLocation.HandLeft;
 
         public HumanHandsComponent()
         {
             Family = ComponentFamily.Hands;
-            Handslots = new Dictionary<InventoryLocation, Entity>();
+
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.LoadParameters(mapping);
-            Handslots.Clear();
-
             foreach (YamlScalarNode node in (YamlSequenceNode)mapping["slots"])
             {
                 Handslots.Add((InventoryLocation)Enum.Parse(typeof(InventoryLocation), node.Value), null);

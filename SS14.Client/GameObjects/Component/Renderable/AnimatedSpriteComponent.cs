@@ -10,9 +10,11 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
@@ -227,19 +229,18 @@ namespace SS14.Client.GameObjects
             return true;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("drawdepth", out node))
             {
-                case "drawdepth":
-                    SetDrawDepth((DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true));
-                    break;
+                SetDrawDepth(node.AsEnum<DrawDepth>());
+            }
 
-                case "sprite":
-                    baseSprite = parameter.GetValue<string>();
-                    SetSprite(parameter.GetValue<string>());
-                    break;
+            if (mapping.TryGetValue("sprite", out node))
+            {
+                baseSprite = node.AsString();
+                SetSprite(baseSprite);
             }
         }
 

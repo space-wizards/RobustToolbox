@@ -111,11 +111,43 @@ namespace SS14.Shared.Prototypes
 
         public void Resync()
         {
-            foreach (Type type in prototypeTypes.Values.Where((Type type) => typeof(ISyncingPrototype).IsAssignableFrom(type)))
+            foreach (Type type in prototypeTypes.Values.Where(t => typeof(ISyncingPrototype).IsAssignableFrom(t)))
             {
-                foreach (ISyncingPrototype prototype in prototypes[type].Select((IPrototype p) => p as ISyncingPrototype))
+                // This list is the list of prototypes we're syncing.
+                // Iterate using indices.
+                // IF the prototype wants to NOT by synced again,
+                // Swap remove it with the one at the end of the list,
+                //  and do the whole thing again with the one formerly at the end of the list
+                // otherwise keep it and move up an index
+                // When we get to the end, do the whole thing again!
+                // Yes this is ridiculously overengineered BUT IT PERFORMS WELL.
+                // I hope.
+                List<ISyncingPrototype> currentRun = prototypes[type].Select(p => (ISyncingPrototype)p).ToList();
+                int stage = 0;
+                // 3 nested loops ladies and gentlemen.
+                // Outer loop to iterate stages.
+                while (currentRun.Count > 0)
                 {
-                    prototype.Sync(this);
+                    // Middle loop to increase current position if we need to KEEP a prototype for next stage.
+                    for (int i = 0; i < currentRun.Count; i++)
+                    {
+                        while (true)
+                        {
+                            ISyncingPrototype prototype = currentRun[i];
+                            bool result = prototype.Sync(this, stage);
+                            // Keep prototype and move on to next one if it returns true.
+                            // Thus it stays in the list for next stage.
+                            if (result)
+                            {
+                                break;
+                            }
+
+                            // Move the last element in the list to where we are currently.
+                            // Since we don't break we'll do this one next, as i stays the same.
+                            currentRun.RemoveSwap(i);
+                        }
+                    }
+                    stage++;
                 }
             }
         }

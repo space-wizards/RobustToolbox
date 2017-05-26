@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -61,30 +62,30 @@ namespace SS14.Client.GameObjects
             _entries.Add(entry);
         }
 
-        public override void LoadParameters(YamlMappingNode mapping)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("entries"), out node))
+            if (mapping.TryGetValue("entries", out node))
             {
                 foreach (YamlMappingNode entry in (YamlSequenceNode)node)
                 {
-                    string name = "";
-                    string icon = "";
-                    string message = "";
+                    string name = "NULL";
+                    string icon = "NULL";
+                    string message = "NULL";
 
                     if (entry.Children.TryGetValue(new YamlScalarNode("name"), out node))
                     {
-                        name = ((YamlScalarNode)node).Value;
+                        name = node.AsString();
                     }
 
                     if (entry.Children.TryGetValue(new YamlScalarNode("icon"), out node))
                     {
-                        icon = ((YamlScalarNode)node).Value;
+                        icon = node.AsString();
                     }
 
                     if (entry.Children.TryGetValue(new YamlScalarNode("message"), out node))
                     {
-                        message = ((YamlScalarNode)node).Value;
+                        message = node.AsString();
                     }
 
                 var newEntry = new ContextMenuEntry

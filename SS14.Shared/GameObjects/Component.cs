@@ -40,7 +40,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        void LoadParameters(YamlMappingNode mapping);
+        void LoadParameters(Dictionary<string, YamlNode> mapping);
 
         /// <summary>
         /// Main method for updating the component. This is called from a big loop in Componentmanager.
@@ -155,7 +155,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        public virtual void LoadParameters(YamlMappingNode mapping)
+        public virtual void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
         }
 

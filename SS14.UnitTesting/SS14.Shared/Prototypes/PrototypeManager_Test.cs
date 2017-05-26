@@ -16,6 +16,7 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
         {
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
+            manager.Resync();
 
         }
 
@@ -29,24 +30,31 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             Assert.That(node["foo"], Is.EqualTo(new YamlScalarNode("bar!")));
         }
 
-        [Test]
-        public void TestLightPrototype()
+        [Test, Combinatorial]
+        public void TestLightPrototype([Values("wallLight", "wallLightChild")] string id)
         {
-            var prototype = manager.Index<EntityPrototype>("wallLight");
+            var prototype = manager.Index<EntityPrototype>(id);
 
-            Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Transform"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Velocity"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Direction"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Clickable"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Sprite"));
-            Assert.That(prototype.Components.Keys, Contains.Item("BasicInteractable"));
-            Assert.That(prototype.Components.Keys, Contains.Item("BasicMover"));
-            Assert.That(prototype.Components.Keys, Contains.Item("WallMounted"));
-            Assert.That(prototype.Components.Keys, Contains.Item("Light"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
+                Assert.That(prototype.ID, Is.EqualTo(id));
+                Assert.That(prototype.Components, Contains.Key("Transform"));
+                Assert.That(prototype.Components, Contains.Key("Velocity"));
+                Assert.That(prototype.Components, Contains.Key("Direction"));
+                Assert.That(prototype.Components, Contains.Key("Clickable"));
+                Assert.That(prototype.Components, Contains.Key("Sprite"));
+                Assert.That(prototype.Components, Contains.Key("BasicInteractable"));
+                Assert.That(prototype.Components, Contains.Key("BasicMover"));
+                Assert.That(prototype.Components, Contains.Key("WallMounted"));
+                Assert.That(prototype.Components, Contains.Key("Light"));
+            });
 
             var componentData = prototype.Components["Light"];
-            Assert.That(componentData, Contains.Item("startState").And.EqualTo("Off"));
+            var expected = new Dictionary<string, YamlNode>();
+            expected["startState"] = new YamlScalarNode("Off");
+
+            Assert.That(componentData, Is.EquivalentTo(expected));
         }
 
         const string DOCUMENT = @"
@@ -71,7 +79,11 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
   - type: WallMounted
   - type: Light
     startState: Off
-        ";
+---
+- type: entity
+  id: wallLightChild
+  parent: wallLight
+";
     }
 
     [IoCTarget]

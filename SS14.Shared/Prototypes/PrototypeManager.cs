@@ -124,28 +124,27 @@ namespace SS14.Shared.Prototypes
                 // I hope.
                 List<ISyncingPrototype> currentRun = prototypes[type].Select(p => (ISyncingPrototype)p).ToList();
                 int stage = 0;
-                // 3 nested loops ladies and gentlemen.
                 // Outer loop to iterate stages.
                 while (currentRun.Count > 0)
                 {
-                    // Middle loop to increase current position if we need to KEEP a prototype for next stage.
+                    // Increase positions to iterate over list.
+                    // If we need to stick, i gets reduced down below.
                     for (int i = 0; i < currentRun.Count; i++)
                     {
-                        while (true)
+                        ISyncingPrototype prototype = currentRun[i];
+                        bool result = prototype.Sync(this, stage);
+                        // Keep prototype and move on to next one if it returns true.
+                        // Thus it stays in the list for next stage.
+                        if (result)
                         {
-                            ISyncingPrototype prototype = currentRun[i];
-                            bool result = prototype.Sync(this, stage);
-                            // Keep prototype and move on to next one if it returns true.
-                            // Thus it stays in the list for next stage.
-                            if (result)
-                            {
-                                break;
-                            }
-
-                            // Move the last element in the list to where we are currently.
-                            // Since we don't break we'll do this one next, as i stays the same.
-                            currentRun.RemoveSwap(i);
+                            continue;
                         }
+
+                        // Move the last element in the list to where we are currently.
+                        // Since we don't break we'll do this one next, as i stays the same.
+                        //  (for loop cancels out decrement here)
+                        currentRun.RemoveSwap(i);
+                        i--;
                     }
                     stage++;
                 }

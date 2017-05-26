@@ -88,10 +88,13 @@ namespace SS14.Shared.GameObjects
             YamlScalarNode idNode = (YamlScalarNode)mapping[new YamlScalarNode("id")];
             ID = idNode.Value;
 
-            YamlScalarNode nameNode = (YamlScalarNode)mapping[new YamlScalarNode("name")];
-            Name = nameNode.Value;
-
             YamlNode node;
+
+            if (mapping.Children.TryGetValue(new YamlScalarNode("name"), out node))
+            {
+                Name = node.AsString();
+            }
+
             if (mapping.Children.TryGetValue(new YamlScalarNode("class"), out node))
             {
                 var manager = IoCManager.Resolve<IContentLoader>();
@@ -157,20 +160,30 @@ namespace SS14.Shared.GameObjects
             switch (stage)
             {
                 case 0:
+                    if (parentTemp == null)
+                    {
+                        return true;
+                    }
+
                     Parent = manager.Index<EntityPrototype>(parentTemp);
+                    if (Parent.Children == null)
+                    {
+                        Parent.Children = new List<EntityPrototype>();
+                    }
                     Parent.Children.Add(this);
-                    return true;
+                    return false;
 
                 case 1:
-                    if (Parent != null)
-                    {
-                        return false;
-                    }
                     // We are a root-level prototype.
                     // As such we're getting the duty of pushing inheritance into everybody's face.
                     // Can't do a "puller" system where each queries the parent because it requires n stages
                     //  (n being the depth of each inheritance tree)
 
+                    if (Children == null)
+                    {
+                        break;
+                    }
+                    Console.WriteLine("Hrm... {0}", this);
                     foreach (EntityPrototype child in Children)
                     {
                         PushInheritance(this, child);
@@ -202,6 +215,16 @@ namespace SS14.Shared.GameObjects
                     // Copy component into the target, since it doesn't have it yet.
                     target.Components[component.Key] = new Dictionary<string, YamlNode>(component.Value);
                 }
+            }
+
+            if (target.Name == null)
+            {
+                target.Name = source.Name;
+            }
+
+            if (target.Children == null)
+            {
+                return;
             }
 
             // TODO: remove recursion somehow.
@@ -256,6 +279,11 @@ namespace SS14.Shared.GameObjects
 
             components[type] = dict;
             // TODO: figure out a better way to exclude the type node.
+        }
+
+        public override string ToString()
+        {
+            return string.Format("EntityPrototype({0})", ID);
         }
     }
 }

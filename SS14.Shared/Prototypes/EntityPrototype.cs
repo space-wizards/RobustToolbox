@@ -183,7 +183,6 @@ namespace SS14.Shared.GameObjects
                     {
                         break;
                     }
-                    Console.WriteLine("Hrm... {0}", this);
                     foreach (EntityPrototype child in Children)
                     {
                         PushInheritance(this, child);

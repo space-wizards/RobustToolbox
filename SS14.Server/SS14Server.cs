@@ -22,6 +22,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -105,6 +106,9 @@ namespace SS14.Server
             {
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
             }
+
+            // Create log directory if it does not exist yet.
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
             LogManager.Initialize(logPath, configMgr.LogLevel);
 
@@ -472,6 +476,7 @@ namespace SS14.Server
 
             LoadSettings();
 
+            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);

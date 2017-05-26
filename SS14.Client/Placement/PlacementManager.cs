@@ -210,7 +210,7 @@ namespace SS14.Client.Placement
             EntityPrototype prototype =
                 IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(templateName);
 
-            ComponentParameter spriteParam = template.GetBaseSpriteParamaters().FirstOrDefault();
+            ComponentParameter spriteParam = prototype.GetBaseSpriteParamaters().FirstOrDefault();
             //Will break if states not ordered correctly.
             //if (spriteParam == null) return;
 
@@ -219,7 +219,7 @@ namespace SS14.Client.Placement
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;
-            CurrentTemplate = template;
+            CurrentPrototype = prototype;
 
             IsActive = true;
         }

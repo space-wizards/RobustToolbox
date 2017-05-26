@@ -74,6 +74,12 @@ namespace SS14.UnitTesting
             InitializeResources();
             #endif
 
+            Init();
+        }
+
+        protected virtual void Init()
+        {
+
         }
 
         #region Setup

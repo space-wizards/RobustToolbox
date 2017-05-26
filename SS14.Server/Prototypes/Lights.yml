@@ -1,0 +1,14 @@
+- type: entity
+  id: wallLight
+  name: Wall Light
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: Sprite
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: WallMounted
+  - type: Light
+    startState: Off

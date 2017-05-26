@@ -5,6 +5,7 @@ using SS14.Shared.Utility;
 using SS14.Server.Interfaces;
 using SS14.Shared.ContentLoader;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -65,13 +66,33 @@ namespace SS14.Server
             var loader = IoCManager.Resolve<IContentLoader>();
             assemblies.Clear();
 
-            var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-            loader.LoadAssembly(contentAssembly);
-            assemblies.Add(contentAssembly);
+            try
+            {
+                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
+                loader.LoadAssembly(contentAssembly);
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
+                Console.ResetColor();
+            }
 
-            contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-            loader.LoadAssembly(contentAssembly);
-            assemblies.Add(contentAssembly);
+            try
+            {
+                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
+                loader.LoadAssembly(contentAssembly);
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
+                Console.ResetColor();
+            }
 
             IoCManager.AddAssemblies(assemblies);
         }

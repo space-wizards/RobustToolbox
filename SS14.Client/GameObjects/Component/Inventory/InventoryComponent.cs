@@ -43,13 +43,13 @@ namespace SS14.Client.GameObjects
 
         public bool ContainsEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Template.Name == templatename);
+            return ContainedEntities.Exists(x => x.Prototype.Name == templatename);
         }
 
         public Entity GetEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Template.Name == templatename)
-                       ? ContainedEntities.First(x => x.Template.Name == templatename)
+            return ContainedEntities.Exists(x => x.Prototype.Name == templatename)
+                       ? ContainedEntities.First(x => x.Prototype.Name == templatename)
                        : null;
         }
 

@@ -47,8 +47,8 @@ namespace SS14.Client.Placement.Modes
             }
             else
             {
-                mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentTemplate.PlacementOffset.Key,
-                                         currentTile.Y + 0.5f + pManager.CurrentTemplate.PlacementOffset.Value);
+                mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
+                                         currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 
                 FloatRect spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),

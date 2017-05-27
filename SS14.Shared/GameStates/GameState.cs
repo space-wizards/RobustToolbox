@@ -146,7 +146,7 @@ namespace SS14.Shared.GameStates
         /// <returns></returns>
         public static GameState ReadStateMessage(NetIncomingMessage message)
         {
-            uint sequence = message.ReadUInt32(); // This unused variable is vitally important, and the client will crash without it
+            uint sequence = message.ReadUInt32();
             int length = message.ReadInt32();
             byte[] stateData = Decompress(message.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))

@@ -308,7 +308,7 @@ namespace SS14.Server
                         LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
                 }
-                UpdateLastSeen(msg);                
+                UpdateLastSeen(msg);
                 IoCManager.Resolve<ISS14NetServer>().Recycle(msg);
             }
         }
@@ -436,9 +436,18 @@ namespace SS14.Server
                         NetOutgoingMessage stateMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
                         uint lastStateAcked = stateManager.GetLastStateAcked(c);
 
-                        stateMessage.Write((byte)NetMessage.StateUpdate);
-                        GameStateDelta delta = stateManager.GetDelta(c, _lastState);
-                        delta.WriteDelta(stateMessage);
+                        if (lastStateAcked == 0)// || forceFullState)
+                        {
+                            state.WriteStateMessage(stateMessage);
+                            //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
+                        }
+                        else
+                        {
+                            stateMessage.Write((byte)NetMessage.StateUpdate);
+                            GameStateDelta delta = stateManager.GetDelta(c, _lastState);
+                            delta.WriteDelta(stateMessage);
+                            //LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                        }
 
                         IoCManager.Resolve<ISS14NetServer>().SendMessage(stateMessage, c, NetDeliveryMethod.Unreliable);
                     }

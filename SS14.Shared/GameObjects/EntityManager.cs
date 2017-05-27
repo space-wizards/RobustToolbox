@@ -55,6 +55,7 @@ namespace SS14.Shared.GameObjects
 
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
+            EngineType = engineType;
             EntitySystemManager = new EntitySystemManager(this);
             ComponentFactory = new ComponentFactory(this);
             EntityNetworkManager = entityNetworkManager;

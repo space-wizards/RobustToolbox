@@ -96,6 +96,8 @@ namespace SS14.Client.GameObjects
 
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
+            base.LoadParameters(mapping);
+
             YamlNode node;
             if (mapping.TryGetValue("drawdepth", out node))
             {

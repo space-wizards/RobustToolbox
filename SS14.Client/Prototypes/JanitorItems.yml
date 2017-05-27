@@ -38,3 +38,22 @@
   - type: BasicItem
     # <ItemCapabilityParameter name="damageAmount" type="int" value="6" />
     # <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+
+- type: entity
+  id: Mop
+  name: Mop
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+    notWornSprite: mop
+
+  - type: Icon
+    icon: mop
+
+  - type: Physics
+  - type: Clickable
+  - type: BasicItem

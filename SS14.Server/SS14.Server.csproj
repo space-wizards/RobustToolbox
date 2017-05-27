@@ -299,6 +299,8 @@
     <Content Include="Prototypes\Containers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Prototypes\Doors.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Prototypes\GlassWalls.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Prototypes\Internals.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Prototypes\JanitorItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Prototypes\Lights.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Prototypes\Lockers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Prototypes\MedicalItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>

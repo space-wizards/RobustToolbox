@@ -14,8 +14,6 @@ namespace SS14.Server
     {
         private static void Main(string[] args)
         {
-            //Process command-line args
-            var parsedArgs = processArgs(args);
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
 
             var assemblies = new List<Assembly>();

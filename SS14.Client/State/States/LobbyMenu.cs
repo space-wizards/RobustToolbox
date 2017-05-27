@@ -210,8 +210,7 @@ namespace SS14.Client.State.States
                     switch (messageType)
                     {
                         case NetMessage.LobbyChat:
-                            string text = message.ReadString();
-                            //AddChat(text);
+                            //TODO: Send player messages to a lobby chat
                             break;
 
                         case NetMessage.PlayerList:

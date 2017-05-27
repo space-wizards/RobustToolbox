@@ -428,12 +428,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
 
@@ -452,13 +448,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
@@ -483,14 +474,12 @@ namespace SS14.Client.Resources
         /// </summary>
         private IEnumerable<KeyValuePair<string, Sprite>> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
-
             var loadedSprites = new List<KeyValuePair<string,Sprite>>();
 
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             var memStream = new MemoryStream();
 

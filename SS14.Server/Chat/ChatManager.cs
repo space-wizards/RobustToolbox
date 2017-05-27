@@ -222,7 +222,7 @@ namespace SS14.Server.Chat
             CommandParsing.ParseArguments(text, args);
             if (_emotes.ContainsKey(args[0]))
             {
-                var userText = String.Format(_emotes[args[0]].SelfText, name);//todo user-only channel
+                // todo make a user-only channel that only the sender can see i.e. for emotes and game feedback ('you put the coins in the jar' or whatever)
                 var otherText = String.Format(_emotes[args[0]].OtherText, name, "his"); //todo pronouns, gender
                 SendChatMessage(ChatChannel.Emote, otherText, name, entityId);
             }

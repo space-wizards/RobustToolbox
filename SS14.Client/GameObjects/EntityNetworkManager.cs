@@ -114,7 +114,6 @@ namespace SS14.Client.GameObjects
         {
             foreach (object messageParam in messageParams)
             {
-                Type t = messageParam.GetType();
                 if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
                 {
                     message.Write((byte) NetworkDataType.d_enum);

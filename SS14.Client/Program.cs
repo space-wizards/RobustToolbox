@@ -11,7 +11,7 @@ namespace SS14.Client
         [STAThread]
         private static void Main()
         {
-            GameController GC = new GameController(); // No, sonarqube, this isn't unused. A side-effect of this is to "run the game"
+            GameController GC = new GameController();
         }
     }
 }

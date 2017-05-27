@@ -43,6 +43,8 @@ namespace SS14.Server
         private readonly List<float> frameTimes = new List<float>();
 
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
+        private Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
+
         public DateTime Time;
         private bool _active;
         private int _lastAnnounced;
@@ -89,9 +91,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            //Init serializer
-            var serializer = IoCManager.Resolve<ISS14Serializer>();
-
             Runlevel = RunLevel.Init;
             _singleton = this;
 
@@ -309,7 +308,39 @@ namespace SS14.Server
                         LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
                 }
+                UpdateLastSeen(msg);                
                 IoCManager.Resolve<ISS14NetServer>().Recycle(msg);
+            }
+        }
+
+        private void UpdateLastSeen(NetIncomingMessage msg)
+        {
+            DateTime currentTime = DateTime.Now;
+            NetConnection sender = msg.SenderConnection;
+            if (sender == null || sender.Status == NetConnectionStatus.Disconnected || sender.Status == NetConnectionStatus.Disconnecting)
+            {
+                return;
+            }
+            if (_clientListLastSeen.ContainsKey(sender))
+            {
+                _clientListLastSeen[sender] = currentTime;
+            }
+            else
+            {
+                _clientListLastSeen.Add(sender, currentTime);
+            }
+            List<NetConnection> cleanupConnections = new List<NetConnection>();
+            foreach (KeyValuePair<NetConnection, DateTime> client in _clientListLastSeen)
+            {
+                if (currentTime.Subtract(client.Value).TotalSeconds >= 5) {
+                    LogManager.Log(String.Format("Client Timeout: Kicking client {0}", client.Key.RemoteEndPoint));
+                    client.Key.Disconnect("No message was recieved in 60 seconds, you have been kicked from the server.");
+                    cleanupConnections.Add(sender);
+                }
+            }
+            foreach (NetConnection conn in cleanupConnections)
+            {
+                CleanupClientConnection(conn);
             }
         }
 
@@ -404,18 +435,10 @@ namespace SS14.Server
                             continue;
                         NetOutgoingMessage stateMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
                         uint lastStateAcked = stateManager.GetLastStateAcked(c);
-                        if (lastStateAcked == 0)// || forceFullState)
-                        {
-                            int length = state.WriteStateMessage(stateMessage);
-                            //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
-                        }
-                        else
-                        {
-                            stateMessage.Write((byte)NetMessage.StateUpdate);
-                            GameStateDelta delta = stateManager.GetDelta(c, _lastState);
-                            delta.WriteDelta(stateMessage);
-                            //LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
-                        }
+
+                        stateMessage.Write((byte)NetMessage.StateUpdate);
+                        GameStateDelta delta = stateManager.GetDelta(c, _lastState);
+                        delta.WriteDelta(stateMessage);
 
                         IoCManager.Resolve<ISS14NetServer>().SendMessage(stateMessage, c, NetDeliveryMethod.Unreliable);
                     }
@@ -558,13 +581,13 @@ namespace SS14.Server
         {
             NetConnection sender = msg.SenderConnection;
             string senderIp = sender.RemoteEndPoint.Address.ToString();
-            LogManager.Log(senderIp + ": Status change");
+            LogManager.Log(String.Format("{0}: Status changed to {1}", senderIp, sender.Status.ToString()));
 
             switch (sender.Status)
             {
                 case NetConnectionStatus.Connected:
                     LogManager.Log(senderIp + ": Connection request");
-                    if (ClientList.ContainsKey(sender))
+                    if (ClientList.ContainsKey(sender)) // TODO Move this to a config to allow or disallowed shared IPAddress
                     {
                         LogManager.Log(senderIp + ": Already connected", LogLevel.Error);
                         return;
@@ -580,10 +603,16 @@ namespace SS14.Server
                     IoCManager.Resolve<IPlayerManager>().EndSession(sender);
                     if (ClientList.ContainsKey(sender))
                     {
-                        ClientList.Remove(sender);
+                        CleanupClientConnection(sender);
                     }
                     break;
             }
+        }
+
+        private void CleanupClientConnection(NetConnection sender)
+        {
+            _clientListLastSeen.Remove(sender);
+            ClientList.Remove(sender);
         }
 
         /// <summary>
@@ -711,7 +740,6 @@ namespace SS14.Server
         public void SendChangeTile(int x, int y, Tile newTile)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);

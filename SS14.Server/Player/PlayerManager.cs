@@ -46,7 +46,6 @@ namespace SS14.Server.Player
         {
             //Spawn the player's entity. There's probably a much better place to do this.
             Entity a = server.EntityManager.SpawnEntity("HumanMob");
-            Entity human = a;
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
             s.AttachToEntity(a);
         }

@@ -38,8 +38,7 @@ namespace SS14.Client.Lighting
                 }
                 return;
             }
-
-            var modes = new List<LightMode>();
+            
             foreach (Type t in LightModes)
             {
                 var temp = (LightMode) Activator.CreateInstance(t);

@@ -490,7 +490,6 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2f ScreenToWorld(Vector2i point)
         {
-            var center = WorldCenter;
             return new Vector2f(
                 ((float)point.X - ScreenViewportSize.X / 2 ) / TileSize + WorldCenter.X,
                 ((float)point.Y - ScreenViewportSize.Y / 2 ) / TileSize + WorldCenter.Y

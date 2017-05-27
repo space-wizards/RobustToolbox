@@ -117,7 +117,6 @@ namespace SS14.Server.GameObjects
             if (message.ComponentFamily == ComponentFamily.Hands)
             {
                 var type = (ComponentMessageType) message.MessageParameters[0];
-                var replies = new List<ComponentReplyMessage>();
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:

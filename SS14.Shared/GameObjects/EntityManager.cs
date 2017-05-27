@@ -339,7 +339,9 @@ namespace SS14.Shared.GameObjects
                 ProcessMsgBuffer();
                 IncomingEntityMessage emsg = ProcessNetMessage(msg);
                 if (!_entities.ContainsKey(emsg.Uid))
+                {
                     MessageBuffer.Enqueue(emsg);
+                }
                 else
                     _entities[emsg.Uid].HandleNetworkMessage(emsg);
             }

@@ -491,7 +491,7 @@ namespace SS14.Shared.GameObjects
             var synchedComponentTypes = state.StateData.SynchedComponentTypes;
             foreach(var t in synchedComponentTypes)
             {
-                if(HasComponent(t.Item1) && GetComponent(t.Item1).GetType().Name != t.Item2)
+                if(HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
                     RemoveComponent(t.Item1);
 
                 if(!HasComponent(t.Item1))

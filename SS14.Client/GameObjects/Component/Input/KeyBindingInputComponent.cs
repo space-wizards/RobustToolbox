@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace SS14.Client.GameObjects
 {
@@ -12,6 +13,7 @@ namespace SS14.Client.GameObjects
     public class KeyBindingInputComponent : Component
     {
         public override string Name => "KeyBindingInput";
+
         #region Delegates
 
         public delegate void KeyEvent(bool state);
@@ -27,13 +29,27 @@ namespace SS14.Client.GameObjects
         {
             Family = ComponentFamily.Input;
 
-            //Bind to the key binding manager
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
-            keyBindingManager.BoundKeyDown += KeyDown;
-            keyBindingManager.BoundKeyUp += KeyUp;
             _keyStates = new Dictionary<BoundKeyFunctions, bool>();
             _keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            keyBindingManager.BoundKeyDown -= KeyDown;
+            keyBindingManager.BoundKeyUp -= KeyUp;
+        }
+
+        public override void OnAdd(Entity owner)
+        {
+            base.OnAdd(owner);
+
+            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
+            keyBindingManager.BoundKeyDown += KeyDown;
+            keyBindingManager.BoundKeyUp += KeyUp;
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -94,6 +110,7 @@ namespace SS14.Client.GameObjects
         {
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
+
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
             SetKeyState(e.Function, true);
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, e.Function, e.FunctionState);

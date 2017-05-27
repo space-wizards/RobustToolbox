@@ -159,7 +159,6 @@ namespace SS14.Client.Network
 
         public void SendChangeTile(int x, int y, Tile newTile)
         {
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage netMessage = NetClient.CreateMessage();
             netMessage.Write((int)x);
             netMessage.Write((int)y);

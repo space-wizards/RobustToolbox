@@ -90,9 +90,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            //Init serializer
-            var serializer = IoCManager.Resolve<ISS14Serializer>();
-
             Runlevel = RunLevel.Init;
             _singleton = this;
 
@@ -434,18 +431,10 @@ namespace SS14.Server
                             continue;
                         NetOutgoingMessage stateMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
                         uint lastStateAcked = stateManager.GetLastStateAcked(c);
-                        if (lastStateAcked == 0)// || forceFullState)
-                        {
-                            int length = state.WriteStateMessage(stateMessage);
-                            //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
-                        }
-                        else
-                        {
-                            stateMessage.Write((byte)NetMessage.StateUpdate);
-                            GameStateDelta delta = stateManager.GetDelta(c, _lastState);
-                            delta.WriteDelta(stateMessage);
-                            //LogManager.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
-                        }
+
+                        stateMessage.Write((byte)NetMessage.StateUpdate);
+                        GameStateDelta delta = stateManager.GetDelta(c, _lastState);
+                        delta.WriteDelta(stateMessage);
 
                         IoCManager.Resolve<ISS14NetServer>().SendMessage(stateMessage, c, NetDeliveryMethod.Unreliable);
                     }
@@ -746,7 +735,6 @@ namespace SS14.Server
         public void SendChangeTile(int x, int y, Tile newTile)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);

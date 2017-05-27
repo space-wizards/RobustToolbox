@@ -7,6 +7,13 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - worktop_single
+    drawdepth: Tables
+
+  - type: Icon
+    icon: worktop_single
+
   - type: BasicInteractable
   - type: BasicMover
   - type: Worktop
@@ -16,3 +23,4 @@
     offsetY: 8
 
   - type: Collidable
+    DebugColor: "#0000FF"

@@ -1,5 +1,5 @@
 - type: entity
-  id: wallLight
+  id: WallLight
   name: Wall Light
   components:
   - type: Transform
@@ -7,11 +7,23 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - wall_light
+
+  - type: Icon
+    icon: wall_light
+
   - type: BasicInteractable
   - type: BasicMover
   - type: WallMounted
-  - type: Light
-    startState: On
+  - type: PointLight
+    lightoffsetx: 0
+    lightoffsety: 0
+    lightradius: 1024
+    lightColorR: 220
+    lightColorG: 220
+    lightColorB: 198
+    mask: whitemask
 
 - type: entity
   id: flashlight
@@ -22,6 +34,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: flashlight
+
+  - type: Icon
+    icon: flashlight
 
   - type: BasicInteractable
   - type: BasicMover
@@ -38,5 +54,8 @@
   - type: Damageable
     maxHealth: 20
 
-  - type: Light
-    startState: Off
+  - type: FlashLight
+    lightradius: 512
+    lightColorR: 180
+    lightColorG: 180
+    lightColorB: 140

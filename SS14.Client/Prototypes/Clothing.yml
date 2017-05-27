@@ -8,6 +8,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: armour
+
+  - type: Icon
+    icon: armour
 
   - type: BasicInteractable
   - type: BasicMover
@@ -34,6 +38,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_jumpsuit
+    notWornSprite: jumpsuit
+
+  - type: Icon
+    icon: player_jumpsuit
 
   - type: BasicInteractable
   - type: BasicMover
@@ -54,6 +62,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_jumpsuit_security
+    notWornSprite: janitorsuit
+
+  - type: Icon
+    icon: player_jumpsuit_security
 
   - type: BasicInteractable
   - type: BasicMover
@@ -74,6 +86,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_jumpsuit_gray
+    notWornSprite: janitorsuit
+
+  - type: Icon
+    icon: janitorsuit
 
   - type: BasicInteractable
   - type: BasicMover
@@ -94,6 +110,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_jumpsuit_gray
+    notWornSprite: biosuit
+
+  - type: Icon
+    icon: biosuit
 
   - type: BasicInteractable
   - type: BasicMover
@@ -119,6 +139,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: gloves_surgical
+
+  - type: Icon
+    icon: gloves_surgical
 
   - type: BasicInteractable
   - type: BasicMover
@@ -139,6 +163,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: medshoes
+
+  - type: Icon
+    icon: medshoes
 
   - type: BasicInteractable
   - type: BasicMover
@@ -159,6 +187,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: surgicalmask
+
+  - type: Icon
+    icon: surgicalmask
 
   - type: BasicInteractable
   - type: BasicMover
@@ -179,6 +211,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: surgicalgown
+
+  - type: Icon
+    icon: surgicalgown
 
   - type: BasicInteractable
   - type: BasicMover
@@ -225,6 +261,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: bluegloves
+
+  - type: Icon
+    icon: bluegloves
 
   - type: BasicInteractable
   - type: BasicMover
@@ -245,6 +285,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: galoshes
+
+  - type: Icon
+    icon: galoshes
 
   - type: BasicInteractable
   - type: BasicMover
@@ -265,6 +309,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: shoes
+
+  - type: Icon
+    icon: shoes
 
   - type: BasicInteractable
   - type: BasicMover

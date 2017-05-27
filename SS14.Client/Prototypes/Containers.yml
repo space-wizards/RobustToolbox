@@ -7,6 +7,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: toolbox_r
+
+  - type: Icon
+    icon: toolbox_r
 
   - type: BasicInteractable
   - type: BasicMover

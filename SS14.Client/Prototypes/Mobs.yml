@@ -9,6 +9,9 @@
   - type: AnimatedSprite
     sprite: player
 
+  - type: Icon
+    icon: player
+
   - type: BasicInteractable
   - type: BasicMover
   - type: HumanEquipment
@@ -26,5 +29,3 @@
 
   - type: EntityStats
   - type: Hitbox
-    sizeX: 25
-    sizeY: 25

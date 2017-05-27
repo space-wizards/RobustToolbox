@@ -6,10 +6,20 @@
   - type: Velocity
   - type: Direction
   - type: Clickable
-  - type: SpriteComponent
+  - type: Sprite
+    drawdepth: FloorPlaceable
+    sprites:
+    - door_ew
+    - door_ewo
+
+  - type: Icon
+    icon: door_ew
+
   - type: BasicInteractable
   - type: BasicMover
   - type: Collidable
+    TweakAABBTop: 63
+
   - type: BasicDoor
     openSprite: door_ewo
     closedSprite: door_ew

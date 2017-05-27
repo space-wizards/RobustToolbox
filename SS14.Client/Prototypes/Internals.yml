@@ -8,6 +8,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWormSprite: breather
+
+  - type: Icon
+    icon: breather
 
   - type: BasicInteractable
   - type: BasicMover
@@ -18,3 +22,5 @@
 
   - type: Equippable
     wearloc: Mask
+
+  - type: EntityStats

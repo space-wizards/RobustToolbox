@@ -7,14 +7,14 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - locker_closed
+    - locker_open
+
+  - type: Icon
+    icon: locker_closed
+
   - type: BasicInteractable
   - type: BasicMover
   - type: Collidable
-  - type: Physics
-    mass: 5
-
-  - type: BasicDoor
-    openSprite: locker_open
-    closedSprite: locker_closed
-    openOnBump: false
-    autoCloseInteral: 0
+    TweakAABBTop: 48

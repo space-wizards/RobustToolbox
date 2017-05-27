@@ -8,6 +8,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: bluebucket
+
+  - type: Icon
+    icon: bluebucket
 
   - type: BasicInteractable
   - type: BasicMover
@@ -29,6 +33,10 @@
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
+    notWornSprite: wetfloorsign
+
+  - type: Icon
+    icon: wetfloorsign
 
   - type: BasicInteractable
   - type: BasicMover

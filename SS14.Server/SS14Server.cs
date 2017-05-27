@@ -508,7 +508,9 @@ namespace SS14.Server
 
             LoadSettings();
 
-            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            prototypeManager.Resync();
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);

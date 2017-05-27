@@ -16,6 +16,7 @@ using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
+using SS14.Shared.ContentLoader;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -56,11 +57,7 @@ namespace SS14.Client
 
             ShowSplashScreen();
 
-            var assemblies = new List<Assembly>();
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
-            assemblies.Add(Assembly.GetExecutingAssembly());
-
-            IoCManager.AddAssemblies(assemblies);
+            LoadAssemblies();
 
             _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
             _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
@@ -75,7 +72,9 @@ namespace SS14.Client
             CleanupSplashScreen();
 
             //Initialization of private members
-            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            prototypeManager.Resync();
             _networkManager = IoCManager.Resolve<INetworkManager>();
             _netGrapher = IoCManager.Resolve<INetworkGrapher>();
             _stateManager = IoCManager.Resolve<IStateManager>();
@@ -100,6 +99,53 @@ namespace SS14.Client
             _networkManager.Disconnect();
             CluwneLib.Terminate();
             LogManager.Log("GameController terminated.");
+        }
+
+        private void LoadAssemblies()
+        {
+            var assemblies = new List<Assembly>(2);
+            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
+            assemblies.Add(Assembly.GetExecutingAssembly());
+            IoCManager.AddAssemblies(assemblies);
+
+            assemblies.Clear();
+
+            // So we can't actually access this until IoC has loaded the initial assemblies. Yay.
+            var loader = IoCManager.Resolve<IContentLoader>();
+            assemblies.Clear();
+
+            // TODO this should be done on connect.
+            // The issue is that due to our giant trucks of shit code.
+            // It'd be extremely hard to integrate correctly.
+            try
+            {
+                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
+                loader.LoadAssembly(contentAssembly);
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
+                System.Console.ResetColor();
+            }
+
+            try
+            {
+                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
+                loader.LoadAssembly(contentAssembly);
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
+                System.Console.ResetColor();
+            }
+
+            IoCManager.AddAssemblies(assemblies);
         }
 
         private void ShowSplashScreen()

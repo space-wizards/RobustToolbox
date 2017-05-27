@@ -204,6 +204,7 @@ namespace SS14.Shared.Prototypes
 
         private void ReloadPrototypeTypes()
         {
+            Clear();
             foreach (var type in IoCManager.ResolveEnumerable<IPrototype>())
             {
                 var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));

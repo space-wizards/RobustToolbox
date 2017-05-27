@@ -97,7 +97,6 @@ namespace SS14.Server.GameObjects
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
-            Console.WriteLine(name);
             Entity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(X, Y));

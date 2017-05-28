@@ -1,15 +1,18 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Particles;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-
+    [IoCTarget]
     public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
+        public override string Name => "ParticleSystem";
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 
         //Notes: The server doesn't actually care about whether the client can't find a particle system when we tell it to add it.
@@ -69,8 +72,10 @@ namespace SS14.Server.GameObjects
                 emitters[name] = active;
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
+            /*
+            TODO: reimplement
             foreach (XElement param in extendedParameters.DescendantNodes())
             {
                 if(param.Name == "ParticleSystem")
@@ -89,6 +94,7 @@ namespace SS14.Server.GameObjects
                         }
                     }
             }
+            */
         }
     }
 }

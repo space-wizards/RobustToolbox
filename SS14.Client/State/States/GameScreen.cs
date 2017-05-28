@@ -421,9 +421,6 @@ namespace SS14.Client.State.States
                 CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 var vp = CluwneLib.WorldViewport;
 
-                // Get nearby lights
-                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
-
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);

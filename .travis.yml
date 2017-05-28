@@ -7,11 +7,6 @@ os:
 - linux
 - osx
 
-addons:
-  apt:
-    packages:
-    - nunit-console
-
 before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
 
@@ -21,5 +16,6 @@ before_script:
 
 script:
 - "xbuild /p:Configuration=Release /p:HEADLESS=1 SpaceStation14.sln"
-- "nunit-console SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
+- "cd packages/NUnit.ConsoleRunner.3.6.1/tools"
+- "mono --debug nunit3-console.exe ../../../SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
 

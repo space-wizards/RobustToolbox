@@ -2,13 +2,16 @@
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class SVarsComponent : Component, ISVarsComponent
     {
+        public override string Name => "SVars";
         public SVarsComponent()
         {
             Family = ComponentFamily.SVars;

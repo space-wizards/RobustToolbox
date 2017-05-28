@@ -93,6 +93,9 @@
     <Reference Include="System.Xml.Linq">
       <Name>System.Xml.Linq</Name>
     </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>..\packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -139,6 +142,7 @@
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
     <Compile Include="Utility\unZipString.cs" />
+    <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
     <Compile Include="NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -153,6 +157,7 @@
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\Exceptions\MissingImplementationException.cs" />
     <Compile Include="IoC\Exceptions\NoPublicConstructorException.cs" />
+    <Compile Include="IoC\Exceptions\InvalidImplementationException.cs" />
     <Compile Include="GameObjects\Component.cs" />
     <Compile Include="GameObjects\ComponentFactory.cs" />
     <Compile Include="GameObjects\ComponentManager.cs" />
@@ -161,9 +166,6 @@
     <Compile Include="GameObjects\EntityManager.cs" />
     <Compile Include="GameObjects\EntityQuery.cs" />
     <Compile Include="GameObjects\EntitySystemManager.cs" />
-    <Compile Include="GameObjects\EntityTemplate.cs" />
-    <Compile Include="GameObjects\EntityTemplateDatabase.cs" />
-    <Compile Include="GameObjects\Enums.cs" />
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="GameObjects\StaticConstants.cs" />
@@ -173,6 +175,7 @@
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="Utility\AppDomainHelpers.cs" />
+    <Compile Include="Utility\AssemblyHelpers.cs" />
     <Compile Include="GameObjects\Component\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Component\Damageable\DamageableComponentState.cs" />
     <Compile Include="GameObjects\Component\Damageable\Health\HealthComponentState.cs" />
@@ -205,6 +208,11 @@
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="GameObjects\ItemFlags.cs" />
     <Compile Include="GameObjects\MarshalComponentParameter.cs" />
+    <Compile Include="GameObjects\Enums.cs" />
+    <Compile Include="Prototypes\IPrototype.cs" />
+    <Compile Include="Prototypes\PrototypeManager.cs" />
+    <Compile Include="Prototypes\EntityPrototype.cs" />
+    <Compile Include="ContentLoader\ContentLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GameObjects\Component\" />
@@ -212,6 +220,9 @@
     <Folder Include="GameObjects\Events\" />
     <Folder Include="GameObjects\Server\" />
     <Folder Include="GO\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>

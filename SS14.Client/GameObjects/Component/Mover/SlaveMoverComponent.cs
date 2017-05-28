@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
@@ -9,8 +10,10 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
+    [IoCTarget]
     public class SlaveMoverComponent : Component
     {
+        public override string Name => "SlaveMover";
         private Entity _master;
 
         public SlaveMoverComponent()
@@ -52,29 +55,7 @@ namespace SS14.Client.GameObjects
 
         private void Translate(Vector2f toPosition)
         {
-            Vector2f delta = toPosition - Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
-
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
-            /*
-            if (delta.X > 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southeast);
-            if (delta.X > 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northeast);
-            if (delta.X < 0 && delta.Y > 0)
-                SetMoveDir(Constants.MoveDirs.southwest);
-            if (delta.X < 0 && delta.Y < 0)
-                SetMoveDir(Constants.MoveDirs.northwest);
-            if (delta.X > 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.east);
-            if (delta.X < 0 && delta.Y == 0)
-                SetMoveDir(Constants.MoveDirs.west);
-            if (delta.Y > 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.south);
-            if (delta.Y < 0 && delta.X == 0)
-                SetMoveDir(Constants.MoveDirs.north);
-             */
-
-            //Owner.Moved();
         }
 
         public override void HandleComponentState(dynamic state)

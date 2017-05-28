@@ -57,22 +57,25 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadBaseResources()
         {
-            Assembly _assembly = Assembly.GetExecutingAssembly();
-            Stream _stream;
+            Assembly assembly = Assembly.GetExecutingAssembly();
 
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf");
-            if (_stream != null)
-                _fonts.Add("base_font", new Font( _stream));
-            _stream = null;
-
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png");
-            if (_stream != null)
+            using(Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf"))
             {
-                Texture nospriteimage = new Texture( _stream);
-                _textures.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite(nospriteimage));
+                if (stream != null)
+                {
+                    _fonts.Add("base_font", new Font(stream));
+                }
             }
-            _stream = null;
+
+            using(Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png"))
+            {
+                if (stream != null)
+                {
+                    Texture nospriteimage = new Texture(stream);
+                    _textures.Add("nosprite", nospriteimage);
+                    _sprites.Add("nosprite", new Sprite(nospriteimage));
+                }
+            }
         }
 
         /// <summary>
@@ -264,7 +267,6 @@ namespace SS14.Client.Resources
             }
             #endregion
 
-            sorted = null;
             zipFile.Close();
             zipFileStream.Close();
             zipFileStream.Dispose();
@@ -428,12 +430,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
 
@@ -452,13 +450,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
@@ -483,14 +476,12 @@ namespace SS14.Client.Resources
         /// </summary>
         private IEnumerable<KeyValuePair<string, Sprite>> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
-
             var loadedSprites = new List<KeyValuePair<string,Sprite>>();
 
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             var memStream = new MemoryStream();
 

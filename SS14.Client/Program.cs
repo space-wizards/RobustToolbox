@@ -11,7 +11,6 @@ namespace SS14.Client
         [STAThread]
         private static void Main()
         {
-            var args = Environment.GetCommandLineArgs();
             GameController GC = new GameController();
         }
     }

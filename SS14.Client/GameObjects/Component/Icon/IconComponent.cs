@@ -2,11 +2,16 @@
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class IconComponent : Component
     {
+        public override string Name => "Icon";
         public Sprite Icon;
 
         public IconComponent()
@@ -14,19 +19,12 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Icon;
         }
 
-        /// <summary>
-        /// Set parameters :)
-        /// </summary>
-        /// <param name="parameter"></param>
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            //base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("icon", out node))
             {
-                case "icon":
-                    var iconName = parameter.GetValue<string>();
-                    SetIcon(iconName);
-                    break;
+                SetIcon(node.AsString());
             }
         }
 

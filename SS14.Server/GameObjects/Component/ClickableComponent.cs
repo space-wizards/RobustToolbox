@@ -1,11 +1,14 @@
 ﻿using Lidgren.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class ClickableComponent : Component
     {
+        public override string Name => "Clickable";
         public ClickableComponent()
         {
             Family = ComponentFamily.Click;

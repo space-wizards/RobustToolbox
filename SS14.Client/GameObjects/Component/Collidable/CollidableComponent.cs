@@ -7,12 +7,18 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Collidable;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class CollidableComponent : Component, ICollidable
     {
+        public override string Name => "Collidable";
+
         public SFML.Graphics.Color DebugColor { get; set; }
 
         private bool collisionEnabled = true;
@@ -164,31 +170,38 @@ namespace SS14.Client.GameObjects
         /// Settable params:
         /// TweakAABB - Vector4
         /// </summary>
-        /// <param name="parameter"></param>
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            YamlNode node;
+            if (mapping.TryGetValue("tweakAABB", out node))
             {
-                case "TweakAABB":
-                    TweakAABB = parameter.GetValue<Vector4f>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBtop":
-                    tweakAABB.X = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBright":
-                    tweakAABB.Y = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBbottom":
-                    tweakAABB.Z = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "TweakAABBleft":
-                    tweakAABB.W = parameter.GetValue<float>() / IoCManager.Resolve<IMapManager>().TileSize;
-                    break;
-                case "DebugColor":
-                    DebugColor = ColorUtils.FromHex(parameter.GetValue<string>(), Color.Red);
-                    break;
+                TweakAABB = node.AsVector4f() / mapManager.TileSize;
+            }
+
+            if (mapping.TryGetValue("TweakAABBtop", out node))
+            {
+                tweakAABB.X = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.TryGetValue("TweakAABBright", out node))
+            {
+                tweakAABB.Y = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.TryGetValue("TweakAABBbottom", out node))
+            {
+                tweakAABB.Z = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.TryGetValue("TweakAABBleft", out node))
+            {
+                tweakAABB.W = node.AsFloat() / mapManager.TileSize;
+            }
+
+            if (mapping.TryGetValue("DebugColor", out node))
+            {
+                DebugColor = ColorUtils.FromHex(node.AsString(), Color.Red);
             }
         }
 

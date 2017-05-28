@@ -28,7 +28,6 @@ namespace SS14.Server.HelperClasses
         {
             float x = message.ReadFloat();
             float y = message.ReadFloat();
-            float z = message.ReadFloat();
             position = new Vector2f(x, y);
             rotation = message.ReadFloat();
             time = 0;

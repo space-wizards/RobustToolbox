@@ -14,8 +14,10 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
     {
+        public override string Name => "ParticleSystem";
         #region Variables.
         private Dictionary<string, ParticleSystem> _emitters = new Dictionary<string, ParticleSystem>(); // List of particle emitters.
         protected IRenderableComponent master;

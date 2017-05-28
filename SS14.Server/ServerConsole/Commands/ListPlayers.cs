@@ -17,7 +17,7 @@ namespace SS14.Server.ServerConsole.Commands
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Current Players:\n");
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("{0,20}{1,16}{2,12}{3, 14}{4,9}", "Player Name", "IP Address", "Status", "Playing Time",
+            Console.WriteLine("{0,20}{1,16}{2,12}{3,14}{4,9}", "Player Name", "IP Address", "Status", "Playing Time",
                               "Ping");
             foreach (IPlayerSession p in players)
             {

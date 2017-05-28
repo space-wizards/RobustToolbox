@@ -1,13 +1,18 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class DamageableComponent : Component
     {
+        public override string Name => "Damageable";
         private readonly List<DamageHistoryItem> _damageHistory = new List<DamageHistoryItem>();
         public float currentHealth = 100;
 
@@ -115,19 +120,18 @@ namespace SS14.Server.GameObjects
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("maxHealth", out node))
             {
-                case "MaxHealth":
-                    maxHealth = parameter.GetValue<int>();
-                    currentHealth = maxHealth;
-                    break;
-                case "CurrentHealth":
-                    currentHealth = parameter.GetValue<int>();
-                    break;
+                maxHealth = node.AsInt();
+                currentHealth = maxHealth;
+            }
+
+            if (mapping.TryGetValue("currentHealth", out node))
+            {
+                currentHealth = node.AsInt();
             }
         }
 

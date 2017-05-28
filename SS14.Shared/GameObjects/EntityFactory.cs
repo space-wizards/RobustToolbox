@@ -1,37 +1,38 @@
-﻿namespace SS14.Shared.GameObjects
+﻿using SS14.Shared.Prototypes;
+
+namespace SS14.Shared.GameObjects
 {
     public class EntityFactory
     {
-        private readonly EntityTemplateDatabase _entityTemplateDatabase;
+        private readonly IPrototypeManager PrototypeManager;
+        private readonly EntityManager Manager;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public EntityFactory(EntityTemplateDatabase entityTemplateDatabase)
+        public EntityFactory(IPrototypeManager prototypeManager, EntityManager manager)
         {
-            _entityTemplateDatabase = entityTemplateDatabase;
+            PrototypeManager = prototypeManager;
+            Manager = manager;
         }
 
         /// <summary>
         /// Creates an entity from a template pulled from the entitydb
         /// </summary>
-        /// <param name="entityTemplateName">name of the template</param>
+        /// <param name="prototypeName">name of the template</param>
         /// <returns>Created Entity</returns>
-        public Entity CreateEntity(string entityTemplateName)
+        public Entity CreateEntity(string prototypeName)
         {
-            EntityTemplate template = _entityTemplateDatabase.GetTemplate(entityTemplateName);
+            EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             //TODO: Throw exception here
-            return template == null ? null : template.CreateEntity();
+            return prototype.CreateEntity(Manager);
         }
 
         /// <summary>
         /// Retrieves template with given name from db
         /// </summary>
-        /// <param name="entityTemplateName">name of the template</param>
+        /// <param name="prototypeName">name of the template</param>
         /// <returns>Template</returns>
-        public EntityTemplate GetTemplate(string entityTemplateName)
-        {
-            return _entityTemplateDatabase.GetTemplate(entityTemplateName);
-        }
+        public EntityPrototype GetTemplate(string prototypeName) => PrototypeManager.Index<EntityPrototype>(prototypeName);
     }
 }

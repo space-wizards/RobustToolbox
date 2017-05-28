@@ -7,7 +7,7 @@ namespace SS14.Server.ServerConsole.Commands
 {
     public class RestartServer : IConsoleCommand
     {
-        public string Command => "restartserver";
+        public string Command => "restart";
         public string Description => "Restarts the server";
         public string Help => "Restarts the server.";
 
@@ -20,13 +20,13 @@ namespace SS14.Server.ServerConsole.Commands
     // Crashes for some reason.
     public class StopServer : IConsoleCommand
     {
-        public string Command => "stop";
+        public string Command => "shutdown";
         public string Description => "Stops the server";
         public string Help => "Stops the server brutally without telling clients.";
 
         public  void Execute(params string[] args)
         {
-            Environment.Exit(0);
+            IoCManager.Resolve<ISS14Server>().Shutdown();
         }
     }
 }

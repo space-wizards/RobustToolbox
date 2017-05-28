@@ -3,12 +3,15 @@ using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Transform;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Server.GameObjects
 {
-    internal class TransformComponent : Component, ITransformComponent
+    [IoCTarget]
+    public class TransformComponent : Component, ITransformComponent
     {
+        public override string Name => "Transform";
         private Vector2f _position = new Vector2f();
         private bool firstState = true;
         public TransformComponent()

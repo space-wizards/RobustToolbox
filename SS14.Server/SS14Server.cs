@@ -22,6 +22,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,7 +43,7 @@ namespace SS14.Server
         private readonly List<float> frameTimes = new List<float>();
 
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
-        private Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
+        private readonly Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
 
         public DateTime Time;
         private bool _active;
@@ -90,9 +91,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            //Init serializer
-            var serializer = IoCManager.Resolve<ISS14Serializer>();
-
             Runlevel = RunLevel.Init;
             _singleton = this;
 
@@ -107,6 +105,9 @@ namespace SS14.Server
             {
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
             }
+
+            // Create log directory if it does not exist yet.
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
             LogManager.Initialize(logPath, configMgr.LogLevel);
 
@@ -307,7 +308,7 @@ namespace SS14.Server
                         LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
                 }
-                UpdateLastSeen(msg);                
+                UpdateLastSeen(msg);
                 IoCManager.Resolve<ISS14NetServer>().Recycle(msg);
             }
         }
@@ -434,9 +435,10 @@ namespace SS14.Server
                             continue;
                         NetOutgoingMessage stateMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
                         uint lastStateAcked = stateManager.GetLastStateAcked(c);
+
                         if (lastStateAcked == 0)// || forceFullState)
                         {
-                            int length = state.WriteStateMessage(stateMessage);
+                            state.WriteStateMessage(stateMessage);
                             //LogManager.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
                         }
                         else
@@ -506,6 +508,9 @@ namespace SS14.Server
 
             LoadSettings();
 
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            prototypeManager.Resync();
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
@@ -746,7 +751,6 @@ namespace SS14.Server
         public void SendChangeTile(int x, int y, Tile newTile)
         {
             NetOutgoingMessage tileMessage = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
             //tileMessage.Write((byte)NetMessage.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);

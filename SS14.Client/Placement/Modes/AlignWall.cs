@@ -28,15 +28,9 @@ namespace SS14.Client.Placement.Modes
 
             var bounds = spriteToDraw.GetLocalBounds();
             var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
-            var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
-                                                 mouseWorld.Y - (spriteSize.Y / 2f),
-                                                 spriteSize.X, spriteSize.Y);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
-
-            //CollisionManager collisionMgr = (CollisionManager)ServiceManager.Singleton.GetService(ClientServiceType.CollisionManager);
-            //if (collisionMgr.IsColliding(spriteRectWorld, true)) validPosition = false;
 
             currentTile = currentMap.GetTileRef(mouseWorld);
 
@@ -52,10 +46,10 @@ namespace SS14.Client.Placement.Modes
 
             var nodes = new List<Vector2f>();
 
-            if (pManager.CurrentTemplate.MountingPoints != null)
+            if (pManager.CurrentPrototype.MountingPoints != null)
             {
                 nodes.AddRange(
-                    pManager.CurrentTemplate.MountingPoints.Select(
+                    pManager.CurrentPrototype.MountingPoints.Select(
                         current => new Vector2f(mouseWorld.X, currentTile.Y + current)));
             }
             else
@@ -69,8 +63,8 @@ namespace SS14.Client.Placement.Modes
                                     orderby (node - mouseWorld).LengthSquared() ascending
                                     select node).First();
 
-            mouseWorld = closestNode + new Vector2f(pManager.CurrentTemplate.PlacementOffset.Key,
-                                                    pManager.CurrentTemplate.PlacementOffset.Value);
+            mouseWorld = closestNode + new Vector2f(pManager.CurrentPrototype.PlacementOffset.X,
+                                                    pManager.CurrentPrototype.PlacementOffset.Y);
             mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 
             var range = pManager.CurrentPermission.Range;

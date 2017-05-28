@@ -24,6 +24,9 @@ namespace SS14.Shared.IoC
         /// </summary>
         public static event AssemblyAddedHandler AssemblyAdded;
 
+        /// <summary>
+        /// Add extra assemblies to IoC's known types.
+        /// </summary>
         public static void AddAssemblies(IEnumerable<Assembly> assemblies)
         {
             foreach (var assembly in assemblies)
@@ -47,6 +50,14 @@ namespace SS14.Shared.IoC
             {
                 AssemblyAdded.Invoke();
             }
+        }
+
+        /// <summary>
+        /// Add extra assemblies to IoC's known types.
+        /// </summary>
+        public static void AddAssemblies(params Assembly[] args)
+        {
+            AddAssemblies(args);
         }
 
         public static void Clear()
@@ -101,6 +112,10 @@ namespace SS14.Shared.IoC
             }
         }
 
+        /// <summary>
+        /// Resolve a static instance of the highest priority implementation of an interface.
+        /// see <see cref="NewType"/> if you want to resolve a NEW instance.
+        /// </summary>
         public static T Resolve<T>() where T: IIoCInterface
         {
             Type type = typeof(T);
@@ -112,13 +127,16 @@ namespace SS14.Shared.IoC
             return (T)Services[type];
         }
 
+        /// <summary>
+        /// Resolves an IoC target's type, not a static instance.
+        /// </summary>
         public static Type ResolveType<T>() where T: IIoCInterface
         {
             return ResolveType(typeof(T));
         }
 
         /// <summary>
-        /// Resolves a type without compile time enforcement.
+        /// Resolves a target's type without compile time enforcement.
         /// Do not use this outside reflection!
         /// </summary>
         public static Type ResolveType(Type type)
@@ -130,6 +148,10 @@ namespace SS14.Shared.IoC
             return ResolveTypes[type];
         }
 
+        /// <summary>
+        /// Resolves an enumerable over all types that implement an interface, regardless of priority.
+        /// The order of these types is completely arbitrary.
+        /// </summary>
         public static IEnumerable<Type> ResolveEnumerable<T>() where T: IIoCInterface
         {
             var type = typeof(T);
@@ -141,6 +163,9 @@ namespace SS14.Shared.IoC
             return ResolveListTypes[type];
         }
 
+        /// <summary>
+        /// Resolves a type and creates a NEW instance.
+        /// </summary>
         public static T NewType<T>(params object[] args) where T: IIoCInterface
         {
             return (T)Activator.CreateInstance(ResolveType<T>(), args);

@@ -1,12 +1,18 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class EquippableComponent : Component
     {
+        public override string Name => "Equippable";
         public EquipmentSlot wearloc;
 
         public Entity currentWearer { get; set; }
@@ -34,15 +40,12 @@ namespace SS14.Server.GameObjects
             return reply;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("wearloc", out node))
             {
-                case "wearloc":
-                    wearloc = (EquipmentSlot) Enum.Parse(typeof (EquipmentSlot), parameter.GetValue<string>());
-                    break;
+                wearloc = node.AsEnum<EquipmentSlot>();
             }
         }
 

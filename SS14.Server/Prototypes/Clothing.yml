@@ -1,0 +1,276 @@
+- type: entity
+  id: Armour
+  name: Armour
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Outer
+
+  - type: EntityStats
+    armor:
+      Piercing: 5
+      Bludgeoning: 5
+      Slashing: 5
+
+- type: entity
+  id: Assistant_Grey
+  name: Grey Jumpsuit
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_jumpsuit
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Inner
+
+- type: entity
+  id: Security_Jumpsuit
+  name: Security Jumpsuit
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_jumpsuit_security
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Inner
+
+- type: entity
+  id: Janitor_Suit
+  name: Janitor Jumpsuit
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_jumpsuit_gray
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Inner
+
+- type: entity
+  id: Biosuit
+  name: Biological Hazard Suit
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_jumpsuit_gray
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Outer
+
+  - type: EntityStats
+    armor:
+      Toxin: 3
+      Shock: 1
+
+- type: entity
+  id: Gloves_Surgical
+  name: Surgical Gloves
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Hands
+
+- type: entity
+  id: Shoes_Medical
+  name: Medical Shoes
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Feet
+
+- type: entity
+  id: Mask_Surgical
+  name: Surgical Mask
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Mask
+
+- type: entity
+  id: Surgicalgown
+  name: Surgical Gown
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Outer
+
+- type: entity
+  id: Helmet
+  name: Helment
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Head
+
+  - type: EntityStats
+    armor:
+      Piercing: 3
+      Bludgeoning: 3
+      Slashing: 3
+
+- type: entity
+  id: BlueGloves
+  name: Blue Gloves
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Hands
+
+- type: entity
+  id: Galoshes
+  name: Galoshes
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Feet
+
+- type: entity
+  id: Shoes
+  name: Shoes
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Feet

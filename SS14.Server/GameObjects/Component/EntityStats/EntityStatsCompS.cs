@@ -2,15 +2,20 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.EntityStats;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class EntityStatsComp : Component
     {
+        public override string Name => "EntityStats";
         private readonly Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
 
         public EntityStatsComp()
@@ -58,15 +63,19 @@ namespace SS14.Server.GameObjects
             base.Update(frameTime);
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            foreach (XElement entityStat in extendedParameters.Descendants("EntityArmor"))
+            YamlNode node;
+            if (mapping.TryGetValue("armor", out node))
             {
-                var type = (DamageType) Enum.Parse(typeof (DamageType), entityStat.Attribute("type").Value, true);
-                //Add check for parsing. Handle exceptions if invalid name.
-                int value = int.Parse(entityStat.Attribute("value").Value); //See comment above.
+                foreach (KeyValuePair<YamlNode, YamlNode> stat in (YamlMappingNode)node)
+                {
+                    var type = stat.Key.AsEnum<DamageType>();
+                    //Add check for parsing. Handle exceptions if invalid name.
+                    int value = stat.Value.AsInt(); //See comment above.
 
-                armorStats[type] = value;
+                    armorStats[type] = value;
+                }
             }
         }
 

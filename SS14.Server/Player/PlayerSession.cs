@@ -8,6 +8,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Server.GameObjects;
 using System;
 
 namespace SS14.Server.Player
@@ -61,12 +62,12 @@ namespace SS14.Server.Player
             //a.attachedClient = connectedClient;
             //Add input component.
             a.AddComponent(ComponentFamily.Input,
-                           _playerManager.server.EntityManager.ComponentFactory.GetComponent("KeyBindingInputComponent"));
+                           _playerManager.server.EntityManager.ComponentFactory.GetComponent<KeyBindingInputComponent>());
             a.AddComponent(ComponentFamily.Mover,
-                           _playerManager.server.EntityManager.ComponentFactory.GetComponent("PlayerInputMoverComponent"));
-            IComponent actorComponent =
-                _playerManager.server.EntityManager.ComponentFactory.GetComponent("BasicActorComponent");
-            actorComponent.SetParameter(new ComponentParameter("playersession", this));
+                           _playerManager.server.EntityManager.ComponentFactory.GetComponent<PlayerInputMoverComponent>());
+            BasicActorComponent actorComponent =
+                _playerManager.server.EntityManager.ComponentFactory.GetComponent<BasicActorComponent>();
+            actorComponent.playerSession = this;
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
             attachedEntity = a;
@@ -188,7 +189,7 @@ namespace SS14.Server.Player
         private void ResetAttachedEntityName()
         {
             if(attachedEntity != null)
-                attachedEntity.Name = attachedEntity.Template.Name;
+                attachedEntity.Name = attachedEntity.Prototype.ID;
         }
 
         public void JoinLobby()

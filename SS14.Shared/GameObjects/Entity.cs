@@ -16,7 +16,7 @@ namespace SS14.Shared.GameObjects
 
         bool Initialized { get; set; }
 
-        EntityTemplate Template { get; set; }
+        EntityPrototype Prototype { get; set; }
         event EntityShutdownEvent OnShutdown;
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace SS14.Shared.GameObjects
         protected IEntityNetworkManager EntityNetworkManager;
 
         public int Uid { get; set; }
-        public EntityTemplate Template { get; set; }
+        public EntityPrototype Prototype { get; set; }
         public string Name { get; set; }
 
         public bool Initialized { get; set; }
@@ -335,7 +335,7 @@ namespace SS14.Shared.GameObjects
                     replies.First(x => x.MessageType == ComponentMessageType.GetDescriptionString).ParamsList[0];
             //If you dont answer with a string then fuck you.
 
-            return Template.Description;
+            return null;
         }
 
         #endregion
@@ -491,7 +491,7 @@ namespace SS14.Shared.GameObjects
             var synchedComponentTypes = state.StateData.SynchedComponentTypes;
             foreach(var t in synchedComponentTypes)
             {
-                if(HasComponent(t.Item1) && GetComponent(t.Item1).GetType().Name != t.Item2)
+                if(HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
                     RemoveComponent(t.Item1);
 
                 if(!HasComponent(t.Item1))
@@ -523,13 +523,13 @@ namespace SS14.Shared.GameObjects
             List<Tuple<ComponentFamily, string>> synchedComponentTypes = _components
                 .Where(t => EntityManager.SynchedComponentTypes.Contains(t.Key))
                 .Select(
-                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.GetType().Name)
+                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.Name)
                 ).ToList();
 
             var es = new EntityState(
                 Uid,
                 compStates,
-                Template.Name,
+                Prototype.ID,
                 Name,
                 synchedComponentTypes);
             return es;

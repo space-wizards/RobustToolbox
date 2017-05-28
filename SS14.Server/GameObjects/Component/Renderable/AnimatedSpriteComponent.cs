@@ -1,16 +1,21 @@
 ﻿using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
+        public override string Name => "AnimatedSprite";
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        public string Name;
+        public string SpriteName;
         private string _currentAnimation;
         public string CurrentAnimation
         {
@@ -52,21 +57,20 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             var masterUid = master != null ? (int?)master.Owner.Uid : null;
-            return new AnimatedSpriteComponentState(Visible, DrawDepth, Name, CurrentAnimation, Loop, masterUid);
+            return new AnimatedSpriteComponentState(Visible, DrawDepth, SpriteName, CurrentAnimation, Loop, masterUid);
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("drawdepth", out node))
             {
-                case "drawdepth":
-                    DrawDepth = (DrawDepth)Enum.Parse(typeof(DrawDepth), parameter.GetValue<string>(), true);
-                    break;
+                DrawDepth = node.AsEnum<DrawDepth>();
+            }
 
-                case "sprite":
-                    Name = parameter.GetValue<string>();
-                    break;
+            if (mapping.TryGetValue("sprite", out node))
+            {
+                SpriteName = node.AsString();
             }
         }
 

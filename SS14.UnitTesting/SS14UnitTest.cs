@@ -52,10 +52,14 @@ namespace SS14.UnitTesting
 
         public SS14UnitTest()
         {
+            // Clear state across tests.
+            IoCManager.Clear();
+
             var assemblies = new List<Assembly>();
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.exe")));
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.exe")));
+            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Shared.dll")));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
@@ -69,6 +73,12 @@ namespace SS14.UnitTesting
             GetResourceManager = IoCManager.Resolve<IResourceManager>();
             InitializeResources();
             #endif
+
+            Init();
+        }
+
+        protected virtual void Init()
+        {
 
         }
 

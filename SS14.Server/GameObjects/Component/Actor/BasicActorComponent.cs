@@ -7,26 +7,15 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class BasicActorComponent : Component, IActorComponent
     {
-        private IPlayerSession playerSession;
+        public override string Name => "BasicActor";
+        public IPlayerSession playerSession { get; internal set; }
 
         public BasicActorComponent()
         {
             Family = ComponentFamily.Actor;
-        }
-
-        public override void SetParameter(ComponentParameter parameter)
-        {
-            switch (parameter.MemberName)
-            {
-                case "playersession": //TODO this shouldnt be a parameter.
-                    playerSession = parameter.GetValue<IPlayerSession>();
-                    break;
-                default:
-                    base.SetParameter(parameter);
-                    break;
-            }
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -54,11 +43,6 @@ namespace SS14.Server.GameObjects
             }
 
             return reply;
-        }
-
-        public IPlayerSession GetPlayerSession()
-        {
-            return playerSession;
         }
     }
 }

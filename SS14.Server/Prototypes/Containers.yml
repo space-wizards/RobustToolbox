@@ -1,0 +1,24 @@
+- type: entity
+  id: Toolbox
+  name: Toolbox
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Clickable
+  - type: Direction
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  - type: Physics
+    mass: 5
+
+  - type: BasicItem
+  # <ItemCapability name="MeleeWeaponCapability">
+  #   <ItemCapabilityParameters>
+  #     <ItemCapabilityParameter name="damageAmount" type="int" value="200" />
+  #     <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
+  #   </ItemCapabilityParameters>
+  # </ItemCapability>

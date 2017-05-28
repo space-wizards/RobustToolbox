@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,6 @@ namespace SS14.Shared.GameObjects
 
     public class EntityManager : IEntityManager
     {
-        private readonly string _componentNamespace;
         protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
@@ -56,27 +56,18 @@ namespace SS14.Shared.GameObjects
         public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
         {
             EngineType = engineType;
-            switch (EngineType)
-            {
-                case EngineType.Client:
-                    _componentNamespace = "SS14.Client.GameObjects";
-                    break;
-                case EngineType.Server:
-                    _componentNamespace = "SS14.Server.GameObjects";
-                    break;
-            }
             EntitySystemManager = new EntitySystemManager(this);
-            ComponentFactory = new ComponentFactory(this, _componentNamespace);
+            ComponentFactory = new ComponentFactory(this);
             EntityNetworkManager = entityNetworkManager;
             ComponentManager = new ComponentManager();
-            EntityTemplateDatabase = new EntityTemplateDatabase(this);
-            EntityFactory = new EntityFactory(EntityTemplateDatabase);
+            PrototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            EntityFactory = new EntityFactory(PrototypeManager, this);
             Clock = 0f;
             Initialize();
         }
 
         protected EntityFactory EntityFactory { get; private set; }
-        public EntityTemplateDatabase EntityTemplateDatabase { get; private set; }
+        public IPrototypeManager PrototypeManager { get; private set; }
         public EntitySystemManager EntitySystemManager { get; private set; }
         public bool Initialized { get; protected set; }
         public float Clock { get; private set; }
@@ -291,7 +282,7 @@ namespace SS14.Shared.GameObjects
                 if (!Initialized)
                     e.Initialize();
                 if (!e.HasComponent(ComponentFamily.SVars))
-                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVarsComponent"));
+                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVars"));
             }
             return e;
         }
@@ -349,7 +340,9 @@ namespace SS14.Shared.GameObjects
                 ProcessMsgBuffer();
                 IncomingEntityMessage emsg = ProcessNetMessage(msg);
                 if (!_entities.ContainsKey(emsg.Uid))
+                {
                     MessageBuffer.Enqueue(emsg);
+                }
                 else
                     _entities[emsg.Uid].HandleNetworkMessage(emsg);
             }

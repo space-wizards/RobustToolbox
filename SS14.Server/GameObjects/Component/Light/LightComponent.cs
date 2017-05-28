@@ -3,12 +3,17 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class LightComponent : Component
     {
+        public override string Name => "Light";
         private int _colorB = 200;
         private int _colorG = 200;
         private int _colorR = 200;
@@ -20,24 +25,27 @@ namespace SS14.Server.GameObjects
             Family = ComponentFamily.Light;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("startState", out node))
             {
-                case "startState":
-                    _state = (LightState) Enum.Parse(typeof (LightState), parameter.GetValue<string>(), true);
-                    break;
-                case "lightColorR":
-                    _colorR = int.Parse(parameter.GetValue<string>());
-                    break;
-                case "lightColorG":
-                    _colorG = int.Parse(parameter.GetValue<string>());
-                    break;
-                case "lightColorB":
-                    _colorB = int.Parse(parameter.GetValue<string>());
-                    break;
+                _state = node.AsEnum<LightState>();
+            }
+
+            if (mapping.TryGetValue("lightColorR", out node))
+            {
+                _colorR = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("lightColorG", out node))
+            {
+                _colorG = node.AsInt();
+            }
+
+            if (mapping.TryGetValue("lightColorB", out node))
+            {
+                _colorB = node.AsInt();
             }
         }
 

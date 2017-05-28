@@ -99,7 +99,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             //We can drop either a specific item from any inventory location or any item from a hand
             var item = args.Item;
 
-            var holdingHand = InventoryLocation.None;
+            InventoryLocation holdingHand;
             if (item != null)
             {
                 holdingHand = actorHands.GetHand(item);

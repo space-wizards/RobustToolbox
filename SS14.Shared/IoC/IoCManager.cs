@@ -28,18 +28,15 @@ namespace SS14.Shared.IoC
         {
             foreach (var assembly in assemblies)
             {
-
                 try
                 {
                     ServiceTypes.AddRange(assembly.GetTypes());
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    // now look at ex.LoaderExceptions - this is an Exception[], so:
-                    foreach (Exception inner in ex.LoaderExceptions)
-                    {
-                        throw inner;
-                    }
+                    throw new AggregateException(
+                        string.Format("One or more exceptions occured while trying to load types from assembly {0}", assembly.FullName),
+                        ex.LoaderExceptions);
                 }
 
             }

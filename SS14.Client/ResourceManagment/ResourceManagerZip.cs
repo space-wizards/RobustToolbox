@@ -57,22 +57,25 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadBaseResources()
         {
-            Assembly _assembly = Assembly.GetExecutingAssembly();
-            Stream _stream;
+            Assembly assembly = Assembly.GetExecutingAssembly();
 
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf");
-            if (_stream != null)
-                _fonts.Add("base_font", new Font( _stream));
-            _stream = null;
-
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png");
-            if (_stream != null)
+            using(Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf"))
             {
-                Texture nospriteimage = new Texture( _stream);
-                _textures.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite(nospriteimage));
-            }
-            _stream = null;
+                if (stream != null)
+                {
+                    _fonts.Add("base_font", new Font(stream));
+                }
+            };
+
+            using(Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png"))
+            {
+                if (stream != null)
+                {
+                    Texture nospriteimage = new Texture(stream);
+                    _textures.Add("nosprite", nospriteimage);
+                    _sprites.Add("nosprite", new Sprite(nospriteimage));
+                }
+            };
         }
 
         /// <summary>
@@ -264,7 +267,6 @@ namespace SS14.Client.Resources
             }
             #endregion
 
-            sorted = null;
             zipFile.Close();
             zipFileStream.Close();
             zipFileStream.Dispose();

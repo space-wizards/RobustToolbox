@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
 using SS14.Shared;
@@ -26,8 +27,8 @@ namespace SS14.Client.Interfaces.UserInterface
         /// Remove focus, but only if the target is currently focused.
         /// </summary>
         void RemoveFocus(IGuiComponent target);
-        void Update(float frameTime);
-        void Render();
+        void Update(FrameEventArgs e);
+        void Render(FrameEventArgs e);
 
         void ToggleMoveMode();
 

@@ -68,6 +68,14 @@ namespace SS14.Client.UserInterface.Components
             RebuildList();
         }
 
+        /// <summary>
+        /// Removes all items from the listbox
+        /// </summary>
+        public void ClearItems() {
+            _contentStrings.Clear();
+            RebuildList();
+        }
+
         public void RemoveItem(string str)
         {
             if (!_contentStrings.Contains(str)) return;

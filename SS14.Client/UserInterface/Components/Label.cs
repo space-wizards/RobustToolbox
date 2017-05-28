@@ -26,19 +26,30 @@ namespace SS14.Client.UserInterface.Components
         public TextSprite Text;
 
 
+        public Label(string text, string font, uint size, IResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+            Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font), size) { Color = Color.Black };
+            Update(0);
+        }
+
         public Label(string text, string font, IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;
-
             Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font)) {Color = Color.Black};
-
             Update(0);
+        }
+
+        public uint FontSize
+        {
+            get => Text.FontSize;
+            set => Text.FontSize = value;
         }
 
         public Color TextColor 
         {
-            get { return Text.Color; }
-            set { Text.Color = value;}
+            get => Text.Color;
+            set => Text.Color = value;
         }
 
         public bool DrawBorder { get; set; }

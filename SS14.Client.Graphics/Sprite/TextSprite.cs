@@ -19,8 +19,21 @@ namespace SS14.Client.Graphics.Sprite
         /// <summary>
         /// Creates a TextSprite
         /// </summary>
-        /// <param name=""> Label of TextSprite </param>
-        /// <param name="p2">   </param>
+        /// <param name="Label"> Label of TextSprite </param>
+        /// <param name="text"> Text to display </param>
+        /// <param name="font"> Font to use when displaying Text </param>
+        /// <param name="font"> Size of the font to use </param>
+        public TextSprite(string Label, string text, Font font, uint size)
+        {
+            this.Label = Label;
+            _textSprite = new Text(text, font, size);
+        }
+
+        /// <summary>
+        /// Creates a TextSprite
+        /// </summary>
+        /// <param name="Label"> Label of TextSprite </param>
+        /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
         public TextSprite(string Label, string text, Font font)
         {
@@ -100,59 +113,33 @@ namespace SS14.Client.Graphics.Sprite
 
         public bool Shadowed
         {
-            get
-            {
-                return _shadowed;
-            }
-            set
-            {
-                this._shadowed = value;
-            }
+            get => _shadowed;
+            set => _shadowed = value;
         }
 
         public uint FontSize
         {
-            get { return _textSprite.CharacterSize; }
-            set { _textSprite.CharacterSize = value; }
+            get => _textSprite.CharacterSize;
+            set => _textSprite.CharacterSize = value;
         }
 
         public Color ShadowColor
         {
-            get
-            {
-                return _shadowColor;
-            }
-            set
-            {
-                this._shadowColor = value;
-            }
+            get => _shadowColor;
+            set => this._shadowColor = value;
         }
 
         public string Text
         {
-            get
-            {
-                return _textSprite.DisplayedString;
-            }
-            set
-            {
-                _textSprite.DisplayedString = value;
-            }
+            get => _textSprite.DisplayedString;
+            set => _textSprite.DisplayedString = value;
         }
 
         public Vector2i Position;
 
-        public int Width
-        {
-            get { return (int)_textSprite.GetLocalBounds().Width; }
-        }
-
-        public int Height
-        {
-            // FIXME take into account newlines.
-            get { return (int)_textSprite.CharacterSize; }
-        }
-
+        public int Width => (int)_textSprite.GetLocalBounds().Width;
+        // FIXME take into account newlines.
+        public int Height => (int)_textSprite.CharacterSize;
         #endregion Accessors
     }
 }

@@ -27,6 +27,9 @@ namespace SS14.Client.UserInterface.Components
             _resourceManager = resourceManager;
             checkbox = _resourceManager.GetSprite("checkbox0");
             checkboxCheck = _resourceManager.GetSprite("checkbox1");
+
+            ClientArea = new IntRect(Position, 
+                new SFML.System.Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));
             Update(0);
 
         }

@@ -148,7 +148,7 @@ namespace SS14.Client.State.States
             var bounds = _ticketBg.GetLocalBounds();
             _ticketBg.SetTransformToRect(new IntRect(0, (int)(CluwneLib.Screen.Size.Y / 2f - bounds.Height / 2f), (int)bounds.Width, (int)bounds.Height));
             _ticketBg.Draw();
-            UserInterfaceManager.Render();
+            UserInterfaceManager.Render(e);
         }
 
         public void FormResize()
@@ -293,7 +293,7 @@ namespace SS14.Client.State.States
         public void Update(FrameEventArgs e)
         {
             _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
-            UserInterfaceManager.Update(e.FrameDeltaTime);
+            UserInterfaceManager.Update(e);
         }
 
         #endregion

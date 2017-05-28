@@ -11,7 +11,7 @@ namespace SS14.Client.Interfaces.State
     {
         IState CurrentState { get; }
         void RequestStateChange<T>() where T : IState;
-        void Update(FrameEventArgs args);
+        void Update(FrameEventArgs e);
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
         void MouseUp(MouseButtonEventArgs e);

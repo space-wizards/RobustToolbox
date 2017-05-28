@@ -1,5 +1,6 @@
 ﻿using SS14.Client.Interfaces.Configuration;
 using SFML.Window;
+using System;
 using System.IO;
 using System.Xml.Serialization;
 using SS14.Shared.IoC;
@@ -19,14 +20,13 @@ namespace SS14.Client.Configuration
             if (File.Exists(configFile))
             {
                 _configFile = configFile;
-                var configLoader = new XmlSerializer(typeof (PlayerConfiguration));
+                var configLoader = new XmlSerializer(typeof(PlayerConfiguration));
                 StreamReader configReader = File.OpenText(configFile);
-                var config = (PlayerConfiguration) configLoader.Deserialize(configReader);
+                var config = (PlayerConfiguration)configLoader.Deserialize(configReader);
                 configReader.Close();
                 Configuration = config;
 
-                config.ResourcePack=SS14.Shared.Utility.PlatformTools.SanePath(config.ResourcePack);
-
+                config.ResourcePack = SS14.Shared.Utility.PlatformTools.SanePath(config.ResourcePack);
             }
             else
             {
@@ -126,7 +126,6 @@ namespace SS14.Client.Configuration
             return Configuration.MessageLogging;
         }
 
-
         public bool GetSimulateLatency()
         {
             return Configuration.SimulateLatency;
@@ -167,7 +166,7 @@ namespace SS14.Client.Configuration
             return Configuration.Interpolation;
         }
 
-        #endregion
+        #endregion IConfigurationManager Members
 
         private void Save()
         {
@@ -177,7 +176,7 @@ namespace SS14.Client.Configuration
             }
             else
             {
-                var configSaver = new XmlSerializer(typeof (PlayerConfiguration));
+                var configSaver = new XmlSerializer(typeof(PlayerConfiguration));
                 StreamWriter configWriter = File.CreateText(_configFile);
                 configSaver.Serialize(configWriter, Configuration);
                 configWriter.Flush();

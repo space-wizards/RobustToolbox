@@ -424,7 +424,7 @@ namespace SS14.Client.State.States
         public void Render(FrameEventArgs e)
         {
             _background.Draw();
-            UserInterfaceManager.Render();
+            UserInterfaceManager.Render(e);
         }
 
         public void FormResize()

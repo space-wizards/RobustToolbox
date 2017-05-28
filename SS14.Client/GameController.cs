@@ -194,12 +194,11 @@ namespace SS14.Client
 
         private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
-
             _networkManager.UpdateNetwork();
             _stateManager.Update(e);
 
-            _userInterfaceManager.Update(e.FrameDeltaTime);
-            _userInterfaceManager.Render();
+            _userInterfaceManager.Update(e);
+            _userInterfaceManager.Render(e);
 
             _netGrapher.Update();
         }

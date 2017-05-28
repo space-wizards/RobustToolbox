@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.ContentLoader;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Log;
 
 namespace SS14.Shared.GameObjects
 {
@@ -256,6 +257,7 @@ namespace SS14.Shared.GameObjects
                     // Ignore nonexistant ones.
                     // This is kind of inefficient but we'll do the sanity on prototype creation
                     // Once the dependency injection stack is fixed.
+                    LogManager.Log(string.Format("Unable to load prototype component. UnknowComponentException occured for componentKey `{0}`", componentData.Key));
                     continue;
                 }
                 component.LoadParameters(componentData.Value);

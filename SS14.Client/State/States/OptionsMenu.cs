@@ -142,7 +142,7 @@ namespace SS14.Client.State.States
                                                   select v;
 
             if (!modes.Any())
-                new Exception("No available video modes");
+                throw new Exception("No available video modes");
 
             foreach (VideoMode vm in modes)
             {

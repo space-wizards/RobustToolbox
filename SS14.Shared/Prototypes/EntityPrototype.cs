@@ -145,7 +145,7 @@ namespace SS14.Shared.GameObjects
             if (mapping.Children.TryGetValue(new YamlScalarNode("nodes"), out node))
             {
                 MountingPoints = new List<int>();
-                foreach (YamlScalarNode point in (YamlSequenceNode)node)
+                foreach (YamlScalarNode point in ((YamlSequenceNode)node).Cast<YamlScalarNode>())
                 {
                     MountingPoints.Add(point.AsInt());
                 }
@@ -276,12 +276,9 @@ namespace SS14.Shared.GameObjects
             if (components.TryGetValue("Icon", out ಠ_ಠ))
             {
                 YamlNode ಥ_ಥ;
-                if (ಠ_ಠ.TryGetValue("icon", out ಥ_ಥ))
+                if (ಠ_ಠ.TryGetValue("icon", out ಥ_ಥ) && ಥ_ಥ is YamlScalarNode)
                 {
-                    if (ಥ_ಥ is YamlScalarNode)
-                    {
-                        return new ComponentParameter[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
-                    }
+                    return new ComponentParameter[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
                 }
             }
             return new ComponentParameter[0];

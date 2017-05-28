@@ -1,4 +1,5 @@
 using SS14.Shared.IoC;
+using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
 using System;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Runtime.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Prototypes
@@ -65,7 +67,7 @@ namespace SS14.Shared.Prototypes
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public class PrototypeAttribute : Attribute
     {
-        private string type;
+        private readonly string type;
         public string Type => type;
         public PrototypeAttribute(string type)
         {
@@ -76,11 +78,11 @@ namespace SS14.Shared.Prototypes
     [IoCTarget]
     public class PrototypeManager : IPrototypeManager
     {
-        private Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         #region IPrototypeManager members
-        private Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
-        private Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
+        private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
+        private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T: class, IPrototype
         {
@@ -210,12 +212,12 @@ namespace SS14.Shared.Prototypes
                 var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
                 if (attribute == null)
                 {
-                    throw new Exception(string.Format("IPrototype implementor {0} does not have a PrototypeAttribute to give it a type.", type));
+                    throw new InvalidImplementationException(type, typeof(IPrototype), "No " + nameof(PrototypeAttribute) + " to give it a type string.");
                 }
 
                 if (prototypeTypes.ContainsKey(attribute.Type))
                 {
-                    throw new Exception(string.Format("Duplicate prototype type ID on {0}: {1}. Current: {2}", type, attribute.Type, prototypeTypes[attribute.Type]));
+                    throw new InvalidImplementationException(type, typeof(IPrototype), string.Format("Duplicate prototype type ID: {0}. Current: {1}", attribute.Type, prototypeTypes[attribute.Type]));
                 }
 
                 prototypeTypes[attribute.Type] = type;
@@ -242,9 +244,10 @@ namespace SS14.Shared.Prototypes
                 var prototype = (IPrototype)Activator.CreateInstance(prototypeType);
                 prototype.LoadFrom(node);
                 prototypes[prototypeType].Add(prototype);
-                if (prototype is IIndexedPrototype)
+                var indexedPrototype = prototype as IIndexedPrototype;
+                if (indexedPrototype != null)
                 {
-                    var id = ((IIndexedPrototype)prototype).ID;
+                    var id = indexedPrototype.ID;
                     if (indexedPrototypes[prototypeType].ContainsKey(id))
                     {
                         throw new PrototypeLoadException(string.Format("Duplicate ID: '{0}'", id));
@@ -255,21 +258,40 @@ namespace SS14.Shared.Prototypes
         }
     }
 
+    [Serializable]
     public class PrototypeLoadException : Exception
     {
         public PrototypeLoadException() {}
         public PrototypeLoadException(string message) : base(message) {}
         public PrototypeLoadException(string message, Exception inner) : base(message, inner) {}
+
+        public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context) {}
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+        }
     }
 
+    [Serializable]
     public class UnknowPrototypeException : Exception
     {
+        public override string Message => "Unknown prototype: " + Prototype;
         public readonly string Prototype;
         public UnknowPrototypeException(string prototype)
         {
             Prototype = prototype;
         }
 
-        public override string Message => "Unknown prototype: " + Prototype;
+        public UnknowPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+            Prototype = (string)info.GetValue("prototype", typeof(string));
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue("prototype", Prototype, typeof(string));
+        }
     }
 }

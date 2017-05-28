@@ -10,7 +10,6 @@ namespace SS14.Shared.GameObjects
     public class ComponentFactory
     {
         private readonly Dictionary<string, Type> componentNames;
-        private readonly Dictionary<string, Type> componentTypes;
 
         public ComponentFactory(EntityManager entityManager)
         {
@@ -33,7 +32,7 @@ namespace SS14.Shared.GameObjects
         {
             if (componentType.GetInterface(nameof(IComponent)) == null)
             {
-                throw new Exception(string.Format("{0} does not implement {1}", componentType, nameof(IComponent)));
+                throw new ArgumentException(string.Format("{0} does not implement {1}", componentType, nameof(IComponent)), nameof(componentType));
             }
             return (IComponent) Activator.CreateInstance(componentType);
         }
@@ -77,7 +76,7 @@ namespace SS14.Shared.GameObjects
 
                 if (componentNames.ContainsKey(instance.Name))
                 {
-                    throw new Exception("Duplicate Name for component: " + instance.Name);
+                    throw new InvalidImplementationException(type, typeof(IComponent), "Duplicate Name for component: " + instance.Name);
                 }
 
                 componentNames[instance.Name] = type;

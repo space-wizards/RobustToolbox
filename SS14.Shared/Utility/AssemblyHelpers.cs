@@ -9,7 +9,7 @@ namespace SS14.Shared.Utility
         public static Assembly RelativeLoadFrom(string path)
         {
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetCallingAssembly().CodeBase).LocalPath);
-            return Assembly.LoadFrom(Path.Combine(assemblyDir, path));
+            return Assembly.Load(Path.Combine(assemblyDir, path));
         }
     }
 }

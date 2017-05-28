@@ -99,9 +99,9 @@ namespace SS14.Client.State.States
 
         private void UpdateGUIPosition()
         {
-            var SECTION_PADDING = 50;
-            var OPTION_PADDING = 10;
-            var LABEL_PADDING = 3;
+            const int SECTION_PADDING = 50;
+            const int OPTION_PADDING = 10;
+            const int LABEL_PADDING = 3;
 
 
             _lblTitle.Position = new Vector2i(_boundingArea.Left + 10, _boundingArea.Top + 10);

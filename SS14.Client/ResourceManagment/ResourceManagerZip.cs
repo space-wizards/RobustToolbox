@@ -65,7 +65,7 @@ namespace SS14.Client.Resources
                 {
                     _fonts.Add("base_font", new Font(stream));
                 }
-            };
+            }
 
             using(Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png"))
             {
@@ -75,7 +75,7 @@ namespace SS14.Client.Resources
                     _textures.Add("nosprite", nospriteimage);
                     _sprites.Add("nosprite", new Sprite(nospriteimage));
                 }
-            };
+            }
         }
 
         /// <summary>

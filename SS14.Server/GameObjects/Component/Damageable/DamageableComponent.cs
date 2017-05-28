@@ -125,13 +125,13 @@ namespace SS14.Server.GameObjects
             YamlNode node;
             if (mapping.TryGetValue("maxHealth", out node))
             {
-                currentHealth = maxHealth = node.AsInt();
+                maxHealth = node.AsInt();
+                currentHealth = maxHealth;
             }
 
             if (mapping.TryGetValue("currentHealth", out node))
             {
                 currentHealth = node.AsInt();
-
             }
         }
 

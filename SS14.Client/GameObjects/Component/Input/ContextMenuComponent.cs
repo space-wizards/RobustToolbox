@@ -4,6 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using YamlDotNet.RepresentationModel;
@@ -67,7 +68,7 @@ namespace SS14.Client.GameObjects
             YamlNode node;
             if (mapping.TryGetValue("entries", out node))
             {
-                foreach (YamlMappingNode entry in (YamlSequenceNode)node)
+                foreach (YamlMappingNode entry in ((YamlSequenceNode)node).Cast<YamlMappingNode>())
                 {
                     string name = "NULL";
                     string icon = "NULL";

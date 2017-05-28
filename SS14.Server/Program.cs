@@ -39,18 +39,6 @@ namespace SS14.Server
             server.MainLoop();
         }
 
-        private static CommandLineArgs processArgs(string[] args)
-        {
-            var options = new CommandLineArgs();
-            bool result = CommandLine.Parser.Default.ParseArguments(args, options);
-            if (!result)
-            {
-                Environment.Exit(0);
-            }
-
-            return options;
-        }
-
         private static void LoadAssemblies()
         {
             var assemblies = new List<Assembly>(2);

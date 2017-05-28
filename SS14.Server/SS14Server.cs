@@ -43,7 +43,7 @@ namespace SS14.Server
         private readonly List<float> frameTimes = new List<float>();
 
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
-        private Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
+        private readonly Dictionary<NetConnection, DateTime> _clientListLastSeen = new Dictionary<NetConnection, DateTime>();
 
         public DateTime Time;
         private bool _active;

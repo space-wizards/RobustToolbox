@@ -11,20 +11,14 @@ namespace SS14.Shared.Serialization
 {
     public class SS14Serializer
     {
-        public static bool _initialized = false;
-
         public SS14Serializer()
         {
-            if (!_initialized)
-            {
-                Serializer.Initialize(
-                    (from asm in AppDomain.CurrentDomain.GetAssemblies()
-                     from type in asm.GetTypes()
-                     where typeof(INetSerializableType).IsAssignableFrom(type)
-                     select type
-                    ), new[] { new SfmlTypeSerializer() });
-                _initialized = true;
-            }
+            Serializer.Initialize(
+                (from asm in AppDomain.CurrentDomain.GetAssemblies()
+                    from type in asm.GetTypes()
+                    where typeof(INetSerializableType).IsAssignableFrom(type)
+                    select type
+                ), new[] { new SfmlTypeSerializer() });
         }
 
         public void Serialize(Stream stream, object obj)

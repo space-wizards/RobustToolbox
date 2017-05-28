@@ -57,7 +57,7 @@ namespace SS14.Shared.IoC
         /// </summary>
         public static void AddAssemblies(params Assembly[] args)
         {
-            AddAssemblies(args);
+            AddAssemblies(args.AsEnumerable());
         }
 
         public static void Clear()

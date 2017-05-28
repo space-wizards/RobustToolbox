@@ -22,16 +22,11 @@ namespace SS14.Server.GameObjects
         /// <param name="message"></param>
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            bool shouldMove = true;
+            var velComp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
+            var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
 
-            if (shouldMove)
-            {
-                var velComp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
-
-                velComp.Velocity = new Vector2f((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
-                transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
-            }
+            velComp.Velocity = new Vector2f((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
+            transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
         }
     }
 }

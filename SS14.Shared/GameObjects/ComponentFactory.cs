@@ -33,7 +33,7 @@ namespace SS14.Shared.GameObjects
         {
             if (componentType.GetInterface(nameof(IComponent)) == null)
             {
-                throw new Exception(string.Format("{0} does not implement {1}", nameof(IComponent)));
+                throw new Exception(string.Format("{0} does not implement {1}", componentType, nameof(IComponent)));
             }
             return (IComponent) Activator.CreateInstance(componentType);
         }

@@ -40,7 +40,7 @@ namespace SS14.Shared.ContentLoader
     {
         public IEnumerable<Type> Types => Assemblies.SelectMany((Assembly a) => a.GetTypes());
 
-        private List<Assembly> assemblies = new List<Assembly>();
+        private readonly List<Assembly> assemblies = new List<Assembly>();
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
         public void LoadAssembly(Assembly assembly)

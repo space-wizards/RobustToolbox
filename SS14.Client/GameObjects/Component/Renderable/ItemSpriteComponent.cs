@@ -6,12 +6,17 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class ItemSpriteComponent : SpriteComponent
     {
+        public override string Name => "ItemSprite";
         private bool IsInHand;
         private string basename = "";
         private InventoryLocation holdingHand = InventoryLocation.None;
@@ -136,26 +141,27 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        /// <summary>
-        /// Set parameters :)
-        /// </summary>
-        /// <param name="parameter"></param>
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            //base.SetParameter(parameter);
-            switch (parameter.MemberName)
+            base.LoadParameters(mapping);
+            YamlNode node;
+            if (mapping.TryGetValue("drawdepth", out node))
             {
-                case "drawdepth":
-                    SetDrawDepth((DrawDepth) Enum.Parse(typeof (DrawDepth), parameter.GetValue<string>(), true));
-                    break;
-                case "basename":
-                    basename = parameter.GetValue<string>();
-                    LoadSprites();
-                    break;
-                case "addsprite":
-                    var spriteToAdd = parameter.GetValue<string>();
-                    LoadSprites(spriteToAdd);
-                    break;
+                SetDrawDepth(node.AsEnum<DrawDepth>());
+            }
+
+            if (mapping.TryGetValue("basename", out node))
+            {
+                basename = node.AsString();
+                LoadSprites();
+            }
+
+            if (mapping.TryGetValue("sprites", out node))
+            {
+                foreach (YamlNode spriteNode in (YamlSequenceNode)node)
+                {
+                    LoadSprites(spriteNode.AsString());
+                }
             }
         }
 

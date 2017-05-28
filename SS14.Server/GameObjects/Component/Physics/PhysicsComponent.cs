@@ -1,12 +1,16 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
-
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    internal class PhysicsComponent : Component
+    [IoCTarget]
+    public class PhysicsComponent : Component
     {
+        public override string Name => "Physics";
         public float Mass { get; set; }
 
         public PhysicsComponent()
@@ -40,15 +44,12 @@ namespace SS14.Server.GameObjects
         //    }
         //}
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("mass", out node))
             {
-                case "Mass":
-                    Mass = parameter.GetValue<float>();
-                    break;
+                Mass = node.AsFloat();
             }
         }
 

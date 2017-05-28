@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Damageable;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
@@ -7,8 +8,10 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Basic damageable component only tracks whether its dead or not
     /// </summary>
+    [IoCTarget]
     public class DamageableComponent : Component
     {
+        public override string Name => "Damageable";
         //Used for things that are binary. Either broken or not broken. (windows?)
         protected bool IsDead;
 

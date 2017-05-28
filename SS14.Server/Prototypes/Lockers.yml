@@ -1,0 +1,20 @@
+- type: entity
+  id: Locker
+  name: Locker
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: Sprite
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: Collidable
+  - type: Physics
+    mass: 5
+
+  - type: BasicDoor
+    openSprite: locker_open
+    closedSprite: locker_closed
+    openOnBump: false
+    autoCloseInteral: 0

@@ -10,8 +10,10 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class TransformComponent : Component
     {
+        public override string Name => "Transform";
         private Vector2f _position = new Vector2f();
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;

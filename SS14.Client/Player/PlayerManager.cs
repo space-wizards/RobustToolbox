@@ -57,13 +57,13 @@ namespace SS14.Client.Player
             ControlledEntity = newEntity;
             ControlledEntity.AddComponent(ComponentFamily.Input,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent("KeyBindingInputComponent"));
+                                              GetComponent<KeyBindingInputComponent>());
             ControlledEntity.AddComponent(ComponentFamily.Mover,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent("PlayerInputMoverComponent"));
+                                              GetComponent<PlayerInputMoverComponent>());
             ControlledEntity.AddComponent(ComponentFamily.Collider,
                                           IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent("ColliderComponent"));
+                                              GetComponent<ColliderComponent>());
             ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
         }
 

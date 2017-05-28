@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
@@ -9,8 +10,10 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
+    [IoCTarget]
     public class SlaveMoverComponent : Component
     {
+        public override string Name => "SlaveMover";
         private Entity _master;
 
         public SlaveMoverComponent()

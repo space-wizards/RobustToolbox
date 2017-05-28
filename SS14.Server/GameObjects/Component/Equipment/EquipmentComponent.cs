@@ -5,13 +5,16 @@ using SS14.Server.Interfaces.GameObject;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equipment;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class EquipmentComponent : Component, IEquipmentComponent
     {
+        public override string Name => "Equipment";
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
         public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
 

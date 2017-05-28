@@ -52,7 +52,7 @@ namespace SS14.Client.Placement.Modes
                     mouseWorld, snapToRange);
 
             IOrderedEnumerable<Entity> snapToEntities = from Entity entity in nearbyEntities
-                                                        where entity.Template == pManager.CurrentTemplate
+                                                        where entity.Prototype == pManager.CurrentPrototype
                                                         orderby
                                                             (entity.GetComponent<TransformComponent>(
                                                                 ComponentFamily.Transform).Position - mouseWorld).LengthSquared()

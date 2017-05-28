@@ -15,12 +15,12 @@ namespace SS14.Client.UserInterface.Components
         #region Delegates
 
         public delegate void EntitySpawnSelectPress(
-            EntitySpawnSelectButton sender, EntityTemplate template, string templateName);
+            EntitySpawnSelectButton sender, EntityPrototype template, string templateName);
 
         #endregion
 
         private readonly IResourceManager _resourceManager;
-        private readonly EntityTemplate associatedTemplate;
+        private readonly EntityPrototype associatedTemplate;
         private readonly string associatedTemplateName;
         private readonly Font font;
 
@@ -30,7 +30,7 @@ namespace SS14.Client.UserInterface.Components
         public int fixed_width = -1;
         public bool selected = false;
 
-        public EntitySpawnSelectButton(EntityTemplate entityTemplate, string templateName,
+        public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName,
                                        IResourceManager resourceManager)
         {
             _resourceManager = resourceManager;

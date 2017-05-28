@@ -17,11 +17,18 @@ namespace SS14.Shared.IoC
         // Any laziness.
         private static readonly Dictionary<Type, List<Type>> ResolveListTypes= new Dictionary<Type, List<Type>>();
 
+        public delegate void AssemblyAddedHandler();
+        /// <summary>
+        /// Invoked after new assemblies are loaded into IoC.
+        /// Hook into this if you iterate available IoC targets for an interfaces, Like console commands.
+        /// </summary>
+        public static event AssemblyAddedHandler AssemblyAdded;
+
         public static void AddAssemblies(IEnumerable<Assembly> assemblies)
         {
             foreach (var assembly in assemblies)
             {
-                
+
                 try
                 {
                     ServiceTypes.AddRange(assembly.GetTypes());
@@ -34,10 +41,24 @@ namespace SS14.Shared.IoC
                         throw inner;
                     }
                 }
-                
+
             }
 
             SortTypes();
+
+            if (AssemblyAdded != null)
+            {
+                AssemblyAdded.Invoke();
+            }
+        }
+
+        public static void Clear()
+        {
+            AssemblyAdded = null;
+            Services.Clear();
+            ServiceTypes.Clear();
+            ResolveTypes.Clear();
+            ResolveListTypes.Clear();
         }
 
         /// <summary>

@@ -1,9 +1,13 @@
 ﻿using SS14.Shared;
+using SS14.Shared.IoC;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class HumanEquipmentComponent : EquipmentComponent
     {
+        public override string Name => "HumanEquipment";
         public HumanEquipmentComponent()
         {
             //These shit lines allow the fucking shit to be added to the shit

@@ -1,0 +1,21 @@
+- type: entity
+  id: Glass
+  name: Glass
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - glass
+    - glass_shattered
+    drawdepth: FloorPlaceable
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicLargeObjectComponents
+  - type: Collidable
+    TweakAABBTop: 48
+  - type: Icon
+    icon: glass
+

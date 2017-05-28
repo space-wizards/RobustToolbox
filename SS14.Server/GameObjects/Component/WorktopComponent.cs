@@ -1,12 +1,15 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class WorktopComponent : BasicLargeObjectComponent
     {
+        public override string Name => "Worktop";
         public WorktopComponent()
         {
             Family = ComponentFamily.LargeObject;
@@ -54,11 +57,6 @@ namespace SS14.Server.GameObjects
         /// <param name="actor">The actor entity</param>
         protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
         {
-        }
-
-        public override void SetParameter(ComponentParameter parameter)
-        {
-            base.SetParameter(parameter);
         }
     }
 }

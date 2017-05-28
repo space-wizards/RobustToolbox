@@ -2,12 +2,15 @@
 using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
     //Moves the entity based on input from a Clientside PlayerInputMoverComponent.
+    [IoCTarget]
     public class PlayerInputMoverComponent : Component
     {
+        public override string Name => "PlayerInputMover";
         public PlayerInputMoverComponent()
         {
             Family = ComponentFamily.Mover;

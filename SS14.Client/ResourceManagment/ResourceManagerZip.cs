@@ -327,7 +327,7 @@ namespace SS14.Client.Resources
 
                 Texture loadedImg = new Texture(memStream);
                 TextureCache.Add(ResourceName, loadedImg, opacityMap);
-                _textureToKey.Add(loadedImg, ResourceName);
+                _textureToKey.Add(TextureCache.Textures[ResourceName].Item1, ResourceName);
 
                 memStream.Close();
                 zipStream.Close();

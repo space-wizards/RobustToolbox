@@ -11,7 +11,7 @@ namespace SS14.Shared.Serialization
 {
     public class SS14Serializer
     {
-        public SS14Serializer()
+        static SS14Serializer()
         {
             Serializer.Initialize(
                 (from asm in AppDomain.CurrentDomain.GetAssemblies()

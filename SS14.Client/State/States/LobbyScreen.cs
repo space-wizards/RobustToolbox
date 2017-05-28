@@ -110,7 +110,7 @@ namespace SS14.Client.State.States
                 pos += 20;
             }
 
-            UserInterfaceManager.Render();
+            UserInterfaceManager.Render(e);
         }
 
         public void FormResize()
@@ -127,7 +127,7 @@ namespace SS14.Client.State.States
 
         public void Update(FrameEventArgs e)
         {
-            UserInterfaceManager.Update(e.FrameDeltaTime);
+            UserInterfaceManager.Update(e);
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();

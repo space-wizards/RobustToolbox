@@ -3,6 +3,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GOC;
@@ -458,21 +459,21 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///  Updates the logic of UI components.
         /// </summary>
-        public void Update(float frameTime)
+        public void Update(FrameEventArgs e)
         {
-            if (_console.IsVisible()) _console.Update(frameTime);
+            if (_console.IsVisible()) _console.Update(e.FrameDeltaTime);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = (MousePos - dragOffset);
 
             foreach (IGuiComponent component in _components)
-                component.Update(frameTime);
+                component.Update(e.FrameDeltaTime);
         }
 
         /// <summary>
         ///  Renders UI components to screen.
         /// </summary>
-        public void Render()
+        public void Render(FrameEventArgs e)
         {
             IOrderedEnumerable<IGuiComponent> renderList = from IGuiComponent comp in _components
                                                            where comp.IsVisible()

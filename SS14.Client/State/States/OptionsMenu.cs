@@ -130,9 +130,6 @@ namespace SS14.Client.State.States
             _btnApply.Update(0);
             _btnBack.Position = new Vector2i(_btnApply.Position.X - (_btnBack.ClientArea.Width + OPTION_PADDING), _btnApply.Position.Y);
             _btnBack.Update(0);
-
-
-            UserInterfaceManager.Update(0);
         }
 
         private void PopulateAvailableVideoModes()
@@ -207,7 +204,7 @@ namespace SS14.Client.State.States
             }
 
             _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
-            UserInterfaceManager.Update(e.FrameDeltaTime);
+            UserInterfaceManager.Update(e);
         }
 
         #endregion
@@ -221,7 +218,7 @@ namespace SS14.Client.State.States
 
             _ticketBg.SetTransformToRect(_boundingArea);
             _ticketBg.Draw();
-            UserInterfaceManager.Render();
+            UserInterfaceManager.Render(e);
         }
 
         public void FormResize()

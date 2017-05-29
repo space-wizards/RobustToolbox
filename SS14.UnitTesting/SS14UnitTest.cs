@@ -15,16 +15,11 @@ using System.IO;
 
 namespace SS14.UnitTesting
 {
-
-
     public class SS14UnitTest
     {
-
-
         private FrameEventArgs frameEvent;
         public delegate void EventHandler();
         public static event EventHandler InjectedMethod;
-
 
         #region Accessors
 
@@ -46,9 +41,7 @@ namespace SS14.UnitTesting
             set;
         }
 
-
-        #endregion
-
+        #endregion Accessors
 
         public SS14UnitTest()
         {
@@ -66,20 +59,20 @@ namespace SS14.UnitTesting
 
             //ConfigurationManager setup
             GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-            GetConfigurationManager.Initialize("./player_config.xml");
+            GetConfigurationManager.Initialize(
+                PathHelpers.AssemblyRelativeFile("./player_config.xml", Assembly.GetExecutingAssembly()));
 
-            #if !HEADLESS
+#if !HEADLESS
             //ResourceManager Setup
             GetResourceManager = IoCManager.Resolve<IResourceManager>();
             InitializeResources();
-            #endif
+#endif
 
             Init();
         }
 
         protected virtual void Init()
         {
-
         }
 
         #region Setup
@@ -87,14 +80,13 @@ namespace SS14.UnitTesting
         {
             GetResourceManager.LoadBaseResources();
             GetResourceManager.LoadLocalResources();
-
         }
 
         public void InitializeCluwneLib()
         {
             GetClock = new Clock();
 
-            CluwneLib.Video.SetWindowSize(1280,720);
+            CluwneLib.Video.SetWindowSize(1280, 720);
             CluwneLib.Video.SetFullscreen(false);
             CluwneLib.Video.SetRefreshRate(60);
 
@@ -120,19 +112,18 @@ namespace SS14.UnitTesting
             CluwneLib.Go();
         }
 
-
         public void StartCluwneLibLoop()
         {
             while (CluwneLib.IsRunning)
-           {
-               var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
-               GetClock.Restart();
-               frameEvent = new FrameEventArgs(lastFrameTime);
-               CluwneLib.ClearCurrentRendertarget(Color.Black);
-               CluwneLib.Screen.DispatchEvents();
-               InjectedMethod();
-               CluwneLib.Screen.Display();
-           }
+            {
+                var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
+                GetClock.Restart();
+                frameEvent = new FrameEventArgs(lastFrameTime);
+                CluwneLib.ClearCurrentRendertarget(Color.Black);
+                CluwneLib.Screen.DispatchEvents();
+                InjectedMethod();
+                CluwneLib.Screen.Display();
+            }
         }
 
         private void MainWindowRequestClose(object sender, EventArgs e)
@@ -141,6 +132,6 @@ namespace SS14.UnitTesting
             Application.Exit();
         }
 
-        #endregion
+        #endregion Setup
     }
 }

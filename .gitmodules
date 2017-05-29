@@ -1,0 +1,3 @@
+[submodule "SS14.ServerContent"]
+	path = SS14.ServerContent
+	url = ../../space-wizards/space-station-14-content

@@ -3,6 +3,8 @@ using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using System;
+using System.Threading;
 
 namespace SS14.Server.Network
 {
@@ -42,6 +44,16 @@ namespace SS14.Server.Network
 #endif
 
             return _config;
+        }
+
+        public void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterReceivedCallback(SendOrPostCallback callback)
+        {
+            throw new NotImplementedException();
         }
     }
 }

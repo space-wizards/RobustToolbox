@@ -30,8 +30,7 @@ namespace SS14.Server.Network
 
         public void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients)
         {
-            foreach (NetConnection recipient in recipients)
-                SendMessage(message, recipient, NetDeliveryMethod.ReliableOrdered);
+             SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
         #endregion

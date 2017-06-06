@@ -30,7 +30,8 @@ namespace SS14.Server.Network
 
         public void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients)
         {
-            SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
+            foreach (NetConnection recipient in recipients)
+                SendMessage(message, recipient, NetDeliveryMethod.ReliableOrdered);
         }
 
         #endregion
@@ -46,11 +47,14 @@ namespace SS14.Server.Network
             return _config;
         }
 
-        public void SendMessage(NetOutgoingMessage msg, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel)
+        public void SendMessage(NetOutgoingMessage message, List<NetConnection> recipients, NetDeliveryMethod method, int sequenceChannel)
         {
-            throw new NotImplementedException();
+            foreach (NetConnection recipient in recipients)
+                SendMessage(message, recipient, NetDeliveryMethod.ReliableOrdered, sequenceChannel);
         }
 
+        // acc to Lidgren code comment: Call this to register a callback for when a new message arrives
+        // we aren't currently using it, so it's left as this exception
         public void RegisterReceivedCallback(SendOrPostCallback callback)
         {
             throw new NotImplementedException();

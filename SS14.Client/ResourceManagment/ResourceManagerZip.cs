@@ -323,7 +323,7 @@ namespace SS14.Client.Resources
                 }
 
                 Texture loadedImg = new Texture(memStream);
-                TextureCache.Add(ResourceName, loadedImg, opacityMap);
+                TextureCache.Add(ResourceName, loadedImg, opacityMap, img);
                 _textureToKey.Add(TextureCache.Textures[ResourceName].Item1, ResourceName);
 
                 memStream.Close();

@@ -1,0 +1,10 @@
+diff a/SS14.Client/State/States/GameScreen.cs b/SS14.Client/State/States/GameScreen.cs	(rejected hunks)
+@@ -425,7 +425,7 @@
+                 ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+ 
+                 // Render the lightmap
+-                RenderLightsIntoMap(lights);
++            //    RenderLightsIntoMap(lights);
+                 CalculateSceneBatches(vp);
+ 
+                 //Draw all rendertargets to the scenetarget

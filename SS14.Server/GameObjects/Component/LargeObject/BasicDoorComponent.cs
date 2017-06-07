@@ -3,13 +3,17 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class BasicDoorComponent : BasicLargeObjectComponent
     {
+        public override string Name => "BasicDoor";
         private bool Open;
         private bool autoclose = true;
         private string closedSprite = "";
@@ -174,34 +178,36 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = true;
         }
 
-        public override void SetParameter(ComponentParameter parameter)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            base.SetParameter(parameter);
-
-            switch (parameter.MemberName)
+            YamlNode node;
+            if (mapping.TryGetValue("openSprite", out node))
             {
-                case "OpenSprite":
-                    openSprite = parameter.GetValue<string>();
-                    break;
-                case "ClosedSprite":
-                    closedSprite = parameter.GetValue<string>();
-                    break;
-                case "OpenOnBump":
-                    openonbump = parameter.GetValue<bool>();
-                    break;
-                case "AutoCloseInterval":
-                    var autocloseinterval = parameter.GetValue<int>();
-                    if (autocloseinterval == 0)
-                        autoclose = false;
-                    else
-                    {
-                        autoclose = true;
-                        openLength = autocloseinterval;
-                    }
-                    break;
-                default:
-                    base.SetParameter(parameter);
-                    break;
+                openSprite = node.AsString();
+            }
+
+            if (mapping.TryGetValue("closedSprite", out node))
+            {
+                closedSprite = node.AsString();
+            }
+
+            if (mapping.TryGetValue("openOnBump", out node))
+            {
+                openonbump = node.AsBool();
+            }
+
+            if (mapping.TryGetValue("autoCloseInterval", out node))
+            {
+                var autocloseinterval = node.AsInt();
+                if (autocloseinterval == 0)
+                {
+                    autoclose = false;
+                }
+                else
+                {
+                    autoclose = true;
+                    openLength = autocloseinterval;
+                }
             }
         }
 

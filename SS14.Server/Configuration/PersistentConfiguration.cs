@@ -10,19 +10,18 @@ namespace SS14.Server.Configuration
     public class PersistentConfiguration
     {
         public const int _Version = 1;
-        public Vector2i ConsoleSize = new Vector2i(120, 60);
-        public LogLevel LogLevel = LogLevel.Information;
 
-        public string LogPath = "logs";
-        public string LogFormat = "log_%(date)s-%(time)s.txt";
-        public bool MessageLogging = false;
-
-        public int Port = 1212;
-        public string ServerName = "SS13 Server";
-        public float TickRate = 66;
-        public GameType gameType = GameType.Game;
-        public string serverMapName = "SavedMap";
-        public int serverMaxPlayers = 32;
-        public string serverWelcomeMessage = "Welcome to the server!";
+        public Vector2i ConsoleSize { get; set; } = new Vector2i(120, 60);
+        public LogLevel LogLevel { get; set; } = LogLevel.Information;
+        public string LogPath { get; set; } = "logs";
+        public string LogFormat { get; set; } = "log_%(date)s-%(time)s.txt";
+        public bool MessageLogging { get; set; } = false;
+        public int Port { get; set; } = 1212;
+        public string ServerName { get; set; } = "SS13 Server";
+        public float TickRate { get; set; } = 66;
+        public GameType gameType { get; set; } = GameType.Game;
+        public string serverMapName { get; set; } = "SavedMap";
+        public int serverMaxPlayers { get; set; } = 32;
+        public string serverWelcomeMessage { get; set; } = "Welcome to the server!";
     }
 }

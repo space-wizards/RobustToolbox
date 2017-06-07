@@ -32,8 +32,6 @@ namespace SS14.Client.Placement.Modes
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
-            var spriteSize = CluwneLib.PixelToTile(new Vector2f(spriteBounds.Width, spriteBounds.Height)); // TODO: Doublecheck this.  Use SizeF?
-
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
@@ -54,7 +52,7 @@ namespace SS14.Client.Placement.Modes
                     mouseWorld, snapToRange);
 
             IOrderedEnumerable<Entity> snapToEntities = from Entity entity in nearbyEntities
-                                                        where entity.Template == pManager.CurrentTemplate
+                                                        where entity.Prototype == pManager.CurrentPrototype
                                                         orderby
                                                             (entity.GetComponent<TransformComponent>(
                                                                 ComponentFamily.Transform).Position - mouseWorld).LengthSquared()

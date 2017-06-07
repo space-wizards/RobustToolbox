@@ -2,12 +2,15 @@
 using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
+    [IoCTarget]
     public class PlayerInputMoverComponent : Component
     {
+        public override string Name => "PlayerInputMover";
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
         public const float FastMoveSpeed = Constants.HumanRunSpeed;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.

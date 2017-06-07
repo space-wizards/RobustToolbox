@@ -53,13 +53,13 @@ namespace SS14.Shared.Log
 
                 logStream = new StreamWriter(LogPath, true);
             }
-            catch (IOException)
+            catch (IOException e)
             {
-                Console.WriteLine("Log file ('{0}') in use, unable to open file for logging.", LogPath);
+                Console.WriteLine("Unable to open logfile ('{0}'): {1}", LogPath, e);
                 Environment.Exit(1);
             }
 
-            logStream.AutoFlush = true;
+
             LogOne("LogManager started.", LogLevel.Information);
         }
 

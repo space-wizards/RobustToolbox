@@ -88,7 +88,6 @@ namespace SS14.Client.UserInterface.Components
             if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
             {
                 var comp = (HealthComponent) entity.GetComponent(ComponentFamily.Damageable);
-                float _health = comp.GetHealth();
 
                 healthPct = comp.GetHealth()/comp.GetMaxHealth();
                 if (float.IsNaN(healthPct)) healthPct = 1; //This can happen when the components are not ready yet.

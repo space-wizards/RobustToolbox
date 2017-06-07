@@ -2,32 +2,38 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hands;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class HumanHandsComponent : Component, IInventoryContainer
     {
-        public readonly Dictionary<InventoryLocation, Entity> Handslots;
+        public override string Name => "HumanHands";
+        public readonly Dictionary<InventoryLocation, Entity> Handslots = new Dictionary<InventoryLocation, Entity>();
         public InventoryLocation CurrentHand = InventoryLocation.HandLeft;
 
         public HumanHandsComponent()
         {
             Family = ComponentFamily.Hands;
-            Handslots = new Dictionary<InventoryLocation, Entity>();
+
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
-            Handslots.Clear();
-
-            foreach (XElement param in extendedParameters.Descendants("handSlot"))
+            YamlNode node;
+            if (mapping.TryGetValue("slots", out node))
             {
-                if (param.Attribute("slot") != null)
-                    Handslots.Add((InventoryLocation)Enum.Parse(typeof(InventoryLocation), param.Attribute("slot").Value), null);
+                foreach (YamlNode slot in (YamlSequenceNode)mapping["slots"])
+                {
+                    Handslots.Add(slot.AsEnum<InventoryLocation>(), null);
+                }
             }
         }
 
@@ -111,7 +117,6 @@ namespace SS14.Server.GameObjects
             if (message.ComponentFamily == ComponentFamily.Hands)
             {
                 var type = (ComponentMessageType) message.MessageParameters[0];
-                var replies = new List<ComponentReplyMessage>();
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:

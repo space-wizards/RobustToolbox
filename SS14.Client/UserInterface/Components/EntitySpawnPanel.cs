@@ -8,6 +8,7 @@ using SS14.Client.Placement;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -149,17 +150,20 @@ namespace SS14.Client.UserInterface.Components
             _entityList.components.Clear();
             _entityList.ResetScrollbars();
 
-            List<KeyValuePair<string, EntityTemplate>> templates = (searchStr == null)
-                                                                       ? IoCManager.Resolve<IEntityManagerContainer>()
-                                                                             .EntityManager.EntityTemplateDatabase.
-                                                                             Templates.ToList()
-                                                                       : IoCManager.Resolve<IEntityManagerContainer>()
-                                                                             .EntityManager.EntityTemplateDatabase.
-                                                                             Templates.Where(
-                                                                                 x =>
-                                                                                 x.Value.Name.ToLower().Contains(
-                                                                                     searchStr.ToLower())).ToList();
-
+            var manager = IoCManager.Resolve<IPrototypeManager>();
+            IEnumerable<KeyValuePair<string, EntityPrototype>> templates;
+            if (searchStr == null)
+            {
+                templates = manager.EnumeratePrototypes<EntityPrototype>()
+                                   .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
+            }
+            else
+            {
+                var searchStrLower = searchStr.ToLower();
+                templates = manager.EnumeratePrototypes<EntityPrototype>()
+                                   .Where(p => p.ID.ToLower().Contains(searchStrLower))
+                                   .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
+            }
 
             if (searchStr != null) _clearLabel.BackgroundColor = new SFML.Graphics.Color(211, 211, 211);
 
@@ -182,7 +186,7 @@ namespace SS14.Client.UserInterface.Components
                 ((EntitySpawnSelectButton) curr).fixed_width = maxWidth;
         }
 
-        private void NewButtonClicked(EntitySpawnSelectButton sender, EntityTemplate template, string templateName)
+        private void NewButtonClicked(EntitySpawnSelectButton sender, EntityPrototype template, string templateName)
         {
             if (sender.selected)
             {

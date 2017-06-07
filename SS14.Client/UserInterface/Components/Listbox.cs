@@ -68,6 +68,14 @@ namespace SS14.Client.UserInterface.Components
             RebuildList();
         }
 
+        /// <summary>
+        /// Removes all items from the listbox
+        /// </summary>
+        public void ClearItems() {
+            _contentStrings.Clear();
+            RebuildList();
+        }
+
         public void RemoveItem(string str)
         {
             if (!_contentStrings.Contains(str)) return;
@@ -78,8 +86,8 @@ namespace SS14.Client.UserInterface.Components
 
         public void SelectItem(string str, bool raiseEvent = false)
         {
-        if (str==null)
-            str="";
+            str = str ?? "str";
+
             ListboxItem selLabel = (from a in _dropDown.components
                                     where a.GetType() == typeof (ListboxItem)
                                     let b = (ListboxItem) a
@@ -87,7 +95,9 @@ namespace SS14.Client.UserInterface.Components
                                     select b).FirstOrDefault();
 
             if (selLabel != null)
+            {
                 SetItem(selLabel, raiseEvent);
+            }
         }
 
         private void RebuildList()

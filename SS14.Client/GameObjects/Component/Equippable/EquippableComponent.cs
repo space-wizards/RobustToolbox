@@ -1,11 +1,14 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class EquippableComponent : Component
     {
+        public override string Name => "Equippable";
         /// <summary>
         /// Where is this equipment being worn
         /// </summary>

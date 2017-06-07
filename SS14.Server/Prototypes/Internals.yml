@@ -1,0 +1,20 @@
+- type: entity
+  id: Breather
+  name: Breather
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+
+  - type: BasicInteractable
+  - type: BasicMover
+  - type: BasicItem
+  # <ItemCapability name="BreatherCapability"></ItemCapability>
+  - type: Physics
+    mass: 5
+
+  - type: Equippable
+    wearloc: Mask

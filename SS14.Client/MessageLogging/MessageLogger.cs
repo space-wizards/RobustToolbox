@@ -12,7 +12,7 @@ namespace SS14.Client.MessageLogging
     [IoCTarget]
     public class MessageLogger : IMessageLogger
     {
-        private static Timer _pingTimer;
+        private readonly Timer _pingTimer;
         private readonly MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 

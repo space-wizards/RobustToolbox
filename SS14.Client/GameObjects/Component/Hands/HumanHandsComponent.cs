@@ -9,8 +9,10 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class HumanHandsComponent : Component
     {
+        public override string Name => "HumanHands";
         public Dictionary<InventoryLocation, Entity> HandSlots { get; private set; }
         public InventoryLocation CurrentHand { get; private set; }
 

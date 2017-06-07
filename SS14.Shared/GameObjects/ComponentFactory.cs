@@ -2,22 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.IoC;
+using SS14.Shared.IoC.Exceptions;
 
 namespace SS14.Shared.GameObjects
 {
     public class ComponentFactory
     {
-        private readonly string _componentNamespace;
-        private readonly List<Type> _types;
+        private readonly Dictionary<string, Type> componentNames;
 
-        public ComponentFactory(EntityManager entityManager, string componentNamespace)
+        public ComponentFactory(EntityManager entityManager)
         {
             EntityManager = entityManager;
-            _componentNamespace = componentNamespace;
+            componentNames = new Dictionary<string, Type>();
 
-            Type type = typeof (IComponent);
-            List<Assembly> asses = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            _types = asses.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
+            ReloadComponents();
+
+            IoCManager.AssemblyAdded += ReloadComponents;
         }
 
         public EntityManager EntityManager { get; private set; }
@@ -29,37 +30,68 @@ namespace SS14.Shared.GameObjects
         /// <returns>A Component</returns>
         public IComponent GetComponent(Type componentType)
         {
-            if (componentType.GetInterface("IComponent") == null)
-                return null;
+            if (componentType.GetInterface(nameof(IComponent)) == null)
+            {
+                throw new ArgumentException(string.Format("{0} does not implement {1}", componentType, nameof(IComponent)), nameof(componentType));
+            }
             return (IComponent) Activator.CreateInstance(componentType);
         }
 
-        public T GetComponent<T>() where T:IComponent
+        public T GetComponent<T>() where T: IComponent
         {
-            return (T) Activator.CreateInstance(typeof (T));
+            return (T)Activator.CreateInstance(typeof(T));
         }
 
         /// <summary>
-        /// Gets a new component instantiated of the specified type.
+        /// Gets a new component instantiated of the specified name.
         /// </summary>
-        /// <param name="componentType">type of component to make</param>
+        /// <param name="componentName">name of component to make</param>
         /// <returns>A Component</returns>
-        public IComponent GetComponent(string componentTypeName)
+        public IComponent GetComponent(string componentName)
         {
-            if (componentTypeName == "KeyBindingInputMoverComponent")
-                componentTypeName = "PlayerInputMoverComponent";
-            if (componentTypeName == "NetworkMoverComponent")
-                componentTypeName = "BasicMoverComponent";
-            if (string.IsNullOrWhiteSpace(componentTypeName))
-                return null;
-            string fullName = _componentNamespace + "." + componentTypeName;
-            //Type t = Assembly.GetExecutingAssembly().GetType(componentTypeName); //Get the type
-            Type t = _types.FirstOrDefault(type => type.FullName == fullName);
-            //Type t = Type.GetType(_componentNamespace + "." + componentTypeName); //Get the type
-            if (t == null || t.GetInterface("IComponent") == null)
-                throw new TypeLoadException("Cannot find specified component type: " + fullName);
-
-            return (IComponent) Activator.CreateInstance(t); // Return an instance
+            try
+            {
+                return (IComponent)Activator.CreateInstance(componentNames[componentName]);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnknowComponentException(componentName);
+            }
         }
+
+        public Type GetComponentType(string componentType)
+        {
+            return componentNames[componentType];
+        }
+
+        private void ReloadComponents()
+        {
+            foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
+            {
+                IComponent instance = (IComponent)Activator.CreateInstance(type);
+                if (instance.Name == null || instance.Name == "")
+                {
+                    throw new InvalidImplementationException(type, typeof(IComponent), "Does not have a " + nameof(IComponent.Name));
+                }
+
+                if (componentNames.ContainsKey(instance.Name))
+                {
+                    throw new InvalidImplementationException(type, typeof(IComponent), "Duplicate Name for component: " + instance.Name);
+                }
+
+                componentNames[instance.Name] = type;
+            }
+        }
+    }
+
+    public class UnknowComponentException : Exception
+    {
+        public readonly string ComponentType;
+        public UnknowComponentException(string componentType)
+        {
+            ComponentType = componentType;
+        }
+
+        public override string Message => "Unknown component type: " + ComponentType;
     }
 }

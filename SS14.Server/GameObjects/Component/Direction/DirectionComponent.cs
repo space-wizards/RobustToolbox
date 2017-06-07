@@ -3,13 +3,16 @@ using SS14.Server.Interfaces.GOC;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Direction;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class DirectionComponent : Component, IDirectionComponent
     {
+        public override string Name => "Direction";
         private Direction _lastDeterminedDirection = Direction.South;
 
         public DirectionComponent()

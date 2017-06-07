@@ -8,7 +8,6 @@ using SS14.Client.UserInterface.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.UserInterface.Components.Label;
 
@@ -18,22 +17,25 @@ namespace SS14.Client.State.States
     {
         #region Fields
 
-        private readonly Label _btnApply;
+        private Sprite _background;
+        private Sprite _ticketBg;
 
-        private readonly Sprite _background;
-        private readonly Sprite _ticketBg;
+        private Checkbox _chkFullscreen;
+        private Checkbox _chkVsync;
 
-        private readonly Checkbox _chkFullscreen;
-        private readonly Checkbox _chkVsync;
+        private Label _lblTitle;
+        private Label _lblFullscreen;
+        private Label _lblVsync;
+        private Button _btnBack;
+        private Button _btnApply;
 
-        private readonly Label _lblFullscreen;
-        private readonly Label _lblVsync;
-        private readonly Label _btnMainMenu;
-
-        private readonly Listbox _lstResolution;
+        private Listbox _lstResolution;
     
+        private Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
+        private int _prevScreenHeight;
+        private int _prevScreenWidth;
 
-        private readonly Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
+        private IntRect _boundingArea = new IntRect();
 
         #endregion
 
@@ -44,31 +46,103 @@ namespace SS14.Client.State.States
         public OptionsMenu(IDictionary<Type, object> managers)
             : base(managers)
         {
+            UpdateBounds();
+        }
+
+        private void UpdateBounds()
+        {
+            _boundingArea.Height = 600;
+            _boundingArea.Width = 1000;
+            _boundingArea.Left = 0;
+            _boundingArea.Top = (int)(CluwneLib.Screen.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
+        }
+
+        private void InitalizeGUI()
+        {
             _background = ResourceManager.GetSprite("mainbg");
+            _ticketBg = ResourceManager.GetSprite("ticketoverlay");
+
+            _lblTitle = new Label("Options", "CALIBRI", 48, ResourceManager);
+            UserInterfaceManager.AddComponent(_lblTitle);
 
             _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
+            UserInterfaceManager.AddComponent(_lblFullscreen);
 
             _chkFullscreen = new Checkbox(ResourceManager);
-            _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
             _chkFullscreen.ValueChanged += _chkfullscreen_ValueChanged;
+            _chkfullscreen_ValueChanged(ConfigurationManager.GetFullscreen(), _chkFullscreen);
+            UserInterfaceManager.AddComponent(_chkFullscreen);
 
             _lblVsync = new Label("Vsync", "CALIBRI", ResourceManager);
+            UserInterfaceManager.AddComponent(_lblVsync);
 
             _chkVsync = new Checkbox(ResourceManager);
-            _chkVsync.Value = ConfigurationManager.GetVsync();
             _chkVsync.ValueChanged += _chkvsync_ValueChanged;
+            _chkvsync_ValueChanged(ConfigurationManager.GetVsync(), _chkVsync);
+            UserInterfaceManager.AddComponent(_chkVsync);
 
             _lstResolution = new Listbox(250, 150, ResourceManager);
             _lstResolution.ItemSelected += _reslistbox_ItemSelected;
+            PopulateAvailableVideoModes();
+            UserInterfaceManager.AddComponent(_lstResolution);
 
-            IOrderedEnumerable<VideoMode> modes = from v in SFML.Window.VideoMode.FullscreenModes where 
-                                     (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
-                                         orderby v.Height*v.Width ascending 
-                                         select v;
+            _btnBack = new Button("Back", ResourceManager);
+            _btnBack.Clicked += _backBtn_Clicked;
+            UserInterfaceManager.AddComponent(_btnBack);
+
+            _btnApply = new Button("Apply Settings", ResourceManager);
+            _btnApply.Clicked += _applybtt_Clicked;
+            UserInterfaceManager.AddComponent(_btnApply);
+
+            UpdateGUIPosition();
+        }
+
+        private void UpdateGUIPosition()
+        {
+            const int SECTION_PADDING = 50;
+            const int OPTION_PADDING = 10;
+            const int LABEL_PADDING = 3;
+
+
+            _lblTitle.Position = new Vector2i(_boundingArea.Left + 10, _boundingArea.Top + 10);
+            _lblTitle.Update(0);
+
+            _lstResolution.Position = new Vector2i(_boundingArea.Left + SECTION_PADDING,
+                _lblTitle.Position.Y + _lblTitle.ClientArea.Height + SECTION_PADDING);
+            _lstResolution.Update(0);
+
+            _chkFullscreen.Position = new Vector2i(_lstResolution.Position.X,
+                _lstResolution.Position.Y + _lstResolution.ClientArea.Height + SECTION_PADDING);
+            _chkFullscreen.Update(0);
+            _lblFullscreen.Position = new Vector2i(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + LABEL_PADDING,
+                _chkFullscreen.Position.Y);
+            _lblFullscreen.Update(0);
+
+            _chkVsync.Position = new Vector2i(_lblFullscreen.Position.X,
+                _lblFullscreen.Position.Y + _lblFullscreen.ClientArea.Height + OPTION_PADDING);
+            _chkVsync.Update(0);
+            _lblVsync.Position = new Vector2i(_chkVsync.Position.X + _chkVsync.ClientArea.Width + LABEL_PADDING,
+                _chkVsync.Position.Y);
+            _lblVsync.Update(0);
+
+            _btnApply.Position = new Vector2i((_boundingArea.Left + _boundingArea.Width) - (_btnApply.ClientArea.Width + SECTION_PADDING),
+                                                (_boundingArea.Top + _boundingArea.Height) - (_btnApply.ClientArea.Height + SECTION_PADDING));
+            _btnApply.Update(0);
+            _btnBack.Position = new Vector2i(_btnApply.Position.X - (_btnBack.ClientArea.Width + OPTION_PADDING), _btnApply.Position.Y);
+            _btnBack.Update(0);
+        }
+
+        private void PopulateAvailableVideoModes()
+        {
+            _lstResolution.ClearItems();
+            vmList.Clear();
+            IOrderedEnumerable<VideoMode> modes = from v in SFML.Window.VideoMode.FullscreenModes
+                                                  where (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
+                                                  orderby v.Height * v.Width ascending
+                                                  select v;
 
             if (!modes.Any())
-                //No compatible videomodes at all. It is likely the game is being run on a calculator. TODO handle this.
-                Application.Exit();
+                throw new Exception("No available video modes");
 
             foreach (VideoMode vm in modes)
             {
@@ -81,16 +155,16 @@ namespace SS14.Client.State.States
 
             if (
                  vmList.Any(
-                    x=>
-                    x.Value.Width == CluwneLib.Screen.Size.X && x.Value.Height == CluwneLib.Screen.Size.Y ))
-                    
+                    x =>
+                    x.Value.Width == CluwneLib.Screen.Size.X && x.Value.Height == CluwneLib.Screen.Size.Y))
+
             {
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
                         x.Value.Width == CluwneLib.Screen.Size.X &&
-                        x.Value.Height == CluwneLib.Screen.Size.Y );
-                        
+                        x.Value.Height == CluwneLib.Screen.Size.Y);
+
                 _lstResolution.SelectItem(curr.Key, false);
             }
             else
@@ -103,40 +177,37 @@ namespace SS14.Client.State.States
                         x.Value.Height == CluwneLib.Screen.Size.Y);
                 _lstResolution.SelectItem(curr.Key, false);
             }
-
-            _ticketBg = ResourceManager.GetSprite("ticketoverlay");
-
-            _btnMainMenu = new Label("Main Menu", "CALIBRI", ResourceManager);
-            _btnMainMenu.DrawBorder = true;
-            _btnMainMenu.Clicked += _mainmenubtt_Clicked;
-
-            _btnApply = new Label("Apply", "CALIBRI", ResourceManager);
-            _btnApply.DrawBorder = true;
-            _btnApply.Clicked += _applybtt_Clicked;
-
-
-            _lstResolution.Position = new Vector2i(45 , (int)(CluwneLib.Screen.Size.Y / 2.5f));
-            _lstResolution.Update(0);
-            _chkFullscreen.Position = new Vector2i(_lstResolution.Position.X,
-                                                _lstResolution.Position.Y + _lstResolution.ClientArea.Height + 10);
-            _chkFullscreen.Update(0);
-            _chkVsync.Position = new Vector2i(_chkFullscreen.Position.X,
-                                           _chkFullscreen.Position.Y + _chkFullscreen.ClientArea.Height + 10);
-            _chkVsync.Update(0);
-            _lblFullscreen.Position = new Vector2i(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + 3,
-                                                _chkFullscreen.Position.Y + (int)(_chkFullscreen.ClientArea.Height / 2f) -
-                                                (int)(_lblFullscreen.ClientArea.Height / 2f));
-            _lblFullscreen.Update(0);
-            _lblVsync.Position = new Vector2i(_chkVsync.Position.X + _chkVsync.ClientArea.Width + 3,
-                                           _chkVsync.Position.Y + (int)(_chkVsync.ClientArea.Height / 2f) -
-                                           (int)(_chkVsync.ClientArea.Height / 2f));
-            _lblVsync.Update(0);
-            _btnMainMenu.Position = new Vector2i(_lstResolution.Position.X + 650, _lstResolution.Position.Y);
-            _btnMainMenu.Update(0);
-            _btnApply.Position = new Vector2i(_btnMainMenu.Position.X,
-                                           _btnMainMenu.Position.Y + _btnMainMenu.ClientArea.Height + 5);
-            _btnApply.Update(0);
         }
+
+        #region Startup, Shutdown, Update
+
+        public void Startup()
+        {
+            NetworkManager.Disconnect(); //TODO: Is this really needed here?
+            InitalizeGUI();
+        }
+
+
+        public void Shutdown()
+        {
+            UserInterfaceManager.DisposeAllComponents();
+        }
+
+        public void Update(FrameEventArgs e)
+        {
+            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
+            {
+                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
+                UpdateBounds();
+                UpdateGUIPosition();
+            }
+
+            _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
+            UserInterfaceManager.Update(e);
+        }
+
+        #endregion
 
         #region IState Members
 
@@ -145,10 +216,9 @@ namespace SS14.Client.State.States
             _background.SetTransformToRect(new IntRect(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
             _background.Draw();
 
-            var bounds = _ticketBg.GetLocalBounds();
-            _ticketBg.SetTransformToRect(new IntRect(0, (int)(CluwneLib.Screen.Size.Y / 2f - bounds.Height / 2f), (int)bounds.Width, (int)bounds.Height));
+            _ticketBg.SetTransformToRect(_boundingArea);
             _ticketBg.Draw();
-            UserInterfaceManager.Render();
+            UserInterfaceManager.Render(e);
         }
 
         public void FormResize()
@@ -216,10 +286,7 @@ namespace SS14.Client.State.States
             ConfigurationManager.SetVsync(newValue);
         }
 
-        private void _applybtt_Clicked(Label sender, MouseButtonEventArgs e)
-        {
-            ApplyVideoMode();
-        }
+
 
         private void _chkfullscreen_ValueChanged(bool newValue, Checkbox sender)
         {
@@ -243,59 +310,17 @@ namespace SS14.Client.State.States
 
         private string GetVmString(VideoMode vm)
         {
-            return vm.Width.ToString() + "x" + vm.Height.ToString() + " @ " + vm.BitsPerPixel+ " hz";
+            return string.Format(" - {0} x {1} @ {2}hz", vm.Width.ToString(), vm.Height.ToString(), vm.BitsPerPixel);
         }
 
-        private void _exitbtt_Clicked(Label sender)
+        private void _applybtt_Clicked(Button sender)
         {
-            Environment.Exit(0);
+            ApplyVideoMode();
         }
 
-        private void _mainmenubtt_Clicked(Label sender, MouseButtonEventArgs e)
+        private void _backBtn_Clicked(Button sender)
         {
             StateManager.RequestStateChange<MainScreen>();
         }
-
-        private void _connectbtt_Clicked(Label sender, MouseButtonEventArgs e)
-        {
-        }
-
-        private void _connecttxt_OnSubmit(string text)
-        {
-        }
-
-        #region Startup, Shutdown, Update
-
-        public void Startup()
-        {
-            NetworkManager.Disconnect();
-            UserInterfaceManager.AddComponent(_btnMainMenu);
-            UserInterfaceManager.AddComponent(_lstResolution);
-            UserInterfaceManager.AddComponent(_chkFullscreen);
-            UserInterfaceManager.AddComponent(_chkVsync);
-            UserInterfaceManager.AddComponent(_lblFullscreen);
-            UserInterfaceManager.AddComponent(_lblVsync);
-            UserInterfaceManager.AddComponent(_btnApply);
-        }
-
-
-        public void Shutdown()
-        {
-            UserInterfaceManager.RemoveComponent(_btnMainMenu);
-            UserInterfaceManager.RemoveComponent(_lstResolution);
-            UserInterfaceManager.RemoveComponent(_chkFullscreen);
-            UserInterfaceManager.RemoveComponent(_chkVsync);
-            UserInterfaceManager.RemoveComponent(_lblFullscreen);
-            UserInterfaceManager.RemoveComponent(_lblVsync);
-            UserInterfaceManager.RemoveComponent(_btnApply);
-        }
-
-        public void Update(FrameEventArgs e)
-        {
-            _chkFullscreen.Value = ConfigurationManager.GetFullscreen();
-            UserInterfaceManager.Update(e.FrameDeltaTime);
-        }
-
-        #endregion
     }
 }

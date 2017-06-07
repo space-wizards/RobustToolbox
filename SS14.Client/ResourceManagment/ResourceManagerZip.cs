@@ -10,6 +10,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -38,7 +39,7 @@ namespace SS14.Client.Resources
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>();
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>();
-        private readonly List<string> supportedImageExtensions = new List<string> {".png"};
+        private readonly List<string> supportedImageExtensions = new List<string> { ".png" };
 
         private readonly Dictionary<Texture, string> _textureToKey = new Dictionary<Texture, string>();
         public Dictionary<Texture, string> TextureToKey => _textureToKey;
@@ -57,22 +58,25 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadBaseResources()
         {
-            Assembly _assembly = Assembly.GetExecutingAssembly();
-            Stream _stream;
+            Assembly assembly = Assembly.GetExecutingAssembly();
 
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf");
-            if (_stream != null)
-                _fonts.Add("base_font", new Font( _stream));
-            _stream = null;
-
-            _stream = _assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png");
-            if (_stream != null)
+            using (Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf"))
             {
-                Texture nospriteimage = new Texture( _stream);
-                _textures.Add("nosprite", nospriteimage);
-                _sprites.Add("nosprite", new Sprite(nospriteimage));
+                if (stream != null)
+                {
+                    _fonts.Add("base_font", new Font(stream));
+                }
             }
-            _stream = null;
+
+            using (Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png"))
+            {
+                if (stream != null)
+                {
+                    Texture nospriteimage = new Texture(stream);
+                    _textures.Add("nosprite", nospriteimage);
+                    _sprites.Add("nosprite", new Sprite(nospriteimage));
+                }
+            }
         }
 
         /// <summary>
@@ -92,14 +96,14 @@ namespace SS14.Client.Resources
             string zipPath = path ?? _configurationManager.GetResourcePath();
             string password = pw ?? _configurationManager.GetResourcePassword();
 
-            if (Assembly.GetEntryAssembly().GetName().Name == "SS14.UnitTesting")
+            if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
                 string debugPath = "..\\";
                 debugPath += zipPath;
                 zipPath = debugPath;
             }
 
-
+            zipPath = PathHelpers.ExecutableRelativeFile(zipPath);
 
             if (!File.Exists(zipPath))
                 throw new FileNotFoundException("Specified Zip does not exist: " + zipPath);
@@ -130,7 +134,7 @@ namespace SS14.Client.Resources
             }
 
             sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
-            #endregion
+            #endregion Sort Resource pack
 
             LogManager.Log("Loading resources...");
 
@@ -139,21 +143,20 @@ namespace SS14.Client.Resources
             {
                 switch (current.Key)
                 {
-                    case("textures/"):
+                    case ("textures/"):
 
                         int itemCount = current.Value.Count();
                         Task<Texture>[] taskArray = new Task<Texture>[itemCount];
-                        for(int i = 0; i < itemCount; i++)
+                        for (int i = 0; i < itemCount; i++)
                         {
                             ZipEntry texture = current.Value[i];
 
-                            if(supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
+                            if (supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {
                                 taskArray[i] = Task<Texture>.Factory.StartNew(() =>
                                 {
                                     return LoadTextureFrom(zipFile, texture);
                                 });
-
                             }
                         }
 
@@ -167,7 +170,7 @@ namespace SS14.Client.Resources
 
                         break;
 
-                    case("tai/"): // Tai? HANK HANK
+                    case ("tai/"): // Tai? HANK HANK
                         LogManager.Log("Loading tai...");
                         foreach (ZipEntry tai in current.Value)
                         {
@@ -180,7 +183,7 @@ namespace SS14.Client.Resources
                         }
                         break;
 
-                    case("fonts/"):
+                    case ("fonts/"):
                         LogManager.Log("Loading fonts...");
                         foreach (ZipEntry font in current.Value)
                         {
@@ -194,7 +197,7 @@ namespace SS14.Client.Resources
                         }
                         break;
 
-                    case("particlesystems/"):
+                    case ("particlesystems/"):
                         LogManager.Log("Loading particlesystems...");
                         foreach (ZipEntry particles in current.Value)
                         {
@@ -215,20 +218,19 @@ namespace SS14.Client.Resources
 
                             foreach (ZipEntry shader in current.Value)
                             {
-                                int FirstIndex = shader.Name.IndexOf('/') ;
+                                int FirstIndex = shader.Name.IndexOf('/');
                                 int LastIndex = shader.Name.LastIndexOf('/');
 
                                 if (FirstIndex != LastIndex)  // if the shader pixel/fragment files are in folder/technique group, construct shader and add it to a technique list.
                                 {
-                                    string FolderName = shader.Name.Substring(FirstIndex + 1 , LastIndex - FirstIndex - 1);
+                                    string FolderName = shader.Name.Substring(FirstIndex + 1, LastIndex - FirstIndex - 1);
 
-                                    if(!_TechniqueList.Keys.Contains(FolderName))
+                                    if (!_TechniqueList.Keys.Contains(FolderName))
                                     {
                                         List = new TechniqueList();
                                         List.Name = FolderName;
-                                        _TechniqueList.Add(FolderName,List);
+                                        _TechniqueList.Add(FolderName, List);
                                     }
-
 
                                     LoadedShader = LoadShaderFrom(zipFile, shader);
                                     if (LoadedShader == null) continue;
@@ -240,14 +242,13 @@ namespace SS14.Client.Resources
                                 {
                                     LoadedShader = LoadShaderFrom(zipFile, shader);
                                     if (LoadedShader == null) continue;
-
                                     else _shaders.Add(Path.GetFileNameWithoutExtension(shader.Name).ToLowerInvariant(), LoadedShader);
                                 }
                             }
                             break;
                         }
 
-                    case("animations/"):
+                    case ("animations/"):
                         LogManager.Log("Loading animations...");
                         foreach (ZipEntry animation in current.Value)
                         {
@@ -260,11 +261,9 @@ namespace SS14.Client.Resources
                         }
                         break;
                 }
-
             }
-            #endregion
+            #endregion Load Resources
 
-            sorted = null;
             zipFile.Close();
             zipFileStream.Close();
             zipFileStream.Dispose();
@@ -307,12 +306,12 @@ namespace SS14.Client.Resources
 
                 Image img = new Image(memStream);
                 bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
-                for(int y = 0; y < img.Size.Y; y++)
+                for (int y = 0; y < img.Size.Y; y++)
                 {
-                    for(int x = 0; x < img.Size.X; x++)
+                    for (int x = 0; x < img.Size.X; x++)
                     {
                         Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
-                        if(pColor.A > Limits.ClickthroughLimit)
+                        if (pColor.A > Limits.ClickthroughLimit)
                         {
                             opacityMap[x, y] = true;
                         }
@@ -325,22 +324,20 @@ namespace SS14.Client.Resources
 
                 Texture loadedImg = new Texture(memStream);
                 TextureCache.Add(ResourceName, loadedImg, opacityMap);
-                _textureToKey.Add(loadedImg, ResourceName);
+                _textureToKey.Add(TextureCache.Textures[ResourceName].Item1, ResourceName);
 
                 memStream.Close();
                 zipStream.Close();
                 memStream.Dispose();
                 zipStream.Dispose();
                 return loadedImg;
-
             }
-            catch(Exception I)
+            catch (Exception I)
             {
                 System.Console.WriteLine("Failed to load " + imageEntry.Name + ": " + I.ToString());
             }
 
             return null;
-
         }
 
         /// <summary>
@@ -350,14 +347,12 @@ namespace SS14.Client.Resources
         {
             string ResourceName = Path.GetFileNameWithoutExtension(shaderEntry.Name).ToLowerInvariant();
 
-
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
             GLSLShader loadedShader;
 
             //Will throw exception if missing or wrong password. Handle this.
-
 
             if (shaderEntry.Name.Contains(".frag"))
             {
@@ -381,12 +376,9 @@ namespace SS14.Client.Resources
                 FragmentShader.Dispose();
                 VertexShader = null;
                 FragmentShader = null;
-
             }
             else
                 loadedShader = null;
-
-
 
             zipStream.Close();
             zipStream.Dispose();
@@ -411,7 +403,6 @@ namespace SS14.Client.Resources
 
             Font loadedFont = new Font(memStream);
 
-
             // memStream.Close();
             zipStream.Close();
             // memStream.Dispose();
@@ -428,12 +419,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
 
@@ -452,13 +439,8 @@ namespace SS14.Client.Resources
         /// <returns></returns>
         private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(entry.Name).ToLowerInvariant();
-
-
-            var byteBuffer = new byte[zipBufferSize];
-
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
@@ -483,14 +465,12 @@ namespace SS14.Client.Resources
         /// </summary>
         private IEnumerable<KeyValuePair<string, Sprite>> LoadSpritesFrom(ZipFile zipFile, ZipEntry taiEntry)
         {
-            string ResourceName = Path.GetFileNameWithoutExtension(taiEntry.Name).ToLowerInvariant();
-
-            var loadedSprites = new List<KeyValuePair<string,Sprite>>();
+            var loadedSprites = new List<KeyValuePair<string, Sprite>>();
 
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-            //Will throw exception is missing or wrong password. Handle this.
+            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             var memStream = new MemoryStream();
 
@@ -555,21 +535,20 @@ namespace SS14.Client.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2f((float) Math.Round(offsetX*atlasTex.Size.X, 1),
-                    (float) Math.Round(offsetY*atlasTex.Size.Y, 1));
-                info.Size = new Vector2f((float) Math.Round(sizeX*atlasTex.Size.X, 1),
-                    (float) Math.Round(sizeY*atlasTex.Size.Y, 1));
+                info.Offsets = new Vector2f((float)Math.Round(offsetX * atlasTex.Size.X, 1),
+                    (float)Math.Round(offsetY * atlasTex.Size.Y, 1));
+                info.Size = new Vector2f((float)Math.Round(sizeX * atlasTex.Size.X, 1),
+                    (float)Math.Round(sizeY * atlasTex.Size.Y, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
                     new Sprite(atlasTex, new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
-
             }
 
             return loadedSprites;
         }
-        #endregion
+        #endregion Resource Loading & Disposal
 
         #region Resource Retrieval
 
@@ -684,7 +663,6 @@ namespace SS14.Client.Resources
         {
             if (_TechniqueList.ContainsKey(key)) return _TechniqueList[key];
             else return null;
-
         }
 
         /// <summary>
@@ -717,6 +695,6 @@ namespace SS14.Client.Resources
             else return _fonts["base_font"];
         }
 
-        #endregion
+        #endregion Resource Retrieval
     }
 }

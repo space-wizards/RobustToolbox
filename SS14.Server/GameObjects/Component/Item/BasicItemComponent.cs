@@ -2,15 +2,20 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
+using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class BasicItemComponent : Component
     {
+        public override string Name => "BasicItem";
         private readonly Dictionary<string, ItemCapability> capabilities;
         public InventoryLocation HoldingHand = InventoryLocation.None;
         public bool CanBePickedUp = true;
@@ -278,8 +283,12 @@ namespace SS14.Server.GameObjects
             cap.owner = this;
         }
 
-        public override void HandleExtendedParameters(XElement extendedParameters)
+        public override void LoadParameters(Dictionary<string, YamlNode> yaml)
         {
+            /*
+            TODO: figure something out for this cancerous mess.
+            Yeah it's basically ANOTHER FUCKING COMPONENT SYSTEM built into the item component.
+
             foreach (XElement itemcapability in extendedParameters.Descendants("ItemCapability"))
             {
                 IEnumerable<XElement> Verbs = itemcapability.Descendants("ItemCapabilityVerb");
@@ -305,6 +314,7 @@ namespace SS14.Server.GameObjects
                 }
                 AddCapability(cap);
             }
+            */
         }
 
         public override ComponentState GetComponentState()

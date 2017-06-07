@@ -15,7 +15,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
         private FrameEventArgs _frameEvent;
         private EventArgs _frameEventArgs;
-        private Clock clock;
+        private Clock clock = new Clock();
 
         private StarScroller Stars;
 
@@ -34,7 +34,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
                 CluwneLib.Screen.DispatchEvents();
 
-
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)
                 renderimage.Clear();       //Clear
                 base.GetResourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
@@ -44,7 +43,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 renderimage.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
                 CluwneLib.Screen.Display();
-
             }
         }
     }

@@ -5,7 +5,7 @@ namespace SS14.Shared.IoC
     /// <summary>
     /// Defines priority and whether or not IoC can resolve something to this class.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public class IoCTargetAttribute : Attribute
     {
         private bool disabled = false;

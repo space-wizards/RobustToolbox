@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
@@ -8,8 +9,10 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
+    [IoCTarget]
     public class BasicMoverComponent : Component
     {
+        public override string Name => "BasicMover";
         private bool interpolating;
         private float movedtime; // Amount of time we've been moving since the last update packet.
         private float movetime = 0.05f; // Milliseconds it should take to move.

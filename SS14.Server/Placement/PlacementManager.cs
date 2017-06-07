@@ -151,7 +151,7 @@ namespace SS14.Server.Placement
 
             if(mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if(playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,
@@ -165,7 +165,6 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(Entity mob, int range, string tileType, string alignOption)
         {
-            var mapMgr = (MapManager) IoCManager.Resolve<IMapManager>();
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
             message.Write((byte) NetMessage.PlacementManagerMessage);
             message.Write((byte) PlacementManagerMessage.StartPlacement);
@@ -175,7 +174,7 @@ namespace SS14.Server.Placement
             message.Write(alignOption);
             if (mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if (playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,
@@ -195,7 +194,7 @@ namespace SS14.Server.Placement
 
             if (mob.HasComponent(ComponentFamily.Actor))
             {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).GetPlayerSession().ConnectedClient;
+                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
                 if (playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,

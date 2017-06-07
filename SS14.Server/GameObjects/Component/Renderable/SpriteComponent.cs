@@ -2,12 +2,15 @@
 using SS14.Server.Interfaces.GOC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class SpriteComponent : Component, IRenderableComponent
     {
+        public override string Name => "Sprite";
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         private string _currentBaseName;

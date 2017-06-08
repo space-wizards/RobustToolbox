@@ -2,7 +2,7 @@
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.texture;
+using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
@@ -220,7 +220,7 @@ namespace SS14.Client.GameObjects
             Dictionary<Texture, string> tmp = _resManager.TextureToKey;
             if(!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
-            bool[,] opacityMap = TextureCache.Textures[textureKey].Item2; //get our clickthrough 'map'
+            bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'
             if(!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
             {
                 return false;

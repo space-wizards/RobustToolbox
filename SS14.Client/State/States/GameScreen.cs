@@ -1227,7 +1227,7 @@ namespace SS14.Client.State.States
             Dictionary<Texture, string> tmp = _resManager.TextureToKey;
             if(!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
             string textureKey = tmp[screenShadows.Texture];
-            Image texunflipx = Graphics.texture.TextureCache.Textures[textureKey].Item3;
+            Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
             texunflipx.FlipVertically();
             screenShadows.Texture.Update(texunflipx);
         }

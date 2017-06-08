@@ -19,7 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TextureCache = SS14.Client.Graphics.texture.TextureCache;
+using SS14.Client.Graphics.TexHelpers;
 
 namespace SS14.Client.Resources
 {
@@ -292,7 +292,7 @@ namespace SS14.Client.Resources
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
             if (TextureCache.Textures.ContainsKey(ResourceName))
-                return TextureCache.Textures[ResourceName].Item1;
+                return TextureCache.Textures[ResourceName].Texture;
 
             var byteBuffer = new byte[zipBufferSize];
 
@@ -323,8 +323,9 @@ namespace SS14.Client.Resources
                 }
 
                 Texture loadedImg = new Texture(memStream);
-                TextureCache.Add(ResourceName, loadedImg, opacityMap);
-                _textureToKey.Add(TextureCache.Textures[ResourceName].Item1, ResourceName);
+                TextureInfo tmp = new TextureInfo(loadedImg, img, opacityMap);
+                TextureCache.Add(ResourceName, tmp);
+                _textureToKey.Add(TextureCache.Textures[ResourceName].Texture, ResourceName);
 
                 memStream.Close();
                 zipStream.Close();
@@ -509,7 +510,7 @@ namespace SS14.Client.Resources
                 if (!TextureCache.Textures.ContainsKey(imageName))
                     continue; //Image for this sprite does not exist. Possibly set to defered later.
 
-                Texture atlasTex = TextureCache.Textures[imageName].Item1;
+                Texture atlasTex = TextureCache.Textures[imageName].Texture;
                 //Grab the image for the sprite from the cache.
 
                 var info = new SpriteInfo();

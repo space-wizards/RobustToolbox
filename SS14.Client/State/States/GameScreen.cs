@@ -421,7 +421,10 @@ namespace SS14.Client.State.States
                 CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 var vp = CluwneLib.WorldViewport;
 
+                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+
                 // Render the lightmap
+                RenderLightsIntoMap(lights);
                 CalculateSceneBatches(vp);
 
                 //Draw all rendertargets to the scenetarget
@@ -443,10 +446,10 @@ namespace SS14.Client.State.States
 
                 //Debug.DebugRendertarget(_sceneTarget);
 
-             //   if (bFullVision)
+                if (bFullVision)
                     _sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-           //     else
-           //         LightScene();
+                else
+                    LightScene();
 
 
                 RenderDebug(vp);
@@ -1220,7 +1223,11 @@ namespace SS14.Client.State.States
                 screenShadows.EndDrawing();
             }
 
-            var texunflipx = screenShadows.Texture.CopyToImage();
+            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
+            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
+            if(!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
+            string textureKey = tmp[screenShadows.Texture];
+            Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
             texunflipx.FlipVertically();
             screenShadows.Texture.Update(texunflipx);
         }

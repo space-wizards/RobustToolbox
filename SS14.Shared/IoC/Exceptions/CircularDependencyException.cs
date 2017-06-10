@@ -8,7 +8,7 @@ namespace SS14.Shared.IoC.Exceptions
 {
     public class CircularDependencyException : Exception
     {
-        private readonly Type type;
+        public readonly Type type;
         // TODO: More detailed saying of how the object graph is screwed up.
         public override string Message => string.Format("The type {0} is in a circular dependency reference.", type);
 

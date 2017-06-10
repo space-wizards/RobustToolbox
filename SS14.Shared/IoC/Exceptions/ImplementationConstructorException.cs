@@ -11,9 +11,12 @@ namespace SS14.Shared.IoC.Exceptions
     /// </summary>
     class ImplementationConstructorException : Exception
     {
+        public readonly Type type;
+
         public ImplementationConstructorException(Type type, Exception inner)
             : base(string.Format("{0} threw an exception inside its constructor."), inner)
         {
+            this.type = type;
         }
     }
 }

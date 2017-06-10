@@ -113,6 +113,8 @@
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
+    <Compile Include="IoC\Exceptions\CircularDependencyException.cs" />
+    <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\LogManager.cs" />
@@ -215,10 +217,6 @@
     <Compile Include="ContentLoader\ContentLoader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="GameObjects\Component\" />
-    <Folder Include="GameObjects\EntitySystemMessage\" />
-    <Folder Include="GameObjects\Events\" />
-    <Folder Include="GameObjects\Server\" />
     <Folder Include="GO\" />
   </ItemGroup>
   <ItemGroup>

@@ -1,45 +1,38 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Shared.GameObjects.System
 {
-    public abstract class EntitySystem: IEntityEventSubscriber
+    [IoCTarget(Disabled = true)]
+    public abstract class EntitySystem : IEntityEventSubscriber, IEntitySystem
     {
-        protected EntityManager EntityManager;
-        protected EntitySystemManager EntitySystemManager;
-        protected EntityQuery EntityQuery;
-
-        private bool _initialized;
-        private bool _shutdown;
-
-        public EntitySystem(EntityManager em, EntitySystemManager esm)
-        {
-            EntityManager = em;
-            EntitySystemManager = esm;
-        }
+        protected readonly IEntityManager EntityManager;
+        protected readonly IEntitySystemManager EntitySystemManager;
+        protected IEntityQuery EntityQuery;
 
         public EntitySystem()
-        {}
+        {
+            EntityManager = IoCManager.Resolve<IEntityManager>();
+            EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();
+        }
 
         public virtual void RegisterMessageTypes()
-        {}
+        { }
 
         public virtual void SubscribeEvents()
-        {}
+        { }
 
-        protected List<Entity> RelevantEntities
-        {
-            get { return EntityManager.GetEntities(EntityQuery); }
-        }
+        protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
 
         public virtual void Initialize()
         {
-            _initialized = true;
         }
 
         public virtual void Shutdown()
         {
-            _shutdown = true;
         }
 
         public virtual void HandleNetMessage(EntitySystemMessage sysMsg)
@@ -48,6 +41,6 @@ namespace SS14.Shared.GameObjects.System
         }
 
         public virtual void Update(float frameTime)
-        {}
+        { }
     }
 }

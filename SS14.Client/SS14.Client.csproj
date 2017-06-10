@@ -261,7 +261,6 @@
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
     <Compile Include="Console\QuitCommand.cs" />
-    <Compile Include="GOC\EntityManagerContainer.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="GameTimer\GameTimer.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
@@ -276,7 +275,6 @@
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GOC\GetSVarsEventArgs.cs" />
-    <Compile Include="Interfaces\GOC\IEntityManagerContainer.cs" />
     <Compile Include="Interfaces\GOC\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GOC\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GOC\ISVarsComponent.cs" />

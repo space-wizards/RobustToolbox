@@ -3,6 +3,9 @@ using NetSerializer;
 using SS14.Shared.GameObjects.Exceptions;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,36 +14,14 @@ using System.Reflection;
 
 namespace SS14.Shared.GameObjects
 {
-    public class EntitySystemManager
+    [IoCTarget]
+    public class EntitySystemManager : IEntitySystemManager
     {
-        private readonly Dictionary<Type, EntitySystem> _systems = new Dictionary<Type, EntitySystem>();
-        private readonly Dictionary<Type, EntitySystem> _systemMessageTypes = new Dictionary<Type, EntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _systemMessageTypes = new Dictionary<Type, IEntitySystem>();
         private EntityManager _entityManager;
 
-        private bool _initialized;
-        private bool _shutdown;
-
-        public EntitySystemManager(EntityManager em)
-        {
-            _entityManager = em;
-            IEnumerable<Type> _systemTypes = Assembly.GetEntryAssembly().GetTypes().Where(
-                 t => typeof(EntitySystem).IsAssignableFrom(t));
-
-            foreach (Type type in _systemTypes)
-            {
-                if (type == typeof(EntitySystem))
-                    continue; //Don't run the base EntitySystem.
-                //Force initialization of all systems
-                var instance = (EntitySystem)Activator.CreateInstance(type, _entityManager, this);
-                MethodInfo generic = typeof(EntitySystemManager).GetMethod("AddSystem").MakeGenericMethod(type);
-                generic.Invoke(this, new[] { instance });
-                instance.RegisterMessageTypes();
-                instance.SubscribeEvents();
-
-            }
-        }
-
-        public void RegisterMessageType<T>(EntitySystem regSystem) where T : EntitySystemMessage
+        public void RegisterMessageType<T>(IEntitySystem regSystem) where T : EntitySystemMessage
         {
             Type type = typeof(T);
 
@@ -51,70 +32,78 @@ namespace SS14.Shared.GameObjects
 
             if (_systemMessageTypes.ContainsKey(type)) return;
 
-            if(!_systemMessageTypes.Any(x => x.Key == type && x.Value == regSystem))
+            if (!_systemMessageTypes.Any(x => x.Key == type && x.Value == regSystem))
                 _systemMessageTypes.Add(type, regSystem);
         }
 
-        public T GetEntitySystem<T>() where T : EntitySystem
+        public T GetEntitySystem<T>() where T : IEntitySystem
         {
-            Type type = typeof (T);
+            Type type = typeof(T);
             if (!_systems.ContainsKey(type))
             {
                 throw new MissingImplementationException(type);
             }
 
-            return (T) _systems[type];
+            return (T)_systems[type];
         }
 
         public void Initialize()
         {
-            foreach (EntitySystem system in _systems.Values)
+            foreach (Type type in IoCManager.ResolveEnumerable<IEntitySystem>())
+            {
+                //Force initialization of all systems
+                var instance = (IEntitySystem)Activator.CreateInstance(type);
+                AddSystem(instance);
+                instance.RegisterMessageTypes();
+                instance.SubscribeEvents();
+            }
+            foreach (IEntitySystem system in _systems.Values)
                 system.Initialize();
-            _initialized = true;
         }
 
-        public void AddSystem<T>(T system) where T : EntitySystem
+        private void AddSystem(IEntitySystem system)
         {
-            if (_systems.ContainsKey(typeof (T)))
+            var type = system.GetType();
+            if (_systems.ContainsKey(type))
             {
                 RemoveSystem(system);
             }
 
-            _systems.Add(typeof (T), system);
+            _systems.Add(type, system);
         }
 
-        public void RemoveSystem<T>(T system) where T : EntitySystem
+        private void RemoveSystem(IEntitySystem system)
         {
-            if (_systems.ContainsKey(typeof (T)))
+            var type = system.GetType();
+            if (_systems.ContainsKey(type))
             {
-                _systems[typeof (T)].Shutdown();
-                _systems.Remove(typeof (T));
+                _systems[type].Shutdown();
+                _systems.Remove(type);
             }
         }
 
         public void Shutdown()
         {
-            foreach (var system in _systems)
+            foreach (var system in _systems.Values)
             {
-                RemoveSystem(system.Value);
+                RemoveSystem(system);
             }
-            _shutdown = true;
         }
 
         public void HandleSystemMessage(EntitySystemData sysMsg)
         {
-            Int32 messageLength = sysMsg.message.ReadInt32();
+            int messageLength = sysMsg.message.ReadInt32();
 
             object deserialized = Serializer.Deserialize(new MemoryStream(sysMsg.message.ReadBytes(messageLength)));
 
             if (deserialized is EntitySystemMessage)
-                foreach (KeyValuePair<Type, EntitySystem> current in _systemMessageTypes.Where(x => x.Key == deserialized.GetType()))
+                foreach (KeyValuePair<Type, IEntitySystem> current in _systemMessageTypes.Where(x => x.Key == deserialized.GetType()))
                     current.Value.HandleNetMessage((EntitySystemMessage)deserialized);
         }
 
         public void Update(float frameTime)
         {
-            foreach (EntitySystem system in _systems.Values)
+            foreach (IEntitySystem system in _systems.Values)
             {
                 system.Update(frameTime);
             }
@@ -134,5 +123,5 @@ namespace SS14.Shared.GameObjects
     }
 
     public class InvalidEntitySystemException : Exception
-    {}
+    { }
 }

@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
@@ -8,34 +8,11 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IEntityManager : IIoCInterface
-    {
-        ComponentFactory ComponentFactory { get; }
-        ComponentManager ComponentManager { get; }
-        IEntityNetworkManager EntityNetworkManager { get; set; }
-        EngineType EngineType { get; set; }
-        float Clock { get; }
-
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="eid">entity id</param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        Entity GetEntity(int eid);
-
-        List<Entity> GetEntities(EntityQuery query);
-
-        /// <summary>
-        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
-        /// </summary>
-        /// <param name="e">Entity to remove</param>
-        void DeleteEntity(Entity e);
-
-        bool EntityExists(int eid);
-    }
-
+    [IoCTarget]
     public class EntityManager : IEntityManager
     {
+        protected readonly IEntityNetworkManager entityNetworkManager;
+
         protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
@@ -53,9 +30,8 @@ namespace SS14.Shared.GameObjects
                                                                       ComponentFamily.Mover
                                                                   };
 
-        public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
+        public EntityManager(IEntityNetworkManager entityNetworkManager)
         {
-            EngineType = engineType;
             EntitySystemManager = new EntitySystemManager(this);
             ComponentFactory = new ComponentFactory(this);
             EntityNetworkManager = entityNetworkManager;
@@ -78,10 +54,7 @@ namespace SS14.Shared.GameObjects
         public ComponentManager ComponentManager { get; private set; }
         public IEntityNetworkManager EntityNetworkManager { get; set; }
 
-        //This is a crude method to tell if we're running on the server or on the client. Fuck me.
-        public EngineType EngineType { get; set; }
-
-        #endregion
+        #endregion IEntityManager Members
 
         public void Initialize()
         {
@@ -128,11 +101,11 @@ namespace SS14.Shared.GameObjects
 
         #region ComponentEvents
 
-        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T:EntityEventArgs
+        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T : EntityEventArgs
         {
-            Type eventType = typeof (T);
+            Type eventType = typeof(T);
             //var evh = (ComponentEventHandler<ComponentEventArgs>)Convert.ChangeType(eventHandler, typeof(ComponentEventHandler<ComponentEventArgs>));
-            if(!_eventSubscriptions.ContainsKey(eventType))
+            if (!_eventSubscriptions.ContainsKey(eventType))
             {
                 _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
             }
@@ -151,7 +124,6 @@ namespace SS14.Shared.GameObjects
             {
                 _inverseEventSubscriptions[s].Add(eventType, eventHandler);
             }
-
         }
 
         public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
@@ -206,15 +178,15 @@ namespace SS14.Shared.GameObjects
 
         public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
         {
-            if(_inverseEventSubscriptions.ContainsKey(subscriber))
+            if (_inverseEventSubscriptions.ContainsKey(subscriber))
             {
-                foreach(KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
+                foreach (KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
                 {
                     UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
                 }
             }
         }
-        #endregion
+        #endregion ComponentEvents
 
         #region Entity Management
 
@@ -227,7 +199,6 @@ namespace SS14.Shared.GameObjects
         {
             return _entities.ContainsKey(eid) ? _entities[eid] : null;
         }
-
 
         public List<Entity> GetEntities(EntityQuery query)
         {
@@ -287,7 +258,7 @@ namespace SS14.Shared.GameObjects
             return e;
         }
 
-        #endregion
+        #endregion Entity Management
 
         #region message processing
 
@@ -348,7 +319,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        #endregion
+        #endregion message processing
 
         #region State stuff
 
@@ -382,6 +353,6 @@ namespace SS14.Shared.GameObjects
                 InitializeEntities();
         }
 
-        #endregion
+        #endregion State stuff
     }
 }

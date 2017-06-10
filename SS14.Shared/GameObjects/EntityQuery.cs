@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.GameObjects
 {
-    public class EntityQuery
+    public class EntityQuery : IEntityQuery
     {
         public EntityQuery()
         {

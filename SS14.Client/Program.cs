@@ -17,11 +17,13 @@ namespace SS14.Client
         [STAThread]
         private static void Main()
         {
+            LoadAssemblies();
+
             var controller = IoCManager.Resolve<IGameController>();
-            GameController GC = new GameController();
+            controller.Run();
         }
 
-        private void LoadAssemblies()
+        private static void LoadAssemblies()
         {
             var assemblies = new List<Assembly>(2)
             {

@@ -48,16 +48,28 @@ namespace SS14.Client
 
         #region Constructors
 
-        public GameController()
+        public GameController(IPlayerConfigurationManager configManager,
+                              INetworkGrapher networkGrapher,
+                              INetworkManager networkManager,
+                              IStateManager stateManager,
+                              IUserInterfaceManager userInterfaceManager,
+                              IResourceManager resourceManager)
+        {
+            _configurationManager = configManager;
+            _netGrapher = networkGrapher;
+            _networkManager = networkManager;
+            _stateManager = stateManager;
+            _userInterfaceManager = userInterfaceManager;
+            _resourceManager = resourceManager;
+        }
+
+        public void Run()
         {
             LogManager.Log("Initialising GameController.", LogLevel.Debug);
 
             ShowSplashScreen();
 
-            _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
             _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
-
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
@@ -70,10 +82,6 @@ namespace SS14.Client
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
             prototypeManager.Resync();
-            _networkManager = IoCManager.Resolve<INetworkManager>();
-            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
-            _stateManager = IoCManager.Resolve<IStateManager>();
-            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
             _stateManager.RequestStateChange<MainScreen>();
 

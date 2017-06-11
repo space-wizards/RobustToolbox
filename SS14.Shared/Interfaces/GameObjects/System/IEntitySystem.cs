@@ -1,10 +1,4 @@
-﻿using Lidgren.Network;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SS14.Shared.IoC;
+﻿using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Interfaces.GameObjects.System

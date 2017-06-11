@@ -91,6 +91,8 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
+            EntityManager = IoCManager.Resolve<IEntityManager>();
+
             Runlevel = RunLevel.Init;
             _singleton = this;
 
@@ -125,7 +127,7 @@ namespace SS14.Server
 
         #region ISS13Server Members
 
-        public IEntityManager EntityManager { get; private set; }
+        private readonly IEntityManager EntityManager;
         public RunLevel Runlevel { get; private set; }
 
         public void Restart()
@@ -493,11 +495,7 @@ namespace SS14.Server
             else if (Runlevel == RunLevel.Game)
             {
                 IoCManager.Resolve<IMapManager>().LoadMap(_serverMapName);
-
-                //IoCManager.Resolve<IAtmosManager>().InitializeGasCells();
-
-                EntityManager = new EntityManager(IoCManager.Resolve<ISS14NetServer>());
-
+                EntityManager.Initialize();
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.StartGame();
             }
         }
@@ -539,7 +537,6 @@ namespace SS14.Server
         {
             IoCManager.Resolve<IPlayerManager>().DetachAll();
             EntityManager.Shutdown();
-            EntityManager = null;
             GC.Collect();
         }
 

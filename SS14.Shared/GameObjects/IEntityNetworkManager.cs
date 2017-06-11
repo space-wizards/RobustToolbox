@@ -1,9 +1,10 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IEntityNetworkManager
+    public interface IEntityNetworkManager : IIoCInterface
     {
         NetOutgoingMessage CreateEntityMessage();
 
@@ -15,7 +16,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+        void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
                                          NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                          params object[] messageParams);
 
@@ -41,7 +42,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Intended recipient of the message</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
+        void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
         /// <param name="type">Message type</param>
         /// <param name="list">List of parameter objects</param>
-        void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list);
+        void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessage type, params object[] list);
 
         void SendMessage(NetOutgoingMessage message, NetConnection recipient,
                          NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered);

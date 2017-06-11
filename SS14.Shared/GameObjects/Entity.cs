@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace SS14.Shared.GameObjects
 
         #region constructor
 
-        public Entity(EntityManager entityManager)
+        public Entity(IEntityManager entityManager)
         {
             EntityManager = entityManager;
             EntityNetworkManager = EntityManager.EntityNetworkManager;
@@ -40,7 +41,7 @@ namespace SS14.Shared.GameObjects
                 Initialize();
         }
 
-        public EntityManager EntityManager { get; private set; }
+        protected IEntityManager EntityManager { get; private set; }
 
         #endregion constructor
 
@@ -229,15 +230,15 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        public bool Match(EntityQuery query)
+        public bool Match(IEntityQuery query)
         {
             // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
-            if (!(query.Exclusionset.Any() || query.OneSet.Any() || query.AllSet.Any()))
+            if (!(query.ExclusionSet.Any() || query.OneSet.Any() || query.AllSet.Any()))
                 return true;
 
             //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
             bool matched =
-                !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
+                !(query.ExclusionSet.Any() && query.ExclusionSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
 
             //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
             if (matched && query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom)))
@@ -375,7 +376,7 @@ namespace SS14.Shared.GameObjects
                     RemoveComponent(t.Item1);
 
                 if (!HasComponent(t.Item1))
-                    AddComponent(t.Item1, EntityManager.ComponentFactory.GetComponent(t.Item2));
+                    AddComponent(t.Item1, IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2));
             }
             foreach (ComponentState compState in state.ComponentStates)
             {

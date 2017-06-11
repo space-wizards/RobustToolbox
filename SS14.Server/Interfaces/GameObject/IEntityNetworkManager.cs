@@ -1,10 +1,11 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
+using SS14.Shared.IoC;
 using GO = SS14.Shared.GameObjects;
 
 namespace SS14.Server.Interfaces.GOC
 {
-    public interface IEntityNetworkManager : GO.IEntityNetworkManager
+    public interface IEntityNetworkManager : GO.IEntityNetworkManager, IIoCInterface
     {
         void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered);
 

@@ -24,11 +24,11 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EntityManager = SS14.Client.GameObjects.EntityManager;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State.States
@@ -54,7 +54,7 @@ namespace SS14.Client.State.States
         private RenderImage _baseTarget;
         private Sprite _baseTargetSprite;
 
-        private EntityManager _entityManager;
+        private IEntityManager _entityManager;
 
         private GaussianBlur _gaussianBlur;
 
@@ -152,8 +152,7 @@ namespace SS14.Client.State.States
             //Init serializer
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
-            _entityManager = new EntityManager(NetworkManager);
-            IoCManager.Resolve<IEntityManagerContainer>().EntityManager = _entityManager;
+            _entityManager = IoCManager.Resolve<IEntityManager>();
             IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 

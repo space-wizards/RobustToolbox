@@ -25,7 +25,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        bool Match(EntityQuery query);
+        bool Match(IEntityQuery query);
 
         /// <summary>
         /// Public method to add a component to an entity.
@@ -79,8 +79,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <summary>
         /// Requests Description string from components and returns it. If no component answers, returns default description from template.
         /// </summary>
-        string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
-            ;
+        string GetDescriptionString(); //This needs to go here since it can not be bound to any single component.
 
         /// <summary>
         /// Sends a message to the counterpart component on the server side

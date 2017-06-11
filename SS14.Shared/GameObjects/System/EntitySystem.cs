@@ -1,12 +1,10 @@
-﻿using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.System;
+﻿using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Shared.GameObjects.System
 {
-    [IoCTarget(Disabled = true)]
     public abstract class EntitySystem : IEntityEventSubscriber, IEntitySystem
     {
         protected readonly IEntityManager EntityManager;

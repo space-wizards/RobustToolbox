@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,101 +10,10 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
-    /// <remarks>
-    /// All discoverable implementations of IComponent must override the Name property.
-    /// </remarks>
-    public interface IComponent: IEntityEventSubscriber, IIoCInterface
-    {
-        ComponentFamily Family { get; }
-        Entity Owner { get; set; }
-        Type StateType { get; }
-
-        /// <summary>
-        /// Name that this component is represented with in prototypes and over the network.
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Called when the component is removed from an entity.
-        /// Shuts down the component
-        /// </summary>
-        void OnRemove();
-
-        /// <summary>
-        /// Called when the component gets added to an entity.
-        /// </summary>
-        /// <param name="owner"></param>
-        void OnAdd(Entity owner);
-
-        /// <summary>
-        /// Base method to shut down the component.
-        /// </summary>
-        void Shutdown();
-
-        /// <summary>
-        /// This allows setting of the component's parameters from YAML once it is instantiated.
-        /// This should basically be overridden by every inheriting component, as parameters will be different
-        /// across the board.
-        /// </summary>
-        void LoadParameters(Dictionary<string, YamlNode> mapping);
-
-        /// <summary>
-        /// Main method for updating the component. This is called from a big loop in Componentmanager.
-        /// </summary>
-        /// <param name="frameTime"></param>
-        void Update(float frameTime);
-
-        /// <summary>
-        /// Recieve a message from another component within the owner entity
-        /// </summary>
-        /// <param name="sender">the component that sent the message</param>
-        /// <param name="type">the message type in CGO.MessageType</param>
-        /// <param name="list">parameters list</param>
-        ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                             params object[] list);
-
-        /// <summary>
-        /// Get the component's state for synchronizing
-        /// </summary>
-        /// <returns>ComponentState object</returns>
-        ComponentState GetComponentState();
-
-        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
-        void HandleComponentState(dynamic state);
-
-        /// <summary>
-        /// Handles a message that a client has just instantiated a component
-        /// </summary>
-        /// <param name="netConnection"></param>
-        void HandleInstantiationMessage(NetConnection netConnection);
-
-        /// <summary>
-        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
-        /// If it isn't going to return a current value, it shouldn't return it at all.
-        /// </summary>
-        /// <returns></returns>
-        List<ComponentParameter> GetParameters();
-
-        /// <summary>
-        /// Gets all available SVars for the entity.
-        /// This gets current values, or at least it should...
-        /// </summary>
-        /// <returns>Returns a list of component parameters for marshaling</returns>
-        List<MarshalComponentParameter> GetSVars();
-
-        /// <summary>
-        /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this
-        /// function.
-        /// </summary>
-        /// <param name="sVar">ComponentParameter</param>
-        void SetSVar(MarshalComponentParameter sVar);
-    }
-
     [IoCTarget(Disabled=true)]
-    public class Component : IComponent
+    public abstract class Component : IComponent
     {
-        public virtual string Name { get; }
+        public abstract string Name { get; }
         private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();
 
         public Component()
@@ -113,13 +23,10 @@ namespace SS14.Shared.GameObjects
 
         #region IComponent Members
 
-        public Entity Owner { get; set; }
+        public IEntity Owner { get; private set; }
         public ComponentFamily Family { get; protected set; }
 
-        public virtual Type StateType
-        {
-            get { return null; }
-        }
+        public virtual Type StateType => null;
 
         //Contains SVars -- Server only
 
@@ -132,7 +39,7 @@ namespace SS14.Shared.GameObjects
         {
             Shutdown();
             //Send us to the manager so it knows we're dead.
-            Owner.EntityManager.ComponentManager.RemoveComponent(this);
+            IoCManager.Resolve<IComponentManager>().RemoveComponent(this);
             Owner = null;
         }
 
@@ -140,11 +47,12 @@ namespace SS14.Shared.GameObjects
         /// Called when the component gets added to an entity.
         /// </summary>
         /// <param name="owner"></param>
-        public virtual void OnAdd(Entity owner)
+        public virtual void OnAdd(IEntity owner)
         {
             Owner = owner;
             //Send us to the manager so it knows we're active
-            Owner.EntityManager.ComponentManager.AddComponent(this);
+            var manager = IoCManager.Resolve<IComponentManager>();
+            manager.AddComponent(this);
             if (Owner.Initialized && Owner.EntityManager.EngineType == EngineType.Client)
                 Owner.SendComponentInstantiationMessage(this);
         }
@@ -161,7 +69,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        public virtual void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public virtual void LoadParameters(IDictionary<string, YamlNode> mapping)
         {
         }
 
@@ -239,7 +147,7 @@ namespace SS14.Shared.GameObjects
         /// If it isn't going to return a current value, it shouldn't return it at all.
         /// </summary>
         /// <returns></returns>
-        public virtual List<ComponentParameter> GetParameters()
+        public virtual IList<ComponentParameter> GetParameters()
         {
             return new List<ComponentParameter>();
         }
@@ -253,7 +161,7 @@ namespace SS14.Shared.GameObjects
         /// This gets current values, or at least it should...
         /// </summary>
         /// <returns>Returns a list of component parameters for marshaling</returns>
-        public List<MarshalComponentParameter> GetSVars()
+        public IList<MarshalComponentParameter> GetSVars()
         {
             return (from param in GetParameters()
                     where SVarIsRegistered(param.MemberName)

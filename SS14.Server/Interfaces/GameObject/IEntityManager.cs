@@ -1,19 +1,20 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.GOC
 {
-    public interface IEntityManager : SS14.Shared.GameObjects.IEntityManager, IIoCInterface
+    public interface IEntityManager : Shared.Interfaces.GameObjects.IEntityManager, IIoCInterface
     {
         void Shutdown();
         void HandleEntityNetworkMessage(NetIncomingMessage message);
         void SaveEntities();
-        Entity SpawnEntity(string template, int uid = -1);
-        Entity SpawnEntityAt(string entityTemplateName, Vector2f vector2);
-        List<EntityState> GetEntityStates();
+        IEntity SpawnEntity(string template, int uid = -1);
+        IEntity SpawnEntityAt(string entityTemplateName, Vector2f vector2);
+        IList<EntityState> GetEntityStates();
         void Update(float frameTime);
     }
 }

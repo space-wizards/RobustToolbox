@@ -6,12 +6,14 @@ using SS14.Client.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace SS14.Client.GameObjects
 {
+    [IoCTarget]
     public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly bool _messageProfiling;
@@ -59,7 +61,7 @@ namespace SS14.Client.GameObjects
             _networkManager.SendMessage(newMsg, method);
         }
 
-        public void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
                                                         NetDeliveryMethod method, NetConnection recipient,
                                                         params object[] messageParams)
         {
@@ -74,7 +76,7 @@ namespace SS14.Client.GameObjects
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
                                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                                 params object[] messageParams)
         {
@@ -101,7 +103,7 @@ namespace SS14.Client.GameObjects
         /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
         /// <param name="type">Message type</param>
         /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        public void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessage type, params object[] list)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write((byte)type);
@@ -197,7 +199,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         /// <param name="sendingEntity"></param>
         /// <param name="svar"></param>
-        public void SendSVar(Entity sendingEntity, MarshalComponentParameter svar)
+        public void SendSVar(IEntity sendingEntity, MarshalComponentParameter svar)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write((byte)EntityMessage.SetSVar);

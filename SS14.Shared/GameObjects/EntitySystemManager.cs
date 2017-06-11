@@ -19,7 +19,6 @@ namespace SS14.Shared.GameObjects
     {
         private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
         private readonly Dictionary<Type, IEntitySystem> _systemMessageTypes = new Dictionary<Type, IEntitySystem>();
-        private EntityManager _entityManager;
 
         public void RegisterMessageType<T>(IEntitySystem regSystem) where T : EntitySystemMessage
         {

@@ -8,7 +8,6 @@ namespace SS14.Server.Interfaces
 {
     public interface ISS14Server : IIoCInterface
     {
-        IEntityManager EntityManager { get; }
         RunLevel Runlevel { get; }
         void SetServerInstance(ISS14Server server);
         void MainLoop();

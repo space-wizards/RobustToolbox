@@ -6,6 +6,7 @@ using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +16,7 @@ using IEntityNetworkManager = SS14.Server.Interfaces.GOC.IEntityNetworkManager;
 
 namespace SS14.Server.GameObjects
 {
+    [IoCTarget]
     public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly bool _messageProfiling;
@@ -52,13 +54,13 @@ namespace SS14.Server.GameObjects
         /// <param name="sendingEntity">The entity the message is going from(and to, on the other end)</param>
         /// <param name="type">Message type</param>
         /// <param name="list">List of parameter objects</param>
-        public void SendEntityNetworkMessage(Entity sendingEntity, EntityMessage type, params object[] list)
+        public void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessage type, params object[] list)
         {
         }
 
 
-        public void SendComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
-                                                [Optional] [DefaultParameterValue(NetDeliveryMethod.ReliableUnordered)] NetDeliveryMethod method, params object[] messageParams)
+        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+                                                NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
         {
             throw new NotImplementedException();
         }
@@ -76,7 +78,7 @@ namespace SS14.Server.GameObjects
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendDirectedComponentNetworkMessage(Entity sendingEntity, ComponentFamily family,
+        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
                                                         NetDeliveryMethod method,
                                                         NetConnection recipient, params object[] messageParams)
         {
@@ -274,8 +276,8 @@ namespace SS14.Server.GameObjects
                                                                       message.SenderConnection);
                     break;
                 case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
-                    EntityManager eMgr = (EntityManager)IoCManager.Resolve<IEntityManager>();
-                    eMgr.EntitySystemManager.HandleSystemMessage(new EntitySystemData(message.SenderConnection, message));
+                    var manager = IoCManager.Resolve<IEntitySystemManager>();
+                    manager.HandleSystemMessage(new EntitySystemData(message.SenderConnection, message));
                     break;
                 case EntityMessage.PositionMessage:
                     uid = message.ReadInt32();

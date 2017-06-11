@@ -2,6 +2,8 @@
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -16,13 +18,9 @@ namespace SS14.Server.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
+    [IoCTarget(Priority=5)]
     public class EntityManager : SS14.Shared.GameObjects.EntityManager, IEntityManager
     {
-        public EntityManager(ISS14NetServer netServer)
-            : base(EngineType.Server, new EntityNetworkManager(netServer))
-        {
-        }
-
         #region IEntityManager Members
 
         public void SaveEntities()
@@ -42,15 +40,15 @@ namespace SS14.Server.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public Entity SpawnEntityAt(string EntityType, Vector2f position)
+        public IEntity SpawnEntityAt(string EntityType, Vector2f position)
         {
-            Entity e = SpawnEntity(EntityType);
+            IEntity e = SpawnEntity(EntityType);
             e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
             e.Initialize();
             return e;
         }
 
-        public List<EntityState> GetEntityStates()
+        public IList<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
             foreach (Entity entity in _entities.Values)
@@ -97,7 +95,7 @@ namespace SS14.Server.GameObjects
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
-            Entity ent = SpawnEntity(template);
+            IEntity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(X, Y));
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
@@ -118,6 +116,14 @@ namespace SS14.Server.GameObjects
                                                  e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction
                                                      .ToString()));
             return el;
+        }
+
+        public void Initialize()
+        {
+            LoadEntities();
+            EntitySystemManager.Initialize();
+            Initialized = true;
+            InitializeEntities();
         }
     }
 }

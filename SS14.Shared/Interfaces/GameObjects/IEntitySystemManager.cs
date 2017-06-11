@@ -18,5 +18,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         void RegisterMessageType<T>(IEntitySystem regSystem) where T : EntitySystemMessage;
         T GetEntitySystem<T>() where T : IEntitySystem;
         void Initialize();
+        void Shutdown();
+        void HandleSystemMessage(EntitySystemData sysMsg);
+        void Update(float frameTime);
     }
 }

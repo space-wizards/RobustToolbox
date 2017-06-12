@@ -95,6 +95,7 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
+		#error TODO: fix
             PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
             if (myState?.ControlledEntity == null)
             {

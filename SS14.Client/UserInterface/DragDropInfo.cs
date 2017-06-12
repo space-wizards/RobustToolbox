@@ -1,5 +1,5 @@
 ﻿using SFML.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -40,7 +40,7 @@ namespace SS14.Client.UserInterface
             IsEntity = true;
         }
 
-        #endregion
+        #endregion IDragDropInfo Members
 
         public bool Active()
         {

@@ -5,7 +5,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     public class ParticleSystem : EntitySystem
     {
-        public ParticleSystem(EntityManager em, EntitySystemManager esm)
+        public ParticleSystem(ServerEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

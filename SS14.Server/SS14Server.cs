@@ -3,6 +3,7 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Configuration;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
@@ -19,6 +20,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
@@ -29,8 +31,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using EntityManager = SS14.Server.GameObjects.EntityManager;
-using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
 using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
 
 namespace SS14.Server
@@ -39,7 +39,6 @@ namespace SS14.Server
     public class SS14Server : ISS14Server
     {
         private const int GameCountdown = 15;
-        private static SS14Server _singleton;
         private readonly List<float> frameTimes = new List<float>();
 
         public Dictionary<NetConnection, IClient> ClientList = new Dictionary<NetConnection, IClient>();
@@ -64,16 +63,6 @@ namespace SS14.Server
         private int updateRate = 20; //20 updates per second
         public string ConsoleTitle { get; private set; }
 
-        public static SS14Server Singleton
-        {
-            get
-            {
-                if (_singleton == null)
-                    throw new TypeInitializationException("Singleton not initialized.", null);
-                return _singleton;
-            }
-        }
-
         public bool Active => _active;
 
         #region Server Settings
@@ -91,10 +80,10 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            EntityManager = IoCManager.Resolve<IEntityManager>();
+            EntityManager = IoCManager.Resolve<IServerEntityManager>();
+            ComponentManager = IoCManager.Resolve<IComponentManager>();
 
             Runlevel = RunLevel.Init;
-            _singleton = this;
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
             configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
@@ -127,7 +116,8 @@ namespace SS14.Server
 
         #region ISS13Server Members
 
-        private readonly IEntityManager EntityManager;
+        private readonly IServerEntityManager EntityManager;
+        private readonly IComponentManager ComponentManager;
         public RunLevel Runlevel { get; private set; }
 
         public void Restart()
@@ -139,7 +129,7 @@ namespace SS14.Server
             StartLobby();
         }
 
-        public void Shutdown(string reason=null)
+        public void Shutdown(string reason = null)
         {
             if (reason == null)
                 LogManager.Log("Shutting down...");
@@ -334,7 +324,8 @@ namespace SS14.Server
             List<NetConnection> cleanupConnections = new List<NetConnection>();
             foreach (KeyValuePair<NetConnection, DateTime> client in _clientListLastSeen)
             {
-                if (currentTime.Subtract(client.Value).TotalSeconds >= 5) {
+                if (currentTime.Subtract(client.Value).TotalSeconds >= 5)
+                {
                     LogManager.Log(String.Format("Client Timeout: Kicking client {0}", client.Key.RemoteEndPoint));
                     client.Key.Disconnect("No message was recieved in 60 seconds, you have been kicked from the server.");
                     cleanupConnections.Add(sender);
@@ -348,12 +339,11 @@ namespace SS14.Server
 
         public void Update(float frameTime)
         {
-
             switch (Runlevel)
             {
                 case RunLevel.Game:
 
-                    EntityManager.ComponentManager.Update(frameTime);
+                    ComponentManager.Update(frameTime);
                     EntityManager.Update(frameTime);
                     var start = stopWatch.ElapsedTicks;
                     //((AtmosManager)IoCManager.Resolve<IAtmosManager>()).Update(frameTime);
@@ -701,11 +691,10 @@ namespace SS14.Server
                     //        adminPermissions.isAdmin || true)
                     //TEMPORARY. REMOVE THE 'TRUE' LATER ON. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     //{
-                    Entity delEnt = EntityManager.GetEntity(entId);
+                    IEntity delEnt = EntityManager.GetEntity(entId);
                     if (delEnt != null) EntityManager.DeleteEntity(delEnt);
                     //}
                     break;
-
             }
         }
 

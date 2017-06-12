@@ -10,7 +10,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class HumanHandsComponent : Component
+    public class HumanHandsComponent : ClientComponent
     {
         public override string Name => "HumanHands";
         public Dictionary<InventoryLocation, Entity> HandSlots { get; private set; }
@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            var type = (ComponentMessageType) message.MessageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
             int entityUid;
             InventoryLocation usedHand;
             Entity item;
@@ -33,7 +33,7 @@ namespace SS14.Client.GameObjects
             {
                 case (ComponentMessageType.EntityChanged):
                     //This is not sent atm. Commented out serverside for later use.
-                    entityUid = (int) message.MessageParameters[1];
+                    entityUid = (int)message.MessageParameters[1];
                     usedHand = (InventoryLocation)message.MessageParameters[2];
                     item = Owner.EntityManager.GetEntity(entityUid);
                     if (HandSlots.Keys.Contains(usedHand))
@@ -49,7 +49,7 @@ namespace SS14.Client.GameObjects
                     HandSlots.Remove(usedHand);
                     break;
                 case (ComponentMessageType.HandsPickedUpItem):
-                    entityUid = (int) message.MessageParameters[1];
+                    entityUid = (int)message.MessageParameters[1];
                     usedHand = (InventoryLocation)message.MessageParameters[2];
                     item = Owner.EntityManager.GetEntity(entityUid);
                     //item.SendMessage(this, ComponentMessageType.PickedUp, null, usedHand);
@@ -67,7 +67,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return typeof (HandsComponentState);
+                return typeof(HandsComponentState);
             }
         }
 
@@ -108,12 +108,12 @@ namespace SS14.Client.GameObjects
         {
             bool changed = false;
             var currentHand = state.ActiveHand;
-            if(CurrentHand != currentHand)
+            if (CurrentHand != currentHand)
             {
                 changed = true;
                 CurrentHand = currentHand;
             }
-            foreach(var handSlot in state.Slots.Keys)
+            foreach (var handSlot in state.Slots.Keys)
             {
                 var hand = handSlot;
                 if (!HandSlots.ContainsKey(hand))
@@ -123,7 +123,7 @@ namespace SS14.Client.GameObjects
                 }
                 var existingSlotUid = HandSlots[hand] == null ? null : (int?)HandSlots[hand].Uid;
                 var newSlotUid = state.Slots[handSlot];
-                if(existingSlotUid == null)
+                if (existingSlotUid == null)
                 {
                     if (newSlotUid != null)
                     {
@@ -133,7 +133,7 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    if(newSlotUid != existingSlotUid)
+                    if (newSlotUid != existingSlotUid)
                     {
                         if (newSlotUid != null)
                             HandSlots[hand] = Owner.EntityManager.GetEntity((int)newSlotUid);
@@ -144,7 +144,7 @@ namespace SS14.Client.GameObjects
                     }
                 }
             }
-            if(changed)
+            if (changed)
             {
                 IoCManager.Resolve<IUserInterfaceManager>().ComponentUpdate(GuiComponentType.HandsUi);
             }

@@ -9,7 +9,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameTimer;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
@@ -54,7 +54,8 @@ namespace SS14.Client.State.States
         private RenderImage _baseTarget;
         private Sprite _baseTargetSprite;
 
-        private IEntityManager _entityManager;
+        private IClientEntityManager _entityManager;
+        private IComponentManager _componentManager;
 
         private GaussianBlur _gaussianBlur;
 
@@ -70,12 +71,12 @@ namespace SS14.Client.State.States
         #region gameState stuff
         private readonly Dictionary<uint, GameState> _lastStates = new Dictionary<uint, GameState>();
         private uint _currentStateSequence; //We only ever want a newer state than the current one
-        #endregion
+        #endregion gameState stuff
 
         #region Mouse/Camera stuff
         public Vector2i MousePosScreen = new Vector2i();
         public Vector2f MousePosWorld = new Vector2f();
-        #endregion
+        #endregion Mouse/Camera stuff
 
         #region UI Variables
         private int _prevScreenWidth = 0;
@@ -89,7 +90,7 @@ namespace SS14.Client.State.States
         private ImageButton _inventoryButton;
         private ImageButton _statusButton;
         private ImageButton _menuButton;
-        #endregion
+        #endregion UI Variables
 
         #region Lighting
         private Sprite _lightTargetIntermediateSprite;
@@ -128,13 +129,12 @@ namespace SS14.Client.State.States
         //private QuadRenderer quadRenderer;
         private ShadowMapResolver shadowMapResolver;
 
-        #endregion
+        #endregion Lighting
 
-        #endregion
+        #endregion Variables
 
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
         {
-
         }
 
         #region IState Members
@@ -152,7 +152,7 @@ namespace SS14.Client.State.States
             //Init serializer
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
-            _entityManager = IoCManager.Resolve<IEntityManager>();
+            _entityManager = IoCManager.Resolve<IClientEntityManager>();
             IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
@@ -171,9 +171,8 @@ namespace SS14.Client.State.States
             InitializeSpriteBatches();
             InitalizeLighting();
             InitializeGUI();
-
         }
-       
+
         private void InitializeRenderTargets()
         {
             _baseTarget = new RenderImage("baseTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
@@ -199,7 +198,6 @@ namespace SS14.Client.State.States
             _overlayTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _overlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _overlayTarget.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-
 
             _composedSceneTarget = new RenderImage("composedSceneTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
                                                  ImageBufferFormats.BufferRGB888A8);
@@ -241,7 +239,6 @@ namespace SS14.Client.State.States
             _wallTopsBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _wallTopsBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-
             _decalBatch = new SpriteBatch();
             //_decalBatch.SourceBlend                   = AlphaBlendOperation.SourceAlpha;
             //_decalBatch.DestinationBlend              = AlphaBlendOperation.InverseSourceAlpha;
@@ -251,7 +248,6 @@ namespace SS14.Client.State.States
             _decalBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
             _decalBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _decalBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-
 
             _floorBatch = new SpriteBatch();
             _wallBatch = new SpriteBatch();
@@ -277,8 +273,7 @@ namespace SS14.Client.State.States
             _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
 
             _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
-
-    }
+        }
 
         private void InitializeGUI()
         {
@@ -330,7 +325,6 @@ namespace SS14.Client.State.States
             _statusButton.Clicked += statusButton_Clicked;
             UserInterfaceManager.AddComponent(_statusButton);
 
-
             _menuButton = new ImageButton
             {
                 ImageNormal = "button_menu",
@@ -376,9 +370,7 @@ namespace SS14.Client.State.States
             playerVision.SetRadius(1024);
             playerVision.Move(new Vector2f());
 
-
             _occluderDebugTarget = new RenderImage("debug", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-
         }
 
         public void Update(FrameEventArgs e)
@@ -396,7 +388,7 @@ namespace SS14.Client.State.States
             CluwneLib.TileSize = MapManager.TileSize;
 
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
-            _entityManager.ComponentManager.Update(e.FrameDeltaTime);
+            _componentManager.Update(e.FrameDeltaTime);
             _entityManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
             PlayerManager.Update(e.FrameDeltaTime);
@@ -438,7 +430,6 @@ namespace SS14.Client.State.States
 
                 RenderOverlay();
 
-
                 _sceneTarget.EndDrawing();
                 _sceneTarget.ResetCurrentRenderTarget();
                 //_sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
@@ -449,7 +440,6 @@ namespace SS14.Client.State.States
                     _sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 else
                     LightScene();
-
 
                 RenderDebug(vp);
 
@@ -496,8 +486,6 @@ namespace SS14.Client.State.States
                 if (_decalBatch.Count > 0)
                     _overlayTarget.Draw(_decalBatch);
 
-
-
                 if (_gasBatch.Count > 0)
                     _overlayTarget.Draw(_gasBatch);
 
@@ -516,13 +504,13 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collider)
+                    _componentManager.GetComponents(ComponentFamily.Collider)
                     .OfType<ColliderComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
                 var collidables =
-                    _entityManager.ComponentManager.GetComponents(ComponentFamily.Collidable)
+                    _componentManager.GetComponents(ComponentFamily.Collidable)
                     .OfType<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
@@ -586,22 +574,19 @@ namespace SS14.Client.State.States
             GC.Collect();
         }
 
-
-        #endregion
+        #endregion IState Members
 
         #region Input
 
         #region Keyboard
         public void KeyPressed(KeyEventArgs e)
         {
-
         }
 
         public void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
-
 
             if (e.Code == Keyboard.Key.F1)
             {
@@ -674,7 +659,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion
+        #endregion Keyboard
 
         #region Mouse
         public void MouseUp(MouseButtonEventArgs e)
@@ -713,8 +698,8 @@ namespace SS14.Client.State.States
             //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             float checkDistance = 1.5f;
             // Find all the entities near us we could have clicked
-            Entity[] entities =
-                ((EntityManager)IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(
+            IEnumerable<IEntity> entities =
+                _entityManager.GetEntitiesInRange(
                     PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
                     checkDistance);
 
@@ -725,8 +710,7 @@ namespace SS14.Client.State.States
             {
                 var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
                 if (clickable == null) continue;
-                int drawdepthofclicked;
-                if (clickable.CheckClick(clickedWorldPoint, out drawdepthofclicked))
+                if (clickable.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
             }
 
@@ -772,7 +756,7 @@ namespace SS14.Client.State.States
                 }
             }
 
-            #endregion
+            #endregion Object clicking
         }
 
         public void MouseMove(MouseMoveEventArgs e)
@@ -784,12 +768,10 @@ namespace SS14.Client.State.States
 
         public void MouseMoved(MouseMoveEventArgs e)
         {
-
         }
 
         public void MousePressed(MouseButtonEventArgs e)
         {
-
         }
 
         public void MouseWheelMove(MouseWheelEventArgs e)
@@ -806,7 +788,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseLeft(e);
         }
-        #endregion
+        #endregion Mouse
 
         #region Chat
         private void HandleChatMessage(NetIncomingMessage msg)
@@ -834,13 +816,9 @@ namespace SS14.Client.State.States
                     break;
             }
             _gameChat.AddLine(message, channel);
-            if (entityId > 0)
+            if (entityId > 0 && _entityManager.TryGetEntity(entityId, out IEntity a))
             {
-                Entity a = IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(entityId);
-                if (a != null)
-                {
-                    a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
-                }
+                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
             }
         }
 
@@ -858,9 +836,9 @@ namespace SS14.Client.State.States
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        #endregion
+        #endregion Chat
 
-        #endregion
+        #endregion Input
 
         #region Event Handlers
 
@@ -880,7 +858,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }
 
-        #endregion
+        #endregion Buttons
 
         #region Messages
 
@@ -940,7 +918,7 @@ namespace SS14.Client.State.States
             }
         }
 
-        #endregion
+        #endregion Messages
 
         #region State
 
@@ -1043,7 +1021,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        #endregion
+        #endregion State
 
         private void OnPlayerMove(object sender, VectorEventArgs args)
         {
@@ -1058,7 +1036,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        #endregion
+        #endregion Event Handlers
 
         #region Lighting in order of call
 
@@ -1068,7 +1046,6 @@ namespace SS14.Client.State.States
          *
          *
          **/
-
 
         private void CalculateAllLights()
         {
@@ -1086,7 +1063,6 @@ namespace SS14.Client.State.States
         /// <param name="lights">Array of lights</param>
         private void RenderLightsIntoMap(IEnumerable<ILight> lights)
         {
-
             //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
             foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
             {
@@ -1105,9 +1081,7 @@ namespace SS14.Client.State.States
             RenderImage desto = shadowIntermediate;
             RenderImage copy = null;
 
-
             Lightmap.setAsCurrentShader();
-
 
             var lightTextures = new List<Texture>();
             var colors = new List<Vector4f>();
@@ -1125,7 +1099,6 @@ namespace SS14.Client.State.States
 
                 //Set the drawing position.
                 Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
-
 
                 //Set shader parameters
                 var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
@@ -1160,7 +1133,6 @@ namespace SS14.Client.State.States
                 }
                 if (draw)
                 {
-
                     desto.BeginDrawing();
 
                     Lightmap.SetParameter("LightPosData", r_pos);
@@ -1178,7 +1150,6 @@ namespace SS14.Client.State.States
 
                     desto.EndDrawing();
 
-
                     //Swap rendertargets to set up for the next light
                     copy = source;
                     source = desto;
@@ -1195,7 +1166,6 @@ namespace SS14.Client.State.States
                 {
                     r_img[i] = lightTextures[0];
                     lightTextures.RemoveAt(0);
-
 
                     r_col[i] = colors[0];
                     colors.RemoveAt(0);
@@ -1215,7 +1185,7 @@ namespace SS14.Client.State.States
 
             Lightmap.ResetCurrentShader();
 
-            if(source != screenShadows)
+            if (source != screenShadows)
             {
                 screenShadows.BeginDrawing();
                 source.Blit(0, 0, source.Width, source.Height);
@@ -1224,7 +1194,7 @@ namespace SS14.Client.State.States
 
             IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
             Dictionary<Texture, string> tmp = _resManager.TextureToKey;
-            if(!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
+            if (!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
             string textureKey = tmp[screenShadows.Texture];
             Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
             texunflipx.FlipVertically();
@@ -1263,8 +1233,6 @@ namespace SS14.Client.State.States
 
         private void RenderPlayerVisionMap()
         {
-
-
             if (bFullVision)
             {
                 playerOcclusionTarget.Clear(new SFML.Graphics.Color(211, 211, 211));
@@ -1277,20 +1245,15 @@ namespace SS14.Client.State.States
                 playerOcclusionTarget.Clear(Color.Black);
                 playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
 
-
-                LightArea area =  GetLightArea(RadiusToShadowMapSize( playerVision.Radius));
-                area.LightPosition =  playerVision.Position  ; // Set the light position
+                LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
+                area.LightPosition = playerVision.Position; // Set the light position
 
                 TileRef TileReference = MapManager.GetTileRef(playerVision.Position);
 
                 if (TileReference.Tile.TileDef.IsOpaque)
                 {
-
                     area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
-
-
                 }
-
 
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
@@ -1302,13 +1265,11 @@ namespace SS14.Client.State.States
 
                 if (debugWallOccluders)
                 {
-
                     _occluderDebugTarget.BeginDrawing();
                     _occluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
                     _occluderDebugTarget.EndDrawing();
-
                 }
 
                 shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
@@ -1337,10 +1298,7 @@ namespace SS14.Client.State.States
 
                 playerOcclusionTarget.EndDrawing();
 
-
                 //Debug.DebugRendertarget(playerOcclusionTarget);
-
-
             }
             else
             {
@@ -1393,7 +1351,6 @@ namespace SS14.Client.State.States
                     TileType.Render(point.X, point.Y, _floorBatch);
                     TileType.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
                 }
-
             }
 
             walls.Sort((t1, t2) => t1.Y - t2.Y);
@@ -1415,8 +1372,8 @@ namespace SS14.Client.State.States
         /// <param name="frametime">time since the last frame was rendered.</param>
         private void RenderComponents(float frameTime, FloatRect viewPort)
         {
-            IEnumerable<Component> components = _entityManager.ComponentManager.GetComponents(ComponentFamily.Renderable)
-                .Union(_entityManager.ComponentManager.GetComponents(ComponentFamily.Particles));
+            IEnumerable<IComponent> components = _componentManager.GetComponents(ComponentFamily.Renderable)
+                                          .Union(_componentManager.GetComponents(ComponentFamily.Particles));
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
@@ -1446,7 +1403,6 @@ namespace SS14.Client.State.States
 
         private void LightScene()
         {
-
             //Blur the light/shadow map
             BlurShadowMap();
 
@@ -1467,15 +1423,13 @@ namespace SS14.Client.State.States
             LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
             LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4f(.05f, .05f, 0.05f, 1));
 
-
             // Blit the shadow image on top of the screen
             screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
-
 
             LightblendTechnique["FinalLightBlend"].ResetCurrentShader();
             _composedSceneTarget.EndDrawing();
 
-         //  Debug.DebugRendertarget(_composedSceneTarget);
+            //  Debug.DebugRendertarget(_composedSceneTarget);
 
             playerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
             playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again
@@ -1484,13 +1438,9 @@ namespace SS14.Client.State.States
             //redraw composed scene
             _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Screen.Size.X, (uint)CluwneLib.Screen.Size.Y, Color.White, BlitterSizeMode.Crop);
 
-
-
-
             //old
             //   screenShadows.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
             //   playerOcclusionTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
-
         }
 
         private void BlurShadowMap()
@@ -1506,7 +1456,7 @@ namespace SS14.Client.State.States
             PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
-        #endregion
+        #endregion Lighting in order of call
 
         #region Helper methods
 
@@ -1527,7 +1477,6 @@ namespace SS14.Client.State.States
 
         private void CalculateLightArea(ILight light)
         {
-
             ILightArea area = light.LightArea;
             if (area.Calculated)
                 return;
@@ -1580,7 +1529,6 @@ namespace SS14.Client.State.States
                 default:
                     return lightArea1024;
             }
-
         }
 
         private void RecalculateScene()
@@ -1604,9 +1552,7 @@ namespace SS14.Client.State.States
             debugWallOccluders = !debugWallOccluders;
         }
 
-
-
-        #endregion
+        #endregion Helper methods
 
         #region Nested type: ClickData
 
@@ -1622,6 +1568,6 @@ namespace SS14.Client.State.States
             }
         }
 
-        #endregion
+        #endregion Nested type: ClickData
     }
 }

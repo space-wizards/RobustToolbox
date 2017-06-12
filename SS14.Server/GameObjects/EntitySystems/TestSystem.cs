@@ -5,7 +5,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     public class TestSystem : EntitySystem
     {
-        public TestSystem(EntityManager em, EntitySystemManager esm)
+        public TestSystem(ServerEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

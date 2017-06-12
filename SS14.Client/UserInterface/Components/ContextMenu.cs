@@ -3,7 +3,7 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
@@ -42,7 +42,7 @@ namespace SS14.Client.UserInterface.Components
                 var examineButton =
                     new ContextMenuButton(
                         new ContextMenuEntry
-                            {ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye"}, _buttonSize,
+                        { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize,
                         _resourceManager);
                 examineButton.Selected += ContextSelected;
                 _buttons.Add(examineButton);
@@ -51,7 +51,7 @@ namespace SS14.Client.UserInterface.Components
 
             var sVarButton =
                 new ContextMenuButton(
-                    new ContextMenuEntry {ComponentMessage = "svars", EntryName = "SVars", IconName = "context_eye"},
+                    new ContextMenuEntry { ComponentMessage = "svars", EntryName = "SVars", IconName = "context_eye" },
                     _buttonSize, _resourceManager);
             sVarButton.Selected += ContextSelected;
             _buttons.Add(sVarButton);
@@ -68,22 +68,22 @@ namespace SS14.Client.UserInterface.Components
             float currY = creationPos.Y;
             foreach (ContextMenuButton button in _buttons)
             {
-                button.Position = new Vector2i((int) creationPos.X, (int) currY);
+                button.Position = new Vector2i((int)creationPos.X, (int)currY);
                 currY += _buttonSize.Y;
             }
-            ClientArea = new IntRect((int) creationPos.X, (int) creationPos.Y, (int) _buttonSize.X,
-                                       _buttons.Count()*(int) _buttonSize.Y);
+            ClientArea = new IntRect((int)creationPos.X, (int)creationPos.Y, (int)_buttonSize.X,
+                                       _buttons.Count() * (int)_buttonSize.Y);
         }
 
         private void ContextSelected(ContextMenuButton sender)
         {
-            if ((string) sender.UserData == "examine")
+            if ((string)sender.UserData == "examine")
             {
                 var newExamine = new ExamineWindow(new Vector2i(300, 200), _owningEntity, _resourceManager);
                 _userInterfaceManager.AddComponent(newExamine);
                 newExamine.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
             }
-            else if ((string) sender.UserData == "svars")
+            else if ((string)sender.UserData == "svars")
             {
                 var newSVars = new SVarEditWindow(new Vector2i(350, 400), _owningEntity);
                 _userInterfaceManager.AddComponent(newSVars);
@@ -93,7 +93,7 @@ namespace SS14.Client.UserInterface.Components
                     newSVars.GetSVarsCallback;
                 _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoGetSVars();
             }
-            else _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string) sender.UserData);
+            else _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
         }
 
         public override void Update(float frameTime)
@@ -109,8 +109,8 @@ namespace SS14.Client.UserInterface.Components
             base.Render();
             foreach (ContextMenuButton button in _buttons)
                 button.Render();
-          CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                 Color.Black);
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
+                                                   Color.Black);
         }
 
         public override void Dispose()
@@ -163,7 +163,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void ContextPressHandler(ContextMenuButton sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceManager _resourceManager;
         private readonly Label _textLabel;
@@ -190,10 +190,10 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Update(frameTime);
             var bounds = _iconSprite.GetLocalBounds();
-            ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
+            ClientArea = new IntRect(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textLabel.Position = new Vector2i(ClientArea.Left + (int)bounds.Width + 6,
-                                            ClientArea.Top + (int) (ClientArea.Height/2f) -
-                                            (int) (_textLabel.ClientArea.Height/2f));
+                                            ClientArea.Top + (int)(ClientArea.Height / 2f) -
+                                            (int)(_textLabel.ClientArea.Height / 2f));
             _textLabel.Update(frameTime);
         }
 
@@ -202,9 +202,9 @@ namespace SS14.Client.UserInterface.Components
             base.Render();
             var bounds = _iconSprite.GetLocalBounds();
             var iconRect = new IntRect(ClientArea.Left + 3,
-                                         ClientArea.Top + (int) (ClientArea.Height/2f) - (int) (bounds.Height/2f),
+                                         ClientArea.Top + (int)(ClientArea.Height / 2f) - (int)(bounds.Height / 2f),
                                          (int)bounds.Width, (int)bounds.Height);
-           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,  _currentColor);
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, _currentColor);
             _textLabel.Render();
             _iconSprite.SetTransformToRect(iconRect);
             _iconSprite.Draw();
@@ -221,7 +221,7 @@ namespace SS14.Client.UserInterface.Components
         public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(e.X, e.Y))
-                if (Selected != null) Selected(this);
+                Selected?.Invoke(this);
             return true;
         }
 

@@ -10,6 +10,9 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntity
     {
+        IEntityNetworkManager EntityNetworkManager { get; }
+        IEntityManager EntityManager { get; }
+
         string Name { get; set; }
         int Uid { get; set; }
 
@@ -98,13 +101,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="messageParams">Parameters</param>
         void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
-
-        /// <summary>
-        /// Client message to server saying component has been instantiated and needs initial data
-        /// </summary>
-        /// <param name="component"></param>
-        [Obsolete("Getting rid of this messaging paradigm")]
-        void SendComponentInstantiationMessage(Component component);
 
         /// <summary>
         /// Sets up variables and shite

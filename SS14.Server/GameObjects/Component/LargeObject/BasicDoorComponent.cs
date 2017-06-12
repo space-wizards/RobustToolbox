@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace SS14.Server.GameObjects
         {
             Family = ComponentFamily.LargeObject;
 
-            RegisterSVar("OpenOnBump", typeof (bool));
+            RegisterSVar("OpenOnBump", typeof(bool));
         }
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
@@ -63,7 +64,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
@@ -211,9 +212,9 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override List<ComponentParameter> GetParameters()
+        public override IList<ComponentParameter> GetParameters()
         {
-            List<ComponentParameter> cparams = base.GetParameters();
+            IList<ComponentParameter> cparams = base.GetParameters();
             cparams.Add(new ComponentParameter("OpenOnBump", openonbump));
             return cparams;
         }

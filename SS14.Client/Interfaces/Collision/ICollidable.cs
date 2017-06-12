@@ -1,5 +1,5 @@
 ﻿using SFML.Graphics;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.Interfaces.Collision
 {
@@ -7,6 +7,6 @@ namespace SS14.Client.Interfaces.Collision
     {
         FloatRect AABB { get; }
         bool IsHardCollidable { get; } // true if collisions should prevent movement, or just trigger bumps.
-        void Bump(Entity ent);
+        void Bump(IEntity ent);
     }
 }

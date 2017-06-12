@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -28,7 +29,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
             protected set { capabilityType = value; }
         }
 
-        public virtual bool ApplyTo(Entity target, Entity sourceActor)
+        public virtual bool ApplyTo(IEntity target, IEntity sourceActor)
         {
             return false;
         }
@@ -36,7 +37,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
         public void AddVerb(int priority, ItemCapabilityVerb verb)
         {
             if (verbs.ContainsKey(priority))
-                //Shuffle the list to insert the specified verb and move the one in that spot down.
+            //Shuffle the list to insert the specified verb and move the one in that spot down.
             {
                 ItemCapabilityVerb tverb = verbs[priority];
                 RemoveVerb(priority);
@@ -81,7 +82,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
             GetAllCapabilities,
         }
 
-        #endregion
+        #endregion ItemCapabilityQueryType enum
 
         public ItemCapabilityType capabilityType;
         public ItemCapabilityQueryType queryType;
@@ -113,7 +114,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
             Null
         }
 
-        #endregion
+        #endregion ItemCapabilityQueryResultType enum
 
         private ItemCapabilityQueryResultType resultStatus;
         private ItemCapability[] returnedCapabilities;

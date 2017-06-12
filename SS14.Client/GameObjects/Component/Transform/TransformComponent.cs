@@ -11,7 +11,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class TransformComponent : Component
+    public class TransformComponent : ClientComponent
     {
         public override string Name => "Transform";
         private Vector2f _position = new Vector2f();
@@ -38,7 +38,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (TransformComponentState); }
+            get { return typeof(TransformComponentState); }
         }
 
         public float X
@@ -68,7 +68,6 @@ namespace SS14.Client.GameObjects
         public void TranslateByOffset(Vector2f offset)
         {
             Position = Position + offset;
-
         }
 
         public override void HandleComponentState(dynamic state)
@@ -97,11 +96,10 @@ namespace SS14.Client.GameObjects
                 lerpStateFrom = state;
                 lerpStateTo = state;
             }
-            if(lastState.ForceUpdate)
+            if (lastState.ForceUpdate)
             {
                 TranslateTo(new Vector2f(state.X, state.Y));
             }
-
         }
     }
 }

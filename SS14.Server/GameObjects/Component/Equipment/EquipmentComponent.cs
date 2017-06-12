@@ -1,10 +1,11 @@
 ﻿using Lidgren.Network;
 using SS14.Server.GameObjects.Events;
 using SS14.Server.GameObjects.Item.ItemCapability;
-using SS14.Server.Interfaces.GameObject;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equipment;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "Equipment";
         protected List<EquipmentSlot> activeSlots = new List<EquipmentSlot>();
-        public Dictionary<EquipmentSlot, Entity> equippedEntities = new Dictionary<EquipmentSlot, Entity>();
+        public Dictionary<EquipmentSlot, IEntity> equippedEntities = new Dictionary<EquipmentSlot, IEntity>();
 
         public EquipmentComponent()
         {
@@ -34,7 +35,7 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.DisassociateEntity:
-                    UnEquipEntity((Entity) list[0]);
+                    UnEquipEntity((IEntity)list[0]);
                     break;
             }
 
@@ -46,7 +47,7 @@ namespace SS14.Server.GameObjects
             // TODO change these things to flow to the server via a system instead of via this component
             if (message.ComponentFamily == ComponentFamily.Equipment)
             {
-                var type = (ComponentMessageType) message.MessageParameters[0];
+                var type = (ComponentMessageType)message.MessageParameters[0];
                 switch (type) //Why does this send messages to itself THIS IS DUMB AND WILL BREAK THINGS. BZZZ
                 {
                     case ComponentMessageType.EquipItem:
@@ -68,7 +69,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public void RaiseEquipItem(Entity item)
+        public void RaiseEquipItem(IEntity item)
         {
             Owner.EntityManager.RaiseEvent(this, new InventoryEquipItemEventArgs
             {
@@ -85,7 +86,7 @@ namespace SS14.Server.GameObjects
             });
         }
 
-        public void RaiseUnEquipItemToFloor(Entity item)
+        public void RaiseUnEquipItemToFloor(IEntity item)
         {
             Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToFloorEventArgs
             {
@@ -94,7 +95,7 @@ namespace SS14.Server.GameObjects
             });
         }
 
-        public void RaiseUnEquipItemToHand(Entity item)
+        public void RaiseUnEquipItemToHand(IEntity item)
         {
             Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToHandEventArgs
             {
@@ -103,7 +104,7 @@ namespace SS14.Server.GameObjects
             });
         }
 
-        public void RaiseUnEquipItemToSpecifiedHand(Entity item, InventoryLocation hand)
+        public void RaiseUnEquipItemToSpecifiedHand(IEntity item, InventoryLocation hand)
         {
             Owner.EntityManager.RaiseEvent(this, new InventoryUnEquipItemToSpecifiedHandEventArgs
             {
@@ -114,7 +115,7 @@ namespace SS14.Server.GameObjects
         }
 
         // Equips Entity e to Part part
-        public void EquipEntityToPart(EquipmentSlot part, Entity e)
+        public void EquipEntityToPart(EquipmentSlot part, IEntity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -131,7 +132,7 @@ namespace SS14.Server.GameObjects
         }
 
         // Equips Entity e and automatically finds the appropriate part
-        public void EquipEntity(Entity e)
+        public void EquipEntity(IEntity e)
         {
             if (equippedEntities.ContainsValue(e)) //Its already equipped? Unequip first. This shouldnt happen.
                 UnEquipEntity(e);
@@ -143,7 +144,7 @@ namespace SS14.Server.GameObjects
                 if (reply.MessageType == ComponentMessageType.ReturnWearLoc)
                 {
                     RemoveFromOtherComps(e);
-                    EquipEntityToPart((EquipmentSlot) reply.ParamsList[0], e);
+                    EquipEntityToPart((EquipmentSlot)reply.ParamsList[0], e);
                 }
             }
         }
@@ -158,11 +159,11 @@ namespace SS14.Server.GameObjects
             //Get the item in the hand
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
                                                             ComponentMessageType.GetActiveHandItem);
-            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity) reply.ParamsList[0]))
+            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reply.ParamsList[0]))
             {
-                RemoveFromOtherComps((Entity) reply.ParamsList[0]);
+                RemoveFromOtherComps((IEntity)reply.ParamsList[0]);
                 //Equip
-                EquipEntity((Entity) reply.ParamsList[0]);
+                EquipEntity((IEntity)reply.ParamsList[0]);
             }
         }
 
@@ -179,31 +180,31 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public void UnEquipEntityToHand(Entity e)
+        public void UnEquipEntityToHand(IEntity e)
         {
             UnEquipEntity(e);
             //HumanHandsComponent hh = (HumanHandsComponent)Owner.GetComponent(ComponentFamily.Hands);
             Owner.SendMessage(this, ComponentMessageType.PickUpItem, e);
         }
 
-        public void UnEquipEntityToHand(Entity e, InventoryLocation h)
+        public void UnEquipEntityToHand(IEntity e, InventoryLocation h)
         {
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
                                                             ComponentMessageType.IsHandEmpty, h);
-            if (reply.MessageType == ComponentMessageType.IsHandEmptyReply && (bool) reply.ParamsList[0])
+            if (reply.MessageType == ComponentMessageType.IsHandEmptyReply && (bool)reply.ParamsList[0])
             {
                 UnEquipEntity(e);
                 Owner.SendMessage(this, ComponentMessageType.PickUpItemToHand, e, h);
             }
         }
 
-        public bool IsEquipped(Entity e)
+        public bool IsEquipped(IEntity e)
         {
             return equippedEntities.ContainsValue(e);
         }
 
         // Unequips entity e
-        public void UnEquipEntity(Entity e)
+        public void UnEquipEntity(IEntity e)
         {
             EquipmentSlot key;
             foreach (var kvp in equippedEntities)
@@ -217,7 +218,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        private bool IsItem(Entity e)
+        private bool IsItem(IEntity e)
         {
             if (e.HasComponent(ComponentFamily.Item)) //We can only equip items derp
                 return true;
@@ -231,18 +232,18 @@ namespace SS14.Server.GameObjects
             return true;
         }
 
-        private void RemoveFromOtherComps(Entity entity)
+        private void RemoveFromOtherComps(IEntity entity)
         {
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
-                holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
+                holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
-                holder = ((EquippableComponent) entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
+                holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
             if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
             else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
         }
 
-        private bool CanEquip(Entity e)
+        private bool CanEquip(IEntity e)
         {
             if (!e.HasComponent(ComponentFamily.Equippable))
                 return false;
@@ -251,8 +252,8 @@ namespace SS14.Server.GameObjects
                                                         ComponentMessageType.GetWearLoc);
             if (reply.MessageType == ComponentMessageType.ReturnWearLoc)
             {
-                if (IsItem(e) && IsEmpty((EquipmentSlot) reply.ParamsList[0]) && e != null &&
-                    activeSlots.Contains((EquipmentSlot) reply.ParamsList[0]))
+                if (IsItem(e) && IsEmpty((EquipmentSlot)reply.ParamsList[0]) && e != null &&
+                    activeSlots.Contains((EquipmentSlot)reply.ParamsList[0]))
                 {
                     return true;
                 }
@@ -271,7 +272,7 @@ namespace SS14.Server.GameObjects
             }
             foreach (ComponentReplyMessage reply in replies)
             {
-                caps.AddRange((ItemCapability[]) reply.ParamsList[0]);
+                caps.AddRange((ItemCapability[])reply.ParamsList[0]);
             }
             return caps;
         }
@@ -281,7 +282,7 @@ namespace SS14.Server.GameObjects
             return false;
         }
 
-        public bool RemoveEntity(Entity user, Entity toRemove)
+        public bool RemoveEntity(IEntity user, IEntity toRemove)
         {
             if (equippedEntities.Any(x => x.Value == toRemove))
             {
@@ -299,7 +300,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public bool CanAddEntity(Entity user, Entity toAdd)
+        public bool CanAddEntity(IEntity user, IEntity toAdd)
         {
             if (equippedEntities.Any(x => x.Value == toAdd) || !toAdd.HasComponent(ComponentFamily.Equippable))
             {
@@ -313,7 +314,7 @@ namespace SS14.Server.GameObjects
             return true;
         }
 
-        public bool AddEntity(Entity user, Entity toAdd)
+        public bool AddEntity(IEntity user, IEntity toAdd)
         {
             if (equippedEntities.Any(x => x.Value == toAdd))
                 return false;
@@ -325,7 +326,7 @@ namespace SS14.Server.GameObjects
                     if (activeSlots.Contains(eqCompo.wearloc) && !equippedEntities.ContainsKey(eqCompo.wearloc))
                     {
                         equippedEntities.Add(eqCompo.wearloc, toAdd);
-                        eqCompo.currentWearer = this.Owner;
+                        eqCompo.currentWearer = Owner;
 
                         return true;
                     }

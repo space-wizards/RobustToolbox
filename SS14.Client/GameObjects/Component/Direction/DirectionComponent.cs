@@ -9,7 +9,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class DirectionComponent : Component
+    public class DirectionComponent : ClientComponent
     {
         public override string Name => "Direction";
         private Direction _lastDeterminedDirection = Direction.South;
@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (DirectionComponentState); }
+            get { return typeof(DirectionComponentState); }
         }
 
         public override void OnAdd(Entity owner)
@@ -84,7 +84,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(dynamic state)
         {
-            var dir = (Direction) state.Direction;
+            var dir = (Direction)state.Direction;
             SetMoveDir(dir);
         }
     }

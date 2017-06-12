@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ItemSpriteComponent : SpriteComponent
+    public class ItemSpriteComponent : ClientComponent
     {
         public override string Name => "ItemSprite";
         private bool IsInHand;
@@ -40,7 +40,7 @@ namespace SS14.Client.GameObjects
                     if (!IsInHand)
                         break;
                     SetDrawDepth(DrawDepth.HeldItems);
-                    switch ((Direction) list[0])
+                    switch ((Direction)list[0])
                     {
                         case Direction.North:
                             if (SpriteExists(basename + "_inhand_back"))
@@ -122,7 +122,7 @@ namespace SS14.Client.GameObjects
                     holdingHand = (InventoryLocation)list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
-                    basename = (string) list[0];
+                    basename = (string)list[0];
                     break;
             }
 
@@ -133,7 +133,7 @@ namespace SS14.Client.GameObjects
         {
             base.HandleNetworkMessage(message, sender);
 
-            switch ((ComponentMessageType) message.MessageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetBaseName:
                     //basename = (string) message.MessageParameters[1];
@@ -198,7 +198,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState) state);
+            base.HandleComponentState((SpriteComponentState)state);
 
             if (state.BaseName != null && basename != state.BaseName)
             {

@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hands;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -16,13 +17,12 @@ namespace SS14.Server.GameObjects
     public class HumanHandsComponent : Component, IInventoryContainer
     {
         public override string Name => "HumanHands";
-        public readonly Dictionary<InventoryLocation, Entity> Handslots = new Dictionary<InventoryLocation, Entity>();
+        public readonly Dictionary<InventoryLocation, IEntity> Handslots = new Dictionary<InventoryLocation, IEntity>();
         public InventoryLocation CurrentHand = InventoryLocation.HandLeft;
 
         public HumanHandsComponent()
         {
             Family = ComponentFamily.Hands;
-
         }
 
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)
@@ -116,7 +116,7 @@ namespace SS14.Server.GameObjects
         {
             if (message.ComponentFamily == ComponentFamily.Hands)
             {
-                var type = (ComponentMessageType) message.MessageParameters[0];
+                var type = (ComponentMessageType)message.MessageParameters[0];
                 switch (type)
                 {
                     case ComponentMessageType.ActiveHandChanged:
@@ -124,7 +124,7 @@ namespace SS14.Server.GameObjects
                         SwitchHandsTo(hand);
                         break;
                     case ComponentMessageType.DropEntityInHand:
-                        Drop(Owner.EntityManager.GetEntity((int) message.MessageParameters[1]));
+                        Drop(Owner.EntityManager.GetEntity((int)message.MessageParameters[1]));
                         break;
                     case ComponentMessageType.DropItemInHand:
                         var dhand = (InventoryLocation)message.MessageParameters[1];
@@ -133,7 +133,6 @@ namespace SS14.Server.GameObjects
                 }
             }
         }
-
 
         /// <summary>
         /// Change the currently selected hand
@@ -158,7 +157,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         /// <param name="hand"></param>
         /// <returns></returns>
-        public Entity GetEntity(InventoryLocation hand)
+        public IEntity GetEntity(InventoryLocation hand)
         {
             if (!IsEmpty(hand))
                 return Handslots[hand];
@@ -171,9 +170,9 @@ namespace SS14.Server.GameObjects
         /// </summary>
         /// <param name="hand"></param>
         /// <returns></returns>
-        public InventoryLocation GetHand(Entity entity)
+        public InventoryLocation GetHand(IEntity entity)
         {
-            foreach(var kvp in Handslots)
+            foreach (var kvp in Handslots)
             {
                 if (kvp.Value == entity)
                     return kvp.Key;
@@ -195,7 +194,7 @@ namespace SS14.Server.GameObjects
             InventoryLocation h = GetCurrentHand();
             if (!IsEmpty(h))
             {
-                Entity e = GetEntity(h);
+                IEntity e = GetEntity(h);
                 if (e != null)
                 {
                     e.SendMessage(this, ComponentFamily.Item, ComponentMessageType.Activate);
@@ -208,7 +207,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         /// <param name="hand"></param>
         /// <param name="entity"></param>
-        private void SetEntity(InventoryLocation hand, Entity entity)
+        private void SetEntity(InventoryLocation hand, IEntity entity)
         {
             if (entity != null && IsEmpty(hand))
             {
@@ -221,7 +220,7 @@ namespace SS14.Server.GameObjects
         /// Put the specified entity in the currently selected hand
         /// </summary>
         /// <param name="entity"></param>
-        private void Pickup(Entity entity)
+        private void Pickup(IEntity entity)
         {
             if (entity != null && IsEmpty(CurrentHand))
             {
@@ -239,7 +238,7 @@ namespace SS14.Server.GameObjects
         /// Put the specified entity in the specified hand
         /// </summary>
         /// <param name="entity"></param>
-        private void Pickup(Entity entity, InventoryLocation hand)
+        private void Pickup(IEntity entity, InventoryLocation hand)
         {
             if (entity != null && IsEmpty(hand))
             {
@@ -260,13 +259,13 @@ namespace SS14.Server.GameObjects
             Drop(CurrentHand);
         }
 
-        private void RemoveFromOtherComps(Entity entity)
+        private void RemoveFromOtherComps(IEntity entity)
         {
             Entity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
-                holder = ((BasicItemComponent) entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
+                holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
-                holder = ((EquippableComponent) entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
+                holder = ((EquippableComponent)entity.GetComponent(ComponentFamily.Equippable)).currentWearer;
             if (holder != null) holder.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
             else Owner.SendMessage(this, ComponentMessageType.DisassociateEntity, entity);
         }
@@ -291,7 +290,7 @@ namespace SS14.Server.GameObjects
         /// Drop an entity.
         /// </summary>
         /// <param name="hand"></param>
-        private void Drop(Entity ent)
+        private void Drop(IEntity ent)
         {
             if (Handslots.ContainsValue(ent))
             {
@@ -318,7 +317,7 @@ namespace SS14.Server.GameObjects
             return true;
         }
 
-        public bool RemoveEntity(Entity actor, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
+        public bool RemoveEntity(IEntity actor, IEntity toRemove, InventoryLocation location = InventoryLocation.Any)
         {
             if (Handslots.Any(x => x.Value == toRemove))
             {
@@ -331,7 +330,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public bool CanAddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        public bool CanAddEntity(IEntity actor, IEntity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
             if (Handslots.Any(x => x.Value == toAdd) || (location == InventoryLocation.Any && Handslots[CurrentHand] != null) || !Handslots.ContainsKey(location) || Handslots[location] != null)
             {
@@ -340,7 +339,7 @@ namespace SS14.Server.GameObjects
             return true;
         }
 
-        public bool AddEntity(Entity actor, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        public bool AddEntity(IEntity actor, IEntity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
             if (Handslots.Any(x => x.Value == toAdd))
             {
@@ -372,7 +371,7 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public IEnumerable<Entity> GetEntitiesInInventory()
+        public IEnumerable<IEntity> GetEntitiesInInventory()
         {
             return Handslots.Values;
         }
@@ -381,11 +380,11 @@ namespace SS14.Server.GameObjects
         {
             //Oh man , what
             //Yes man, this!
-            var entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int?>(x.Key, x.Value != null?(int?)x.Value.Uid:null)).ToDictionary(key => key.Key, va => va.Value);
+            var entities = Handslots.Select(x => new KeyValuePair<InventoryLocation, int?>(x.Key, x.Value != null ? (int?)x.Value.Uid : null)).ToDictionary(key => key.Key, va => va.Value);
             return new HandsComponentState(CurrentHand, entities);
         }
 
-        public bool IsInHand(Entity e)
+        public bool IsInHand(IEntity e)
         {
             return Handslots.ContainsValue(e);
         }

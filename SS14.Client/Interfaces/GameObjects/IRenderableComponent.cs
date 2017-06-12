@@ -1,8 +1,9 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 
-namespace SS14.Client.Interfaces.GOC
+namespace SS14.Client.Interfaces.GameObjects
 {
     public interface IRenderableComponent : IComponent
     {
@@ -12,7 +13,7 @@ namespace SS14.Client.Interfaces.GOC
         FloatRect AABB { get; }
         FloatRect AverageAABB { get; }
         bool IsSlaved();
-        void SetMaster(Entity m);
+        void SetMaster(IEntity m);
         void UnsetMaster();
         void AddSlave(IRenderableComponent slavecompo);
         void RemoveSlave(IRenderableComponent slavecompo);

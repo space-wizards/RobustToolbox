@@ -8,7 +8,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     public class InteractionSystem : EntityEventHandlingSystem
     {
-        public InteractionSystem(EntityManager em, EntitySystemManager esm)
+        public InteractionSystem(ServerEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {}
 

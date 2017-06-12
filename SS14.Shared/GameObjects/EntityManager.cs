@@ -98,6 +98,19 @@ namespace SS14.Shared.GameObjects
             return _entities.ContainsKey(eid) ? _entities[eid] : null;
         }
 
+        /// <summary>
+        /// Attempt to get an entity, returning whether or not an entity was gotten.
+        /// </summary>
+        /// <param name="eid">The entity ID to look up.</param>
+        /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
+        /// <returns>True if a value was returned, false otherwise.</returns>
+        public bool TryGetEntity(int eid, out IEntity entity)
+        {
+            entity = GetEntity(eid);
+
+            return entity != null;
+        }
+
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
             return _entities.Values.Where(e => e.Match(query)).ToList();
@@ -155,11 +168,11 @@ namespace SS14.Shared.GameObjects
             }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            IEntity e = prototype.CreateEntity(this);
+            IEntity e = prototype.CreateEntity(this, EntityNetworkManager, ComponentFactory);
 
             e.Uid = uid;
             _entities.Add(e.Uid, e);
-            if (!Initialized)
+            if (Initialized)
             {
                 e.Initialize();
             }
@@ -238,6 +251,40 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion ComponentEvents
+
+        #region State stuff
+
+        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
+        {
+            var entityKeys = new List<int>();
+            foreach (EntityState es in entityStates)
+            {
+                //Todo defer component state result processing until all entities are loaded and initialized...
+                es.ReceivedTime = serverTime;
+                entityKeys.Add(es.StateData.Uid);
+                //Known entities
+                if (_entities.ContainsKey(es.StateData.Uid))
+                {
+                    _entities[es.StateData.Uid].HandleEntityState(es);
+                }
+                else //Unknown entities
+                {
+                    IEntity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    e.Name = es.StateData.Name;
+                    e.HandleEntityState(es);
+                }
+            }
+
+            //Delete entities that exist here but don't exist in the entity states
+            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (int k in toDelete)
+                DeleteEntity(k);
+
+            if (!Initialized)
+                InitializeEntities();
+        }
+
+        #endregion State stuff
 
         #endregion IEntityManager Members
 
@@ -328,39 +375,5 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion message processing
-
-        #region State stuff
-
-        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
-        {
-            var entityKeys = new List<int>();
-            foreach (EntityState es in entityStates)
-            {
-                //Todo defer component state result processing until all entities are loaded and initialized...
-                es.ReceivedTime = serverTime;
-                entityKeys.Add(es.StateData.Uid);
-                //Known entities
-                if (_entities.ContainsKey(es.StateData.Uid))
-                {
-                    _entities[es.StateData.Uid].HandleEntityState(es);
-                }
-                else //Unknown entities
-                {
-                    Entity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
-                    e.Name = es.StateData.Name;
-                    e.HandleEntityState(es);
-                }
-            }
-
-            //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (int k in toDelete)
-                DeleteEntity(k);
-
-            if (!Initialized)
-                InitializeEntities();
-        }
-
-        #endregion State stuff
     }
 }

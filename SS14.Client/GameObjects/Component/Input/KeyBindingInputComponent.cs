@@ -10,7 +10,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class KeyBindingInputComponent : Component
+    public class KeyBindingInputComponent : ClientComponent
     {
         public override string Name => "KeyBindingInput";
 
@@ -18,7 +18,7 @@ namespace SS14.Client.GameObjects
 
         public delegate void KeyEvent(bool state);
 
-        #endregion
+        #endregion Delegates
 
         private readonly Dictionary<BoundKeyFunctions, KeyEvent> _keyHandlers;
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates;
@@ -150,7 +150,7 @@ namespace SS14.Client.GameObjects
             var activeKeyHandlers =
                 from keyState in _keyStates
                 join handler in _keyHandlers on keyState.Key equals handler.Key
-                select new {evt = handler.Value, state = keyState.Value};
+                select new { evt = handler.Value, state = keyState.Value };
 
             //Execute the bastards!
             foreach (var keyHandler in activeKeyHandlers)

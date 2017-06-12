@@ -4,6 +4,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -21,7 +22,7 @@ namespace SS14.Client.Collision
     public class CollisionManager : ICollisionManager
     {
         private const int BucketSize = 256;
-        private readonly Dictionary<CollidableAABB, Entity> _aabbs;
+        private readonly Dictionary<CollidableAABB, IEntity> _aabbs;
 
         private readonly Dictionary<Vector2i, int> _bucketIndex;
         //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
@@ -38,7 +39,7 @@ namespace SS14.Client.Collision
         {
             _bucketIndex = new Dictionary<Vector2i, int>();
             _buckets = new Dictionary<int, CollidableBucket>();
-            _aabbs = new Dictionary<CollidableAABB, Entity>();
+            _aabbs = new Dictionary<CollidableAABB, IEntity>();
         }
 
         #region ICollisionManager members
@@ -89,7 +90,7 @@ namespace SS14.Client.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(Entity entity)
+        public bool TryCollide(IEntity entity)
         {
             return TryCollide(entity, new Vector2f());
         }
@@ -99,7 +100,7 @@ namespace SS14.Client.Collision
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(Entity entity, Vector2f offset, bool bump = true)
+        public bool TryCollide(IEntity entity, Vector2f offset, bool bump = true)
         {
             var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
             if (collider == null) return false;
@@ -137,11 +138,10 @@ namespace SS14.Client.Collision
                     collided = true;
                 }
 
-                if(bump) aabb.Collidable.Bump(entity);
+                if (bump) aabb.Collidable.Bump(entity);
             }
             return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(ColliderAABB, true).Any(t => t.Tile.TileDef.IsCollidable);
         }
-
 
         /// <summary>
         /// Adds a collidable to the manager.
@@ -154,10 +154,9 @@ namespace SS14.Client.Collision
             {
                 AddPoint(p);
             }
-            if (collidable is IComponent)
+            if (collidable is IComponent comp)
             {
-                var baseComp = collidable as Component;
-                _aabbs.Add(c, baseComp.Owner);
+                _aabbs.Add(c, comp.Owner);
             }
             else
                 _aabbs.Add(c, null);
@@ -169,7 +168,7 @@ namespace SS14.Client.Collision
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
-            KeyValuePair<CollidableAABB, Entity> ourAABB = _aabbs.FirstOrDefault(a => a.Key.Collidable == collidable);
+            KeyValuePair<CollidableAABB, IEntity> ourAABB = _aabbs.FirstOrDefault(a => a.Key.Collidable == collidable);
 
             if (ourAABB.Key.Collidable == null)
                 return;
@@ -191,7 +190,7 @@ namespace SS14.Client.Collision
             AddCollidable(collidable);
         }
 
-        #endregion
+        #endregion ICollisionManager members
 
         /// <summary>
         /// Adds an AABB point to a buckets
@@ -228,8 +227,8 @@ namespace SS14.Client.Collision
 
         private static Vector2i GetBucketCoordinate(Vector2f coordinate)
         {
-            var x = (int) Math.Floor(coordinate.X/BucketSize);
-            var y = (int) Math.Floor(coordinate.Y/BucketSize);
+            var x = (int)Math.Floor(coordinate.X / BucketSize);
+            var y = (int)Math.Floor(coordinate.Y / BucketSize);
             return new Vector2i(x, y);
         }
 

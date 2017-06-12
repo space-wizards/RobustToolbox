@@ -5,16 +5,14 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
-namespace SS14.Server.Interfaces.GOC
+namespace SS14.Server.Interfaces.GameObjects
 {
-    public interface IEntityManager : Shared.Interfaces.GameObjects.IEntityManager, IIoCInterface
+    public interface IServerEntityManager : IEntityManager, IIoCInterface
     {
-        void Shutdown();
-        void HandleEntityNetworkMessage(NetIncomingMessage message);
+        void Initialize();
         void SaveEntities();
         IEntity SpawnEntity(string template, int uid = -1);
         IEntity SpawnEntityAt(string entityTemplateName, Vector2f vector2);
-        IList<EntityState> GetEntityStates();
-        void Update(float frameTime);
+        List<EntityState> GetEntityStates();
     }
 }

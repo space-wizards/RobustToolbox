@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
@@ -9,6 +9,7 @@ using SS14.Server.Interfaces.Player;
 using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System;
@@ -39,7 +40,7 @@ namespace SS14.Server.Placement
         /// </summary>
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var messageType = (PlacementManagerMessage) msg.ReadByte();
+            var messageType = (PlacementManagerMessage)msg.ReadByte();
 
             switch (messageType)
             {
@@ -70,7 +71,7 @@ namespace SS14.Server.Placement
 
             float xRcv = msg.ReadFloat();
             float yRcv = msg.ReadFloat();
-            var dirRcv = (Direction) msg.ReadByte();
+            var dirRcv = (Direction)msg.ReadByte();
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection);
             if (session.attachedEntity == null)
@@ -83,7 +84,7 @@ namespace SS14.Server.Placement
             Vector2f tilePos = new Vector2f(a, b);
 
             if (permission != null || true)
-                //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
+            //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
             {
                 if (permission != null)
                 {
@@ -106,14 +107,15 @@ namespace SS14.Server.Placement
 
                 if (!isTile)
                 {
-                    Entity created = _server.EntityManager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
+                    var manager = IoCManager.Resolve<IServerEntityManager>();
+                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
                     if (created != null)
                     {
                         created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
                             new Vector2f(xRcv, yRcv));
-                        if(created.HasComponent(ComponentFamily.Direction))
+                        if (created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
-                        if(created.HasComponent(ComponentFamily.WallMounted))
+                        if (created.HasComponent(ComponentFamily.WallMounted))
                             created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(mapMgr.GetTileRef(tilePos));
                     }
                 }
@@ -139,20 +141,20 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(Entity mob, int range, string objectType, string alignOption)
+        public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.PlacementManagerMessage);
-            message.Write((byte) PlacementManagerMessage.StartPlacement);
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
             message.Write(false); //Not a tile
             message.Write(objectType);
             message.Write(alignOption);
 
-            if(mob.HasComponent(ComponentFamily.Actor))
+            if (mob.HasComponent(ComponentFamily.Actor))
             {
                 var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
-                if(playerConnection != null)
+                if (playerConnection != null)
                 {
                     IoCManager.Resolve<ISS14NetServer>().SendMessage(message, playerConnection,
                                                                      NetDeliveryMethod.ReliableOrdered);
@@ -163,11 +165,11 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBeginTile(Entity mob, int range, string tileType, string alignOption)
+        public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.PlacementManagerMessage);
-            message.Write((byte) PlacementManagerMessage.StartPlacement);
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.StartPlacement);
             message.Write(range);
             message.Write(true); //Is a tile.
             message.Write(tileType);
@@ -186,11 +188,11 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        public void SendPlacementCancel(Entity mob)
+        public void SendPlacementCancel(IEntity mob)
         {
             NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.PlacementManagerMessage);
-            message.Write((byte) PlacementManagerMessage.CancelPlacement);
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.CancelPlacement);
 
             if (mob.HasComponent(ComponentFamily.Actor))
             {
@@ -206,7 +208,7 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(Entity mob, int range, string objectType, string alignOption)
+        public void StartBuilding(IEntity mob, int range, string objectType, string alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -215,7 +217,7 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuildingTile(Entity mob, int range, string tileType, string alignOption)
+        public void StartBuildingTile(IEntity mob, int range, string tileType, string alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBeginTile(mob, range, tileType, alignOption);
@@ -224,7 +226,7 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void CancelBuilding(Entity mob)
+        public void CancelBuilding(IEntity mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);
@@ -233,16 +235,16 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(Entity mob, int range, string objectType, string alignOption)
+        public void AssignBuildPermission(IEntity mob, int range, string objectType, string alignOption)
         {
             var newPermission = new PlacementInformation
-                                    {
-                                        MobUid = mob.Uid,
-                                        Range = range,
-                                        IsTile = false,
-                                        EntityType = objectType,
-                                        PlacementOption = alignOption
-                                    };
+            {
+                MobUid = mob.Uid,
+                Range = range,
+                IsTile = false,
+                EntityType = objectType,
+                PlacementOption = alignOption
+            };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
                                                                where permission.MobUid == mob.Uid
@@ -262,16 +264,16 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermissionTile(Entity mob, int range, string tileType, string alignOption)
+        public void AssignBuildPermissionTile(IEntity mob, int range, string tileType, string alignOption)
         {
             var newPermission = new PlacementInformation
-                                    {
-                                        MobUid = mob.Uid,
-                                        Range = range,
-                                        IsTile = true,
-                                        TileType = IoCManager.Resolve<ITileDefinitionManager>()[tileType].TileId,
-                                        PlacementOption = alignOption
-                                    };
+            {
+                MobUid = mob.Uid,
+                Range = range,
+                IsTile = true,
+                TileType = IoCManager.Resolve<ITileDefinitionManager>()[tileType].TileId,
+                PlacementOption = alignOption
+            };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
                                                                where permission.MobUid == mob.Uid
@@ -291,7 +293,7 @@ namespace SS14.Server.Placement
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        public void RevokeAllBuildPermissions(Entity mob)
+        public void RevokeAllBuildPermissions(IEntity mob)
         {
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
                                                                where permission.MobUid == mob.Uid
@@ -301,7 +303,7 @@ namespace SS14.Server.Placement
                 BuildPermissions.RemoveAll(x => mobPermissions.Contains(x));
         }
 
-        #endregion
+        #endregion IPlacementManager Members
 
         private PlacementInformation GetPermission(int uid, string alignOpt)
         {

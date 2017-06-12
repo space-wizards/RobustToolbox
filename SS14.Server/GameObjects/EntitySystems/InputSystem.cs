@@ -6,7 +6,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     public class InputSystem : EntitySystem
     {
-        public InputSystem(EntityManager em, EntitySystemManager esm)
+        public InputSystem(ServerEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

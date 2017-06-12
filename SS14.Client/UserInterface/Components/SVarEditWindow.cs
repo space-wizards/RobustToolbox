@@ -1,5 +1,5 @@
 ﻿using SFML.System;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -50,8 +50,8 @@ namespace SS14.Client.UserInterface.Components
 
         private GuiComponent CreateEditField(MarshalComponentParameter compPar)
         {
-            if (compPar.Parameter.ParameterType == typeof (float) || compPar.Parameter.ParameterType == typeof (int) ||
-                compPar.Parameter.ParameterType == typeof (String))
+            if (compPar.Parameter.ParameterType == typeof(float) || compPar.Parameter.ParameterType == typeof(int) ||
+                compPar.Parameter.ParameterType == typeof(String))
             {
                 var editTxt = new Textbox(100, _resourceManager);
                 editTxt.ClearOnSubmit = false;
@@ -60,11 +60,11 @@ namespace SS14.Client.UserInterface.Components
                 editTxt.OnSubmit += editTxt_OnSubmit;
                 return editTxt;
             }
-            else if (compPar.Parameter.ParameterType == typeof (Boolean))
+            else if (compPar.Parameter.ParameterType == typeof(Boolean))
             {
                 var editBool = new Checkbox(_resourceManager);
                 editBool.UserData = compPar;
-                editBool.Value = ((Boolean) compPar.Parameter.Parameter);
+                editBool.Value = ((Boolean)compPar.Parameter.Parameter);
                 editBool.ValueChanged += editBool_ValueChanged;
                 return editBool;
             }
@@ -73,26 +73,26 @@ namespace SS14.Client.UserInterface.Components
 
         private void editBool_ValueChanged(bool newValue, Checkbox sender)
         {
-            var assigned = (MarshalComponentParameter) sender.UserData;
+            var assigned = (MarshalComponentParameter)sender.UserData;
             assigned.Parameter.Parameter = newValue;
             _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
         }
 
         private void editTxt_OnSubmit(string text, Textbox sender)
         {
-            var assigned = (MarshalComponentParameter) sender.UserData;
+            var assigned = (MarshalComponentParameter)sender.UserData;
 
-            if (assigned.Parameter.ParameterType == typeof (string))
+            if (assigned.Parameter.ParameterType == typeof(string))
             {
                 assigned.Parameter.Parameter = text;
                 _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
             }
-            else if (assigned.Parameter.ParameterType == typeof (int))
+            else if (assigned.Parameter.ParameterType == typeof(int))
             {
                 assigned.Parameter.Parameter = int.Parse(text);
                 _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);
             }
-            else if (assigned.Parameter.ParameterType == typeof (float))
+            else if (assigned.Parameter.ParameterType == typeof(float))
             {
                 assigned.Parameter.Parameter = float.Parse(text);
                 _owner.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoSetSVar(assigned);

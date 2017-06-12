@@ -11,7 +11,7 @@ namespace SS14.Client.GameObjects
     /// Mover component that responds to movement by an entity.
     /// </summary>
     [IoCTarget]
-    public class SlaveMoverComponent : Component
+    public class SlaveMoverComponent : ClientComponent
     {
         public override string Name => "SlaveMover";
         private Entity _master;
@@ -65,15 +65,15 @@ namespace SS14.Client.GameObjects
 
         private void SetNewState(MoverComponentState state)
         {
-            if(_master == null && state.Master != null)
+            if (_master == null && state.Master != null)
             {
                 Attach((int)state.Master);
             }
-            if(_master != null && state.Master == null)
+            if (_master != null && state.Master == null)
             {
                 Detach();
             }
-            if(_master != null && state.Master != null && _master.Uid != state.Master)
+            if (_master != null && state.Master != null && _master.Uid != state.Master)
             {
                 Detach();
                 Attach((int)state.Master);

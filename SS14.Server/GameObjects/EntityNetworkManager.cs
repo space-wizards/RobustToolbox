@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Server.Interfaces.Configuration;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.MessageLogging;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
@@ -12,7 +13,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using IEntityNetworkManager = SS14.Server.Interfaces.GOC.IEntityNetworkManager;
 
 namespace SS14.Server.GameObjects
 {
@@ -33,7 +33,7 @@ namespace SS14.Server.GameObjects
         public NetOutgoingMessage CreateEntityMessage()
         {
             NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte) NetMessage.EntityMessage);
+            message.Write((byte)NetMessage.EntityMessage);
             return message;
         }
 
@@ -58,14 +58,13 @@ namespace SS14.Server.GameObjects
         {
         }
 
-
         public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
                                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
         {
             throw new NotImplementedException();
         }
 
-        #endregion
+        #endregion IEntityNetworkManager Members
 
         #region Sending
 
@@ -83,82 +82,82 @@ namespace SS14.Server.GameObjects
                                                         NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
-            message.Write((byte) EntityMessage.ComponentMessage);
+            message.Write((byte)EntityMessage.ComponentMessage);
             message.Write(sendingEntity.Uid); //Write this entity's UID
-            message.Write((byte) family);
+            message.Write((byte)family);
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
                 {
-                    message.Write((byte) NetworkDataType.d_enum);
-                    message.Write((int) messageParam);
+                    message.Write((byte)NetworkDataType.d_enum);
+                    message.Write((int)messageParam);
                 }
                 else if (messageParam is bool)
                 {
-                    message.Write((byte) NetworkDataType.d_bool);
-                    message.Write((bool) messageParam);
+                    message.Write((byte)NetworkDataType.d_bool);
+                    message.Write((bool)messageParam);
                 }
                 else if (messageParam is byte)
                 {
-                    message.Write((byte) NetworkDataType.d_byte);
-                    message.Write((byte) messageParam);
+                    message.Write((byte)NetworkDataType.d_byte);
+                    message.Write((byte)messageParam);
                 }
                 else if (messageParam is sbyte)
                 {
-                    message.Write((byte) NetworkDataType.d_sbyte);
-                    message.Write((sbyte) messageParam);
+                    message.Write((byte)NetworkDataType.d_sbyte);
+                    message.Write((sbyte)messageParam);
                 }
                 else if (messageParam is ushort)
                 {
-                    message.Write((byte) NetworkDataType.d_ushort);
-                    message.Write((ushort) messageParam);
+                    message.Write((byte)NetworkDataType.d_ushort);
+                    message.Write((ushort)messageParam);
                 }
                 else if (messageParam is short)
                 {
-                    message.Write((byte) NetworkDataType.d_short);
-                    message.Write((short) messageParam);
+                    message.Write((byte)NetworkDataType.d_short);
+                    message.Write((short)messageParam);
                 }
                 else if (messageParam is int)
                 {
-                    message.Write((byte) NetworkDataType.d_int);
-                    message.Write((int) messageParam);
+                    message.Write((byte)NetworkDataType.d_int);
+                    message.Write((int)messageParam);
                 }
                 else if (messageParam is uint)
                 {
-                    message.Write((byte) NetworkDataType.d_uint);
-                    message.Write((uint) messageParam);
+                    message.Write((byte)NetworkDataType.d_uint);
+                    message.Write((uint)messageParam);
                 }
                 else if (messageParam is ulong)
                 {
-                    message.Write((byte) NetworkDataType.d_ulong);
-                    message.Write((ulong) messageParam);
+                    message.Write((byte)NetworkDataType.d_ulong);
+                    message.Write((ulong)messageParam);
                 }
                 else if (messageParam is long)
                 {
-                    message.Write((byte) NetworkDataType.d_long);
-                    message.Write((long) messageParam);
+                    message.Write((byte)NetworkDataType.d_long);
+                    message.Write((long)messageParam);
                 }
                 else if (messageParam is float)
                 {
-                    message.Write((byte) NetworkDataType.d_float);
-                    message.Write((float) messageParam);
+                    message.Write((byte)NetworkDataType.d_float);
+                    message.Write((float)messageParam);
                 }
                 else if (messageParam is double)
                 {
-                    message.Write((byte) NetworkDataType.d_double);
-                    message.Write((double) messageParam);
+                    message.Write((byte)NetworkDataType.d_double);
+                    message.Write((double)messageParam);
                 }
                 else if (messageParam is string)
                 {
-                    message.Write((byte) NetworkDataType.d_string);
-                    message.Write((string) messageParam);
+                    message.Write((byte)NetworkDataType.d_string);
+                    message.Write((string)messageParam);
                 }
                 else if (messageParam is byte[])
                 {
-                    message.Write((byte) NetworkDataType.d_byteArray);
-                    message.Write(((byte[]) messageParam).Length);
-                    message.Write((byte[]) messageParam);
+                    message.Write((byte)NetworkDataType.d_byteArray);
+                    message.Write(((byte[])messageParam).Length);
+                    message.Write((byte[])messageParam);
                 }
                 else
                 {
@@ -188,9 +187,9 @@ namespace SS14.Server.GameObjects
             var parameters = new List<object>();
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType().IsSubclassOf(typeof (Enum)))
+                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
                 {
-                    parameters.Add((int) messageParam);
+                    parameters.Add((int)messageParam);
                 }
                 else if (messageParam is int
                          || messageParam is uint
@@ -250,10 +249,9 @@ namespace SS14.Server.GameObjects
             {
                 m_netServer.SendToAll(newMsg, method);
             }
-
         }
 
-        #endregion
+        #endregion Sending
 
         #region Receiving
 
@@ -264,7 +262,7 @@ namespace SS14.Server.GameObjects
         /// <returns></returns>
         public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (EntityMessage) message.ReadByte();
+            var messageType = (EntityMessage)message.ReadByte();
             int uid = 0;
             IncomingEntityMessage incomingEntityMessage = IncomingEntityMessage.Null;
             switch (messageType)
@@ -312,7 +310,7 @@ namespace SS14.Server.GameObjects
 
                 if (messageType == EntityMessage.ComponentMessage)
                 {
-                    var messageContent = (IncomingEntityComponentMessage) incomingEntityMessage.Message;
+                    var messageContent = (IncomingEntityComponentMessage)incomingEntityMessage.Message;
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
                                                           uid,
                                                           messageType,
@@ -324,7 +322,7 @@ namespace SS14.Server.GameObjects
                     logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
                                                           uid,
                                                           messageType,
-                                                          (ComponentFamily) incomingEntityMessage.Message,
+                                                          (ComponentFamily)incomingEntityMessage.Message,
                                                           new object[0]);
                 }
             }
@@ -338,19 +336,19 @@ namespace SS14.Server.GameObjects
         /// <param name="message"></param>
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
-            var componentFamily = (ComponentFamily) message.ReadByte();
+            var componentFamily = (ComponentFamily)message.ReadByte();
 
             return new IncomingEntityComponentMessage(componentFamily, UnPackParams(message));
         }
 
-        #endregion
+        #endregion Receiving
 
         private List<object> UnPackParams(NetIncomingMessage message)
         {
             var messageParams = new List<object>();
             while (message.Position < message.LengthBits)
             {
-                switch ((NetworkDataType) message.ReadByte())
+                switch ((NetworkDataType)message.ReadByte())
                 {
                     case NetworkDataType.d_enum:
                         messageParams.Add(message.ReadInt32()); //Cast from int, because enums are ints.

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SS14.Server.Interfaces.GOC
+namespace SS14.Server.Interfaces.GameObjects
 {
     public interface EntityQuery
     {

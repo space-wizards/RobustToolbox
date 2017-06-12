@@ -1,6 +1,7 @@
 ﻿using SFML.System;
-using SS14.Client.Interfaces.Network;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
@@ -12,25 +13,17 @@ namespace SS14.Client.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [IoCTarget(Priority = 5)]
-    public class EntityManager : SS14.Shared.GameObjects.EntityManager
+    public class EntityManager : Shared.GameObjects.EntityManager, IClientEntityManager
     {
-        public EntityManager(INetworkManager networkManager)
-            : base(EngineType.Client, new EntityNetworkManager(networkManager))
-        {
-        }
-
-
-        public Entity[] GetEntitiesInRange(Vector2f position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(Vector2f position, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
-            IEnumerable<Entity> entities = from e in _entities.Values
-                                           where
-                                               (position -
-                                                e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).
-                                                   LengthSquared() < Range
-                                           select e;
-
-            return entities.ToArray();
+            return from e in _entities.Values
+                   where
+                       (position -
+                        e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).
+                           LengthSquared() < Range
+                   select e;
         }
 
         public override void InitializeEntities()

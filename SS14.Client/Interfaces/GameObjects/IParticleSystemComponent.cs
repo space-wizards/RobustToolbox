@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.GameObjects;
 
-namespace SS14.Client.Interfaces.GOC
+namespace SS14.Client.Interfaces.GameObjects
 {
     public interface IParticleSystemComponent : IComponent
     {

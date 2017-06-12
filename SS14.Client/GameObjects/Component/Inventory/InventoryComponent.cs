@@ -9,7 +9,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class InventoryComponent : Component
+    public class InventoryComponent : ClientComponent
     {
         public override string Name => "Inventory";
         #region Delegates
@@ -17,7 +17,7 @@ namespace SS14.Client.GameObjects
         public delegate void InventoryComponentUpdateHandler(
             InventoryComponent sender, int maxSlots, List<Entity> entities);
 
-        #endregion
+        #endregion Delegates
 
         public InventoryComponent()
         {
@@ -64,7 +64,7 @@ namespace SS14.Client.GameObjects
         {
             var theState = state as InventoryComponentState;
             var stateChanged = false;
-            if(MaxSlots != theState.MaxSlots)
+            if (MaxSlots != theState.MaxSlots)
             {
                 MaxSlots = theState.MaxSlots;
                 stateChanged = true;
@@ -74,7 +74,7 @@ namespace SS14.Client.GameObjects
             var toRemove = new List<Entity>();
             foreach (var e in ContainedEntities)
             {
-                if(newEntities.Contains(e.Uid))
+                if (newEntities.Contains(e.Uid))
                 {
                     newEntities.Remove(e.Uid);
                 }

@@ -6,21 +6,20 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        public PhysicsSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public PhysicsSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
             EntityQuery.AllSet.Add(typeof(VelocityComponent));
             EntityQuery.AllSet.Add(typeof(TransformComponent));
-            EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
-            EntityQuery.Exclusionset.Add(typeof(PlayerInputMoverComponent));
+            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
+            EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
         }
 
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
-            foreach(var entity in entities)
+            foreach (var entity in entities)
             {
                 //GasEffect(entity, frametime);
 

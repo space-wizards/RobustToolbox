@@ -187,7 +187,7 @@
     <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\PersistentConfiguration.cs" />
-    <Compile Include="GameObjects\EntityManager.cs" />
+    <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\EntityNetworkManager.cs" />
     <Compile Include="GameObjects\MessageEnums.cs" />
     <Compile Include="GameObjects\Component\ClickableComponent.cs" />
@@ -244,18 +244,17 @@
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
     <Compile Include="Interfaces\Configuration\IServerConfigurationManager.cs" />
     <Compile Include="Interfaces\GameMode\IGameMode.cs" />
-    <Compile Include="Interfaces\GameObject\IActorComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IComponentFactory.cs" />
-    <Compile Include="Interfaces\GameObject\IDirectionComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IEntityManager.cs" />
-    <Compile Include="Interfaces\GameObject\IEntityNetworkManager.cs" />
-    <Compile Include="Interfaces\GameObject\IEntityQuery.cs" />
-    <Compile Include="Interfaces\GameObject\IEquipmentComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IInventoryComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IParticleSystemComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObject\ITransformComponent.cs" />
-    <Compile Include="Interfaces\GameObject\IWallMountedComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
+    <Compile Include="Interfaces\GameObjects\IServerEntityNetworkManager.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
+    <Compile Include="Interfaces\GameObjects\IEquipmentComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IInventoryComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\ITransformComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IWallMountedComponent.cs" />
     <Compile Include="Interfaces\GameState\IGameStateManager.cs" />
     <Compile Include="Interfaces\Map\Chunk.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
@@ -295,20 +294,48 @@
     <Compile Include="ServerConsole\Commands\ServerManagement.cs" />
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\Commands\ThrowException.cs" />
-    <Content Include="Prototypes\Clothing.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Containers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Doors.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\GlassWalls.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Internals.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\JanitorItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Lights.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Lockers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\MedicalItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Misc.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Mobs.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Tables.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Wallmounted.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Weapons.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Prototypes\Clothing.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Containers.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Doors.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\GlassWalls.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Internals.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\JanitorItems.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Lights.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Lockers.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\MedicalItems.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Misc.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Mobs.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Tables.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Wallmounted.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Weapons.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <PropertyGroup>

@@ -15,7 +15,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class CollidableComponent : Component, ICollidable
+    public class CollidableComponent : ClientComponent, ICollidable
     {
         public override string Name => "Collidable";
 
@@ -34,12 +34,12 @@ namespace SS14.Client.GameObjects
         {
             Family = ComponentFamily.Collidable;
             DebugColor = Color.Red;
-            tweakAABB = new Vector4f(0,0,0,0);
+            tweakAABB = new Vector4f(0, 0, 0, 0);
         }
 
         public override Type StateType
         {
-            get { return typeof (CollidableComponentState); }
+            get { return typeof(CollidableComponentState); }
         }
 
         private Vector4f TweakAABB
@@ -95,13 +95,12 @@ namespace SS14.Client.GameObjects
                                               ent.Uid);
         }
 
-
         public bool IsHardCollidable
         {
             get { return isHardCollidable; }
         }
 
-        #endregion
+        #endregion ICollidable Members
 
         public event EventHandler OnBump;
 
@@ -235,7 +234,7 @@ namespace SS14.Client.GameObjects
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-                currentAABB = (FloatRect) reply.ParamsList[0];
+                currentAABB = (FloatRect)reply.ParamsList[0];
                 currentAABB = new FloatRect(
                     currentAABB.Left / tileSize,
                     currentAABB.Top / tileSize,

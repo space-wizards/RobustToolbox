@@ -6,7 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -436,7 +436,6 @@ namespace SS14.Client.UserInterface
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
-
             }
             */
         }

@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class EquippableComponent : Component
+    public class EquippableComponent : ClientComponent
     {
         public override string Name => "Equippable";
         /// <summary>
@@ -26,7 +26,7 @@ namespace SS14.Client.GameObjects
 
         public override System.Type StateType
         {
-            get { return typeof (EquippableComponentState); }
+            get { return typeof(EquippableComponentState); }
         }
 
         /// <summary>
@@ -55,10 +55,10 @@ namespace SS14.Client.GameObjects
         /// <param name="state"></param>
         public override void HandleComponentState(dynamic state)
         {
-            int? holderUid = currentWearer != null ? currentWearer.Uid : (int?) null;
-            if(state.Holder != holderUid)
+            int? holderUid = currentWearer != null ? currentWearer.Uid : (int?)null;
+            if (state.Holder != holderUid)
             {
-                if(state.Holder == null)
+                if (state.Holder == null)
                 {
                     UnEquipped();
                 }

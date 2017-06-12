@@ -10,7 +10,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class EquipmentComponent : Component
+    public class EquipmentComponent : ClientComponent
     {
         public override string Name => "Equipment";
         public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
@@ -59,7 +59,7 @@ namespace SS14.Client.GameObjects
         private void EquipItem(EquipmentSlot part, int uid)
         {
             if (!IsEmpty(part))
-                // Uh oh we are confused about something! But it's better to just do what the server says
+            // Uh oh we are confused about something! But it's better to just do what the server says
             {
                 UnEquipItem(part);
             }
@@ -99,7 +99,7 @@ namespace SS14.Client.GameObjects
             foreach (KeyValuePair<EquipmentSlot, int> curr in state.EquippedEntities)
             {
                 Entity retEnt = Owner.EntityManager.GetEntity(curr.Value);
-                if(retEnt == null && !IsEmpty(curr.Key))
+                if (retEnt == null && !IsEmpty(curr.Key))
                 {
                     UnEquipItem(curr.Key);
                 }
@@ -117,7 +117,7 @@ namespace SS14.Client.GameObjects
             }
 
             var removed = EquippedEntities.Keys.Where(x => !state.EquippedEntities.ContainsKey(x)).ToArray();
-            foreach(EquipmentSlot rem in removed)
+            foreach (EquipmentSlot rem in removed)
             {
                 UnEquipItem(rem);
             }

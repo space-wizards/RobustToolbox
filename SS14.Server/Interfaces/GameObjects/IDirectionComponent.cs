@@ -1,6 +1,6 @@
 ﻿using SS14.Shared;
 
-namespace SS14.Server.Interfaces.GOC
+namespace SS14.Server.Interfaces.GameObjects
 {
     public interface IDirectionComponent
     {

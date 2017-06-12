@@ -1,7 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
 using System;
 
-namespace SS14.Client.Interfaces.GOC
+namespace SS14.Client.Interfaces.GameObjects
 {
     public interface ISVarsComponent
     {

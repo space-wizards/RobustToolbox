@@ -1,7 +1,7 @@
 ﻿using SFML.Graphics;
 using System.Collections.Generic;
 
-namespace SS14.Client.Interfaces.GOC
+namespace SS14.Client.Interfaces.GameObjects
 {
     public interface ISpriteComponent
     {

@@ -22,8 +22,8 @@ namespace SS14.Server.GameObjects
         public DamageableComponent()
         {
             Family = ComponentFamily.Damageable;
-            RegisterSVar("MaxHealth", typeof (int));
-            RegisterSVar("CurrentHealth", typeof (int));
+            RegisterSVar("MaxHealth", typeof(int));
+            RegisterSVar("CurrentHealth", typeof(int));
         }
 
         // TODO use state system
@@ -43,7 +43,7 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.Damage:
-                    ApplyDamage((Entity) list[0], (int) list[1], (DamageType) list[2]);
+                    ApplyDamage((Entity)list[0], (int)list[1], (DamageType)list[2]);
                     break;
             }
 
@@ -90,7 +90,7 @@ namespace SS14.Server.GameObjects
 
         protected virtual int GetArmor(DamageType damType)
         {
-            var entStats = (EntityStatsComp) Owner.GetComponent(ComponentFamily.EntityStats);
+            var entStats = (EntityStatsComp)Owner.GetComponent(ComponentFamily.EntityStats);
 
             if (entStats != null) return entStats.GetArmorValue(damType);
             else return 0;
@@ -135,11 +135,11 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override List<ComponentParameter> GetParameters()
+        public override IList<ComponentParameter> GetParameters()
         {
-            List<ComponentParameter> cparams = base.GetParameters();
-            cparams.Add(new ComponentParameter("MaxHealth", (int) maxHealth));
-            cparams.Add(new ComponentParameter("CurrentHealth", (int) currentHealth));
+            IList<ComponentParameter> cparams = base.GetParameters();
+            cparams.Add(new ComponentParameter("MaxHealth", (int)maxHealth));
+            cparams.Add(new ComponentParameter("CurrentHealth", (int)currentHealth));
             return cparams;
         }
     }

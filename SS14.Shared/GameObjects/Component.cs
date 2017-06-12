@@ -10,7 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
-    [IoCTarget(Disabled=true)]
+    [IoCTarget(Disabled = true)]
     public abstract class Component : IComponent
     {
         public abstract string Name { get; }
@@ -53,8 +53,6 @@ namespace SS14.Shared.GameObjects
             //Send us to the manager so it knows we're active
             var manager = IoCManager.Resolve<IComponentManager>();
             manager.AddComponent(this);
-            if (Owner.Initialized && Owner.EntityManager.EngineType == EngineType.Client)
-                Owner.SendComponentInstantiationMessage(this);
         }
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        public virtual void LoadParameters(IDictionary<string, YamlNode> mapping)
+        public virtual void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
         }
 
@@ -95,16 +93,7 @@ namespace SS14.Shared.GameObjects
             if (sender == this) //Don't listen to our own messages!
                 return reply;
 
-            //Client-only hack
-            if (Owner.EntityManager.EngineType == EngineType.Client)
-            {
-                switch (type)
-                {
-                    case ComponentMessageType.Initialize:
-                        Owner.SendComponentInstantiationMessage(this);
-                        break;
-                }
-            }
+            // Leaving this gap here in case anybody wants to add something later.
 
             return reply;
         }
@@ -152,7 +141,7 @@ namespace SS14.Shared.GameObjects
             return new List<ComponentParameter>();
         }
 
-        #endregion
+        #endregion IComponent Members
 
         #region SVars Stuff
 
@@ -220,9 +209,9 @@ namespace SS14.Shared.GameObjects
             if (SVarIsRegistered(name))
                 _sVars.Remove(name);
         }
-        #endregion
+        #endregion SVars Stuff
 
         protected virtual void SubscribeEvents()
-        {}
+        { }
     }
 }

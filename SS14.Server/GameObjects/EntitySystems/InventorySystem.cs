@@ -1,21 +1,25 @@
 ﻿using SS14.Server.GameObjects.Events;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using EntityQuery = SS14.Shared.GameObjects.EntityQuery;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
     public class InventorySystem : EntitySystem
     {
-        public InventorySystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        private readonly IComponentFactory componentFactory;
+
+        public InventorySystem()
         {
+            componentFactory = IoCManager.Resolve<IComponentFactory>();
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof (InventoryComponent));
-            EntityQuery.OneSet.Add(typeof (EquipmentComponent));
-            EntityQuery.OneSet.Add(typeof (HumanHandsComponent));
+            EntityQuery.OneSet.Add(typeof(InventoryComponent));
+            EntityQuery.OneSet.Add(typeof(EquipmentComponent));
+            EntityQuery.OneSet.Add(typeof(HumanHandsComponent));
         }
 
         public override void RegisterMessageTypes()
@@ -51,39 +55,33 @@ namespace SS14.Server.GameObjects.EntitySystems
             if (sysMsg is InventorySystemPickUp)
             {
                 InventorySystemPickUp message = sysMsg as InventorySystemPickUp;
-                Entity user = EntityManager.GetEntity(message.uidUser);
-                Entity obj = EntityManager.GetEntity(message.uidObject);
+                IEntity user = EntityManager.GetEntity(message.uidUser);
+                IEntity obj = EntityManager.GetEntity(message.uidObject);
 
-                if(user != null && obj != null)
+                if (user != null && obj != null)
                     PickUpEntity(user, obj);
             }
-
             else if (sysMsg is InventorySystemDrop)
             {
                 InventorySystemDrop message = sysMsg as InventorySystemDrop;
-                Entity user = EntityManager.GetEntity(message.uidUser);
-                Entity obj = EntityManager.GetEntity(message.uidObject);
-                Entity dropping = EntityManager.GetEntity(message.uidDroppingInventory);
+                IEntity user = EntityManager.GetEntity(message.uidUser);
+                IEntity obj = EntityManager.GetEntity(message.uidObject);
+                IEntity dropping = EntityManager.GetEntity(message.uidDroppingInventory);
 
                 if (user != null && obj != null && dropping != null)
                     RemoveEntity(user, dropping, obj);
             }
-
             else if (sysMsg is InventorySystemExchange) //TODO: Add argument for target inventory type.
             {
                 InventorySystemExchange message = sysMsg as InventorySystemExchange;
-                Entity user = EntityManager.GetEntity(message.uidUser);
-                Entity obj = EntityManager.GetEntity(message.uidObject);
-                Entity prevInv = EntityManager.GetEntity(message.uidPreviousInventory);
-                Entity newInv = EntityManager.GetEntity(message.uidNewInventory);
+                IEntity user = EntityManager.GetEntity(message.uidUser);
+                IEntity obj = EntityManager.GetEntity(message.uidObject);
+                IEntity prevInv = EntityManager.GetEntity(message.uidPreviousInventory);
+                IEntity newInv = EntityManager.GetEntity(message.uidNewInventory);
 
                 if (user != null && obj != null && prevInv != null && newInv != null)
                     ExchangeEntity(user, prevInv, newInv, obj);
             }
-        }
-
-        public override void Update(float frametime)
-        {
         }
 
         #region events
@@ -112,23 +110,20 @@ namespace SS14.Server.GameObjects.EntitySystems
                 holdingHand = actorHands.CurrentHand;
                 item = actorHands.GetEntity(holdingHand);
             }
-            if(item != null)
+            if (item != null)
                 RemoveEntity(args.Actor, args.Actor, item, holdingHand);
         }
 
         public void HandleExchangeItem(object sender, InventoryExchangedItemEventArgs args)
         {
-
         }
 
         public void HandleRemovedItem(object sender, InventoryRemovedItemEventArgs args)
         {
-
         }
 
         public void HandleAddedItem(object sender, InventoryAddedItemEventArgs args)
         {
-
         }
 
         public void HandleEquipItem(object sender, InventoryEquipItemEventArgs args)
@@ -143,7 +138,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             var actor = args.Actor;
             var handsComp = actor.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
-            if(!handsComp.IsEmpty(handsComp.CurrentHand))
+            if (!handsComp.IsEmpty(handsComp.CurrentHand))
             {
                 // TODO check if target slot can recieve entity
                 var ent = handsComp.GetEntity(handsComp.CurrentHand);
@@ -203,11 +198,10 @@ namespace SS14.Server.GameObjects.EntitySystems
                 AddEntity(actor, actor, item, InventoryLocation.Inventory);
         }
 
-
-        #endregion
+        #endregion events
 
         #region Inventory Management Methods
-        public bool PickUpEntity(Entity user, Entity obj)
+        public bool PickUpEntity(IEntity user, IEntity obj)
         {
             HumanHandsComponent userHands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             BasicItemComponent objItem = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);
@@ -224,14 +218,14 @@ namespace SS14.Server.GameObjects.EntitySystems
             return false;
         }
 
-        public bool ExchangeEntity(Entity user, Entity prevInventory, Entity newInventory, Entity obj)
+        public bool ExchangeEntity(IEntity user, IEntity prevInventory, IEntity newInventory, IEntity obj)
         {
             if (!RemoveEntity(user, prevInventory, obj)) return false;
             if (!PickUpEntity(newInventory, obj)) return false;
             return true;
         }
 
-        public bool RemoveEntity(Entity user, Entity inventory, Entity toRemove, InventoryLocation location = InventoryLocation.Any)
+        public bool RemoveEntity(IEntity user, IEntity inventory, IEntity toRemove, InventoryLocation location = InventoryLocation.Any)
         {
             var comHands = inventory.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             var comEquip = inventory.GetComponent<EquipmentComponent>(ComponentFamily.Equipment);
@@ -266,7 +260,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 {
                     //Do sprite stuff and detaching
                     EquippableComponent eqCompo = toRemove.GetComponent<EquippableComponent>(ComponentFamily.Equippable);
-                    if(eqCompo != null) eqCompo.currentWearer = null;
+                    if (eqCompo != null) eqCompo.currentWearer = null;
                     FreeMovementAndSprite(toRemove);
                     // TODO Find a better way
                     toRemove.SendMessage(this, ComponentMessageType.ItemUnEquipped);
@@ -277,10 +271,10 @@ namespace SS14.Server.GameObjects.EntitySystems
             return false;
         }
 
-        public void EnslaveMovementAndSprite(Entity master, Entity slave)
+        public void EnslaveMovementAndSprite(IEntity master, IEntity slave)
         {
             slave.RemoveComponent(ComponentFamily.Mover);
-            slave.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<SlaveMoverComponent>());
+            slave.AddComponent(ComponentFamily.Mover, componentFactory.GetComponent<SlaveMoverComponent>());
             slave.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover).Attach(master);
             if (slave.HasComponent(ComponentFamily.Renderable) && master.HasComponent(ComponentFamily.Renderable))
             {
@@ -288,7 +282,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
         }
 
-        public void FreeMovementAndSprite(Entity slave)
+        public void FreeMovementAndSprite(IEntity slave)
         {
             var toRemoveSlaveMover = slave.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover);
             if (toRemoveSlaveMover != null)
@@ -301,23 +295,23 @@ namespace SS14.Server.GameObjects.EntitySystems
                 slave.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).UnsetMaster();
             }
             slave.RemoveComponent(ComponentFamily.Mover);
-            slave.AddComponent(ComponentFamily.Mover, EntityManager.ComponentFactory.GetComponent<BasicMoverComponent>());
+            slave.AddComponent(ComponentFamily.Mover, componentFactory.GetComponent<BasicMoverComponent>());
             slave.GetComponent<BasicItemComponent>(ComponentFamily.Item).HandleDropped();
         }
 
-        public void HideEntity(Entity toHide)
+        public void HideEntity(IEntity toHide)
         {
             var renderable = toHide.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
             renderable.Visible = false;
         }
 
-        public void ShowEntity(Entity toShow)
+        public void ShowEntity(IEntity toShow)
         {
             var renderable = toShow.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
             renderable.Visible = true;
         }
 
-        public bool AddEntity(Entity user, Entity inventory, Entity toAdd, InventoryLocation location = InventoryLocation.Any)
+        public bool AddEntity(IEntity user, IEntity inventory, IEntity toAdd, InventoryLocation location = InventoryLocation.Any)
         {
             if (EntityIsInEntity(inventory, toAdd))
             {
@@ -383,9 +377,9 @@ namespace SS14.Server.GameObjects.EntitySystems
             return false;
         }
 
-        protected InventoryLocation GetEntityLocationInEntity(Entity who, Entity what)
+        protected InventoryLocation GetEntityLocationInEntity(IEntity who, IEntity what)
         {
-            if(IsEquipped(who, what))
+            if (IsEquipped(who, what))
             {
                 return InventoryLocation.Equipment;
             }
@@ -401,20 +395,20 @@ namespace SS14.Server.GameObjects.EntitySystems
             return InventoryLocation.None;
         }
 
-        protected bool EntityIsInEntity(Entity who, Entity what)
+        protected bool EntityIsInEntity(IEntity who, IEntity what)
         {
             return IsInHands(who, what) || IsInInventory(who, what) || IsEquipped(who, what);
         }
 
-        protected bool IsInHands(Entity who, Entity what)
+        protected bool IsInHands(IEntity who, IEntity what)
         {
             var handsComp = who.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
-            if(handsComp == null)
+            if (handsComp == null)
                 return false;
             return handsComp.IsInHand(what);
         }
 
-        protected bool IsInInventory(Entity who, Entity what)
+        protected bool IsInInventory(IEntity who, IEntity what)
         {
             var inventoryComp = who.GetComponent<InventoryComponent>(ComponentFamily.Inventory);
             if (inventoryComp == null)
@@ -422,7 +416,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             return inventoryComp.containsEntity(what);
         }
 
-        protected bool IsEquipped(Entity who, Entity what)
+        protected bool IsEquipped(IEntity who, IEntity what)
         {
             var eqComp = who.GetComponent<EquipmentComponent>(ComponentFamily.Equipment);
             if (eqComp == null)
@@ -431,6 +425,6 @@ namespace SS14.Server.GameObjects.EntitySystems
             return eqComp.IsEquipped(what);
         }
 
-        #endregion
+        #endregion Inventory Management Methods
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared;
@@ -14,7 +13,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class MobSpriteComponent : SpriteComponent
+    public class MobSpriteComponent : ClientComponent
     {
         public override string Name => "MobSprite";
         private string _basename;
@@ -36,7 +35,7 @@ namespace SS14.Client.GameObjects
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    switch ((Direction) list[0])
+                    switch ((Direction)list[0])
                     {
                         case Direction.North:
                             SetSpriteByKey(_basename + "_back");
@@ -149,7 +148,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(dynamic state)
         {
-            base.HandleComponentState((SpriteComponentState) state);
+            base.HandleComponentState((SpriteComponentState)state);
 
             if (state.BaseName != null && _basename != state.BaseName)
             {

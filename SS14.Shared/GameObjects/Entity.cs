@@ -20,7 +20,8 @@ namespace SS14.Shared.GameObjects
             new Dictionary<ComponentFamily, IComponent>();
 
         protected List<Type> ComponentTypes = new List<Type>();
-        protected IEntityNetworkManager EntityNetworkManager;
+        public IEntityNetworkManager EntityNetworkManager { get; private set; }
+        public IEntityManager EntityManager { get; private set; }
 
         public int Uid { get; set; }
         public EntityPrototype Prototype { get; set; }
@@ -31,19 +32,11 @@ namespace SS14.Shared.GameObjects
 
         #endregion Members
 
-        #region constructor
-
-        public Entity(IEntityManager entityManager)
+        public Entity(IEntityManager entityManager, IEntityNetworkManager networkManager)
         {
             EntityManager = entityManager;
-            EntityNetworkManager = EntityManager.EntityNetworkManager;
-            if (EntityManager.EngineType == EngineType.Client)
-                Initialize();
+            EntityNetworkManager = networkManager;
         }
-
-        protected IEntityManager EntityManager { get; private set; }
-
-        #endregion constructor
 
         #region Initialization
 
@@ -151,22 +144,6 @@ namespace SS14.Shared.GameObjects
             EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.Family,
                                                                      method, recipient,
                                                                      messageParams);
-        }
-
-        /// <summary>
-        /// Client message to server saying component has been instantiated and needs initial data
-        /// </summary>
-        /// <param name="component"></param>
-        [Obsolete("Getting rid of this messaging paradigm")]
-        public void SendComponentInstantiationMessage(Component component)
-        {
-            if (EntityManager.EngineType == EngineType.Server)
-                return;
-            if (component == null)
-                throw new Exception("Component is null");
-
-            EntityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage,
-                                                          component.Family);
         }
 
         /// <summary>

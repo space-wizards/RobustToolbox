@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class SVarsComponent : Component, ISVarsComponent
+    public class SVarsComponent : ClientComponent, ISVarsComponent
     {
         public override string Name => "SVars";
         public SVarsComponent()
@@ -32,11 +32,11 @@ namespace SS14.Client.GameObjects
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.GetSVars);
         }
 
-        #endregion
+        #endregion ISVarsComponent Members
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            switch ((ComponentMessageType) message.MessageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.GetSVars:
                     HandleGetSVars(message);
@@ -49,11 +49,11 @@ namespace SS14.Client.GameObjects
             //If nothing's listening, then why bother with this shit?
             if (GetSVarsCallback == null)
                 return;
-            var count = (int) message.MessageParameters[1];
+            var count = (int)message.MessageParameters[1];
             var svars = new List<MarshalComponentParameter>();
             for (int i = 2; i < count + 2; i++)
             {
-                svars.Add(MarshalComponentParameter.Deserialize((byte[]) message.MessageParameters[i]));
+                svars.Add(MarshalComponentParameter.Deserialize((byte[])message.MessageParameters[i]));
             }
 
             GetSVarsCallback(this, new GetSVarsEventArgs(svars));

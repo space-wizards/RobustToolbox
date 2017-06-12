@@ -1,5 +1,5 @@
 ﻿using SFML.System;
-using SS14.Server.Interfaces.Network;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -11,15 +11,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using IEntityManager = SS14.Server.Interfaces.GOC.IEntityManager;
 
 namespace SS14.Server.GameObjects
 {
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    [IoCTarget(Priority=5)]
-    public class EntityManager : SS14.Shared.GameObjects.EntityManager, IEntityManager
+    [IoCTarget(Priority = 5)]
+    public class ServerEntityManager : EntityManager, IServerEntityManager
     {
         #region IEntityManager Members
 
@@ -48,7 +47,7 @@ namespace SS14.Server.GameObjects
             return e;
         }
 
-        public IList<EntityState> GetEntityStates()
+        public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
             foreach (Entity entity in _entities.Values)
@@ -59,7 +58,7 @@ namespace SS14.Server.GameObjects
             return stateEntities;
         }
 
-        #endregion
+        #endregion IEntityManager Members
 
         /// <summary>
         /// Load all entities from SavedEntities.xml
@@ -91,7 +90,7 @@ namespace SS14.Server.GameObjects
 
             var dir = Direction.South;
             if (e.Attribute("direction") != null)
-                dir = (Direction) Enum.Parse(typeof (Direction), e.Attribute("direction").Value, true);
+                dir = (Direction)Enum.Parse(typeof(Direction), e.Attribute("direction").Value, true);
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;

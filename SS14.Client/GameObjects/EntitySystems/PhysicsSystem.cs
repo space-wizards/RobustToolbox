@@ -5,7 +5,7 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        public PhysicsSystem(EntityManager em, EntitySystemManager esm)
+        public PhysicsSystem(ClientEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

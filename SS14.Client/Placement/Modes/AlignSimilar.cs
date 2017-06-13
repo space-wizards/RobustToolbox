@@ -2,14 +2,14 @@
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
-using EntityManager = SS14.Client.GameObjects.EntityManager;
+using ClientEntityManager = SS14.Client.GameObjects.ClientEntityManager;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -48,7 +48,7 @@ namespace SS14.Client.Placement.Modes
                          .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             Entity[] nearbyEntities =
-                ((EntityManager) IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(
+                ((ClientEntityManager) IoCManager.Resolve<IEntityManagerContainer>().EntityManager).GetEntitiesInRange(
                     mouseWorld, snapToRange);
 
             IOrderedEnumerable<Entity> snapToEntities = from Entity entity in nearbyEntities

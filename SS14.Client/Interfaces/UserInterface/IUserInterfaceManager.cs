@@ -2,7 +2,7 @@
 using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;

@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Collidable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -85,10 +86,9 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
         /// </summary>
-        public void Bump(Entity ent)
+        public void Bump(IEntity ent)
         {
-            if (OnBump != null)
-                OnBump(this, new EventArgs());
+            OnBump?.Invoke(this, new EventArgs());
 
             Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped,
@@ -108,7 +108,7 @@ namespace SS14.Client.GameObjects
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();

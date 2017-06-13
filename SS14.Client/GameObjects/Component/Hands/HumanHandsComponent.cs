@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hands;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +14,12 @@ namespace SS14.Client.GameObjects
     public class HumanHandsComponent : ClientComponent
     {
         public override string Name => "HumanHands";
-        public Dictionary<InventoryLocation, Entity> HandSlots { get; private set; }
+        public Dictionary<InventoryLocation, IEntity> HandSlots { get; private set; }
         public InventoryLocation CurrentHand { get; private set; }
 
         public HumanHandsComponent()
         {
-            HandSlots = new Dictionary<InventoryLocation, Entity>();
+            HandSlots = new Dictionary<InventoryLocation, IEntity>();
             Family = ComponentFamily.Hands;
         }
 
@@ -27,7 +28,7 @@ namespace SS14.Client.GameObjects
             var type = (ComponentMessageType)message.MessageParameters[0];
             int entityUid;
             InventoryLocation usedHand;
-            Entity item;
+            IEntity item;
 
             switch (type)
             {

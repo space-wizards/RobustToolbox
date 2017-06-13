@@ -244,7 +244,7 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
-    <Compile Include="GameObjects\EntityManager.cs" />
+    <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\EntityNetworkManager.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />

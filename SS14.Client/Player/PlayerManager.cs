@@ -95,14 +95,13 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-		#error TODO: fix
             PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
-            if (myState?.ControlledEntity == null)
+            if (myState == null)
             {
                 return;
             }
 
-            if (ControlledEntity == null || (ControlledEntity != null && myState.ControlledEntity != ControlledEntity.Uid))
+            if (myState.ControlledEntity != null && (ControlledEntity == null || myState.ControlledEntity != ControlledEntity.Uid))
             {
                 Attach(IoCManager.Resolve<IEntityManager>().GetEntity((int)myState.ControlledEntity));
             }

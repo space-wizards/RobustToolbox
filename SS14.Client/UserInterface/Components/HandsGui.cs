@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Helpers;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
 {
     public struct UiHandInfo
     {
-        public Entity Entity;
+        public IEntity Entity;
         public InventoryLocation Hand;
         public Sprite HeldSprite;
     }
@@ -63,7 +64,7 @@ namespace SS14.Client.UserInterface.Components
             if (_playerManager == null || _playerManager.ControlledEntity == null)
                 return;
 
-            Entity entity = _playerManager.ControlledEntity;
+            IEntity entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
 
             if (hands.CurrentHand == InventoryLocation.HandLeft)
@@ -127,7 +128,7 @@ namespace SS14.Client.UserInterface.Components
             if (_playerManager.ControlledEntity == null)
                 return;
 
-            Entity entity = _playerManager.ControlledEntity;
+            IEntity entity = _playerManager.ControlledEntity;
             var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
 
             if (hands == null) return;
@@ -136,7 +137,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (LeftHand.Entity == null || LeftHand.Entity.Uid != hands.HandSlots[InventoryLocation.HandLeft].Uid)
                 {
-                    Entity entityL = hands.HandSlots[InventoryLocation.HandLeft];
+                    IEntity entityL = hands.HandSlots[InventoryLocation.HandLeft];
                     LeftHand.Entity = entityL;
                     LeftHand.HeldSprite = Utilities.GetIconSprite(entityL);
                 }
@@ -151,7 +152,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (RightHand.Entity == null || RightHand.Entity.Uid != hands.HandSlots[InventoryLocation.HandRight].Uid)
                 {
-                    Entity entityR = hands.HandSlots[InventoryLocation.HandRight];
+                    IEntity entityR = hands.HandSlots[InventoryLocation.HandRight];
                     RightHand.Entity = entityR;
                     RightHand.HeldSprite = Utilities.GetIconSprite(entityR);
                 }
@@ -167,7 +168,7 @@ namespace SS14.Client.UserInterface.Components
         {
             var _playerManager = IoCManager.Resolve<IPlayerManager>();
 
-            Entity playerEntity = _playerManager.ControlledEntity;
+            IEntity playerEntity = _playerManager.ControlledEntity;
             var equipComponent = (HumanHandsComponent) playerEntity.GetComponent(ComponentFamily.Hands);
             equipComponent.SendSwitchHands(hand);
         }
@@ -199,7 +200,7 @@ namespace SS14.Client.UserInterface.Components
                 if (_playerManager.ControlledEntity == null)
                     return false;
 
-                Entity entity = _playerManager.ControlledEntity;
+                IEntity entity = _playerManager.ControlledEntity;
 
                 var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
                 var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
@@ -271,7 +272,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (ClientArea.Contains(e.X, e.Y))
             {
-                Entity entity = _playerManager.ControlledEntity;
+                IEntity entity = _playerManager.ControlledEntity;
                 var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
                 switch (e.Button)
                 {

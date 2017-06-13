@@ -12,7 +12,7 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     internal class TransformSystem : EntitySystem
     {
-        public TransformSystem(EntityManager em, EntitySystemManager esm)
+        public TransformSystem(ClientEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

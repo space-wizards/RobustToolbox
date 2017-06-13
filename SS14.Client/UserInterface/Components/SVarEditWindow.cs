@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -11,10 +12,10 @@ namespace SS14.Client.UserInterface.Components
 {
     internal sealed class SVarEditWindow : Window
     {
-        private readonly Entity _owner;
+        private readonly IEntity _owner;
         private List<MarshalComponentParameter> _sVars;
 
-        public SVarEditWindow(Vector2i size, Entity owner)
+        public SVarEditWindow(Vector2i size, IEntity owner)
             : base("Entity SVars : " + owner.Name, size, IoCManager.Resolve<IResourceManager>())
         {
             _owner = owner;

@@ -5,7 +5,7 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     public class InventorySystem : EntitySystem
     {
-        public InventorySystem(EntityManager em, EntitySystemManager esm)
+        public InventorySystem(ClientEntityManager em, EntitySystemManager esm)
             : base(em, esm)
         {
             EntityQuery = new EntityQuery();

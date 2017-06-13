@@ -13,7 +13,7 @@ namespace SS14.Client.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [IoCTarget(Priority = 5)]
-    public class EntityManager : Shared.GameObjects.EntityManager, IClientEntityManager
+    public class ClientEntityManager : Shared.GameObjects.EntityManager, IClientEntityManager
     {
         public IEnumerable<IEntity> GetEntitiesInRange(Vector2f position, float Range)
         {

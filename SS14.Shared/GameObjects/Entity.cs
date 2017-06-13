@@ -2,6 +2,7 @@
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -36,6 +37,11 @@ namespace SS14.Shared.GameObjects
         {
             EntityManager = entityManager;
             EntityNetworkManager = networkManager;
+            var name = Assembly.GetEntryAssembly().GetName().Name;
+            if (name == "SS14.Client")
+            {
+                Initialize();
+            }
         }
 
         #region Initialization

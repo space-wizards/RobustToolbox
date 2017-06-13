@@ -113,7 +113,7 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
-            return _entities.Values.Where(e => e.Match(query)).ToList();
+            return _entities.Values.Where(e => e.Match(query));
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace SS14.Shared.GameObjects
 
             e.Uid = uid;
             _entities.Add(e.Uid, e);
-            if (Initialized)
+            if (!Initialized)
             {
                 e.Initialize();
             }

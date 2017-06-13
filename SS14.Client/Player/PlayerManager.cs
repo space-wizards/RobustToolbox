@@ -97,19 +97,15 @@ namespace SS14.Client.Player
         {
             PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
             if (myState == null)
-            {
                 return;
-            }
-
-            if (myState.ControlledEntity != null && (ControlledEntity == null || myState.ControlledEntity != ControlledEntity.Uid))
-            {
-                Attach(IoCManager.Resolve<IEntityManager>().GetEntity((int)myState.ControlledEntity));
-            }
+            if (myState.ControlledEntity != null &&
+                (ControlledEntity == null ||
+                 (ControlledEntity != null && myState.ControlledEntity != ControlledEntity.Uid)))
+                Attach(
+                    IoCManager.Resolve<IEntityManager>().GetEntity((int)myState.ControlledEntity));
 
             if (status != myState.Status)
-            {
                 SwitchState(myState.Status);
-            }
         }
 
         #endregion IPlayerManager Members

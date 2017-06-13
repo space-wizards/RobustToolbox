@@ -14,7 +14,7 @@ namespace SS14.Client.Network
     public class NetworkGrapher : INetworkGrapher
     {
         private const int MaxDataPoints = 200;
-        private readonly List<NetworkStatisticsDataPoint> _dataPoints;
+        private readonly List<NetworkStatisticsDataPoint> _dataPoints = new List<NetworkStatisticsDataPoint>();
         private readonly INetworkManager _networkManager;
         private readonly IResourceManager _resourceManager;
         private TextSprite _textSprite;
@@ -27,8 +27,11 @@ namespace SS14.Client.Network
         {
             _resourceManager = resourceManager;
             _networkManager = networkManager;
-            _dataPoints = new List<NetworkStatisticsDataPoint>();
             _lastDataPointTime = DateTime.Now;
+        }
+
+        public void Initialize()
+        {
             _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("base_font"));
         }
 
@@ -55,7 +58,7 @@ namespace SS14.Client.Network
             DrawGraph();
         }
 
-        #endregion
+        #endregion INetworkGrapher Members
 
         private void DrawGraph()
         {
@@ -80,19 +83,19 @@ namespace SS14.Client.Network
                                         (int)(_dataPoints[i].RecievedBytes * 0.1f),
                                         SFML.Graphics.Color.Red.WithAlpha(180));
 
-                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)) + 2,
+                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * (MaxDataPoints - i)) + 2,
                                         (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
                                         2,
-                                        (int)(_dataPoints[i].SentBytes*0.1f),
+                                        (int)(_dataPoints[i].SentBytes * 0.1f),
                                         new SFML.Graphics.Color(0, 128, 0).WithAlpha(180));
             }
 
-            _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
+            _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes / totalMilliseconds, 6));
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
             _textSprite.Draw();
 
-            _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
+            _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes / totalMilliseconds, 6));
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
             _textSprite.Draw();
         }
 

@@ -48,13 +48,17 @@ namespace SS14.Client.UserInterface
         ///  Currently targeting action.
         /// </summary>
 
-        public UserInterfaceManager(IResourceManager resourceManager)
+        public UserInterfaceManager(IResourceManager resourceManager, IPlayerConfigurationManager config)
         {
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
-            _config = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), resourceManager);
+            _config = config;
+        }
+
+        public void Initialize()
+        {
+            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), _resourceManager);
             _console.SetVisible(false);
         }
 

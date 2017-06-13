@@ -11,6 +11,7 @@ namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager : IIoCInterface
     {
+        void Initialize();
         IDragDropInfo DragInfo { get; }
 
         IDebugConsole Console { get; }

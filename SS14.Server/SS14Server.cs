@@ -80,9 +80,6 @@ namespace SS14.Server
 
         public SS14Server(ICommandLineArgs args)
         {
-            EntityManager = IoCManager.Resolve<IServerEntityManager>();
-            ComponentManager = IoCManager.Resolve<IComponentManager>();
-
             Runlevel = RunLevel.Init;
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
@@ -104,6 +101,9 @@ namespace SS14.Server
 
             TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
+
+            EntityManager = IoCManager.Resolve<IServerEntityManager>();
+            ComponentManager = IoCManager.Resolve<IComponentManager>();
         }
 
         public float ServerRate // desired server frame (tick) time in milliseconds

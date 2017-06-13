@@ -82,6 +82,9 @@ namespace SS14.Client
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
             prototypeManager.Resync();
+            _networkManager.Initialize();
+            _netGrapher.Initialize();
+            _userInterfaceManager.Initialize();
 
             _stateManager.RequestStateChange<MainScreen>();
 

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public delegate void EntityShutdownEvent(Entity e);
+    public delegate void EntityShutdownEvent(IEntity e);
 
     public class Entity : IEntity
     {

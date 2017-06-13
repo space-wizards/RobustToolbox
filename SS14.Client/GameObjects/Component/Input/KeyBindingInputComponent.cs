@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace SS14.Client.GameObjects
             keyBindingManager.BoundKeyUp -= KeyUp;
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
 

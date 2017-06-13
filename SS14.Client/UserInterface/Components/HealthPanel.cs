@@ -64,7 +64,7 @@ namespace SS14.Client.UserInterface.Components
             const int y_inner = 25;
             const int dec_inner = 7;
 
-            panelBG.Position =new Vector2f (Position.X, Position.Y);
+            panelBG.Position = new Vector2f(Position.X, Position.Y);
             healthMeterBg.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
             healthMeterOverlay.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
             healthMeterGrid.Position = new Vector2f(Position.X + x_inner, Position.Y + y_inner);
@@ -75,25 +75,25 @@ namespace SS14.Client.UserInterface.Components
             var healthMeterBounds = healthMeterOverlay.GetLocalBounds();
 
             healthMeterInner = new IntRect(Position.X + x_inner + dec_inner, Position.Y + y_inner + dec_inner,
-                                             (int) (healthMeterBounds.Width - (2*dec_inner)),
-                                             (int) (healthMeterBounds.Height - (2*dec_inner)));
+                                             (int)(healthMeterBounds.Width - (2 * dec_inner)),
+                                             (int)(healthMeterBounds.Height - (2 * dec_inner)));
             healthPc.Position = new Vector2i(healthMeterInner.Left + 5,
                                           (int)
-                                          (healthMeterInner.Top + (healthMeterInner.Height/2f) -
-                                           (healthPc.ClientArea.Height/2f)) - 2);
+                                          (healthMeterInner.Top + (healthMeterInner.Height / 2f) -
+                                           (healthPc.ClientArea.Height / 2f)) - 2);
             healthPc.Update(frameTime);
 
-            Entity entity = _playerManager.ControlledEntity;
+            IEntity entity = _playerManager.ControlledEntity;
 
             if (entity != null && entity.HasComponent(ComponentFamily.Damageable))
             {
-                var comp = (HealthComponent) entity.GetComponent(ComponentFamily.Damageable);
+                var comp = (HealthComponent)entity.GetComponent(ComponentFamily.Damageable);
 
-                healthPct = comp.GetHealth()/comp.GetMaxHealth();
+                healthPct = comp.GetHealth() / comp.GetMaxHealth();
                 if (float.IsNaN(healthPct)) healthPct = 1; //This can happen when the components are not ready yet.
 
                 interpCol = ColorUtils.InterpolateBetween(ColCritical, ColHealthy, healthPct);
-                healthPc.Text.Text = Math.Round((healthPct*100)).ToString() + "%";
+                healthPc.Text.Text = Math.Round((healthPct * 100)).ToString() + "%";
             }
 
             blipTime += frameTime;
@@ -103,7 +103,7 @@ namespace SS14.Client.UserInterface.Components
         {
             panelBG.Draw();
             healthMeterBg.Draw();
-            CluwneLib.drawRectangle(healthMeterInner.Left, healthMeterInner.Top, healthMeterInner.Width,  healthMeterInner.Height, interpCol);
+            CluwneLib.drawRectangle(healthMeterInner.Left, healthMeterInner.Top, healthMeterInner.Width, healthMeterInner.Height, interpCol);
             healthPc.Render();
             healthMeterGrid.Draw();
             RenderBlip();
@@ -120,23 +120,23 @@ namespace SS14.Client.UserInterface.Components
             int blipUp = 45;
             int blipDown = 57;
 
-            if (blipTime*blipSpeed > blipMaxArea)
+            if (blipTime * blipSpeed > blipMaxArea)
                 blipTime = 0;
 
-            var bs = (int) Math.Floor(blipTime*blipSpeed);
+            var bs = (int)Math.Floor(blipTime * blipSpeed);
 
             CluwneLib.BlendingMode = BlendingModes.Modulated;
             for (int i = bs; i < (bs + blipWidth); i++)
             {
-                float sweepPct = (float) i/(bs + blipWidth);
+                float sweepPct = (float)i / (bs + blipWidth);
 
                 float alpha =
-                    Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea/2f) - i)/(blipMaxArea/2f)))*(300f*sweepPct), 0f), 255f);
-               Color temp = ColorUtils.InterpolateBetween(new Color(255, 165, 0, (byte)alpha),  new Color(124, 252, 0, (byte)alpha), healthPct);
-               _backgroundSprite.Color = temp;
+                    Math.Min(Math.Max((1 - (Math.Abs((blipMaxArea / 2f) - i) / (blipMaxArea / 2f))) * (300f * sweepPct), 0f), 255f);
+                Color temp = ColorUtils.InterpolateBetween(new Color(255, 165, 0, (byte)alpha), new Color(124, 252, 0, (byte)alpha), healthPct);
+                _backgroundSprite.Color = temp;
 
-                float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i))/(float) blipUp) - 0.80f, 0f);
-                float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i))/(float) blipDown) - 0.93f, 0f);
+                float blipHeightUp = Math.Max(((blipUp - Math.Abs(blipUp - i)) / (float)blipUp) - 0.80f, 0f);
+                float blipHeightDown = Math.Max(((blipDown - Math.Abs(blipDown - i)) / (float)blipDown) - 0.93f, 0f);
 
                 if (i <= blipMaxArea)
                 {
@@ -148,7 +148,7 @@ namespace SS14.Client.UserInterface.Components
                     _backgroundSprite.Draw();
                 }
             }
-           CluwneLib.BlendingMode = BlendingModes.None;
+            CluwneLib.BlendingMode = BlendingModes.None;
         }
 
         public override void Resize()

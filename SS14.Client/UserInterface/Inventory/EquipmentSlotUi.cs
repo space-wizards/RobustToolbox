@@ -11,6 +11,7 @@ using SS14.Client.Helpers;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 
 namespace SS14.Client.UserInterface.Inventory
@@ -19,9 +20,9 @@ namespace SS14.Client.UserInterface.Inventory
     {
         #region Delegates
 
-        public delegate void InventorySlotUiDropHandler(EquipmentSlotUi sender, Entity dropped);
+        public delegate void InventorySlotUiDropHandler(EquipmentSlotUi sender, IEntity dropped);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
@@ -44,23 +45,23 @@ namespace SS14.Client.UserInterface.Inventory
             _buttonSprite = _resourceManager.GetSprite("slot");
             _textSprite = new TextSprite(slot + "UIElementSlot", slot.ToString(),
                                          _resourceManager.GetFont("CALIBRI"))
-                              {
-                                  ShadowColor = Color.Black,
-                                  ShadowOffset = new Vector2f(1, 1),
-                                  Shadowed = true,
-                                  Color = Color.White
-                              };
+            {
+                ShadowColor = Color.Black,
+                ShadowOffset = new Vector2f(1, 1),
+                Shadowed = true,
+                Color = Color.White
+            };
 
             Update(0);
         }
 
         public EquipmentSlot AssignedSlot { get; private set; }
-        public Entity CurrentEntity { get; private set; }
+        public IEntity CurrentEntity { get; private set; }
         public event InventorySlotUiDropHandler Dropped;
 
         public override sealed void Update(float frameTime)
         {
-            _buttonSprite.Position = new Vector2f(Position.X,Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X, Position.Y);
             var bounds = _buttonSprite.GetLocalBounds();
             ClientArea = new IntRect(Position,
                                        new Vector2i((int)bounds.Width, (int)bounds.Height));
@@ -70,8 +71,8 @@ namespace SS14.Client.UserInterface.Inventory
             if (_playerManager.ControlledEntity == null)
                 return;
 
-            Entity entity = _playerManager.ControlledEntity;
-            var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
+            IEntity entity = _playerManager.ControlledEntity;
+            var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
             if (equipment.EquippedEntities.ContainsKey(AssignedSlot))
             {
@@ -91,7 +92,7 @@ namespace SS14.Client.UserInterface.Inventory
         public override void Render()
         {
             _buttonSprite.Color = _color;
-            _buttonSprite.Position = new Vector2f(Position.X,Position.Y);
+            _buttonSprite.Position = new Vector2f(Position.X, Position.Y);
             _buttonSprite.Draw();
             _buttonSprite.Color = Color.White;
 
@@ -124,8 +125,8 @@ namespace SS14.Client.UserInterface.Inventory
                 if (_playerManager.ControlledEntity == null)
                     return false;
 
-                Entity entity = _playerManager.ControlledEntity;
-                var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
+                IEntity entity = _playerManager.ControlledEntity;
+                var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
                 if (equipment.EquippedEntities.ContainsKey(AssignedSlot))
                     _userInterfaceManager.DragInfo.StartDrag(equipment.EquippedEntities[AssignedSlot]);
@@ -142,9 +143,9 @@ namespace SS14.Client.UserInterface.Inventory
                 if (_playerManager.ControlledEntity == null)
                     return false;
 
-                Entity entity = _playerManager.ControlledEntity;
-                var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
-                var hands = (HumanHandsComponent) entity.GetComponent(ComponentFamily.Hands);
+                IEntity entity = _playerManager.ControlledEntity;
+                var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
+                var hands = (HumanHandsComponent)entity.GetComponent(ComponentFamily.Hands);
 
                 if (CurrentEntity != null && CurrentEntity == _userInterfaceManager.DragInfo.DragEntity &&
                     hands.IsHandEmpty(hands.CurrentHand)) //Dropped from us to us. (Try to) unequip it to active hand.
@@ -157,7 +158,7 @@ namespace SS14.Client.UserInterface.Inventory
                 if (CurrentEntity == null && _userInterfaceManager.DragInfo.IsEntity &&
                     _userInterfaceManager.DragInfo.IsActive)
                 {
-                    if (Dropped != null) Dropped(this, _userInterfaceManager.DragInfo.DragEntity);
+                    Dropped?.Invoke(this, _userInterfaceManager.DragInfo.DragEntity);
                     return true;
                 }
             }
@@ -177,8 +178,8 @@ namespace SS14.Client.UserInterface.Inventory
             if (_playerManager.ControlledEntity == null)
                 return false;
 
-            Entity entity = _playerManager.ControlledEntity;
-            var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
+            IEntity entity = _playerManager.ControlledEntity;
+            var equipment = (EquipmentComponent)entity.GetComponent(ComponentFamily.Equipment);
 
             return equipment.IsEmpty(AssignedSlot);
         }

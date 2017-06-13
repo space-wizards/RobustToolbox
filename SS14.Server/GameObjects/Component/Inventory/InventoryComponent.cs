@@ -63,12 +63,12 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.DisassociateEntity:
-                    RemoveFromInventory((Entity)list[0]);
+                    RemoveFromInventory((IEntity)list[0]);
                     break;
 
                 case ComponentMessageType.InventoryAdd:
                     // TODO Refactor craftingmanager to access this component directly, not using a message
-                    AddToInventory((Entity)list[0]);
+                    AddToInventory((IEntity)list[0]);
                     break;
 
                 case ComponentMessageType.InventorySetSize:

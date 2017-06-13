@@ -2,7 +2,7 @@
 using SFML.System;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 
@@ -10,12 +10,12 @@ namespace SS14.Client.Interfaces.Placement
 {
     public interface IPlacementManager : IIoCInterface
     {
-        Boolean IsActive { get; }
-        Boolean Eraser { get; }
+        bool IsActive { get; }
+        bool Eraser { get; }
 
         event EventHandler PlacementCanceled;
 
-        void HandleDeletion(Entity entity);
+        void HandleDeletion(IEntity entity);
         void HandlePlacement();
         void BeginPlacing(PlacementInformation info);
         void Render();

@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
@@ -70,14 +71,14 @@ namespace SS14.Server.GameObjects
             {
                 case ComponentMessageType.SetSpriteByKey:
                     if (Owner != null)
-                        _currentSpriteKey = (string) list[0];
+                        _currentSpriteKey = (string)list[0];
                     break;
                 case ComponentMessageType.SetBaseName:
                     if (Owner != null)
-                        _currentBaseName = (string) list[0];
+                        _currentBaseName = (string)list[0];
                     break;
                 case ComponentMessageType.SetVisible:
-                    Visible = (bool) list[0];
+                    Visible = (bool)list[0];
                     break;
             }
 
@@ -89,14 +90,12 @@ namespace SS14.Server.GameObjects
             return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName);
         }
 
-
-
         public bool IsSlaved()
         {
             return master != null;
         }
 
-        public void SetMaster(Entity m)
+        public void SetMaster(IEntity m)
         {
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;

@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 
@@ -14,7 +15,7 @@ namespace SS14.Client.GameObjects
     public class SlaveMoverComponent : ClientComponent
     {
         public override string Name => "SlaveMover";
-        private Entity _master;
+        private IEntity _master;
 
         public SlaveMoverComponent()
         {

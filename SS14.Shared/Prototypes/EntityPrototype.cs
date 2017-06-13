@@ -242,9 +242,9 @@ namespace SS14.Shared.GameObjects
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        public IEntity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (Entity)Activator.CreateInstance(ClassType, manager, networkManager);
+            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager);
 
             foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in components)
             {

@@ -45,20 +45,20 @@ namespace SS14.Server.GameObjects
                     break;*/
                 case ComponentMessageType.ReceiveItemToItemInteraction:
                     //This message means we were clicked on by an actor with an item in hand
-                    HandleItemToItemInteraction((Entity)list[0]);
+                    HandleItemToItemInteraction((IEntity)list[0]);
                     // param 0 is the actor entity, param 1 is the source actor entity
                     break;
                 case ComponentMessageType.EnactItemToActorInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Actor, (Entity)list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.Actor, (IEntity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToItemInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.Item, (Entity)list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.Item, (IEntity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToLargeObjectInteraction:
-                    ApplyTo((Entity)list[0], InteractsWith.LargeObject, (Entity)list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.LargeObject, (IEntity)list[1]);
                     break;
                 /*case ComponentMessageType.PickedUp:
-                    HandlePickedUp((Entity) list[0], (Hand) list[1]);
+                    HandlePickedUp((IEntity) list[0], (Hand) list[1]);
                     break;*/
                 case ComponentMessageType.Dropped:
                     HandleDropped();

@@ -261,7 +261,7 @@ namespace SS14.Server.GameObjects
 
         private void RemoveFromOtherComps(IEntity entity)
         {
-            Entity holder = null;
+            IEntity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
                 holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable))

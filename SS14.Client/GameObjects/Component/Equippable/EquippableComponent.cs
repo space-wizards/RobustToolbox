@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
@@ -17,7 +18,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// What entity is wearing this equipment
         /// </summary>
-        public Entity currentWearer { get; set; }
+        public IEntity currentWearer { get; set; }
 
         public EquippableComponent()
         {

@@ -159,7 +159,7 @@ namespace SS14.Server.GameObjects
             //Get the item in the hand
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Hands,
                                                             ComponentMessageType.GetActiveHandItem);
-            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((Entity)reply.ParamsList[0]))
+            if (reply.MessageType == ComponentMessageType.ReturnActiveHandItem && CanEquip((IEntity)reply.ParamsList[0]))
             {
                 RemoveFromOtherComps((IEntity)reply.ParamsList[0]);
                 //Equip
@@ -234,7 +234,7 @@ namespace SS14.Server.GameObjects
 
         private void RemoveFromOtherComps(IEntity entity)
         {
-            Entity holder = null;
+            IEntity holder = null;
             if (entity.HasComponent(ComponentFamily.Item))
                 holder = ((BasicItemComponent)entity.GetComponent(ComponentFamily.Item)).CurrentHolder;
             if (holder == null && entity.HasComponent(ComponentFamily.Equippable))
@@ -266,7 +266,7 @@ namespace SS14.Server.GameObjects
         {
             var caps = new List<ItemCapability>();
             var replies = new List<ComponentReplyMessage>();
-            foreach (Entity ent in equippedEntities.Values)
+            foreach (IEntity ent in equippedEntities.Values)
             {
                 ent.SendMessage(this, ComponentMessageType.ItemGetAllCapabilities, replies);
             }

@@ -82,7 +82,7 @@ namespace SS14.Server.GameObjects
             SetImpermeable(args.VectorTo);
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
+        protected override void RecieveItemInteraction(IEntity actor, IEntity item,
                                                        Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);

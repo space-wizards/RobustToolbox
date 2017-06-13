@@ -14,6 +14,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
@@ -61,8 +62,8 @@ namespace SS14.Client.Placement
 
         #region IPlacementManager Members
 
-        public Boolean IsActive { get; private set; }
-        public Boolean Eraser { get; private set; }
+        public bool IsActive { get; private set; }
+        public bool Eraser { get; private set; }
 
         public event EventHandler PlacementCanceled;
 
@@ -120,7 +121,7 @@ namespace SS14.Client.Placement
                 RequestPlacement();
         }
 
-        public void HandleDeletion(Entity entity)
+        public void HandleDeletion(IEntity entity)
         {
             if (!IsActive || !Eraser) return;
 

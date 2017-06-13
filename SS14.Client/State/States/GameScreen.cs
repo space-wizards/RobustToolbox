@@ -706,7 +706,7 @@ namespace SS14.Client.State.States
             // See which one our click AABB intersected with
             var clickedEntities = new List<ClickData>();
             var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
-            foreach (Entity entity in entities)
+            foreach (IEntity entity in entities)
             {
                 var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
                 if (clickable == null) continue;
@@ -725,11 +725,11 @@ namespace SS14.Client.State.States
                 //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
                 //                  select cd.Clicked).Last();
 
-                Entity entToClick = (from cd in clickedEntities
-                                     orderby cd.Drawdepth ascending,
-                                         cd.Clicked.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
-                                         .Y ascending
-                                     select cd.Clicked).Last();
+                IEntity entToClick = (from cd in clickedEntities
+                                      orderby cd.Drawdepth ascending,
+                                          cd.Clicked.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
+                                          .Y ascending
+                                      select cd.Clicked).Last();
 
                 if (PlacementManager.Eraser && PlacementManager.IsActive)
                 {
@@ -1558,10 +1558,10 @@ namespace SS14.Client.State.States
 
         private struct ClickData
         {
-            public readonly Entity Clicked;
+            public readonly IEntity Clicked;
             public readonly int Drawdepth;
 
-            public ClickData(Entity clicked, int drawdepth)
+            public ClickData(IEntity clicked, int drawdepth)
             {
                 Clicked = clicked;
                 Drawdepth = drawdepth;

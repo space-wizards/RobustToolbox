@@ -7,6 +7,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,9 +19,9 @@ namespace SS14.Client.UserInterface.Components
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
         private readonly IResourceManager _resourceManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
-        private Entity _owningEntity;
+        private IEntity _owningEntity;
 
-        public ContextMenu(Entity entity, Vector2f creationPos, IResourceManager resourceManager,
+        public ContextMenu(IEntity entity, Vector2f creationPos, IResourceManager resourceManager,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;

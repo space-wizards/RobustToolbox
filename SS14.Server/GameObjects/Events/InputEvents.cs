@@ -4,6 +4,6 @@ namespace SS14.Server.GameObjects.Events
 {
     public class BoundKeyChangeEventArgs : SS14.Shared.GameObjects.Events.BoundKeyChangeEventArgs
     {
-        public Entity Actor;
+        public IEntity Actor;
     }
 }

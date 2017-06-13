@@ -25,7 +25,7 @@ namespace SS14.Server.GameObjects
         public void SaveEntities()
         {
             //List<XElement> entities = new List<XElement>();
-            IEnumerable<XElement> entities = from Entity e in _entities.Values
+            IEnumerable<XElement> entities = from IEntity e in _entities.Values
                                              where e.Prototype.ID != "HumanMob"
                                              select ToXML(e);
 
@@ -50,7 +50,7 @@ namespace SS14.Server.GameObjects
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
-            foreach (Entity entity in _entities.Values)
+            foreach (IEntity entity in _entities.Values)
             {
                 EntityState entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);
@@ -100,7 +100,7 @@ namespace SS14.Server.GameObjects
             ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
         }
 
-        private XElement ToXML(Entity e)
+        private XElement ToXML(IEntity e)
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X",

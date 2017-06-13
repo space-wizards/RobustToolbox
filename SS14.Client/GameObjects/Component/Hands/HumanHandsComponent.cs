@@ -78,7 +78,7 @@ namespace SS14.Client.GameObjects
                                               ComponentMessageType.ActiveHandChanged, hand);
         }
 
-        public void SendDropEntity(Entity ent)
+        public void SendDropEntity(IEntity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
                                               ComponentMessageType.DropEntityInHand, ent.Uid);

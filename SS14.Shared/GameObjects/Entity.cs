@@ -196,6 +196,24 @@ namespace SS14.Shared.GameObjects
             return null;
         }
 
+        #region Component Events
+        //Convenience thing.
+        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
+        {
+            EntityManager.SubscribeEvent<T>(evh, s);
+        }
+
+        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
+        {
+            EntityManager.UnsubscribeEvent<T>(s);
+        }
+
+        public void RaiseEvent(EntityEventArgs toRaise)
+        {
+            EntityManager.RaiseEvent(this, toRaise);
+        }
+        #endregion Component Events
+
         #endregion IEntity Members
 
         #region Entity Systems
@@ -227,24 +245,6 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion Entity Systems
-
-        #region Component Events
-        //Convenience thing.
-        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
-        {
-            EntityManager.SubscribeEvent<T>(evh, s);
-        }
-
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
-        {
-            EntityManager.UnsubscribeEvent<T>(s);
-        }
-
-        public void RaiseEvent(EntityEventArgs toRaise)
-        {
-            EntityManager.RaiseEvent(this, toRaise);
-        }
-        #endregion Component Events
 
         #region Components
 

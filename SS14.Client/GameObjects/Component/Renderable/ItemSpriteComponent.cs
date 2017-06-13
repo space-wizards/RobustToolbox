@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ItemSpriteComponent : ClientComponent
+    public class ItemSpriteComponent : SpriteComponent
     {
         public override string Name => "ItemSprite";
         private bool IsInHand;

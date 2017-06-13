@@ -5,19 +5,18 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        public PhysicsSystem(ClientEntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public PhysicsSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
             EntityQuery.AllSet.Add(typeof(VelocityComponent));
             EntityQuery.AllSet.Add(typeof(TransformComponent));
-            EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
+            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
         }
 
         /// <summary>
         /// Update
-        /// 
+        ///
         /// This system is currently slightly dumb -- it only does player movement right now because
         /// all other movement is done via straight interpolation through coordinates sent from the server.
         /// </summary>
@@ -30,7 +29,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                
+
                 //Decelerate
                 velocity.Velocity -= (velocity.Velocity * (frametime * 0.01f));
 
@@ -74,6 +73,5 @@ namespace SS14.Client.GameObjects.EntitySystems
                 }#1#
             }*/
         }
-
     }
 }

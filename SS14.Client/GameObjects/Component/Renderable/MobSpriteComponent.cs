@@ -13,7 +13,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class MobSpriteComponent : ClientComponent
+    public class MobSpriteComponent : SpriteComponent
     {
         public override string Name => "MobSprite";
         private string _basename;

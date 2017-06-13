@@ -109,7 +109,7 @@ namespace SS14.Server.GameObjects
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        protected override void HandleEmptyHandToLargeObjectInteraction(IEntity actor)
         {
             ToggleDoor(true);
         }

@@ -5,11 +5,10 @@ namespace SS14.Server.GameObjects.EntitySystems
 {
     public class TestSystem : EntitySystem
     {
-        public TestSystem(ServerEntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public TestSystem()
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof (BasicItemComponent));
+            EntityQuery.OneSet.Add(typeof(BasicItemComponent));
         }
 
         public override void Update(float frametime)

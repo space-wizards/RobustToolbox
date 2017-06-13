@@ -120,5 +120,9 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <returns></returns>
         EntityState GetEntityState();
+
+        void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs;
+        void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs;
+        void RaiseEvent(EntityEventArgs toRaise);
     }
 }

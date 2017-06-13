@@ -22,12 +22,18 @@ namespace SS14.Server.Chat
     public class ChatManager : IChatManager
     {
         private ISS14Server _serverMain;
+        private readonly IServerEntityManager entityManager;
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
         private Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
         private string _emotePath = PathHelpers.ExecutableRelativeFile("emotes.xml");
 
         public IDictionary<string, IChatCommand> Commands => _commands;
+
+        public ChatManager(IServerEntityManager entityManager)
+        {
+            this.entityManager = entityManager;
+        }
 
         #region IChatManager Members
 
@@ -166,10 +172,12 @@ namespace SS14.Server.Chat
             {
                 using (var emoteFileStream = new FileStream(_emotePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
-                    var emote = new Emote();
-                    emote.Command = "default";
-                    emote.OtherText = "{0} does something!";
-                    emote.SelfText = "You do something!";
+                    var emote = new Emote()
+                    {
+                        Command = "default",
+                        OtherText = "{0} does something!",
+                        SelfText = "You do something!"
+                    };
                     _emotes.Add("default", emote);
                     XmlSerializer serializer = new XmlSerializer(typeof(List<Emote>));
                     serializer.Serialize(emoteFileStream, _emotes.Values.ToList());
@@ -200,7 +208,7 @@ namespace SS14.Server.Chat
                 return;
             List<NetConnection> recipients =
                 IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(
-                    _serverMain.EntityManager.GetEntity((int)entityId).GetComponent<ITransformComponent>(
+                    entityManager.GetEntity((int)entityId).GetComponent<ITransformComponent>(
                         ComponentFamily.Transform).Position, withinRange).Select(p => p.ConnectedClient).ToList();
             IoCManager.Resolve<ISS14NetServer>().SendToMany(message, recipients);
         }

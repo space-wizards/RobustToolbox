@@ -189,6 +189,19 @@ namespace SS14.Shared.IoC
                 throw new MissingImplementationException(type);
             }
 
+            // See if we already have an valid instance but registered as a different type.
+            // Example being the EntityManager on client and server,
+            // which have subinterfaces like IServerEntityManager.
+            var potentialInstance = Services.Values.FirstOrDefault(s => type.IsAssignableFrom(s.GetType()));
+            if (potentialInstance != null)
+            {
+                // NOTE: if BuildType() gets called when there already IS an instance for the type.
+                // This'll "catch" that too.
+                // This is NOT intended and do not rely on it.
+                Services[type] = potentialInstance;
+                return;
+            }
+
             ConstructorInfo constructor = concreteType.GetConstructors().FirstOrDefault();
             if (constructor == null)
             {

@@ -11,6 +11,7 @@ using System;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
+    [IoCTarget]
     internal class TransformSystem : EntitySystem
     {
         public TransformSystem()

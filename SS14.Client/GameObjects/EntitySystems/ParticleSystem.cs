@@ -6,6 +6,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
+    [IoCTarget]
     public class ParticleSystem : EntitySystem
     {
         public ParticleSystem()

@@ -248,7 +248,6 @@
     <Compile Include="GameObjects\EntityNetworkManager.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
     <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />

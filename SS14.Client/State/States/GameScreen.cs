@@ -153,6 +153,7 @@ namespace SS14.Client.State.States
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
+            _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 

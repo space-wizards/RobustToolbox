@@ -229,7 +229,6 @@
     <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
     <Compile Include="GameObjects\Events\InventoryEvents.cs" />
     <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />

@@ -9,6 +9,7 @@ using EntityQuery = SS14.Shared.GameObjects.EntityQuery;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
+    [IoCTarget]
     public class InventorySystem : EntitySystem
     {
         private readonly IComponentFactory componentFactory;

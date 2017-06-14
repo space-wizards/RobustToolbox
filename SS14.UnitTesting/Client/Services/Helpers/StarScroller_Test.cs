@@ -1,5 +1,4 @@
-﻿#if !HEADLESS
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -9,8 +8,12 @@ using System;
 namespace SS14.UnitTesting.SS14.Client.Helpers
 {
     [TestFixture, Explicit]
+    [Category("rendering")]
     public class StarScroller : SS14UnitTest
     {
+        public override bool NeedsClientConfig => true;
+        public override bool NeedsResourcePack => true;
+
         private RenderImage renderimage;
 
         private FrameEventArgs _frameEvent;
@@ -47,4 +50,3 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         }
     }
 }
-#endif

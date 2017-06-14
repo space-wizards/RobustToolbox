@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Graphics;
 using NUnit.Framework;
 using SS14.Shared.IoC;
@@ -16,12 +16,11 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
     public class PrototypeManager_Test : SS14UnitTest
     {
         private IPrototypeManager manager;
-        protected override void Init()
+        public PrototypeManager_Test()
         {
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
             manager.Resync();
-
         }
 
         [Test]

@@ -497,7 +497,7 @@ namespace SS14.Server
             LoadSettings();
 
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize(this);

@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using System;
 
 namespace SS14.UnitTesting.SS14.Shared.IoC
 {
@@ -67,6 +68,12 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         public void IoCTestCircularDependencies()
         {
             Assert.That(() => IoCManager.Resolve<IIoCCircularDeps1>(), Throws.InstanceOf<CircularDependencyException>());
+        } 
+
+        [Test]
+        public void IoCTestConstructorException()
+        {
+            Assert.That(() => IoCManager.Resolve<IConstructorException>(), Throws.InstanceOf<ImplementationConstructorException>().And.InnerException.InstanceOf<TestConstructorExceptionException>());
         }
     }
 
@@ -109,5 +116,22 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         {
 
         }
+    }
+
+    public interface IConstructorException : IIoCInterface {}
+
+
+    [IoCTarget]
+    public class ConstructorException : IConstructorException
+    {
+        public ConstructorException()
+        {
+            throw new TestConstructorExceptionException();
+        }
+    }
+
+    public class TestConstructorExceptionException : Exception
+    {
+
     }
 }

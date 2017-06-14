@@ -236,9 +236,9 @@ namespace SS14.Shared.IoC
                         object instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
                         Services.Add(type, instance);
                     }
-                    catch (Exception e)
+                    catch (TargetInvocationException e)
                     {
-                        throw new ImplementationConstructorException(concreteType, e);
+                        throw new ImplementationConstructorException(concreteType, e.InnerException);
                     }
                 }
                 else
@@ -248,9 +248,9 @@ namespace SS14.Shared.IoC
                         object instance = Activator.CreateInstance(concreteType);
                         Services.Add(type, instance);
                     }
-                    catch (Exception e)
+                    catch (TargetInvocationException e)
                     {
-                        throw new ImplementationConstructorException(concreteType, e);
+                        throw new ImplementationConstructorException(concreteType, e.InnerException);
                     }
                 }
             }

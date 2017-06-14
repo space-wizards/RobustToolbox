@@ -148,6 +148,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper Classes\InterpolationPacket.cs" />
+    <Compile Include="Interfaces\Log\IServerLogManager.cs" />
+    <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

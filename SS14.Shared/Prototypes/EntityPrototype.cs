@@ -258,7 +258,7 @@ namespace SS14.Shared.GameObjects
                     // Ignore nonexistant ones.
                     // This is kind of inefficient but we'll do the sanity on prototype creation
                     // Once the dependency injection stack is fixed.
-                    LogManager.Log(string.Format("Unable to load prototype component. UnknowComponentException occured for componentKey `{0}`", componentData.Key));
+                    Log.Logger.Log(string.Format("Unable to load prototype component. UnknowComponentException occured for componentKey `{0}`", componentData.Key));
                     continue;
                 }
                 component.LoadParameters(componentData.Value);

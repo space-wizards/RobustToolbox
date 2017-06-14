@@ -61,9 +61,19 @@ namespace SS14.Shared.IoC
             AddAssemblies(args.AsEnumerable());
         }
 
+        /// <summary>
+        /// Clear all services and types.
+        /// Use this between unit tests and on program shutdown.
+        /// If a service implements <see cref="IDisposable"/>, <see cref="IDisposable.Dispose"/> will be called on it.
+        /// </summary>
         public static void Clear()
         {
             AssemblyAdded = null;
+
+            foreach (var service in Services.Values.OfType<IDisposable>().Distinct())
+            {
+                service.Dispose();
+            }
             Services.Clear();
             ServiceTypes.Clear();
             ResolveTypes.Clear();

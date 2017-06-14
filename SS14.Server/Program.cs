@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Server.Interfaces;
@@ -22,21 +23,24 @@ namespace SS14.Server
 
             var server = IoCManager.Resolve<ISS14Server>();
 
-            LogManager.Log("Server -> Starting");
+            Logger.Log("Server -> Starting");
 
             if (server.Start())
             {
-                LogManager.Log("Server -> Can not start server", LogLevel.Fatal);
+                Logger.Log("Server -> Can not start server", LogLevel.Fatal);
                 //Not like you'd see this, haha. Perhaps later for logging.
                 Environment.Exit(0);
             }
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            LogManager.Log("Server Version " + strVersion + " -> Ready");
+            Logger.Log("Server Version " + strVersion + " -> Ready");
 
             SignalHander.InstallSignals();
 
             server.MainLoop();
+
+            Logger.Info("Goodbye.");
+            IoCManager.Clear();
         }
 
         private static void LoadAssemblies()

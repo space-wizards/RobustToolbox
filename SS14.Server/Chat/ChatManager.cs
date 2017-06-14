@@ -52,7 +52,7 @@ namespace SS14.Server.Chat
             IClient client = _serverMain.GetClient(message.SenderConnection);
             string playerName = client.PlayerName;
 
-            LogManager.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
+            Logger.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
 
             var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(message.SenderConnection).AttachedEntityUid;
 
@@ -194,7 +194,7 @@ namespace SS14.Server.Chat
                 IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
                 {
-                    LogManager.Error("Command has duplicate name: {0}", instance.Command);
+                    Logger.Error("Command has duplicate name: {0}", instance.Command);
                     continue;
                 }
                 _commands[instance.Command] = instance;

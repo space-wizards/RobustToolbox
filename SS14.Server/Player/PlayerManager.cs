@@ -88,7 +88,7 @@ namespace SS14.Server.Player
             IPlayerSession session = GetSessionByConnection(client);
             if (session == null)
                 return; //There is no session!
-            LogManager.Log(session.name + " disconnected.", LogLevel.Information);
+            Logger.Log(session.name + " disconnected.", LogLevel.Information);
             //Detach the entity and (dont)delete it.
             session.OnDisconnect();
         }

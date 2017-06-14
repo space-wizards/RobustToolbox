@@ -53,7 +53,7 @@ namespace SS14.Server.Configuration
                 ConfigSaver.Serialize(ConfigWriter, Configuration);
                 ConfigWriter.Flush();
                 ConfigWriter.Close();
-                LogManager.Log("Server configuration saved to '" + ConfigFile + "'.");
+                Logger.Log("Server configuration saved to '" + ConfigFile + "'.");
             }
         }
 

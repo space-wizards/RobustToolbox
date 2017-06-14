@@ -4,23 +4,24 @@ using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
+    [IoCTarget]
     internal class TransformSystem : EntitySystem
     {
-        public TransformSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public TransformSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(TransformComponent));
-            EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
+            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
         }
 
-        private Vector2f? calculateNewPosition(Entity entity, Vector2f newPosition, TransformComponent transform)
+        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, TransformComponent transform)
         {
             //Check for collision
             var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
@@ -100,10 +101,10 @@ namespace SS14.Client.GameObjects.EntitySystems
 
                     // linear interpolation from the state immediately prior to the "current time"
                     // to the state immediately after the "current time"
-                    var lerp = (currentTime - t1)/(t2 - t1);
+                    var lerp = (currentTime - t1) / (t2 - t1);
                     //lerp is a constant 0..1 value that says what position along the line from p1 to p2 we're at
                     newPosition = Interpolate(p1, p2, lerp, false);
-                    if(isLocallyControlled)
+                    if (isLocallyControlled)
                     {
                         newPosition = EaseExponential(currentTime - t1, transform.Position, newPosition, t2 - t1);
                     }
@@ -128,7 +129,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 }
 
                 if ((newPosition - transform.Position).LengthSquared() > 0.0000001f)// &&
-                    //(!haskbMover || (newPosition - transform.Position).Length > humanMoveLimit))
+                                                                                    //(!haskbMover || (newPosition - transform.Position).Length > humanMoveLimit))
                 {
                     var doTranslate = false;
                     if (!isLocallyControlled)
@@ -156,10 +157,8 @@ namespace SS14.Client.GameObjects.EntitySystems
                         transform.TranslateTo(newPosition);
                         if (isLocallyControlled)
                             entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
-
                     }
                 }
-
             }
         }
 
@@ -170,7 +169,7 @@ namespace SS14.Client.GameObjects.EntitySystems
 
             var dy = (v2.Y - v1.Y);
             var y = EaseExponential(time, v1.Y, dy, duration);
-            return new Vector2f(x,y);
+            return new Vector2f(x, y);
         }
 
         private float EaseExponential(float t, float b, float c, float d)

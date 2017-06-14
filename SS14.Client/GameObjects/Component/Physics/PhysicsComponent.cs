@@ -6,7 +6,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    internal class PhysicsComponent : Component
+    internal class PhysicsComponent : ClientComponent
     {
         public override string Name => "Physics";
         public float Mass { get; set; }

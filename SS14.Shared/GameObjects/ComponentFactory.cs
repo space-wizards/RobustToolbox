@@ -4,24 +4,23 @@ using System.Linq;
 using System.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentFactory
+    [IoCTarget]
+    public class ComponentFactory : IComponentFactory
     {
         private readonly Dictionary<string, Type> componentNames;
 
-        public ComponentFactory(EntityManager entityManager)
+        public ComponentFactory()
         {
-            EntityManager = entityManager;
             componentNames = new Dictionary<string, Type>();
 
             ReloadComponents();
 
             IoCManager.AssemblyAdded += ReloadComponents;
         }
-
-        public EntityManager EntityManager { get; private set; }
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.

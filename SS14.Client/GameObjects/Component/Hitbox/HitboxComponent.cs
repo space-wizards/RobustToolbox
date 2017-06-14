@@ -8,7 +8,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class HitboxComponent : Component
+    public class HitboxComponent : ClientComponent
     {
         public override string Name => "Hitbox";
         public FloatRect AABB { get; set; }
@@ -45,7 +45,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-
         public HitboxComponent()
         {
             Family = ComponentFamily.Hitbox;
@@ -65,6 +64,5 @@ namespace SS14.Client.GameObjects
         {
             AABB = state.AABB;
         }
-
     }
 }

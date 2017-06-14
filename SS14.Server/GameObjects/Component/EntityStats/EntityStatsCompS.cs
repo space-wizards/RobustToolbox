@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.EntityStats;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -22,10 +23,10 @@ namespace SS14.Server.GameObjects
         {
             Family = ComponentFamily.EntityStats;
 
-            foreach (object dmgType in Enum.GetValues(typeof (DamageType)))
+            foreach (object dmgType in Enum.GetValues(typeof(DamageType)))
             {
-                if (!armorStats.Keys.Contains((DamageType) dmgType))
-                    armorStats.Add((DamageType) dmgType, 0);
+                if (!armorStats.Keys.Contains((DamageType)dmgType))
+                    armorStats.Add((DamageType)dmgType, 0);
             }
         }
 
@@ -35,7 +36,7 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.GetArmorValues:
-                    var dmgType = (DamageType) list[0];
+                    var dmgType = (DamageType)list[0];
                     return new ComponentReplyMessage(ComponentMessageType.ReturnArmorValues, GetArmorValue(dmgType));
 
                 default:
@@ -45,7 +46,7 @@ namespace SS14.Server.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            var type = (ComponentMessageType) message.MessageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
             switch (type)
             {
                 case (ComponentMessageType.GetArmorValues): //Add message for sending complete listing.
@@ -91,12 +92,12 @@ namespace SS14.Server.GameObjects
         {
             int armorVal = 0;
 
-            var eqComp = (EquipmentComponent) Owner.GetComponent(ComponentFamily.Equipment);
+            var eqComp = (EquipmentComponent)Owner.GetComponent(ComponentFamily.Equipment);
             if (eqComp != null)
             {
-                foreach (Entity ent in eqComp.equippedEntities.Values)
+                foreach (IEntity ent in eqComp.equippedEntities.Values)
                 {
-                    var entStatComp = (EntityStatsComp) ent.GetComponent(ComponentFamily.EntityStats);
+                    var entStatComp = (EntityStatsComp)ent.GetComponent(ComponentFamily.EntityStats);
                     if (entStatComp != null)
                         armorVal += entStatComp.GetArmorValue(damType);
                 }

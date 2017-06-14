@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 
@@ -25,7 +26,7 @@ namespace SS14.Client.UserInterface.Components
             resAssigned = resistance;
 
             text = new TextSprite("StatInfoLabel" + resistance, "", _resourceManager.GetFont("CALIBRI"))
-                       {Color = Color.White};
+            { Color = Color.White };
 
             switch (resistance)
             {
@@ -64,30 +65,30 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             var bounds = icon.GetLocalBounds();
-            icon.Position = new Vector2f(Position.X,Position.Y);
+            icon.Position = new Vector2f(Position.X, Position.Y);
             text.Position = new Vector2i(Position.X + (int)bounds.Width + 5,
-                                         Position.Y + (int) (bounds.Height/2f) - (int) (text.Height/2f));
+                                         Position.Y + (int)(bounds.Height / 2f) - (int)(text.Height / 2f));
             ClientArea = new IntRect(Position,
-                                       new Vector2i((int) text.Width + (int)bounds.Width + 5,
-                                                (int) Math.Max(bounds.Height, text.Height)));
+                                       new Vector2i((int)text.Width + (int)bounds.Width + 5,
+                                                (int)Math.Max(bounds.Height, text.Height)));
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();
             if (playerMgr != null)
             {
-                Entity playerEnt = playerMgr.ControlledEntity;
+                IEntity playerEnt = playerMgr.ControlledEntity;
                 if (playerEnt != null)
                 {
-                    var statsComp = (EntityStatsComp) playerEnt.GetComponent(ComponentFamily.EntityStats);
+                    var statsComp = (EntityStatsComp)playerEnt.GetComponent(ComponentFamily.EntityStats);
                     if (statsComp != null)
                     {
-                        text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : " +
+                        text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : " +
                                     statsComp.GetArmorValue(resAssigned);
                     }
-                    else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
+                    else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
                 }
-                else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
+                else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
             }
-            else text.Text = Enum.GetName(typeof (DamageType), resAssigned) + " : n/a";
+            else text.Text = Enum.GetName(typeof(DamageType), resAssigned) + " : n/a";
         }
 
         public override void Render()

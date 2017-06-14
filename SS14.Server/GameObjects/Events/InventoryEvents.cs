@@ -1,39 +1,40 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Server.GameObjects.Events
 {
     public class InventoryPickedUpItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 
     public class InventoryDroppedItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 
     public class InventoryExchangedItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item1;
-        public Entity Item2;
+        public IEntity Actor;
+        public IEntity Item1;
+        public IEntity Item2;
     }
 
     public class InventoryRemovedItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Holder;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Holder;
+        public IEntity Item;
     }
 
     public class InventoryAddedItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Holder;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Holder;
+        public IEntity Item;
     }
 
     /// <summary>
@@ -41,8 +42,8 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryEquipItemEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 
     /// <summary>
@@ -50,7 +51,7 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryEquipItemInHandEventArgs : EntityEventArgs
     {
-        public Entity Actor;
+        public IEntity Actor;
     }
 
     /// <summary>
@@ -58,8 +59,8 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryUnEquipItemToFloorEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 
     /// <summary>
@@ -67,8 +68,8 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryUnEquipItemToHandEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 
     /// <summary>
@@ -76,8 +77,8 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryUnEquipItemToSpecifiedHandEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
         public InventoryLocation Hand;
     }
 
@@ -86,7 +87,7 @@ namespace SS14.Server.GameObjects.Events
     /// </summary>
     public class InventoryAddItemToInventoryEventArgs : EntityEventArgs
     {
-        public Entity Actor;
-        public Entity Item;
+        public IEntity Actor;
+        public IEntity Item;
     }
 }

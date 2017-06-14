@@ -9,7 +9,7 @@ namespace SS14.Client.GameObjects
     /// Basic damageable component only tracks whether its dead or not
     /// </summary>
     [IoCTarget]
-    public class DamageableComponent : Component
+    public class DamageableComponent : ClientComponent
     {
         public override string Name => "Damageable";
         //Used for things that are binary. Either broken or not broken. (windows?)
@@ -22,7 +22,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (DamageableComponentState); }
+            get { return typeof(DamageableComponentState); }
         }
 
         protected virtual void Die()

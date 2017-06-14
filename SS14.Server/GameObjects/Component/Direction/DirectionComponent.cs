@@ -1,8 +1,9 @@
 ﻿using SFML.System;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Direction;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -25,9 +26,9 @@ namespace SS14.Server.GameObjects
 
         public Direction Direction { get; set; }
 
-        #endregion
+        #endregion IDirectionComponent Members
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
@@ -60,7 +61,7 @@ namespace SS14.Server.GameObjects
                 _lastDeterminedDirection = Direction.SouthWest;
             if (delta.X < 0 && delta.Y < 0)
                 _lastDeterminedDirection = Direction.NorthWest;
-            if (delta.X > 0 && Math.Abs(0-delta.Y) < 0.05f)
+            if (delta.X > 0 && Math.Abs(0 - delta.Y) < 0.05f)
                 _lastDeterminedDirection = Direction.East;
             if (delta.X < 0 && Math.Abs(0 - delta.Y) < 0.05f)
                 _lastDeterminedDirection = Direction.West;

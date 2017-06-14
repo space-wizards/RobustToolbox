@@ -29,7 +29,6 @@ namespace SS14.Server.GameObjects
 
         //private void GasEffect()
         //{
-
         //    ITile t = IoCManager.Resolve<IMapManager>().GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         //    if (t == null)
         //        return;
@@ -51,12 +50,6 @@ namespace SS14.Server.GameObjects
             {
                 Mass = node.AsFloat();
             }
-        }
-
-        public override List<ComponentParameter> GetParameters()
-        {
-            List<ComponentParameter> cparams = base.GetParameters();
-            return cparams;
         }
 
         public override ComponentState GetComponentState()

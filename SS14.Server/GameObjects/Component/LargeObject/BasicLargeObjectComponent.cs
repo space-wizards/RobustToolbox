@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Linq;
 
@@ -24,10 +25,10 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction:
-                    HandleEmptyHandToLargeObjectInteraction((Entity) list[0]);
+                    HandleEmptyHandToLargeObjectInteraction((IEntity)list[0]);
                     break;
                 case ComponentMessageType.ReceiveItemToLargeObjectInteraction:
-                    HandleItemToLargeObjectInteraction((Entity) list[0]);
+                    HandleItemToLargeObjectInteraction((IEntity)list[0]);
                     break;
             }
 
@@ -39,7 +40,7 @@ namespace SS14.Server.GameObjects
         /// Basically, the actor uses an item on this object
         /// </summary>
         /// <param name="actor">the actor entity</param>
-        protected void HandleItemToLargeObjectInteraction(Entity actor)
+        protected void HandleItemToLargeObjectInteraction(IEntity actor)
         {
             //Get the item
             ComponentReplyMessage reply = actor.SendMessage(this, ComponentFamily.Hands,
@@ -48,12 +49,12 @@ namespace SS14.Server.GameObjects
             if (reply.MessageType != ComponentMessageType.ReturnActiveHandItem)
                 return; // No item in actor's active hand. This shouldn't happen.
 
-            var item = (Entity) reply.ParamsList[0];
+            var item = (Entity)reply.ParamsList[0];
 
             reply = item.SendMessage(this, ComponentFamily.Item, ComponentMessageType.ItemGetCapabilityVerbPairs);
             if (reply.MessageType == ComponentMessageType.ItemReturnCapabilityVerbPairs)
             {
-                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>) reply.ParamsList[0];
+                var verbs = (Lookup<ItemCapabilityType, ItemCapabilityVerb>)reply.ParamsList[0];
                 if (verbs.Count == 0 || verbs == null)
                     RecieveItemInteraction(actor, item);
                 else
@@ -65,7 +66,7 @@ namespace SS14.Server.GameObjects
         /// Recieve an item interaction. woop.
         /// </summary>
         /// <param name="item"></param>
-        protected virtual void RecieveItemInteraction(Entity actor, Entity item,
+        protected virtual void RecieveItemInteraction(IEntity actor, IEntity item,
                                                       Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
         }
@@ -74,7 +75,7 @@ namespace SS14.Server.GameObjects
         /// Recieve an item interaction. woop. NO VERBS D:
         /// </summary>
         /// <param name="item"></param>
-        protected virtual void RecieveItemInteraction(Entity actor, Entity item)
+        protected virtual void RecieveItemInteraction(IEntity actor, IEntity item)
         {
         }
 
@@ -83,7 +84,7 @@ namespace SS14.Server.GameObjects
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected virtual void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        protected virtual void HandleEmptyHandToLargeObjectInteraction(IEntity actor)
         {
             //Apply actions
         }

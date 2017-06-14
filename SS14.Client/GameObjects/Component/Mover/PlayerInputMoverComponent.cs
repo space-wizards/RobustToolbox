@@ -8,7 +8,7 @@ namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
     [IoCTarget]
-    public class PlayerInputMoverComponent : Component
+    public class PlayerInputMoverComponent : ClientComponent
     {
         public override string Name => "PlayerInputMover";
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
@@ -67,8 +67,8 @@ namespace SS14.Client.GameObjects
         /// <param name="list">0 - Function, 1 - Key State</param>
         private void HandleKeyChange(params object[] list)
         {
-            var function = (BoundKeyFunctions) list[0];
-            var state = (BoundKeyState) list[1];
+            var function = (BoundKeyFunctions)list[0];
+            var state = (BoundKeyState)list[1];
             bool setting = state == BoundKeyState.Down;
 
             ShouldSendPositionUpdate = true;
@@ -102,35 +102,35 @@ namespace SS14.Client.GameObjects
 
             if (_moveUp && !_moveLeft && !_moveRight && !_moveDown) // Move Up
             {
-                Velocity = new Vector2f(0, -1)*_currentMoveSpeed;
+                Velocity = new Vector2f(0, -1) * _currentMoveSpeed;
             }
             else if (_moveDown && !_moveLeft && !_moveRight && !_moveUp) // Move Down
             {
-                Velocity = new Vector2f(0, 1)*_currentMoveSpeed;
+                Velocity = new Vector2f(0, 1) * _currentMoveSpeed;
             }
             else if (_moveLeft && !_moveRight && !_moveUp && !_moveDown) // Move Left
             {
-                Velocity = new Vector2f(-1, 0)*_currentMoveSpeed;
+                Velocity = new Vector2f(-1, 0) * _currentMoveSpeed;
             }
             else if (_moveRight && !_moveLeft && !_moveUp && !_moveDown) // Move Right
             {
-                Velocity = new Vector2f(1, 0)*_currentMoveSpeed;
+                Velocity = new Vector2f(1, 0) * _currentMoveSpeed;
             }
             else if (_moveUp && _moveRight && !_moveLeft && !_moveDown) // Move Up & Right
             {
-                Velocity = new Vector2f(0.7071f, -0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(0.7071f, -0.7071f) * _currentMoveSpeed;
             }
             else if (_moveUp && _moveLeft && !_moveRight && !_moveDown) // Move Up & Left
             {
-                Velocity = new Vector2f(-0.7071f, -0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(-0.7071f, -0.7071f) * _currentMoveSpeed;
             }
             else if (_moveDown && _moveRight && !_moveLeft && !_moveUp) // Move Down & Right
             {
-                Velocity = new Vector2f(0.7071f, 0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(0.7071f, 0.7071f) * _currentMoveSpeed;
             }
             else if (_moveDown && _moveLeft && !_moveRight && !_moveUp) // Move Down & Left
             {
-                Velocity = new Vector2f(-0.7071f, 0.7071f)*_currentMoveSpeed;
+                Velocity = new Vector2f(-0.7071f, 0.7071f) * _currentMoveSpeed;
             }
             else
             {

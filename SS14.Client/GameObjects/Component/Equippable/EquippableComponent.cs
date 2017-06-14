@@ -1,12 +1,13 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equippable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class EquippableComponent : Component
+    public class EquippableComponent : ClientComponent
     {
         public override string Name => "Equippable";
         /// <summary>
@@ -17,7 +18,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// What entity is wearing this equipment
         /// </summary>
-        public Entity currentWearer { get; set; }
+        public IEntity currentWearer { get; set; }
 
         public EquippableComponent()
         {
@@ -26,7 +27,7 @@ namespace SS14.Client.GameObjects
 
         public override System.Type StateType
         {
-            get { return typeof (EquippableComponentState); }
+            get { return typeof(EquippableComponentState); }
         }
 
         /// <summary>
@@ -55,10 +56,10 @@ namespace SS14.Client.GameObjects
         /// <param name="state"></param>
         public override void HandleComponentState(dynamic state)
         {
-            int? holderUid = currentWearer != null ? currentWearer.Uid : (int?) null;
-            if(state.Holder != holderUid)
+            int? holderUid = currentWearer != null ? currentWearer.Uid : (int?)null;
+            if (state.Holder != holderUid)
             {
-                if(state.Holder == null)
+                if (state.Holder == null)
                 {
                     UnEquipped();
                 }

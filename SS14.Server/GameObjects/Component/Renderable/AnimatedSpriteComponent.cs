@@ -1,6 +1,7 @@
-﻿using SS14.Server.Interfaces.GOC;
+﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -21,7 +22,7 @@ namespace SS14.Server.GameObjects
         {
             get
             {
-                if(master != null && master.GetType() == typeof(AnimatedSpriteComponent))
+                if (master != null && master.GetType() == typeof(AnimatedSpriteComponent))
                 {
                     return ((AnimatedSpriteComponent)master).CurrentAnimation;
                 }
@@ -45,7 +46,6 @@ namespace SS14.Server.GameObjects
         }
         public DrawDepth DrawDepth = DrawDepth.FloorTiles;
         public bool Visible { get; set; }
-
 
         public AnimatedSpriteComponent()
         {
@@ -85,7 +85,7 @@ namespace SS14.Server.GameObjects
             return master != null;
         }
 
-        public void SetMaster(Entity m)
+        public void SetMaster(IEntity m)
         {
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;

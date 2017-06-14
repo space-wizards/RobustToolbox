@@ -4,6 +4,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 
@@ -16,7 +17,7 @@ namespace SS14.Client.Helpers
             return type.IsSubclassOf(typeof (ITileDefinition)) ? "tilebuildoverlay" : "nosprite";
         }
 
-        public static Sprite GetSpriteComponentSprite(Entity entity)
+        public static Sprite GetSpriteComponentSprite(IEntity entity)
         {
             ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
                                                              ComponentMessageType.GetSprite);
@@ -28,7 +29,7 @@ namespace SS14.Client.Helpers
             return null;
         }
 
-        public static Sprite GetIconSprite(Entity entity)
+        public static Sprite GetIconSprite(IEntity entity)
         {
             if(entity.HasComponent(ComponentFamily.Icon))
             {

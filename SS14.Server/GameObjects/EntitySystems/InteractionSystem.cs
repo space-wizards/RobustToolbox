@@ -2,16 +2,14 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using System;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
+    [IoCTarget]
     public class InteractionSystem : EntityEventHandlingSystem
     {
-        public InteractionSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
-        {}
-
         public override void SubscribeEvents()
         {
             base.SubscribeEvents();
@@ -21,8 +19,8 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         public void HandleClickEvent(object sender, ClickedOnEntityEventArgs args)
         {
-            Entity user = EntityManager.GetEntity(args.Clicker);
-            Entity obj = EntityManager.GetEntity(args.Clicked);
+            IEntity user = EntityManager.GetEntity(args.Clicker);
+            IEntity obj = EntityManager.GetEntity(args.Clicked);
             UserClickedEntity(user, obj, args.MouseButton);
         }
 
@@ -37,7 +35,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 switch (keyFunction)
                 {
                     case BoundKeyFunctions.Drop:
-                        EntityManager.RaiseEvent(sender, new InventoryDroppedItemEventArgs {Actor = user});
+                        EntityManager.RaiseEvent(sender, new InventoryDroppedItemEventArgs { Actor = user });
                         break;
                     case BoundKeyFunctions.SwitchHands:
                         if (user.HasComponent(ComponentFamily.Hands))
@@ -49,7 +47,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
         }
 
-        public bool UserClickedEntity(Entity user, Entity obj, int mouseClickType)
+        public bool UserClickedEntity(IEntity user, IEntity obj, int mouseClickType)
         {
             if (user.HasComponent(ComponentFamily.Hands))
             {
@@ -94,7 +92,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             return false;
         }
 
-        private bool DoHandsToActorInteraction(Entity user, Entity obj)
+        private bool DoHandsToActorInteraction(IEntity user, IEntity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
@@ -104,18 +102,18 @@ namespace SS14.Server.GameObjects.EntitySystems
             return DoApplyItemToActor(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool DoApplyItemToActor(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToActor(IEntity user, IEntity entity, IEntity obj)
         {
             return DoApplyItem(user, entity, obj, InteractsWith.Actor);
         }
 
-        private bool DoEmptyHandToActorInteraction(Entity user, Entity obj)
+        private bool DoEmptyHandToActorInteraction(IEntity user, IEntity obj)
         {
             // TODO Implementation for this
             return true;
         }
 
-        private bool DoHandsToLargeObjectInteraction(Entity user, Entity obj)
+        private bool DoHandsToLargeObjectInteraction(IEntity user, IEntity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
@@ -125,19 +123,19 @@ namespace SS14.Server.GameObjects.EntitySystems
             return DoApplyItemToLargeObject(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool DoApplyItemToLargeObject(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToLargeObject(IEntity user, IEntity entity, IEntity obj)
         {
             return DoApplyItem(user, entity, obj, InteractsWith.LargeObject);
         }
 
-        private bool DoEmptyHandToLargeObjectInteraction(Entity user, Entity obj)
+        private bool DoEmptyHandToLargeObjectInteraction(IEntity user, IEntity obj)
         {
             // Send a message to obj that it has been clicked by user.
             obj.SendMessage(user, ComponentMessageType.ReceiveEmptyHandToLargeObjectInteraction, new object[1] { user });
             return true;
         }
 
-        private bool DoHandsToItemInteraction(Entity user, Entity obj)
+        private bool DoHandsToItemInteraction(IEntity user, IEntity obj)
         {
             var hands = user.GetComponent<HumanHandsComponent>(ComponentFamily.Hands);
             if (hands.IsEmpty(hands.CurrentHand))
@@ -147,12 +145,12 @@ namespace SS14.Server.GameObjects.EntitySystems
             return DoApplyItemToItem(user, hands.GetEntity(hands.CurrentHand), obj);
         }
 
-        private bool DoApplyItemToItem(Entity user, Entity entity, Entity obj)
+        private bool DoApplyItemToItem(IEntity user, IEntity entity, IEntity obj)
         {
             return DoApplyItem(user, entity, obj, InteractsWith.Item);
         }
 
-        private bool DoApplyItem(Entity user, Entity item, Entity target, InteractsWith interaction)
+        private bool DoApplyItem(IEntity user, IEntity item, IEntity target, InteractsWith interaction)
         {
             if (item == target) //Can't apply item to itself!
                 return false;
@@ -164,12 +162,12 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
             return true;
         }
-        private bool DoEmptyHandToItemInteraction(Entity user, Entity obj)
+        private bool DoEmptyHandToItemInteraction(IEntity user, IEntity obj)
         {
             var itemComponent = obj.GetComponent<BasicItemComponent>(ComponentFamily.Item);
-            if(itemComponent.CanBePickedUp)
+            if (itemComponent.CanBePickedUp)
             {
-                EntityManager.RaiseEvent(this, new InventoryPickedUpItemEventArgs{Actor = user, Item = obj});
+                EntityManager.RaiseEvent(this, new InventoryPickedUpItemEventArgs { Actor = user, Item = obj });
             }
             return true;
         }

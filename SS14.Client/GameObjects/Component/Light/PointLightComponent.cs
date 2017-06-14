@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Light;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -13,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class PointLightComponent : Component
+    public class PointLightComponent : ClientComponent
     {
         public override string Name => "PointLight";
         //Contains a standard light
@@ -31,11 +32,11 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (LightComponentState); }
+            get { return typeof(LightComponentState); }
         }
 
         //When added, set up the light.
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
 
@@ -43,7 +44,7 @@ namespace SS14.Client.GameObjects
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
             _light.SetRadius(_lightRadius);
-            _light.SetColor(255, (int) _lightColor.X, (int) _lightColor.Y, (int) _lightColor.Z);
+            _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
             _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
             _light.SetMask(_mask);
             Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
@@ -52,11 +53,11 @@ namespace SS14.Client.GameObjects
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
             base.HandleNetworkMessage(message, sender);
-            var type = (ComponentMessageType) message.MessageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
             switch (type)
             {
                 case ComponentMessageType.SetLightMode:
-                    SetMode((LightModeClass) message.MessageParameters[1]);
+                    SetMode((LightModeClass)message.MessageParameters[1]);
                     break;
             }
         }

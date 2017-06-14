@@ -6,7 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -48,13 +48,17 @@ namespace SS14.Client.UserInterface
         ///  Currently targeting action.
         /// </summary>
 
-        public UserInterfaceManager(IResourceManager resourceManager)
+        public UserInterfaceManager(IResourceManager resourceManager, IPlayerConfigurationManager config)
         {
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
-            _config = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), resourceManager);
+            _config = config;
+        }
+
+        public void Initialize()
+        {
+            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), _resourceManager);
             _console.SetVisible(false);
         }
 
@@ -436,7 +440,6 @@ namespace SS14.Client.UserInterface
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
-
             }
             */
         }

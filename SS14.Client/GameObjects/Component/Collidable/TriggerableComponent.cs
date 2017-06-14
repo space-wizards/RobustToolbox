@@ -1,5 +1,4 @@
 ﻿using SS14.Shared.IoC;
-using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects
 {

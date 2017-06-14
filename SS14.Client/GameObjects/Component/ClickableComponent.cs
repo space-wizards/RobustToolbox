@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ClickableComponent : Component
+    public class ClickableComponent : ClientComponent
     {
         public override string Name => "Clickable";
 
@@ -25,7 +25,7 @@ namespace SS14.Client.GameObjects
             switch (type)
             {
                 case ComponentMessageType.ClickedInHand:
-                    DispatchInHandClick((int) list[0]);
+                    DispatchInHandClick((int)list[0]);
                     break;
             }
 
@@ -37,10 +37,10 @@ namespace SS14.Client.GameObjects
             ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
                                                             ComponentMessageType.CheckSpriteClick, worldPos);
 
-            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool) reply.ParamsList[0])
+            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0])
             {
-                drawdepth = (int) reply.ParamsList[1];
-                return (bool) reply.ParamsList[0];
+                drawdepth = (int)reply.ParamsList[1];
+                return (bool)reply.ParamsList[0];
             }
 
             drawdepth = -1;

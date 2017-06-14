@@ -12,7 +12,7 @@ pull_requests:
 image: Visual Studio 2017
 clone_depth: 10
 install:
-- cinst msbuild-sonarqube-runner
+- ps: if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER) { cinst msbuild-sonarqube-runner }
 
 before_build:
 - cmd: nuget restore SpaceStation14.sln

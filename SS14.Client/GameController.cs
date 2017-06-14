@@ -109,6 +109,7 @@ namespace SS14.Client
 
         private void ShowSplashScreen()
         {
+#if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
             // Size of the NT logo in the bottom left.
@@ -139,11 +140,14 @@ namespace SS14.Client
             window.Draw(logo);
             window.Draw(nanotrasen);
             window.Display();
+#endif
         }
 
         private void CleanupSplashScreen()
         {
+#if !DEBUG
             CluwneLib.CleanupSplashScreen();
+#endif
         }
 
         #endregion Constructors

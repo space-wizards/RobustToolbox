@@ -250,9 +250,9 @@
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" />
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" Condition="'$(Configuration)' != 'Debug'"/>
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" Condition="'$(Configuration)' != 'Debug'"/>
+    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" Condition="'$(Configuration)' != 'Debug'"/>
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />

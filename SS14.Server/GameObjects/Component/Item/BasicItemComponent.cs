@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -20,7 +21,7 @@ namespace SS14.Server.GameObjects
         public InventoryLocation HoldingHand = InventoryLocation.None;
         public bool CanBePickedUp = true;
 
-        public Entity CurrentHolder { get; set; }
+        public IEntity CurrentHolder { get; set; }
 
         public BasicItemComponent()
         {
@@ -44,26 +45,26 @@ namespace SS14.Server.GameObjects
                     break;*/
                 case ComponentMessageType.ReceiveItemToItemInteraction:
                     //This message means we were clicked on by an actor with an item in hand
-                    HandleItemToItemInteraction((Entity) list[0]);
+                    HandleItemToItemInteraction((IEntity)list[0]);
                     // param 0 is the actor entity, param 1 is the source actor entity
                     break;
                 case ComponentMessageType.EnactItemToActorInteraction:
-                    ApplyTo((Entity) list[0], InteractsWith.Actor, (Entity) list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.Actor, (IEntity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToItemInteraction:
-                    ApplyTo((Entity) list[0], InteractsWith.Item, (Entity) list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.Item, (IEntity)list[1]);
                     break;
                 case ComponentMessageType.EnactItemToLargeObjectInteraction:
-                    ApplyTo((Entity) list[0], InteractsWith.LargeObject, (Entity) list[1]);
+                    ApplyTo((IEntity)list[0], InteractsWith.LargeObject, (IEntity)list[1]);
                     break;
                 /*case ComponentMessageType.PickedUp:
-                    HandlePickedUp((Entity) list[0], (Hand) list[1]);
+                    HandlePickedUp((IEntity) list[0], (Hand) list[1]);
                     break;*/
                 case ComponentMessageType.Dropped:
                     HandleDropped();
                     break;
                 case ComponentMessageType.ItemGetCapability:
-                    ItemCapability[] itemcaps = GetCapability((ItemCapabilityType) list[0]);
+                    ItemCapability[] itemcaps = GetCapability((ItemCapabilityType)list[0]);
                     if (itemcaps != null)
                         reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability, itemcaps);
                     break;
@@ -85,11 +86,11 @@ namespace SS14.Server.GameObjects
                     break;
                 case ComponentMessageType.CheckItemHasCapability:
                     reply = new ComponentReplyMessage(ComponentMessageType.ItemHasCapability,
-                                                      HasCapability((ItemCapabilityType) list[0]));
+                                                      HasCapability((ItemCapabilityType)list[0]));
                     break;
                 case ComponentMessageType.ItemGetAllCapabilities:
                     reply = new ComponentReplyMessage(ComponentMessageType.ItemReturnCapability,
-                                                      (object) GetAllCapabilities());
+                                                      (object)GetAllCapabilities());
                     break;
                 case ComponentMessageType.Activate:
                     Activate();
@@ -110,7 +111,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         /// <param name="targetEntity">Target entity</param>
         /// <param name="targetType">Type of entity, Item, LargeObject, or Actor</param>
-        public virtual void ApplyTo(Entity targetEntity, InteractsWith targetType, Entity sourceActor)
+        public virtual void ApplyTo(IEntity targetEntity, InteractsWith targetType, IEntity sourceActor)
         {
             //can be overridden in children to sort of bypass the capability system if needed.
             ApplyCapabilities(targetEntity, targetType, sourceActor);
@@ -122,7 +123,7 @@ namespace SS14.Server.GameObjects
             HoldingHand = InventoryLocation.None;
         }
 
-        public void HandlePickedUp(Entity entity, InventoryLocation holdingHand)
+        public void HandlePickedUp(IEntity entity, InventoryLocation holdingHand)
         {
             CurrentHolder = entity;
             HoldingHand = holdingHand;
@@ -138,7 +139,7 @@ namespace SS14.Server.GameObjects
         /// Basically, the actor uses an item on this item
         /// </summary>
         /// <param name="entity">The actor entity</param>
-        protected virtual void HandleItemToItemInteraction(Entity actor)
+        protected virtual void HandleItemToItemInteraction(IEntity actor)
         {
             //Get the item
 
@@ -151,7 +152,7 @@ namespace SS14.Server.GameObjects
         /// Basically, the actor touches this item with an empty hand
         /// </summary>
         /// <param name="actor"></param>
-        public virtual void HandleEmptyHandToItemInteraction(Entity actor)
+        public virtual void HandleEmptyHandToItemInteraction(IEntity actor)
         {
             //Pick up the item
             actor.SendMessage(this, ComponentMessageType.PickUpItem, Owner);
@@ -170,7 +171,7 @@ namespace SS14.Server.GameObjects
         /// ApplyTo returns true if it successfully interacted with the target, false if not.
         /// </summary>
         /// <param name="target">Target entity for interaction</param>
-        protected virtual void ApplyCapabilities(Entity target, InteractsWith targetType, Entity sourceActor)
+        protected virtual void ApplyCapabilities(IEntity target, InteractsWith targetType, IEntity sourceActor)
         {
             IOrderedEnumerable<ItemCapability> capstoapply = from c in capabilities.Values
                                                              where (c.interactsWith & targetType) == targetType

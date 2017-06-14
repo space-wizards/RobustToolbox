@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Collidable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -15,7 +16,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class CollidableComponent : Component, ICollidable
+    public class CollidableComponent : ClientComponent, ICollidable
     {
         public override string Name => "Collidable";
 
@@ -34,12 +35,12 @@ namespace SS14.Client.GameObjects
         {
             Family = ComponentFamily.Collidable;
             DebugColor = Color.Red;
-            tweakAABB = new Vector4f(0,0,0,0);
+            tweakAABB = new Vector4f(0, 0, 0, 0);
         }
 
         public override Type StateType
         {
-            get { return typeof (CollidableComponentState); }
+            get { return typeof(CollidableComponentState); }
         }
 
         private Vector4f TweakAABB
@@ -85,23 +86,21 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
         /// </summary>
-        public void Bump(Entity ent)
+        public void Bump(IEntity ent)
         {
-            if (OnBump != null)
-                OnBump(this, new EventArgs());
+            OnBump?.Invoke(this, new EventArgs());
 
             Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped,
                                               ent.Uid);
         }
 
-
         public bool IsHardCollidable
         {
             get { return isHardCollidable; }
         }
 
-        #endregion
+        #endregion ICollidable Members
 
         public event EventHandler OnBump;
 
@@ -109,7 +108,7 @@ namespace SS14.Client.GameObjects
         /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             GetAABB();
@@ -235,7 +234,7 @@ namespace SS14.Client.GameObjects
             if (reply.MessageType == ComponentMessageType.CurrentAABB)
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-                currentAABB = (FloatRect) reply.ParamsList[0];
+                currentAABB = (FloatRect)reply.ParamsList[0];
                 currentAABB = new FloatRect(
                     currentAABB.Left / tileSize,
                     currentAABB.Top / tileSize,

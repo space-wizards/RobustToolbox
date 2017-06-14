@@ -1,39 +1,39 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentManager
+    [IoCTarget]
+    public class ComponentManager : IComponentManager
     {
         /// <summary>
         /// Dictionary of components -- this is the master list.
         /// </summary>
-        public Dictionary<ComponentFamily, List<Component>> components;
+        private readonly Dictionary<ComponentFamily, List<IComponent>> components
+            = new Dictionary<ComponentFamily, List<IComponent>>();
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
         public ComponentManager()
         {
-            components = new Dictionary<ComponentFamily, List<Component>>();
             foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
             {
-                components.Add(family, new List<Component>());
+                components[family] = new List<IComponent>();
             }
         }
 
-        public List<Component> GetComponents(ComponentFamily family)
+        public IEnumerable<IComponent> GetComponents(ComponentFamily family)
         {
-            return components[family].Cast<Component>().ToList();
+            return components[family];
         }
 
         /// <summary>
         /// Adds a component to the component list.
         /// </summary>
         /// <param name="component"></param>
-        public void AddComponent(Component component)
+        public void AddComponent(IComponent component)
         {
             components[component.Family].Add(component);
         }
@@ -42,7 +42,7 @@ namespace SS14.Shared.GameObjects
         /// Removes a component from the list.
         /// </summary>
         /// <param name="component"></param>
-        public void RemoveComponent(Component component)
+        public void RemoveComponent(IComponent component)
         {
             components[component.Family].Remove(component);
         }
@@ -58,7 +58,7 @@ namespace SS14.Shared.GameObjects
                 // Hack the update loop to allow us to render somewhere in the GameScreen render loop
                 /*if (family == ComponentFamily.Renderable)
                     continue;*/
-                foreach (Component component in components[family])
+                foreach (IComponent component in components[family])
                 {
                     component.Update(frameTime);
                 }

@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ContextMenuComponent : Component
+    public class ContextMenuComponent : ClientComponent
     {
         public override string Name => "ContextMenu";
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
@@ -33,11 +33,11 @@ namespace SS14.Client.GameObjects
             switch (type)
             {
                 case ComponentMessageType.ContextAdd:
-                    AddEntry((ContextMenuEntry) list[0]);
+                    AddEntry((ContextMenuEntry)list[0]);
                     break;
 
                 case ComponentMessageType.ContextRemove:
-                    RemoveEntryByName((string) list[0]);
+                    RemoveEntryByName((string)list[0]);
                     break;
 
                 case ComponentMessageType.ContextGetEntries:
@@ -89,14 +89,14 @@ namespace SS14.Client.GameObjects
                         message = node.AsString();
                     }
 
-                var newEntry = new ContextMenuEntry
-                {
-                    EntryName = name,
-                    IconName = icon,
-                    ComponentMessage = message
-                };
+                    var newEntry = new ContextMenuEntry
+                    {
+                        EntryName = name,
+                        IconName = icon,
+                        ComponentMessage = message
+                    };
 
-                _entries.Add(newEntry);
+                    _entries.Add(newEntry);
                 }
             }
         }

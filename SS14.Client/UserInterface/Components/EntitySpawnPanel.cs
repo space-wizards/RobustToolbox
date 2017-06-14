@@ -1,7 +1,7 @@
 ﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Placement;
@@ -30,27 +30,27 @@ namespace SS14.Client.UserInterface.Components
             _placementManager = placementManager;
 
             _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceManager)
-                              {Position = new Vector2i(5, 5)};
+            { Position = new Vector2i(5, 5) };
             components.Add(_entityList);
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) {Position = new Vector2i(210, 0)};
+            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) { Position = new Vector2i(210, 0) };
             components.Add(searchLabel);
 
-            _entSearchTextbox = new Textbox(125, _resourceManager) {Position = new Vector2i(210, 20)};
+            _entSearchTextbox = new Textbox(125, _resourceManager) { Position = new Vector2i(210, 20) };
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
             components.Add(_entSearchTextbox);
 
             _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceManager)
-                              {
-                                  DrawBackground = true,
-                                  DrawBorder = true,
-                                  Position = new Vector2i(210, 55)
-                              };
+            {
+                DrawBackground = true,
+                DrawBorder = true,
+                Position = new Vector2i(210, 55)
+            };
 
             _overLabel = new Label("Override Placement:", "CALIBRI", _resourceManager)
-                             {
-                                 Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
-                             };
+            {
+                Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
+            };
 
             components.Add(_overLabel);
 
@@ -81,12 +81,12 @@ namespace SS14.Client.UserInterface.Components
             components.Add(_clearLabel);
 
             _eraserButton = new ImageButton
-                                {
-                                    ImageNormal = "erasericon",
-                                    Position =
+            {
+                ImageNormal = "erasericon",
+                Position =
                                         new Vector2i(_clearLabel.Position.X + _clearLabel.ClientArea.Width + 5,
                                                   _clearLabel.Position.Y)
-                                };
+            };
 
             //eraserButton.Position = new Vector2i(clearLabel.ClientArea.Right + 5, clearLabel.ClientArea.Top); Clientarea not updating properly. FIX THIS
             _eraserButton.Clicked += EraserButtonClicked;
@@ -94,24 +94,24 @@ namespace SS14.Client.UserInterface.Components
 
             BuildEntityList();
 
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
         private void _lstOverride_ItemSelected(Label item, Listbox sender)
         {
-            var pMan = (PlacementManager) _placementManager;
+            var pMan = (PlacementManager)_placementManager;
 
             if (pMan.CurrentMode != null)
             {
                 var newObjInfo = new PlacementInformation
-                                     {
-                                         PlacementOption = item.Text.Text,
-                                         EntityType = pMan.CurrentPermission.EntityType,
-                                         Range = -1,
-                                         IsTile = pMan.CurrentPermission.IsTile
-                                     };
+                {
+                    PlacementOption = item.Text.Text,
+                    EntityType = pMan.CurrentPermission.EntityType,
+                    Range = -1,
+                    IsTile = pMan.CurrentPermission.IsTile
+                };
 
                 _placementManager.Clear();
                 _placementManager.BeginPlacing(newObjInfo);
@@ -138,8 +138,8 @@ namespace SS14.Client.UserInterface.Components
         {
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof (EntitySpawnSelectButton)))
-                ((EntitySpawnSelectButton) curr).selected = false;
+                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                ((EntitySpawnSelectButton)curr).selected = false;
         }
 
         private void BuildEntityList(string searchStr = null)
@@ -182,8 +182,8 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof (EntitySpawnSelectButton)))
-                ((EntitySpawnSelectButton) curr).fixed_width = maxWidth;
+                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                ((EntitySpawnSelectButton)curr).fixed_width = maxWidth;
         }
 
         private void NewButtonClicked(EntitySpawnSelectButton sender, EntityPrototype template, string templateName)
@@ -197,8 +197,8 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof (EntitySpawnSelectButton)))
-                ((EntitySpawnSelectButton) curr).selected = false;
+                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                ((EntitySpawnSelectButton)curr).selected = false;
 
             string overrideMode = "";
             if (_lstOverride.CurrentlySelected != null)
@@ -206,12 +206,12 @@ namespace SS14.Client.UserInterface.Components
                     overrideMode = _lstOverride.CurrentlySelected.Text.Text;
 
             var newObjInfo = new PlacementInformation
-                                 {
-                                     PlacementOption = overrideMode.Length > 0 ? overrideMode : template.PlacementMode,
-                                     EntityType = templateName,
-                                     Range = -1,
-                                     IsTile = false
-                                 };
+            {
+                PlacementOption = overrideMode.Length > 0 ? overrideMode : template.PlacementMode,
+                EntityType = templateName,
+                Range = -1,
+                IsTile = false
+            };
 
             _placementManager.BeginPlacing(newObjInfo);
 

@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -9,23 +10,23 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class InventoryComponent : Component
+    public class InventoryComponent : ClientComponent
     {
         public override string Name => "Inventory";
         #region Delegates
 
         public delegate void InventoryComponentUpdateHandler(
-            InventoryComponent sender, int maxSlots, List<Entity> entities);
+            InventoryComponent sender, int maxSlots, List<IEntity> entities);
 
-        #endregion
+        #endregion Delegates
 
         public InventoryComponent()
         {
             Family = ComponentFamily.Inventory;
-            ContainedEntities = new List<Entity>();
+            ContainedEntities = new List<IEntity>();
         }
 
-        public List<Entity> ContainedEntities { get; private set; }
+        public List<IEntity> ContainedEntities { get; private set; }
 
         public int MaxSlots { get; private set; }
 
@@ -36,7 +37,7 @@ namespace SS14.Client.GameObjects
 
         public event InventoryComponentUpdateHandler Changed;
 
-        public bool ContainsEntity(Entity entity)
+        public bool ContainsEntity(IEntity entity)
         {
             return ContainedEntities.Contains(entity);
         }
@@ -46,15 +47,13 @@ namespace SS14.Client.GameObjects
             return ContainedEntities.Exists(x => x.Prototype.ID == templatename);
         }
 
-        public Entity GetEntity(string templatename)
+        public IEntity GetEntity(string templatename)
         {
-            return ContainedEntities.Exists(x => x.Prototype.ID == templatename)
-                       ? ContainedEntities.First(x => x.Prototype.ID == templatename)
-                       : null;
+            return ContainedEntities.FirstOrDefault(x => x.Prototype.ID == templatename);
         }
 
         // TODO raise an event to be handled by a clientside InventorySystem, which will send the event through to the server?
-        public void SendInventoryAdd(Entity ent)
+        public void SendInventoryAdd(IEntity ent)
         {
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
                                               ComponentMessageType.InventoryAdd, ent.Uid);
@@ -64,17 +63,17 @@ namespace SS14.Client.GameObjects
         {
             var theState = state as InventoryComponentState;
             var stateChanged = false;
-            if(MaxSlots != theState.MaxSlots)
+            if (MaxSlots != theState.MaxSlots)
             {
                 MaxSlots = theState.MaxSlots;
                 stateChanged = true;
             }
 
             var newEntities = new List<int>(theState.ContainedEntities);
-            var toRemove = new List<Entity>();
+            var toRemove = new List<IEntity>();
             foreach (var e in ContainedEntities)
             {
-                if(newEntities.Contains(e.Uid))
+                if (newEntities.Contains(e.Uid))
                 {
                     newEntities.Remove(e.Uid);
                 }

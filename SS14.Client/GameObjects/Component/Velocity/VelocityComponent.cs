@@ -7,18 +7,17 @@ using System;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class VelocityComponent : Component
+    public class VelocityComponent : ClientComponent
     {
         public override string Name => "Velocity";
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
         private Vector2f _velocity = new Vector2f();
 
-
         public VelocityComponent()
         {
             Family = ComponentFamily.Velocity;
-            Velocity = new Vector2f(0,0);
+            Velocity = new Vector2f(0, 0);
         }
 
         public Vector2f Velocity
@@ -29,7 +28,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (VelocityComponentState); }
+            get { return typeof(VelocityComponentState); }
         }
 
         public float X
@@ -51,7 +50,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(dynamic state)
         {
-            if(Owner.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) == null)
+            if (Owner.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) == null)
                 SetNewState(state);
         }
 

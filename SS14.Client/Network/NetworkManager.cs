@@ -17,23 +17,26 @@ namespace SS14.Client.Network
         public NetClient NetClient { get; private set; }
         private GameType _serverGameType;
 
-        public NetworkManager()
-        {
-            IsConnected = false;
+        #region INetworkManager Members
 
+        public void Initialize()
+        {
+            if (NetClient != null)
+            {
+                throw new InvalidOperationException("Start() has been called already.");
+            }
+
+#if DEBUG
             var config = IoCManager.Resolve<IPlayerConfigurationManager>();
 
             //Simulate Latency
             if (config.GetSimulateLatency())
             {
-#if DEBUG
                 _netConfig.SimulatedLoss = config.GetSimulatedLoss();
                 _netConfig.SimulatedMinimumLatency = config.GetSimulatedMinimumLatency();
                 _netConfig.SimulatedRandomLatency = config.GetSimulatedRandomLatency();
-#endif
             }
 
-#if DEBUG
             _netConfig.ConnectionTimeout = 30000f;
 #endif
 
@@ -41,9 +44,8 @@ namespace SS14.Client.Network
             NetClient.Start();
         }
 
-        #region INetworkManager Members
-
-        public bool IsConnected { get; private set; }
+        public bool IsConnected
+        { get; private set; } = false;
 
         public NetPeerStatistics CurrentStatistics
         {
@@ -98,7 +100,7 @@ namespace SS14.Client.Network
         public void RequestMap()
         {
             NetOutgoingMessage message = NetClient.CreateMessage();
-            message.Write((byte) NetMessage.RequestMap);
+            message.Write((byte)NetMessage.RequestMap);
             NetClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
@@ -110,7 +112,7 @@ namespace SS14.Client.Network
         public void SendClientName(string name)
         {
             NetOutgoingMessage message = NetClient.CreateMessage();
-            message.Write((byte) NetMessage.ClientName);
+            message.Write((byte)NetMessage.ClientName);
             message.Write(name);
             NetClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
@@ -123,7 +125,7 @@ namespace SS14.Client.Network
             }
         }
 
-        #endregion
+        #endregion INetworkManager Members
 
         protected virtual void OnMessageArrived(NetIncomingMessage message)
         {
@@ -154,7 +156,7 @@ namespace SS14.Client.Network
 
         public void SetGameType(NetIncomingMessage msg)
         {
-            _serverGameType = (GameType) msg.ReadByte();
+            _serverGameType = (GameType)msg.ReadByte();
         }
 
         public void SendChangeTile(int x, int y, Tile newTile)

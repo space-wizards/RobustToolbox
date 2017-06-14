@@ -109,10 +109,21 @@
     <Compile Include="ColorUtils.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
+    <Compile Include="GameObjects\Entity.cs" />
+    <Compile Include="Interfaces\GameObjects\IComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
+    <Compile Include="Interfaces\GameObjects\IComponentManager.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntity.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntityManager.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
+    <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
+    <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
+    <Compile Include="IoC\Exceptions\CircularDependencyException.cs" />
+    <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\LogManager.cs" />
@@ -161,8 +172,6 @@
     <Compile Include="GameObjects\Component.cs" />
     <Compile Include="GameObjects\ComponentFactory.cs" />
     <Compile Include="GameObjects\ComponentManager.cs" />
-    <Compile Include="GameObjects\Entity.cs" />
-    <Compile Include="GameObjects\EntityFactory.cs" />
     <Compile Include="GameObjects\EntityManager.cs" />
     <Compile Include="GameObjects\EntityQuery.cs" />
     <Compile Include="GameObjects\EntitySystemManager.cs" />
@@ -208,19 +217,12 @@
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="GameObjects\ItemFlags.cs" />
     <Compile Include="GameObjects\MarshalComponentParameter.cs" />
-    <Compile Include="GameObjects\Enums.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />
     <Compile Include="ContentLoader\ContentLoader.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GameObjects\Component\" />
-    <Folder Include="GameObjects\EntitySystemMessage\" />
-    <Folder Include="GameObjects\Events\" />
-    <Folder Include="GameObjects\Server\" />
-    <Folder Include="GO\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

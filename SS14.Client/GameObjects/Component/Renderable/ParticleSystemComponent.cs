@@ -1,12 +1,12 @@
-﻿
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Particles;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
+    public class ParticleSystemComponent : ClientComponent, IParticleSystemComponent, IRenderableComponent
     {
         public override string Name => "ParticleSystem";
         #region Variables.
@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects
         protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
 
         public DrawDepth DrawDepth { get; set; }
-        #endregion
+        #endregion Variables.
 
         #region Properties
         public FloatRect AverageAABB
@@ -36,7 +36,7 @@ namespace SS14.Client.GameObjects
         {
             get { return new FloatRect(); }
         }
-        #endregion
+        #endregion Properties
 
         public ParticleSystemComponent()
         {
@@ -60,7 +60,7 @@ namespace SS14.Client.GameObjects
             //_emitter.MoveEmitter(_emitter.EmitterPosition + offset);
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
@@ -110,7 +110,7 @@ namespace SS14.Client.GameObjects
             return master != null;
         }
 
-        public void SetMaster(Entity m)
+        public void SetMaster(IEntity m)
         {
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;
@@ -153,7 +153,6 @@ namespace SS14.Client.GameObjects
                     _emitters[name].Emit = active;
                 }
             }
-
         }
 
         public void RemoveParticleSystem(string name)

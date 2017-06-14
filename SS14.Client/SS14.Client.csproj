@@ -174,6 +174,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameController.cs" />
+    <Compile Include="GameObjects\Component\ClientComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
+    <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="app.config">
@@ -241,11 +244,10 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
-    <Compile Include="GameObjects\EntityManager.cs" />
+    <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\EntityNetworkManager.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\TestSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
     <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
     <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" />
@@ -260,7 +262,6 @@
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
     <Compile Include="Console\QuitCommand.cs" />
-    <Compile Include="GOC\EntityManagerContainer.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="GameTimer\GameTimer.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
@@ -274,12 +275,11 @@
     <Compile Include="Interfaces\Configuration\IPlayerConfigurationManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
-    <Compile Include="Interfaces\GOC\GetSVarsEventArgs.cs" />
-    <Compile Include="Interfaces\GOC\IEntityManagerContainer.cs" />
-    <Compile Include="Interfaces\GOC\IParticleSystemComponent.cs" />
-    <Compile Include="Interfaces\GOC\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GOC\ISVarsComponent.cs" />
-    <Compile Include="Interfaces\GOC\ISpriteComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\GetSVarsEventArgs.cs" />
+    <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\ISVarsComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
     <Compile Include="Interfaces\GameTimer\IGameTimer.cs" />
     <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
@@ -387,20 +387,48 @@
     <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs" />
     <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
     <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
-    <Content Include="Prototypes\Clothing.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Containers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Doors.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\GlassWalls.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Internals.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\JanitorItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Lights.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Lockers.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\MedicalItems.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Misc.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Mobs.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Tables.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Wallmounted.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="Prototypes\Weapons.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Prototypes\Clothing.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Containers.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Doors.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\GlassWalls.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Internals.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\JanitorItems.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Lights.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Lockers.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\MedicalItems.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Misc.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Mobs.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Tables.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Wallmounted.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Weapons.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

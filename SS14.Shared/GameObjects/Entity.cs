@@ -1,132 +1,14 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public delegate void EntityShutdownEvent(Entity e);
-
-    public interface IEntity
-    {
-        string Name { get; set; }
-        EntityManager EntityManager { get; }
-        int Uid { get; set; }
-
-        bool Initialized { get; set; }
-
-        EntityPrototype Prototype { get; set; }
-        event EntityShutdownEvent OnShutdown;
-
-        /// <summary>
-        /// Match
-        ///
-        /// Allows us to fetch entities with a defined SET of components
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        bool Match(EntityQuery query);
-
-        /// <summary>
-        /// Public method to add a component to an entity.
-        /// Calls the component's onAdd method, which also adds it to the component manager.
-        /// </summary>
-        /// <param name="family">the family of component -- there can only be one at a time per family.</param>
-        /// <param name="component">The component.</param>
-        void AddComponent(ComponentFamily family, IComponent component);
-
-        /// <summary>
-        /// Public method to remove a component from an entity.
-        /// Calls the onRemove method of the component, which handles removing it
-        /// from the component manager and shutting down the component.
-        /// </summary>
-        /// <param name="family"></param>
-        void RemoveComponent(ComponentFamily family);
-
-        /// <summary>
-        /// Checks to see if a component of a certain family exists
-        /// </summary>
-        /// <param name="family">componentfamily to check</param>
-        /// <returns>true if component exists, false otherwise</returns>
-        bool HasComponent(ComponentFamily family);
-
-        T GetComponent<T>(ComponentFamily family) where T : class;
-
-        /// <summary>
-        /// Gets the component of the specified family, if it exists
-        /// </summary>
-        /// <param name="family">componentfamily to get</param>
-        /// <returns></returns>
-        IComponent GetComponent(ComponentFamily family);
-
-        void Shutdown();
-        List<IComponent> GetComponents();
-        List<ComponentFamily> GetComponentFamilies();
-        void SendMessage(object sender, ComponentMessageType type, params object[] args);
-
-        /// <summary>
-        /// Allows components to send messages
-        /// </summary>
-        /// <param name="sender">the component doing the sending</param>
-        /// <param name="type">the type of message</param>
-        /// <param name="args">message parameters</param>
-        void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
-                         params object[] args);
-
-        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
-                                          params object[] args);
-
-        /// <summary>
-        /// Requests Description string from components and returns it. If no component answers, returns default description from template.
-        /// </summary>
-        string GetDescriptionString() //This needs to go here since it can not be bound to any single component.
-            ;
-
-        /// <summary>
-        /// Sends a message to the counterpart component on the server side
-        /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
-        /// <param name="messageParams">Parameters</param>
-        void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams);
-
-        /// <summary>
-        /// Sends a message to the counterpart component on the server side
-        /// </summary>
-        /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
-        /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
-        /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
-                                                 NetConnection recipient, params object[] messageParams);
-
-        /// <summary>
-        /// Client message to server saying component has been instantiated and needs initial data
-        /// </summary>
-        /// <param name="component"></param>
-        [Obsolete("Getting rid of this messaging paradigm")]
-        void SendComponentInstantiationMessage(Component component);
-
-        /// <summary>
-        /// Sets up variables and shite
-        /// </summary>
-        void Initialize();
-
-        void HandleNetworkMessage(IncomingEntityMessage message);
-
-        /// <summary>
-        /// Client method to handle an entity state object
-        /// </summary>
-        /// <param name="state"></param>
-        void HandleEntityState(EntityState state);
-
-        /// <summary>
-        /// Serverside method to prepare an entity state object
-        /// </summary>
-        /// <returns></returns>
-        EntityState GetEntityState();
-    }
+    public delegate void EntityShutdownEvent(IEntity e);
 
     public class Entity : IEntity
     {
@@ -139,7 +21,8 @@ namespace SS14.Shared.GameObjects
             new Dictionary<ComponentFamily, IComponent>();
 
         protected List<Type> ComponentTypes = new List<Type>();
-        protected IEntityNetworkManager EntityNetworkManager;
+        public IEntityNetworkManager EntityNetworkManager { get; private set; }
+        public IEntityManager EntityManager { get; private set; }
 
         public int Uid { get; set; }
         public EntityPrototype Prototype { get; set; }
@@ -148,21 +31,18 @@ namespace SS14.Shared.GameObjects
         public bool Initialized { get; set; }
         public event EntityShutdownEvent OnShutdown;
 
-        #endregion
+        #endregion Members
 
-        #region constructor
-
-        public Entity(EntityManager entityManager)
+        public Entity(IEntityManager entityManager, IEntityNetworkManager networkManager)
         {
             EntityManager = entityManager;
-            EntityNetworkManager = EntityManager.EntityNetworkManager;
-            if (EntityManager.EngineType == EngineType.Client)
+            EntityNetworkManager = networkManager;
+            var name = Assembly.GetEntryAssembly().GetName().Name;
+            if (name == "SS14.Client")
+            {
                 Initialize();
+            }
         }
-
-        public EntityManager EntityManager { get; private set; }
-
-        #endregion
 
         #region Initialization
 
@@ -175,7 +55,7 @@ namespace SS14.Shared.GameObjects
             Initialized = true;
         }
 
-        #endregion
+        #endregion Initialization
 
         #region Component Messaging
 
@@ -238,7 +118,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        #endregion
+        #endregion Component Messaging
 
         #region Network messaging
 
@@ -273,22 +153,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Client message to server saying component has been instantiated and needs initial data
-        /// </summary>
-        /// <param name="component"></param>
-        [Obsolete("Getting rid of this messaging paradigm")]
-        public void SendComponentInstantiationMessage(Component component)
-        {
-            if (EntityManager.EngineType == EngineType.Server)
-                return;
-            if (component == null)
-                throw new Exception("Component is null");
-
-            EntityNetworkManager.SendEntityNetworkMessage(this, EntityMessage.ComponentInstantiationMessage,
-                                                          component.Family);
-        }
-
-        /// <summary>
         /// Func to handle an incoming network message
         /// </summary>
         /// <param name="message"></param>
@@ -297,7 +161,7 @@ namespace SS14.Shared.GameObjects
             switch (message.MessageType)
             {
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage) message.Message, message.Sender);
+                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
                     break;
                 case EntityMessage.ComponentInstantiationMessage: //Server Only
                     HandleComponentInstantiationMessage(message);
@@ -312,11 +176,11 @@ namespace SS14.Shared.GameObjects
         /// <param name="message">Message from client</param>
         protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
         {
-            if (HasComponent((ComponentFamily) message.Message))
-                GetComponent<Component>((ComponentFamily) message.Message).HandleInstantiationMessage(message.Sender);
+            if (HasComponent((ComponentFamily)message.Message))
+                GetComponent<Component>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
         }
 
-        #endregion
+        #endregion Network messaging
 
         #region IEntity Members
 
@@ -338,38 +202,6 @@ namespace SS14.Shared.GameObjects
             return null;
         }
 
-        #endregion
-
-        #region Entity Systems
-
-        /// <summary>
-        /// Match
-        ///
-        /// Allows us to fetch entities with a defined SET of components
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        public bool Match(EntityQuery query)
-        {
-            // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
-            if (!(query.Exclusionset.Any() || query.OneSet.Any() || query.AllSet.Any()))
-                return true;
-
-            //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            bool matched =
-                !(query.Exclusionset.Any() && query.Exclusionset.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
-
-            //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
-            if (matched && query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom)))
-                matched = false;
-            //If the entity matches so far, and it matches the ONE set, it matches.
-            if (matched && query.OneSet.Any() && !query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)))
-                matched = false;
-            return matched;
-        }
-
-        #endregion
-
         #region Component Events
         //Convenience thing.
         public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s) where T : EntityEventArgs
@@ -386,7 +218,39 @@ namespace SS14.Shared.GameObjects
         {
             EntityManager.RaiseEvent(this, toRaise);
         }
-        #endregion
+        #endregion Component Events
+
+        #endregion IEntity Members
+
+        #region Entity Systems
+
+        /// <summary>
+        /// Match
+        ///
+        /// Allows us to fetch entities with a defined SET of components
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public bool Match(IEntityQuery query)
+        {
+            // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
+            if (!(query.ExclusionSet.Any() || query.OneSet.Any() || query.AllSet.Any()))
+                return true;
+
+            //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
+            bool matched =
+                !(query.ExclusionSet.Any() && query.ExclusionSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
+
+            //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
+            if (matched && query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom)))
+                matched = false;
+            //If the entity matches so far, and it matches the ONE set, it matches.
+            if (matched && query.OneSet.Any() && !query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)))
+                matched = false;
+            return matched;
+        }
+
+        #endregion Entity Systems
 
         #region Components
 
@@ -433,7 +297,7 @@ namespace SS14.Shared.GameObjects
         public T GetComponent<T>(ComponentFamily family) where T : class
         {
             if (GetComponent(family) is T)
-                return (T) GetComponent(family);
+                return (T)GetComponent(family);
             return null;
         }
 
@@ -472,7 +336,7 @@ namespace SS14.Shared.GameObjects
             ComponentTypes = _components.Values.Select(t => t.GetType()).ToList();
         }
 
-        #endregion
+        #endregion Components
 
         #region GameState Stuff
 
@@ -489,13 +353,13 @@ namespace SS14.Shared.GameObjects
             }*/
             Name = state.StateData.Name;
             var synchedComponentTypes = state.StateData.SynchedComponentTypes;
-            foreach(var t in synchedComponentTypes)
+            foreach (var t in synchedComponentTypes)
             {
-                if(HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
+                if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
                     RemoveComponent(t.Item1);
 
-                if(!HasComponent(t.Item1))
-                    AddComponent(t.Item1, EntityManager.ComponentFactory.GetComponent(t.Item2));
+                if (!HasComponent(t.Item1))
+                    AddComponent(t.Item1, IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2));
             }
             foreach (ComponentState compState in state.ComponentStates)
             {
@@ -550,6 +414,6 @@ namespace SS14.Shared.GameObjects
             return stateComps;
         }
 
-        #endregion
+        #endregion GameState Stuff
     }
 }

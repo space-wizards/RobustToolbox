@@ -76,7 +76,7 @@ namespace SS14.Client.GameObjects
 
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
-                                                              //FIXTHIS
+                                                                  //FIXTHIS
                                                               orderby c.DrawDepth ascending
                                                               where c.DrawDepth < DrawDepth
                                                               select c;
@@ -109,7 +109,7 @@ namespace SS14.Client.GameObjects
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
-                                                            //FIXTHIS
+                                                                //FIXTHIS
                                                             orderby c.DrawDepth ascending
                                                             where c.DrawDepth >= DrawDepth
                                                             select c;
@@ -119,11 +119,9 @@ namespace SS14.Client.GameObjects
                 component.Render(topLeft, bottomRight);
             }
 
-
             //Draw AABB
             var aabb = AABB;
-            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2),(int)(renderPos.Y - aabb.Height / 2), (int)aabb.Width, (int)aabb.Height, new SFML.Graphics.Color(0, 0, 255));
+            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), (int)aabb.Width, (int)aabb.Height, new SFML.Graphics.Color(0, 0, 255));
         }
-
     }
 }

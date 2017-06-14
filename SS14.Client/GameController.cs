@@ -10,6 +10,7 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Interfaces;
 using SS14.Client.State.States;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -26,13 +27,13 @@ using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
 {
-    public class GameController
+    [IoCTarget]
+    public class GameController : IGameController
     {
-
         #region Fields
 
         readonly private IPlayerConfigurationManager _configurationManager;
-      //  private Input _input;
+        //  private Input _input;
         readonly private INetworkGrapher _netGrapher;
         readonly private INetworkManager _networkManager;
         readonly private IStateManager _stateManager;
@@ -41,28 +42,34 @@ namespace SS14.Client
 
         private SFML.System.Clock _clock;
 
-        #endregion
-
-        #region Properties
-
-        #endregion
+        #endregion Fields
 
         #region Methods
 
         #region Constructors
 
-        public GameController()
+        public GameController(IPlayerConfigurationManager configManager,
+                              INetworkGrapher networkGrapher,
+                              INetworkManager networkManager,
+                              IStateManager stateManager,
+                              IUserInterfaceManager userInterfaceManager,
+                              IResourceManager resourceManager)
+        {
+            _configurationManager = configManager;
+            _netGrapher = networkGrapher;
+            _networkManager = networkManager;
+            _stateManager = stateManager;
+            _userInterfaceManager = userInterfaceManager;
+            _resourceManager = resourceManager;
+        }
+
+        public void Run()
         {
             LogManager.Log("Initialising GameController.", LogLevel.Debug);
 
             ShowSplashScreen();
 
-            LoadAssemblies();
-
-            _configurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
             _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
-
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
@@ -75,12 +82,11 @@ namespace SS14.Client
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("prototypes"));
             prototypeManager.Resync();
-            _networkManager = IoCManager.Resolve<INetworkManager>();
-            _netGrapher = IoCManager.Resolve<INetworkGrapher>();
-            _stateManager = IoCManager.Resolve<IStateManager>();
-            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            _networkManager.Initialize();
+            _netGrapher.Initialize();
+            _userInterfaceManager.Initialize();
 
-            _stateManager.RequestStateChange<MainScreen> ();
+            _stateManager.RequestStateChange<MainScreen>();
 
             FrameEventArgs _frameEvent;
             // EventArgs _frameEventArgs;
@@ -93,59 +99,12 @@ namespace SS14.Client
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color.Black);
                 CluwneLib.Screen.DispatchEvents();
-                CluwneLib.RunIdle (this, _frameEvent);
+                CluwneLib.RunIdle(this, _frameEvent);
                 CluwneLib.Screen.Display();
             }
             _networkManager.Disconnect();
             CluwneLib.Terminate();
             LogManager.Log("GameController terminated.");
-        }
-
-        private void LoadAssemblies()
-        {
-            var assemblies = new List<Assembly>(2);
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
-            assemblies.Add(Assembly.GetExecutingAssembly());
-            IoCManager.AddAssemblies(assemblies);
-
-            assemblies.Clear();
-
-            // So we can't actually access this until IoC has loaded the initial assemblies. Yay.
-            var loader = IoCManager.Resolve<IContentLoader>();
-            assemblies.Clear();
-
-            // TODO this should be done on connect.
-            // The issue is that due to our giant trucks of shit code.
-            // It'd be extremely hard to integrate correctly.
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                loader.LoadAssembly(contentAssembly);
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                loader.LoadAssembly(contentAssembly);
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            IoCManager.AddAssemblies(assemblies);
         }
 
         private void ShowSplashScreen()
@@ -162,7 +121,7 @@ namespace SS14.Client
             var logoTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.logo.png"));
             var logo = new SFML.Graphics.Sprite(logoTexture);
             var logoSize = logoTexture.Size;
-            logo.Position = new Vector2f(SIZE_X/2 - logoSize.X/2,SIZE_Y/2 - logoSize.Y/2);
+            logo.Position = new Vector2f(SIZE_X / 2 - logoSize.X / 2, SIZE_Y / 2 - logoSize.Y / 2);
 
             var backgroundTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.background.png"));
             var background = new SFML.Graphics.Sprite(backgroundTexture);
@@ -187,8 +146,7 @@ namespace SS14.Client
             CluwneLib.CleanupSplashScreen();
         }
 
-
-        #endregion
+        #endregion Constructors
 
         #region EventHandlers
 
@@ -231,7 +189,7 @@ namespace SS14.Client
         /// <param name="e">The KeyArgsinstance containing the event data.</param>
         private void KeyDownEvent(object sender, KeyArgs e)
         {
-            if(_stateManager!=null)
+            if (_stateManager != null)
                 _stateManager.KeyDown(e);
 
             switch (e.Code)
@@ -327,9 +285,9 @@ namespace SS14.Client
                 _stateManager.TextEntered(e);
         }
 
-        #endregion
+        #endregion Input Handling
 
-        #endregion
+        #endregion EventHandlers
 
         #region Privates
 
@@ -337,10 +295,10 @@ namespace SS14.Client
 
         private void SetupCluwne()
         {
-            uint displayWidth  = _configurationManager.GetDisplayWidth();
+            uint displayWidth = _configurationManager.GetDisplayWidth();
             uint displayHeight = _configurationManager.GetDisplayHeight();
-            bool isFullscreen  = _configurationManager.GetFullscreen();
-            var refresh        = _configurationManager.GetDisplayRefresh();
+            bool isFullscreen = _configurationManager.GetFullscreen();
+            var refresh = _configurationManager.GetDisplayRefresh();
 
             CluwneLib.Video.SetFullscreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);
@@ -355,26 +313,25 @@ namespace SS14.Client
                 onetime = false;
             }
             CluwneLib.Screen.SetMouseCursorVisible(false);
-            CluwneLib.Screen.BackgroundColor      = Color.Black;
-            CluwneLib.Screen.Resized             += MainWindowResizeEnd;
-            CluwneLib.Screen.Closed              += MainWindowRequestClose;
-            CluwneLib.Screen.KeyPressed          += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased         += KeyUpEvent;
-            CluwneLib.Screen.MouseButtonPressed  += MouseDownEvent;
+            CluwneLib.Screen.BackgroundColor = Color.Black;
+            CluwneLib.Screen.Resized += MainWindowResizeEnd;
+            CluwneLib.Screen.Closed += MainWindowRequestClose;
+            CluwneLib.Screen.KeyPressed += KeyDownEvent;
+            CluwneLib.Screen.KeyReleased += KeyUpEvent;
+            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
             CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved          += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved     += MouseWheelMoveEvent;
-            CluwneLib.Screen.MouseEntered        += MouseEntered;
-            CluwneLib.Screen.MouseLeft           += MouseLeft;
-            CluwneLib.Screen.TextEntered         += TextEntered;
+            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
+            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
+            CluwneLib.Screen.MouseEntered += MouseEntered;
+            CluwneLib.Screen.MouseLeft += MouseLeft;
+            CluwneLib.Screen.TextEntered += TextEntered;
 
             CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
 
-        #endregion
+        #endregion Privates
 
-        #endregion
+        #endregion Methods
     }
 }
-

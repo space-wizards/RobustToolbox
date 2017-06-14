@@ -4,7 +4,7 @@ using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
@@ -14,6 +14,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
@@ -48,7 +49,7 @@ namespace SS14.Client.Placement
             CollisionManager = collisionManager;
             PlayerManager = playerManager;
 
-            Type type = typeof (PlacementMode);
+            Type type = typeof(PlacementMode);
             List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
             List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
 
@@ -61,14 +62,14 @@ namespace SS14.Client.Placement
 
         #region IPlacementManager Members
 
-        public Boolean IsActive { get; private set; }
-        public Boolean Eraser { get; private set; }
+        public bool IsActive { get; private set; }
+        public bool Eraser { get; private set; }
 
         public event EventHandler PlacementCanceled;
 
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var messageType = (PlacementManagerMessage) msg.ReadByte();
+            var messageType = (PlacementManagerMessage)msg.ReadByte();
 
             switch (messageType)
             {
@@ -120,12 +121,12 @@ namespace SS14.Client.Placement
                 RequestPlacement();
         }
 
-        public void HandleDeletion(Entity entity)
+        public void HandleDeletion(IEntity entity)
         {
             if (!IsActive || !Eraser) return;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessage.RequestEntityDeletion);
+            message.Write((byte)NetMessage.RequestEntityDeletion);
             message.Write(entity.Uid);
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
@@ -155,7 +156,7 @@ namespace SS14.Client.Placement
             }
 
             Type modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
+            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
 
             if (info.IsTile)
                 PreparePlacementTile((Tile)info.TileType);
@@ -178,7 +179,7 @@ namespace SS14.Client.Placement
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
                 var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                CluwneLib.drawCircle(                    pos.X,
+                CluwneLib.drawCircle(pos.X,
                     pos.Y,
                     CurrentPermission.Range,
                     Color.White,
@@ -186,15 +187,15 @@ namespace SS14.Client.Placement
             }
         }
 
-        #endregion
+        #endregion IPlacementManager Members
 
         private void HandleStartPlacement(NetIncomingMessage msg)
         {
             CurrentPermission = new PlacementInformation
-                                    {
-                                        Range = msg.ReadInt32(),
-                                        IsTile = msg.ReadBoolean()
-                                    };
+            {
+                Range = msg.ReadInt32(),
+                IsTile = msg.ReadBoolean()
+            };
 
             if (CurrentPermission.IsTile) CurrentPermission.TileType = msg.ReadUInt16();
             else CurrentPermission.EntityType = msg.ReadString();
@@ -212,7 +213,7 @@ namespace SS14.Client.Placement
             //Will break if states not ordered correctly.
             //if (spriteParam == null) return;
 
-            var spriteName = spriteParam == null?"":spriteParam.GetValue<string>();
+            var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
             Sprite sprite = ResourceManager.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
@@ -242,11 +243,11 @@ namespace SS14.Client.Placement
         {
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
-            
+
             NetOutgoingMessage message = NetworkManager.CreateMessage();
 
-            message.Write((byte) NetMessage.PlacementManagerMessage);
-            message.Write((byte) PlacementManagerMessage.RequestPlacement);
+            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.RequestPlacement);
             message.Write(CurrentMode.ModeName);
 
             message.Write(CurrentPermission.IsTile);
@@ -257,7 +258,7 @@ namespace SS14.Client.Placement
             message.Write(CurrentMode.mouseWorld.X);
             message.Write(CurrentMode.mouseWorld.Y);
 
-            message.Write((byte) Direction);
+            message.Write((byte)Direction);
 
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }

@@ -10,7 +10,7 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class EntityStatsComp : Component
+    public class EntityStatsComp : ClientComponent
     {
         public override string Name => "EntityStats";
         private Dictionary<DamageType, int> armorStats = new Dictionary<DamageType, int>();
@@ -22,20 +22,20 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (EntityStatsComponentState); }
+            get { return typeof(EntityStatsComponentState); }
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            var type = (ComponentMessageType) message.MessageParameters[0];
+            var type = (ComponentMessageType)message.MessageParameters[0];
 
             switch (type)
             {
                 case (ComponentMessageType.ReturnArmorValues):
-                    if (!armorStats.Keys.Contains((DamageType) message.MessageParameters[1]))
-                        armorStats.Add((DamageType) message.MessageParameters[1], (int) message.MessageParameters[2]);
+                    if (!armorStats.Keys.Contains((DamageType)message.MessageParameters[1]))
+                        armorStats.Add((DamageType)message.MessageParameters[1], (int)message.MessageParameters[2]);
                     else
-                        armorStats[(DamageType) message.MessageParameters[1]] = (int) message.MessageParameters[2];
+                        armorStats[(DamageType)message.MessageParameters[1]] = (int)message.MessageParameters[2];
                     break;
 
                 default:
@@ -46,9 +46,9 @@ namespace SS14.Client.GameObjects
 
         public void PullFullUpdate() //Add proper message for this.
         {
-            foreach (object curr in Enum.GetValues(typeof (DamageType)))
+            foreach (object curr in Enum.GetValues(typeof(DamageType)))
                 Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered,
-                                                  ComponentMessageType.GetArmorValues, (int) curr);
+                                                  ComponentMessageType.GetArmorValues, (int)curr);
         }
 
         public int GetArmorValue(DamageType damType)

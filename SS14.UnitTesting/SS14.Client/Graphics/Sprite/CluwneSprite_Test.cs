@@ -7,7 +7,7 @@ using SS14.Client.Interfaces.Resource;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
 {
-    [TestFixture]
+    [TestFixture, Explicit]
     public class CluwneSprite_Test : SS14UnitTest
     {
 

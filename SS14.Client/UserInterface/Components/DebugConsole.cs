@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -283,7 +283,7 @@ namespace SS14.Client.UserInterface.Components
     /// <summary>
     /// These dummies are made purely so list and help can list server-side commands.
     /// </summary>
-    [IoCTarget(Disabled=true)]
+    [IoCTarget(Disabled = true)]
     class ServerDummyCommand : IConsoleCommand
     {
         readonly string command;

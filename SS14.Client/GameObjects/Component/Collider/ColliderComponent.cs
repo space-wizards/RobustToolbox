@@ -1,7 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class ColliderComponent : Component
+    public class ColliderComponent : ClientComponent
     {
         public override string Name => "Collider";
         public SFML.Graphics.Color DebugColor { get; set; }

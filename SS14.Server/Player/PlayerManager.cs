@@ -1,12 +1,12 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.GameObject;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -22,9 +22,11 @@ namespace SS14.Server.Player
         /* This class will manage connected player sessions. */
         public Dictionary<int, PlayerSession> playerSessions;
         public ISS14Server server;
+        private readonly IServerEntityManager entityManager;
 
         public PlayerManager()
         {
+            entityManager = IoCManager.Resolve<IServerEntityManager>();
             playerSessions = new Dictionary<int, PlayerSession>();
             //We can actually query this by client connection or whatever we want using linq
         }
@@ -45,7 +47,7 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession s)
         {
             //Spawn the player's entity. There's probably a much better place to do this.
-            Entity a = server.EntityManager.SpawnEntity("HumanMob");
+            IEntity a = entityManager.SpawnEntity("HumanMob");
             a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
             s.AttachToEntity(a);
         }
@@ -90,7 +92,6 @@ namespace SS14.Server.Player
             //Detach the entity and (dont)delete it.
             session.OnDisconnect();
         }
-
 
         public void SendJoinGameToAll()
         {
@@ -142,6 +143,6 @@ namespace SS14.Server.Player
             return playerSessions.Values.Select(s => s.PlayerState).ToList();
         }
 
-        #endregion
+        #endregion IPlayerManager Members
     }
 }

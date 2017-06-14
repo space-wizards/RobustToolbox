@@ -1,12 +1,14 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.IoC;
+
 namespace SS14.Client.GameObjects.EntitySystems
 {
+    [IoCTarget]
     public class InputSystem : EntitySystem
     {
-        public InputSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public InputSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof(KeyBindingInputComponent));
@@ -32,7 +34,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         animation.SetAnimationState(inputs.GetKeyState(BoundKeyFunctions.Run) ? "run" : "walk");
                     }
-                        //Char is not moving
+                    //Char is not moving
                     else
                     {
                         animation.SetAnimationState("idle");

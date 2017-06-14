@@ -9,13 +9,15 @@ namespace SS14.Shared.IoC
 {
     public static class IoCManager
     {
+        // Used to detect whether we have circular dependencies.
+        private static readonly HashSet<Type> CurrentlyBuilding = new HashSet<Type>();
         private static readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
         private static readonly List<Type> ServiceTypes = new List<Type>();
         private static readonly Dictionary<Type, Type> ResolveTypes = new Dictionary<Type, Type>();
         // Could probably merge these two lists but I'll hold off
         // On the basis of premature optimization.
         // Any laziness.
-        private static readonly Dictionary<Type, List<Type>> ResolveListTypes= new Dictionary<Type, List<Type>>();
+        private static readonly Dictionary<Type, List<Type>> ResolveListTypes = new Dictionary<Type, List<Type>>();
 
         public delegate void AssemblyAddedHandler();
         /// <summary>
@@ -41,7 +43,6 @@ namespace SS14.Shared.IoC
                         string.Format("One or more exceptions occured while trying to load types from assembly {0}", assembly.FullName),
                         ex.LoaderExceptions);
                 }
-
             }
 
             SortTypes();
@@ -84,14 +85,14 @@ namespace SS14.Shared.IoC
             // TODO: handle types with multiple implemented interfaces in a special way?
             foreach (var type in ServiceTypes)
             {
-                var attribute = (IoCTargetAttribute) Attribute.GetCustomAttribute(type, typeof(IoCTargetAttribute));
+                var attribute = (IoCTargetAttribute)Attribute.GetCustomAttribute(type, typeof(IoCTargetAttribute));
                 if (attribute == null || attribute.Disabled)
                 {
                     continue;
                 }
                 foreach (var interfaceType in type.GetInterfaces())
                 {
-                    if (interfaceType.GetInterfaces().Any((Type t) => t == typeof(IIoCInterface)))
+                    if (interfaceType.GetInterfaces().Any(t => t == typeof(IIoCInterface)))
                     {
                         if (!ResolveListTypes.ContainsKey(interfaceType))
                         {
@@ -114,9 +115,9 @@ namespace SS14.Shared.IoC
 
         /// <summary>
         /// Resolve a static instance of the highest priority implementation of an interface.
-        /// see <see cref="NewType"/> if you want to resolve a NEW instance.
+        /// see <see cref="NewType"/> if you want to resolve a NEW  instance.
         /// </summary>
-        public static T Resolve<T>() where T: IIoCInterface
+        public static T Resolve<T>() where T : IIoCInterface
         {
             Type type = typeof(T);
             if (!Services.ContainsKey(type))
@@ -130,7 +131,7 @@ namespace SS14.Shared.IoC
         /// <summary>
         /// Resolves an IoC target's type, not a static instance.
         /// </summary>
-        public static Type ResolveType<T>() where T: IIoCInterface
+        public static Type ResolveType<T>() where T : IIoCInterface
         {
             return ResolveType(typeof(T));
         }
@@ -152,7 +153,7 @@ namespace SS14.Shared.IoC
         /// Resolves an enumerable over all types that implement an interface, regardless of priority.
         /// The order of these types is completely arbitrary.
         /// </summary>
-        public static IEnumerable<Type> ResolveEnumerable<T>() where T: IIoCInterface
+        public static IEnumerable<Type> ResolveEnumerable<T>() where T : IIoCInterface
         {
             var type = typeof(T);
             if (!ResolveListTypes.ContainsKey(type))
@@ -166,7 +167,7 @@ namespace SS14.Shared.IoC
         /// <summary>
         /// Resolves a type and creates a NEW instance.
         /// </summary>
-        public static T NewType<T>(params object[] args) where T: IIoCInterface
+        public static T NewType<T>(params object[] args) where T : IIoCInterface
         {
             return (T)Activator.CreateInstance(ResolveType<T>(), args);
         }
@@ -183,32 +184,79 @@ namespace SS14.Shared.IoC
         private static void BuildType(Type type)
         {
             Type concreteType = ResolveType(type);
-            if (concreteType == null) throw new MissingImplementationException(type);
+            if (concreteType == null)
+            {
+                throw new MissingImplementationException(type);
+            }
+
+            // See if we already have an valid instance but registered as a different type.
+            // Example being the EntityManager on client and server,
+            // which have subinterfaces like IServerEntityManager.
+            var potentialInstance = Services.Values.FirstOrDefault(s => type.IsAssignableFrom(s.GetType()));
+            if (potentialInstance != null)
+            {
+                // NOTE: if BuildType() gets called when there already IS an instance for the type.
+                // This'll "catch" that too.
+                // This is NOT intended and do not rely on it.
+                Services[type] = potentialInstance;
+                return;
+            }
 
             ConstructorInfo constructor = concreteType.GetConstructors().FirstOrDefault();
-            if (constructor == null) throw new NoPublicConstructorException(concreteType);
-
-            ParameterInfo[] parameters = constructor.GetParameters();
-            if (parameters.Any())
+            if (constructor == null)
             {
-                var requiredParameters = new List<object>();
-                foreach (ParameterInfo parameterInfo in parameters)
-                {
-                    if (!Services.ContainsKey(parameterInfo.ParameterType))
-                    {
-                        BuildType(parameterInfo.ParameterType);
-                    }
-
-                    object dependency = Services[parameterInfo.ParameterType];
-                    requiredParameters.Add(dependency);
-                }
-                object instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
-                Services.Add(type, instance);
+                throw new NoPublicConstructorException(concreteType);
             }
-            else
+
+            if (CurrentlyBuilding.Contains(concreteType))
             {
-                object instance = Activator.CreateInstance(concreteType);
-                Services.Add(type, instance);
+                throw new CircularDependencyException(type);
+            }
+
+            CurrentlyBuilding.Add(concreteType);
+
+            try
+            {
+                ParameterInfo[] parameters = constructor.GetParameters();
+                if (parameters.Any())
+                {
+                    var requiredParameters = new List<object>();
+                    foreach (ParameterInfo parameterInfo in parameters)
+                    {
+                        if (!Services.ContainsKey(parameterInfo.ParameterType))
+                        {
+                            BuildType(parameterInfo.ParameterType);
+                        }
+
+                        object dependency = Services[parameterInfo.ParameterType];
+                        requiredParameters.Add(dependency);
+                    }
+                    try
+                    {
+                        object instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
+                        Services.Add(type, instance);
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        throw new ImplementationConstructorException(concreteType, e.InnerException);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        object instance = Activator.CreateInstance(concreteType);
+                        Services.Add(type, instance);
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        throw new ImplementationConstructorException(concreteType, e.InnerException);
+                    }
+                }
+            }
+            finally
+            {
+                CurrentlyBuilding.Remove(concreteType);
             }
         }
     }

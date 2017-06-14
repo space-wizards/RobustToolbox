@@ -1,5 +1,6 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace SS14.Server.GameObjects
         {
         }
 
-        private void PlaceItem(Entity actor, Entity item)
+        private void PlaceItem(IEntity actor, IEntity item)
         {
             var rnd = new Random();
             actor.SendMessage(this, ComponentMessageType.DropItemInCurrentHand);
@@ -29,7 +30,7 @@ namespace SS14.Server.GameObjects
                 new Vector2f(rnd.Next(-28, 28), rnd.Next(-28, 15)));
         }
 
-        protected override void RecieveItemInteraction(Entity actor, Entity item,
+        protected override void RecieveItemInteraction(IEntity actor, IEntity item,
                                                        Lookup<ItemCapabilityType, ItemCapabilityVerb> verbs)
         {
             base.RecieveItemInteraction(actor, item, verbs);
@@ -45,7 +46,7 @@ namespace SS14.Server.GameObjects
         /// Recieve an item interaction. woop. NO VERBS D:
         /// </summary>
         /// <param name="item"></param>
-        protected override void RecieveItemInteraction(Entity actor, Entity item)
+        protected override void RecieveItemInteraction(IEntity actor, IEntity item)
         {
             PlaceItem(actor, item);
         }
@@ -55,7 +56,7 @@ namespace SS14.Server.GameObjects
         /// Basically, actor "uses" this object
         /// </summary>
         /// <param name="actor">The actor entity</param>
-        protected override void HandleEmptyHandToLargeObjectInteraction(Entity actor)
+        protected override void HandleEmptyHandToLargeObjectInteraction(IEntity actor)
         {
         }
     }

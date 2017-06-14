@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.ContentLoader;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
@@ -241,16 +242,16 @@ namespace SS14.Shared.GameObjects
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(EntityManager manager)
+        public IEntity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (Entity)Activator.CreateInstance(ClassType, manager);
+            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager);
 
             foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in components)
             {
                 IComponent component;
                 try
                 {
-                    component = manager.ComponentFactory.GetComponent(componentData.Key);
+                    component = componentFactory.GetComponent(componentData.Key);
                 }
                 catch (UnknowComponentException)
                 {

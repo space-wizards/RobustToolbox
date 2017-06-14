@@ -3,11 +3,12 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.TexHelpers;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -18,7 +19,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class SpriteComponent : Component, IRenderableComponent, ISpriteComponent
+    public class SpriteComponent : ClientComponent, IRenderableComponent, ISpriteComponent
     {
         public override string Name => "Sprite";
         protected Sprite currentBaseSprite;
@@ -41,7 +42,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (SpriteComponentState); }
+            get { return typeof(SpriteComponentState); }
         }
 
         public float Bottom
@@ -49,7 +50,7 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                       (GetActiveDirectionalSprite().GetLocalBounds().Height/2);
+                       (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
             }
         }
 
@@ -126,7 +127,7 @@ namespace SS14.Client.GameObjects
             return sprites.ContainsKey(key);
         }
 
-        #endregion
+        #endregion ISpriteComponent Members
 
         private void BuildDirectionalSprites()
         {
@@ -135,7 +136,7 @@ namespace SS14.Client.GameObjects
 
             foreach (var curr in sprites)
             {
-                foreach (string dir in Enum.GetNames(typeof (Direction)))
+                foreach (string dir in Enum.GetNames(typeof(Direction)))
                 {
                     string name = (curr.Key + "_" + dir).ToLowerInvariant();
                     if (resMgr.SpriteExists(name))
@@ -144,7 +145,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
@@ -158,13 +159,13 @@ namespace SS14.Client.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
-            switch ((ComponentMessageType) message.MessageParameters[0])
+            switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetVisible:
-                    visible = (bool) message.MessageParameters[1];
+                    visible = (bool)message.MessageParameters[1];
                     break;
                 case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string) message.MessageParameters[1]);
+                    SetSpriteByKey((string)message.MessageParameters[1]);
                     break;
             }
         }
@@ -181,7 +182,7 @@ namespace SS14.Client.GameObjects
             {
                 case ComponentMessageType.CheckSpriteClick:
                     reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((Vector2f) list[0]), DrawDepth);
+                                                      WasClicked((Vector2f)list[0]), DrawDepth);
                     break;
                 case ComponentMessageType.GetAABB:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
@@ -190,10 +191,10 @@ namespace SS14.Client.GameObjects
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite());
                     break;
                 case ComponentMessageType.SetSpriteByKey:
-                    SetSpriteByKey((string) list[0]);
+                    SetSpriteByKey((string)list[0]);
                     break;
                 case ComponentMessageType.SlaveAttach:
-                    SetMaster(Owner.EntityManager.GetEntity((int) list[0]));
+                    SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
                     break;
                 case ComponentMessageType.ItemUnEquipped:
                 case ComponentMessageType.Dropped:
@@ -240,26 +241,26 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 new FloatRect(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (bounds.Width/2),
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (bounds.Height/2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (bounds.Width / 2),
+                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
             // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int) (worldPos.X - AABB.Left + texRect.Left),
-                                              (int) (worldPos.Y - AABB.Top + texRect.Top));
+            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
+                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
 
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
             IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
             Dictionary<Texture, string> tmp = _resManager.TextureToKey;
-            if(!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
+            if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'
-            if(!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
+            if (!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
             {
                 return false;
             }
@@ -295,7 +296,7 @@ namespace SS14.Client.GameObjects
         {
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
-                                                              //FIXTHIS
+                                                                  //FIXTHIS
                                                               orderby c.DrawDepth ascending
                                                               where c.DrawDepth < DrawDepth
                                                               select c;
@@ -311,7 +312,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2f renderPos = CluwneLib.WorldToScreen( Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
@@ -324,10 +325,9 @@ namespace SS14.Client.GameObjects
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
 
-
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
-                                                            //FIXTHIS
+                                                                //FIXTHIS
                                                             orderby c.DrawDepth ascending
                                                             where c.DrawDepth >= DrawDepth
                                                             select c;
@@ -337,11 +337,10 @@ namespace SS14.Client.GameObjects
                 component.Render(topLeft, bottomRight);
             }
 
-
             //Draw AABB
             var aabb = AABB;
-            if(CluwneLib.Debug.DebugColliders)
-            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
+            if (CluwneLib.Debug.DebugColliders)
+                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
         }
 
         public void SetSpriteCenter(string sprite, Vector2f center)
@@ -361,7 +360,7 @@ namespace SS14.Client.GameObjects
             return master != null;
         }
 
-        public void SetMaster(Entity m)
+        public void SetMaster(IEntity m)
         {
             if (!m.HasComponent(ComponentFamily.Renderable))
                 return;

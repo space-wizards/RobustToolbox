@@ -12,7 +12,7 @@ using System;
 
 namespace SS14.UnitTesting.SS14.Client.Helpers
 {
-    [TestFixture]
+    [TestFixture, Explicit]
     public class GaussianBlur_Test : SS14UnitTest
     {
 

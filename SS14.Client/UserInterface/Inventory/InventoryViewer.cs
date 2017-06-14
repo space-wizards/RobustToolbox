@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 
@@ -30,12 +31,12 @@ namespace SS14.Client.UserInterface.Inventory
             RebuildInventoryView(_inventoryComponent.MaxSlots, _inventoryComponent.ContainedEntities);
         }
 
-        private void ComponentChanged(InventoryComponent sender, int maxSlots, List<Entity> entities)
+        private void ComponentChanged(InventoryComponent sender, int maxSlots, List<IEntity> entities)
         {
             RebuildInventoryView(maxSlots, entities);
         }
 
-        public void RebuildInventoryView(int maxSlots, List<Entity> entities)
+        public void RebuildInventoryView(int maxSlots, List<IEntity> entities)
         {
             int currX = 0;
             int currY = 0;
@@ -46,12 +47,12 @@ namespace SS14.Client.UserInterface.Inventory
 
             _inventoryContainer.components.Clear();
 
-            foreach (Entity entity in entities)
+            foreach (IEntity entity in entities)
             {
                 var slot = new InventorySlotUi(entity, _resourceManager)
-                               {
-                                   Position = new Vector2i(currX*spacing + xOffset, currY*spacing + yOffset)
-                               };
+                {
+                    Position = new Vector2i(currX * spacing + xOffset, currY * spacing + yOffset)
+                };
 
                 slot.Clicked += SlotClicked;
 
@@ -68,9 +69,9 @@ namespace SS14.Client.UserInterface.Inventory
             for (int i = 0; i < (maxSlots - entities.Count); i++)
             {
                 var slot = new InventorySlotUi(null, _resourceManager)
-                               {
-                                   Position = new Vector2i(currX*spacing + xOffset, currY*spacing + yOffset)
-                               };
+                {
+                    Position = new Vector2i(currX * spacing + xOffset, currY * spacing + yOffset)
+                };
 
                 slot.Clicked += SlotClicked;
 

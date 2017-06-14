@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using System;
 
 namespace SS14.UnitTesting.SS14.Shared.IoC
 {
@@ -62,6 +63,18 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
             }
             Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
         }
+
+        [Test]
+        public void IoCTestCircularDependencies()
+        {
+            Assert.That(() => IoCManager.Resolve<IIoCCircularDeps1>(), Throws.InstanceOf<CircularDependencyException>());
+        } 
+
+        [Test]
+        public void IoCTestConstructorException()
+        {
+            Assert.That(() => IoCManager.Resolve<IConstructorException>(), Throws.InstanceOf<ImplementationConstructorException>().And.InnerException.InstanceOf<TestConstructorExceptionException>());
+        }
     }
 
     public interface IIoCFailInterface : IIoCInterface {}
@@ -82,4 +95,43 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
     public class IoCTestPriorities2 : IIoCTestPriories {}
     [IoCTarget(Priority=30, Disabled=true)]
     public class IoCTestPriorities3 : IIoCTestPriories {}
+
+
+    public interface IIoCCircularDeps1 : IIoCInterface {}
+    public interface IIoCCircularDeps2 : IIoCInterface {}
+
+    [IoCTarget]
+    public class CircularDeps1 : IIoCCircularDeps1
+    {
+        public CircularDeps1(IIoCCircularDeps2 deps2)
+        {
+
+        }
+    }
+
+    [IoCTarget]
+    public class CircularDeps2 : IIoCCircularDeps2
+    {
+        public CircularDeps2(IIoCCircularDeps1 deps1)
+        {
+
+        }
+    }
+
+    public interface IConstructorException : IIoCInterface {}
+
+
+    [IoCTarget]
+    public class ConstructorException : IConstructorException
+    {
+        public ConstructorException()
+        {
+            throw new TestConstructorExceptionException();
+        }
+    }
+
+    public class TestConstructorExceptionException : Exception
+    {
+
+    }
 }

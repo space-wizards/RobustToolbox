@@ -12,7 +12,6 @@ namespace SS14.Shared.GameObjects
     {
         private Vector2f _emitterPosition = new Vector2f(0, 0);
         private Vector2f _emissionOffset = new Vector2f(0, 0);
-        private bool _emit = true;
         private int _emitRate = 1;
         private int _maximumParticleCount = 200;
         private Vector2f _emissionRadiusRange = new Vector2f(0, 0);
@@ -130,7 +129,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Maximum Particles To Display
-        /// This controls how many particles will be 'alive' at once. If the number of particles generated exceeds this, 
+        /// This controls how many particles will be 'alive' at once. If the number of particles generated exceeds this,
         /// the oldest particles will be culled first.
         /// </summary>
         public int MaximumParticleCount
@@ -145,7 +144,7 @@ namespace SS14.Shared.GameObjects
 
         /// <summary>
         /// Emission Radius
-        /// This controls the range in radius from the emission position where the particles 
+        /// This controls the range in radius from the emission position where the particles
         /// will start. If the radius is 0, they will all be emitted at the EmitPosition.
         /// </summary>
         public Vector2f EmissionRadiusRange

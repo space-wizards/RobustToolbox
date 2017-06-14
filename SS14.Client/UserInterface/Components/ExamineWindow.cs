@@ -2,6 +2,7 @@
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.UserInterface.Components
@@ -11,7 +12,7 @@ namespace SS14.Client.UserInterface.Components
         private readonly Label _entityDescription;
         private Sprite _entitySprite;
 
-        public ExamineWindow(Vector2i size, Entity entity, IResourceManager resourceManager)
+        public ExamineWindow(Vector2i size, IEntity entity, IResourceManager resourceManager)
             : base(entity.Name, size, resourceManager)
         {
             _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceManager);

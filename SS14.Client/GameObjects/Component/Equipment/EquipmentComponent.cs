@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Equipment;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,11 @@ using System.Linq;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class EquipmentComponent : Component
+    public class EquipmentComponent : ClientComponent
     {
         public override string Name => "Equipment";
         public List<EquipmentSlot> ActiveSlots = new List<EquipmentSlot>();
-        public Dictionary<EquipmentSlot, Entity> EquippedEntities = new Dictionary<EquipmentSlot, Entity>();
+        public Dictionary<EquipmentSlot, IEntity> EquippedEntities = new Dictionary<EquipmentSlot, IEntity>();
 
         public EquipmentComponent()
         {
@@ -59,7 +60,7 @@ namespace SS14.Client.GameObjects
         private void EquipItem(EquipmentSlot part, int uid)
         {
             if (!IsEmpty(part))
-                // Uh oh we are confused about something! But it's better to just do what the server says
+            // Uh oh we are confused about something! But it's better to just do what the server says
             {
                 UnEquipItem(part);
             }
@@ -71,7 +72,7 @@ namespace SS14.Client.GameObjects
             EquippedEntities.Remove(part);
         }
 
-        public void UnEquipItem(Entity entity)
+        public void UnEquipItem(IEntity entity)
         {
             if (EquippedEntities.ContainsValue(entity))
                 EquippedEntities.Remove(EquippedEntities.Where(x => x.Value == entity).Select(x => x.Key).First());
@@ -84,12 +85,12 @@ namespace SS14.Client.GameObjects
             return true;
         }
 
-        public bool IsEquipped(Entity entity, EquipmentSlot slot)
+        public bool IsEquipped(IEntity entity, EquipmentSlot slot)
         {
             return EquippedEntities.ContainsKey(slot) && EquippedEntities[slot] == entity;
         }
 
-        public bool IsEquipped(Entity entity)
+        public bool IsEquipped(IEntity entity)
         {
             return EquippedEntities.ContainsValue(entity);
         }
@@ -98,8 +99,8 @@ namespace SS14.Client.GameObjects
         {
             foreach (KeyValuePair<EquipmentSlot, int> curr in state.EquippedEntities)
             {
-                Entity retEnt = Owner.EntityManager.GetEntity(curr.Value);
-                if(retEnt == null && !IsEmpty(curr.Key))
+                IEntity retEnt = Owner.EntityManager.GetEntity(curr.Value);
+                if (retEnt == null && !IsEmpty(curr.Key))
                 {
                     UnEquipItem(curr.Key);
                 }
@@ -117,7 +118,7 @@ namespace SS14.Client.GameObjects
             }
 
             var removed = EquippedEntities.Keys.Where(x => !state.EquippedEntities.ContainsKey(x)).ToArray();
-            foreach(EquipmentSlot rem in removed)
+            foreach (EquipmentSlot rem in removed)
             {
                 UnEquipItem(rem);
             }

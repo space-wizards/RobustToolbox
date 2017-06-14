@@ -12,6 +12,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,14 +154,14 @@ namespace SS14.Client.UserInterface.Inventory
             _txtDbg = new TextSprite("comboDlgDbg", "Combo Debug", _resourceManager.GetFont("CALIBRI"));
         }
 
-        private void SlotDropped(EquipmentSlotUi sender, Entity dropped)
+        private void SlotDropped(EquipmentSlotUi sender, IEntity dropped)
         {
             _userInterfaceManager.DragInfo.Reset();
 
             if (_playerManager.ControlledEntity == null)
                 return;
 
-            Entity entity = _playerManager.ControlledEntity;
+            IEntity entity = _playerManager.ControlledEntity;
 
             var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
 
@@ -193,7 +194,7 @@ namespace SS14.Client.UserInterface.Inventory
                 case 2: //Status
                     if (_playerManager.ControlledEntity != null) //TEMPORARY SOLUTION.
                     {
-                        Entity resEntity = _playerManager.ControlledEntity;
+                        IEntity resEntity = _playerManager.ControlledEntity;
                         var entStats = (EntityStatsComp) resEntity.GetComponent(ComponentFamily.EntityStats);
                         entStats.PullFullUpdate();
                     }
@@ -243,7 +244,7 @@ namespace SS14.Client.UserInterface.Inventory
                 _tabEquip.Render();
 
                 _txtDbg.Position = new Vector2i(Position.X + 20, Position.Y + 15);
-                _txtDbg.Color = new SFML.Graphics.Color(255, 222, 173);
+                _txtDbg.Color = new Color(255, 222, 173);
                 if (_currentTab == 1) _txtDbg.Text = "Equipment";
                 if (_currentTab == 2) _txtDbg.Text = "Status";
                 _txtDbg.Draw();
@@ -493,7 +494,7 @@ namespace SS14.Client.UserInterface.Inventory
 
         private void SendSwitchHandTo(InventoryLocation hand)
         {
-            Entity playerEntity = _playerManager.ControlledEntity;
+            IEntity playerEntity = _playerManager.ControlledEntity;
             var equipComponent = (HumanHandsComponent) playerEntity.GetComponent(ComponentFamily.Hands);
             equipComponent.SendSwitchHands(hand);
         }
@@ -531,7 +532,7 @@ namespace SS14.Client.UserInterface.Inventory
                             if (_playerManager.ControlledEntity == null)
                                 return false;
 
-                            Entity entity = _playerManager.ControlledEntity;
+                            IEntity entity = _playerManager.ControlledEntity;
 
                             var equipment = (EquipmentComponent) entity.GetComponent(ComponentFamily.Equipment);
                             equipment.DispatchEquip(_userInterfaceManager.DragInfo.DragEntity.Uid);

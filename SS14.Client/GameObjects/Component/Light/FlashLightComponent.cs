@@ -1,5 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
@@ -19,7 +20,7 @@ namespace SS14.Client.GameObjects
             switch (type)
             {
                 case ComponentMessageType.MoveDirection:
-                    var movedir = (Direction) list[0];
+                    var movedir = (Direction)list[0];
                     LightMoveDir(movedir);
                     break;
             }
@@ -27,7 +28,7 @@ namespace SS14.Client.GameObjects
             return reply;
         }
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
 

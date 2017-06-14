@@ -3,12 +3,13 @@ using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.TexHelpers;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -19,7 +20,7 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Client.GameObjects
 {
     [IoCTarget]
-    public class AnimatedSpriteComponent : Component, IRenderableComponent
+    public class AnimatedSpriteComponent : ClientComponent, IRenderableComponent
     {
         public override string Name => "AnimatedSprite";
         protected string baseSprite;
@@ -53,7 +54,8 @@ namespace SS14.Client.GameObjects
 
         public FloatRect AverageAABB
         {
-            get {
+            get
+            {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
                 return new FloatRect(
@@ -78,9 +80,9 @@ namespace SS14.Client.GameObjects
 
         public bool HorizontalFlip { get; set; }
 
-        #endregion
+        #endregion ISpriteComponent Members
 
-        public override void OnAdd(Entity owner)
+        public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
@@ -89,7 +91,7 @@ namespace SS14.Client.GameObjects
 
         public void SetSprite()
         {
-            if(baseSprite != null)
+            if (baseSprite != null)
             {
                 SetSprite(baseSprite);
             }
@@ -218,10 +220,10 @@ namespace SS14.Client.GameObjects
 
             IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
             Dictionary<Texture, string> tmp = _resManager.TextureToKey;
-            if(!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
+            if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'
-            if(!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
+            if (!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
             {
                 return false;
             }
@@ -250,10 +252,10 @@ namespace SS14.Client.GameObjects
 
             //Render slaves beneath
             IEnumerable<IRenderableComponent> renderablesBeneath = from IRenderableComponent c in slaves
-                                                              //FIXTHIS
-                                                              orderby c.DrawDepth ascending
-                                                              where c.DrawDepth < DrawDepth
-                                                              select c;
+                                                                       //FIXTHIS
+                                                                   orderby c.DrawDepth ascending
+                                                                   where c.DrawDepth < DrawDepth
+                                                                   select c;
 
             foreach (IRenderableComponent component in renderablesBeneath.ToList())
             {
@@ -281,10 +283,10 @@ namespace SS14.Client.GameObjects
 
             //Render slaves above
             IEnumerable<IRenderableComponent> renderablesAbove = from IRenderableComponent c in slaves
-                                                            //FIXTHIS
-                                                            orderby c.DrawDepth ascending
-                                                            where c.DrawDepth >= DrawDepth
-                                                            select c;
+                                                                     //FIXTHIS
+                                                                 orderby c.DrawDepth ascending
+                                                                 where c.DrawDepth >= DrawDepth
+                                                                 select c;
 
             foreach (IRenderableComponent component in renderablesAbove.ToList())
             {
@@ -298,7 +300,6 @@ namespace SS14.Client.GameObjects
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
                                    new Vector2f(), aabb);
-
         }
 
         public override void Update(float frameTime)
@@ -340,7 +341,7 @@ namespace SS14.Client.GameObjects
             return master != null;
         }
 
-        public void SetMaster(Entity m)
+        public void SetMaster(IEntity m)
         {
             if (m == null)
             {
@@ -401,11 +402,11 @@ namespace SS14.Client.GameObjects
         {
             DrawDepth = state.DrawDepth;
             visible = state.Visible;
-            if(sprite.Name != state.Name)
+            if (sprite.Name != state.Name)
                 SetSprite(state.Name);
             if (sprite.CurrentAnimationStateKey != state.CurrentAnimation)
             {
-                if(state.CurrentAnimation == null)
+                if (state.CurrentAnimation == null)
                     sprite.SetAnimationState("idle");
                 else
                     sprite.SetAnimationState(state.CurrentAnimation);

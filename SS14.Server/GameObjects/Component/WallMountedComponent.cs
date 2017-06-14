@@ -1,5 +1,5 @@
 ﻿using SFML.System;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;

@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
@@ -13,7 +14,7 @@ namespace SS14.Server.GameObjects
     public class SlaveMoverComponent : Component
     {
         public override string Name => "SlaveMover";
-        private Entity master;
+        private IEntity master;
 
         public SlaveMoverComponent()
         {
@@ -31,7 +32,7 @@ namespace SS14.Server.GameObjects
             switch (type)
             {
                 case ComponentMessageType.SlaveAttach:
-                    Attach((int) list[0]);
+                    Attach((int)list[0]);
                     break;
             }
             return reply;
@@ -51,7 +52,7 @@ namespace SS14.Server.GameObjects
             Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }
 
-        public void Attach(Entity newMaster)
+        public void Attach(IEntity newMaster)
         {
             master = newMaster;
             master.OnShutdown += master_OnShutdown;
@@ -59,7 +60,7 @@ namespace SS14.Server.GameObjects
             Translate(master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
         }
 
-        private void master_OnShutdown(Entity e)
+        private void master_OnShutdown(IEntity e)
         {
             Detach();
         }

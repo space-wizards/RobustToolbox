@@ -8,7 +8,7 @@ using System;
 
 namespace SS14.UnitTesting.SS14.Client.Helpers
 {
-    [TestFixture]
+    [TestFixture, Explicit]
     public class StarScroller : SS14UnitTest
     {
         private RenderImage renderimage;

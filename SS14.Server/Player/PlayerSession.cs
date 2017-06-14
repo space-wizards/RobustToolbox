@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.Round;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
@@ -24,9 +25,10 @@ namespace SS14.Server.Player
             _playerManager = playerManager;
             name = "";
 
-            PlayerState = new PlayerState();
-            PlayerState.UniqueIdentifier = client.RemoteUniqueIdentifier;
-
+            PlayerState = new PlayerState()
+            {
+                UniqueIdentifier = client.RemoteUniqueIdentifier
+            };
             if (client != null)
             {
                 connectedClient = client;
@@ -47,8 +49,9 @@ namespace SS14.Server.Player
             get { return connectedClient; }
         }
 
-        public Entity attachedEntity { get; set; }
-        public int? AttachedEntityUid {
+        public IEntity attachedEntity { get; set; }
+        public int? AttachedEntityUid
+        {
             get { return attachedEntity == null ? null : (int?)attachedEntity.Uid; }
         }
         public string name { get; set; }
@@ -56,17 +59,16 @@ namespace SS14.Server.Player
 
         public DateTime ConnectedTime { get; private set; }
 
-        public void AttachToEntity(Entity a)
+        public void AttachToEntity(IEntity a)
         {
             DetachFromEntity();
             //a.attachedClient = connectedClient;
             //Add input component.
-            a.AddComponent(ComponentFamily.Input,
-                           _playerManager.server.EntityManager.ComponentFactory.GetComponent<KeyBindingInputComponent>());
-            a.AddComponent(ComponentFamily.Mover,
-                           _playerManager.server.EntityManager.ComponentFactory.GetComponent<PlayerInputMoverComponent>());
-            BasicActorComponent actorComponent =
-                _playerManager.server.EntityManager.ComponentFactory.GetComponent<BasicActorComponent>();
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            a.AddComponent(ComponentFamily.Input, factory.GetComponent<KeyBindingInputComponent>());
+            a.AddComponent(ComponentFamily.Mover, factory.GetComponent<PlayerInputMoverComponent>());
+
+            BasicActorComponent actorComponent = factory.GetComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
             a.AddComponent(ComponentFamily.Actor, actorComponent);
 
@@ -89,7 +91,7 @@ namespace SS14.Server.Player
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (PlayerSessionMessage) message.ReadByte();
+            var messageType = (PlayerSessionMessage)message.ReadByte();
             switch (messageType)
             {
                 case PlayerSessionMessage.Verb:
@@ -130,22 +132,22 @@ namespace SS14.Server.Player
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
             NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte) NetMessage.PlayerSessionMessage);
-            m.Write((byte) PlayerSessionMessage.AddPostProcessingEffect);
-            m.Write((int) type);
+            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)PlayerSessionMessage.AddPostProcessingEffect);
+            m.Write((int)type);
             m.Write(duration);
             IoCManager.Resolve<ISS14NetServer>().SendMessage(m, ConnectedClient, NetDeliveryMethod.ReliableUnordered);
         }
 
-        #endregion
+        #endregion IPlayerSession Members
 
         private void SendAttachMessage()
         {
-            if(attachedEntity == null) //TODO proper exception
+            if (attachedEntity == null) //TODO proper exception
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
             NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte) NetMessage.PlayerSessionMessage);
-            m.Write((byte) PlayerSessionMessage.AttachToEntity);
+            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)PlayerSessionMessage.AttachToEntity);
             m.Write(attachedEntity.Uid);
             IoCManager.Resolve<ISS14NetServer>().SendMessage(m, connectedClient);
         }
@@ -168,7 +170,7 @@ namespace SS14.Server.Player
                         JoinGame();
                         break;
                     case "toxins":
-                        //Need debugging function to add more gas
+                    //Need debugging function to add more gas
                     case "save":
                         _playerManager.server.SaveEntities();
                         _playerManager.server.SaveMap();
@@ -176,7 +178,6 @@ namespace SS14.Server.Player
                 }
             }
         }
-
 
         private void SetAttachedEntityName()
         {
@@ -188,7 +189,7 @@ namespace SS14.Server.Player
 
         private void ResetAttachedEntityName()
         {
-            if(attachedEntity != null)
+            if (attachedEntity != null)
                 attachedEntity.Name = attachedEntity.Prototype.ID;
         }
 
@@ -209,7 +210,7 @@ namespace SS14.Server.Player
                 _playerManager.server.Runlevel == RunLevel.Game)
             {
                 NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                m.Write((byte) NetMessage.JoinGame);
+                m.Write((byte)NetMessage.JoinGame);
                 IoCManager.Resolve<ISS14NetServer>().SendMessage(m, connectedClient);
 
                 status = SessionStatus.InGame;
@@ -220,9 +221,9 @@ namespace SS14.Server.Player
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
             NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte) NetMessage.PlayerUiMessage);
-            m.Write((byte) UiManagerMessage.ComponentMessage);
-            m.Write((byte) gui);
+            m.Write((byte)NetMessage.PlayerUiMessage);
+            m.Write((byte)UiManagerMessage.ComponentMessage);
+            m.Write((byte)gui);
             return m;
         }
 

@@ -7,6 +7,7 @@ namespace SS14.Client.Interfaces.Network
 {
     public interface INetworkManager : IIoCInterface
     {
+        void Initialize();
         NetPeerStatistics CurrentStatistics { get; }
         NetClient NetClient { get; }
         bool IsConnected { get; }

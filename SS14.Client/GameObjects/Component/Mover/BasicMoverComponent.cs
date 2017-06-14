@@ -10,7 +10,7 @@ namespace SS14.Client.GameObjects
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
     [IoCTarget]
-    public class BasicMoverComponent : Component
+    public class BasicMoverComponent : ClientComponent
     {
         public override string Name => "BasicMover";
         private bool interpolating;
@@ -26,7 +26,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType
         {
-            get { return typeof (MoverComponentState); }
+            get { return typeof(MoverComponentState); }
         }
 
         public override void Update(float frameTime)
@@ -47,7 +47,6 @@ namespace SS14.Client.GameObjects
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
                     Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2f(X, Y);
                 }
-
             }
         }
 
@@ -61,8 +60,8 @@ namespace SS14.Client.GameObjects
         /// <returns>current position</returns>
         private float Ease(float time, float start, float end, float duration = 1) // duration is in ms.
         {
-            time = time/duration; // - 1;
-            return time*(end - start) + start;
+            time = time / duration; // - 1;
+            return time * (end - start) + start;
         }
     }
 }

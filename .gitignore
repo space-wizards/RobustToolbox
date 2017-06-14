@@ -73,3 +73,5 @@ project.lock.json
 
 # Created by NUnit.
 TestResult.xml
+
+NetSerializerDebug.dll

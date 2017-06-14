@@ -8,7 +8,7 @@ using SS14.Client.Interfaces.Resource;
 
 namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
 {
-    [TestFixture]
+    [TestFixture, Explicit]
     public class TestShader_Test : SS14UnitTest
     {
         private IResourceManager resources;

@@ -208,7 +208,7 @@ namespace SS14.Shared.IoC
                 throw new NoPublicConstructorException(concreteType);
             }
 
-            if (CurrentlyBuilding.Contains(type))
+            if (CurrentlyBuilding.Contains(concreteType))
             {
                 throw new CircularDependencyException(type);
             }

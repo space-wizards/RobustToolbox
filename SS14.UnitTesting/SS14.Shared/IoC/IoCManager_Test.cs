@@ -62,6 +62,12 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
             }
             Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
         }
+
+        [Test]
+        public void IoCTestCircularDependencies()
+        {
+            Assert.That(() => IoCManager.Resolve<IIoCCircularDeps1>(), Throws.InstanceOf<CircularDependencyException>());
+        }
     }
 
     public interface IIoCFailInterface : IIoCInterface {}
@@ -82,4 +88,26 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
     public class IoCTestPriorities2 : IIoCTestPriories {}
     [IoCTarget(Priority=30, Disabled=true)]
     public class IoCTestPriorities3 : IIoCTestPriories {}
+
+
+    public interface IIoCCircularDeps1 : IIoCInterface {}
+    public interface IIoCCircularDeps2 : IIoCInterface {}
+
+    [IoCTarget]
+    public class CircularDeps1 : IIoCCircularDeps1
+    {
+        public CircularDeps1(IIoCCircularDeps2 deps2)
+        {
+
+        }
+    }
+
+    [IoCTarget]
+    public class CircularDeps2 : IIoCCircularDeps2
+    {
+        public CircularDeps2(IIoCCircularDeps1 deps1)
+        {
+
+        }
+    }
 }

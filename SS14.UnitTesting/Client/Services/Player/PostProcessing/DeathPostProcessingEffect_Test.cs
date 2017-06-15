@@ -1,13 +1,15 @@
-﻿#if !HEADLESS
-using NUnit.Framework;
-
+﻿using NUnit.Framework;
+using System;
 
 namespace SS14.UnitTesting.SS14.Client.Player.PostProcessing
 {
     [TestFixture]
     [Ignore("This test does nothing.")]
+    [Category("rendering")]
     public class DeathPostProcessingEffect_Test : SS14UnitTest
     {
+        public override bool NeedsClientConfig => true;
+        public override bool NeedsResourcePack => true;
         public DeathPostProcessingEffect_Test()
         {
 
@@ -20,4 +22,3 @@ namespace SS14.UnitTesting.SS14.Client.Player.PostProcessing
         }
     }
 }
-#endif

@@ -1,5 +1,4 @@
-﻿#if !HEADLESS
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -8,8 +7,11 @@ using SS14.Client.Interfaces.Resource;
 namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
 {
     [TestFixture, Explicit]
+    [Category("rendering")]
     public class CluwneSprite_Test : SS14UnitTest
     {
+        public override bool NeedsClientConfig => true;
+        public override bool NeedsResourcePack => true;
 
         private IResourceManager resources;
         private RenderImage test;
@@ -37,4 +39,3 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
         }
     }
 }
-#endif

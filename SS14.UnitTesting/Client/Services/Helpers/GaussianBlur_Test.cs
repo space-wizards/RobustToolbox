@@ -1,5 +1,4 @@
-﻿#if !HEADLESS
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -13,8 +12,11 @@ using System;
 namespace SS14.UnitTesting.SS14.Client.Helpers
 {
     [TestFixture, Explicit]
+    [Category("rendering")]
     public class GaussianBlur_Test : SS14UnitTest
     {
+        public override bool NeedsClientConfig => true;
+        public override bool NeedsResourcePack => true;
 
         private IPlayerConfigurationManager _configurationManager;
         private IResourceManager _resourceManager;
@@ -256,5 +258,3 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
     }
 
 }
-
-#endif

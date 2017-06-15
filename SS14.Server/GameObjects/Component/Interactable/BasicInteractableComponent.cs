@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects

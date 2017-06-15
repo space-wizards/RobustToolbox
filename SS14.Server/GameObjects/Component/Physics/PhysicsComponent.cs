@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;

@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Interfaces.Resource;

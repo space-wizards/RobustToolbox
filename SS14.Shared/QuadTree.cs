@@ -1,4 +1,4 @@
-﻿// From http://csharpquadtree.codeplex.com/
+// From http://csharpquadtree.codeplex.com/
 
 using SFML.Graphics;
 using SFML.System;

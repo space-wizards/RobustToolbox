@@ -1,4 +1,4 @@
-﻿
+
 namespace SS14.Client.Interfaces.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileRef: {X},{Y}")]

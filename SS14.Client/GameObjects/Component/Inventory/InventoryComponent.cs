@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
 using SS14.Shared.Interfaces.GameObjects;

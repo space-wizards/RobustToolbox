@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;

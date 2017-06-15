@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces.GameObjects;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Shared;

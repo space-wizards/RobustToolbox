@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using System;
 
 namespace SS14.Shared

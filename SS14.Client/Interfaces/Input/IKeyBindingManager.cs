@@ -1,4 +1,4 @@
-﻿using SS14.Shared;
+using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;

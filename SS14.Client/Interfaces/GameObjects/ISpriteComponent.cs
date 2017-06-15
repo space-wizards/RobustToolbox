@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.GameObjects

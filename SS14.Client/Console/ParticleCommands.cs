@@ -1,4 +1,4 @@
-﻿// TODO: Re-add these.
+// TODO: Re-add these.
 
 /*
 switch (command)

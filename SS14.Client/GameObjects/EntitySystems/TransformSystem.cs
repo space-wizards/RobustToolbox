@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;

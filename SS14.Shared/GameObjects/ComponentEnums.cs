@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared.GameObjects
+namespace SS14.Shared.GameObjects
 {
     /// <summary>
     /// Component Family ie. what type of component it is.

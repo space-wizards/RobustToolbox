@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SFML.Graphics;
 using SS14.Shared.Maths;
 using System;

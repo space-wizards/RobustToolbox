@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces.Map;
+using SS14.Server.Interfaces.Map;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.IoC;

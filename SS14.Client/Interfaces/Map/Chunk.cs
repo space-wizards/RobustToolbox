@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 
 namespace SS14.Client.Interfaces.Map
 {

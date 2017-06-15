@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;

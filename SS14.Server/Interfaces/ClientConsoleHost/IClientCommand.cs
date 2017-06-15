@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Command;
+using SS14.Shared.Command;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 

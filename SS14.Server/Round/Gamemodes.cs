@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameMode;
 using SS14.Server.Interfaces.Player;

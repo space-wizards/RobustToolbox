@@ -1,4 +1,4 @@
-﻿using SS14.Server.GameObjects.Item.ItemCapability;
+using SS14.Server.GameObjects.Item.ItemCapability;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;

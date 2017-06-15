@@ -1,4 +1,4 @@
-﻿using SFMLTexture = SFML.Graphics.Texture;
+using SFMLTexture = SFML.Graphics.Texture;
 using SFML.Graphics;
 using System.Collections.Generic;
 

@@ -1,4 +1,4 @@
-﻿using SS14.Shared.IoC.Exceptions;
+using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;

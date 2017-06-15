@@ -1,4 +1,4 @@
-﻿using NetSerializer;
+using NetSerializer;
 using SFML.Graphics;
 using SFML.System;
 using System;

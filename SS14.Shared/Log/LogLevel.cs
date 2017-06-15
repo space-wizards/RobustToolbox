@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared.Log
+namespace SS14.Shared.Log
 {
     /// <remarks>
     /// The value associated with the level determines the order in which they are filtered,

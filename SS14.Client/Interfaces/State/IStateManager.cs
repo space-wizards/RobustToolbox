@@ -1,4 +1,4 @@
-﻿
+
 
 using SFML.Window;
 using SS14.Client.Graphics.Event;

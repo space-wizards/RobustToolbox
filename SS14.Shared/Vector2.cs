@@ -1,4 +1,4 @@
-﻿#region Imports
+#region Imports
 
 using SS14.Shared.Serialization;
 using System;

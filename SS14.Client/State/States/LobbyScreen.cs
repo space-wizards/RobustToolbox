@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;

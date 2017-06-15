@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using CommandLine.Text;
 using SS14.Server.Interfaces;
 using SS14.Shared.IoC;

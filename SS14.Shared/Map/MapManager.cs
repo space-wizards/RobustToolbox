@@ -1,12 +1,4 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SS14.Server.Interfaces.Map;
-using SS14.Shared;
-using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using SS14.Shared.ServerEnums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,30 +7,37 @@ using System.Text.RegularExpressions;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SFML.Graphics;
+using SFML.System;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Log;
+using SS14.Shared.Maths;
 
-namespace SS14.Server.Map
+namespace SS14.Shared.Map
 {
     public class MapManager : IMapManager
     {
-        private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
-        private static readonly int ChunkSize = Chunk.ChunkSize;
+        private readonly Dictionary<Vector2i, Chunk> chunks;
+        private static readonly int ChunkSize = Chunk.CHUNK_SIZE;
 
         public event TileChangedEventHandler TileChanged;
-        private bool suppressNetworkUpdatesOnTileChanged = false;
+        private bool suppressOnTileChanged;
+
+        public int TileSize { get; }
+
+        public Dictionary<Vector2i, Chunk> Chunks => chunks;
 
         public MapManager()
         {
-            tileIndexer = new TileCollection(this);
+            TileSize = 32;
+            chunks = new Dictionary<Vector2i, Chunk>();
+            _tileIndexer = new TileCollection(this);
         }
 
         public void Initialize()
         {
             NewMap();
-        }
-
-        public int TileSize
-        {
-            get { return 32; }
         }
 
         #region Tile Enumerators
@@ -75,12 +74,12 @@ namespace SS14.Server.Map
                     {
                         if (ignoreSpace)
                             continue;
-                        else
-                            for (int y = yMin; y <= yMax; ++y)
-                                for (int x = xMin; x <= xMax; ++x)
-                                    yield return new TileRef(this,
-                                        chunkX * ChunkSize + x,
-                                        chunkY * ChunkSize + y);
+
+                        for (int y = yMin; y <= yMax; ++y)
+                            for (int x = xMin; x <= xMax; ++x)
+                                yield return new TileRef(this,
+                                    chunkX * ChunkSize + x,
+                                    chunkY * ChunkSize + y);
                     }
                     else
                     {
@@ -133,6 +132,9 @@ namespace SS14.Server.Map
 
         #region Indexers
 
+        private readonly TileCollection _tileIndexer;
+        public ITileCollection Tiles => _tileIndexer;
+
         public TileRef GetTileRef(Vector2f pos)
         {
             return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
@@ -151,10 +153,8 @@ namespace SS14.Server.Map
                 return new TileRef(this, x, y);
         }
 
-        private TileCollection tileIndexer;
-        public ITileCollection Tiles { get { return tileIndexer; } }
 
-        public sealed class TileCollection : ITileCollection
+        private sealed class TileCollection : ITileCollection
         {
             private readonly MapManager mm;
 
@@ -174,6 +174,7 @@ namespace SS14.Server.Map
                     this[(int)Math.Floor(pos.X), (int)Math.Floor(pos.Y)] = value;
                 }
             }
+
             public Tile this[int x, int y]
             {
                 get
@@ -211,126 +212,19 @@ namespace SS14.Server.Map
                     chunk.Tiles[index] = value;
                     var tileRef = new TileRef(mm, x, y, chunk, index);
 
-                    if (mm.TileChanged != null)
-                        mm.TileChanged(tileRef, oldTile);
+                    mm.RaiseOnTileChanged(tileRef, oldTile);
 
-                    if (!mm.suppressNetworkUpdatesOnTileChanged)
-                        NetworkUpdateTile(tileRef);
-                }
-            }
-        }
-
-        #endregion Indexers
-
-        #region Networking
-
-        public void SendMap(INetChannel connection)
-        {
-            Logger.Log($"[MAP] {connection.RemoteAddress}: Sending map");
-
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgMap>();
-
-            message.MessageType = MapMessage.SendTileMap;
-            message.Version = 1; // Format version.  Who knows, it could come in handy.
-
-            // Tile definition mapping
-            var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-
-            // tile defs
-            message.TileDefs = new MsgMap.TileDef[tileDefManager.Count];
-            for (var tileId = 0; tileId < tileDefManager.Count; ++tileId)
-            {
-                message.TileDefs[tileId] = new MsgMap.TileDef
-                {
-                    Name = tileDefManager[tileId].Name
-                };
-            }
-
-            var counter = 0;
-            message.ChunkDefs = new MsgMap.ChunkDef[chunks.Count];
-
-            foreach (var chunk in chunks)
-            {
-                var chk = new MsgMap.ChunkDef
-                {
-                    X = chunk.Key.X,
-                    Y = chunk.Key.Y,
-                    Defs = new MsgMap.TileDef[chunk.Value.Tiles.Length]
-                };
-
-                var tileIndex = 0;
-                foreach (var tile in chunk.Value.Tiles)
-                {
-                    chk.Defs[tileIndex++] = new MsgMap.TileDef
+                    /*
+                    // Obsolete: migrated to Server.Map.MapNetworkManager
+                    if (!mm.suppressOnTileChanged)
                     {
-                        Tile = (uint)tile
-                    };
-                }
-
-                message.ChunkDefs[counter++] = chk;
-            }
-
-            net.ServerSendMessage(message, connection);
-            Logger.Log($"[MAP] {connection.RemoteAddress}: Finished sending map");
-        }
-
-        public void HandleNetworkMessage(MsgMap message)
-        {
-            switch (message.MessageType)
-            {
-                case MapMessage.TurfClick:
-                    //HandleTurfClick(message);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        /*
-        private void HandleTurfClick(NetIncomingMessage message)
-        {
-            // Who clicked and on what tile.
-            Atom.Atom clicker = SS13Server.Singleton.playerManager.GetSessionByConnection(message.SenderConnection).attachedAtom;
-            short x = message.ReadInt16();
-            short y = message.ReadInt16();
-
-            if (Vector2.Distance(clicker.position, new Vector2(x * tileSpacing + (tileSpacing / 2), y * tileSpacing + (tileSpacing / 2))) > 96)
-            {
-                return; // They were too far away to click us!
-            }
-            bool Update = false;
-            if (IsSaneArrayPosition(x, y))
-            {
-                Update = tileArray[x, y].ClickedBy(clicker);
-                if (Update)
-                {
-                    if (tileArray[x, y].tileState == TileState.Dead)
-                    {
-                        Tiles.Atmos.GasCell g = tileArray[x, y].gasCell;
-                        Tiles.Tile t = GenerateNewTile(x, y, tileArray[x, y].tileType);
-                        tileArray[x, y] = t;
-                        tileArray[x, y].gasCell = g;
+                        var handler = IoCManager.Resolve<IMapNetworkManager>();
+                        handler.NetworkUpdateTile(tileRef);
+                        //mm.NetworkUpdateTile(tileRef);
                     }
-                    NetworkUpdateTile(x, y);
+                    */
                 }
             }
-        }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-        
-        private static void NetworkUpdateTile(TileRef tile)
-        {
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgMap>();
-
-            message.MessageType = MapMessage.TurfUpdate;
-            message.SingleTurf = new MsgMap.Turf
-            {
-                X = tile.X,
-                Y = tile.Y,
-                Tile = (uint)tile.Tile
-            };
-
-            net.ServerSendToAll(message);
         }
 
         #endregion Networking
@@ -394,7 +288,7 @@ namespace SS14.Server.Map
 
         public bool LoadMap(string mapName)
         {
-            suppressNetworkUpdatesOnTileChanged = true;
+            suppressOnTileChanged = true;
             try
             {
                 var badChars = Path.GetInvalidFileNameChars();
@@ -443,11 +337,11 @@ namespace SS14.Server.Map
                         int cy = br.ReadInt32() * ChunkSize;
 
                         for (int y = cy; y < cy + ChunkSize; ++y)
-                            for (int x = cx; x < cx + ChunkSize; ++x)
-                            {
-                                Tile tile = (Tile)br.ReadUInt32();
-                                this.Tiles[x, y] = tile;
-                            }
+                        for (int x = cx; x < cx + ChunkSize; ++x)
+                        {
+                            Tile tile = (Tile)br.ReadUInt32();
+                            this.Tiles[x, y] = tile;
+                        }
                     }
 
                     string ending = br.ReadString();
@@ -459,13 +353,13 @@ namespace SS14.Server.Map
             }
             finally
             {
-                suppressNetworkUpdatesOnTileChanged = false;
+                suppressOnTileChanged = false;
             }
         }
 
         private void NewMap()
         {
-            suppressNetworkUpdatesOnTileChanged = true;
+            suppressOnTileChanged = true;
             try
             {
                 Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
@@ -476,15 +370,15 @@ namespace SS14.Server.Map
                 Debug.Assert(wall > 0);
 
                 for (int y = -32; y <= 32; ++y)
-                    for (int x = -32; x <= 32; ++x)
-                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
-                            Tiles[x, y] = new Tile(wall);
-                        else
-                            Tiles[x, y] = new Tile(floor);
+                for (int x = -32; x <= 32; ++x)
+                    if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
+                        Tiles[x, y] = new Tile(wall);
+                    else
+                        Tiles[x, y] = new Tile(floor);
             }
             finally
             {
-                suppressNetworkUpdatesOnTileChanged = false;
+                suppressOnTileChanged = false;
             }
         }
 
@@ -497,5 +391,13 @@ namespace SS14.Server.Map
         {
             return (int)(n - (int)Math.Floor(n / d) * d);
         }
+        private void RaiseOnTileChanged(TileRef tileRef, Tile oldTile)
+        {
+            if(suppressOnTileChanged)
+                return;
+
+            TileChanged?.Invoke(tileRef, oldTile);
+        }
+
     }
 }

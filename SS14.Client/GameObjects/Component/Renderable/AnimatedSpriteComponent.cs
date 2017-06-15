@@ -4,7 +4,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;

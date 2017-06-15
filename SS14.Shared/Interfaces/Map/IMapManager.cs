@@ -1,26 +1,21 @@
-﻿using SFML.Graphics;
+﻿using System.Collections.Generic;
+using SFML.Graphics;
 using SFML.System;
-using SS14.Shared;
-using System.Collections.Generic;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Network;
-using SS14.Shared.Network.Messages;
+using SS14.Shared.Map;
 
-namespace SS14.Server.Interfaces.Map
+namespace SS14.Shared.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
     public interface IMapManager
     {
-        void Initialize();
+        Dictionary<Vector2i, Chunk> Chunks { get; }
+
         bool LoadMap(string mapName);
         void SaveMap(string mapName);
 
         event TileChangedEventHandler TileChanged;
-
-        void HandleNetworkMessage(MsgMap message);
-        void SendMap(INetChannel connection);
 
         int TileSize { get; }
 

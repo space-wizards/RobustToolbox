@@ -1,5 +1,6 @@
+using SS14.Shared.Interfaces.Map;
 
-namespace SS14.Client.Interfaces.Map
+namespace SS14.Shared.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileRef: {X},{Y}")]
     public struct TileRef
@@ -23,6 +24,7 @@ namespace SS14.Client.Interfaces.Map
 
         public int X { get { return x; } }
         public int Y { get { return y; } }
+        public int TileSize => map.TileSize;
         public Tile Tile
         {
             get
@@ -38,5 +40,10 @@ namespace SS14.Client.Interfaces.Map
             }
             set { map.Tiles[x, y] = value; }
         }
+
+        public TileRef North { get { return new TileRef(map, x, y - 1); } }
+        public TileRef South { get { return new TileRef(map, x, y + 1); } }
+        public TileRef East { get { return new TileRef(map, x + 1, y); } }
+        public TileRef West { get { return new TileRef(map, x - 1, y); } }
     }
 }

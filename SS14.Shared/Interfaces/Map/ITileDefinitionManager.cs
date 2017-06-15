@@ -1,8 +1,8 @@
-﻿using Lidgren.Network;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Lidgren.Network;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Interfaces.Map
+namespace SS14.Shared.Interfaces.Map
 {
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {

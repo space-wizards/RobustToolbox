@@ -1,23 +1,30 @@
-﻿using Lidgren.Network;
-using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections.Generic;
+using Lidgren.Network;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Map
+namespace SS14.Shared.Map
 {
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         [Dependency]
         private readonly IResourceManager resourceManager;
-        List<ITileDefinition> tileDefs = new List<ITileDefinition>();
-        Dictionary<string, ITileDefinition> tileNames = new Dictionary<string, ITileDefinition>();
-        Dictionary<ITileDefinition, ushort> tileIds = new Dictionary<ITileDefinition, ushort>();
+        private readonly List<ITileDefinition> tileDefs;
+        private readonly Dictionary<string, ITileDefinition> tileNames;
+        private readonly Dictionary<ITileDefinition, ushort> tileIds;
 
+        /// <summary>
+        /// Default Constructor.
+        /// </summary>
         public TileDefinitionManager()
         {
-            Register(new SpaceTileDefinition());
+            tileDefs = new List<ITileDefinition>();
+            tileNames = new Dictionary<string, ITileDefinition>();
+            tileIds = new Dictionary<ITileDefinition, ushort>();
+
+            Register(SpaceTileDefinition.Instance);
             Register(new FloorTileDefinition());
             Register(new WallTileDefinition());
         }
@@ -66,20 +73,11 @@ namespace SS14.Client.Map
             }
         }
 
-        public ITileDefinition this[string name]
-        {
-            get { return tileNames[name]; }
-        }
+        public ITileDefinition this[string name] => tileNames[name];
 
-        public ITileDefinition this[int id]
-        {
-            get { return tileDefs[id]; }
-        }
+        public ITileDefinition this[int id] => tileDefs[id];
 
-        public int Count
-        {
-            get { return tileDefs.Count; }
-        }
+        public int Count => tileDefs.Count;
 
         public IEnumerator<ITileDefinition> GetEnumerator()
         {

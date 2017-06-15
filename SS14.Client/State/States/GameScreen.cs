@@ -11,7 +11,7 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Lighting;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -32,6 +32,8 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Client.Map;
+using SS14.Shared.Map;
 using SS14.Shared.Network;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
@@ -903,7 +905,7 @@ namespace SS14.Client.State.States
                     switch (messageType)
                     {
                         case NetMessages.MapMessage:
-                            MapManager.HandleNetworkMessage(message);
+                            IoCManager.Resolve<IMapNetworkManager>().HandleNetworkMessage(MapManager, message);
                             break;
                         //case NetMessages.AtmosDisplayUpdate:
                         //    MapManager.HandleAtmosDisplayUpdate(message);
@@ -1333,7 +1335,7 @@ namespace SS14.Client.State.States
             foreach (TileRef t in tiles)
             {
                 Vector2f pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2f(t.X, t.Y)));
-                t.Tile.TileDef.RenderPos(pos.X, pos.Y);
+                MapRenderer.RenderPos(t.Tile.TileDef, pos.X, pos.Y);
             }
         }
 
@@ -1351,35 +1353,8 @@ namespace SS14.Client.State.States
         private void DrawTiles(FloatRect vision)
         {
             var tiles = MapManager.GetTilesIntersecting(vision, false);
-            var walls = new List<TileRef>();
 
-            foreach (TileRef TileReference in tiles)
-            {
-                var Tile = TileReference.Tile;
-                var TileType = Tile.TileDef;
-
-                //t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
-                if (TileType.IsWall)
-                    walls.Add(TileReference);
-                else
-                {
-                    var point = CluwneLib.WorldToScreen(new Vector2f(TileReference.X, TileReference.Y));
-                    TileType.Render(point.X, point.Y, _floorBatch);
-                    TileType.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
-                }
-            }
-
-            walls.Sort((t1, t2) => t1.Y - t2.Y);
-
-            foreach (TileRef tr in walls)
-            {
-                var t = tr.Tile;
-                var td = t.TileDef;
-
-                var point = CluwneLib.WorldToScreen(new Vector2f(tr.X, tr.Y));
-                td.Render(point.X, point.Y, _wallBatch);
-                td.RenderTop(point.X, point.Y, _wallTopsBatch);
-            }
+            MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch, _wallBatch, _wallTopsBatch);
         }
 
         /// <summary>

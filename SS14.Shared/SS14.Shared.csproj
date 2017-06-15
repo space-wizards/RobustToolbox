@@ -133,6 +133,11 @@
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
+    <Compile Include="Interfaces\Map\IMapManager.cs" />
+    <Compile Include="Interfaces\Map\IMapNetworkManager.cs" />
+    <Compile Include="Interfaces\Map\ITileCollection.cs" />
+    <Compile Include="Interfaces\Map\ITileDefinition.cs" />
+    <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -142,6 +147,13 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Map\Chunk.cs" />
+    <Compile Include="Map\HardcodedTileDefinitions.cs" />
+    <Compile Include="Map\MapManager.cs" />
+    <Compile Include="Map\Tile.cs" />
+    <Compile Include="Map\TileDefinition.cs" />
+    <Compile Include="Map\TileDefinitionManager.cs" />
+    <Compile Include="Map\TileRef.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
@@ -261,6 +273,9 @@
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="GO\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

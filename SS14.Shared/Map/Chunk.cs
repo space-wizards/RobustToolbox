@@ -1,10 +1,16 @@
 using Lidgren.Network;
 
-namespace SS14.Client.Interfaces.Map
+namespace SS14.Shared.Map
 {
+    /// <summary>
+    /// A square section of the map.
+    /// </summary>
     public class Chunk
     {
-        public static readonly int ChunkSize = 16;
+        /// <summary>
+        /// The number of tiles per dimension of the chunk.
+        /// </summary>
+        public const int CHUNK_SIZE = 16;
 
         public uint Version { get; private set; }
         public void IncrementVersion() { unchecked { ++Version; } }
@@ -14,7 +20,7 @@ namespace SS14.Client.Interfaces.Map
         public Chunk()
         {
             Version = 0;
-            Tiles = new Tile[ChunkSize * ChunkSize];
+            Tiles = new Tile[CHUNK_SIZE * CHUNK_SIZE];
         }
 
         public void ReceiveChunkData(NetIncomingMessage message)

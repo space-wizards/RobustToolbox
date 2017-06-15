@@ -1,12 +1,9 @@
 using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.Map
+namespace SS14.Shared.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public sealed class SpaceTileDefinition : ITileDefinition
@@ -16,22 +13,23 @@ namespace SS14.Client.Map
             tileSprite = resourceManager.GetSprite("space_texture");
         }
 
-        public ushort TileId { get { return 0; } }
+        public ushort TileId => 0;
         public void InvalidateTileId() { }
 
-        public string Name { get { return "Space"; } }
+        public string Name => "Space";
 
-        public bool IsConnectingSprite { get { return false; } }
-        public bool IsOpaque { get { return false; } }
-        public bool IsCollidable { get { return false; } }
-        public bool IsGasVolume { get { return true; } }
-        public bool IsVentedIntoSpace { get { return true; } }
-        public bool IsWall { get { return false; } }
+        public bool IsConnectingSprite => false;
+        public bool IsOpaque => false;
+        public bool IsCollidable => false;
+        public bool IsGasVolume => true;
+        public bool IsVentedIntoSpace => true;
+        public bool IsWall => false;
+        public string SpriteName => "space_texture";
 
         public Tile Create(ushort data = 0) { return new Tile(0, data); }
 
-        Sprite tileSprite;
-
+        //Sprite tileSprite;
+/*
         public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
@@ -58,6 +56,7 @@ namespace SS14.Client.Map
         public void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
         }
+*/
     }
 
     public sealed class FloorTileDefinition : TileDefinition
@@ -72,17 +71,16 @@ namespace SS14.Client.Map
             IsGasVolume = true;
             IsVentedIntoSpace = false;
             IsWall = false;
+            SpriteName = "floor_texture";
         }
 
-        public override void InitializeResources(IResourceManager resourceManager)
-        {
-            tileSprite = resourceManager.GetSprite("floor_texture");
+            tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("floor_texture");
         }
     }
 
     public sealed class WallTileDefinition : TileDefinition
     {
-        private RectangleShape shape;
+        private readonly RectangleShape shape;
 
         public WallTileDefinition()
         {
@@ -95,19 +93,13 @@ namespace SS14.Client.Map
             IsVentedIntoSpace = false;
             IsWall = true;
         }
-        
+        /*
         public override void RenderPos(float x, float y)
         {
             shape.FillColor = Color.Black;
             shape.Position = new SFML.System.Vector2f(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
-
-        public override void InitializeResources(IResourceManager resourceManager)
-        {
-            tileSprite = resourceManager.GetSprite("wall_texture");
-            var bounds = tileSprite.GetLocalBounds();
-            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
-        }
+        */
     }
 }

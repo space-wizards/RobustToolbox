@@ -1,7 +1,7 @@
 ﻿using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
-using SS14.Server.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Map;
@@ -10,6 +10,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;

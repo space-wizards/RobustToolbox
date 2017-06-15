@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Velocity;
 using SS14.Shared.IoC;

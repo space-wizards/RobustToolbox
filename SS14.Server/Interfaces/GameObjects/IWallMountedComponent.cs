@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces.Map;
+using SS14.Server.Interfaces.Map;
 
 namespace SS14.Server.Interfaces.GameObjects
 {

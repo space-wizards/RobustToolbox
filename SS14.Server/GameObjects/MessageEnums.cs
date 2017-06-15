@@ -1,4 +1,4 @@
-﻿namespace SS14.Server.GameObjects
+namespace SS14.Server.GameObjects
 {
     public enum MessageResult
     {

@@ -1,4 +1,4 @@
-﻿using SFML.Window;
+using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;

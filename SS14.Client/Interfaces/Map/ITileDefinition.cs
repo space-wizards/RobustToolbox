@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SS14.Client.Graphics.Sprite;
 
 namespace SS14.Client.Interfaces.Map

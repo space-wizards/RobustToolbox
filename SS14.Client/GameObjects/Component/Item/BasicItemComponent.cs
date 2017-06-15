@@ -1,4 +1,4 @@
-﻿using SS14.Shared;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
 using SS14.Shared.Interfaces.GameObjects;

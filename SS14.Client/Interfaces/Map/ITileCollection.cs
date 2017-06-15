@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 
 namespace SS14.Client.Interfaces.Map
 {

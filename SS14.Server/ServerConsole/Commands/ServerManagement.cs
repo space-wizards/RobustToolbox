@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 using System;

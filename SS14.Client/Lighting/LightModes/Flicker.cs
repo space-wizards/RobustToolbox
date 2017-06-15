@@ -1,4 +1,4 @@
-﻿
+
 using SFML.Graphics;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Utility;

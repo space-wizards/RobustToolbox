@@ -1,4 +1,4 @@
-﻿namespace SS14.Client.Graphics.View
+namespace SS14.Client.Graphics.View
 {
     public class Viewport
     {

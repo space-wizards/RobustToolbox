@@ -1,4 +1,4 @@
-﻿using SFML.Window;
+using SFML.Window;
 
 
 namespace SS14.Client.Graphics.Settings

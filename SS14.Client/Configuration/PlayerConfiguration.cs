@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SFML.Window;
 
 namespace SS14.Client.Configuration

@@ -1,4 +1,4 @@
-﻿using SS14.Shared.IoC;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces
 {

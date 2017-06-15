@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Resource;

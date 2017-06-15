@@ -1,4 +1,4 @@
-﻿/// Shitty vector2 class implemented from http://www.codeproject.com/KB/recipes/VectorType.aspx
+/// Shitty vector2 class implemented from http://www.codeproject.com/KB/recipes/VectorType.aspx
 
 using System;
 using System.Collections.Generic;

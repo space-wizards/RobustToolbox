@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared.IoC;

@@ -1,4 +1,4 @@
-﻿
+
 using SS14.Client.GameObjects;
 using SS14.Client.Resources;
 using SS14.Shared.Maths;

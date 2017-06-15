@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 

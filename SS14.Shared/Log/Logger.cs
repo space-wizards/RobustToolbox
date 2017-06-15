@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Interfaces.Log;
+using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;
 using System;
 using System.IO;

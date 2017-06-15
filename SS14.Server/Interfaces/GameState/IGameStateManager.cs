@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Shared;
 using System.Collections.Generic;
 using SS14.Shared.IoC;

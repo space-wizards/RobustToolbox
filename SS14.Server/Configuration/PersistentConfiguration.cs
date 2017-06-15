@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SS14.Shared;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;

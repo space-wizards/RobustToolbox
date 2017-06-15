@@ -1,4 +1,4 @@
-﻿using SS14.Client.Interfaces.Configuration;
+using SS14.Client.Interfaces.Configuration;
 using SFML.Window;
 using System;
 using System.IO;

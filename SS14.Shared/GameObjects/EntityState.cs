@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Serialization;
+using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 

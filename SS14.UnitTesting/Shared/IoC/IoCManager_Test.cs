@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.IoC;

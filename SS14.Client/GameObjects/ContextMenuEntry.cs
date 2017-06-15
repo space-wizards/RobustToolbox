@@ -1,4 +1,4 @@
-﻿namespace SS14.Client.GameObjects
+namespace SS14.Client.GameObjects
 {
     public struct ContextMenuEntry
     {

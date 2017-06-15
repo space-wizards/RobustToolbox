@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared
+namespace SS14.Shared
 {
     public class EntityBaseClass //This class is the base class for all other objects in the game. 
         //Think of it as byonds ATOM. Add shared variables here.

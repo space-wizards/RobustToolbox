@@ -1,4 +1,4 @@
-﻿using SS14.Client.Interfaces.Serialization;
+using SS14.Client.Interfaces.Serialization;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.Serialization

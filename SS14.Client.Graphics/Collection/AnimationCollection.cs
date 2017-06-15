@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprite;
 using System;
 using System.Collections.Generic;
 

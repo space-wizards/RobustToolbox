@@ -1,4 +1,4 @@
-﻿namespace SS14.Client.Graphics.VertexData
+namespace SS14.Client.Graphics.VertexData
 {
     public class VertexEnums
     {

@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Log;
+using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;

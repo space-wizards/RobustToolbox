@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Helpers;

@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.GameObjects;

@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;

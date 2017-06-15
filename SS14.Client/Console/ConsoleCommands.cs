@@ -1,4 +1,4 @@
-﻿// This file is for commands that do something to the console itself.
+// This file is for commands that do something to the console itself.
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 

@@ -1,4 +1,4 @@
-﻿using BsDiffLib;
+using BsDiffLib;
 using Lidgren.Network;
 using NetSerializer;
 using SS14.Shared.GameStates;

@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Server.GameObjects.Events;
 using SS14.Server.GameObjects.Item.ItemCapability;
 using SS14.Server.Interfaces.GameObjects;

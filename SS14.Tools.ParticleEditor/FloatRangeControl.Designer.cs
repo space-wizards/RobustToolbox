@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Tools.ParticleEditor
 {

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
 

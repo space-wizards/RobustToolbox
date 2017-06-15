@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 
 namespace SS14.Client.Interfaces.Collision
 {

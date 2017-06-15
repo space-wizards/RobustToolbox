@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.Graphics
 {

@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SS14.Shared;
 
 namespace SS14.Server.Interfaces

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 
 namespace SS14.UnitTesting.SS14.Client.Player.PostProcessing

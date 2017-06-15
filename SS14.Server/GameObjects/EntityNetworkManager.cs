@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using NetSerializer;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;

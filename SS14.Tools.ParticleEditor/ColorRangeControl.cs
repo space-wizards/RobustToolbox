@@ -1,4 +1,4 @@
-﻿using Cyotek.Windows.Forms;
+using Cyotek.Windows.Forms;
 using SS14.Shared.Utility;
 using System;
 using System.ComponentModel;

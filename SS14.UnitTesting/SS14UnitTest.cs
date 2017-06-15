@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using NUnit.Framework;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
@@ -15,11 +16,35 @@ using System.IO;
 
 namespace SS14.UnitTesting
 {
-    public class SS14UnitTest
+    public abstract class SS14UnitTest
     {
         private FrameEventArgs frameEvent;
         public delegate void EventHandler();
         public static event EventHandler InjectedMethod;
+
+        #region Options
+
+        // TODO: make this figured out at runtime so we don't have to pass a compiler flag.
+#if HEADLESS
+        public const bool Headless = true;
+#else
+        public const bool Headless = false;
+#endif
+
+        // These properties are meant to be overriden to disable certain parts
+        // Like loading resource packs, which isn't always needed.
+
+        /// <summary>
+        /// Whether the client resource pack should be loaded or not.
+        /// </summary>
+        public virtual bool NeedsResourcePack => false;
+
+        /// <summary>
+        /// Whether the client config should be loaded or not.
+        /// </summary>
+        public virtual bool NeedsClientConfig => false;
+
+        #endregion Options
 
         #region Accessors
 
@@ -41,10 +66,18 @@ namespace SS14.UnitTesting
             set;
         }
 
-        #endregion Accessors
+#endregion Accessors
 
         public SS14UnitTest()
         {
+            TestFixtureAttribute a = Attribute.GetCustomAttribute(GetType(), typeof(TestFixtureAttribute)) as TestFixtureAttribute;
+            if (NeedsResourcePack && Headless)
+            {
+                // Disable the test automatically.
+                a.Explicit = true;
+                return;
+            }
+
             // Clear state across tests.
             IoCManager.Clear();
 
@@ -57,22 +90,19 @@ namespace SS14.UnitTesting
 
             IoCManager.AddAssemblies(assemblies);
 
-            //ConfigurationManager setup
-            GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-            GetConfigurationManager.Initialize(
-                PathHelpers.AssemblyRelativeFile("./player_config.xml", Assembly.GetExecutingAssembly()));
+            if (NeedsClientConfig)
+            {
+                //ConfigurationManager setup
+                GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
+                GetConfigurationManager.Initialize(
+                    PathHelpers.AssemblyRelativeFile("./player_config.xml", Assembly.GetExecutingAssembly()));
+            }
 
-#if !HEADLESS
-            //ResourceManager Setup
-            GetResourceManager = IoCManager.Resolve<IResourceManager>();
-            InitializeResources();
-#endif
-
-            Init();
-        }
-
-        protected virtual void Init()
-        {
+            if (NeedsResourcePack)
+            {
+                GetResourceManager = IoCManager.Resolve<IResourceManager>();
+                InitializeResources();
+            }
         }
 
         #region Setup

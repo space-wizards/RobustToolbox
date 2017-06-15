@@ -126,7 +126,7 @@ namespace SS14.Server.Placement
             }
             else //They are not allowed to request this. Send 'PlacementFailed'. TBA
             {
-                LogManager.Log("Invalid placement request: "
+                Logger.Log("Invalid placement request: "
                                + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).name +
                                " - " +
                                IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).

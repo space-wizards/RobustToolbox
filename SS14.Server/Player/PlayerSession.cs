@@ -106,7 +106,7 @@ namespace SS14.Server.Player
         public void SetName(string _name)
         {
             name = _name;
-            LogManager.Log("Player set name: " + connectedClient.RemoteEndPoint.Address + " -> " + name);
+            Logger.Log("Player set name: " + connectedClient.RemoteEndPoint.Address + " -> " + name);
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -117,7 +117,7 @@ namespace SS14.Server.Player
             status = SessionStatus.Connected;
             UpdatePlayerState();
             //Put player in lobby immediately.
-            LogManager.Log("Player connected - " + connectedClient.RemoteEndPoint.Address);
+            Logger.Log("Player connected - " + connectedClient.RemoteEndPoint.Address);
             JoinLobby();
         }
 
@@ -160,7 +160,7 @@ namespace SS14.Server.Player
         public void DispatchVerb(string verb, int uid)
         {
             //Handle global verbs
-            LogManager.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);
+            Logger.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);
 
             if (uid == 0)
             {

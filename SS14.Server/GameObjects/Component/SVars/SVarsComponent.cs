@@ -43,7 +43,7 @@ namespace SS14.Server.GameObjects
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
 
             Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
-            LogManager.Log("Player " + player.name + " set SVar."); //Make this message better
+            Logger.Log("Player " + player.name + " set SVar."); //Make this message better
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace SS14.Server.GameObjects
         {
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
             SendSVars(client);
-            LogManager.Log("Sending SVars to " + player.name + " for entity " + Owner.Uid + ":" + Owner.Name);
+            Logger.Log("Sending SVars to " + player.name + " for entity " + Owner.Uid + ":" + Owner.Name);
         }
     }
 }

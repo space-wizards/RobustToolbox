@@ -118,6 +118,7 @@
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
+    <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Log\LogLevel.cs" />
+    <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Vector4f.cs" />

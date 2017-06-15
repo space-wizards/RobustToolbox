@@ -1,92 +1,56 @@
-﻿using SS14.Shared.ServerEnums;
+﻿using SS14.Shared.Interfaces.Log;
+using SS14.Shared.IoC;
 using System;
-using System.IO;
 
 namespace SS14.Shared.Log
 {
-    public class LogManager
+    /// <summary>
+    /// Generic logger. Dumps to <see cref="System.Console"/> and that's it.
+    /// </summary>
+    [IoCTarget]
+    public class LogManager : ILogManager
     {
-        /// <summary>
-        /// Singleton
-        /// </summary>
-        private static LogManager singleton;
+        #region ILogManager Members
 
-        private LogLevel currentLogLevel;
-        private StreamWriter logStream;
+        public LogLevel CurrentLevel { get; set; } = LogLevel.Debug;
 
-        public string LogPath { get; set; }
-
-        public static LogManager Singleton
+        public void Log(string message, LogLevel level = LogLevel.Information, params object[] args)
         {
-            get
+            if ((int)level < (int)CurrentLevel)
             {
-                if (singleton == null)
-                    throw new TypeInitializationException("LogManager Not Initialized.", null);
-                return singleton;
+                // Too low level, ignore it.
+                return;
             }
+            LogInternal(string.Format(message, args), level);
         }
 
-        /// <summary>
-        /// Initialize log
-        /// </summary>
-        /// <param name="_logPath"></param>
-        public static void Initialize(string _logPath, LogLevel logLevel = LogLevel.Information)
-        {
-            singleton = new LogManager();
-            singleton.LogPath = _logPath;
-            singleton.currentLogLevel = logLevel;
-            singleton.Start();
-            Log("Logging at level: " + logLevel.ToString());
-        }
+        public void Debug(string message, params object[] args) => Log(message, LogLevel.Debug, args);
+        public void Info(string message, params object[] args) => Log(message, LogLevel.Information, args);
+        public void Warning(string message, params object[] args) => Log(message, LogLevel.Warning, args);
+        public void Error(string message, params object[] args) => Log(message, LogLevel.Error, args);
+        public void Fatal(string message, params object[] args) => Log(message, LogLevel.Fatal, args);
+
+        #endregion ILogManager Members
 
         /// <summary>
-        /// Start logging, open the log file etc.
+        /// Actual method used to log the formatted message somewhere.
+        /// To disk, console, etc...
         /// </summary>
-        public void Start()
+        protected virtual void LogInternal(string message, LogLevel level)
         {
-            try
-            {
-                if (!Directory.Exists(LogPath))
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(LogPath));
-                }
+            string name = LogLevelToName(level);
+            ConsoleColor color = LogLevelToConsoleColor(level);
 
-                logStream = new StreamWriter(LogPath, true);
-            }
-            catch (IOException e)
-            {
-                Console.WriteLine("Unable to open logfile ('{0}'): {1}", LogPath, e);
-                Environment.Exit(1);
-            }
-
-
-            LogOne("LogManager started.", LogLevel.Information);
+            Console.ForegroundColor = color;
+            Console.Write(name);
+            Console.ResetColor();
+            Console.WriteLine(": {0}", message);
         }
 
-        /// <summary>
-        /// Log dat shit
-        /// </summary>
-        /// <param name="Message"></param>
-        /// <param name="logLevel"></param>
-        private void LogOne(string Message, LogLevel logLevel)
-        {
-            if (singleton == null)
-                throw new TypeInitializationException("LogManager Not Initialized.", null);
-
-            if ((int)logLevel >= (int)singleton.currentLogLevel)
-            {
-                string logType = logLevel.ToString();
-                if (logType == "Information")
-                    logType = "Info";
-                logStream.WriteLine(DateTime.Now.ToString("o") + " - " + logType + ": " + Message);
-                Console.ForegroundColor = LogLevelToConsoleColor(logLevel);
-                Console.Write(logType);
-                Console.ResetColor();
-                Console.WriteLine(": " + Message);
-            }
-        }
-
-        public static ConsoleColor LogLevelToConsoleColor(LogLevel level)
+        // If you make either of these methods public.
+        // Put them somewhere else.
+        // This would be a terrible spot.
+        protected static ConsoleColor LogLevelToConsoleColor(LogLevel level)
         {
             switch (level)
             {
@@ -108,59 +72,28 @@ namespace SS14.Shared.Log
             }
         }
 
-        /// <summary>
-        /// Log a message. Only works if the logmanager is initialized. Static method because its easier to type
-        /// </summary>
-        /// <param name="Message">the message</param>
-        /// <param name="logLevel">the level of the log item</param>
-        public static void Log(string Message, LogLevel logLevel = LogLevel.Information)
+        protected static string LogLevelToName(LogLevel level)
         {
-            try
+            switch (level)
             {
-                singleton.LogOne(Message, logLevel);
-            }
-            catch (NullReferenceException)
-            {
-                Console.WriteLine(Message);
+                case LogLevel.Debug:
+                    return "DEBG";
+
+                case LogLevel.Information:
+                    return "INFO";
+
+                case LogLevel.Warning:
+                    return "WARN";
+
+                case LogLevel.Error:
+                    return "ERRO";
+
+                case LogLevel.Fatal:
+                    return "FATL";
+
+                default:
+                    return "UNKO";
             }
         }
-
-        /// <summary>
-        /// Log a message, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        public static void Log(string message, LogLevel logLevel = LogLevel.Information, params object[] args)
-        {
-            Log(string.Format(message, args), logLevel);
-        }
-
-        /// <summary>
-        /// Log a message as debug, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        /// <seealso cref="LogManager.Log" />
-        public static void Debug(string message, params object[] args) => Log(message, LogLevel.Debug, args);
-
-        /// <summary>
-        /// Log a message as info, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        /// <seealso cref="LogManager.Log" />
-        public static void Info(string message, params object[] args) => Log(message, LogLevel.Information, args);
-
-        /// <summary>
-        /// Log a message as warning, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        /// <seealso cref="LogManager.Log" />
-        public static void Warning(string message, params object[] args) => Log(message, LogLevel.Warning, args);
-
-        /// <summary>
-        /// Log a message as error, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        /// <seealso cref="LogManager.Log" />
-        public static void Error(string message, params object[] args) => Log(message, LogLevel.Error, args);
-
-        /// <summary>
-        /// Log a message as fatal, taking in a format string and format list using the regular <see cref="string.Format" /> syntax.
-        /// </summary>
-        /// <seealso cref="LogManager.Log" />
-        public static void Fatal(string message, params object[] args) => Log(message, LogLevel.Fatal, args);
     }
 }

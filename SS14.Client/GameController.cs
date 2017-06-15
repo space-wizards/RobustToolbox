@@ -65,7 +65,7 @@ namespace SS14.Client
 
         public void Run()
         {
-            LogManager.Log("Initialising GameController.", LogLevel.Debug);
+            Logger.Debug("Initialising GameController.");
 
             ShowSplashScreen();
 
@@ -90,7 +90,7 @@ namespace SS14.Client
 
             FrameEventArgs _frameEvent;
             // EventArgs _frameEventArgs;
-            _clock = new SFML.System.Clock();
+            _clock = new Clock();
 
             while (CluwneLib.IsRunning == true)
             {
@@ -104,7 +104,7 @@ namespace SS14.Client
             }
             _networkManager.Disconnect();
             CluwneLib.Terminate();
-            LogManager.Log("GameController terminated.");
+            Logger.Info("GameController terminated.");
         }
 
         private void ShowSplashScreen()

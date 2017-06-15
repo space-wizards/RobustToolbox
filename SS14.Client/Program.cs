@@ -4,6 +4,7 @@ using System.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Shared.ContentLoader;
+using SS14.Shared.Log;
 using SS14.Client.Interfaces;
 
 namespace SS14.Client
@@ -21,6 +22,9 @@ namespace SS14.Client
 
             var controller = IoCManager.Resolve<IGameController>();
             controller.Run();
+
+            Logger.Info("Goodbye.");
+            IoCManager.Clear();
         }
 
         private static void LoadAssemblies()

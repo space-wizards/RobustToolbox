@@ -231,7 +231,7 @@ namespace SS14.Server.Map
 
         public void SendMap(NetConnection connection)
         {
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
+            Logger.Log(connection.RemoteEndPoint.Address + ": Sending map");
             NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileMap);
 
             mapMessage.Write((int)1); // Format version.  Who knows, it could come in handy.
@@ -254,7 +254,7 @@ namespace SS14.Server.Map
             }
 
             IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
+            Logger.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
                            mapMessage.LengthBytes + " bytes");
         }
 
@@ -323,7 +323,7 @@ namespace SS14.Server.Map
             DateTime date = DateTime.Now;
             mapName = string.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
 
-            LogManager.Log(string.Format("We are attempting to save map with name {0}", mapName));
+            Logger.Log(string.Format("We are attempting to save map with name {0}", mapName));
 
             var badChars = Path.GetInvalidFileNameChars();
             if (mapName.Any(c => badChars.Contains(c)))
@@ -339,7 +339,7 @@ namespace SS14.Server.Map
             {
                 var sw = new StreamWriter(fs);
                 var bw = new BinaryWriter(fs);
-                LogManager.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
+                Logger.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
 
                 sw.Write("SS14 Map File Version ");
                 sw.Write((int)1); // Format version.  Who knows, it could come in handy.
@@ -370,7 +370,7 @@ namespace SS14.Server.Map
                 bw.Flush();
             }
 
-            LogManager.Log("Done saving map.");
+            Logger.Log("Done saving map.");
         }
 
         public bool LoadMap(string mapName)
@@ -391,7 +391,7 @@ namespace SS14.Server.Map
                 {
                     var sr = new StreamReader(fs);
                     var br = new BinaryReader(fs);
-                    LogManager.Log(string.Format("Loading map: \"{0}\"", mapName));
+                    Logger.Log(string.Format("Loading map: \"{0}\"", mapName));
 
                     var versionString = sr.ReadLine();
                     if (!versionString.StartsWith("SS14 Map File Version "))
@@ -435,7 +435,7 @@ namespace SS14.Server.Map
                     Debug.Assert(ending == "End of Map");
                 }
 
-                LogManager.Log("Done loading map.");
+                Logger.Log("Done loading map.");
                 return true;
             }
             finally
@@ -449,7 +449,7 @@ namespace SS14.Server.Map
             suppressNetworkUpdatesOnTileChanged = true;
             try
             {
-                LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
+                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
                 ushort floor = IoCManager.Resolve<ITileDefinitionManager>()["Floor"].TileId;
                 ushort wall = IoCManager.Resolve<ITileDefinitionManager>()["Wall"].TileId;
 

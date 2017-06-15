@@ -5,6 +5,7 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
+using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
@@ -78,8 +79,9 @@ namespace SS14.Server
         private int lastRecievedBytes;
         private int lastSentBytes;
 
-        public SS14Server(ICommandLineArgs args)
+        public SS14Server(ICommandLineArgs args, IServerLogManager logManager)
         {
+            LogManager = logManager;
             Runlevel = RunLevel.Init;
 
             var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
@@ -97,7 +99,8 @@ namespace SS14.Server
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-            LogManager.Initialize(logPath, configMgr.LogLevel);
+            LogManager.CurrentLevel = configMgr.LogLevel;
+            LogManager.LogPath = logPath;
 
             TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
             ServerRate = 1000.0f / TickRate;
@@ -118,11 +121,12 @@ namespace SS14.Server
 
         private readonly IServerEntityManager EntityManager;
         private readonly IComponentManager ComponentManager;
+        private readonly IServerLogManager LogManager;
         public RunLevel Runlevel { get; private set; }
 
         public void Restart()
         {
-            LogManager.Log("Restarting Server...");
+            Logger.Log("Restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
             SendGameStateUpdate(true, true);
             DisposeForRestart();
@@ -132,9 +136,9 @@ namespace SS14.Server
         public void Shutdown(string reason = null)
         {
             if (reason == null)
-                LogManager.Log("Shutting down...");
+                Logger.Log("Shutting down...");
             else
-                LogManager.Log(string.Format("{0}, shutting down...", reason));
+                Logger.Log(string.Format("{0}, shutting down...", reason));
             _active = false;
         }
 
@@ -270,19 +274,19 @@ namespace SS14.Server
                 switch (msg.MessageType)
                 {
                     case NetIncomingMessageType.VerboseDebugMessage:
-                        LogManager.Log(msg.ReadString(), LogLevel.Debug);
+                        Logger.Log(msg.ReadString(), LogLevel.Debug);
                         break;
 
                     case NetIncomingMessageType.DebugMessage:
-                        LogManager.Log(msg.ReadString(), LogLevel.Debug);
+                        Logger.Log(msg.ReadString(), LogLevel.Debug);
                         break;
 
                     case NetIncomingMessageType.WarningMessage:
-                        LogManager.Log(msg.ReadString(), LogLevel.Warning);
+                        Logger.Log(msg.ReadString(), LogLevel.Warning);
                         break;
 
                     case NetIncomingMessageType.ErrorMessage:
-                        LogManager.Log(msg.ReadString(), LogLevel.Error);
+                        Logger.Log(msg.ReadString(), LogLevel.Error);
                         break;
 
                     case NetIncomingMessageType.Data:
@@ -297,7 +301,7 @@ namespace SS14.Server
                         break;
 
                     default:
-                        LogManager.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
+                        Logger.Log("Unhandled type: " + msg.MessageType, LogLevel.Error);
                         break;
                 }
                 UpdateLastSeen(msg);
@@ -326,7 +330,7 @@ namespace SS14.Server
             {
                 if (currentTime.Subtract(client.Value).TotalSeconds >= 5)
                 {
-                    LogManager.Log(String.Format("Client Timeout: Kicking client {0}", client.Key.RemoteEndPoint));
+                    Logger.Log(String.Format("Client Timeout: Kicking client {0}", client.Key.RemoteEndPoint));
                     client.Key.Disconnect("No message was recieved in 60 seconds, you have been kicked from the server.");
                     cleanupConnections.Add(sender);
                 }
@@ -459,13 +463,13 @@ namespace SS14.Server
             _serverMaxPlayers = cfgmgr.ServerMaxPlayers;
             _gameType = cfgmgr.GameType;
             _serverWelcomeMessage = cfgmgr.ServerWelcomeMessage;
-            LogManager.Log("Port: " + _serverPort);
-            LogManager.Log("Name: " + _serverName);
-            LogManager.Log("TickRate: " + TickRate + "(" + ServerRate + "ms)");
-            LogManager.Log("Map: " + _serverMapName);
-            LogManager.Log("Max players: " + _serverMaxPlayers);
-            LogManager.Log("Game type: " + _gameType);
-            LogManager.Log("Welcome message: " + _serverWelcomeMessage);
+            Logger.Log("Port: " + _serverPort);
+            Logger.Log("Name: " + _serverName);
+            Logger.Log("TickRate: " + TickRate + "(" + ServerRate + "ms)");
+            Logger.Log("Map: " + _serverMapName);
+            Logger.Log("Max players: " + _serverMaxPlayers);
+            Logger.Log("Game type: " + _gameType);
+            Logger.Log("Welcome message: " + _serverWelcomeMessage);
         }
 
         /// <summary>
@@ -579,15 +583,15 @@ namespace SS14.Server
         {
             NetConnection sender = msg.SenderConnection;
             string senderIp = sender.RemoteEndPoint.Address.ToString();
-            LogManager.Log(String.Format("{0}: Status changed to {1}", senderIp, sender.Status.ToString()));
+            Logger.Log(String.Format("{0}: Status changed to {1}", senderIp, sender.Status.ToString()));
 
             switch (sender.Status)
             {
                 case NetConnectionStatus.Connected:
-                    LogManager.Log(senderIp + ": Connection request");
+                    Logger.Log(senderIp + ": Connection request");
                     if (ClientList.ContainsKey(sender)) // TODO Move this to a config to allow or disallowed shared IPAddress
                     {
-                        LogManager.Log(senderIp + ": Already connected", LogLevel.Error);
+                        Logger.Log(senderIp + ": Already connected", LogLevel.Error);
                         return;
                     }
                     HandleConnectionApproval(sender);
@@ -597,7 +601,7 @@ namespace SS14.Server
                     break;
 
                 case NetConnectionStatus.Disconnected:
-                    LogManager.Log(senderIp + ": Disconnected");
+                    Logger.Log(senderIp + ": Disconnected");
                     IoCManager.Resolve<IPlayerManager>().EndSession(sender);
                     if (ClientList.ContainsKey(sender))
                     {
@@ -745,7 +749,7 @@ namespace SS14.Server
             {
                 IoCManager.Resolve<ISS14NetServer>().SendMessage(tileMessage, connection,
                                                                  NetDeliveryMethod.ReliableOrdered);
-                LogManager.Log(connection.RemoteEndPoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
+                Logger.Log(connection.RemoteEndPoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
 

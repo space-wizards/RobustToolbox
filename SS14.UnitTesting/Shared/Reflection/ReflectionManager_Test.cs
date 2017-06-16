@@ -7,6 +7,12 @@ using SS14.Shared.Reflection;
 
 namespace SS14.UnitTesting.Shared.Reflection
 {
+    [IoCTarget(Priority = 5)]
+    public sealed class ReflectionManagerTest : ReflectionManager
+    {
+        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.UnitTesting.", "SS14.Server.", "SS14.Client.", "SS14.Shared." };
+    }
+
     [TestFixture]
     public class ReflectionManager_Test : SS14UnitTest
     {
@@ -20,20 +26,20 @@ namespace SS14.UnitTesting.Shared.Reflection
             bool did2 = false;
             foreach (var type in reflectionManager.GetAllChildren<IReflectionManagerTest>())
             {
-                if (!did1 && type == typeof(ReflectionManagerTestClass1))
+                if (!did1 && type == typeof(TestClass1))
                 {
                     did1 = true;
                 }
-                else if (!did2 && type == typeof(ReflectionManagerTestClass2))
+                else if (!did2 && type == typeof(TestClass2))
                 {
                     did2 = true;
                 }
-                else if (type == typeof(ReflectionManagerTestClass3))
+                else if (type == typeof(TestClass3))
                 {
                     // Not possible since it has [Reflect(false)]
                     Assert.Fail("ReflectionManager returned the [Reflect(false)] class.");
                 }
-                else if (type == typeof(ReflectionManagerTestClass4))
+                else if (type == typeof(TestClass4))
                 {
                     Assert.Fail("ReflectionManager returned the abstract class");
                 }
@@ -44,24 +50,34 @@ namespace SS14.UnitTesting.Shared.Reflection
             }
             Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
         }
+
+        public interface IReflectionManagerTest { }
+
+        // These two pass like normal.
+        public class TestClass1 : IReflectionManagerTest { }
+        public class TestClass2 : IReflectionManagerTest { }
+
+
+        // These two should both NOT be passed.
+        [Reflect(false)]
+        public class TestClass3 : IReflectionManagerTest { }
+        public abstract class TestClass4 : IReflectionManagerTest { }
+
+
+        [Test]
+        public void ReflectionManager_TestGetType()
+        {
+            IReflectionManager reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            Assert.Multiple(() =>
+            {
+                Assert.That(reflectionManager.GetType("Shared.Reflection.TestGetType1"), Is.EqualTo(typeof(TestGetType1)));
+                Assert.That(reflectionManager.GetType("Shared.Reflection.TestGetType2"), Is.EqualTo(typeof(TestGetType2)));
+                Assert.That(reflectionManager.GetType("Shared.Reflection.ITestGetType3"), Is.EqualTo(typeof(ITestGetType3)));
+            });
+        }
     }
 
-    // It's probably not amazing that the entire reflection manager is loaded in...
-    [IoCTarget(Priority = 5)]
-    public sealed class ReflectionManagerTest : ReflectionManager
-    {
-        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.UnitTesting", "SS14.Server", "SS14.Client", "SS14.Shared" };
-    }
-
-    public interface IReflectionManagerTest { }
-
-    // These two pass like normal.
-    public class ReflectionManagerTestClass1 : IReflectionManagerTest { }
-    public class ReflectionManagerTestClass2 : IReflectionManagerTest { }
-
-
-    // These two should both NOT be passed.
-    [Reflect(false)]
-    public class ReflectionManagerTestClass3 : IReflectionManagerTest { }
-    public abstract class ReflectionManagerTestClass4 : IReflectionManagerTest { }
+    public class TestGetType1 { }
+    public abstract class TestGetType2 { }
+    public interface ITestGetType3 { }
 }

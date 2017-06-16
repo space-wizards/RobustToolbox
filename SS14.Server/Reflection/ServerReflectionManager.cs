@@ -12,6 +12,6 @@ namespace SS14.Server.Reflection
     [IoCTarget]
     public sealed class ServerReflectionManager : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.Server", "SS14.Shared" };
+        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.Server.", "SS14.Shared." };
     }
 }

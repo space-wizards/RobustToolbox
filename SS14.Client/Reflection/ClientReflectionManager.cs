@@ -12,6 +12,6 @@ namespace SS14.Client.Reflection
     [IoCTarget]
     public sealed class ClientReflectionManager : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new[] {"", "SS14.Client", "SS14.Shared"};
+        protected override IEnumerable<string> TypePrefixes => new[] {"", "SS14.Client.", "SS14.Shared."};
     }
 }

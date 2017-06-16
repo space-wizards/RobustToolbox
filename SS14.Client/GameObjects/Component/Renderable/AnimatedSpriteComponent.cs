@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
@@ -19,7 +19,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class AnimatedSpriteComponent : ClientComponent, IRenderableComponent
     {
         public override string Name => "AnimatedSprite";

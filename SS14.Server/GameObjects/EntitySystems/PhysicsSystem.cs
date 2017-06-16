@@ -1,11 +1,10 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
-    [IoCTarget]
     internal class PhysicsSystem : EntitySystem
     {
         public PhysicsSystem()

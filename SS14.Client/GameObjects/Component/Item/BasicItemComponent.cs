@@ -1,4 +1,4 @@
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Item;
 using SS14.Shared.Interfaces.GameObjects;
@@ -6,7 +6,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class BasicItemComponent : ClientComponent
     {
         public override string Name => "BasicItem";

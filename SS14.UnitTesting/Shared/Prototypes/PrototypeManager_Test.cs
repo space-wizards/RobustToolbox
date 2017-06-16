@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Graphics;
 using NUnit.Framework;
 using SS14.Shared.IoC;
@@ -158,7 +158,6 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
 ";
     }
 
-    [IoCTarget]
     public class TestBasicPrototypeComponent : Component
     {
         public override string Name => "TestBasicPrototypeComponent";

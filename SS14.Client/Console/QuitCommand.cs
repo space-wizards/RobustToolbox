@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Console
 {
-    [IoCTarget]
     class QuitCommand : IConsoleCommand
     {
         public string Command => "quit";

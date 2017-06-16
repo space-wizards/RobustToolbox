@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Direction;
@@ -9,7 +9,6 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class DirectionComponent : ClientComponent
     {
         public override string Name => "Direction";

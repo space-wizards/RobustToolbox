@@ -1,10 +1,9 @@
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class HumanEquipmentComponent : EquipmentComponent
     {
         public override string Name => "HumanEquipment";

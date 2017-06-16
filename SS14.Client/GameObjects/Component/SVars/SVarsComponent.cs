@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class SVarsComponent : ClientComponent, ISVarsComponent
     {
         public override string Name => "SVars";

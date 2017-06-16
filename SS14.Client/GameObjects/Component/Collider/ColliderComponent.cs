@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
@@ -11,7 +11,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class ColliderComponent : ClientComponent
     {
         public override string Name => "Collider";

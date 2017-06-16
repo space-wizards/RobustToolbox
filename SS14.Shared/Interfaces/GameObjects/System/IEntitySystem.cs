@@ -1,4 +1,4 @@
-using SS14.Shared.IoC;
+﻿using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Interfaces.GameObjects.System
@@ -11,7 +11,7 @@ namespace SS14.Shared.Interfaces.GameObjects.System
     /// <remarks>
     /// <see cref="IEntitySystem"/> implementors must have a <see cref="IoCTargetAttribute"/> to be discoverable.
     /// </remarks>
-    public interface IEntitySystem : IIoCInterface
+    public interface IEntitySystem
     {
         void RegisterMessageTypes();
 

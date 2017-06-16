@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Player;
@@ -11,7 +11,6 @@ using System;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
-    [IoCTarget]
     internal class TransformSystem : EntitySystem
     {
         public TransformSystem()

@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Velocity;
 using SS14.Shared.IoC;
@@ -6,7 +6,6 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class VelocityComponent : ClientComponent
     {
         public override string Name => "Velocity";

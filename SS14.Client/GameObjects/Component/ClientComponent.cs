@@ -1,14 +1,16 @@
-using System;
+﻿using System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Reflection;
 
 namespace SS14.Client.GameObjects
 {
     /// <summary>
     /// Sub type of <see cref="Component"/> that handles some client-specific things.
     /// </summary>
+    [Reflect(false)]
     public abstract class ClientComponent : Component
     {
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,

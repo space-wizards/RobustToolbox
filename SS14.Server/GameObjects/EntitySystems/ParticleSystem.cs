@@ -1,10 +1,9 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
-    [IoCTarget]
     public class ParticleSystem : EntitySystem
     {
         public ParticleSystem()

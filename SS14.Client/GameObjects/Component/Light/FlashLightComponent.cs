@@ -1,11 +1,10 @@
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class FlashLightComponent : PointLightComponent
     {
         public override string Name => "FlashLight";

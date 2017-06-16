@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -10,7 +10,6 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class KeyBindingInputComponent : ClientComponent
     {
         public override string Name => "KeyBindingInput";

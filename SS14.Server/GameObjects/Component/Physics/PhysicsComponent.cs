@@ -1,4 +1,4 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -7,7 +7,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class PhysicsComponent : Component
     {
         public override string Name => "Physics";

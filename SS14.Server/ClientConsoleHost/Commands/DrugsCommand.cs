@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +11,6 @@ using SS14.Shared;
 
 namespace SS14.Server.ClientConsoleHost.Commands
 {
-    [IoCTarget]
     public class DrugsCommand : IClientCommand
     {
         public string Command => "everyoneondrugs";

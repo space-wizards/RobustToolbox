@@ -1,4 +1,4 @@
-using SS14.Shared.IoC;
+﻿using SS14.Shared.IoC;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Prototypes
@@ -10,7 +10,7 @@ namespace SS14.Shared.Prototypes
     /// To use this, the prototype must be accessible through IoC with <see cref="IoCTargetAttribute"/>
     /// and it must have a <see cref="PrototypeAttribute"/> to give it a type string.
     /// </remarks>
-    public interface IPrototype : IIoCInterface
+    public interface IPrototype
     {
         /// <summary>
         /// Load data from the YAML mappings in the prototype files.

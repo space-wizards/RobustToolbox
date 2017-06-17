@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -10,7 +10,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class DamageableComponent : Component
     {
         public override string Name => "Damageable";

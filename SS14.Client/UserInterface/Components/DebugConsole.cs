@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.GameObjects;
@@ -9,8 +9,10 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -237,7 +239,8 @@ namespace SS14.Client.UserInterface.Components
 
         private void InitializeCommands()
         {
-            foreach (Type t in IoCManager.ResolveEnumerable<IConsoleCommand>())
+            var manager = IoCManager.Resolve<IReflectionManager>();
+            foreach (Type t in manager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
                 if (commands.ContainsKey(instance.Command))
@@ -283,7 +286,7 @@ namespace SS14.Client.UserInterface.Components
     /// <summary>
     /// These dummies are made purely so list and help can list server-side commands.
     /// </summary>
-    [IoCTarget(Disabled = true)]
+    [Reflect(false)]
     class ServerDummyCommand : IConsoleCommand
     {
         readonly string command;

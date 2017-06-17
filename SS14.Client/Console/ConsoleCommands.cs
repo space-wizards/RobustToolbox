@@ -1,4 +1,4 @@
-// This file is for commands that do something to the console itself.
+﻿// This file is for commands that do something to the console itself.
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 
@@ -9,7 +9,6 @@ using System;
 
 namespace SS14.Client.Console
 {
-    [IoCTarget]
     class ClearCommand : IConsoleCommand
     {
         public string Command => "cls";
@@ -23,7 +22,6 @@ namespace SS14.Client.Console
         }
     }
 
-    [IoCTarget]
     class FillCommand : IConsoleCommand
     {
         public string Command => "fill";

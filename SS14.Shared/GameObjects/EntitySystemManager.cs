@@ -1,8 +1,9 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Shared.GameObjects.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ namespace SS14.Shared.GameObjects
     [IoCTarget]
     public class EntitySystemManager : IEntitySystemManager
     {
+        private readonly IReflectionManager ReflectionManager;
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
@@ -23,6 +25,11 @@ namespace SS14.Shared.GameObjects
         /// Maps child types of <see cref="EntitySystemMessage"/> to the system that will be receiving them.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> SystemMessageTypes = new Dictionary<Type, IEntitySystem>();
+
+        public EntitySystemManager(IReflectionManager reflectionManager)
+        {
+            ReflectionManager = reflectionManager;
+        }
 
         /// <exception cref="InvalidOperationException">Thrown if the specified type is already registered by another system.</exception>
         /// <exception cref="InvalidEntitySystemException">Thrown if the entity system instance is not registered with this <see cref="EntitySystemManager"/></exception>
@@ -66,7 +73,7 @@ namespace SS14.Shared.GameObjects
 
         public void Initialize()
         {
-            foreach (Type type in IoCManager.ResolveEnumerable<IEntitySystem>())
+            foreach (Type type in ReflectionManager.GetAllChildren<IEntitySystem>())
             {
                 //Force initialization of all systems
                 var instance = (IEntitySystem)Activator.CreateInstance(type);

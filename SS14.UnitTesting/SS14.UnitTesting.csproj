@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -87,6 +87,7 @@
     <Compile Include="Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
+    <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
     <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />

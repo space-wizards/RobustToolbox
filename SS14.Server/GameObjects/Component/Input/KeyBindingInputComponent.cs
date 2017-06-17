@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -10,7 +10,6 @@ namespace SS14.Server.GameObjects
     /// <summary>
     /// This class recieves keypresses from the attached client and forwards them to other components.
     /// </summary>
-    [IoCTarget]
     public class KeyBindingInputComponent : Component
     {
         public override string Name => "KeyBindingInput";

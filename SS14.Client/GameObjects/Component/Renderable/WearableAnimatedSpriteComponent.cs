@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -13,7 +13,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
         public override string Name => "WearableAnimatedSprite";

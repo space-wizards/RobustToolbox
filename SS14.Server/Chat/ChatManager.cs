@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
@@ -6,8 +6,10 @@ using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,7 @@ namespace SS14.Server.Chat
     public class ChatManager : IChatManager
     {
         private ISS14Server _serverMain;
+        private readonly IReflectionManager reflectionManager;
         private readonly IServerEntityManager entityManager;
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
@@ -30,9 +33,10 @@ namespace SS14.Server.Chat
 
         public IDictionary<string, IChatCommand> Commands => _commands;
 
-        public ChatManager(IServerEntityManager entityManager)
+        public ChatManager(IServerEntityManager entityManager, IReflectionManager reflectionManager)
         {
             this.entityManager = entityManager;
+            this.reflectionManager = reflectionManager;
         }
 
         #region IChatManager Members
@@ -189,7 +193,7 @@ namespace SS14.Server.Chat
         // Load all command types.
         private void LoadCommands()
         {
-            foreach (Type t in IoCManager.ResolveEnumerable<IChatCommand>())
+            foreach (Type t in reflectionManager.GetAllChildren<IChatCommand>())
             {
                 IChatCommand instance = (IChatCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))

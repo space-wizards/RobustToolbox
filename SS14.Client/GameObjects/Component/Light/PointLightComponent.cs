@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
@@ -13,7 +13,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class PointLightComponent : ClientComponent
     {
         public override string Name => "PointLight";

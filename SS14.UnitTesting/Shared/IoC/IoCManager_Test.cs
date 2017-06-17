@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.IoC;
@@ -25,7 +25,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         [Test]
         public void IoCTestExceptions()
         {
-            Assert.That(() => IoCManager.ResolveType<IIoCFailInterface>(),
+            Assert.That(() => IoCManager.Resolve<IIoCFailInterface>(),
                         Throws.TypeOf<MissingImplementationException>(),
                         "IoC did not throw a MissingImplementationException.");
 
@@ -38,30 +38,6 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         public void IoCTestAttributes()
         {
             Assert.That(IoCManager.Resolve<IIoCTestPriories>(), Is.TypeOf<IoCTestPriorities1>());
-        }
-
-        [Test]
-        public void IoCTestIter()
-        {
-            // I have no idea how to better do this.
-            bool did1 = false;
-            bool did2 = false;
-            foreach (var type in IoCManager.ResolveEnumerable<IIoCTestPriories>())
-            {
-                if (!did1 && type == typeof(IoCTestPriorities1))
-                {
-                    did1 = true;
-                }
-                else if (!did2 && type == typeof(IoCTestPriorities2))
-                {
-                    did2 = true;
-                }
-                else
-                {
-                    Assert.Fail("IoCManager returned too many types.");
-                }
-            }
-            Assert.That(did1 && did2, Is.True, "IoCManager did not return both expected types. First: {0}, Second: {1}", did1, did2);
         }
 
         [Test]

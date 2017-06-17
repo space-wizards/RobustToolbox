@@ -1,10 +1,12 @@
-using SS14.Shared.Interfaces.GameObjects.System;
+﻿using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Reflection;
 using System.Collections.Generic;
 
 namespace SS14.Shared.GameObjects.System
 {
+    [Reflect(false)]
     public abstract class EntitySystem : IEntityEventSubscriber, IEntitySystem
     {
         protected readonly IEntityManager EntityManager;

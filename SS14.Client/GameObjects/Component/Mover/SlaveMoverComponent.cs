@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Mover;
@@ -11,7 +11,6 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
-    [IoCTarget]
     public class SlaveMoverComponent : ClientComponent
     {
         public override string Name => "SlaveMover";

@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -11,7 +11,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class BasicDoorComponent : BasicLargeObjectComponent
     {
         public override string Name => "BasicDoor";

@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -8,6 +8,7 @@ using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
@@ -38,9 +39,9 @@ namespace SS14.Server.ClientConsoleHost
             netMgr.SendMessage(message, senderConnection);
         }
 
-        public ClientConsoleHost()
+        public ClientConsoleHost(IReflectionManager reflactionManager)
         {
-            foreach(Type type in IoCManager.ResolveEnumerable<IClientCommand>())
+            foreach(Type type in reflactionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
                 if (AvailableCommands.ContainsKey(instance.Command))

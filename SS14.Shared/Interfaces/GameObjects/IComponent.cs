@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     /// <remarks>
     /// All discoverable implementations of IComponent must override the Name property.
     /// </remarks>
-    public interface IComponent : IEntityEventSubscriber, IIoCInterface
+    public interface IComponent : IEntityEventSubscriber
     {
         ComponentFamily Family { get; }
         IEntity Owner { get; }

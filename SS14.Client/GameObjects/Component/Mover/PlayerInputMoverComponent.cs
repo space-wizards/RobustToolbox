@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -7,7 +7,6 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
-    [IoCTarget]
     public class PlayerInputMoverComponent : ClientComponent
     {
         public override string Name => "PlayerInputMover";

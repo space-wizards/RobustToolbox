@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
-using SS14.Shared.ContentLoader;
 using SS14.Shared.Log;
 using SS14.Client.Interfaces;
 
@@ -29,18 +29,11 @@ namespace SS14.Client
 
         private static void LoadAssemblies()
         {
-            var assemblies = new List<Assembly>(2)
+            var assemblies = new List<Assembly>(4)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
                 Assembly.GetExecutingAssembly()
             };
-            IoCManager.AddAssemblies(assemblies);
-
-            assemblies.Clear();
-
-            // So we can't actually access this until IoC has loaded the initial assemblies. Yay.
-            var loader = IoCManager.Resolve<IContentLoader>();
-            assemblies.Clear();
 
             // TODO this should be done on connect.
             // The issue is that due to our giant trucks of shit code.
@@ -48,7 +41,6 @@ namespace SS14.Client
             try
             {
                 var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                loader.LoadAssembly(contentAssembly);
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)
@@ -62,7 +54,6 @@ namespace SS14.Client
             try
             {
                 var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                loader.LoadAssembly(contentAssembly);
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)
@@ -74,6 +65,7 @@ namespace SS14.Client
             }
 
             IoCManager.AddAssemblies(assemblies);
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
     }
 }

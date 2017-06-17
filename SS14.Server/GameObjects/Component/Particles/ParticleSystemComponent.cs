@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces.GameObjects;
+﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Particles;
 using SS14.Shared.IoC;
@@ -9,7 +9,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
         public override string Name => "ParticleSystem";

@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces.GameObjects;
+﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
@@ -10,7 +10,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class AnimatedSpriteComponent : Component, IRenderableComponent
     {
         public override string Name => "AnimatedSprite";

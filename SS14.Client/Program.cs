@@ -6,6 +6,10 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Shared.Log;
 using SS14.Client.Interfaces;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Log;
+using SS14.Shared.Prototypes;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Client
 {
@@ -27,13 +31,24 @@ namespace SS14.Client
             IoCManager.Clear();
         }
 
+        /// <summary>
+        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
+        /// </summary>
+        private static void RegisterIoC()
+        {
+            // Shared stuff.
+            IoCManager.Register<IComponentManager, ComponentManager>();
+            IoCManager.Register<IPrototypeManager, PrototypeManager>();
+            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
+            IoCManager.Register<IComponentFactory, ComponentFactory>();
+            IoCManager.Register<ILogManager, LogManager>();
+
+            // Client stuff.
+        }
+
         private static void LoadAssemblies()
         {
-            var assemblies = new List<Assembly>(4)
-            {
-                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
-                Assembly.GetExecutingAssembly()
-            };
+            var assemblies = new List<Assembly>(2);
 
             // TODO this should be done on connect.
             // The issue is that due to our giant trucks of shit code.
@@ -64,7 +79,6 @@ namespace SS14.Client
                 System.Console.ResetColor();
             }
 
-            IoCManager.AddAssemblies(assemblies);
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
     }

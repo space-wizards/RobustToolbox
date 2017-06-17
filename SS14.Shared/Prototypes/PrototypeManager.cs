@@ -24,7 +24,7 @@ namespace SS14.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        IEnumerable<T> EnumeratePrototypes<T>() where T: class, IPrototype;
+        IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype;
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
         /// </summary>
@@ -38,7 +38,7 @@ namespace SS14.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        T Index<T>(string id) where T: class, IIndexedPrototype;
+        T Index<T>(string id) where T : class, IIndexedPrototype;
         /// <summary>
         /// Index for a <see cref="IIndexedPrototype"/> by ID.
         /// </summary>
@@ -76,7 +76,6 @@ namespace SS14.Shared.Prototypes
         }
     }
 
-    [IoCTarget]
     public class PrototypeManager : IPrototypeManager
     {
         private readonly IReflectionManager ReflectionManager;
@@ -86,7 +85,7 @@ namespace SS14.Shared.Prototypes
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
 
-        public IEnumerable<T> EnumeratePrototypes<T>() where T: class, IPrototype
+        public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
             return prototypes[typeof(T)].Select((IPrototype p) => p as T);
         }
@@ -96,7 +95,7 @@ namespace SS14.Shared.Prototypes
             return prototypes[type];
         }
 
-        public T Index<T>(string id) where T: class, IIndexedPrototype
+        public T Index<T>(string id) where T : class, IIndexedPrototype
         {
             try
             {
@@ -264,11 +263,19 @@ namespace SS14.Shared.Prototypes
     [Serializable]
     public class PrototypeLoadException : Exception
     {
-        public PrototypeLoadException() {}
-        public PrototypeLoadException(string message) : base(message) {}
-        public PrototypeLoadException(string message, Exception inner) : base(message, inner) {}
+        public PrototypeLoadException()
+        {
+        }
+        public PrototypeLoadException(string message) : base(message)
+        {
+        }
+        public PrototypeLoadException(string message, Exception inner) : base(message, inner)
+        {
+        }
 
-        public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context) {}
+        public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {

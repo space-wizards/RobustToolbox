@@ -12,7 +12,6 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    [IoCTarget]
     public class EntitySystemManager : IEntitySystemManager
     {
         private readonly IReflectionManager ReflectionManager;

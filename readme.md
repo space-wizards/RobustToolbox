@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/space-wizards/space-station-14.png?label=ready&title=Ready)](https://waffle.io/space-wizards/space-station-14?utm_source=badge)
 # Space Station 14 [![Build status](https://ci.appveyor.com/api/projects/status/ygb7t8hsj3wt7pnm/branch/master?svg=true)](https://ci.appveyor.com/project/Silvertorch5/space-station-14/branch/master) [![Build Status](https://travis-ci.org/space-wizards/space-station-14.svg?branch=master)](https://travis-ci.org/space-wizards/space-station-14)
 
 Space Station 14 is a renewed attempt at an SS13 remake.

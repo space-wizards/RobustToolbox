@@ -1,49 +1,38 @@
-using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Shared.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileRef: {X},{Y}")]
     public struct TileRef
     {
-        private readonly IMapManager map; // Instance field since there may be multiple grids later.
-        private readonly int x;           // Make static if this ends up never happening. ~Yota
-        private readonly int y;
-
+        private readonly MapManager manager;
+        private readonly uint mapIndex;
         private readonly Chunk chunk;
-        private readonly int index;
-
-        public TileRef(IMapManager map, int x, int y) : this(map, x, y, null, 0) { }
-        public TileRef(IMapManager map, int x, int y, Chunk chunk, int index)
+        private readonly uint x;           
+        private readonly uint y;
+        
+        internal TileRef(MapManager manager, uint mapIndex, Chunk chunk, uint x, uint y)
         {
-            this.map = map;
+            this.manager = manager;
             this.x = x;
             this.y = y;
             this.chunk = chunk;
-            this.index = index;
+            this.mapIndex = mapIndex;
         }
 
-        public int X { get { return x; } }
-        public int Y { get { return y; } }
-        public int TileSize => map.TileSize;
+        public uint X { get { return x; } }
+        public uint Y { get { return y; } }
+        public uint TileSize => manager.TileSize;
         public Tile Tile
         {
-            get
-            {
-                if (chunk == null)
-                {
-                    this = map.GetTileRef(x, y);
-                    if (chunk == null)
-                        return map.Tiles[x, y];
-                }
-
-                return chunk.Tiles[index];
-            }
-            set { map.Tiles[x, y] = value; }
+            get => chunk.Tiles[x,y];
+            set => chunk.SetTile(x, y, value);
         }
 
-        public TileRef North { get { return new TileRef(map, x, y - 1); } }
-        public TileRef South { get { return new TileRef(map, x, y + 1); } }
-        public TileRef East { get { return new TileRef(map, x + 1, y); } }
-        public TileRef West { get { return new TileRef(map, x - 1, y); } }
+        /*
+        public TileRef North { get { return new TileRef(manager, x, y - 1); } }
+        public TileRef South { get { return new TileRef(manager, x, y + 1); } }
+        public TileRef East { get { return new TileRef(manager, x + 1, y); } }
+        public TileRef West { get { return new TileRef(manager, x - 1, y); } }
+        */
     }
 }

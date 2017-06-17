@@ -10,41 +10,12 @@ using SS14.Shared.Map;
 
 namespace SS14.Client.Map
 {
+    /// <summary>
+    ///     Helper functions for rendering a map.
+    ///     TODO: This is a temporary class. When the rendering engine is remade, it should provide equivalent functionality.
+    /// </summary>
     public static class MapRenderer
     {
-        private static Dictionary<ushort, Sprite> _spriteLookup = new Dictionary<ushort, Sprite>();
-
-        public static bool HasSprite(ITileDefinition tileDef)
-        {
-            if (_spriteLookup == null)
-                return false;
-
-            return _spriteLookup.ContainsKey(tileDef.TileId);
-        }
-
-        public static Sprite GetSprite(ITileDefinition tileDef)
-        {
-            Sprite output;
-            if (_spriteLookup != null && _spriteLookup.TryGetValue(tileDef.TileId, out output))
-                return output;
-
-            return null;
-        }
-
-        public static void SetSprite(ITileDefinition tileDef, Sprite sprite)
-        {
-            _spriteLookup.Add(tileDef.TileId, sprite);
-        }
-
-        public static void RebuildSprites(ITileDefinitionManager defManager)
-        {
-            foreach (ITileDefinition def in defManager)
-            {
-                var sprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
-                _spriteLookup.Add(def.TileId, sprite);
-            }
-        }
-
         public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch, SpriteBatch wallBatch, SpriteBatch wallTopsBatch)
         {
             var walls = new List<TileRef>();
@@ -53,21 +24,22 @@ namespace SS14.Client.Map
             {
                 var tile = tileReference.Tile;
                 var tileType = tile.TileDef;
-                
+
                 if (tileType.IsWall)
+                {
                     walls.Add(tileReference);
+                }
                 else
                 {
                     var point = CluwneLib.WorldToScreen(new Vector2f(tileReference.X, tileReference.Y));
                     RenderTile(tileType, point.X, point.Y, floorBatch);
                     RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
                 }
-
             }
 
-            walls.Sort((t1, t2) => t1.Y - t2.Y);
+            walls.Sort((t1, t2) => (int) t1.Y - (int) t2.Y);
 
-            foreach (TileRef tr in walls)
+            foreach (var tr in walls)
             {
                 var t = tr.Tile;
                 var td = t.TileDef;
@@ -78,32 +50,52 @@ namespace SS14.Client.Map
             }
         }
 
+        /// <summary>
+        ///     Render a textured instance of a tile at the given coordinates.
+        /// </summary>
+        /// <param name="def">The definition of the tile to use.</param>
+        /// <param name="xTopLeft"></param>
+        /// <param name="yTopLeft"></param>
+        /// <param name="batch">The SpriteBatch to queue into.</param>
         public static void RenderTile(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
-            Sprite tileSprite;
-            if (_spriteLookup.TryGetValue(def.TileId, out tileSprite))
-            {
-                tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
-                batch.Draw(tileSprite);
-            }
+            var tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
+            tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
+            batch.Draw(tileSprite);
         }
 
+        /// <summary>
+        ///     Render a solid black instance of a tile at the given coordinates.
+        /// </summary>
+        /// <param name="def">The definition of the tile to use.</param>
+        /// <param name="x">X position in world coordinates.</param>
+        /// <param name="y">Y position in world coordinates.</param>
         public static void RenderPos(ITileDefinition def, float x, float y)
         {
+            var tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
+            var bounds = tileSprite.GetLocalBounds();
+            var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
+            shape.FillColor = Color.Black;
+            shape.Position = new Vector2f(x, y);
+            shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 
+        //What was this supposed to do?
         public static void RenderPosOffset(ITileDefinition def, float x, float y, int tileSpacing, Vector2f lightPosition)
         {
         }
 
+        //What was this supposed to do?
         public static void DrawDecals(ITileDefinition def, float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
         }
 
-        public static void RenderGas(ITileDefinition def, float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch gasBatch)
+        //What was this supposed to do?
+        public static void RenderGas(ITileDefinition def, float xTopLeft, float yTopLeft, uint tileSpacing, SpriteBatch gasBatch)
         {
         }
 
+        //What was this supposed to do?
         public static void RenderTop(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
         }

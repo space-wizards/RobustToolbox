@@ -10,22 +10,41 @@ namespace SS14.Shared.Interfaces.Map
 
     public interface IMapManager
     {
-        Dictionary<Vector2i, Chunk> Chunks { get; }
-
-        bool LoadMap(string mapName);
-        void SaveMap(string mapName);
+        uint TileSize { get; }
 
         event TileChangedEventHandler TileChanged;
-
-        int TileSize { get; }
 
         IEnumerable<TileRef> GetTilesIntersecting(FloatRect area, bool ignoreSpace);
         IEnumerable<TileRef> GetGasTilesIntersecting(FloatRect area);
         IEnumerable<TileRef> GetWallsIntersecting(FloatRect area);
         IEnumerable<TileRef> GetAllTiles();
 
-        TileRef GetTileRef(Vector2f pos);
+        bool LoadMap(string mapName);
+        void SaveMap(string mapName);
+
+        TileRef GetTileRef(Vector2f posWorld);
         TileRef GetTileRef(int x, int y);
-        ITileCollection Tiles { get; }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="mapIndex"></param>
+        /// <returns></returns>
+        uint GetChunkCount(uint mapIndex);
+
+        /// <summary>
+        ///     Returns the chunk at the given position on the given map. If the chunk does not exist,
+        ///     then a new one is generated that is filled with empty space.
+        /// </summary>
+        /// <param name="mapIndex"></param>
+        /// <param name="posChunk"></param>
+        /// <returns></returns>
+        IMapChunk GetChunk(uint mapIndex, Vector2i posChunk);
+
+        IMapChunk GetChunk(uint mapIndex, int xChunk, int yChunk);
+
+        Tile GetTile(uint mapIndex, float xWorld, float yWorld);
+        void SetTile(uint mapIndex, float xWorld, float yWorld, Tile tile);
+
+        IEnumerable<IMapChunk> GetMapChunks(uint mapIndex);
     }
 }

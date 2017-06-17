@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
@@ -18,20 +19,24 @@ namespace SS14.Shared.Map
 {
     public class MapManager : IMapManager
     {
-        private readonly Dictionary<Vector2i, Chunk> chunks;
-        private static readonly int ChunkSize = Chunk.CHUNK_SIZE;
+        private const uint MAP_INDEX = 0;
+        private const ushort CHUNK_SIZE = 16;
+        private const uint TILE_SIZE = 32;
+        private bool _suppressOnTileChanged;
 
         public event TileChangedEventHandler TileChanged;
-        private bool suppressOnTileChanged;
+        public uint TileSize { get; }
+        public static ushort ChunkSize => CHUNK_SIZE;
 
-        public int TileSize { get; }
+        private Dictionary<Vector2i, Chunk> Chunks { get; }
 
-        public Dictionary<Vector2i, Chunk> Chunks => chunks;
+        private Dictionary<int, TileCollection> Grids;
 
         public MapManager()
         {
             TileSize = 32;
-            chunks = new Dictionary<Vector2i, Chunk>();
+            Chunks = new Dictionary<Vector2i, Chunk>();
+            Grids = new Dictionary<int, TileCollection>();
             _tileIndexer = new TileCollection(this);
         }
 
@@ -70,16 +75,14 @@ namespace SS14.Shared.Map
                         yMax = Mod(Math.Floor(area.Bottom()), ChunkSize);
 
                     Chunk chunk;
-                    if (!chunks.TryGetValue(new Vector2i(chunkX, chunkY), out chunk))
+                    if (!Chunks.TryGetValue(new Vector2i(chunkX, chunkY), out chunk))
                     {
                         if (ignoreSpace)
                             continue;
 
                         for (int y = yMin; y <= yMax; ++y)
                             for (int x = xMin; x <= xMax; ++x)
-                                yield return new TileRef(this,
-                                    chunkX * ChunkSize + x,
-                                    chunkY * ChunkSize + y);
+                                yield return new TileRef(this, MAP_INDEX, chunk, (uint) (chunkX * ChunkSize + x), (uint) (chunkY * ChunkSize + y));
                     }
                     else
                     {
@@ -88,41 +91,38 @@ namespace SS14.Shared.Map
                             int i = y * ChunkSize + xMin;
                             for (int x = xMin; x <= xMax; ++x, ++i)
                             {
-                                if (!ignoreSpace || chunk.Tiles[i].TileId != 0)
-                                    yield return new TileRef(this,
-                                        chunkX * ChunkSize + x,
-                                        chunkY * ChunkSize + y,
-                                        chunk, i);
+                                if (!ignoreSpace || chunk.Tiles[x,i].TileId != 0)
+                                    yield return new TileRef(this, MAP_INDEX, chunk, (uint) (chunkX * ChunkSize + x), (uint) (chunkY * ChunkSize + y));
                             }
                         }
                     }
                 }
             }
         }
+
         public IEnumerable<TileRef> GetGasTilesIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsGasVolume);
         }
+
         public IEnumerable<TileRef> GetWallsIntersecting(FloatRect area)
         {
             return GetTilesIntersecting(area, true).Where(t => t.Tile.TileDef.IsWall);
         }
+
         // Unlike GetAllTilesIn(...), this skips non-existant chunks.
         // It also does not return chunks in order.
         public IEnumerable<TileRef> GetAllTiles()
         {
-            foreach (var pair in chunks)
+            foreach (var pair in Chunks)
             {
                 int i = 0;
                 for (int y = 0; y < ChunkSize; ++y)
                 {
                     for (int x = 0; x < ChunkSize; ++x, ++i)
                     {
-                        if (pair.Value.Tiles[i].TileId != 0)
-                            yield return new TileRef(this,
-                                pair.Key.X * ChunkSize + x,
-                                pair.Key.Y * ChunkSize + y,
-                                pair.Value, i);
+                        if (pair.Value.Tiles[x,y].TileId != 0)
+                            yield return new TileRef(this, MAP_INDEX, pair.Value, (uint) (pair.Key.X * ChunkSize + x), (uint) (pair.Key.Y * ChunkSize + y));
                     }
                 }
             }
@@ -135,10 +135,16 @@ namespace SS14.Shared.Map
         private readonly TileCollection _tileIndexer;
         public ITileCollection Tiles => _tileIndexer;
 
-        public TileRef GetTileRef(Vector2f pos)
+        /// <summary>
+        /// Returns the tileRef at a given world position.
+        /// </summary>
+        /// <param name="posWorld">The position of the tile in world space.</param>
+        /// <returns>The tileRef at the position.</returns>
+        public TileRef GetTileRef(Vector2f posWorld)
         {
-            return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
+            return GetTileRef((int)Math.Floor(posWorld.X), (int)Math.Floor(posWorld.Y));
         }
+
         public TileRef GetTileRef(int x, int y)
         {
             Vector2i chunkPos = new Vector2i(
@@ -146,17 +152,99 @@ namespace SS14.Shared.Map
                 (int)Math.Floor((float)y / ChunkSize)
             );
             Chunk chunk;
-            if (chunks.TryGetValue(chunkPos, out chunk))
-                return new TileRef(this, x, y, chunk,
-                    (y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize));
+            if (Chunks.TryGetValue(chunkPos, out chunk))
+                return new TileRef(this, MAP_INDEX, chunk, (uint) x, (uint) y);
             else
-                return new TileRef(this, x, y);
+                return new TileRef(this, MAP_INDEX, chunk, (uint) x, (uint) y);
         }
 
+        public uint GetChunkCount(uint mapIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IMapChunk GetChunk(uint mapIndex, Vector2i posChunk)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IMapChunk GetChunk(uint mapIndex, int xChunk, int yChunk)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Tile GetTile(uint mapIndex, float xWorld, float yWorld)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetTile(uint mapIndex, float xWorld, float yWorld, Tile tile)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns all chunks inside of a grid.
+        /// </summary>
+        /// <param name="mapIndex">The index of the grid to access.</param>
+        /// <returns>An enumeration of all the chunks.</returns>
+        public IEnumerable<IMapChunk> GetMapChunks(uint mapIndex)
+        {
+            throw new NotImplementedException();
+        }
+        
+        /// <summary>
+        /// Transforms world coordinates, local to the grid origin, into chunk indices.
+        /// </summary>
+        /// <param name="posWorld">The world position to transform.</param>
+        /// <returns>Chunk indices of the world position.</returns>
+        public Vector2i WorldToChunkIndices(Vector2f posWorld)
+        {
+            var chunkSpace = posWorld / (CHUNK_SIZE * TILE_SIZE);
+
+            // casting truncates the floats
+            return new Vector2i((int) chunkSpace.X, (int) chunkSpace.Y);
+        }
+
+        /// <summary>
+        /// Transforms a local world position into local tile indices.
+        /// </summary>
+        /// <param name="posWorld"></param>
+        /// <returns></returns>
+        public Vector2i WorldToTileIndices(Vector2f posWorld)
+        {
+            var tileSpace = posWorld / TILE_SIZE;
+            
+            // casting truncates the floats
+            return new Vector2i((int)tileSpace.X, (int)tileSpace.Y);
+        }
+
+        /// <summary>
+        /// Transform Tile indices to Chunk indices.
+        /// </summary>
+        /// <param name="posTile"></param>
+        /// <returns></returns>
+        public Vector2i TileToChunkIndices(Vector2i posTile)
+        {
+            var chunkSpace = posTile / CHUNK_SIZE;
+            
+            return new Vector2i(chunkSpace.X, chunkSpace.Y);
+        }
+
+        /// <summary>
+        /// Transforms a local world position to a local tile position.
+        /// </summary>
+        /// <param name="posWorld"></param>
+        /// <returns></returns>
+        public Vector2f WorldToTile(Vector2f posWorld)
+        {
+            return posWorld / TILE_SIZE;
+        }
 
         private sealed class TileCollection : ITileCollection
         {
             private readonly MapManager mm;
+            public Dictionary<Vector2i, Chunk> Chunks { get; }
 
             internal TileCollection(MapManager mm)
             {
@@ -179,29 +267,33 @@ namespace SS14.Shared.Map
             {
                 get
                 {
+                    /*
                     Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
                     Chunk chunk;
-                    if (mm.chunks.TryGetValue(chunkPos, out chunk))
+                    if (mm.Chunks.TryGetValue(chunkPos, out chunk))
                         return chunk.Tiles[(y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize)];
                     else
                         return default(Tile); // SPAAAAAAAAAAAAAACE!!!
+                        */
+                    return default(Tile);
                 }
                 set
                 {
+                    /*
                     Vector2i chunkPos = new Vector2i(
                         (int)Math.Floor((float)x / ChunkSize),
                         (int)Math.Floor((float)y / ChunkSize)
                     );
                     Chunk chunk;
-                    if (!mm.chunks.TryGetValue(chunkPos, out chunk))
+                    if (!mm.Chunks.TryGetValue(chunkPos, out chunk))
                     {
                         if (value.IsSpace)
                             return;
                         else
-                            mm.chunks[chunkPos] = chunk = new Chunk();
+                            mm.Chunks[chunkPos] = chunk = new Chunk();
                     }
 
                     int index = (y - chunkPos.Y * ChunkSize) * ChunkSize + (x - chunkPos.X * ChunkSize);
@@ -213,15 +305,6 @@ namespace SS14.Shared.Map
                     var tileRef = new TileRef(mm, x, y, chunk, index);
 
                     mm.RaiseOnTileChanged(tileRef, oldTile);
-
-                    /*
-                    // Obsolete: migrated to Server.Map.MapNetworkManager
-                    if (!mm.suppressOnTileChanged)
-                    {
-                        var handler = IoCManager.Resolve<IMapNetworkManager>();
-                        handler.NetworkUpdateTile(tileRef);
-                        //mm.NetworkUpdateTile(tileRef);
-                    }
                     */
                 }
             }
@@ -235,7 +318,7 @@ namespace SS14.Shared.Map
         {
             mapName = Regex.Replace(mapName, @"-\d\d-\d\d_\d\d-\d\d-\d\d", ""); //Strip timestamp, same format as below
             DateTime date = DateTime.Now;
-            mapName = string.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
+            mapName = String.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
 
             Logger.Log(string.Format("We are attempting to save map with name {0}", mapName));
 
@@ -243,7 +326,7 @@ namespace SS14.Shared.Map
             if (mapName.Any(c => badChars.Contains(c)))
                 throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-            string pathName = Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps");
+            string pathName = Path.Combine(Assembly.GetEntryAssembly().Location, @"..\Maps");
             Directory.CreateDirectory(pathName);
 
             string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
@@ -269,13 +352,13 @@ namespace SS14.Shared.Map
                 }
 
                 // Map chunks
-                bw.Write((int)chunks.Count);
-                foreach (var chunk in chunks)
+                bw.Write((int)Chunks.Count);
+                foreach (var kvChunk in Chunks)
                 {
-                    bw.Write((int)chunk.Key.X);
-                    bw.Write((int)chunk.Key.Y);
+                    bw.Write((int)kvChunk.Key.X);
+                    bw.Write((int)kvChunk.Key.Y);
 
-                    foreach (var tile in chunk.Value.Tiles)
+                    foreach (var tile in kvChunk.Value.Tiles)
                         bw.Write((uint)tile);
                 }
 
@@ -288,14 +371,14 @@ namespace SS14.Shared.Map
 
         public bool LoadMap(string mapName)
         {
-            suppressOnTileChanged = true;
+            _suppressOnTileChanged = true;
             try
             {
                 var badChars = Path.GetInvalidFileNameChars();
                 if (mapName.Any(c => badChars.Contains(c)))
                     throw new ArgumentException("Invalid characters in map name.", "mapName");
 
-                string fileName = Path.GetFullPath(Path.Combine(System.Reflection.Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
+                string fileName = Path.GetFullPath(Path.Combine(Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
 
                 if (!File.Exists(fileName))
                     return false;
@@ -313,7 +396,7 @@ namespace SS14.Shared.Map
                     fs.Seek(versionString.Length + 2, SeekOrigin.Begin);
 
                     int formatVersion;
-                    if (!int.TryParse(versionString.Substring(22), out formatVersion))
+                    if (!Int32.TryParse(versionString.Substring(22), out formatVersion))
                         return false;
 
                     if (formatVersion != 1)
@@ -340,7 +423,7 @@ namespace SS14.Shared.Map
                         for (int x = cx; x < cx + ChunkSize; ++x)
                         {
                             Tile tile = (Tile)br.ReadUInt32();
-                            this.Tiles[x, y] = tile;
+                            Tiles[x, y] = tile;
                         }
                     }
 
@@ -353,13 +436,13 @@ namespace SS14.Shared.Map
             }
             finally
             {
-                suppressOnTileChanged = false;
+                _suppressOnTileChanged = false;
             }
         }
 
         private void NewMap()
         {
-            suppressOnTileChanged = true;
+            _suppressOnTileChanged = true;
             try
             {
                 Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
@@ -378,26 +461,25 @@ namespace SS14.Shared.Map
             }
             finally
             {
-                suppressOnTileChanged = false;
+                _suppressOnTileChanged = false;
             }
         }
 
         #endregion File Operations
 
-        // An actual modulus implementation, because apparently % is not modulus.  Srsly
+        // An actual modulus implementation, because apparently % is not modulus.  Seriously
         // Should probably stick this in some static class.
-        [System.Diagnostics.DebuggerStepThrough]
-        private static int Mod(double n, int d)
+        [DebuggerStepThrough]
+        private static int Mod(double n, uint d)
         {
             return (int)(n - (int)Math.Floor(n / d) * d);
         }
         private void RaiseOnTileChanged(TileRef tileRef, Tile oldTile)
         {
-            if(suppressOnTileChanged)
+            if(_suppressOnTileChanged)
                 return;
 
             TileChanged?.Invoke(tileRef, oldTile);
         }
-
     }
 }

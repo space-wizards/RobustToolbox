@@ -402,7 +402,7 @@ namespace SS14.Client.State.States
                 UpdateGUIPosition();
             }
 
-            CluwneLib.TileSize = MapManager.TileSize;
+            CluwneLib.TileSize = (int) MapManager.TileSize;
 
             IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _componentManager.Update(e.FrameDeltaTime);
@@ -420,7 +420,7 @@ namespace SS14.Client.State.States
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);
-            CluwneLib.TileSize = MapManager.TileSize;
+            CluwneLib.TileSize = (int) MapManager.TileSize;
 
             CalculateAllLights();
 

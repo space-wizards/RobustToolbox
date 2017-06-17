@@ -24,7 +24,7 @@ namespace SS14.Shared.Map
             tileNames = new Dictionary<string, ITileDefinition>();
             tileIds = new Dictionary<ITileDefinition, ushort>();
 
-            Register(SpaceTileDefinition.Instance);
+            Register(new SpaceTileDefinition());
             Register(new FloorTileDefinition());
             Register(new WallTileDefinition());
         }

@@ -5,7 +5,7 @@ using SS14.Shared.IoC;
 namespace SS14.Shared.Map
 {
     [DebuggerDisplay("TileDef: {Name}")]
-    public class TileDefinition : ITileDefinition
+    public abstract class TileDefinition : ITileDefinition
     {
         private ushort _tileId = ushort.MaxValue;
 

@@ -1,5 +1,4 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Map;
@@ -9,61 +8,123 @@ using SS14.Shared.Map;
 
 namespace SS14.Server.Map
 {
+    /// <summary>
+    ///     This handles all translations between network messages and the MapManager on the server
+    ///     side. This class is instantiated through the IoC Resource Locator.
+    ///     TODO: This is a temporary class. Once the Client and Server NetworkManagers are merged
+    ///     to a unified shared version, this class should be merged with its twin in SS14.Client.
+    /// </summary>
     [IoCTarget]
     public class MapNetworkManager : IMapNetworkManager
     {
+        /// <summary>
+        ///     The accepted version of the network message map format.
+        /// </summary>
+        private const int MAP_VERSION = 1;
+
+        /// <summary>
+        ///     Default private constructor.
+        /// </summary>
         public MapNetworkManager()
         {
-            IoCManager.Resolve<IMapManager>().TileChanged += MapManagerOnTileChanged;
+            IoCManager.Resolve<IMapManager>().TileChanged += MapMgrOnTileChanged;
         }
 
-        ~MapNetworkManager()
+        /// <summary>
+        ///     Handles and processes a incoming network message.
+        /// </summary>
+        /// <param name="mapManager">The mapManager to apply to message to.</param>
+        /// <param name="message">The message to handle.</param>
+        public void HandleNetworkMessage(IMapManager mapManager, NetIncomingMessage message)
         {
-            IoCManager.Resolve<IMapManager>().TileChanged -= MapManagerOnTileChanged;
+            var messageType = (MapMessage) message.ReadByte();
+            switch (messageType)
+            {
+                case MapMessage.TurfClick:
+                    //HandleTurfClick(message);
+                    break;
+            }
         }
 
-        private void MapManagerOnTileChanged(TileRef tileRef, Tile oldTile)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static NetOutgoingMessage CreateMapMessage(MapMessage messageType)
-        {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
-            message.Write((byte)messageType);
-            return message;
-        }
-
+        /// <summary>
+        ///     Serializes the MapManager and TileDefMgr into an outgoing message to send to a client.
+        /// </summary>
+        /// <param name="mapManager">The mapManager to apply to message to.</param>
+        /// <param name="connection">The connection to make the message on.</param>
         public void SendMap(IMapManager mapManager, NetConnection connection)
         {
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
-            NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileMap);
+            //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
+            const uint MAP_INDEX = 0;
 
-            mapMessage.Write((int)1); // Format version.  Who knows, it could come in handy.
+            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
+            var mapMessage = CreateMapMessage(MapMessage.SendTileMap);
+
+            mapMessage.Write(MAP_VERSION); // Format version.  Who knows, it could come in handy.
 
             // Tile definition mapping
             var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-            mapMessage.Write((int)tileDefManager.Count);
-            for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
-                mapMessage.Write((string)tileDefManager[tileId].Name);
+            mapMessage.Write(tileDefManager.Count);
+
+            foreach (var tileDef in tileDefManager)
+                mapMessage.Write(tileDef.Name);
 
             // Map chunks
-            mapMessage.Write((int)mapManager.Chunks.Count);
-            foreach (var chunk in mapManager.Chunks)
+            mapMessage.Write(mapManager.GetChunkCount(MAP_INDEX));
+            foreach (var chunk in mapManager.GetMapChunks(MAP_INDEX))
             {
-                mapMessage.Write((int)chunk.Key.X);
-                mapMessage.Write((int)chunk.Key.Y);
+                mapMessage.Write(chunk.X);
+                mapMessage.Write(chunk.Y);
 
-                foreach (var tile in chunk.Value.Tiles)
-                    mapMessage.Write((uint)tile);
+                foreach (var tile in chunk)
+                    mapMessage.Write((uint) tile.Tile);
             }
 
             IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
                            mapMessage.LengthBytes + " bytes");
         }
-        
+
+        /// <summary>
+        ///     Default finalizer.
+        /// </summary>
+        ~MapNetworkManager()
+        {
+            IoCManager.Resolve<IMapManager>().TileChanged -= MapMgrOnTileChanged;
+        }
+
+        /// <summary>
+        ///     Event handler for when a tile is modified in the MapManager.
+        /// </summary>
+        /// <param name="tileRef">A reference to the new tile.</param>
+        /// <param name="oldTile">The old tile being modified.</param>
+        private static void MapMgrOnTileChanged(TileRef tileRef, Tile oldTile)
+        {
+            var netMgr = IoCManager.Resolve<ISS14NetServer>();
+
+            var message = netMgr.CreateMessage();
+            message.Write((byte) NetMessage.MapMessage);
+            message.Write((byte) MapMessage.TurfUpdate);
+
+            message.Write(tileRef.X);
+            message.Write(tileRef.Y);
+            message.Write((uint) tileRef.Tile);
+
+            netMgr.SendToAll(message);
+        }
+
+        /// <summary>
+        ///     Creates an empty MapMessage.
+        /// </summary>
+        /// <param name="messageType">The type of message to create.</param>
+        /// <returns></returns>
+        private static NetOutgoingMessage CreateMapMessage(MapMessage messageType)
+        {
+            var message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
+            message.Write((byte) NetMessage.MapMessage);
+            message.Write((byte) messageType);
+            return message;
+        } // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
+
 
         /*
         private void HandleTurfClick(NetIncomingMessage message)
@@ -93,31 +154,6 @@ namespace SS14.Server.Map
                     NetworkUpdateTile(x, y);
                 }
             }
-        }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-        public static void NetworkUpdateTile(TileRef tile)
-        {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
-            message.Write((byte)MapMessage.TurfUpdate);
-
-            message.Write((int)tile.X);
-            message.Write((int)tile.Y);
-            message.Write((uint)tile.Tile);
-            IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
-        }
-        
-        public void HandleNetworkMessage(IMapManager mapManager, NetIncomingMessage message)
-        {
-            var messageType = (MapMessage)message.ReadByte();
-            switch (messageType)
-            {
-                case MapMessage.TurfClick:
-                    //HandleTurfClick(message);
-                    break;
-                default:
-                    break;
-            }
-        }
+        }*/
     }
 }

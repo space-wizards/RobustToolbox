@@ -7,65 +7,106 @@ using SS14.Shared.Map;
 
 namespace SS14.Client.Map
 {
+    /// <summary>
+    ///     This handles all translations between network messages and the MapManager on the client
+    ///     side. This class is instantiated through the IoC Resource Locator.
+    ///     TODO: This is a temporary class. Once the Client and Server NetworkManagers are merged
+    ///     to a unified shared version, this class should be merged with its twin in SS14.Server.
+    /// </summary>
     [IoCTarget]
     public class MapNetworkManager : IMapNetworkManager
     {
+        /// <summary>
+        ///     The accepted version of the NetworkMessage map format.
+        /// </summary>
+        private const int MAP_VERSION = 1;
+
+        /// <summary>
+        ///     Handles and processes a incoming network message.
+        /// </summary>
+        /// <param name="mapManager">The mapManager to apply to message to.</param>
+        /// <param name="message">The message to handle.</param>
         public void HandleNetworkMessage(IMapManager mapManager, NetIncomingMessage message)
         {
-            var messageType = (MapMessage)message.ReadByte();
+            var messageType = (MapMessage) message.ReadByte();
             switch (messageType)
             {
                 case MapMessage.TurfUpdate:
-                    HandleTurfUpdate(message);
+                    HandleTileUpdate(mapManager, message);
                     break;
                 case MapMessage.SendTileMap:
-                    LoadTileMap(mapManager, message);
+                    var tileDefMgr = IoCManager.Resolve<ITileDefinitionManager>();
+                    HandleTileMap(mapManager, tileDefMgr, message);
                     break;
-                case MapMessage.TurfClick:
-                        break;
-
             }
         }
 
+        /// <summary>
+        ///     Serializes the MapManager and TileDefMgr into an outgoing message to send to a client.
+        /// </summary>
+        /// <param name="mapManager">The mapManager to apply to message to.</param>
+        /// <param name="connection">The connection to make the message on.</param>
         public void SendMap(IMapManager mapManager, NetConnection connection)
         {
-            // not implemented clientside
+            // not implemented client side
         }
 
-        private static void LoadTileMap(IMapManager mapManager, NetIncomingMessage message)
+        /// <summary>
+        ///     Deserializes an IMapManager and ITileDefinitionManager from a properly formatted NetMessage.
+        /// </summary>
+        /// <param name="mapManager">The target MapManager to deserialize the message into.</param>
+        /// <param name="tileDefMgr">The TileDefManager to deserialize the message into.</param>
+        /// <param name="message">The message containing a serialized map and tileDefines.</param>
+        private static void HandleTileMap(IMapManager mapManager, ITileDefinitionManager tileDefMgr, NetIncomingMessage message)
         {
-            int version = message.ReadInt32();
-            if (version != 1)
+            var version = message.ReadInt32();
+            if (version != MAP_VERSION)
                 return;
 
-            var tileDefMgr = IoCManager.Resolve<ITileDefinitionManager>();
             tileDefMgr.RegisterServerTileMapping(message);
 
-            int chunkCount = message.ReadInt32();
-            for (int i = 0; i < chunkCount; ++i)
+            //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
+            const uint MAP_INDEX = 0;
+
+            var chunkCount = message.ReadInt32();
+            for (var i = 0; i < chunkCount; ++i)
             {
-                int x = message.ReadInt32();
-                int y = message.ReadInt32();
+                var x = message.ReadInt32();
+                var y = message.ReadInt32();
                 var chunkPos = new Vector2i(x, y);
 
-                Chunk chunk;
-                if (!mapManager.Chunks.TryGetValue(chunkPos, out chunk))
-                    mapManager.Chunks[chunkPos] = chunk = new Chunk();
-
-                chunk.ReceiveChunkData(message);
+                var chunk = mapManager.GetChunk(MAP_INDEX, chunkPos);
+                HandleChunkData(chunk, message);
             }
-
-            MapRenderer.RebuildSprites(tileDefMgr);
         }
 
-        private static void HandleTurfUpdate(NetIncomingMessage message)
+        /// <summary>
+        ///     Deserializes a chunk.
+        /// </summary>
+        /// <param name="chunk">The chunk to deserialize.</param>
+        /// <param name="message">The NetMessage to read from.</param>
+        private static void HandleChunkData(IMapChunk chunk, NetBuffer message)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            int x = message.ReadInt32();
-            int y = message.ReadInt32();
-            Tile tile = (Tile)message.ReadUInt32();
+            for (uint x = 0; x < chunk.Size; x++)
+            for (uint y = 0; y < chunk.Size; y++)
+                chunk.SetTile(x, y, (Tile) message.ReadUInt32());
+        }
 
-            mapManager.Tiles[x, y] = tile;
+        /// <summary>
+        ///     Updates a single tile from the network message.
+        /// </summary>
+        /// <param name="mapManager">The target MapManager to update.</param>
+        /// <param name="message">The message containing the info.</param>
+        private static void HandleTileUpdate(IMapManager mapManager, NetBuffer message)
+        {
+            var x = message.ReadInt32();
+            var y = message.ReadInt32();
+            var tile = (Tile) message.ReadUInt32();
+
+            //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
+            const uint MAP_INDEX = 0;
+
+            mapManager.SetTile(MAP_INDEX, x, y, tile);
         }
     }
 }

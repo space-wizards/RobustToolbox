@@ -17,6 +17,9 @@ namespace SS14.Shared.Reflection
         /// </remarks>
         protected abstract IEnumerable<string> TypePrefixes { get; }
         private readonly List<Assembly> assemblies = new List<Assembly>();
+
+        public event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive=false)
@@ -33,6 +36,7 @@ namespace SS14.Shared.Reflection
         public void LoadAssemblies(IEnumerable<Assembly> assemblies)
         {
             this.assemblies.AddRange(assemblies);
+            OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }
 
         /// <seealso cref="TypePrefixes"/>

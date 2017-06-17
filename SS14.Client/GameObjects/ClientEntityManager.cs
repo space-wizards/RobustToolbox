@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -13,7 +13,6 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    [IoCTarget(Priority = 5)]
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
         public IEnumerable<IEntity> GetEntitiesInRange(Vector2f position, float Range)

@@ -61,5 +61,20 @@ namespace SS14.Shared.Interfaces.Reflection
         /// Loads assemblies into the manager and get all the types.
         /// </summary>
         void LoadAssemblies(params Assembly[] args);
+
+        /// <summary>
+        /// Fired whenever an assembly is added through <see cref="LoadAssemblies"/>,
+        /// this means more types might be available from <see cref="GetType(string)"/> and <see cref="GetAllChildren{T}(bool)"/>
+        /// </summary>
+        event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+    }
+
+    public class ReflectionUpdateEventArgs : EventArgs
+    {
+        public readonly IReflectionManager ReflectionManager;
+        public ReflectionUpdateEventArgs(IReflectionManager reflectionManager)
+        {
+            ReflectionManager = reflectionManager;
+        }
     }
 }

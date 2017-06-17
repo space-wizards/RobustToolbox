@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Map;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Map
 {
-    [IoCTarget]
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();

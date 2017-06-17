@@ -202,7 +202,7 @@ namespace SS14.Shared.Prototypes
         public PrototypeManager(IReflectionManager reflectionManager)
         {
             ReflectionManager = reflectionManager;
-            IoCManager.AssemblyAdded += ReloadPrototypeTypes;
+            reflectionManager.OnAssemblyAdded += (_, __) => ReloadPrototypeTypes();
             ReloadPrototypeTypes();
         }
 

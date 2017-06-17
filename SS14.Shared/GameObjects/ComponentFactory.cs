@@ -22,7 +22,7 @@ namespace SS14.Shared.GameObjects
 
             ReloadComponents();
 
-            IoCManager.AssemblyAdded += ReloadComponents;
+            reflectionManager.OnAssemblyAdded += (_, __) => ReloadComponents();
         }
 
         /// <summary>

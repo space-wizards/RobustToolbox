@@ -66,7 +66,11 @@ namespace SS14.Server
         // TODO: Move to the main server so we can have proper logging and stuff.
         private static void LoadContentAssemblies()
         {
-            var assemblies = new List<Assembly>(2);
+            var assemblies = new List<Assembly>(4)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
+                Assembly.GetExecutingAssembly()
+            };
 
             try
             {

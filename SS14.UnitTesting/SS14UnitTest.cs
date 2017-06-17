@@ -81,14 +81,13 @@ namespace SS14.UnitTesting
             // Clear state across tests.
             IoCManager.Clear();
 
-            var assemblies = new List<Assembly>();
+            var assemblies = new List<Assembly>(4);
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.exe")));
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.exe")));
             assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Shared.dll")));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
-            IoCManager.AddAssemblies(assemblies);
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
             if (NeedsClientConfig)

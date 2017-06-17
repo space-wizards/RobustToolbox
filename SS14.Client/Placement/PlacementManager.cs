@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
@@ -24,7 +24,6 @@ using System.Reflection;
 
 namespace SS14.Client.Placement
 {
-    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         public readonly ICollisionManager CollisionManager;

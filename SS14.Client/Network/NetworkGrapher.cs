@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Network;
@@ -10,7 +10,6 @@ using System.Collections.Generic;
 
 namespace SS14.Client.Network
 {
-    [IoCTarget]
     public class NetworkGrapher : INetworkGrapher
     {
         private const int MaxDataPoints = 200;

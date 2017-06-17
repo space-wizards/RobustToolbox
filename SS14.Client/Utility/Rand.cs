@@ -1,10 +1,9 @@
-using SS14.Client.Interfaces.Utility;
+﻿using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.Utility
 {
-    [IoCTarget]
     public class Rand : IRand
     {
         private readonly Random rand;

@@ -51,13 +51,20 @@ namespace SS14.Shared.IoC
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
         /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
-        public static void Register<TInterface, TImplementation>() where TImplementation : TInterface
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before.
+        /// </exception>
+        public static void Register<TInterface, TImplementation>(bool overwrite=false) where TImplementation : TInterface
         {
             var interfaceType = typeof(TInterface);
             if (ResolveTypes.ContainsKey(interfaceType))
             {
                 throw new InvalidOperationException(
-                    string.Format("Attempted to register already registered interface {}. New implementation: {}"
+                    string.Format("Attempted to register already registered interface {}. New implementation: {}",
                                   interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
                     ));
             }

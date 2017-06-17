@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Inventory;
 using SS14.Shared.Interfaces.GameObjects;
@@ -9,7 +9,6 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class InventoryComponent : ClientComponent
     {
         public override string Name => "Inventory";

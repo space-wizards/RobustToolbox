@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.GameObjects.Events;
 using SS14.Server.GameObjects.Item.ItemCapability;
 using SS14.Server.Interfaces.GameObjects;
@@ -12,7 +12,6 @@ using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class EquipmentComponent : Component, IEquipmentComponent
     {
         public override string Name => "Equipment";

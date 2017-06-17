@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Resource;
@@ -13,7 +13,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class ItemSpriteComponent : SpriteComponent
     {
         public override string Name => "ItemSprite";

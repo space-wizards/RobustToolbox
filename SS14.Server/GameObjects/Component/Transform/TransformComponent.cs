@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -8,7 +8,6 @@ using System;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class TransformComponent : Component, ITransformComponent
     {
         public override string Name => "Transform";

@@ -1,20 +1,24 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Shared.GameObjects
 {
     [IoCTarget]
     public class ComponentFactory : IComponentFactory
     {
+        private readonly IReflectionManager ReflectionManager;
+
         private readonly Dictionary<string, Type> componentNames;
 
-        public ComponentFactory()
+        public ComponentFactory(IReflectionManager reflectionManager)
         {
+            ReflectionManager = reflectionManager;
             componentNames = new Dictionary<string, Type>();
 
             ReloadComponents();
@@ -65,7 +69,7 @@ namespace SS14.Shared.GameObjects
 
         private void ReloadComponents()
         {
-            foreach (var type in IoCManager.ResolveEnumerable<IComponent>())
+            foreach (var type in ReflectionManager.GetAllChildren<IComponent>())
             {
                 IComponent instance = (IComponent)Activator.CreateInstance(type);
                 if (instance.Name == null || instance.Name == "")

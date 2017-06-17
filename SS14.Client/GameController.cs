@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -17,7 +17,6 @@ using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
-using SS14.Shared.ContentLoader;
 using System;
 using System.Collections.Generic;
 using System.IO;

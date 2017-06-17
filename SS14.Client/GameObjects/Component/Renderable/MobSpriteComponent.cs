@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared;
@@ -12,7 +12,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class MobSpriteComponent : SpriteComponent
     {
         public override string Name => "MobSprite";

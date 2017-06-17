@@ -1,8 +1,9 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.ContentLoader;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Reflection;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
@@ -15,7 +16,6 @@ using SS14.Shared.Log;
 namespace SS14.Shared.GameObjects
 {
     [Prototype("entity")]
-    [IoCTarget]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
         /// <summary>
@@ -99,7 +99,7 @@ namespace SS14.Shared.GameObjects
 
             if (mapping.Children.TryGetValue(new YamlScalarNode("class"), out node))
             {
-                var manager = IoCManager.Resolve<IContentLoader>();
+                var manager = IoCManager.Resolve<IReflectionManager>();
                 ClassType = manager.GetType(((YamlScalarNode)node).Value);
                 // TODO: logging of when the ClassType doesn't exist: Safety for typos.
             }

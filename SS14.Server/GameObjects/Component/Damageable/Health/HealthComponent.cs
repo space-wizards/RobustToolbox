@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Damageable.Health;
 using SS14.Shared.Interfaces.GameObjects;
@@ -6,7 +6,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class HealthComponent : DamageableComponent
     {
         public override string Name => "Health";

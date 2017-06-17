@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
@@ -6,7 +6,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class WallMountedComponent : Component, IWallMountedComponent
     {
         public override string Name => "WallMounted";

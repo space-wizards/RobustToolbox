@@ -1,11 +1,10 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Linq;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class BasicLargeObjectComponent : Component
     {
         public override string Name => "BasicLargeObject";

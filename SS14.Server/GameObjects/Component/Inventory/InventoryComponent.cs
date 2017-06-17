@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.GameObjects.Events;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
@@ -14,7 +14,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class InventoryComponent : Component, IInventoryComponent, IInventoryContainer
     {
         public override string Name => "Inventory";

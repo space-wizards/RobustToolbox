@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.Map;
@@ -15,7 +15,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class CollidableComponent : ClientComponent, ICollidable
     {
         public override string Name => "Collidable";

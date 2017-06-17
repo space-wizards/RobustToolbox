@@ -1,4 +1,4 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Damageable;
 using SS14.Shared.IoC;
 using System;
@@ -8,7 +8,6 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Basic damageable component only tracks whether its dead or not
     /// </summary>
-    [IoCTarget]
     public class DamageableComponent : ClientComponent
     {
         public override string Name => "Damageable";

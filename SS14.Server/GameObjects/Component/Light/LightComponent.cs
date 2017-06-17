@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces.Chat;
+﻿using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Light;
@@ -10,7 +10,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class LightComponent : Component
     {
         public override string Name => "Light";

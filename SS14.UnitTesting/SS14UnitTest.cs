@@ -1,11 +1,11 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
-using SS14.Server.Interfaces;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -89,6 +89,7 @@ namespace SS14.UnitTesting
             assemblies.Add(Assembly.GetExecutingAssembly());
 
             IoCManager.AddAssemblies(assemblies);
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
             if (NeedsClientConfig)
             {

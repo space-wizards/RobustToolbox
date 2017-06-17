@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -14,7 +14,6 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class ParticleSystemComponent : ClientComponent, IParticleSystemComponent, IRenderableComponent
     {
         public override string Name => "ParticleSystem";

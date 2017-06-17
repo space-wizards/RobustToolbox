@@ -1,4 +1,4 @@
-using SS14.Shared.IoC.Exceptions;
+﻿using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +7,9 @@ using System.Reflection;
 
 namespace SS14.Shared.IoC
 {
+    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IIoCInterface"/>
+    /// <seealso cref="IoCTargetAttribute"/>
     public static class IoCManager
     {
         // Used to detect whether we have circular dependencies.
@@ -14,10 +17,6 @@ namespace SS14.Shared.IoC
         private static readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
         private static readonly List<Type> ServiceTypes = new List<Type>();
         private static readonly Dictionary<Type, Type> ResolveTypes = new Dictionary<Type, Type>();
-        // Could probably merge these two lists but I'll hold off
-        // On the basis of premature optimization.
-        // Any laziness.
-        private static readonly Dictionary<Type, List<Type>> ResolveListTypes = new Dictionary<Type, List<Type>>();
 
         public delegate void AssemblyAddedHandler();
         /// <summary>
@@ -77,7 +76,6 @@ namespace SS14.Shared.IoC
             Services.Clear();
             ServiceTypes.Clear();
             ResolveTypes.Clear();
-            ResolveListTypes.Clear();
         }
 
         /// <summary>
@@ -87,7 +85,6 @@ namespace SS14.Shared.IoC
         public static void SortTypes()
         {
             ResolveTypes.Clear();
-            ResolveListTypes.Clear();
             // Cache of interface = last resolved priority to make sorting easier.
             // Yeah I could sort with LINQ but fuck that.
             var resolvedPriorities = new Dictionary<Type, int>();
@@ -104,13 +101,6 @@ namespace SS14.Shared.IoC
                 {
                     if (interfaceType.GetInterfaces().Any(t => t == typeof(IIoCInterface)))
                     {
-                        if (!ResolveListTypes.ContainsKey(interfaceType))
-                        {
-                            ResolveListTypes[interfaceType] = new List<Type>(1);
-                        }
-
-                        ResolveListTypes[interfaceType].Add(type);
-
                         if (resolvedPriorities.ContainsKey(interfaceType) && resolvedPriorities[interfaceType] >= attribute.Priority)
                         {
                             continue;
@@ -141,7 +131,7 @@ namespace SS14.Shared.IoC
         /// <summary>
         /// Resolves an IoC target's type, not a static instance.
         /// </summary>
-        public static Type ResolveType<T>() where T : IIoCInterface
+        private static Type ResolveType<T>() where T : IIoCInterface
         {
             return ResolveType(typeof(T));
         }
@@ -150,45 +140,13 @@ namespace SS14.Shared.IoC
         /// Resolves a target's type without compile time enforcement.
         /// Do not use this outside reflection!
         /// </summary>
-        public static Type ResolveType(Type type)
+        private static Type ResolveType(Type type)
         {
             if (!ResolveTypes.ContainsKey(type))
             {
                 throw new MissingImplementationException(type);
             }
             return ResolveTypes[type];
-        }
-
-        /// <summary>
-        /// Resolves an enumerable over all types that implement an interface, regardless of priority.
-        /// The order of these types is completely arbitrary.
-        /// </summary>
-        public static IEnumerable<Type> ResolveEnumerable<T>() where T : IIoCInterface
-        {
-            var type = typeof(T);
-            if (!ResolveListTypes.ContainsKey(type))
-            {
-                throw new MissingImplementationException(type);
-            }
-
-            return ResolveListTypes[type];
-        }
-
-        /// <summary>
-        /// Resolves a type and creates a NEW instance.
-        /// </summary>
-        public static T NewType<T>(params object[] args) where T : IIoCInterface
-        {
-            return (T)Activator.CreateInstance(ResolveType<T>(), args);
-        }
-
-        /// <summary>
-        /// Resolves and creates a type without compile time enforcement.
-        /// Do not use this outside reflection!
-        /// </summary>
-        public static IIoCInterface NewType(Type type, params object[] args)
-        {
-            return (IIoCInterface)Activator.CreateInstance(ResolveType(type), args);
         }
 
         private static void BuildType(Type type)

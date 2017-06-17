@@ -1,3 +1,4 @@
+﻿using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
@@ -78,6 +79,7 @@ namespace SS14.Shared.Prototypes
     [IoCTarget]
     public class PrototypeManager : IPrototypeManager
     {
+        private readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         #region IPrototypeManager members
@@ -198,8 +200,9 @@ namespace SS14.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
-        public PrototypeManager()
+        public PrototypeManager(IReflectionManager reflectionManager)
         {
+            ReflectionManager = reflectionManager;
             IoCManager.AssemblyAdded += ReloadPrototypeTypes;
             ReloadPrototypeTypes();
         }
@@ -207,7 +210,7 @@ namespace SS14.Shared.Prototypes
         private void ReloadPrototypeTypes()
         {
             Clear();
-            foreach (var type in IoCManager.ResolveEnumerable<IPrototype>())
+            foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
                 var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
                 if (attribute == null)

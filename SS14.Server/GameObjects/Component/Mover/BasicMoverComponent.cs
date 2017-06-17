@@ -1,10 +1,9 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     internal class BasicMoverComponent : Component
     {
         public override string Name => "BasicMover";

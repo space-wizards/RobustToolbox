@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Hitbox;
@@ -10,7 +10,6 @@ using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class HitboxComponent : Component
     {
         public override string Name => "Hitbox";

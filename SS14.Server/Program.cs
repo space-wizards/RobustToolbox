@@ -1,10 +1,10 @@
-using SS14.Shared.Log;
+﻿using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using SS14.Server.Interfaces;
-using SS14.Shared.ContentLoader;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -45,21 +45,17 @@ namespace SS14.Server
 
         private static void LoadAssemblies()
         {
-            var assemblies = new List<Assembly>(2);
-            assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"));
-            assemblies.Add(Assembly.GetExecutingAssembly());
+            var assemblies = new List<Assembly>(4)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
+                Assembly.GetExecutingAssembly()
+            };
             IoCManager.AddAssemblies(assemblies);
 
-            assemblies.Clear();
-
-            // So we can't actually access this until IoC has loaded the initial assemblies. Yay.
-            var loader = IoCManager.Resolve<IContentLoader>();
-            assemblies.Clear();
 
             try
             {
                 var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                loader.LoadAssembly(contentAssembly);
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)
@@ -73,7 +69,6 @@ namespace SS14.Server
             try
             {
                 var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                loader.LoadAssembly(contentAssembly);
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)
@@ -85,6 +80,7 @@ namespace SS14.Server
             }
 
             IoCManager.AddAssemblies(assemblies);
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
     }
 }

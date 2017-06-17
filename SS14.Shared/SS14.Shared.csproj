@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -119,6 +119,7 @@
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
+    <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -141,6 +142,7 @@
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="QuadTree.cs" />
+    <Compile Include="Reflection\ReflectAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
@@ -222,7 +224,7 @@
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />
-    <Compile Include="ContentLoader\ContentLoader.cs" />
+    <Compile Include="Reflection\ReflectionManager.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -65,10 +65,10 @@ namespace SS14.Shared.IoC
                 throw new TypeArgumentException("Must not be abstract.", nameof(TImplementation));
             }
             var interfaceType = typeof(TInterface);
-            if (ResolveTypes.ContainsKey(interfaceType))
+            if (!overwrite && ResolveTypes.ContainsKey(interfaceType))
             {
                 throw new InvalidOperationException(
-                    string.Format("Attempted to register already registered interface {}. New implementation: {}",
+                    string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
                                   interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
                     ));
             }

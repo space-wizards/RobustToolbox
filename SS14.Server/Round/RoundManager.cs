@@ -5,7 +5,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Round
 {
-    internal class RoundManager : IRoundManager
+    public class RoundManager : IRoundManager
     {
         private bool _ready;
 

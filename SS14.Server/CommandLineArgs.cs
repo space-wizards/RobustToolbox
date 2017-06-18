@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace SS14.Server
 {
-    class CommandLineArgs : ICommandLineArgs
+    public class CommandLineArgs : ICommandLineArgs
     {
         [Option("config-file", Required = false, DefaultValue = "./server_config.xml", HelpText = "Config file to read from.")]
         public string ConfigFile { get; set; }

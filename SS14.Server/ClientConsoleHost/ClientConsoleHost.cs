@@ -17,7 +17,7 @@ using System;
 
 namespace SS14.Server.ClientConsoleHost
 {
-    class ClientConsoleHost : IClientConsoleHost
+    public class ClientConsoleHost : IClientConsoleHost
     {
         private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
         public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;

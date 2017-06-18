@@ -1,4 +1,4 @@
-using SS14.Shared.IoC;
+﻿using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
 
@@ -24,7 +24,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     /// Periodically ticks <see cref="IEntitySystem"/> instances.
     /// </remarks>
     /// <seealso cref="IEntitySystem"/>
-    public interface IEntitySystemManager : IIoCInterface
+    public interface IEntitySystemManager
     {
         /// <summary>
         /// Register an <see cref="EntitySystemMessage"/> type to be sent to the specified system.

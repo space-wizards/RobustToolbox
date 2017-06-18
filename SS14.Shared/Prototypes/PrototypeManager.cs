@@ -16,7 +16,7 @@ namespace SS14.Shared.Prototypes
     /// <summary>
     /// Handle storage and loading of YAML prototypes.
     /// </summary>
-    public interface IPrototypeManager : IIoCInterface
+    public interface IPrototypeManager
     {
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.

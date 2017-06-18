@@ -64,9 +64,9 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
     }
 
-    public interface IIoCFailInterface : IIoCInterface { }
+    public interface IIoCFailInterface { }
 
-    public interface IIoCNoPublicConstructorTest : IIoCInterface { }
+    public interface IIoCNoPublicConstructorTest { }
 
     public class IoCNoPublicConstructorTest : IIoCNoPublicConstructorTest
     {
@@ -75,15 +75,14 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
     }
 
-    public interface IIoCTestPriories : IIoCInterface { }
+    public interface IIoCTestPriories { }
 
     public class IoCTestPriorities1 : IIoCTestPriories { }
     public class IoCTestPriorities2 : IIoCTestPriories { }
 
-    public interface IIoCCircularDeps1 : IIoCInterface { }
-    public interface IIoCCircularDeps2 : IIoCInterface { }
+    public interface IIoCCircularDeps1 { }
+    public interface IIoCCircularDeps2 { }
 
-    [IoCTarget]
     public class CircularDeps1 : IIoCCircularDeps1
     {
         public CircularDeps1(IIoCCircularDeps2 deps2)
@@ -91,7 +90,6 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
     }
 
-    [IoCTarget]
     public class CircularDeps2 : IIoCCircularDeps2
     {
         public CircularDeps2(IIoCCircularDeps1 deps1)
@@ -99,9 +97,8 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
     }
 
-    public interface IConstructorException : IIoCInterface { }
+    public interface IConstructorException { }
 
-    [IoCTarget]
     public class ConstructorException : IConstructorException
     {
         public ConstructorException()

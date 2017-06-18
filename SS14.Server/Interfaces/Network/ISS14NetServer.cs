@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Network
 {
-    public interface ISS14NetServer : IIoCInterface
+    public interface ISS14NetServer
     {
         /// <summary>
         /// Gets the NetPeerStatus of the NetPeer

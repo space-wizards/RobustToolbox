@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Console;
@@ -9,7 +9,7 @@ using System;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
-    public interface IUserInterfaceManager : IIoCInterface
+    public interface IUserInterfaceManager
     {
         void Initialize();
         IDragDropInfo DragInfo { get; }

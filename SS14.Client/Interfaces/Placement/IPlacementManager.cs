@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
@@ -8,7 +8,7 @@ using System;
 
 namespace SS14.Client.Interfaces.Placement
 {
-    public interface IPlacementManager : IIoCInterface
+    public interface IPlacementManager
     {
         bool IsActive { get; }
         bool Eraser { get; }

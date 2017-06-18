@@ -23,7 +23,7 @@ namespace SS14.Shared.Interfaces.Reflection
     /// </remarks>
     /// <seealso cref="IoCManager"/>
     /// <seealso cref="ReflectAttribute"/>
-    public interface IReflectionManager : IIoCInterface
+    public interface IReflectionManager
     {
         /// <summary>
         /// Gets all known types that are assignable to <typeparamref name="T"/>.
@@ -34,7 +34,7 @@ namespace SS14.Shared.Interfaces.Reflection
         /// if it is a known type.
         /// </param>
         /// <returns>An enumerable over all the types. Order is in no way guaranteed.</returns>
-        IEnumerable<Type> GetAllChildren<T>(bool inclusive=false);
+        IEnumerable<Type> GetAllChildren<T>(bool inclusive = false);
 
         /// <summary>
         /// All loaded assemblies.

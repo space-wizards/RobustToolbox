@@ -2,7 +2,7 @@
 
 namespace SS14.Client.Interfaces
 {
-    public interface IGameController : IIoCInterface
+    public interface IGameController
     {
         /// <summary>
         /// Main method that does everything, starting the game loop.

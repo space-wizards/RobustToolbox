@@ -168,8 +168,6 @@
     <EmbeddedResource Include="Utility\BitStream.resx">
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
-    <Compile Include="IoC\IIoCInterface.cs" />
-    <Compile Include="IoC\IoCAttributes.cs" />
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\Exceptions\MissingImplementationException.cs" />
     <Compile Include="IoC\Exceptions\NoPublicConstructorException.cs" />

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
+using System.Collections.Generic;
 
 namespace SS14.UnitTesting.Shared.Reflection
 {
-    [IoCTarget(Priority = 5)]
     public sealed class ReflectionManagerTest : ReflectionManager
     {
         protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.UnitTesting.", "SS14.Server.", "SS14.Client.", "SS14.Shared." };
@@ -57,12 +55,10 @@ namespace SS14.UnitTesting.Shared.Reflection
         public class TestClass1 : IReflectionManagerTest { }
         public class TestClass2 : IReflectionManagerTest { }
 
-
         // These two should both NOT be passed.
         [Reflect(false)]
         public class TestClass3 : IReflectionManagerTest { }
         public abstract class TestClass4 : IReflectionManagerTest { }
-
 
         [Test]
         public void ReflectionManager_TestGetType()

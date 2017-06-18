@@ -15,7 +15,6 @@ using System.Runtime.InteropServices;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly bool _messageProfiling;

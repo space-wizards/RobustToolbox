@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Player
 {
-    public interface IPlayerManager : IIoCInterface
+    public interface IPlayerManager
     {
         void SpawnPlayerMob(IPlayerSession player);
         IPlayerSession GetSessionByConnection(NetConnection senderConnection);

@@ -17,7 +17,6 @@ using System;
 
 namespace SS14.Server.ClientConsoleHost
 {
-    [IoCTarget]
     class ClientConsoleHost : IClientConsoleHost
     {
         private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
@@ -41,7 +40,7 @@ namespace SS14.Server.ClientConsoleHost
 
         public ClientConsoleHost(IReflectionManager reflactionManager)
         {
-            foreach(Type type in reflactionManager.GetAllChildren<IClientCommand>())
+            foreach (Type type in reflactionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
                 if (AvailableCommands.ContainsKey(instance.Command))

@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.Interfaces.GameState;
 using SS14.Shared;
 using SS14.Shared.IoC;
@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace SS14.Server.GameStates
 {
-    [IoCTarget]
     public class GameStateManager : Dictionary<uint, SS14.Shared.GameStates.GameState>, IGameStateManager
     {
         private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
@@ -64,7 +63,7 @@ namespace SS14.Server.GameStates
             return ackedStates[client.RemoteUniqueIdentifier];
         }
 
-        #endregion
+        #endregion IGameStateManager Members
 
         public void CullAll()
         {

@@ -1,9 +1,9 @@
 ﻿using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Shared.IoC
 {
@@ -50,7 +50,7 @@ namespace SS14.Shared.IoC
         /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
-        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation. Must not be abstract or an interface.</typeparam>
         /// <param name="overwrite">
         /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         /// replace the current implementation instead.
@@ -58,8 +58,12 @@ namespace SS14.Shared.IoC
         /// <exception cref="InvalidOperationException">
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before.
         /// </exception>
-        public static void Register<TInterface, TImplementation>(bool overwrite=false) where TImplementation : TInterface
+        public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : TInterface
         {
+            if (typeof(TImplementation).IsAbstract)
+            {
+                throw new TypeArgumentException("Must not be abstract.", nameof(TImplementation));
+            }
             var interfaceType = typeof(TInterface);
             if (ResolveTypes.ContainsKey(interfaceType))
             {

@@ -1,15 +1,43 @@
-﻿using SS14.Server.Interfaces;
+﻿using SS14.Server.Chat;
+using SS14.Server.Configuration;
+using SS14.Server.GameObjects;
+using SS14.Server.GameStates;
+using SS14.Server.Interfaces;
+using SS14.Server.Interfaces.Chat;
+using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Configuration;
+using SS14.Server.Interfaces.GameObjects;
+using SS14.Server.Interfaces.GameState;
+using SS14.Server.Interfaces.Log;
+using SS14.Server.Interfaces.Map;
+using SS14.Server.Interfaces.MessageLogging;
+using SS14.Server.Interfaces.Network;
+using SS14.Server.Interfaces.Placement;
+using SS14.Server.Interfaces.Player;
+using SS14.Server.Interfaces.Round;
+using SS14.Server.Interfaces.Serialization;
+using SS14.Server.Interfaces.ServerConsole;
+using SS14.Server.Log;
+using SS14.Server.Map;
+using SS14.Server.MessageLogging;
+using SS14.Server.Network;
+using SS14.Server.Placement;
+using SS14.Server.Player;
+using SS14.Server.Reflection;
+using SS14.Server.Round;
+using SS14.Server.Serialization;
+using SS14.Server.ServerConsole;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Log;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using SS14.Shared.Prototypes;
 
 namespace SS14.Server
 {
@@ -58,9 +86,29 @@ namespace SS14.Server
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IComponentFactory, ComponentFactory>();
-            IoCManager.Register<ILogManager, LogManager>();
 
             // Server stuff.
+            IoCManager.Register<IEntityManager, ServerEntityManager>();
+            IoCManager.Register<IServerEntityManager, ServerEntityManager>();
+            IoCManager.Register<ILogManager, ServerLogManager>();
+            IoCManager.Register<IServerLogManager, ServerLogManager>();
+            IoCManager.Register<IMessageLogger, MessageLogger>();
+            IoCManager.Register<IChatManager, ChatManager>();
+            IoCManager.Register<ISS14NetServer, SS14NetServer>();
+            IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<IPlacementManager, PlacementManager>();
+            IoCManager.Register<IConsoleManager, ConsoleManager>();
+            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
+            IoCManager.Register<IRoundManager, RoundManager>();
+            IoCManager.Register<ISS14Server, SS14Server>();
+            IoCManager.Register<ISS14Serializer, SS14Serializer>();
+            IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
+            IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
+            IoCManager.Register<IGameStateManager, GameStateManager>();
+            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
+            IoCManager.Register<IServerConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
+            IoCManager.Register<IPlayerManager, PlayerManager>();
         }
 
         // TODO: Move to the main server so we can have proper logging and stuff.

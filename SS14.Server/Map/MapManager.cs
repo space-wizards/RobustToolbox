@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Server.Interfaces.Map;
@@ -15,10 +15,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-
 namespace SS14.Server.Map
 {
-    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
@@ -126,7 +124,7 @@ namespace SS14.Server.Map
             }
         }
 
-        #endregion
+        #endregion Tile Enumerators
 
         #region Indexers
 
@@ -217,7 +215,7 @@ namespace SS14.Server.Map
             }
         }
 
-        #endregion
+        #endregion Indexers
 
         #region Networking
 
@@ -313,7 +311,7 @@ namespace SS14.Server.Map
             IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
         }
 
-        #endregion
+        #endregion Networking
 
         #region File Operations
 
@@ -333,7 +331,6 @@ namespace SS14.Server.Map
             Directory.CreateDirectory(pathName);
 
             string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
-
 
             using (var fs = new FileStream(fileName, FileMode.Create))
             {
@@ -469,7 +466,7 @@ namespace SS14.Server.Map
             }
         }
 
-        #endregion
+        #endregion File Operations
 
         // An actual modulus implementation, because apparently % is not modulus.  Srsly
         // Should probably stick this in some static class.
@@ -478,6 +475,5 @@ namespace SS14.Server.Map
         {
             return (int)(n - (int)Math.Floor(n / d) * d);
         }
-
     }
 }

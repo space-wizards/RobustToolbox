@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.MessageLogging;
 using SS14.Shared;
@@ -10,7 +10,6 @@ using System.Timers;
 
 namespace SS14.Server.MessageLogging
 {
-    [IoCTarget]
     public class MessageLogger : IMessageLogger
     {
         private readonly Timer _pingTimer;
@@ -61,11 +60,11 @@ namespace SS14.Server.MessageLogging
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] is Enum)
-                    parameters[i] = (int) parameters[i];
+                    parameters[i] = (int)parameters[i];
             }
             try
             {
-                _loggerServiceClient.LogServerOutgoingNetMessage(clientUID, uid, (int) family, parameters);
+                _loggerServiceClient.LogServerOutgoingNetMessage(clientUID, uid, (int)family, parameters);
             }
             catch (CommunicationException)
             {
@@ -81,12 +80,12 @@ namespace SS14.Server.MessageLogging
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] is Enum)
-                    parameters[i] = (int) parameters[i];
+                    parameters[i] = (int)parameters[i];
             }
             try
             {
-                _loggerServiceClient.LogServerIncomingNetMessage(clientUID, uid, (int) entityMessage,
-                                                                 (int) componentFamily, parameters);
+                _loggerServiceClient.LogServerIncomingNetMessage(clientUID, uid, (int)entityMessage,
+                                                                 (int)componentFamily, parameters);
             }
             catch (CommunicationException)
             {
@@ -101,14 +100,14 @@ namespace SS14.Server.MessageLogging
 
             try
             {
-                _loggerServiceClient.LogServerComponentMessage(uid, (int) senderfamily, sendertype, (int) type);
+                _loggerServiceClient.LogServerComponentMessage(uid, (int)senderfamily, sendertype, (int)type);
             }
             catch (CommunicationException)
             {
             }
         }
 
-        #endregion
+        #endregion IMessageLogger Members
 
         public static void CheckServer(object source, ElapsedEventArgs e)
         {

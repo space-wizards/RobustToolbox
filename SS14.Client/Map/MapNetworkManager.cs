@@ -1,5 +1,4 @@
 ﻿using Lidgren.Network;
-using SFML.System;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
@@ -66,16 +65,16 @@ namespace SS14.Client.Map
             tileDefMgr.RegisterServerTileMapping(message);
 
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
-            const uint MAP_INDEX = 0;
+            const int MAP_INDEX = 0;
 
             var chunkCount = message.ReadInt32();
             for (var i = 0; i < chunkCount; ++i)
             {
                 var x = message.ReadInt32();
                 var y = message.ReadInt32();
-                var chunkPos = new Vector2i(x, y);
+                var chunkPos = new MapGrid.Indices(x, y);
 
-                var chunk = mapManager.GetChunk(MAP_INDEX, chunkPos);
+                var chunk = mapManager.GetGrid(MAP_INDEX).GetChunk(chunkPos);
                 HandleChunkData(chunk, message);
             }
         }
@@ -87,8 +86,8 @@ namespace SS14.Client.Map
         /// <param name="message">The NetMessage to read from.</param>
         private static void HandleChunkData(IMapChunk chunk, NetBuffer message)
         {
-            for (uint x = 0; x < chunk.Size; x++)
-            for (uint y = 0; y < chunk.Size; y++)
+            for (ushort x = 0; x < chunk.ChunkSize; x++)
+            for (ushort y = 0; y < chunk.ChunkSize; y++)
                 chunk.SetTile(x, y, (Tile) message.ReadUInt32());
         }
 
@@ -104,9 +103,9 @@ namespace SS14.Client.Map
             var tile = (Tile) message.ReadUInt32();
 
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
-            const uint MAP_INDEX = 0;
+            const int MAP_INDEX = 0;
 
-            mapManager.SetTile(MAP_INDEX, x, y, tile);
+            mapManager.GetGrid(MAP_INDEX).SetTile(x, y, tile);
         }
     }
 }

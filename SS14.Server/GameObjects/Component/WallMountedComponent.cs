@@ -28,7 +28,7 @@ namespace SS14.Server.GameObjects
             {
                 case ComponentMessageType.WallMountTile: //Attach to a specific tile.
                     var toAttach = (Vector2f) list[0];
-                    var tile = IoCManager.Resolve<IMapManager>().GetTileRef(toAttach);
+                    var tile = IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTile(toAttach);
                     AttachToTile(tile);
                     break;
                 //case ComponentMessageType.WallMountSearch:

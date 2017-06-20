@@ -1,38 +1,40 @@
 
+using System.Diagnostics;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+
 namespace SS14.Shared.Map
 {
-    [System.Diagnostics.DebuggerDisplay("TileRef: {X},{Y}")]
+    /// <summary>
+    /// A reference to a tile.
+    /// </summary>
+    [DebuggerDisplay("TileRef: {X},{Y}")]
     public struct TileRef
     {
-        private readonly MapManager manager;
-        private readonly uint mapIndex;
-        private readonly Chunk chunk;
-        private readonly uint x;           
-        private readonly uint y;
+        private readonly MapManager _manager;
+        private readonly int _gridIndex;
+        private readonly int _x;           
+        private readonly int _y;
+        private readonly Tile _tile;
         
-        internal TileRef(MapManager manager, uint mapIndex, Chunk chunk, uint x, uint y)
+        internal TileRef(MapManager manager, int gridIndex,int xIndex, int yIndex, Tile tile)
         {
-            this.manager = manager;
-            this.x = x;
-            this.y = y;
-            this.chunk = chunk;
-            this.mapIndex = mapIndex;
+            _manager = manager;
+            _x = xIndex;
+            _y = yIndex;
+            _gridIndex = gridIndex;
+            _tile = tile;
         }
 
-        public uint X { get { return x; } }
-        public uint Y { get { return y; } }
-        public uint TileSize => manager.TileSize;
+        public int X => _x;
+        public int Y => _y;
+        public ushort TileSize => _manager.TileSize;
         public Tile Tile
         {
-            get => chunk.Tiles[x,y];
-            set => chunk.SetTile(x, y, value);
+            get => _tile;
+            set => _manager.GetGrid(_gridIndex).SetTile(_x, _y, value);
         }
 
-        /*
-        public TileRef North { get { return new TileRef(manager, x, y - 1); } }
-        public TileRef South { get { return new TileRef(manager, x, y + 1); } }
-        public TileRef East { get { return new TileRef(manager, x + 1, y); } }
-        public TileRef West { get { return new TileRef(manager, x - 1, y); } }
-        */
+        public ITileDefinition TileDef => IoCManager.Resolve<ITileDefinitionManager>()[Tile.TileId];
     }
 }

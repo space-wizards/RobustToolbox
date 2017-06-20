@@ -81,7 +81,7 @@ namespace SS14.Client.Collision
                 }
             }
 
-            return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(collider, true).Any(t => t.Tile.TileDef.IsCollidable);
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(collider).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace SS14.Client.Collision
 
                 if (bump) aabb.Collidable.Bump(entity);
             }
-            return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(ColliderAABB, true).Any(t => t.Tile.TileDef.IsCollidable);
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(ColliderAABB).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>

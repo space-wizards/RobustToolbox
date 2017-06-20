@@ -1,10 +1,6 @@
-using System.Diagnostics;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 
 namespace SS14.Shared.Map
 {
-    [DebuggerDisplay("Tile: {TileDef.Name}, Data={Data}")]
     public struct Tile
     {
         /// <summary>
@@ -17,26 +13,10 @@ namespace SS14.Shared.Map
         /// </summary>
         public ushort Data { get; }
 
-        private static ITileDefinitionManager _tileDefManager;
-
         /// <summary>
         ///     Is this tile space (empty)?
         /// </summary>
-        public bool IsSpace => TileId == 0;
-
-        /// <summary>
-        ///     Optional per-tile data.
-        /// </summary>
-        public ITileDefinition TileDef
-        {
-            get
-            {
-                if (_tileDefManager == null)
-                    _tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-
-                return _tileDefManager[TileId];
-            }
-        }
+        public bool IsEmpty => TileId == 0;
 
         /// <summary>
         ///     Creates a new instance of a grid tile.

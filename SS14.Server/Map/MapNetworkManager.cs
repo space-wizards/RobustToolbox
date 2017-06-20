@@ -27,7 +27,7 @@ namespace SS14.Server.Map
         /// </summary>
         public MapNetworkManager()
         {
-            IoCManager.Resolve<IMapManager>().TileChanged += MapMgrOnTileChanged;
+            IoCManager.Resolve<IMapManager>().OnTileChanged += MapMgrOnTileChanged;
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace SS14.Server.Map
                 mapMessage.Write(tileDef.Name);
 
             // Map chunks
-            mapMessage.Write(mapManager.GetChunkCount(MAP_INDEX));
-            foreach (var chunk in mapManager.GetMapChunks(MAP_INDEX))
+            mapMessage.Write(mapManager.GetDefaultGrid().ChunkCount);
+            foreach (var chunk in mapManager.GetDefaultGrid().GetMapChunks())
             {
                 mapMessage.Write(chunk.X);
                 mapMessage.Write(chunk.Y);
@@ -89,7 +89,7 @@ namespace SS14.Server.Map
         /// </summary>
         ~MapNetworkManager()
         {
-            IoCManager.Resolve<IMapManager>().TileChanged -= MapMgrOnTileChanged;
+            IoCManager.Resolve<IMapManager>().OnTileChanged -= MapMgrOnTileChanged;
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace SS14.Server.Map
         /// </summary>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile being modified.</param>
-        private static void MapMgrOnTileChanged(TileRef tileRef, Tile oldTile)
+        private static void MapMgrOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
         {
             var netMgr = IoCManager.Resolve<ISS14NetServer>();
 

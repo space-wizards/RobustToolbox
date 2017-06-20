@@ -35,10 +35,10 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             //Align to similar if nearby found else free
-            if (currentTile.Tile.TileDef.IsWall)
+            if (currentTile.TileDef.IsWall)
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;

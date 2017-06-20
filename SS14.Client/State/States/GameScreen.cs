@@ -163,7 +163,7 @@ namespace SS14.Client.State.States
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
-            IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
+            IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -1047,7 +1047,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        public void OnTileChanged(TileRef tileRef, Tile oldTile)
+        public void OnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
         {
             IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new FloatRect(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
@@ -1266,9 +1266,9 @@ namespace SS14.Client.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                TileRef TileReference = MapManager.GetTileRef(playerVision.Position);
+                TileRef TileReference = MapManager.GetDefaultGrid().GetTile(playerVision.Position);
 
-                if (TileReference.Tile.TileDef.IsOpaque)
+                if (TileReference.TileDef.IsOpaque)
                 {
                     area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
                 }
@@ -1329,13 +1329,13 @@ namespace SS14.Client.State.States
         {
             Vector2f lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
             var lightArea = new FloatRect(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
-
-            var tiles = MapManager.GetWallsIntersecting(lightArea);
+            
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
 
             foreach (TileRef t in tiles)
             {
                 Vector2f pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2f(t.X, t.Y)));
-                MapRenderer.RenderPos(t.Tile.TileDef, pos.X, pos.Y);
+                MapRenderer.RenderPos(t.TileDef, pos.X, pos.Y);
             }
         }
 
@@ -1352,7 +1352,7 @@ namespace SS14.Client.State.States
         /// </summary>
         private void DrawTiles(FloatRect vision)
         {
-            var tiles = MapManager.GetTilesIntersecting(vision, false);
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision, false);
 
             MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch, _wallBatch, _wallTopsBatch);
         }
@@ -1472,10 +1472,10 @@ namespace SS14.Client.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = light.Position; //mousePosWorld; // Set the light position
-            TileRef t = MapManager.GetTileRef(light.Position);
-            if (t.Tile.IsSpace)
+            TileRef t = MapManager.GetDefaultGrid().GetTile(light.Position);
+            if (t.Tile.IsEmpty)
                 return;
-            if (t.Tile.TileDef.IsOpaque)
+            if (t.TileDef.IsOpaque)
             {
                 area.LightPosition = new Vector2f(area.LightPosition.X,
                                                   t.Y +

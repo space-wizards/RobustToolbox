@@ -51,7 +51,7 @@ namespace SS14.Server.Placement
         {
             var alignRcv = msg.Align;
             var isTile = msg.IsTile;
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+            var mapMgr = IoCManager.Resolve<IMapManager>();
 
             ushort tileType = 0;
             var entityTemplateName = "";
@@ -106,12 +106,12 @@ namespace SS14.Server.Placement
                         if (created.HasComponent(ComponentFamily.Direction))
                             created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
                         if (created.HasComponent(ComponentFamily.WallMounted))
-                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(mapMgr.GetTileRef(tilePos));
+                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(mapMgr.GetGrid(mapMgr.DefaultGridId).GetTile(tilePos));
                     }
                 }
                 else
                 {
-                    mapMgr.Tiles[tilePos] = new Tile(tileType);
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
                 }
             }
             /*

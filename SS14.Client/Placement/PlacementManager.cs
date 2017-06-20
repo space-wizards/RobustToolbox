@@ -223,7 +223,9 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile(Tile tileType)
         {
-            if (tileType.TileDef.IsWall)
+            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
+
+            if (tileDefs[tileType.TileId].IsWall)
             {
                 CurrentBaseSprite = ResourceManager.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";

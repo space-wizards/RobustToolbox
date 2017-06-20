@@ -22,8 +22,7 @@ namespace SS14.Client.Map
 
             foreach (var tileReference in tileRefs)
             {
-                var tile = tileReference.Tile;
-                var tileType = tile.TileDef;
+                var tileType = tileReference.TileDef;
 
                 if (tileType.IsWall)
                 {
@@ -41,8 +40,7 @@ namespace SS14.Client.Map
 
             foreach (var tr in walls)
             {
-                var t = tr.Tile;
-                var td = t.TileDef;
+                var td = tr.TileDef;
 
                 var point = CluwneLib.WorldToScreen(new Vector2f(tr.X, tr.Y));
                 RenderTile(td, point.X, point.Y, wallBatch);

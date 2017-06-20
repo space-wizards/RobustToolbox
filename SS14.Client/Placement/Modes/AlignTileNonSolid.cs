@@ -26,9 +26,9 @@ namespace SS14.Client.Placement.Modes
 
             var bounds = spriteToDraw.GetLocalBounds();
 
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            if (currentTile.Tile.TileDef.IsWall)
+            if (currentTile.TileDef.IsWall)
                 return false;
 
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;

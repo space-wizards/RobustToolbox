@@ -1,4 +1,4 @@
-using SFML.Window;
+﻿using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
@@ -17,7 +17,6 @@ using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State
 {
-    [IoCTarget]
     public class StateManager : IStateManager
     {
         private readonly Dictionary<Type, IState> _loadedStates;

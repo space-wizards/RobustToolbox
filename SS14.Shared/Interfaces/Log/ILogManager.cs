@@ -1,4 +1,4 @@
-using SS14.Shared.IoC;
+﻿using SS14.Shared.IoC;
 using SS14.Shared.Log;
 
 namespace SS14.Shared.Interfaces.Log
@@ -7,7 +7,7 @@ namespace SS14.Shared.Interfaces.Log
     /// Handles logging of messages on specific warning levels.
     /// Output method is dependent on implementation.
     /// </summary>
-    public interface ILogManager : IIoCInterface
+    public interface ILogManager
     {
         /// <summary>
         /// The minimum log level of messages to allow them through.

@@ -1,4 +1,4 @@
-using SS14.Client.Interfaces.Configuration;
+﻿using SS14.Client.Interfaces.Configuration;
 using SFML.Window;
 using System;
 using System.IO;
@@ -7,7 +7,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Configuration
 {
-    [IoCTarget]
     public sealed class ConfigurationManager : IPlayerConfigurationManager
     {
         private string _configFile;

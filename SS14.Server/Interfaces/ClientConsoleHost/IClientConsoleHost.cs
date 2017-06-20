@@ -4,7 +4,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.ClientConsoleHost
 {
-    public interface IClientConsoleHost : IIoCInterface
+    public interface IClientConsoleHost
     {
         IDictionary<string, IClientCommand> AvailableCommands { get; }
         void ProcessCommand(string text, NetConnection sender);

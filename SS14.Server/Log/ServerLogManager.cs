@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces.Log;
+﻿using SS14.Server.Interfaces.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System.IO;
@@ -7,7 +7,6 @@ using System;
 
 namespace SS14.Server.Log
 {
-    [IoCTarget(Priority=5)]
     public class ServerLogManager : LogManager, IServerLogManager, IDisposable
     {
         private bool disposed;
@@ -40,7 +39,6 @@ namespace SS14.Server.Log
                     {
                         logStream = new StreamWriter(value, true, Encoding.UTF8);
                     }
-
                     catch (IOException e)
                     {
                         Error("Unable to open log file ('{0}'): {1}", value, e);
@@ -96,6 +94,6 @@ namespace SS14.Server.Log
             Dispose(false);
         }
 
-        #endregion
+        #endregion IDisposable Members
     }
 }

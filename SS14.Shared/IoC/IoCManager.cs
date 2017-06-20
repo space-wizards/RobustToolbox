@@ -1,63 +1,78 @@
 ﻿using SS14.Shared.IoC.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Exceptions;
 
 namespace SS14.Shared.IoC
 {
+    /// <summary>
+    /// The IoCManager handles Dependency Injection in the project.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Dependency Injection is a concept where instead of saying "I need the <code>EntityManager</code>",
+    /// you say "I need something that implements <code>IEntityManager</code>".
+    /// This decouples the various systems into swappable components that have standardized interfaces.
+    /// </para>
+    /// <para>
+    /// This is useful for a couple of things.
+    /// Firstly, it allows the shared code to request the client or server code implicitly, without hacks.
+    /// Secondly, it's very useful for unit tests as we can replace components to test things.
+    /// </para>
+    /// <para>
+    /// To use the IoCManager, it first needs some types registered through <see cref="Register{TInterface, TImplementation}"/>.
+    /// These implementations can then be fetched with <see cref="Resolve{T}"/>.
+    /// </para>
+    /// </remarks>
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
-    /// <seealso cref="IIoCInterface"/>
-    /// <seealso cref="IoCTargetAttribute"/>
     public static class IoCManager
     {
-        // Used to detect whether we have circular dependencies.
+        /// <summary>
+        /// Set of types that are currently being built by <see cref="BuildType(Type)"/>.
+        /// Used to track whether we have circular dependencies.
+        /// </summary>
         private static readonly HashSet<Type> CurrentlyBuilding = new HashSet<Type>();
+
+        /// <summary>
+        /// Dictionary that maps the types passed to <see cref="Resolve{T}"/> to their implementation.
+        /// </summary>
         private static readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
-        private static readonly List<Type> ServiceTypes = new List<Type>();
+
+        /// <summary>
+        /// The types interface types mapping to their registered implementations.
+        /// This is pulled from to make a service if it doesn't exist yet.
+        /// </summary>
         private static readonly Dictionary<Type, Type> ResolveTypes = new Dictionary<Type, Type>();
 
-        public delegate void AssemblyAddedHandler();
         /// <summary>
-        /// Invoked after new assemblies are loaded into IoC.
-        /// Hook into this if you iterate available IoC targets for an interfaces, Like console commands.
+        /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
         /// </summary>
-        public static event AssemblyAddedHandler AssemblyAdded;
-
-        /// <summary>
-        /// Add extra assemblies to IoC's known types.
-        /// </summary>
-        public static void AddAssemblies(IEnumerable<Assembly> assemblies)
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation. Must not be abstract or an interface.</typeparam>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before.
+        /// </exception>
+        public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : TInterface
         {
-            foreach (var assembly in assemblies)
+            if (typeof(TImplementation).IsAbstract)
             {
-                try
-                {
-                    ServiceTypes.AddRange(assembly.GetTypes());
-                }
-                catch (ReflectionTypeLoadException ex)
-                {
-                    throw new AggregateException(
-                        string.Format("One or more exceptions occured while trying to load types from assembly {0}", assembly.FullName),
-                        ex.LoaderExceptions);
-                }
+                throw new TypeArgumentException("Must not be abstract.", nameof(TImplementation));
             }
-
-            SortTypes();
-
-            if (AssemblyAdded != null)
+            var interfaceType = typeof(TInterface);
+            if (!overwrite && ResolveTypes.ContainsKey(interfaceType))
             {
-                AssemblyAdded.Invoke();
+                throw new InvalidOperationException(
+                    string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
+                                  interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
+                    ));
             }
-        }
-
-        /// <summary>
-        /// Add extra assemblies to IoC's known types.
-        /// </summary>
-        public static void AddAssemblies(params Assembly[] args)
-        {
-            AddAssemblies(args.AsEnumerable());
+            ResolveTypes[interfaceType] = typeof(TImplementation);
         }
 
         /// <summary>
@@ -67,57 +82,21 @@ namespace SS14.Shared.IoC
         /// </summary>
         public static void Clear()
         {
-            AssemblyAdded = null;
-
             foreach (var service in Services.Values.OfType<IDisposable>().Distinct())
             {
                 service.Dispose();
             }
             Services.Clear();
-            ServiceTypes.Clear();
             ResolveTypes.Clear();
         }
 
         /// <summary>
-        /// Sort all resolvable types.
-        /// Existing services do not get updated.
+        /// Resolve a dependency manually.
         /// </summary>
-        public static void SortTypes()
-        {
-            ResolveTypes.Clear();
-            // Cache of interface = last resolved priority to make sorting easier.
-            // Yeah I could sort with LINQ but fuck that.
-            var resolvedPriorities = new Dictionary<Type, int>();
-
-            // TODO: handle types with multiple implemented interfaces in a special way?
-            foreach (var type in ServiceTypes)
-            {
-                var attribute = (IoCTargetAttribute)Attribute.GetCustomAttribute(type, typeof(IoCTargetAttribute));
-                if (attribute == null || attribute.Disabled)
-                {
-                    continue;
-                }
-                foreach (var interfaceType in type.GetInterfaces())
-                {
-                    if (interfaceType.GetInterfaces().Any(t => t == typeof(IIoCInterface)))
-                    {
-                        if (resolvedPriorities.ContainsKey(interfaceType) && resolvedPriorities[interfaceType] >= attribute.Priority)
-                        {
-                            continue;
-                        }
-
-                        resolvedPriorities[interfaceType] = attribute.Priority;
-                        ResolveTypes[interfaceType] = type;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Resolve a static instance of the highest priority implementation of an interface.
-        /// see <see cref="NewType"/> if you want to resolve a NEW  instance.
-        /// </summary>
-        public static T Resolve<T>() where T : IIoCInterface
+        /// <exception cref="MissingImplementationException">Thrown if the interface was not registered beforehand.</exception>
+        /// <exception cref="NoPublicConstructorException">Thrown if the resolved implementation does not have a public constructor.</exception>
+        /// <exception cref="CircularDependencyException">Thrown if the type is already being built. This usually means a circular dependency exists.</exception>
+        public static T Resolve<T>()
         {
             Type type = typeof(T);
             if (!Services.ContainsKey(type))
@@ -129,32 +108,21 @@ namespace SS14.Shared.IoC
         }
 
         /// <summary>
-        /// Resolves an IoC target's type, not a static instance.
+        /// Build the implementation for an interface.
+        /// Registers the built implementation so that it can be directly indexed.
         /// </summary>
-        private static Type ResolveType<T>() where T : IIoCInterface
+        /// <param name="type">The interface to build.</param>
+        private static void BuildType(Type type)
         {
-            return ResolveType(typeof(T));
-        }
-
-        /// <summary>
-        /// Resolves a target's type without compile time enforcement.
-        /// Do not use this outside reflection!
-        /// </summary>
-        private static Type ResolveType(Type type)
-        {
-            if (!ResolveTypes.ContainsKey(type))
+            if (!ResolveTypes.TryGetValue(type, out Type concreteType))
             {
                 throw new MissingImplementationException(type);
             }
-            return ResolveTypes[type];
-        }
 
-        private static void BuildType(Type type)
-        {
-            Type concreteType = ResolveType(type);
-            if (concreteType == null)
+            // We're already building this, this means circular dependency!
+            if (CurrentlyBuilding.Contains(concreteType))
             {
-                throw new MissingImplementationException(type);
+                throw new CircularDependencyException(type);
             }
 
             // See if we already have an valid instance but registered as a different type.
@@ -174,11 +142,6 @@ namespace SS14.Shared.IoC
             if (constructor == null)
             {
                 throw new NoPublicConstructorException(concreteType);
-            }
-
-            if (CurrentlyBuilding.Contains(concreteType))
-            {
-                throw new CircularDependencyException(type);
             }
 
             CurrentlyBuilding.Add(concreteType);

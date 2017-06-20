@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -9,7 +9,6 @@ using System;
 
 namespace SS14.Client.Network
 {
-    [IoCTarget]
     public class NetworkManager : INetworkManager
     {
         private const string ServerName = "SS13 Server";

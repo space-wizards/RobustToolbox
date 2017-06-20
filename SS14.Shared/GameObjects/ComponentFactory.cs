@@ -9,7 +9,6 @@ using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Shared.GameObjects
 {
-    [IoCTarget]
     public class ComponentFactory : IComponentFactory
     {
         private readonly IReflectionManager ReflectionManager;
@@ -23,7 +22,7 @@ namespace SS14.Shared.GameObjects
 
             ReloadComponents();
 
-            IoCManager.AssemblyAdded += ReloadComponents;
+            reflectionManager.OnAssemblyAdded += (_, __) => ReloadComponents();
         }
 
         /// <summary>
@@ -37,10 +36,10 @@ namespace SS14.Shared.GameObjects
             {
                 throw new ArgumentException(string.Format("{0} does not implement {1}", componentType, nameof(IComponent)), nameof(componentType));
             }
-            return (IComponent) Activator.CreateInstance(componentType);
+            return (IComponent)Activator.CreateInstance(componentType);
         }
 
-        public T GetComponent<T>() where T: IComponent
+        public T GetComponent<T>() where T : IComponent
         {
             return (T)Activator.CreateInstance(typeof(T));
         }

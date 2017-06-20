@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.MessageLogging;
@@ -13,7 +13,6 @@ using System.IO;
 
 namespace SS14.Client.GameObjects
 {
-    [IoCTarget]
     public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly bool _messageProfiling;

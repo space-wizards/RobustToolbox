@@ -26,7 +26,6 @@ using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
 {
-    [IoCTarget]
     public class GameController : IGameController
     {
         #region Fields

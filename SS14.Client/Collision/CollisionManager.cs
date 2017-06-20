@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
@@ -18,7 +18,6 @@ namespace SS14.Client.Collision
     /// Here's what is happening here. Each collidable AABB added to this manager gets tossed into
     /// a "bucket". The buckets are subdivisions of the world space in 256-unit blocks.
     /// </summary>
-    [IoCTarget]
     public class CollisionManager : ICollisionManager
     {
         private const int BucketSize = 256;

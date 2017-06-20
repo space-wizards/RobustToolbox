@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -7,7 +7,6 @@ using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +15,6 @@ using System.Runtime.InteropServices;
 
 namespace SS14.Server.GameObjects
 {
-    [IoCTarget]
     public class EntityNetworkManager : IEntityNetworkManager
     {
         private readonly bool _messageProfiling;

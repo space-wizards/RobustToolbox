@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
@@ -11,7 +11,6 @@ using System.Reflection;
 
 namespace SS14.Client.Lighting
 {
-    [IoCTarget]
     public class LightManager : ILightManager
     {
         private readonly List<Type> LightModes = new List<Type>();

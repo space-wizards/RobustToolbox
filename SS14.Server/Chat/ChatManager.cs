@@ -20,7 +20,6 @@ using System.Xml.Serialization;
 
 namespace SS14.Server.Chat
 {
-    [IoCTarget]
     public class ChatManager : IChatManager
     {
         private ISS14Server _serverMain;

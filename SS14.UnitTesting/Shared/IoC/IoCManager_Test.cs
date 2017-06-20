@@ -10,6 +10,17 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
     [TestFixture]
     public class IoCManager_Test : SS14UnitTest
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Register<IIoCNoPublicConstructorTest, IoCNoPublicConstructorTest>();
+            IoCManager.Register<IIoCTestPriories, IoCTestPriorities2>();
+            IoCManager.Register<IIoCTestPriories, IoCTestPriorities1>(true);
+            IoCManager.Register<IIoCCircularDeps1, CircularDeps1>();
+            IoCManager.Register<IIoCCircularDeps2, CircularDeps2>();
+            IoCManager.Register<IConstructorException, ConstructorException>();
+        }
+
         [Test]
         public void IoCTestBasic()
         {
@@ -35,7 +46,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
 
         [Test]
-        public void IoCTestAttributes()
+        public void IoCTestOverwrite()
         {
             Assert.That(IoCManager.Resolve<IIoCTestPriories>(), Is.TypeOf<IoCTestPriorities1>());
         }
@@ -44,7 +55,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         public void IoCTestCircularDependencies()
         {
             Assert.That(() => IoCManager.Resolve<IIoCCircularDeps1>(), Throws.InstanceOf<CircularDependencyException>());
-        } 
+        }
 
         [Test]
         public void IoCTestConstructorException()
@@ -53,51 +64,41 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
     }
 
-    public interface IIoCFailInterface : IIoCInterface {}
+    public interface IIoCFailInterface { }
 
-    public interface IIoCNoPublicConstructorTest : IIoCInterface {}
+    public interface IIoCNoPublicConstructorTest { }
 
-    [IoCTarget]
     public class IoCNoPublicConstructorTest : IIoCNoPublicConstructorTest
     {
-        private IoCNoPublicConstructorTest() {}
+        private IoCNoPublicConstructorTest()
+        {
+        }
     }
 
-    public interface IIoCTestPriories : IIoCInterface {}
+    public interface IIoCTestPriories { }
 
-    [IoCTarget(Priority=10)]
-    public class IoCTestPriorities1 : IIoCTestPriories {}
-    [IoCTarget]
-    public class IoCTestPriorities2 : IIoCTestPriories {}
-    [IoCTarget(Priority=30, Disabled=true)]
-    public class IoCTestPriorities3 : IIoCTestPriories {}
+    public class IoCTestPriorities1 : IIoCTestPriories { }
+    public class IoCTestPriorities2 : IIoCTestPriories { }
 
+    public interface IIoCCircularDeps1 { }
+    public interface IIoCCircularDeps2 { }
 
-    public interface IIoCCircularDeps1 : IIoCInterface {}
-    public interface IIoCCircularDeps2 : IIoCInterface {}
-
-    [IoCTarget]
     public class CircularDeps1 : IIoCCircularDeps1
     {
         public CircularDeps1(IIoCCircularDeps2 deps2)
         {
-
         }
     }
 
-    [IoCTarget]
     public class CircularDeps2 : IIoCCircularDeps2
     {
         public CircularDeps2(IIoCCircularDeps1 deps1)
         {
-
         }
     }
 
-    public interface IConstructorException : IIoCInterface {}
+    public interface IConstructorException { }
 
-
-    [IoCTarget]
     public class ConstructorException : IConstructorException
     {
         public ConstructorException()
@@ -108,6 +109,5 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
 
     public class TestConstructorExceptionException : Exception
     {
-
     }
 }

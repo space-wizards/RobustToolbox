@@ -4,7 +4,7 @@
 
 There is a good chance you can install these with your package manager.
 
-* Mono 
+* Mono
 * SFML and CSFML binding (http://www.sfml-dev.org/download.php)
 
   The version of SFML and SFML.Net bindings should match. Else the mouse cursor can be stuck or other horrible things can happen.

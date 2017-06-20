@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Graphics.Render;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -11,7 +11,7 @@ using KeyboardKeys = SFML.Window.Keyboard.Key;
 
 namespace SS14.Client.Interfaces.Player
 {
-    public interface IPlayerManager : IIoCInterface
+    public interface IPlayerManager
     {
         IEntity ControlledEntity { get; }
 

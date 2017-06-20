@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -36,7 +36,6 @@ using MainLoopTimer = SS14.Server.Timing.MainLoopTimer;
 
 namespace SS14.Server
 {
-    [IoCTarget]
     public class SS14Server : ISS14Server
     {
         private const int GameCountdown = 15;

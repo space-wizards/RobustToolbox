@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
-    public interface IServerEntityManager : IEntityManager, IIoCInterface
+    public interface IServerEntityManager : IEntityManager
     {
         void Initialize();
         void SaveEntities();

@@ -1,4 +1,4 @@
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 using SS14.Server.Interfaces;
 using SS14.Shared.IoC;
@@ -6,10 +6,9 @@ using System.Reflection;
 
 namespace SS14.Server
 {
-    [IoCTarget]
-    class CommandLineArgs : ICommandLineArgs
+    public class CommandLineArgs : ICommandLineArgs
     {
-        [Option("config-file", Required=false, DefaultValue="./server_config.xml", HelpText="Config file to read from.")]
+        [Option("config-file", Required = false, DefaultValue = "./server_config.xml", HelpText = "Config file to read from.")]
         public string ConfigFile { get; set; }
 
         [HelpOption]

@@ -1,4 +1,4 @@
-using SFML.Window;
+﻿using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
@@ -12,7 +12,6 @@ using System.Xml;
 
 namespace SS14.Client.Input
 {
-    [IoCTarget]
     public class KeyBindingManager : IKeyBindingManager
     {
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;

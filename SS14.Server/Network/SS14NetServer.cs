@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.Network;
 using SS14.Shared.IoC;
@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 namespace SS14.Server.Network
 {
-    [IoCTarget]
     public class SS14NetServer : NetServer, ISS14NetServer
     {
         public SS14NetServer()
@@ -31,7 +30,7 @@ namespace SS14.Server.Network
             SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
-        #endregion
+        #endregion ISS13NetServer Members
 
         public static NetPeerConfiguration LoadNetPeerConfig()
         {

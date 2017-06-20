@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.IoC;
@@ -6,7 +6,7 @@ using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
-    public interface IEntityManager : IIoCInterface
+    public interface IEntityManager
     {
         IList<ComponentFamily> SynchedComponentTypes { get; }
 

@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Shared.GameObjects;
@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Resource
 {
-    public interface IResourceManager : IIoCInterface
+    public interface IResourceManager
     {
         Dictionary<Texture, string> TextureToKey { get; }
         void LoadResourceZip(string path = null, string pw = null);

@@ -1,4 +1,4 @@
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    [IoCTarget]
     public class ComponentManager : IComponentManager
     {
         /// <summary>
@@ -18,7 +17,7 @@ namespace SS14.Shared.GameObjects
 
         public ComponentManager()
         {
-            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
             {
                 components[family] = new List<IComponent>();
             }
@@ -53,7 +52,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         public void Update(float frameTime)
         {
-            foreach (ComponentFamily family in Enum.GetValues(typeof (ComponentFamily)))
+            foreach (ComponentFamily family in Enum.GetValues(typeof(ComponentFamily)))
             {
                 // Hack the update loop to allow us to render somewhere in the GameScreen render loop
                 /*if (family == ComponentFamily.Renderable)

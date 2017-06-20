@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -25,7 +25,6 @@ namespace SS14.Client.UserInterface
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
-    [IoCTarget]
     public class UserInterfaceManager : IUserInterfaceManager
     {
         /// <summary>

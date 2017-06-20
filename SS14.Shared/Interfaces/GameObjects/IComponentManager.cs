@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
-    public interface IComponentManager : IIoCInterface
+    public interface IComponentManager
     {
         /// <summary>
         /// Gets an <see cref="IEnumerable{IComponent}"/> over every known <see cref="IComponent"/> with a specified <see cref="ComponentFamily"/>.
@@ -16,7 +16,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="family">The <see cref="ComponentFamily"/> to look up.</param>
         /// <returns>An <see cref="IEnumerable{IComponent}"/> over component with the specified family.</returns>
         IEnumerable<IComponent> GetComponents(ComponentFamily family);
-        
+
         /// <summary>
         /// Add a component to the master component list.
         /// </summary>

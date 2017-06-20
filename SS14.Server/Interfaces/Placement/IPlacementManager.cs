@@ -1,10 +1,10 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Placement
 {
-    public interface IPlacementManager : IIoCInterface
+    public interface IPlacementManager
     {
         void Initialize(ISS14Server server);
 

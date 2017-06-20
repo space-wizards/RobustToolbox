@@ -1,4 +1,4 @@
-using ICSharpCode.SharpZipLib.Core;
+﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using SFML.Graphics;
 using SFML.System;
@@ -8,7 +8,6 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System;
@@ -23,7 +22,6 @@ using SS14.Client.Graphics.TexHelpers;
 
 namespace SS14.Client.Resources
 {
-    [IoCTarget]
     public class ResourceManager : IResourceManager
     {
         private const int zipBufferSize = 4096;

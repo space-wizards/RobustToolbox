@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.Render;
@@ -17,7 +17,6 @@ using System.Linq;
 
 namespace SS14.Client.Player
 {
-    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.

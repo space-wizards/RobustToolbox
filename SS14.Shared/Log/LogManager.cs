@@ -1,4 +1,4 @@
-using SS14.Shared.Interfaces.Log;
+﻿using SS14.Shared.Interfaces.Log;
 using SS14.Shared.IoC;
 using System;
 
@@ -7,7 +7,6 @@ namespace SS14.Shared.Log
     /// <summary>
     /// Generic logger. Dumps to <see cref="System.Console"/> and that's it.
     /// </summary>
-    [IoCTarget]
     public class LogManager : ILogManager
     {
         #region ILogManager Members

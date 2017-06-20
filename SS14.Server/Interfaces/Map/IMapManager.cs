@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared;
@@ -9,7 +9,7 @@ namespace SS14.Server.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public interface IMapManager : IIoCInterface
+    public interface IMapManager
     {
         bool LoadMap(string mapName);
         void SaveMap(string mapName);

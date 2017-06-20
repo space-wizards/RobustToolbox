@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Configuration;
 using SS14.Shared;
@@ -10,7 +10,6 @@ using System.Xml.Serialization;
 
 namespace SS14.Server.Configuration
 {
-    [IoCTarget]
     public sealed class ConfigurationManager : IServerConfigurationManager
     {
         private string ConfigFile;

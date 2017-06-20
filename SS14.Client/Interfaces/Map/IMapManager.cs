@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ namespace SS14.Client.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public interface IMapManager : IIoCInterface
+    public interface IMapManager
     {
         event TileChangedEventHandler TileChanged;
 

@@ -1,10 +1,10 @@
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.MessageLogging
 {
-    public interface IMessageLogger : IIoCInterface
+    public interface IMessageLogger
     {
         void LogOutgoingComponentNetMessage(long clientUID, int uid, ComponentFamily family, object[] parameters);
 

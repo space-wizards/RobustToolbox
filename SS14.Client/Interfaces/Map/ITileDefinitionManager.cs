@@ -1,10 +1,10 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System.Collections.Generic;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Map
 {
-    public interface ITileDefinitionManager : IEnumerable<ITileDefinition>, IIoCInterface
+    public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
         ushort Register(ITileDefinition tileDef);
         void RegisterServerTileMapping(NetIncomingMessage message);

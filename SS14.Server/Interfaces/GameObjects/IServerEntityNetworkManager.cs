@@ -1,10 +1,10 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
-    public interface IServerEntityNetworkManager : IEntityNetworkManager, IIoCInterface
+    public interface IServerEntityNetworkManager : IEntityNetworkManager
     {
         void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered);
 

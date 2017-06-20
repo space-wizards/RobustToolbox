@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
@@ -10,13 +10,11 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Server.Player
 {
-    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* This class will manage connected player sessions. */

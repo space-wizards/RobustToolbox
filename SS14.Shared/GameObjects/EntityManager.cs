@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    [IoCTarget]
     public class EntityManager : IEntityManager
     {
         #region Dependencies

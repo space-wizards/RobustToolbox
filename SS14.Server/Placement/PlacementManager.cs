@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
@@ -18,7 +18,6 @@ using System.Linq;
 
 namespace SS14.Server.Placement
 {
-    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
         //TO-DO: Expand for multiple permission per mob?

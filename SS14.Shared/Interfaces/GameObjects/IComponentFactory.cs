@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +11,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     /// Handles the spawning of components.
     /// Does IoC magic to allow accessing components by <see cref="IComponent.Name"/>.
     /// </summary>
-    public interface IComponentFactory : IIoCInterface
+    public interface IComponentFactory
     {
         /// <summary>
         /// Gets a new component instantiated of the specified type.

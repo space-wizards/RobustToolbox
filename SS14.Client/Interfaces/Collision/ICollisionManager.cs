@@ -1,11 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Collision
 {
-    public interface ICollisionManager : IIoCInterface
+    public interface ICollisionManager
     {
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the colliders under management.

@@ -1,10 +1,10 @@
-using SS14.Server.Interfaces.GameMode;
+﻿using SS14.Server.Interfaces.GameMode;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Round
 {
-    public interface IRoundManager : IIoCInterface
+    public interface IRoundManager
     {
         IGameMode CurrentGameMode { get; }
 

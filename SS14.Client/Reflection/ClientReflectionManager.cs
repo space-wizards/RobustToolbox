@@ -9,7 +9,6 @@ namespace SS14.Client.Reflection
     /// that defines <code>SS14.Client</code> and <code>SS14.Shared</code>
     /// as valid prefixes for <see cref="ReflectionManager.GetType(string)"/>
     /// </summary>
-    [IoCTarget]
     public sealed class ClientReflectionManager : ReflectionManager
     {
         protected override IEnumerable<string> TypePrefixes => new[] {"", "SS14.Client.", "SS14.Shared."};

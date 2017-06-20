@@ -109,6 +109,7 @@
     <Compile Include="ColorUtils.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
+    <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
@@ -167,8 +168,6 @@
     <EmbeddedResource Include="Utility\BitStream.resx">
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
-    <Compile Include="IoC\IIoCInterface.cs" />
-    <Compile Include="IoC\IoCAttributes.cs" />
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\Exceptions\MissingImplementationException.cs" />
     <Compile Include="IoC\Exceptions\NoPublicConstructorException.cs" />

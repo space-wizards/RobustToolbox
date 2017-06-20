@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -17,7 +17,6 @@ namespace SS14.Server.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    [IoCTarget(Priority = 5)]
     public class ServerEntityManager : EntityManager, IServerEntityManager
     {
         #region IEntityManager Members

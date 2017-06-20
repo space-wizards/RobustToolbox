@@ -1,10 +1,10 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IEntityNetworkManager : IIoCInterface
+    public interface IEntityNetworkManager
     {
         NetOutgoingMessage CreateEntityMessage();
 

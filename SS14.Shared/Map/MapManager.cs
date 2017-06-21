@@ -386,11 +386,19 @@ namespace SS14.Shared.Map
                 var grid = mapManager.GetGrid(gridId) ?? mapManager.CreateGrid(gridId);
 
                 for (var y = -32; y <= 32; ++y)
+                {
                     for (var x = -32; x <= 32; ++x)
+                    {
                         if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
+                        {
                             grid.SetTile(x, y, new Tile(wall));
+                        }
                         else
+                        {
                             grid.SetTile(x, y, new Tile(floor));
+                        }
+                    }
+                }
             }
             finally
             {
@@ -399,13 +407,6 @@ namespace SS14.Shared.Map
         }
 
 #endregion
-
-        // An actual modulus implementation, because apparently % is not modulus.  Seriously
-        // Should probably stick this in some static class.
-        [DebuggerStepThrough]
-        private static int Mod(double n, uint d)
-        {
-            return (int)(n - (int)Math.Floor(n / d) * d);
-        }
+        
     }
 }

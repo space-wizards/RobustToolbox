@@ -62,5 +62,10 @@ namespace SS14.Shared.Map
         {
             return !(a == b);
         }
+
+        public override string ToString()
+        {
+            return $"Tile {TileId}, {Data}";
+        }
     }
 }

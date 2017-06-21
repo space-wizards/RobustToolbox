@@ -17,11 +17,10 @@ namespace SS14.Shared.Map
         public int X => _gridIndices.X;
         public int Y => _gridIndices.Y;
 
-        private readonly Tile[,] Tiles;
+        private readonly Tile[,] _tiles;
         private readonly MapManager _mapManager;
         private readonly MapGrid _grid;
         private readonly MapGrid.Indices _gridIndices;
-
 
         /// <summary>
         /// Constructs an instance of a MapGrid chunk.
@@ -30,15 +29,15 @@ namespace SS14.Shared.Map
         /// <param name="grid"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        /// <param name="chunkChunkSize"></param>
-        public Chunk(MapManager manager, MapGrid grid, int x, int y, ushort chunkChunkSize)
+        /// <param name="chunkSize"></param>
+        public Chunk(MapManager manager, MapGrid grid, int x, int y, ushort chunkSize)
         {
             _mapManager = manager;
-            ChunkSize = chunkChunkSize;
+            ChunkSize = chunkSize;
             _grid = grid;
             _gridIndices = new MapGrid.Indices(x, y);
 
-            Tiles = new Tile[ChunkSize, ChunkSize];
+            _tiles = new Tile[ChunkSize, ChunkSize];
         }
 
         /// <summary>
@@ -54,8 +53,8 @@ namespace SS14.Shared.Map
             if (xTile >= ChunkSize || yTile >= ChunkSize)
                 throw new Exception("Tile indices out of bounds.");
 
-            var indices = LocalToGrid(new MapGrid.Indices(xTile, yTile));
-            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, Tiles[xTile, yTile]);
+            var indices = ChunkTileToGridTile(new MapGrid.Indices(xTile, yTile));
+            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
         }
 
         [Obsolete("Enumerate over the chunk instead.")]
@@ -65,35 +64,34 @@ namespace SS14.Shared.Map
             {
                 for (var y = 0; y < ChunkSize; y++)
                 {
-                    if (Tiles[x, y].IsEmpty)
+                    if (_tiles[x, y].IsEmpty)
                         continue;
 
-                    var indices = LocalToGrid(new MapGrid.Indices(x, y));
-                    var chunkTile = GridTileToChunkTile(indices);
-                    yield return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, Tiles[chunkTile.X, chunkTile.Y]);
+                    var indices = ChunkTileToGridTile(new MapGrid.Indices(x, y));
+                    yield return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
                 }
             }
         }
 
-        public void SetTile(ushort xTileIndex, ushort yTileIndex, Tile tile)
+        public void SetTile(ushort xChunkTile, ushort yChunkTile, Tile tile)
         {
-            if (xTileIndex >= ChunkSize || yTileIndex >= ChunkSize)
-                return;
-            var gridTile = ChunkTileToGridTile(new MapGrid.Indices(xTileIndex, yTileIndex));
-            var chunkTile = GridTileToChunkTile(gridTile);
-            var tileRef = new TileRef(_mapManager, _grid.Index, gridTile.X, gridTile.Y, Tiles[chunkTile.X, chunkTile.Y]);
-            var oldTile = Tiles[xTileIndex, yTileIndex];
-            _mapManager.RaiseOnTileChanged(_grid.Index, tileRef, oldTile);
-            _grid.UpdateAABB(gridTile);
-            Tiles[xTileIndex, yTileIndex] = tile;
-        }
-        
-        public void SetTile(ushort xTileIndex, ushort yTileIndex, ushort tileId, ushort tileData = 0)
-        {
-            if (xTileIndex >= ChunkSize || yTileIndex >= ChunkSize)
-                return;
+            if (xChunkTile >= ChunkSize || yChunkTile >= ChunkSize)
+                throw new Exception("Tile indices out of bounds.");
 
-            Tiles[xTileIndex, yTileIndex] = new Tile(tileId, tileData);
+            var gridTile = ChunkTileToGridTile(new MapGrid.Indices(xChunkTile, yChunkTile));
+
+            var newTileRef = new TileRef(_mapManager, _grid.Index, gridTile.X, gridTile.Y, tile);
+            var oldTile = _tiles[xChunkTile, yChunkTile];
+            _mapManager.RaiseOnTileChanged(_grid.Index, newTileRef, oldTile);
+            _grid.UpdateAABB(gridTile);
+
+            _tiles[xChunkTile, yChunkTile] = tile;
+        }
+
+        /// <inheritdoc />
+        public void SetTile(ushort xChunkTile, ushort yChunkTile, ushort tileId, ushort tileData = 0)
+        {
+            SetTile(xChunkTile, yChunkTile, new Tile(tileId, tileData));
         }
 
         public IEnumerator<TileRef> GetEnumerator()
@@ -102,9 +100,8 @@ namespace SS14.Shared.Map
             {
                 for (var y = 0; y < ChunkSize; y++)
                 {
-                    var indices = LocalToGrid(new MapGrid.Indices(x, y));
-                    var chunkTile = GridTileToChunkTile(indices);
-                    yield return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, Tiles[chunkTile.X, chunkTile.Y]);
+                    var gridTile = ChunkTileToGridTile(new MapGrid.Indices(x, y));
+                    yield return new TileRef(_mapManager, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
                 }
             }
         }
@@ -117,26 +114,39 @@ namespace SS14.Shared.Map
         /// <summary>
         /// Translates chunk tile indices to grid tile indices.
         /// </summary>
-        /// <param name="local">The indices relative to the chunk origin.</param>
+        /// <param name="chunkTile">The indices relative to the chunk origin.</param>
         /// <returns>The indices relative to the grid origin.</returns>
-        private MapGrid.Indices LocalToGrid(MapGrid.Indices local)
+        private MapGrid.Indices ChunkTileToGridTile(MapGrid.Indices chunkTile)
         {
-            return local + (_gridIndices * ChunkSize);
+            return chunkTile + (_gridIndices * ChunkSize);
         }
-
-
+        
         /// <inheritdoc />
-        public MapGrid.Indices GridTileToChunkTile(MapGrid.Indices gridTileIndices)
+        public MapGrid.Indices GridTileToChunkTile(MapGrid.Indices gridTile)
         {
             var size = ChunkSize;
-            var x =  Math.Abs(gridTileIndices.X % size);
-            var y = Math.Abs(gridTileIndices.Y % size);
+            var x =  Mod(gridTile.X, size);
+            var y = Mod(gridTile.Y, size);
             return new MapGrid.Indices(x, y);
         }
 
-        public MapGrid.Indices ChunkTileToGridTile(MapGrid.Indices chunkTileIndices)
+        /// <inheritdoc />
+        public override string ToString()
         {
-            return chunkTileIndices + _gridIndices * ChunkSize;
+            return $"Chunk {_gridIndices}, {ChunkSize}";
+        }
+
+        /// <summary>
+        /// This method provides floored modulus.
+        /// C-like languages use truncated modulus for their '%' operator.
+        /// </summary>
+        /// <param name="n">The dividend.</param>
+        /// <param name="d">The divisor.</param>
+        /// <returns>The remainder.</returns>
+        [System.Diagnostics.DebuggerStepThrough]
+        private static int Mod(double n, int d)
+        {
+            return (int)(n - (int)Math.Floor(n / d) * d);
         }
     }
 }

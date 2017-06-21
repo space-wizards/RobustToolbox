@@ -73,7 +73,7 @@ namespace SS14.Client.Map
             var tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
-            shape.FillColor = Color.Black;
+            shape.FillColor = Color.Red;
             shape.Position = new Vector2f(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }

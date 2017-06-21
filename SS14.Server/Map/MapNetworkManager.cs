@@ -54,7 +54,7 @@ namespace SS14.Server.Map
         public void SendMap(IMapManager mapManager, NetConnection connection)
         {
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
-            const uint MAP_INDEX = 0;
+            const int MAP_INDEX = 0;
 
             LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
             var mapMessage = CreateMapMessage(MapMessage.SendTileMap);
@@ -69,8 +69,9 @@ namespace SS14.Server.Map
                 mapMessage.Write(tileDef.Name);
 
             // Map chunks
-            mapMessage.Write(mapManager.GetDefaultGrid().ChunkCount);
-            foreach (var chunk in mapManager.GetDefaultGrid().GetMapChunks())
+            var grid = mapManager.GetGrid(MAP_INDEX);
+            mapMessage.Write(grid.ChunkCount);
+            foreach (var chunk in grid.GetMapChunks())
             {
                 mapMessage.Write(chunk.X);
                 mapMessage.Write(chunk.Y);

@@ -44,25 +44,25 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         /// Replaces a single tile inside of the chunk.
         /// </summary>
-        /// <param name="xTileIndex">The X index of the location inside the chunk.</param>
-        /// <param name="yTileIndex">The Y index of the location inside the chunk.</param>
+        /// <param name="xChunkTile">The X index of the location inside the chunk.</param>
+        /// <param name="yChunkTile">The Y index of the location inside the chunk.</param>
         /// <param name="tile">The new tile to insert.</param>
-        void SetTile(ushort xTileIndex, ushort yTileIndex, Tile tile);
+        void SetTile(ushort xChunkTile, ushort yChunkTile, Tile tile);
 
         /// <summary>
         /// Modifies a single tile inside of the chunk.
         /// </summary>
-        /// <param name="xTileIndex">The X index of the location inside the chunk.</param>
-        /// <param name="yTileIndex">The Y index of the location inside the chunk.</param>
+        /// <param name="xChunkTile">The X index of the location inside the chunk.</param>
+        /// <param name="yChunkTile">The Y index of the location inside the chunk.</param>
         /// <param name="tileId">The new internal ID of the tile.</param>
         /// <param name="tileData">The optional new data of the tile.</param>
-        void SetTile(ushort xTileIndex, ushort yTileIndex, ushort tileId, ushort tileData = 0);
+        void SetTile(ushort xChunkTile, ushort yChunkTile, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         /// Transforms Tile indices relative to the grid into tile indices relative to this chunk.
         /// </summary>
-        /// <param name="gridTileIndices">Tile indices relative to the grid.</param>
+        /// <param name="gridTile">Tile indices relative to the grid.</param>
         /// <returns>Tile indices relative to this chunk.</returns>
-        MapGrid.Indices GridTileToChunkTile(MapGrid.Indices gridTileIndices);
+        MapGrid.Indices GridTileToChunkTile(MapGrid.Indices gridTile);
     }
 }

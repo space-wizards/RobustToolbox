@@ -134,6 +134,21 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns>The world-space coordinates with global origin.</returns>
         Vector2f LocalToWorld(Vector2f posLocal);
 
+
+        /// <summary>
+        /// Transforms grid-space tile indices to local coordinates.
+        /// </summary>
+        /// <param name="gridTile"></param>
+        /// <returns></returns>
+        Vector2f GridTileToLocal(MapGrid.Indices gridTile);
+
+        /// <summary>
+        /// Transforms grid-space tile indices to world coordinates.
+        /// </summary>
+        /// <param name="gridTile">The Grid Tile indices.</param>
+        /// <returns></returns>
+        Vector2f GridTileToWorld(MapGrid.Indices gridTile);
+
         #endregion
     }
 }

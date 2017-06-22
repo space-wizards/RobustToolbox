@@ -172,13 +172,9 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(FloatRect areaWorld, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
         {
-            /* Apparently CluwneLib already does world2tile transform
-            var gridTileLt = WorldToTile(new Vector2f(areaWorld.Left, areaWorld.Top));
-            var gridTileRb = WorldToTile(new Vector2f(areaWorld.Right(), areaWorld.Bottom()));
-            */
-
-            var gridTileLt = new Indices((int)areaWorld.Left, (int)areaWorld.Top);
-            var gridTileRb = new Indices((int)areaWorld.Right(), (int)areaWorld.Bottom());
+            //TODO: needs world -> local -> tile translations.
+            var gridTileLt = new Indices((int)Math.Floor(areaWorld.Left), (int)Math.Floor(areaWorld.Top));
+            var gridTileRb = new Indices((int)Math.Floor(areaWorld.Right()), (int)Math.Floor(areaWorld.Bottom()));
 
             var tiles = new List<TileRef>();
 

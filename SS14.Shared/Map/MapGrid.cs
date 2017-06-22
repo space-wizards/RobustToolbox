@@ -107,10 +107,10 @@ namespace SS14.Shared.Map
         #region  TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTile(Vector2f posWorld)
+        public TileRef GetTile(Vector2f worldPos)
         {
-            var chunkIndices = WorldToChunk(posWorld);
-            var gridTileIndices = WorldToTile(posWorld);
+            var chunkIndices = WorldToChunk(worldPos);
+            var gridTileIndices = WorldToTile(worldPos);
 
             Chunk output;
             if (_chunks.TryGetValue(chunkIndices, out output))
@@ -147,9 +147,9 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(Vector2f posWorld, Tile tile)
+        public void SetTile(Vector2f worldPos, Tile tile)
         {
-            var localTile = WorldToTile(posWorld);
+            var localTile = WorldToTile(worldPos);
             SetTile(localTile.X, localTile.Y, tile);
         }
 
@@ -170,11 +170,11 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<TileRef> GetTilesIntersecting(FloatRect areaWorld, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
+        public IEnumerable<TileRef> GetTilesIntersecting(FloatRect worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
         {
             //TODO: needs world -> local -> tile translations.
-            var gridTileLt = new Indices((int)Math.Floor(areaWorld.Left), (int)Math.Floor(areaWorld.Top));
-            var gridTileRb = new Indices((int)Math.Floor(areaWorld.Right()), (int)Math.Floor(areaWorld.Bottom()));
+            var gridTileLt = new Indices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Top));
+            var gridTileRb = new Indices((int)Math.Floor(worldArea.Right()), (int)Math.Floor(worldArea.Bottom()));
 
             var tiles = new List<TileRef>();
 

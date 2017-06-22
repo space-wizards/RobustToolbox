@@ -195,14 +195,14 @@ namespace SS14.Shared.Map
         /// <summary>
         /// Finds all of the grids at this position in the world.
         /// </summary>
-        /// <param name="posWorld">The location of the tile in world coordinates.</param>
+        /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsAt(Vector2f posWorld)
+        public IEnumerable<IMapGrid> FindGridsAt(Vector2f worldPos)
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
             {
-                if (kvGrid.Value.AABBWorld.Contains(posWorld.X, posWorld.Y))
+                if (kvGrid.Value.AABBWorld.Contains(worldPos.X, worldPos.Y))
                     gridList.Add(kvGrid.Value);
             }
             return gridList;
@@ -211,14 +211,14 @@ namespace SS14.Shared.Map
         /// <summary>
         /// Finds all grids that intersect the rectangle in the world.
         /// </summary>
-        /// <param name="areaWorld">The are in world coordinates to search.</param>
+        /// <param name="worldArea">The are in world coordinates to search.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsIntersecting(FloatRect areaWorld)
+        public IEnumerable<IMapGrid> FindGridsIntersecting(FloatRect worldArea)
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
             {
-                if (kvGrid.Value.AABBWorld.Intersects(areaWorld))
+                if (kvGrid.Value.AABBWorld.Intersects(worldArea))
                     gridList.Add(kvGrid.Value);
             }
             return gridList;

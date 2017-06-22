@@ -3,6 +3,9 @@ using SS14.Shared.IoC;
 
 namespace SS14.Shared.Interfaces.Map
 {
+    /// <summary>
+    /// A shared interface for the client/server map network managers.
+    /// </summary>
     public interface IMapNetworkManager : IIoCInterface
     {
         /// <summary>

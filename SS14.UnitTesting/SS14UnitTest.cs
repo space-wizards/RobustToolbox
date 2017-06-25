@@ -9,7 +9,6 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
@@ -100,7 +99,7 @@ namespace SS14.UnitTesting
 
         #region Accessors
 
-        public IPlayerConfigurationManager GetConfigurationManager
+        public IConfigurationManager GetConfigurationManager
         {
             get;
             private set;
@@ -146,9 +145,8 @@ namespace SS14.UnitTesting
             if (NeedsClientConfig)
             {
                 //ConfigurationManager setup
-                GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-                GetConfigurationManager.Initialize(
-                    PathHelpers.AssemblyRelativeFile("./player_config.xml", Assembly.GetExecutingAssembly()));
+                GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
+                GetConfigurationManager.Initialize(PathHelpers.AssemblyRelativeFile("./client_config.toml", Assembly.GetExecutingAssembly()));
             }
 
             if (NeedsResourcePack)
@@ -170,6 +168,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IComponentFactory, ComponentFactory>();
+            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
@@ -204,7 +203,6 @@ namespace SS14.UnitTesting
             IoCManager.Register<INetworkManager, NetworkManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
-            IoCManager.Register<IPlayerConfigurationManager, Client.Configuration.ConfigurationManager>();
             IoCManager.Register<IGameController, GameController>();
 
             // Unit test stuff.

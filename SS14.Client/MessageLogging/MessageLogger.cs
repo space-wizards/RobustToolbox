@@ -1,7 +1,7 @@
-﻿using SS14.Client.Interfaces.Configuration;
-using SS14.Client.Interfaces.MessageLogging;
+﻿using SS14.Client.Interfaces.MessageLogging;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System;
 using System.ServiceModel;
@@ -15,9 +15,9 @@ namespace SS14.Client.MessageLogging
         private readonly MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger(IPlayerConfigurationManager _configurationManager)
+        public MessageLogger(IConfigurationManager _configurationManager)
         {
-            _logging = _configurationManager.GetMessageLogging();
+            _logging = _configurationManager.GetCVar<bool>("log_enabled");
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
             if (_logging)
             {

@@ -1,11 +1,11 @@
 ﻿using Lidgren.Network;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
-using SS14.Client.Map;
 using SS14.Shared;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Configuration;
 
 namespace SS14.Client.Network
 {
@@ -26,14 +26,25 @@ namespace SS14.Client.Network
             }
 
 #if DEBUG
-            var config = IoCManager.Resolve<IPlayerConfigurationManager>();
+            var config = IoCManager.Resolve<IConfigurationManager>();
+
+            config.RegisterCVar("net_server", "127.0.0.1", CVarFlags.ARCHIVE);
+            config.RegisterCVar("net_updaterate", 20, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net_cmdrate", 30, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net_interpolation", 0.1f, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net_rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
+
+            config.RegisterCVar("net_fakelag", false, CVarFlags.CHEAT);
+            config.RegisterCVar("net_fakeloss", 0.0f, CVarFlags.CHEAT);
+            config.RegisterCVar("net_fakelagmin", 0.0f, CVarFlags.CHEAT);
+            config.RegisterCVar("net_fakelagrand", 0.0f, CVarFlags.CHEAT);
 
             //Simulate Latency
-            if (config.GetSimulateLatency())
+            if (config.GetCVar<bool>("net_fakelag"))
             {
-                _netConfig.SimulatedLoss = config.GetSimulatedLoss();
-                _netConfig.SimulatedMinimumLatency = config.GetSimulatedMinimumLatency();
-                _netConfig.SimulatedRandomLatency = config.GetSimulatedRandomLatency();
+                _netConfig.SimulatedLoss = config.GetCVar<float>("net_fakeloss");
+                _netConfig.SimulatedMinimumLatency = config.GetCVar<float>("net_fakelagmin");
+                _netConfig.SimulatedRandomLatency = config.GetCVar<float>("net_fakelagrand");
             }
 
             _netConfig.ConnectionTimeout = 30000f;

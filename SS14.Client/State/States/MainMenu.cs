@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -69,7 +69,7 @@ namespace SS14.Client.State.States
                             };
             _btnExit.Clicked += _buttExit_Clicked;
 
-            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetServerAddress()};
+            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetCVar<string>("net_server")};
             _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 

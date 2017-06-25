@@ -1,11 +1,11 @@
 ﻿using Lidgren.Network;
 using NetSerializer;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,10 @@ namespace SS14.Client.GameObjects
         public EntityNetworkManager(INetworkManager networkManager)
         {
             _networkManager = networkManager;
-            _messageProfiling = IoCManager.Resolve<IPlayerConfigurationManager>().GetMessageLogging();
+
+            var config = IoCManager.Resolve<IConfigurationManager>();
+            config.RegisterCVar("ent_logging", false);
+            _messageProfiling = config.GetCVar<bool>("ent_logging");
         }
 
         #region IEntityNetworkManager Members

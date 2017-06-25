@@ -89,6 +89,8 @@ namespace SS14.Shared.Configuration
 
             //TODO: Actually save it.
 
+                //TODO: Only save archivable cvars, that are different than default.
+
             Logger.Log($"[CFG] Server config saved to '{_configFile}'");
         }
 
@@ -98,6 +100,11 @@ namespace SS14.Shared.Configuration
             ConfigVar cVar;
             if (_configVars.TryGetValue(name, out cVar))
             {
+                if (cVar.Registered)
+                {
+                    Logger.Log($"[CVar] The variable '{name}' has already been registered", LogLevel.Error);
+                }
+
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
@@ -127,7 +134,7 @@ namespace SS14.Shared.Configuration
                 }
             }
 
-            Logger.Log($"[CVar] Trying to set unregistered variable '{name}'", LogLevel.Warning);
+            Logger.Log($"[CVar] Trying to set unregistered variable '{name}'", LogLevel.Fatal);
             throw new Exception($"[CVar] Trying to set unregistered variable '{name}'");
         }
 
@@ -141,7 +148,7 @@ namespace SS14.Shared.Configuration
                 return (T) (cVar.Value ?? cVar.DefaultValue);
             }
 
-            Logger.Log($"[CVar] Trying to get unregistered variable '{name}'", LogLevel.Warning);
+            Logger.Log($"[CVar] Trying to get unregistered variable '{name}'", LogLevel.Fatal);
             throw new Exception($"[CVar] Trying to get unregistered variable '{name}'");
         }
     }

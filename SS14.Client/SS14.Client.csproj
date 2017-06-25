@@ -203,6 +203,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="client_config.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <Compile Include="GameObjects\AnimatedSprite.cs" />
     <Compile Include="GameObjects\Component\ClickableComponent.cs" />
@@ -256,9 +259,6 @@
     <Compile Include="Reflection\ClientReflectionManager.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
-    <Compile Include="Configuration\ConfigurationManager.cs" />
-    <Compile Include="Configuration\PlayerConfiguration.cs" />
-    <None Include="Configuration\player_config.xml" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
@@ -273,7 +273,6 @@
     <Compile Include="Interfaces\Collision\ICollidable.cs" />
     <Compile Include="Interfaces\Collision\ICollider.cs" />
     <Compile Include="Interfaces\Collision\ICollisionManager.cs" />
-    <Compile Include="Interfaces\Configuration\IPlayerConfigurationManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\GetSVarsEventArgs.cs" />

@@ -3,8 +3,6 @@ using SFML.Window;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -12,16 +10,14 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces;
 using SS14.Client.State.States;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.Configuration;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -30,7 +26,7 @@ namespace SS14.Client
     {
         #region Fields
 
-        readonly private IPlayerConfigurationManager _configurationManager;
+        readonly private IConfigurationManager _configurationManager;
         //  private Input _input;
         readonly private INetworkGrapher _netGrapher;
         readonly private INetworkManager _networkManager;
@@ -46,7 +42,7 @@ namespace SS14.Client
 
         #region Constructors
 
-        public GameController(IPlayerConfigurationManager configManager,
+        public GameController(IConfigurationManager configManager,
                               INetworkGrapher networkGrapher,
                               INetworkManager networkManager,
                               IStateManager stateManager,
@@ -67,7 +63,7 @@ namespace SS14.Client
 
             ShowSplashScreen();
 
-            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("player_config.xml"));
+            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
@@ -297,10 +293,16 @@ namespace SS14.Client
 
         private void SetupCluwne()
         {
-            uint displayWidth = _configurationManager.GetDisplayWidth();
-            uint displayHeight = _configurationManager.GetDisplayHeight();
-            bool isFullscreen = _configurationManager.GetFullscreen();
-            var refresh = _configurationManager.GetDisplayRefresh();
+            _configurationManager.RegisterCVar("display_width", 1280, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display_height", 720, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display_fullscreen", false, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display_refresh", 60, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display_vsync", false, CVarFlags.ARCHIVE);
+
+            uint displayWidth = (uint) _configurationManager.GetCVar<int>("display_width");
+            uint displayHeight = (uint) _configurationManager.GetCVar<int>("display_height");
+            bool isFullscreen = _configurationManager.GetCVar<bool>("display_fullscreen");
+            uint refresh = (uint) _configurationManager.GetCVar<int>("display_refresh");
 
             CluwneLib.Video.SetFullscreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);

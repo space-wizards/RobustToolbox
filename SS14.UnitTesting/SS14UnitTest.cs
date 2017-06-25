@@ -31,7 +31,6 @@ using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
-using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
@@ -52,7 +51,9 @@ using SS14.Server.Player;
 using SS14.Server.Round;
 using SS14.Server.Serialization;
 using SS14.Server.ServerConsole;
+using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
@@ -188,7 +189,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
-            IoCManager.Register<IServerConfigurationManager, Server.Configuration.ConfigurationManager>();
+            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
 

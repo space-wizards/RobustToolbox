@@ -159,15 +159,14 @@
     <Compile Include="Timing\MainLoopTimer.cs" />
     <Compile Include="Timing\TimerMainLoopTimer.cs" />
     <Compile Include="Timing\TimerQueueTimer.cs" />
+    <None Include="server_config.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Timing\TimerQueueTimer_.cs">
     </None>
     <None Include="app.config">
     </None>
     <Content Include="atoms.ss13">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="server_config.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -188,8 +187,6 @@
     <Compile Include="ClientConsoleHost\Commands\Atmospherics.cs" />
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
-    <Compile Include="Configuration\ConfigurationManager.cs" />
-    <Compile Include="Configuration\PersistentConfiguration.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\EntityNetworkManager.cs" />
     <Compile Include="GameObjects\MessageEnums.cs" />
@@ -244,7 +241,6 @@
     <Compile Include="Interfaces\Chat\IChatManager.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientCommand.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
-    <Compile Include="Interfaces\Configuration\IServerConfigurationManager.cs" />
     <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />

@@ -1,12 +1,12 @@
-﻿using SS14.Server.Interfaces.Configuration;
-using SS14.Server.Interfaces.ServerConsole;
+﻿using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Interfaces;
-using SS14.Shared.Command;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using Con = System.Console;
 
 namespace SS14.Server.ServerConsole
@@ -32,10 +32,17 @@ namespace SS14.Server.ServerConsole
         public ConsoleManager()
         {
             InitializeCommands();
-            var consoleSize = IoCManager.Resolve<IServerConfigurationManager>().ConsoleSize;
+            var cfgMan = IoCManager.Resolve<IConfigurationManager>();
+
+            cfgMan.RegisterCVar("ConsoleWidth", 120, CVarFlags.ARCHIVE);
+            cfgMan.RegisterCVar("ConsoleHeight", 60, CVarFlags.ARCHIVE);
+
+            var consoleWidth = cfgMan.GetCVar<int>("ConsoleWidth");
+            var consoleHeight = cfgMan.GetCVar<int>("ConsoleHeight");
+
             try
             {
-                Con.SetWindowSize(consoleSize.X, consoleSize.Y);
+                Con.SetWindowSize(consoleWidth, consoleHeight);
             }
             catch (ArgumentOutOfRangeException e)
             {

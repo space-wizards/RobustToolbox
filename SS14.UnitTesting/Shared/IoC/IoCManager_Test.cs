@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 using SS14.Client.Interfaces.Resource;
-using SS14.Server.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using System;
@@ -24,7 +24,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         [Test]
         public void IoCTestBasic()
         {
-            Assert.That(IoCManager.Resolve<IServerConfigurationManager>(),
+            Assert.That(IoCManager.Resolve<IConfigurationManager>(),
                         Is.Not.Null,
                         "IoC failed to return an IServerConfigurationManager.");
 

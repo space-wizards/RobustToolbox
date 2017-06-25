@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
-using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.Network;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
@@ -34,8 +34,10 @@ namespace SS14.Server.Network
 
         public static NetPeerConfiguration LoadNetPeerConfig()
         {
+            var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
+            cfgMgr.RegisterCVar("Port", 1212);
             var _config = new NetPeerConfiguration("SS13_NetTag");
-            _config.Port = IoCManager.Resolve<IServerConfigurationManager>().Port;
+            _config.Port = cfgMgr.GetCVar<int>("Port");
 #if DEBUG
             _config.ConnectionTimeout = 30000f;
 #endif

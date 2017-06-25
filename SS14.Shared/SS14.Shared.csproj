@@ -63,6 +63,9 @@
       <Name>NetSerializer</Name>
       <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
     </Reference>
+    <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -107,6 +110,10 @@
   <ItemGroup>
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="ColorUtils.cs" />
+    <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Configuration\ConfigVar.cs" />
+    <Compile Include="Configuration\CVarFlags.cs" />
+    <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />

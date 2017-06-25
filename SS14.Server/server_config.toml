@@ -1,0 +1,4 @@
+﻿[Configuration]
+LogPath = "logs"
+
+Port = 1212

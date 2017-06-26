@@ -1,4 +1,15 @@
-﻿[Configuration]
-LogPath = "logs"
-
-Port = 1212
+﻿
+[Configuration]
+log_path = "logs"
+log_format = "log_%(date)s-%(time)s.txt"
+log_level = 2
+log_enabled = true
+net_tickrate = 66
+net_port = 1212
+game_hostname = "MyServer"
+game_mapname = "SavedMap"
+game_maxplayers = 32
+game_type = 1
+game_welcomemsg = "Welcome to the server!"
+con_width = 120
+con_height = 60

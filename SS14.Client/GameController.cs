@@ -63,7 +63,7 @@ namespace SS14.Client
 
             ShowSplashScreen();
 
-            _configurationManager.Initialize(PathHelpers.ExecutableRelativeFile("client_config.toml"));
+            _configurationManager.LoadFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();

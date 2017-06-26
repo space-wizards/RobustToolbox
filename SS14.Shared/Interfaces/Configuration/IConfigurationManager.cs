@@ -11,15 +11,15 @@ namespace SS14.Shared.Interfaces.Configuration
         /// Sets up the ConfigurationManager and loads a yml configuration file.
         /// </summary>
         /// <param name="configFile">the full name of the config file.</param>
-        void Initialize(string configFile);
+        void LoadFile(string configFile);
 
         /// <summary>
         /// Saves the configuration file to disk.
         /// </summary>
-        void Save();
+        void SaveFile();
 
         /// <summary>
-        /// Register a CVar with the system.
+        /// Register a CVar with the system. This must be done before the CVar is accessed.
         /// </summary>
         /// <param name="name">The name of the CVar.</param>
         /// <param name="defaultValue">The default Value of the CVar.</param>

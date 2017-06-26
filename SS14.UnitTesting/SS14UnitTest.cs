@@ -146,7 +146,7 @@ namespace SS14.UnitTesting
             {
                 //ConfigurationManager setup
                 GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
-                GetConfigurationManager.Initialize(PathHelpers.AssemblyRelativeFile("./client_config.toml", Assembly.GetExecutingAssembly()));
+                GetConfigurationManager.LoadFile(PathHelpers.AssemblyRelativeFile("./client_config.toml", Assembly.GetExecutingAssembly()));
             }
 
             if (NeedsResourcePack)

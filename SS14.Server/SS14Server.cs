@@ -85,7 +85,7 @@ namespace SS14.Server
             Runlevel = RunLevel.Init;
 
             var configMgr = IoCManager.Resolve<IConfigurationManager>();
-            configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.toml"));
+            configMgr.LoadFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
             configMgr.RegisterCVar("log_path", "logs", CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log_format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);

@@ -1,1 +1,21 @@
-﻿[Configuration]
+﻿
+[Configuration]
+key_console = 64
+res_pack = "..\\..\\Resources\\ResourcePack.zip"
+res_password = ""
+display_width = 1280
+display_height = 720
+display_fullscreen = false
+display_refresh = 60
+display_vsync = false
+net_server = "127.0.0.1"
+net_updaterate = 20
+net_cmdrate = 30
+net_interpolation = 0.100000001490116
+net_rate = 10240
+net_fakelag = false
+net_fakeloss = 0.0
+net_fakelagmin = 0.0
+net_fakelagrand = 0.0
+ply_name = "Joe Genero"
+ent_logging = false

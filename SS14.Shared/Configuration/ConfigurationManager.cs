@@ -23,7 +23,7 @@ namespace SS14.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void Initialize(string configFile)
+        public void LoadFile(string configFile)
         {
             try
             {
@@ -74,12 +74,12 @@ namespace SS14.Shared.Configuration
                     return obj.Get<string>();
 
                 default:
-                    throw new Exception($"Config cannot convert {tmlType}.");
+                    throw new Exception($"[CFG] Cannot convert {tmlType}.");
             }
         }
 
         /// <inheritdoc />
-        public void Save()
+        public void SaveFile()
         {
             if (_configFile == null)
             {
@@ -87,11 +87,46 @@ namespace SS14.Shared.Configuration
                 return;
             }
 
-            //TODO: Actually save it.
+            try
+            {
+                var tblRoot = Toml.Create();
+                var tblCfg = tblRoot.AddTable("Configuration");
 
-                //TODO: Only save archivable cvars, that are different than default.
+                foreach (var kvCVar in _configVars)
+                {
+                    var cVar = kvCVar.Value;
 
-            Logger.Log($"[CFG] Server config saved to '{_configFile}'");
+                    if(!cVar.Registered)
+                        continue;
+
+                    var name = kvCVar.Key;
+                    var cVarVal = cVar.Value;
+
+                    //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
+                    if (cVarVal is int || cVarVal is Enum)
+                        tblCfg.AddValue(name, (int)cVarVal);
+                    else if (cVarVal is long)
+                        tblCfg.AddValue(name, (long)cVarVal);
+                    else if (cVarVal is bool)
+                        tblCfg.AddValue(name, (bool)cVarVal);
+                    else if (cVarVal is string)
+                        tblCfg.AddValue(name, (string)cVarVal);
+                    else if (cVarVal is float)
+                        tblCfg.AddValue(name, (float)cVarVal);
+                    else if (cVarVal is double)
+                        tblCfg.AddValue(name, (double) cVarVal);
+                    else
+                        Logger.Log($"Cannot serialize '{name}', unsupported type.", LogLevel.Warning);
+                }
+                
+                Toml.WriteFile(tblRoot, _configFile);
+
+                Logger.Log($"[CFG] Server config saved to '{_configFile}'.");
+            }
+            catch (Exception e)
+            {
+                Logger.Log($"[CFG] Cannot save the config file '{_configFile}'.\n {e.Message}", LogLevel.Warning);
+            }
         }
 
         /// <inheritdoc />
@@ -102,7 +137,7 @@ namespace SS14.Shared.Configuration
             {
                 if (cVar.Registered)
                 {
-                    Logger.Log($"[CVar] The variable '{name}' has already been registered", LogLevel.Error);
+                    Logger.Log($"[CVar] The variable '{name}' has already been registered.", LogLevel.Error);
                 }
 
                 cVar.DefaultValue = defaultValue;
@@ -127,7 +162,7 @@ namespace SS14.Shared.Configuration
             ConfigVar cVar;
             if (_configVars.TryGetValue(name, out cVar) && cVar.Registered)
             {
-                //TODO: Make flags work.
+                //TODO: Make flags work, required non-derpy net system.
                 if(cVar.DefaultValue != value)
                 {
                     cVar.Value = value;
@@ -144,7 +179,7 @@ namespace SS14.Shared.Configuration
             ConfigVar cVar;
             if (_configVars.TryGetValue(name, out cVar) && cVar.Registered)
             {
-                //TODO: Make flags work.
+                //TODO: Make flags work, required non-derpy net system.
                 return (T) (cVar.Value ?? cVar.DefaultValue);
             }
 

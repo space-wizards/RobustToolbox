@@ -25,7 +25,6 @@ namespace SS14.Client.Network
                 throw new InvalidOperationException("Start() has been called already.");
             }
 
-#if DEBUG
             var config = IoCManager.Resolve<IConfigurationManager>();
 
             config.RegisterCVar("net_server", "127.0.0.1", CVarFlags.ARCHIVE);
@@ -34,10 +33,12 @@ namespace SS14.Client.Network
             config.RegisterCVar("net_interpolation", 0.1f, CVarFlags.ARCHIVE);
             config.RegisterCVar("net_rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
 
+#if DEBUG
             config.RegisterCVar("net_fakelag", false, CVarFlags.CHEAT);
             config.RegisterCVar("net_fakeloss", 0.0f, CVarFlags.CHEAT);
             config.RegisterCVar("net_fakelagmin", 0.0f, CVarFlags.CHEAT);
             config.RegisterCVar("net_fakelagrand", 0.0f, CVarFlags.CHEAT);
+
 
             //Simulate Latency
             if (config.GetCVar<bool>("net_fakelag"))

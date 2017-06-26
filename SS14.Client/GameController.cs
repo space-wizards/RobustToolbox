@@ -3,6 +3,7 @@ using SFML.Window;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -11,13 +12,14 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
 using System;
+using System.Reflection;
 using System.Windows.Forms;
-using SS14.Shared.Configuration;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client

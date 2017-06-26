@@ -8,20 +8,22 @@ namespace SS14.Shared.Interfaces.Configuration
     public interface IConfigurationManager
     {
         /// <summary>
-        /// Sets up the ConfigurationManager and loads a yml configuration file.
+        /// Sets up the ConfigurationManager and loads a TOML configuration file.
         /// </summary>
         /// <param name="configFile">the full name of the config file.</param>
-        void LoadFile(string configFile);
+        void LoadFromFile(string configFile);
 
         /// <summary>
         /// Saves the configuration file to disk.
         /// </summary>
-        void SaveFile();
+        void SaveToFile();
 
         /// <summary>
         /// Register a CVar with the system. This must be done before the CVar is accessed.
         /// </summary>
-        /// <param name="name">The name of the CVar.</param>
+        /// <param name="name">The name of the CVar. This needs to contain only printable characters.
+        /// Underscores '_' are reserved. Everything before the last underscore is a table identifier,
+        /// everything after is the CVar name in the TOML document.</param>
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
         void RegisterCVar(string name, object defaultValue, CVarFlags flags = CVarFlags.NONE);

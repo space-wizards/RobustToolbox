@@ -12,7 +12,7 @@ namespace SS14.Server.ServerConsole.Commands
 
         public void Execute(params string[] args)
         {
-            IoCManager.Resolve<IConfigurationManager>().SaveFile();
+            IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
     }
 }

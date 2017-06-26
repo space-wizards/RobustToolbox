@@ -7,15 +7,16 @@ using SS14.Shared.Log;
 namespace SS14.Shared.Configuration
 {
     /// <summary>
-    /// Stores and manages global configuration variables.
+    ///     Stores and manages global configuration variables.
     /// </summary>
     public class ConfigurationManager : IConfigurationManager
     {
-        private string _configFile;
+        private const char TABLE_DELIMITER = '_';
         private readonly Dictionary<string, ConfigVar> _configVars;
+        private string _configFile;
 
         /// <summary>
-        /// Constructs a new ConfigurationManager.
+        ///     Constructs a new ConfigurationManager.
         /// </summary>
         public ConfigurationManager()
         {
@@ -23,32 +24,43 @@ namespace SS14.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void LoadFile(string configFile)
+        public void LoadFromFile(string configFile)
         {
             try
             {
                 var tblRoot = Toml.ReadFile(configFile);
-                var tblCfg = (TomlTable)tblRoot["Configuration"];
 
-                foreach (var kvObj in tblCfg)
+                foreach (var kvTable in tblRoot)
                 {
-                    // if the CVar has already been registered
-                    ConfigVar cfgVar;
-                    if (_configVars.TryGetValue(kvObj.Key, out cfgVar))
+                    var table = kvTable.Value as TomlTable;
+
+                    // filters keys in root table
+                    if (table == null)
                     {
-                        // overwrite the value with the saved one
-                        cfgVar.Value = TypeConvert(kvObj.Value);
+                        Logger.Warning($"[CFG] Object {kvTable.Key} in root is not a table, ignoring.");
                         continue;
                     }
 
-                    //or add another unregistered CVar
-                    var configVar = new ConfigVar(kvObj.Key, null, CVarFlags.NONE) {Value = TypeConvert(kvObj.Value)};
-                    _configVars.Add(kvObj.Key, configVar);
+                    foreach (var kvObj in table)
+                    {
+                        var cVarFullName = kvTable.Key + TABLE_DELIMITER + kvObj.Key;
+
+                        // if the CVar has already been registered
+                        if (_configVars.TryGetValue(cVarFullName, out ConfigVar cfgVar))
+                        {
+                            // overwrite the value with the saved one
+                            cfgVar.Value = TypeConvert(kvObj.Value);
+                            continue;
+                        }
+
+                        //or add another unregistered CVar
+                        var cVar = new ConfigVar(cVarFullName, null, CVarFlags.NONE) {Value = TypeConvert(kvObj.Value)};
+                        _configVars.Add(cVarFullName, cVar);
+                    }
                 }
 
-
                 _configFile = configFile;
-                Logger.Log($"[CFG] Configuration Loaded from '{configFile}'");
+                Logger.Info($"[CFG] Configuration Loaded from '{configFile}'");
             }
             catch (Exception e)
             {
@@ -56,7 +68,133 @@ namespace SS14.Shared.Configuration
             }
         }
 
-        // because apparently Nett can't do this for you...
+        /// <inheritdoc />
+        public void SaveToFile()
+        {
+            if (_configFile == null)
+            {
+                Logger.Warning("[CFG] Cannot save the config file, because one was never loaded.");
+                return;
+            }
+
+            try
+            {
+                var tblRoot = Toml.Create();
+
+                foreach (var kvCVar in _configVars)
+                {
+                    var cVar = kvCVar.Value;
+                    var name = kvCVar.Key;
+
+                    var value = cVar.Value;
+                    if (value == null && cVar.Registered)
+                    {
+                        value = cVar.DefaultValue;
+                    }
+                    
+                    if(value == null)
+                    {
+                        Logger.Error($"[CFG] CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    var index = name.LastIndexOf(TABLE_DELIMITER);
+                    var tblName = name.Substring(0, index);
+                    var keyName = name.Substring(index + 1);
+
+                    if (!tblRoot.TryGetValue(tblName, out TomlObject tblObject))
+                        tblObject = tblRoot.AddTable(tblName);
+
+                    // we are controlling tblObject, this should never be null
+                    var table = (TomlTable)tblObject;
+
+                    //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
+                    switch (value)
+                    {
+                        case Enum val:
+                            table.AddValue(keyName, (int) (object) val); // asserts Enum value != (ulong || long)
+                            break;
+                        case int val:
+                            table.AddValue(keyName, val);
+                            break;
+                        case long val:
+                            table.AddValue(keyName, val);
+                            break;
+                        case bool val:
+                            table.AddValue(keyName, val);
+                            break;
+                        case string val:
+                            table.AddValue(keyName, val);
+                            break;
+                        case float val:
+                            table.AddValue(keyName, val);
+                            break;
+                        case double val:
+                            table.AddValue(keyName, val);
+                            break;
+                        default:
+                            Logger.Warning($"[CFG] Cannot serialize '{name}', unsupported type.");
+                            break;
+                    }
+                }
+
+                Toml.WriteFile(tblRoot, _configFile);
+                Logger.Info($"[CFG] Server config saved to '{_configFile}'.");
+            }
+            catch (Exception e)
+            {
+                Logger.Warning($"[CFG] Cannot save the config file '{_configFile}'.\n {e.Message}");
+            }
+        }
+
+        /// <inheritdoc />
+        public void RegisterCVar(string name, object defaultValue, CVarFlags flags = CVarFlags.NONE)
+        {
+            if (_configVars.TryGetValue(name, out ConfigVar cVar))
+            {
+                if (cVar.Registered)
+                    Logger.Error($"[CVar] The variable '{name}' has already been registered.");
+
+                cVar.DefaultValue = defaultValue;
+                cVar.Flags = flags;
+                cVar.Registered = true;
+                return;
+            }
+
+            _configVars.Add(name, new ConfigVar(name, defaultValue, flags) {Registered = true, Value = defaultValue});
+        }
+
+        /// <inheritdoc />
+        public bool IsCVarRegistered(string name)
+        {
+            return _configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered;
+        }
+
+        /// <inheritdoc />
+        public void SetCVar(string name, object value)
+        {
+            //TODO: Make flags work, required non-derpy net system.
+            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+                cVar.Value = value;
+            else
+                throw new Exception($"[CVar] Trying to set unregistered variable '{name}'");
+        }
+
+        /// <inheritdoc />
+        public T GetCVar<T>(string name)
+        {
+            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+                //TODO: Make flags work, required non-derpy net system.
+                return (T) (cVar.Value ?? cVar.DefaultValue);
+
+            throw new Exception($"[CVar] Trying to get unregistered variable '{name}'");
+        }
+
+        /// <summary>
+        ///     Converts a TomlObject into its native type.
+        /// </summary>
+        /// <param name="obj">The object to convert.</param>
+        /// <returns>The boxed native type of the TomlObject.</returns>
         private static object TypeConvert(TomlObject obj)
         {
             var tmlType = obj.TomlType;
@@ -79,113 +217,50 @@ namespace SS14.Shared.Configuration
             }
         }
 
-        /// <inheritdoc />
-        public void SaveFile()
+        /// <summary>
+        ///     Holds the data for a single configuration variable.
+        /// </summary>
+        private class ConfigVar
         {
-            if (_configFile == null)
+            /// <summary>
+            ///     Constructs a CVar.
+            /// </summary>
+            /// <param name="name">The name of the CVar. This needs to contain only printable characters.
+            /// Underscores '_' are reserved. Everything before the last underscore is a table identifier,
+            /// everything after is the CVar name in the TOML document.</param>
+            /// <param name="defaultValue">The default value of this CVar.</param>
+            /// <param name="flags">Optional flags to modify the behavior of this CVar.</param>
+            public ConfigVar(string name, object defaultValue, CVarFlags flags)
             {
-                Logger.Log("[CFG] Cannot save the config file, because one was never loaded.", LogLevel.Warning);
-                return;
+                Name = name;
+                DefaultValue = defaultValue;
+                Flags = flags;
             }
 
-            try
-            {
-                var tblRoot = Toml.Create();
-                var tblCfg = tblRoot.AddTable("Configuration");
+            /// <summary>
+            ///     The name of the CVar.
+            /// </summary>
+            public string Name { get; }
 
-                foreach (var kvCVar in _configVars)
-                {
-                    var cVar = kvCVar.Value;
+            /// <summary>
+            ///     The default value of this CVar.
+            /// </summary>
+            public object DefaultValue { get; set; }
 
-                    if(!cVar.Registered)
-                        continue;
+            /// <summary>
+            ///     Optional flags to modify the behavior of this CVar.
+            /// </summary>
+            public CVarFlags Flags { get; set; }
 
-                    var name = kvCVar.Key;
-                    var cVarVal = cVar.Value;
+            /// <summary>
+            ///     The current value of this CVar.
+            /// </summary>
+            public object Value { get; set; }
 
-                    //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
-                    if (cVarVal is int || cVarVal is Enum)
-                        tblCfg.AddValue(name, (int)cVarVal);
-                    else if (cVarVal is long)
-                        tblCfg.AddValue(name, (long)cVarVal);
-                    else if (cVarVal is bool)
-                        tblCfg.AddValue(name, (bool)cVarVal);
-                    else if (cVarVal is string)
-                        tblCfg.AddValue(name, (string)cVarVal);
-                    else if (cVarVal is float)
-                        tblCfg.AddValue(name, (float)cVarVal);
-                    else if (cVarVal is double)
-                        tblCfg.AddValue(name, (double) cVarVal);
-                    else
-                        Logger.Log($"Cannot serialize '{name}', unsupported type.", LogLevel.Warning);
-                }
-                
-                Toml.WriteFile(tblRoot, _configFile);
-
-                Logger.Log($"[CFG] Server config saved to '{_configFile}'.");
-            }
-            catch (Exception e)
-            {
-                Logger.Log($"[CFG] Cannot save the config file '{_configFile}'.\n {e.Message}", LogLevel.Warning);
-            }
-        }
-
-        /// <inheritdoc />
-        public void RegisterCVar(string name, object defaultValue, CVarFlags flags = CVarFlags.NONE)
-        {
-            ConfigVar cVar;
-            if (_configVars.TryGetValue(name, out cVar))
-            {
-                if (cVar.Registered)
-                {
-                    Logger.Log($"[CVar] The variable '{name}' has already been registered.", LogLevel.Error);
-                }
-
-                cVar.DefaultValue = defaultValue;
-                cVar.Flags = flags;
-                cVar.Registered = true;
-                return;
-            }
-
-            _configVars.Add(name, new ConfigVar(name, defaultValue, flags) { Registered = true, Value = defaultValue});
-        }
-
-        /// <inheritdoc />
-        public bool IsCVarRegistered(string name)
-        {
-            ConfigVar cVar;
-            return _configVars.TryGetValue(name, out cVar) && cVar.Registered;
-        }
-
-        /// <inheritdoc />
-        public void SetCVar(string name, object value)
-        {
-            ConfigVar cVar;
-            if (_configVars.TryGetValue(name, out cVar) && cVar.Registered)
-            {
-                //TODO: Make flags work, required non-derpy net system.
-                if(cVar.DefaultValue != value)
-                {
-                    cVar.Value = value;
-                }
-            }
-
-            Logger.Log($"[CVar] Trying to set unregistered variable '{name}'", LogLevel.Fatal);
-            throw new Exception($"[CVar] Trying to set unregistered variable '{name}'");
-        }
-
-        /// <inheritdoc />
-        public T GetCVar<T>(string name)
-        {
-            ConfigVar cVar;
-            if (_configVars.TryGetValue(name, out cVar) && cVar.Registered)
-            {
-                //TODO: Make flags work, required non-derpy net system.
-                return (T) (cVar.Value ?? cVar.DefaultValue);
-            }
-
-            Logger.Log($"[CVar] Trying to get unregistered variable '{name}'", LogLevel.Fatal);
-            throw new Exception($"[CVar] Trying to get unregistered variable '{name}'");
+            /// <summary>
+            ///     Has this CVar been registered in code?
+            /// </summary>
+            public bool Registered { get; set; }
         }
     }
 }

@@ -562,8 +562,6 @@ namespace SS14.Client.State.States
         {
             IoCManager.Resolve<IPlayerManager>().Detach();
 
-            IoCManager.Resolve<IConfigurationManager>().SaveFile();
-
             _cleanupSpriteList.ForEach(s => s.Texture = null);
             _cleanupSpriteList.Clear();
             _cleanupList.ForEach(t => { t.Dispose(); });

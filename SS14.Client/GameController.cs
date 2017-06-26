@@ -65,7 +65,7 @@ namespace SS14.Client
 
             ShowSplashScreen();
 
-            _configurationManager.LoadFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
+            _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
@@ -101,6 +101,8 @@ namespace SS14.Client
             _networkManager.Disconnect();
             CluwneLib.Terminate();
             Logger.Info("GameController terminated.");
+
+            IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
 
         private void ShowSplashScreen()

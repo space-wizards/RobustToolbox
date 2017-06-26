@@ -1,15 +1,21 @@
 ﻿
-[Configuration]
-log_path = "logs"
-log_format = "log_%(date)s-%(time)s.txt"
-log_level = 2
-log_enabled = true
-net_tickrate = 66
-net_port = 1212
-game_hostname = "MyServer"
-game_mapname = "SavedMap"
-game_maxplayers = 32
-game_type = 1
-game_welcomemsg = "Welcome to the server!"
-con_width = 120
-con_height = 60
+[log]
+path = "logs"
+format = "log_%(date)s-%(time)s.txt"
+level = 2
+enabled = true
+
+[net]
+tickrate = 66
+port = 1212
+
+[game]
+hostname = "MyServer"
+mapname = "SavedMap"
+maxplayers = 32
+type = 1
+welcomemsg = "Welcome to the server!"
+
+[con]
+width = 120
+height = 60

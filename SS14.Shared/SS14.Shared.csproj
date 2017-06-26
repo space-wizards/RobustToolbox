@@ -111,7 +111,6 @@
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="ColorUtils.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
-    <Compile Include="Configuration\ConfigVar.cs" />
     <Compile Include="Configuration\CVarFlags.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />

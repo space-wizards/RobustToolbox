@@ -37,7 +37,8 @@ namespace SS14.Shared.Configuration
                     if (_configVars.TryGetValue(kvObj.Key, out cfgVar))
                     {
                         // overwrite the value with the saved one
-                        cfgVar.Value = kvObj.Value;
+                        cfgVar.Value = TypeConvert(kvObj.Value);
+                        continue;
                     }
 
                     //or add another unregistered CVar

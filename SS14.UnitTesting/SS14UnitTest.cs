@@ -188,7 +188,6 @@ namespace SS14.UnitTesting
             IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
 

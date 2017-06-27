@@ -1,5 +1,7 @@
 ﻿
 [key]
+
+[key.keyboard]
 console = 64
 
 [res]
@@ -23,3 +25,9 @@ fakelag = false
 fakeloss = 0.0
 fakelagmin = 0.0
 fakelagrand = 0.0
+
+[player]
+name = "Joe Genero"
+
+[ent]
+logging = false

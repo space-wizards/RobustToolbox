@@ -70,7 +70,7 @@ namespace SS14.Client.State.States
 
             _chkFullscreen = new Checkbox(ResourceManager);
             _chkFullscreen.ValueChanged += _chkfullscreen_ValueChanged;
-            _chkfullscreen_ValueChanged(ConfigurationManager.GetCVar<bool>("display_fullscreen"), _chkFullscreen);
+            _chkfullscreen_ValueChanged(ConfigurationManager.GetCVar<bool>("display.fullscreen"), _chkFullscreen);
             UserInterfaceManager.AddComponent(_chkFullscreen);
 
             _lblVsync = new Label("Vsync", "CALIBRI", ResourceManager);
@@ -78,7 +78,7 @@ namespace SS14.Client.State.States
 
             _chkVsync = new Checkbox(ResourceManager);
             _chkVsync.ValueChanged += _chkvsync_ValueChanged;
-            _chkvsync_ValueChanged(ConfigurationManager.GetCVar<bool>("display_vsync"), _chkVsync);
+            _chkvsync_ValueChanged(ConfigurationManager.GetCVar<bool>("display.vsync"), _chkVsync);
             UserInterfaceManager.AddComponent(_chkVsync);
 
             _lstResolution = new Listbox(250, 150, ResourceManager);
@@ -203,7 +203,7 @@ namespace SS14.Client.State.States
                 UpdateGUIPosition();
             }
 
-            _chkFullscreen.Value = ConfigurationManager.GetCVar<bool>("display_fullscreen");
+            _chkFullscreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             UserInterfaceManager.Update(e);
         }
 
@@ -283,14 +283,14 @@ namespace SS14.Client.State.States
 
         private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
         {
-            ConfigurationManager.SetCVar("display_vsync", newValue);
+            ConfigurationManager.SetCVar("display.vsync", newValue);
         }
 
 
 
         private void _chkfullscreen_ValueChanged(bool newValue, Checkbox sender)
         {
-            ConfigurationManager.SetCVar("display_fullscreen", newValue);
+            ConfigurationManager.SetCVar("display.fullscreen", newValue);
         }
 
         private void ApplyVideoMode()
@@ -303,8 +303,8 @@ namespace SS14.Client.State.States
             if (vmList.ContainsKey(item.Text.Text))
             {
                 VideoMode sel = vmList[item.Text.Text];
-                ConfigurationManager.SetCVar("display_width", (int)sel.Width);
-                ConfigurationManager.SetCVar("display_height", (int)sel.Height);
+                ConfigurationManager.SetCVar("display.width", (int)sel.Width);
+                ConfigurationManager.SetCVar("display.height", (int)sel.Height);
             }
         }
 

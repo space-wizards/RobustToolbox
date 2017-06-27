@@ -63,7 +63,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
-            var interpolation = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net_interpolation");
+            var interpolation = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
             Vector2f newPosition;
             foreach (var entity in entities)
             {

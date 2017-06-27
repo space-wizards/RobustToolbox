@@ -23,7 +23,7 @@ namespace SS14.Server.GameObjects
         public EntityNetworkManager(ISS14NetServer netServer)
         {
             m_netServer = netServer;
-            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetCVar<bool>("log_enabled");
+            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetCVar<bool>("log.enabled");
         }
 
         #region IEntityNetworkManager Members

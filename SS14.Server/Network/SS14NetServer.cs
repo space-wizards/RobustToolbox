@@ -35,9 +35,9 @@ namespace SS14.Server.Network
         public static NetPeerConfiguration LoadNetPeerConfig()
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
-            cfgMgr.RegisterCVar("net_port", 1212);
+            cfgMgr.RegisterCVar("net.port", 1212);
             var _config = new NetPeerConfiguration("SS13_NetTag");
-            _config.Port = cfgMgr.GetCVar<int>("net_port");
+            _config.Port = cfgMgr.GetCVar<int>("net.port");
 #if DEBUG
             _config.ConnectionTimeout = 30000f;
 #endif

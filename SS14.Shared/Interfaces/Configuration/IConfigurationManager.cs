@@ -22,7 +22,7 @@ namespace SS14.Shared.Interfaces.Configuration
         /// Register a CVar with the system. This must be done before the CVar is accessed.
         /// </summary>
         /// <param name="name">The name of the CVar. This needs to contain only printable characters.
-        /// Underscores '_' are reserved. Everything before the last underscore is a table identifier,
+        /// Periods '.' are reserved. Everything before the last period is a nested table identifier,
         /// everything after is the CVar name in the TOML document.</param>
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>

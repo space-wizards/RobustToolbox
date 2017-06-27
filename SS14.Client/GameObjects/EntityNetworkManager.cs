@@ -23,8 +23,8 @@ namespace SS14.Client.GameObjects
             _networkManager = networkManager;
 
             var config = IoCManager.Resolve<IConfigurationManager>();
-            config.RegisterCVar("ent_logging", false);
-            _messageProfiling = config.GetCVar<bool>("ent_logging");
+            config.RegisterCVar("ent.logging", false);
+            _messageProfiling = config.GetCVar<bool>("ent.logging");
         }
 
         #region IEntityNetworkManager Members

@@ -297,16 +297,16 @@ namespace SS14.Client
 
         private void SetupCluwne()
         {
-            _configurationManager.RegisterCVar("display_width", 1280, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display_height", 720, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display_fullscreen", false, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display_refresh", 60, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display_vsync", false, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.width", 1280, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.height", 720, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.fullscreen", false, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.refresh", 60, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.vsync", false, CVarFlags.ARCHIVE);
 
-            uint displayWidth = (uint) _configurationManager.GetCVar<int>("display_width");
-            uint displayHeight = (uint) _configurationManager.GetCVar<int>("display_height");
-            bool isFullscreen = _configurationManager.GetCVar<bool>("display_fullscreen");
-            uint refresh = (uint) _configurationManager.GetCVar<int>("display_refresh");
+            uint displayWidth = (uint) _configurationManager.GetCVar<int>("display.width");
+            uint displayHeight = (uint) _configurationManager.GetCVar<int>("display.height");
+            bool isFullscreen = _configurationManager.GetCVar<bool>("display.fullscreen");
+            uint refresh = (uint) _configurationManager.GetCVar<int>("display.refresh");
 
             CluwneLib.Video.SetFullscreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);

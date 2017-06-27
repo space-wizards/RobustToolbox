@@ -46,7 +46,7 @@ namespace SS14.Client.UserInterface
 
         public UserInterfaceManager(IResourceManager resourceManager, IConfigurationManager config)
         {
-            config.RegisterCVar("key_console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
+            config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
 
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
@@ -343,7 +343,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == _config.GetCVar<Keyboard.Key>("key_console"))
+            if (e.Code == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
                 _console.ToggleVisible();
                 return true;

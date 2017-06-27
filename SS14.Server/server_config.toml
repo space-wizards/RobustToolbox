@@ -16,6 +16,6 @@ maxplayers = 32
 type = 1
 welcomemsg = "Welcome to the server!"
 
-[con]
+[console]
 width = 120
 height = 60

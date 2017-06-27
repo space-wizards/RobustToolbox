@@ -144,7 +144,7 @@ namespace SS14.Client.State.States
         public void Startup()
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
-            manager.RegisterCVar("ply_name", "Joe Genero", CVarFlags.ARCHIVE);
+            manager.RegisterCVar("player.name", "Joe Genero", CVarFlags.ARCHIVE);
 
             LastUpdate = DateTime.Now;
             Now = DateTime.Now;
@@ -165,7 +165,7 @@ namespace SS14.Client.State.States
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
             NetworkManager.RequestMap();
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("ply_name"));
+            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name"));
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceManager);

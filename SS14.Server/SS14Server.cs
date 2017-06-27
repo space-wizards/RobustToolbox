@@ -87,15 +87,15 @@ namespace SS14.Server
             var configMgr = IoCManager.Resolve<IConfigurationManager>();
             configMgr.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
-            configMgr.RegisterCVar("log_path", "logs", CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log_format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log_level", LogLevel.Information, CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log_enabled", true, CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
 
-            configMgr.RegisterCVar("net_tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
+            configMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
 
-            string logPath = configMgr.GetCVar<string>("log_path");
-            string logFormat = configMgr.GetCVar<string>("log_format");
+            string logPath = configMgr.GetCVar<string>("log.path");
+            string logFormat = configMgr.GetCVar<string>("log.format");
             string logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             string fullPath = Path.Combine(logPath, logFilename);
 
@@ -107,10 +107,10 @@ namespace SS14.Server
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-            LogManager.CurrentLevel = configMgr.GetCVar<LogLevel>("log_level");
+            LogManager.CurrentLevel = configMgr.GetCVar<LogLevel>("log.level");
             LogManager.LogPath = logPath;
 
-            TickRate = configMgr.GetCVar<int>("net_tickrate");
+            TickRate = configMgr.GetCVar<int>("net.tickrate");
             ServerRate = 1000.0f / TickRate;
 
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
@@ -466,18 +466,18 @@ namespace SS14.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("game_hostname", "MyServer", CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("game_mapname", "SavedMap", CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("game_maxplayers", 32, CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("game_type", GameType.Game);
-            cfgMgr.RegisterCVar("game_welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.maxplayers", 32, CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.type", GameType.Game);
+            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
 
-            _serverPort = cfgMgr.GetCVar<int>("net_port");
-            _serverName = cfgMgr.GetCVar<string>("game_hostname");
-            _serverMapName = cfgMgr.GetCVar<string>("game_mapname");
-            _serverMaxPlayers = cfgMgr.GetCVar<int>("game_maxplayers");
-            _gameType = cfgMgr.GetCVar<GameType>("game_type");
-            _serverWelcomeMessage = cfgMgr.GetCVar<string>("game_welcomemsg");
+            _serverPort = cfgMgr.GetCVar<int>("net.port");
+            _serverName = cfgMgr.GetCVar<string>("game.hostname");
+            _serverMapName = cfgMgr.GetCVar<string>("game.mapname");
+            _serverMaxPlayers = cfgMgr.GetCVar<int>("game.maxplayers");
+            _gameType = cfgMgr.GetCVar<GameType>("game.type");
+            _serverWelcomeMessage = cfgMgr.GetCVar<string>("game.welcomemsg");
 
             Logger.Log("Port: " + _serverPort);
             Logger.Log("Name: " + _serverName);

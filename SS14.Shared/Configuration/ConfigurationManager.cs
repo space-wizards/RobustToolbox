@@ -11,7 +11,7 @@ namespace SS14.Shared.Configuration
     /// </summary>
     public class ConfigurationManager : IConfigurationManager
     {
-        private const char TABLE_DELIMITER = '_';
+        private const char TABLE_DELIMITER = '.';
         private readonly Dictionary<string, ConfigVar> _configVars;
         private string _configFile;
 
@@ -30,34 +30,7 @@ namespace SS14.Shared.Configuration
             {
                 var tblRoot = Toml.ReadFile(configFile);
 
-                foreach (var kvTable in tblRoot)
-                {
-                    var table = kvTable.Value as TomlTable;
-
-                    // filters keys in root table
-                    if (table == null)
-                    {
-                        Logger.Warning($"[CFG] Object {kvTable.Key} in root is not a table, ignoring.");
-                        continue;
-                    }
-
-                    foreach (var kvObj in table)
-                    {
-                        var cVarFullName = kvTable.Key + TABLE_DELIMITER + kvObj.Key;
-
-                        // if the CVar has already been registered
-                        if (_configVars.TryGetValue(cVarFullName, out ConfigVar cfgVar))
-                        {
-                            // overwrite the value with the saved one
-                            cfgVar.Value = TypeConvert(kvObj.Value);
-                            continue;
-                        }
-
-                        //or add another unregistered CVar
-                        var cVar = new ConfigVar(cVarFullName, null, CVarFlags.NONE) {Value = TypeConvert(kvObj.Value)};
-                        _configVars.Add(cVarFullName, cVar);
-                    }
-                }
+                ProcessTomlObject(tblRoot);
 
                 _configFile = configFile;
                 Logger.Info($"[CFG] Configuration Loaded from '{configFile}'");
@@ -65,6 +38,44 @@ namespace SS14.Shared.Configuration
             catch (Exception e)
             {
                 Logger.Warning("[CFG] Unable to load configuration file:\n{0}", e);
+            }
+        }
+        
+        /// <summary>
+        /// A recursive function that walks over the config tree, transforming all key nodes into CVars.
+        /// </summary>
+        /// <param name="obj">The root table of the TOML document.</param>
+        /// <param name="tablePath">For internal use only, the current path to the node.</param>
+        private void ProcessTomlObject(TomlObject obj, string tablePath = "")
+        {
+            if (obj is TomlTable table) // this is a table
+            {
+                foreach (var kvTml in table)
+                {
+                    string newPath;
+
+                    if ((kvTml.Value is TomlTable))
+                        newPath = tablePath + kvTml.Key + TABLE_DELIMITER;
+                    else
+                        newPath = tablePath + kvTml.Key;
+
+                    ProcessTomlObject(kvTml.Value, newPath);
+                }
+            }
+            else // this is a key, add CVar
+            {
+                // if the CVar has already been registered
+                if (_configVars.TryGetValue(tablePath, out ConfigVar cfgVar))
+                {
+                    // overwrite the value with the saved one
+                    cfgVar.Value = TypeConvert(obj);
+                }
+                else
+                {
+                    //or add another unregistered CVar
+                    var cVar = new ConfigVar(tablePath, null, CVarFlags.NONE) { Value = TypeConvert(obj) };
+                    _configVars.Add(tablePath, cVar);
+                }
             }
         }
 
@@ -98,15 +109,19 @@ namespace SS14.Shared.Configuration
                         continue;
                     }
 
-                    var index = name.LastIndexOf(TABLE_DELIMITER);
-                    var tblName = name.Substring(0, index);
-                    var keyName = name.Substring(index + 1);
+                    var keyIndex = name.LastIndexOf(TABLE_DELIMITER);
+                    var tblPath = name.Substring(0, keyIndex).Split(TABLE_DELIMITER);
+                    var keyName = name.Substring(keyIndex + 1);
 
-                    if (!tblRoot.TryGetValue(tblName, out TomlObject tblObject))
-                        tblObject = tblRoot.AddTable(tblName);
+                    // locate the Table in the config tree
+                    var table = tblRoot;
+                    foreach (var curTblName in tblPath)
+                    {
+                        if (!table.TryGetValue(curTblName, out TomlObject tblObject))
+                            tblObject = table.AddTable(curTblName);
 
-                    // we are controlling tblObject, this should never be null
-                    var table = (TomlTable)tblObject;
+                        table = tblObject as TomlTable ?? throw new Exception($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
+                    }
 
                     //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
                     switch (value)

@@ -34,11 +34,11 @@ namespace SS14.Server.ServerConsole
             InitializeCommands();
             var cfgMan = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMan.RegisterCVar("con_width", 120, CVarFlags.ARCHIVE);
-            cfgMan.RegisterCVar("con_height", 60, CVarFlags.ARCHIVE);
+            cfgMan.RegisterCVar("console.width", 120, CVarFlags.ARCHIVE);
+            cfgMan.RegisterCVar("console.height", 60, CVarFlags.ARCHIVE);
 
-            var consoleWidth = cfgMan.GetCVar<int>("con_width");
-            var consoleHeight = cfgMan.GetCVar<int>("con_height");
+            var consoleWidth = cfgMan.GetCVar<int>("console.width");
+            var consoleHeight = cfgMan.GetCVar<int>("console.height");
 
             try
             {

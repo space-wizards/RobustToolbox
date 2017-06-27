@@ -27,25 +27,24 @@ namespace SS14.Client.Network
 
             var config = IoCManager.Resolve<IConfigurationManager>();
 
-            config.RegisterCVar("net_server", "127.0.0.1", CVarFlags.ARCHIVE);
-            config.RegisterCVar("net_updaterate", 20, CVarFlags.ARCHIVE);
-            config.RegisterCVar("net_cmdrate", 30, CVarFlags.ARCHIVE);
-            config.RegisterCVar("net_interpolation", 0.1f, CVarFlags.ARCHIVE);
-            config.RegisterCVar("net_rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
+            config.RegisterCVar("net.server", "127.0.0.1", CVarFlags.ARCHIVE);
+            config.RegisterCVar("net.updaterate", 20, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net.cmdrate", 30, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net.interpolation", 0.1f, CVarFlags.ARCHIVE);
+            config.RegisterCVar("net.rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
 
 #if DEBUG
-            config.RegisterCVar("net_fakelag", false, CVarFlags.CHEAT);
-            config.RegisterCVar("net_fakeloss", 0.0f, CVarFlags.CHEAT);
-            config.RegisterCVar("net_fakelagmin", 0.0f, CVarFlags.CHEAT);
-            config.RegisterCVar("net_fakelagrand", 0.0f, CVarFlags.CHEAT);
-
+            config.RegisterCVar("net.fakelag", false, CVarFlags.CHEAT);
+            config.RegisterCVar("net.fakeloss", 0.0f, CVarFlags.CHEAT);
+            config.RegisterCVar("net.fakelagmin", 0.0f, CVarFlags.CHEAT);
+            config.RegisterCVar("net.fakelagrand", 0.0f, CVarFlags.CHEAT);
 
             //Simulate Latency
-            if (config.GetCVar<bool>("net_fakelag"))
+            if (config.GetCVar<bool>("net.fakelag"))
             {
-                _netConfig.SimulatedLoss = config.GetCVar<float>("net_fakeloss");
-                _netConfig.SimulatedMinimumLatency = config.GetCVar<float>("net_fakelagmin");
-                _netConfig.SimulatedRandomLatency = config.GetCVar<float>("net_fakelagrand");
+                _netConfig.SimulatedLoss = config.GetCVar<float>("net.fakeloss");
+                _netConfig.SimulatedMinimumLatency = config.GetCVar<float>("net.fakelagmin");
+                _netConfig.SimulatedRandomLatency = config.GetCVar<float>("net.fakelagrand");
             }
 
             _netConfig.ConnectionTimeout = 30000f;

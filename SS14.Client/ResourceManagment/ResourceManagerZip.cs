@@ -94,11 +94,11 @@ namespace SS14.Client.Resources
         {
             var cfgMgr = _configurationManager;
 
-            cfgMgr.RegisterCVar("res_pack", @"..\..\Resources\ResourcePack.zip", CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("res_password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
+            cfgMgr.RegisterCVar("res.pack", @"..\..\Resources\ResourcePack.zip", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
-            string zipPath = path ?? _configurationManager.GetCVar<string>("res_pack");
-            string password = pw ?? _configurationManager.GetCVar<string>("res_password");
+            string zipPath = path ?? _configurationManager.GetCVar<string>("res.pack");
+            string password = pw ?? _configurationManager.GetCVar<string>("res.password");
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {

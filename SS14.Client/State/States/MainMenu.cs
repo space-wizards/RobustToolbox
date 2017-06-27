@@ -69,7 +69,7 @@ namespace SS14.Client.State.States
                             };
             _btnExit.Clicked += _buttExit_Clicked;
 
-            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetCVar<string>("net_server")};
+            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetCVar<string>("net.server")};
             _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 

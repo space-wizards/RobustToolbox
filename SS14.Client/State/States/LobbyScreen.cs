@@ -61,7 +61,7 @@ namespace SS14.Client.State.States
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
-            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("ply_name")); //Send name.
+            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name")); //Send name.
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
             playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.

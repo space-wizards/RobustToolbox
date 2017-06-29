@@ -1,8 +1,8 @@
 ﻿using SFML.System;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components.Transform;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -78,7 +78,7 @@ namespace SS14.Client.GameObjects
         {
             lastState = state;
             states.Add(state);
-            var interp = IoCManager.Resolve<IPlayerConfigurationManager>().GetInterpolation();
+            var interp = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
             //Remove all states older than the one just before the interp time.
             lerpStateFrom = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
             if (lerpStateFrom != null)

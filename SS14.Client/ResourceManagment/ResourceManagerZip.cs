@@ -5,9 +5,9 @@ using SFML.System;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using System;
@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SS14.Client.Graphics.TexHelpers;
+using SS14.Shared.Configuration;
 
 namespace SS14.Client.Resources
 {
@@ -27,7 +28,7 @@ namespace SS14.Client.Resources
         private const int zipBufferSize = 4096;
         private MemoryStream VertexShader, FragmentShader;
 
-        private readonly IPlayerConfigurationManager _configurationManager;
+        private readonly IConfigurationManager _configurationManager;
         private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
         private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
         private readonly Dictionary<string, Texture> _textures = new Dictionary<string, Texture>();
@@ -44,7 +45,7 @@ namespace SS14.Client.Resources
 
         public int done = 0;
 
-        public ResourceManager(IPlayerConfigurationManager configurationManager)
+        public ResourceManager(IConfigurationManager configurationManager)
         {
             _configurationManager = configurationManager;
         }
@@ -91,8 +92,13 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadResourceZip(string path = null, string pw = null)
         {
-            string zipPath = path ?? _configurationManager.GetResourcePath();
-            string password = pw ?? _configurationManager.GetResourcePassword();
+            var cfgMgr = _configurationManager;
+
+            cfgMgr.RegisterCVar("res.pack", @"..\..\Resources\ResourcePack.zip", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
+
+            string zipPath = path ?? _configurationManager.GetCVar<string>("res.pack");
+            string password = pw ?? _configurationManager.GetCVar<string>("res.password");
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {

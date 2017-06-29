@@ -1,8 +1,7 @@
-﻿using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Configuration;
-using SS14.Server.Interfaces.MessageLogging;
+﻿using SS14.Server.Interfaces.MessageLogging;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System;
 using System.ServiceModel;
@@ -16,9 +15,9 @@ namespace SS14.Server.MessageLogging
         private readonly MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger(IServerConfigurationManager _configurationManager)
+        public MessageLogger(IConfigurationManager _configurationManager)
         {
-            _logging = _configurationManager.MessageLogging;
+            _logging = _configurationManager.GetCVar<bool>("log.enabled");
             _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
             if (_logging)
             {

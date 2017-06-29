@@ -1,0 +1,21 @@
+﻿
+[log]
+path = "logs"
+format = "log_%(date)s-%(time)s.txt"
+level = 2
+enabled = true
+
+[net]
+tickrate = 66
+port = 1212
+
+[game]
+hostname = "MyServer"
+mapname = "SavedMap"
+maxplayers = 32
+type = 1
+welcomemsg = "Welcome to the server!"
+
+[console]
+width = 120
+height = 60

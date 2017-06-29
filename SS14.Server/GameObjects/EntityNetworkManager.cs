@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
 using NetSerializer;
-using SS14.Server.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.MessageLogging;
 using SS14.Server.Interfaces.Network;
@@ -23,7 +23,7 @@ namespace SS14.Server.GameObjects
         public EntityNetworkManager(ISS14NetServer netServer)
         {
             m_netServer = netServer;
-            _messageProfiling = IoCManager.Resolve<IServerConfigurationManager>().MessageLogging;
+            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetCVar<bool>("log.enabled");
         }
 
         #region IEntityNetworkManager Members

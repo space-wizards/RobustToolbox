@@ -1,6 +1,5 @@
 ﻿using SFML.Window;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -10,7 +9,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
-using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
@@ -30,7 +29,7 @@ namespace SS14.Client.State
 
         #region Constructor
 
-        public StateManager(IPlayerConfigurationManager configurationManager, INetworkManager networkManager,
+        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager,
                             IUserInterfaceManager userInterfaceManager,
                             IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
                             IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
@@ -42,7 +41,7 @@ namespace SS14.Client.State
                                 {typeof (IResourceManager), resourceManager},
                                 {typeof (IMapManager), mapManager},
                                 {typeof (IPlayerManager), playerManager},
-                                {typeof (IPlayerConfigurationManager), configurationManager},
+                                {typeof (IConfigurationManager), configurationManager},
                                 {typeof (IPlacementManager), placementManager},
                                 {typeof (IKeyBindingManager), keyBindingManager},
                                 {typeof (IStateManager), this}

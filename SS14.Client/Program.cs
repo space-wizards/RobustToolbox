@@ -1,10 +1,8 @@
 ﻿using SS14.Client.Collision;
-using SS14.Client.Configuration;
 using SS14.Client.GameObjects;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Input;
@@ -32,9 +30,11 @@ using SS14.Client.State;
 using SS14.Client.UserInterface;
 using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
@@ -75,6 +75,7 @@ namespace SS14.Client
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<ILogManager, LogManager>();
+            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -95,7 +96,6 @@ namespace SS14.Client
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IMapManager, MapManager>();
-            IoCManager.Register<IPlayerConfigurationManager, ConfigurationManager>();
             IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IGameController, GameController>();

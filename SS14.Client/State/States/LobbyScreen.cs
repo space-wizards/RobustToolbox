@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -61,7 +61,7 @@ namespace SS14.Client.State.States
             message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
-            NetworkManager.SendClientName(ConfigurationManager.GetPlayerName()); //Send name.
+            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name")); //Send name.
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
             playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.

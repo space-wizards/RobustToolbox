@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -29,6 +29,8 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State.States
@@ -141,6 +143,9 @@ namespace SS14.Client.State.States
 
         public void Startup()
         {
+            var manager = IoCManager.Resolve<IConfigurationManager>();
+            manager.RegisterCVar("player.name", "Joe Genero", CVarFlags.ARCHIVE);
+
             LastUpdate = DateTime.Now;
             Now = DateTime.Now;
 
@@ -160,7 +165,7 @@ namespace SS14.Client.State.States
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
             NetworkManager.RequestMap();
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            NetworkManager.SendClientName(ConfigurationManager.GetPlayerName());
+            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name"));
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceManager);

@@ -2,7 +2,6 @@
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
-using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
@@ -18,9 +17,11 @@ using SS14.Server.Modules.Client;
 using SS14.Server.Map;
 using SS14.Server.Round;
 using SS14.Shared;
+using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
@@ -83,13 +84,21 @@ namespace SS14.Server
             LogManager = logManager;
             Runlevel = RunLevel.Init;
 
-            var configMgr = IoCManager.Resolve<IServerConfigurationManager>();
-            configMgr.Initialize(PathHelpers.ExecutableRelativeFile("server_config.xml"));
+            var configMgr = IoCManager.Resolve<IConfigurationManager>();
+            configMgr.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
-            string logPath = configMgr.LogPath;
-            string logFormat = configMgr.LogFormat;
+            configMgr.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
+            configMgr.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
+
+            configMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
+
+            string logPath = configMgr.GetCVar<string>("log.path");
+            string logFormat = configMgr.GetCVar<string>("log.format");
             string logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             string fullPath = Path.Combine(logPath, logFilename);
+
             if (!Path.IsPathRooted(fullPath))
             {
                 logPath = PathHelpers.ExecutableRelativeFile(fullPath);
@@ -98,10 +107,10 @@ namespace SS14.Server
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-            LogManager.CurrentLevel = configMgr.LogLevel;
+            LogManager.CurrentLevel = configMgr.GetCVar<LogLevel>("log.level");
             LogManager.LogPath = logPath;
 
-            TickRate = IoCManager.Resolve<IServerConfigurationManager>().TickRate;
+            TickRate = configMgr.GetCVar<int>("net.tickrate");
             ServerRate = 1000.0f / TickRate;
 
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
@@ -455,13 +464,21 @@ namespace SS14.Server
 
         public void LoadSettings()
         {
-            var cfgmgr = IoCManager.Resolve<IServerConfigurationManager>();
-            _serverPort = cfgmgr.Port;
-            _serverName = cfgmgr.ServerName;
-            _serverMapName = cfgmgr.ServerMapName;
-            _serverMaxPlayers = cfgmgr.ServerMaxPlayers;
-            _gameType = cfgmgr.GameType;
-            _serverWelcomeMessage = cfgmgr.ServerWelcomeMessage;
+            var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
+
+            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.maxplayers", 32, CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.type", GameType.Game);
+            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
+
+            _serverPort = cfgMgr.GetCVar<int>("net.port");
+            _serverName = cfgMgr.GetCVar<string>("game.hostname");
+            _serverMapName = cfgMgr.GetCVar<string>("game.mapname");
+            _serverMaxPlayers = cfgMgr.GetCVar<int>("game.maxplayers");
+            _gameType = cfgMgr.GetCVar<GameType>("game.type");
+            _serverWelcomeMessage = cfgMgr.GetCVar<string>("game.welcomemsg");
+
             Logger.Log("Port: " + _serverPort);
             Logger.Log("Name: " + _serverName);
             Logger.Log("TickRate: " + TickRate + "(" + ServerRate + "ms)");

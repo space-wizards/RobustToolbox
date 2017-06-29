@@ -1,12 +1,12 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Helpers;
+using SS14.Shared.Interfaces.Configuration;
 using System;
 
 namespace SS14.UnitTesting.SS14.Client.Helpers
@@ -18,7 +18,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         public override bool NeedsClientConfig => true;
         public override bool NeedsResourcePack => true;
 
-        private IPlayerConfigurationManager _configurationManager;
+        private IConfigurationManager _configurationManager;
         private IResourceManager _resourceManager;
 
         private GaussianBlur _gaussianBlur;

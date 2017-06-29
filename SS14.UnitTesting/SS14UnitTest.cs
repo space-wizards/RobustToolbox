@@ -9,7 +9,6 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
@@ -31,7 +30,6 @@ using SS14.Server.GameStates;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
-using SS14.Server.Interfaces.Configuration;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
@@ -52,7 +50,9 @@ using SS14.Server.Player;
 using SS14.Server.Round;
 using SS14.Server.Serialization;
 using SS14.Server.ServerConsole;
+using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
@@ -99,7 +99,7 @@ namespace SS14.UnitTesting
 
         #region Accessors
 
-        public IPlayerConfigurationManager GetConfigurationManager
+        public IConfigurationManager GetConfigurationManager
         {
             get;
             private set;
@@ -145,9 +145,8 @@ namespace SS14.UnitTesting
             if (NeedsClientConfig)
             {
                 //ConfigurationManager setup
-                GetConfigurationManager = IoCManager.Resolve<IPlayerConfigurationManager>();
-                GetConfigurationManager.Initialize(
-                    PathHelpers.AssemblyRelativeFile("./player_config.xml", Assembly.GetExecutingAssembly()));
+                GetConfigurationManager = IoCManager.Resolve<IConfigurationManager>();
+                GetConfigurationManager.LoadFromFile(PathHelpers.AssemblyRelativeFile("./client_config.toml", Assembly.GetExecutingAssembly()));
             }
 
             if (NeedsResourcePack)
@@ -169,6 +168,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IComponentFactory, ComponentFactory>();
+            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
@@ -188,7 +188,6 @@ namespace SS14.UnitTesting
             IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
-            IoCManager.Register<IServerConfigurationManager, Server.Configuration.ConfigurationManager>();
             IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
 
@@ -203,7 +202,6 @@ namespace SS14.UnitTesting
             IoCManager.Register<INetworkManager, NetworkManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
-            IoCManager.Register<IPlayerConfigurationManager, Client.Configuration.ConfigurationManager>();
             IoCManager.Register<IGameController, GameController>();
 
             // Unit test stuff.

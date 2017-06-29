@@ -4,20 +4,17 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Configuration;
 
 namespace SS14.Client.UserInterface
 {
@@ -32,7 +29,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         private readonly List<IGuiComponent> _components;
 
-        private readonly IPlayerConfigurationManager _config;
+        private readonly IConfigurationManager _config;
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
@@ -47,8 +44,10 @@ namespace SS14.Client.UserInterface
         ///  Currently targeting action.
         /// </summary>
 
-        public UserInterfaceManager(IResourceManager resourceManager, IPlayerConfigurationManager config)
+        public UserInterfaceManager(IResourceManager resourceManager, IConfigurationManager config)
         {
+            config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
+
             _resourceManager = resourceManager;
             DragInfo = new DragDropInfo();
             _components = new List<IGuiComponent>();
@@ -344,7 +343,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == _config.GetConsoleKey())
+            if (e.Code == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
                 _console.ToggleVisible();
                 return true;

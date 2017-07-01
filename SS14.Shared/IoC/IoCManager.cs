@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SS14.Shared.Exceptions;
 
 namespace SS14.Shared.IoC
 {
@@ -12,8 +11,8 @@ namespace SS14.Shared.IoC
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Dependency Injection is a concept where instead of saying "I need the <code>EntityManager</code>",
-    /// you say "I need something that implements <code>IEntityManager</code>".
+    /// Dependency Injection is a concept where instead of saying "I need the <c>EntityManager</c>",
+    /// you say "I need something that implements <c>IEntityManager</c>".
     /// This decouples the various systems into swappable components that have standardized interfaces.
     /// </para>
     /// <para>
@@ -50,28 +49,34 @@ namespace SS14.Shared.IoC
         /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
-        /// <typeparam name="TImplementation">The type that will be constructed as implementation. Must not be abstract or an interface.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
         /// <param name="overwrite">
         /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         /// replace the current implementation instead.
         /// </param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before.
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwriten.
         /// </exception>
-        public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : TInterface
+        public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : class, TInterface, new()
         {
-            if (typeof(TImplementation).IsAbstract)
-            {
-                throw new TypeArgumentException("Must not be abstract.", nameof(TImplementation));
-            }
             var interfaceType = typeof(TInterface);
-            if (!overwrite && ResolveTypes.ContainsKey(interfaceType))
+            if (ResolveTypes.ContainsKey(interfaceType))
             {
-                throw new InvalidOperationException(
-                    string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                                  interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
+                if (!overwrite)
+                {
+                    throw new InvalidOperationException(
+                        string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
+                        interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
                     ));
+                }
+
+                if (Services.ContainsKey(interfaceType))
+                {
+                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
+                }
             }
+
             ResolveTypes[interfaceType] = typeof(TImplementation);
         }
 
@@ -93,101 +98,79 @@ namespace SS14.Shared.IoC
         /// <summary>
         /// Resolve a dependency manually.
         /// </summary>
-        /// <exception cref="MissingImplementationException">Thrown if the interface was not registered beforehand.</exception>
-        /// <exception cref="NoPublicConstructorException">Thrown if the resolved implementation does not have a public constructor.</exception>
-        /// <exception cref="CircularDependencyException">Thrown if the type is already being built. This usually means a circular dependency exists.</exception>
+        /// <exception cref="UnregisteredTypeException">Thrown if the interface is not registered.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the resolved type hasn't been created yet
+        /// because the object graph still needs to be constructed for it.
+        /// </exception>
         public static T Resolve<T>()
         {
             Type type = typeof(T);
             if (!Services.ContainsKey(type))
             {
-                BuildType(type);
+                if (ResolveTypes.ContainsKey(type))
+                {
+                    // If we have the type registered but not created that means we haven't been told to initialize the graph yet.
+                    throw new InvalidOperationException($"Attempted to resolve type {type} before the object graph for it has been populated.");
+                }
+
+                throw new UnregisteredTypeException(type);
             }
 
             return (T)Services[type];
         }
 
         /// <summary>
-        /// Build the implementation for an interface.
-        /// Registers the built implementation so that it can be directly indexed.
+        /// Initializes the object graph by building every object and resolving all dependencies.
         /// </summary>
-        /// <param name="type">The interface to build.</param>
-        private static void BuildType(Type type)
+        public static void BuildGraph()
         {
-            if (!ResolveTypes.TryGetValue(type, out Type concreteType))
-            {
-                throw new MissingImplementationException(type);
-            }
+            // List of all objects we need to inject dependencies into.
+            var toInject = new List<object>();
 
-            // We're already building this, this means circular dependency!
-            if (CurrentlyBuilding.Contains(concreteType))
+            // First we build every type we have registered but isn't yet built.
+            // This allows us to run this after the content assembly has been loaded.
+            foreach (KeyValuePair<Type, Type> currentType in ResolveTypes.Where(p => !Services.ContainsKey(p.Key)))
             {
-                throw new CircularDependencyException(type);
-            }
+                // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
+                // Can't catch ourselves because we're not instantiated.
+                // Ones that aren't yet instantiated are about to be and'll find us instead.
+                KeyValuePair<Type, Type>? dupeType = ResolveTypes
+                                                    .Where(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value)
+                                                    .FirstOrDefault();
 
-            // See if we already have an valid instance but registered as a different type.
-            // Example being the EntityManager on client and server,
-            // which have subinterfaces like IServerEntityManager.
-            var potentialInstance = Services.Values.FirstOrDefault(s => type.IsAssignableFrom(s.GetType()));
-            if (potentialInstance != null)
-            {
-                // NOTE: if BuildType() gets called when there already IS an instance for the type.
-                // This'll "catch" that too.
-                // This is NOT intended and do not rely on it.
-                Services[type] = potentialInstance;
-                return;
-            }
-
-            ConstructorInfo constructor = concreteType.GetConstructors().FirstOrDefault();
-            if (constructor == null)
-            {
-                throw new NoPublicConstructorException(concreteType);
-            }
-
-            CurrentlyBuilding.Add(concreteType);
-
-            try
-            {
-                ParameterInfo[] parameters = constructor.GetParameters();
-                if (parameters.Any())
+                if (dupeType != null)
                 {
-                    var requiredParameters = new List<object>();
-                    foreach (ParameterInfo parameterInfo in parameters)
-                    {
-                        if (!Services.ContainsKey(parameterInfo.ParameterType))
-                        {
-                            BuildType(parameterInfo.ParameterType);
-                        }
-
-                        object dependency = Services[parameterInfo.ParameterType];
-                        requiredParameters.Add(dependency);
-                    }
-                    try
-                    {
-                        object instance = Activator.CreateInstance(concreteType, requiredParameters.ToArray());
-                        Services.Add(type, instance);
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        throw new ImplementationConstructorException(concreteType, e.InnerException);
-                    }
+                    // We have something with the same instance type, use that.
+                    Services[currentType.Key] = Services[dupeType.Value.Key];
+                    continue;
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        object instance = Activator.CreateInstance(concreteType);
-                        Services.Add(type, instance);
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        throw new ImplementationConstructorException(concreteType, e.InnerException);
-                    }
+                    var instance = Activator.CreateInstance(currentType.Value);
+                    Services[currentType.Key] = instance;
+                    toInject.Add(instance);
+                }
+                catch (TargetInvocationException e)
+                {
+                    throw new ImplementationConstructorException(currentType.Value, e.InnerException);
                 }
             }
-            finally
+
+            // Graph built, go over ones that need injection.
+            foreach (var implementation in toInject)
             {
-                CurrentlyBuilding.Remove(concreteType);
+                foreach (FieldInfo field in implementation.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    // Not using Resolve<T>() because we're literally building it right now.
+                    if (!Services.ContainsKey(field.FieldType))
+                    {
+                        throw new UnregisteredDependencyException(implementation.GetType(), field.FieldType, field.Name);
+                    }
+
+                    field.SetValue(implementation, Services[field.FieldType]);
+                }
             }
         }
     }

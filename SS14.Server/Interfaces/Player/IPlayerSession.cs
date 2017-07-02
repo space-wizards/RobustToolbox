@@ -1,25 +1,25 @@
-using Lidgren.Network;
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using System;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.Player
 {
     public interface IPlayerSession
     {
-        NetConnection ConnectedClient { get; }
         IEntity attachedEntity { get; }
         int? AttachedEntityUid { get; }
-        string name { get; set; }
-        SessionStatus status { get; set; }
-        NetConnection connectedClient { get; }
+        string Name { get; set; }
+        SessionStatus Status { get; set; }
+        NetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
 
         void SetName(string name);
 
         void AttachToEntity(IEntity a);
 
-        void HandleNetworkMessage(NetIncomingMessage message);
+        void HandleNetworkMessage(MsgSession message);
 
         void DetachFromEntity();
         void OnConnect();

@@ -629,7 +629,7 @@ namespace SS14.Client.State.States
             if (e.Code == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
-                message.Write((byte)NetMessage.ForceRestart);
+                message.Write((byte)NetMessages.ForceRestart);
                 NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
             if (e.Code == Keyboard.Key.Escape)
@@ -836,7 +836,7 @@ namespace SS14.Client.State.States
         private void SendChatMessage(string text)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)NetMessages.ChatMessage);
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
@@ -889,34 +889,34 @@ namespace SS14.Client.State.States
                     }
                     break;
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessage)message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessage.MapMessage:
+                        case NetMessages.MapMessage:
                             MapManager.HandleNetworkMessage(message);
                             break;
-                        //case NetMessage.AtmosDisplayUpdate:
+                        //case NetMessages.AtmosDisplayUpdate:
                         //    MapManager.HandleAtmosDisplayUpdate(message);
                         //    break;
-                        case NetMessage.PlayerSessionMessage:
+                        case NetMessages.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
-                        case NetMessage.PlayerUiMessage:
+                        case NetMessages.PlayerUiMessage:
                             UserInterfaceManager.HandleNetMessage(message);
                             break;
-                        case NetMessage.PlacementManagerMessage:
+                        case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
-                        case NetMessage.ChatMessage:
+                        case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
-                        case NetMessage.EntityMessage:
+                        case NetMessages.EntityMessage:
                             _entityManager.HandleEntityNetworkMessage(message);
                             break;
-                        case NetMessage.StateUpdate:
+                        case NetMessages.StateUpdate:
                             HandleStateUpdate(message);
                             break;
-                        case NetMessage.FullState:
+                        case NetMessages.FullState:
                             HandleFullState(message);
                             break;
                     }
@@ -1011,7 +1011,7 @@ namespace SS14.Client.State.States
         private void SendStateAck(uint sequence)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.StateAck);
+            message.Write((byte)NetMessages.StateAck);
             message.Write(sequence);
             NetworkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
         }

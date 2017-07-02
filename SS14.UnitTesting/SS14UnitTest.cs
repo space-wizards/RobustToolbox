@@ -38,7 +38,6 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.MessageLogging;
-using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
@@ -47,7 +46,6 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
 using SS14.Server.Map;
 using SS14.Server.MessageLogging;
-using SS14.Server.Network;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Reflection;
@@ -69,6 +67,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.UnitTesting
 {
@@ -209,7 +209,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<ICollisionManager, CollisionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-                    IoCManager.Register<INetworkManager, NetworkManager>();
+                    IoCManager.Register<INetClientManager, NetManager>();
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<ILightManager, LightManager>();
@@ -228,7 +228,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IServerLogManager, ServerLogManager>();
                     IoCManager.Register<IMessageLogger, MessageLogger>();
                     IoCManager.Register<IChatManager, ChatManager>();
-                    IoCManager.Register<ISS14NetServer, SS14NetServer>();
+                    IoCManager.Register<INetServerManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<IConsoleManager, ConsoleManager>();

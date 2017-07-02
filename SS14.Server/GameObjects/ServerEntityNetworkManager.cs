@@ -3,7 +3,6 @@ using NetSerializer;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.MessageLogging;
-using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -12,6 +11,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Server.GameObjects
 {
@@ -19,7 +20,7 @@ namespace SS14.Server.GameObjects
     {
         private bool _messageProfiling = false;
         [Dependency]
-        private readonly ISS14NetServer m_netServer;
+        private readonly INetworkServer m_netServer;
 
         public void Initialize()
         {
@@ -30,20 +31,20 @@ namespace SS14.Server.GameObjects
 
         public NetOutgoingMessage CreateEntityMessage()
         {
-            NetOutgoingMessage message = m_netServer.CreateMessage();
-            message.Write((byte)NetMessage.EntityMessage);
+            NetOutgoingMessage message = m_netServer.Server.CreateMessage();
+            message.Write((byte)NetMessages.EntityMessage);
             return message;
         }
 
         public void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            m_netServer.SendToAll(message, method);
+            m_netServer.Server.SendToAll(message, method);
         }
 
         public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            m_netServer.SendMessage(message, recipient, method);
+            m_netServer.Server.SendMessage(message, recipient, method);
         }
 
         /// <summary>
@@ -165,9 +166,9 @@ namespace SS14.Server.GameObjects
 
             //Send the message
             if (recipient == null)
-                m_netServer.SendToAll(message, method);
+                m_netServer.Server.SendToAll(message, method);
             else
-                m_netServer.SendMessage(message, recipient, method);
+                m_netServer.Server.SendMessage(message, recipient, method);
 
             if (_messageProfiling)
             {
@@ -241,11 +242,11 @@ namespace SS14.Server.GameObjects
             //Send the message
             if (targetConnection != null)
             {
-                m_netServer.SendMessage(newMsg, targetConnection, method);
+                m_netServer.Server.SendMessage(newMsg, targetConnection, method);
             }
             else
             {
-                m_netServer.SendToAll(newMsg, method);
+                m_netServer.Server.SendToAll(newMsg, method);
             }
         }
 

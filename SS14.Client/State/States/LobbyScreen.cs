@@ -58,13 +58,13 @@ namespace SS14.Client.State.States
             };
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
+            message.Write((byte)NetMessages.WelcomeMessage); //Request Welcome msg.
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name")); //Send name.
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessages.PlayerList); //Request Playerlist.
             NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
             _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
@@ -131,7 +131,7 @@ namespace SS14.Client.State.States
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-                playerListMsg.Write((byte)NetMessage.PlayerList); // Request Playerlist.
+                playerListMsg.Write((byte)NetMessages.PlayerList); // Request Playerlist.
                 NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
                 _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
@@ -168,31 +168,31 @@ namespace SS14.Client.State.States
                     break;
 
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessage)message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessage.LobbyChat:
+                        case NetMessages.LobbyChat:
                             string text = message.ReadString();
                             AddChat(text);
                             break;
 
-                        case NetMessage.PlayerCount:
+                        case NetMessages.PlayerCount:
                             //TODO var newCount = message.ReadByte();
                             break;
 
-                        case NetMessage.PlayerList:
+                        case NetMessages.PlayerList:
                             HandlePlayerList(message);
                             break;
 
-                        case NetMessage.WelcomeMessage:
+                        case NetMessages.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
 
-                        case NetMessage.ChatMessage:
+                        case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
 
-                        case NetMessage.JoinGame:
+                        case NetMessages.JoinGame:
                             HandleJoinGame();
                             break;
                     }
@@ -227,7 +227,7 @@ namespace SS14.Client.State.States
         public void SendLobbyChat(string text)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)NetMessages.ChatMessage);
             message.Write((byte)ChatChannel.Lobby);
             message.Write(text);
 

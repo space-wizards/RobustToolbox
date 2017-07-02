@@ -36,7 +36,7 @@ namespace SS14.Client.GameObjects
         public NetOutgoingMessage CreateEntityMessage()
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte)NetMessage.EntityMessage);
+            message.Write((byte)NetMessages.EntityMessage);
             return message;
         }
 

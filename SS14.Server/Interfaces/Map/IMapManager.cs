@@ -4,6 +4,8 @@ using SFML.System;
 using SS14.Shared;
 using System.Collections.Generic;
 using SS14.Shared.IoC;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.Map
 {
@@ -17,7 +19,7 @@ namespace SS14.Server.Interfaces.Map
 
         event TileChangedEventHandler TileChanged;
 
-        void HandleNetworkMessage(NetIncomingMessage message);
+        void HandleNetworkMessage(MsgMap message);
         NetOutgoingMessage CreateMapMessage(MapMessage messageType);
         void SendMap(NetConnection connection);
 

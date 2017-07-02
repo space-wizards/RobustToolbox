@@ -1,6 +1,4 @@
-using Lidgren.Network;
-using SS14.Server.Interfaces.Network;
-using SS14.Server.Interfaces.Player;
+﻿using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -11,6 +9,10 @@ using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Server.GameObjects;
 using System;
+using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Player
 {
@@ -20,42 +22,38 @@ namespace SS14.Server.Player
 
         private readonly PlayerManager _playerManager;
         public PlayerState PlayerState;
-        public PlayerSession(NetConnection client, PlayerManager playerManager)
+        public PlayerSession(NetChannel client, PlayerManager playerManager)
         {
             _playerManager = playerManager;
-            name = "";
+            Name = "";
 
             PlayerState = new PlayerState()
             {
-                UniqueIdentifier = client.RemoteUniqueIdentifier
+                UniqueIdentifier = client.UUID
+
             };
             if (client != null)
             {
-                connectedClient = client;
+                ConnectedClient = client;
                 OnConnect();
             }
             else
-                status = SessionStatus.Zombie;
+                Status = SessionStatus.Zombie;
 
             UpdatePlayerState();
         }
 
         #region IPlayerSession Members
 
-        public NetConnection connectedClient { get; private set; }
-
-        public NetConnection ConnectedClient
-        {
-            get { return connectedClient; }
-        }
+        public NetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
         public int? AttachedEntityUid
         {
             get { return attachedEntity == null ? null : (int?)attachedEntity.Uid; }
         }
-        public string name { get; set; }
-        public SessionStatus status { get; set; }
+        public string Name { get; set; }
+        public SessionStatus Status { get; set; }
 
         public DateTime ConnectedTime { get; private set; }
 
@@ -89,9 +87,9 @@ namespace SS14.Server.Player
             UpdatePlayerState();
         }
 
-        public void HandleNetworkMessage(NetIncomingMessage message)
+        public void HandleNetworkMessage(MsgSession message)
         {
-            var messageType = (PlayerSessionMessage)message.ReadByte();
+            var messageType = message.msgType;
             switch (messageType)
             {
                 case PlayerSessionMessage.Verb:
@@ -105,8 +103,8 @@ namespace SS14.Server.Player
 
         public void SetName(string _name)
         {
-            name = _name;
-            Logger.Log("Player set name: " + connectedClient.RemoteEndPoint.Address + " -> " + name);
+            Name = _name;
+            Logger.Log("Player set name: " + ConnectedClient.Connection.RemoteEndPoint.Address + " -> " + Name);
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -114,16 +112,16 @@ namespace SS14.Server.Player
         public void OnConnect()
         {
             ConnectedTime = DateTime.Now;
-            status = SessionStatus.Connected;
+            Status = SessionStatus.Connected;
             UpdatePlayerState();
             //Put player in lobby immediately.
-            Logger.Log("Player connected - " + connectedClient.RemoteEndPoint.Address);
+            Logger.Log("Player connected - " + ConnectedClient.Connection.RemoteEndPoint.Address);
             JoinLobby();
         }
 
         public void OnDisconnect()
         {
-            status = SessionStatus.Disconnected;
+            Status = SessionStatus.Disconnected;
             IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerLeft(this);
             DetachFromEntity();
             UpdatePlayerState();
@@ -131,12 +129,12 @@ namespace SS14.Server.Player
 
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
-            NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte)NetMessage.PlayerSessionMessage);
+            NetOutgoingMessage m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            m.Write((byte)NetMessages.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AddPostProcessingEffect);
             m.Write((int)type);
             m.Write(duration);
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(m, ConnectedClient, NetDeliveryMethod.ReliableUnordered);
+            IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion IPlayerSession Members
@@ -145,16 +143,16 @@ namespace SS14.Server.Player
         {
             if (attachedEntity == null) //TODO proper exception
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
-            NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte)NetMessage.PlayerSessionMessage);
+            NetOutgoingMessage m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            m.Write((byte)NetMessages.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.AttachToEntity);
             m.Write(attachedEntity.Uid);
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(m, connectedClient);
+            IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableOrdered);
         }
 
-        private void HandleVerb(NetIncomingMessage message)
+        private void HandleVerb(MsgSession message)
         {
-            DispatchVerb(message.ReadString(), message.ReadInt32());
+            DispatchVerb(message.verb, message.uid);
         }
 
         public void DispatchVerb(string verb, int uid)
@@ -172,8 +170,7 @@ namespace SS14.Server.Player
                     case "toxins":
                     //Need debugging function to add more gas
                     case "save":
-                        _playerManager.server.SaveEntities();
-                        _playerManager.server.SaveMap();
+                        _playerManager.Server.SaveGame();
                         break;
                 }
             }
@@ -181,9 +178,9 @@ namespace SS14.Server.Player
 
         private void SetAttachedEntityName()
         {
-            if (name != null && attachedEntity != null)
+            if (Name != null && attachedEntity != null)
             {
-                attachedEntity.Name = name;
+                attachedEntity.Name = Name;
             }
         }
 
@@ -196,41 +193,43 @@ namespace SS14.Server.Player
         public void JoinLobby()
         {
             /*var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            m.Write((byte)NetMessage.PlayerSessionMessage);
+            m.Write((byte)NetMessages.PlayerSessionMessage);
             m.Write((byte)PlayerSessionMessage.JoinLobby);
             IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);*/
             DetachFromEntity();
-            status = SessionStatus.InLobby;
+            Status = SessionStatus.InLobby;
             UpdatePlayerState();
         }
 
+        /// <summary>
+        ///     Causes the session to switch from the lobby to the game.
+        /// </summary>
         public void JoinGame()
         {
-            if (connectedClient != null && status != SessionStatus.InGame &&
-                _playerManager.server.Runlevel == RunLevel.Game)
+            if (ConnectedClient != null && Status != SessionStatus.InGame && _playerManager.RunLevel == RunLevel.Game)
             {
-                NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-                m.Write((byte)NetMessage.JoinGame);
-                IoCManager.Resolve<ISS14NetServer>().SendMessage(m, connectedClient);
+                var m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+                m.Write((byte) NetMessages.JoinGame);
+                IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableOrdered);
 
-                status = SessionStatus.InGame;
+                Status = SessionStatus.InGame;
                 UpdatePlayerState();
             }
         }
 
         public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
         {
-            NetOutgoingMessage m = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            m.Write((byte)NetMessage.PlayerUiMessage);
-            m.Write((byte)UiManagerMessage.ComponentMessage);
-            m.Write((byte)gui);
+            var m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            m.Write((byte) NetMessages.PlayerUiMessage);
+            m.Write((byte) UiManagerMessage.ComponentMessage);
+            m.Write((byte) gui);
             return m;
         }
 
         private void UpdatePlayerState()
         {
-            PlayerState.Status = status;
-            PlayerState.Name = name;
+            PlayerState.Status = Status;
+            PlayerState.Name = Name;
             if (attachedEntity == null)
                 PlayerState.ControlledEntity = null;
             else

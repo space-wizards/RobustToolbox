@@ -116,14 +116,14 @@ namespace SS14.Client.UserInterface.Components
             if (e.Message.MessageType != NetIncomingMessageType.Data)
                 return;
 
-            switch ((NetMessage)e.Message.PeekByte())
+            switch ((NetMessages)e.Message.PeekByte())
             {
-                case NetMessage.ConsoleCommandReply:
+                case NetMessages.ConsoleCommandReply:
                     e.Message.ReadByte();
                     AddLine("< " + e.Message.ReadString(), new Color(65, 105, 225));
                     break;
 
-                case NetMessage.ConsoleCommandRegister:
+                case NetMessages.ConsoleCommandRegister:
                     e.Message.ReadByte();
                     for (ushort amount = e.Message.ReadUInt16(); amount > 0; amount--)
                     {
@@ -256,7 +256,7 @@ namespace SS14.Client.UserInterface.Components
             if (netMgr != null && netMgr.IsConnected)
             {
                 NetOutgoingMessage outMsg = netMgr.CreateMessage();
-                outMsg.Write((byte)NetMessage.ConsoleCommand);
+                outMsg.Write((byte)NetMessages.ConsoleCommand);
                 outMsg.Write(text);
                 netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
@@ -269,7 +269,7 @@ namespace SS14.Client.UserInterface.Components
                 return;
 
             NetOutgoingMessage outMsg = netMgr.CreateMessage();
-            outMsg.Write((byte)NetMessage.ConsoleCommandRegister);
+            outMsg.Write((byte)NetMessages.ConsoleCommandRegister);
             netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             sentCommandRequestToServer = true;
         }

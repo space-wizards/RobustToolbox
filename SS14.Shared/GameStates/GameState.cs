@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using NetSerializer;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Serialization;
@@ -131,7 +131,7 @@ namespace SS14.Shared.GameStates
         /// <param name="message">NetOutgoingMessage to write to</param>
         public int WriteStateMessage(NetOutgoingMessage message)
         {
-            message.Write((byte) NetMessage.FullState);
+            message.Write((byte) NetMessages.FullState);
             byte[] stateData = Compress(GetSerializedDataBuffer());
             message.Write(Sequence);
             message.Write(stateData.Length);

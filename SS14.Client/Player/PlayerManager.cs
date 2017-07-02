@@ -139,7 +139,7 @@ namespace SS14.Client.Player
         public void SendVerb(string verb, int uid)
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte)NetMessage.PlayerSessionMessage);
+            message.Write((byte)NetMessages.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);

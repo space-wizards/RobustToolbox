@@ -1,25 +1,34 @@
-namespace SS14.Shared
+﻿namespace SS14.Shared
 {
-    public enum NetMessage
+    public enum NetMessages
     {
-        GameType = 0,
-        LobbyChat,
-        ServerName,
-        ClientName,
-        WelcomeMessage,
-        MaxPlayers,
-        PlayerCount,
-        PlayerList,
+        // Base engine messages
+        ERRROR = 0,
+        ClientName,             // C>S CL_GREET, This contains all info for server to create a CL_INFO
+        WelcomeMessageReq,      // C>S D Requests a welcome message, the server should send this to all established connections anyways.
+        WelcomeMessage,         // S>C SERVER_INFO
+        PlayerCount,            // S<? D SERVER_INFO
+        PlayerListReq,          // C>S
+        PlayerList,             // S>C D CL_INFO, A list of CL_Info's
+
+        // Console Commands
+        LobbyChat,              // D CON_MSG
+        ItemMessage,            // It's something the item system needs to handle
+        MobMessage,             //
+        ChatMessage,            // 
+        PlayerSessionMessage,   //
+        ConsoleCommand,         //
+        ConsoleCommandReply,    //
+        ConsoleCommandRegister, //
+
+        // Map Messages
         RequestMap,
         MapMessage,
-        ItemMessage, // It's something the item system needs to handle
-        MobMessage,
-        ChatMessage,
+
         PlacementManagerMessage,
-        PlayerSessionMessage,
         PlayerUiMessage,
-        JoinGame,
-        ForceRestart,
+        JoinGame,               // C>S Asks the server to move from lobby to the game. 
+        ForceRestart,           // C>S Asks the server to restart the match.
         AtmosDisplayUpdate,
         EntityMessage,
         EntityManagerMessage,
@@ -27,9 +36,6 @@ namespace SS14.Shared
         StateUpdate,
         StateAck,
         FullState,
-        ConsoleCommand,
-        ConsoleCommandReply,
-        ConsoleCommandRegister
     }
 
     public enum ItemMessage

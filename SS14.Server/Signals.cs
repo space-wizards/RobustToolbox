@@ -60,7 +60,7 @@ namespace SS14.Server
                         // String it is.
                         if (signum == "SIGINT" || signum == "SIGTERM")
                         {
-                            IoCManager.Resolve<ISS14Server>().Shutdown(string.Format("{0} received", signum));
+                            IoCManager.Resolve<IBaseServer>().Shutdown(string.Format("{0} received", signum));
                         }
                     }
                 });
@@ -107,7 +107,7 @@ SignalThread = new Thread(() =>
         {
             case Signum.SIGTERM:
             case Signum.SIGINT:
-                IoCManager.Resolve<ISS14Server>().Shutdown(string.Format("{0} received", signum.ToString()));
+                IoCManager.Resolve<IBaseServer>().Shutdown(string.Format("{0} received", signum.ToString()));
                 break;
         }
     }

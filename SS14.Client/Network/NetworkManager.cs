@@ -110,7 +110,7 @@ namespace SS14.Client.Network
         public void RequestMap()
         {
             NetOutgoingMessage message = NetClient.CreateMessage();
-            message.Write((byte)NetMessage.RequestMap);
+            message.Write((byte)NetMessages.RequestMap);
             NetClient.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
@@ -122,7 +122,7 @@ namespace SS14.Client.Network
         public void SendClientName(string name)
         {
             NetOutgoingMessage message = NetClient.CreateMessage();
-            message.Write((byte)NetMessage.ClientName);
+            message.Write((byte)NetMessages.ClientName);
             message.Write(name);
             NetClient.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }

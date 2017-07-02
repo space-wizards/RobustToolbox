@@ -4,7 +4,6 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -15,6 +14,7 @@ using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Reflection;
 using System;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Server.ClientConsoleHost
 {
@@ -27,9 +27,9 @@ namespace SS14.Server.ClientConsoleHost
 
         public void HandleRegistrationRequest(NetConnection senderConnection)
         {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
-            var message = netMgr.CreateMessage();
-            message.Write((byte)NetMessage.ConsoleCommandRegister);
+            var netMgr = IoCManager.Resolve<INetworkServer>();
+            var message = netMgr.Server.CreateMessage();
+            message.Write((byte)NetMessages.ConsoleCommandRegister);
             message.Write((UInt16)AvailableCommands.Count);
             foreach (var command in AvailableCommands.Values)
             {
@@ -71,7 +71,7 @@ namespace SS14.Server.ClientConsoleHost
             {
                 IClientCommand command = AvailableCommands[cmd];
                 args.RemoveAt(0);
-                var client = IoCManager.Resolve<ISS14Server>().GetClient(sender);
+                var client = IoCManager.Resolve<INetworkServer>().GetChannel(sender);
                 command.Execute(this, client, args.ToArray());
             }
             catch (KeyNotFoundException)
@@ -86,11 +86,11 @@ namespace SS14.Server.ClientConsoleHost
 
         public void SendConsoleReply(string text, NetConnection target)
         {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
-            NetOutgoingMessage replyMsg = netMgr.CreateMessage();
-            replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
+            var netMgr = IoCManager.Resolve<INetworkServer>();
+            NetOutgoingMessage replyMsg = netMgr.Server.CreateMessage();
+            replyMsg.Write((byte)NetMessages.ConsoleCommandReply);
             replyMsg.Write(text);
-            netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
+            netMgr.Server.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
         }
     }
 }

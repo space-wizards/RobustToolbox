@@ -2,7 +2,6 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -14,6 +13,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Map
 {
@@ -225,8 +227,8 @@ namespace SS14.Server.Map
 
         public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
+            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            message.Write((byte)NetMessages.MapMessage);
             message.Write((byte)messageType);
             return message;
         }
@@ -255,15 +257,14 @@ namespace SS14.Server.Map
                     mapMessage.Write((uint)tile);
             }
 
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            IoCManager.Resolve<INetworkServer>().Server.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
             Logger.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
                            mapMessage.LengthBytes + " bytes");
         }
 
-        public void HandleNetworkMessage(NetIncomingMessage message)
+        public void HandleNetworkMessage(MsgMap message)
         {
-            var messageType = (MapMessage)message.ReadByte();
-            switch (messageType)
+            switch (message.MessageType)
             {
                 case MapMessage.TurfClick:
                     //HandleTurfClick(message);
@@ -305,14 +306,14 @@ namespace SS14.Server.Map
 
         public void NetworkUpdateTile(TileRef tile)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
+            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            message.Write((byte)NetMessages.MapMessage);
             message.Write((byte)MapMessage.TurfUpdate);
 
             message.Write((int)tile.X);
             message.Write((int)tile.Y);
             message.Write((uint)tile.Tile);
-            IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
+            IoCManager.Resolve<INetworkServer>().SendToAll(message);
         }
 
         #endregion Networking

@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Components
         {
             var netManager = IoCManager.Resolve<INetworkManager>();
             NetOutgoingMessage playerListMsg = netManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessages.PlayerList); //Request Playerlist.
             netManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);          
         }
 

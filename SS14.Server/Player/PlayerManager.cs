@@ -143,6 +143,8 @@ namespace SS14.Server.Player
             Logger.Info(session.Name + " disconnected.");
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
+
+            _sessions.Remove(client.NetworkId);
         }
 
         /// <summary>

@@ -25,6 +25,7 @@ namespace SS14.Shared.Network
         {
             _server = server;
             Connection = connection;
+            UUID = connection.RemoteUniqueIdentifier;
         }
 
         public T CreateMessage<T>()

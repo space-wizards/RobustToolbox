@@ -468,7 +468,7 @@ namespace SS14.Server
         private void HandleGenericMessage(NetMessage msg)
         {
             var chan = msg.Channel;
-            Logger.Info($"[NET] Received message {chan}:{msg.Name}");
+            //Logger.Info($"[NET] Received message {chan}:{msg.Name}");
             var messageType = msg.Id;
             var channel = chan;
 

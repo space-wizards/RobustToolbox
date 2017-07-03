@@ -31,7 +31,7 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("base_font"));
+            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("CALIBRI"));
         }
 
         #region INetworkGrapher Members

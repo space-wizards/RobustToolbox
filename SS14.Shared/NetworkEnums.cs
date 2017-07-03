@@ -11,9 +11,7 @@
         PlayerList,             // S>C D CL_INFO, A list of CL_Info's
 
         // Console Commands
-        LobbyChat,              // D CON_MSG
-        ItemMessage,            // It's something the item system needs to handle
-        MobMessage,             //
+        LobbyChat,              //
         ChatMessage,            // 
         PlayerSessionMessage,   //
         ConsoleCommand,         //
@@ -27,10 +25,8 @@
         PlacementManagerMessage,
         PlayerUiMessage,
         JoinGame,               // C>S Asks the server to move from lobby to the game. 
-        ForceRestart,           // C>S Asks the server to restart the match.
-        AtmosDisplayUpdate,
+        ForceRestart,
         EntityMessage,
-        EntityManagerMessage,
         RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
         StateUpdate,
         StateAck,

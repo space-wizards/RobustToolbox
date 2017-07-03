@@ -152,6 +152,7 @@
     <Compile Include="Network\Messages\MsgConCmd.cs" />
     <Compile Include="Network\Messages\MsgEntity.cs" />
     <Compile Include="Network\Messages\MsgMap.cs" />
+    <Compile Include="Network\Messages\MsgMapReq.cs" />
     <Compile Include="Network\Messages\MsgPlacement.cs" />
     <Compile Include="Network\Messages\MsgPlayerList.cs" />
     <Compile Include="Network\Messages\MsgPlayerListReq.cs" />

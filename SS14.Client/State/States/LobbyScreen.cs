@@ -13,6 +13,7 @@ using System.Collections.Generic;
 
 namespace SS14.Client.State.States
 {
+#if _DEL
     public class LobbyScreen : State, IState
     {
         private const double PlayerListRefreshDelaySec = 3; //Time in seconds before refreshing the playerlist.
@@ -33,7 +34,7 @@ namespace SS14.Client.State.States
         {
         }
 
-        #region IState Members
+#region IState Members
 
         public void Startup()
         {
@@ -58,13 +59,13 @@ namespace SS14.Client.State.States
             };
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.WelcomeMessage); //Request Welcome msg.
+            message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name")); //Send name.
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessages.PlayerList); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
             NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
             _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
@@ -131,14 +132,14 @@ namespace SS14.Client.State.States
             if (_playerListTime.CompareTo(DateTime.Now) < 0)
             {
                 NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-                playerListMsg.Write((byte)NetMessages.PlayerList); // Request Playerlist.
+                playerListMsg.Write((byte)NetMessages.PlayerListReq); // Request Playerlist.
                 NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
                 _playerListTime = DateTime.Now.AddSeconds(PlayerListRefreshDelaySec);
             }
         }
 
-        #endregion IState Members
+#endregion IState Members
 
         private void JoinButtonClicked(Button sender)
         {
@@ -252,7 +253,7 @@ namespace SS14.Client.State.States
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
-        #region Input
+#region Input
 
         public void KeyDown(KeyEventArgs e)
         {
@@ -307,6 +308,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.TextEntered(e);
         }
 
-        #endregion Input
+#endregion Input
     }
+#endif
 }

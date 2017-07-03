@@ -32,6 +32,10 @@ namespace SS14.Shared.Interfaces.Network
 
         #endregion
 
+        event OnConnectingEvent OnConnecting;
+        event OnConnectedEvent OnConnected;
+        event OnDisconnectEvent OnDisconnect;
+
         #region Obsolete
 
         [Obsolete]

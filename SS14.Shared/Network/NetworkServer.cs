@@ -10,6 +10,10 @@ using SS14.Shared.Log;
 
 namespace SS14.Shared.Network
 {
+    public delegate void OnConnectingEvent(NetChannel channel);
+    public delegate void OnConnectedEvent(NetChannel channel);
+    public delegate void OnDisconnectEvent(NetChannel channel);
+
     public class NetworkServer : INetworkServer
     {
         /// <summary>
@@ -40,7 +44,7 @@ namespace SS14.Shared.Network
         public bool IsServer { get; private set; }
 
         [Obsolete]
-        public NetServer Server { get; }
+        public NetServer Server { get; private set; }
 
         [Obsolete]
         public NetPeerStatistics Statistics => _netserver.Statistics;
@@ -67,6 +71,7 @@ namespace SS14.Shared.Network
 
             _netserver = new NetServer(LoadNetPeerConfig());
             _netserver.Start();
+            Server = _netserver;
         }
 
         /// <summary>
@@ -148,17 +153,12 @@ namespace SS14.Shared.Network
                         sender.Disconnect("Duplicate connection.");
                         return;
                     }
-
                     HandleConnectionApproval(sender);
-                    //IoCManager.Resolve<IPlayerManager>().NewSession(sender);
-                    // TODO move this to somewhere that makes more sense.
-
                     break;
 
                 case NetConnectionStatus.Disconnected:
                     Logger.Log("[NET]" + senderIp + ": Disconnected");
-
-                    //IoCManager.Resolve<IPlayerManager>().EndSession(sender);
+                    
                     if (_clients.ContainsKey(sender))
                         CleanupClientConnection(sender);
                     break;
@@ -167,11 +167,16 @@ namespace SS14.Shared.Network
 
         private void HandleConnectionApproval(NetConnection sender)
         {
-            _clients.Add(sender, new NetChannel(sender));
+            var channel = new NetChannel(this, sender);
+            _clients.Add(sender, channel);
+
+            OnConnected?.Invoke(channel);
         }
 
         private void CleanupClientConnection(NetConnection sender)
         {
+            var channel = _clients[sender];
+            OnDisconnect?.Invoke(channel);
             _clients.Remove(sender);
         }
 
@@ -193,7 +198,7 @@ namespace SS14.Shared.Network
                 }
                 throw new Exception($"[NET] No message with Name {name}. Did you register it?");
             }
-            throw new Exception($"[NET] No string in table with ID {id}. Did you register it?");
+            throw new Exception($"[NET] No string in table with ID {(NetMessages)id}. Did you register it?");
         }
 
         private static NetPeerConfiguration LoadNetPeerConfig()
@@ -301,16 +306,11 @@ namespace SS14.Shared.Network
         #endregion NetMessages
 
         #region Events
-
-        public delegate void OnConnectingEvent();
-
+        
         public event OnConnectingEvent OnConnecting;
-
-        public delegate void OnConnectedEvent(NetChannel channel);
+        
         public event OnConnectedEvent OnConnected;
-
-        public delegate void OnDisconnectEvent();
-
+        
         public event OnDisconnectEvent OnDisconnect;
 
         #endregion Events

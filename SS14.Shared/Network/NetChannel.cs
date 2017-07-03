@@ -21,8 +21,9 @@ namespace SS14.Shared.Network
 
         private NetworkServer _server;
 
-        public NetChannel(NetConnection connection)
+        public NetChannel(NetworkServer server, NetConnection connection)
         {
+            _server = server;
             Connection = connection;
         }
 
@@ -38,13 +39,12 @@ namespace SS14.Shared.Network
 
             if (_server.TryFindStringId(message.Name, out int msgID))
             {
-                packet.Write(msgID);
+                packet.Write((byte)msgID);
                 message.WriteToBuffer(packet);
                 _server.SendMessage(packet, Connection);
                 return;
             }
             throw new Exception($"[NET] No string in table with name {message.Name}. Was it registered?");
         }
-        
     }
 }

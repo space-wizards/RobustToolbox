@@ -1,11 +1,16 @@
-﻿using Lidgren.Network;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Lidgren.Network;
 
 namespace SS14.Shared.Network.Messages
 {
-    public class MsgChat : NetMessage
+    public class MsgMapReq : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.ChatMessage;
+        public static readonly NetMessages ID = NetMessages.RequestMap;
         public static readonly MsgGroups GROUP = MsgGroups.ENTITY;
 
         public static readonly string NAME = ID.ToString();
@@ -15,24 +20,17 @@ namespace SS14.Shared.Network.Messages
             get => _callback;
             set => _callback = value;
         }
-        public MsgChat(NetChannel channel)
+        public MsgMapReq(NetChannel channel)
             : base(channel, NAME, GROUP, ID)
         { }
         #endregion
-
-        public ChatChannel channel;
-        public string text;
-
+        
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            channel = (ChatChannel)buffer.ReadByte();
-            text = buffer.ReadString();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write((byte)channel);
-            buffer.Write(text);
         }
     }
 }

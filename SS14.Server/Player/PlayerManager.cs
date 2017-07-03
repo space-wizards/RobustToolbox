@@ -13,6 +13,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
@@ -49,13 +50,18 @@ namespace SS14.Server.Player
         {
             Server = server;
             Server.OnRunLevelChanged += RunLevelChanged;
+
+            var netMan = IoCManager.Resolve<INetworkServer>();
+
+            netMan.OnConnected += NewSession;
+            netMan.OnDisconnect += EndSession;
         }
 
         private void RunLevelChanged(RunLevel oldLevel, RunLevel newLevel)
         {
             RunLevel = newLevel;
         }
-
+        
 
         #region IPlayerManager Members
 
@@ -178,35 +184,38 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public IEnumerable<IPlayerSession> GetPlayersInRange(Vector2f position, int range)
+        public List<IPlayerSession> GetPlayersInRange(Vector2f position, int range)
         {
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
                     (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).LengthSquared() < range * range)
-                        .ToArray();
+                    .Cast<IPlayerSession>()
+                    .ToList();
         }
 
         /// <summary>
         /// Gets all the players in the game lobby.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<IPlayerSession> GetPlayersInLobby()
+        public List<IPlayerSession> GetPlayersInLobby()
         {
             //TODO: Lobby system needs to be moved to Content Assemblies.
             return
                 _sessions.Values.Where(
-                    x => x.Status == SessionStatus.InLobby).ToArray();
+                    x => x.Status == SessionStatus.InLobby)
+                    .Cast<IPlayerSession>()
+                    .ToList();
         }
 
         /// <summary>
         /// Gets all players in the server.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<IPlayerSession> GetAllPlayers()
+        public List<IPlayerSession> GetAllPlayers()
         {
-            return _sessions.Values.ToArray();
+            return _sessions.Values.Cast<IPlayerSession>().ToList();
         }
 
         /// <summary>
@@ -215,7 +224,9 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<PlayerState> GetPlayerStates()
         {
-            return _sessions.Values.Select(s => s.PlayerState).ToList();
+            return _sessions.Values
+                .Select(s => s.PlayerState)
+                .ToList();
         }
 
 #endregion IPlayerManager Members

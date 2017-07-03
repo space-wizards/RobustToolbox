@@ -35,6 +35,7 @@ using SS14.Shared.Utility;
 namespace SS14.Server
 {
     public delegate void EventRunLevelChanged(RunLevel oldLevel, RunLevel newLevel);
+
     public delegate void EventTick(int curTick);
 
     public class BaseServer : IBaseServer
@@ -42,13 +43,12 @@ namespace SS14.Server
         private const int GAME_COUNTDOWN = 15;
         private const int UPDATE_RATE = 20; //20 updates per second
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
-        private readonly IComponentManager _components;
-        private readonly IServerEntityManager _entities;
         private readonly List<float> _frameTimes = new List<float>();
-        private readonly IServerLogManager _log;
         private readonly Stopwatch _stopWatch = new Stopwatch();
         private bool _active;
         private uint _basePeriod;
+        private IComponentManager _components;
+        private IServerEntityManager _entities;
         private int _lastAnnounced;
         private uint _lastState;
         private DateTime _lastStateTime = DateTime.Now;
@@ -66,18 +66,15 @@ namespace SS14.Server
         /// <param name="logManager"></param>
         public BaseServer(ICommandLineArgs args, IServerLogManager logManager)
         {
-            _log = logManager;
-            Level = RunLevel.Init;
-
+            //Sets up the configMgr
             var configMgr = IoCManager.Resolve<IConfigurationManager>();
             configMgr.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
+            //Sets up Logging
             configMgr.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
-
-            configMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
 
             var logPath = configMgr.GetCVar<string>("log.path");
             var logFormat = configMgr.GetCVar<string>("log.format");
@@ -89,15 +86,8 @@ namespace SS14.Server
 
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-
-            _log.CurrentLevel = configMgr.GetCVar<LogLevel>("log.level");
-            _log.LogPath = logPath;
-
-            _tickRate = configMgr.GetCVar<int>("net.tickrate");
-            _serverRate = 1000.0f / _tickRate;
-
-            _entities = IoCManager.Resolve<IServerEntityManager>();
-            _components = IoCManager.Resolve<IComponentManager>();
+            logManager.CurrentLevel = configMgr.GetCVar<LogLevel>("log.level");
+            logManager.LogPath = logPath;
         }
 
         [Obsolete] //TODO: Kill this
@@ -118,6 +108,104 @@ namespace SS14.Server
 
         /// <inheritdoc />
         public event EventTick OnTick;
+        
+        /// <inheritdoc />
+        public void Restart()
+        {
+            //TODO: This needs to hard-reset all modules.
+            Logger.Info("[SRV] Soft restarting Server...");
+            IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
+            SendGameStateUpdate(true, true);
+            DisposeForRestart();
+            StartLobby();
+        }
+
+        /// <inheritdoc />
+        public void Shutdown(string reason = null)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+                Logger.Log("[SRV] Shutting down...");
+            else
+                Logger.Log($"[SRV] {reason}, shutting down...");
+            _active = false;
+        }
+
+        /// <inheritdoc />
+        public void SaveGame()
+        {
+            IoCManager.Resolve<IMapManager>().SaveMap(_serverMapName);
+            _entities.SaveEntities();
+        }
+
+        /// <inheritdoc />
+        public bool Start()
+        {
+            _time = DateTime.Now;
+
+            Level = RunLevel.Init;
+
+            LoadSettings();
+
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.Resync();
+
+            var netMan = IoCManager.Resolve<INetworkServer>();
+            netMan.Initialize(true);
+
+            //TODO: Register all NetMessages
+            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, HandleGenericMessage);
+
+            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleGenericMessage);
+
+            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleGenericMessage);
+
+            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, HandleGenericMessage);
+
+            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, HandleGenericMessage);
+
+            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, HandleGenericMessage);
+
+            IoCManager.Resolve<IChatManager>().Initialize(this);
+            IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<IPlacementManager>().Initialize(this);
+
+            StartLobby();
+            StartGame();
+
+            _active = true;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public void MainLoop()
+        {
+            _basePeriod = 1;
+            _period = _basePeriod;
+
+            var timerObject = new MainLoopTimer();
+            _stopWatch.Start();
+            timerObject.mainLoopTimer.CreateMainLoopTimer(RunLoop, _period);
+
+            while (_active)
+            {
+                AutoResetEvent.WaitOne(-1);
+
+                DoMainLoopStuff();
+            }
+
+            Cleanup();
+
+            /*   TimerCallback tcb = RunLoop;
+            var due = 1;// (long)ServerRate / 3;
+            stopWatch.Start(); //Start the clock
+            mainLoopTimer = new Timer(tcb, _autoResetEvent, 0, due);
+            _autoResetEvent.WaitOne(-1);*/
+        }
 
         /// <summary>
         ///     Loads the server settings from the ConfigurationManager.
@@ -125,6 +213,8 @@ namespace SS14.Server
         private void LoadSettings()
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
+
+            cfgMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVarFlags.ARCHIVE);
             cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVarFlags.ARCHIVE);
@@ -138,6 +228,11 @@ namespace SS14.Server
             _serverMaxPlayers = cfgMgr.GetCVar<int>("game.maxplayers");
             _gameType = cfgMgr.GetCVar<GameType>("game.type");
             _serverWelcomeMessage = cfgMgr.GetCVar<string>("game.welcomemsg");
+            _tickRate = cfgMgr.GetCVar<int>("net.tickrate");
+            _serverRate = 1000.0f / _tickRate;
+
+            _entities = IoCManager.Resolve<IServerEntityManager>();
+            _components = IoCManager.Resolve<IComponentManager>();
 
             Logger.Info($"[SRV] Port: {_serverPort}");
             Logger.Info($"[SRV] Name: {_serverName}");
@@ -190,112 +285,6 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().DetachAll();
             _entities.Shutdown();
             GC.Collect();
-        }
-
-        #region Server Settings
-
-        private DateTime _lastUpdate;
-        private GameType _gameType = GameType.Game;
-        private string _serverMapName = "SavedMap";
-        private int _serverMaxPlayers = 32;
-        private string _serverName = "SS13 Server";
-        private int _serverPort = 1212;
-        private string _serverWelcomeMessage = "Welcome to the server!";
-        private DateTime _lastBytesUpdate = DateTime.Now;
-        private int _lastReceivedBytes;
-        private int _lastSentBytes;
-
-        private readonly float _serverRate; // desired server frame (tick) time in milliseconds
-        private readonly float _tickRate; // desired server frames (ticks) per second
-
-        #endregion Server Settings
-
-        #region IBaseServer Members
-
-        /// <inheritdoc />
-        public void Restart()
-        {
-            //TODO: This needs to hard-reset all modules.
-            Logger.Info("[SRV] Soft restarting Server...");
-            IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
-            SendGameStateUpdate(true, true);
-            DisposeForRestart();
-            StartLobby();
-        }
-
-        /// <inheritdoc />
-        public void Shutdown(string reason = null)
-        {
-            if (string.IsNullOrWhiteSpace(reason))
-                Logger.Log("[SRV] Shutting down...");
-            else
-                Logger.Log($"[SRV] {reason}, shutting down...");
-            _active = false;
-        }
-
-        /// <inheritdoc />
-        public void SaveGame()
-        {
-            IoCManager.Resolve<IMapManager>().SaveMap(_serverMapName);
-            _entities.SaveEntities();
-        }
-
-        /// <inheritdoc />
-        public bool Start()
-        {
-            _time = DateTime.Now;
-
-            LoadSettings();
-
-            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
-            prototypeManager.Resync();
-
-            var netMan = IoCManager.Resolve<INetworkServer>();
-            netMan.Initialize(true);
-
-            //TODO: Register all NetMessages
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandleGenericMessage);
-
-            IoCManager.Resolve<IChatManager>().Initialize(this);
-            IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IPlacementManager>().Initialize(this);
-
-            StartLobby();
-            StartGame();
-
-            _active = true;
-            return false;
-        }
-
-        #endregion
-
-        #region server mainloop
-
-        /// <inheritdoc />
-        public void MainLoop()
-        {
-            _basePeriod = 1;
-            _period = _basePeriod;
-
-            var timerObject = new MainLoopTimer();
-            _stopWatch.Start();
-            timerObject.mainLoopTimer.CreateMainLoopTimer(RunLoop, _period);
-
-            while (_active)
-            {
-                AutoResetEvent.WaitOne(-1);
-
-                DoMainLoopStuff();
-            }
-
-            Cleanup();
-
-            /*   TimerCallback tcb = RunLoop;
-            var due = 1;// (long)ServerRate / 3;
-            stopWatch.Start(); //Start the clock
-            mainLoopTimer = new Timer(tcb, _autoResetEvent, 0, due);
-            _autoResetEvent.WaitOne(-1);*/
         }
 
         private static void RunLoop()
@@ -452,7 +441,23 @@ namespace SS14.Server
             }
         }
 
-        #endregion server mainloop
+        #region Server Settings
+
+        private DateTime _lastUpdate;
+        private GameType _gameType = GameType.Game;
+        private string _serverMapName = "SavedMap";
+        private int _serverMaxPlayers = 32;
+        private string _serverName = "SS13 Server";
+        private int _serverPort = 1212;
+        private string _serverWelcomeMessage = "Welcome to the server!";
+        private DateTime _lastBytesUpdate = DateTime.Now;
+        private int _lastReceivedBytes;
+        private int _lastSentBytes;
+
+        private float _serverRate; // desired server frame (tick) time in milliseconds
+        private float _tickRate; // desired server frames (ticks) per second
+
+        #endregion Server Settings
 
         #region MessageProcessing
 
@@ -469,20 +474,20 @@ namespace SS14.Server
 
             switch (messageType)
             {
-                case NetMessages.WelcomeMessage:
-                    {
-                        var netMsg = channel.CreateMessage<MsgServerInfo>();
+                case NetMessages.WelcomeMessageReq:
+                {
+                    var netMsg = channel.CreateMessage<MsgServerInfo>();
 
-                        netMsg.ServerName = _serverName;
-                        netMsg.ServerPort = _serverPort;
-                        netMsg.ServerWelcomeMessage = _serverWelcomeMessage;
-                        netMsg.ServerMaxPlayers = _serverMaxPlayers;
-                        netMsg.ServerMapName = _serverMapName;
-                        netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
-                        netMsg.ServerPlayerCount = NetServer.ConnectionCount;
+                    netMsg.ServerName = _serverName;
+                    netMsg.ServerPort = _serverPort;
+                    netMsg.ServerWelcomeMessage = _serverWelcomeMessage;
+                    netMsg.ServerMaxPlayers = _serverMaxPlayers;
+                    netMsg.ServerMapName = _serverMapName;
+                    netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
+                    netMsg.ServerPlayerCount = NetServer.ConnectionCount;
 
-                        channel.SendMessage(netMsg);
-                    }
+                    channel.SendMessage(netMsg);
+                }
                     break;
 
                 case NetMessages.ForceRestart:
@@ -494,64 +499,66 @@ namespace SS14.Server
                     break;
 
                 case NetMessages.PlayerListReq:
+                {
+                    var plyMgr = IoCManager.Resolve<IPlayerManager>();
+                    var players = plyMgr.GetAllPlayers().ToArray();
+                    var netMsg = channel.CreateMessage<MsgPlayerList>();
+                    netMsg.PlyCount = (byte)players.Length;
+
+                    var list = new List<MsgPlayerList.PlyInfo>();
+                    foreach (var client in players)
                     {
-                        var netMsg = channel.CreateMessage<MsgPlayerList>();
-                        netMsg.PlyCount = (byte) NetServer.ConnectionCount;
-
-                        var list = new List<MsgPlayerList.PlyInfo>();
-                        foreach (var client in NetServer.Connections)
+                        var info = new MsgPlayerList.PlyInfo
                         {
-                            var info = new MsgPlayerList.PlyInfo();
-                            var plrSession = IoCManager.Resolve<IPlayerManager>().GetSessionById(client.NetworkId);
-
-                            info.name = plrSession.Name;
-                            info.status = (byte) plrSession.Status;
-                            info.ping = client.Connection.AverageRoundtripTime;
-                            list.Add(info);
-                        }
-                        netMsg.plyrs = list;
-
-                        channel.SendMessage(netMsg);
+                            name = client.Name,
+                            status = (byte) client.Status,
+                            ping = client.ConnectedClient.Connection.AverageRoundtripTime
+                        };
+                        list.Add(info);
                     }
+                    netMsg.plyrs = list;
+
+                    channel.SendMessage(netMsg);
+                }
                     break;
 
                 case NetMessages.ClientName:
-                    HandleClientGreet((MsgClGreet)msg);
+                    HandleClientGreet((MsgClGreet) msg);
                     break;
 
                 case NetMessages.ChatMessage:
-                    IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat)msg);
+                    IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat) msg);
                     break;
 
                 case NetMessages.PlayerSessionMessage:
-                    IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession)msg);
+                    IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession) msg);
                     break;
 
                 case NetMessages.MapMessage:
-                    IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap)msg);
+                    IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap) msg);
                     break;
 
                 case NetMessages.PlacementManagerMessage:
-                    IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)msg);
+                    IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) msg);
                     break;
 
                 case NetMessages.EntityMessage:
-                    _entities.HandleEntityNetworkMessage(((MsgEntity)msg).Output);
+                    _entities.HandleEntityNetworkMessage(((MsgEntity) msg).Output);
                     break;
 
                 case NetMessages.RequestEntityDeletion:
-                    HandleAdminMessage(messageType, (MsgAdmin)msg);
+                    HandleAdminMessage(messageType, (MsgAdmin) msg);
                     break;
 
                 case NetMessages.StateAck:
-                    HandleStateAck((MsgStateAck)msg);
+                    HandleStateAck((MsgStateAck) msg);
                     break;
 
                 case NetMessages.ConsoleCommand:
                 {
                     var msgCmd = (MsgConCmd) msg;
-                        IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msgCmd.text, msg.Channel.Connection);
-                    }
+                    IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msgCmd.text, msg.Channel.Connection);
+                }
                     break;
 
                 case NetMessages.ConsoleCommandRegister:

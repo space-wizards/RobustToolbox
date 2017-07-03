@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Network;
@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Components
         {
             var netManager = IoCManager.Resolve<INetworkManager>();
             NetOutgoingMessage playerListMsg = netManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessages.PlayerList); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
             netManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);          
         }
 

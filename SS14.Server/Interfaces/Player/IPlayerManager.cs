@@ -41,9 +41,9 @@ namespace SS14.Server.Interfaces.Player
         //IPlayerSession GetSessionByIp(string ipKick);
 
         void DetachAll();
-        IEnumerable<IPlayerSession> GetPlayersInLobby();
-        IEnumerable<IPlayerSession> GetPlayersInRange(Vector2f position, int range);
-        IEnumerable<IPlayerSession> GetAllPlayers();
+        List<IPlayerSession> GetPlayersInLobby();
+        List<IPlayerSession> GetPlayersInRange(Vector2f position, int range);
+        List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }
 }

@@ -7,7 +7,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.StateAck;
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.ENTITY;
 
         public static readonly string NAME = ID.ToString();
         public static ProcessMessage _callback;

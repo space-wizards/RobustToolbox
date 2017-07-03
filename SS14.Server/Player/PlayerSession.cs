@@ -48,11 +48,16 @@ namespace SS14.Server.Player
         public NetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
-        public int? AttachedEntityUid
+        public int? AttachedEntityUid => attachedEntity?.Uid;
+
+        private string _name;
+        public string Name
         {
-            get { return attachedEntity == null ? null : (int?)attachedEntity.Uid; }
+            get => String.IsNullOrWhiteSpace(_name) ? _name : "Unknown";
+            set => _name = value;
         }
-        public string Name { get; set; }
+        
+
         public SessionStatus Status { get; set; }
 
         public DateTime ConnectedTime { get; private set; }

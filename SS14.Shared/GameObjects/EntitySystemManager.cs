@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using NetSerializer;
-using SS14.Shared.GameObjects.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.Reflection;

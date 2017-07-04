@@ -26,10 +26,15 @@ namespace SS14.Client.Placement
 {
     public class PlacementManager : IPlacementManager
     {
+        [Dependency]
         public readonly ICollisionManager CollisionManager;
+        [Dependency]
         public readonly INetworkManager NetworkManager;
+        [Dependency]
         public readonly IPlayerManager PlayerManager;
+        [Dependency]
         public readonly IResourceManager ResourceManager;
+        [Dependency]
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
@@ -40,14 +45,8 @@ namespace SS14.Client.Placement
         public Direction Direction = Direction.South;
         public bool ValidPosition;
 
-        public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager,
-                                ICollisionManager collisionManager, IPlayerManager playerManager)
+        public PlacementManager()
         {
-            ResourceManager = resourceManager;
-            NetworkManager = networkManager;
-            CollisionManager = collisionManager;
-            PlayerManager = playerManager;
-
             Type type = typeof(PlacementMode);
             List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
             List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();

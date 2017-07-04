@@ -76,8 +76,9 @@ namespace SS14.Shared.Prototypes
         }
     }
 
-    public class PrototypeManager : IPrototypeManager
+    public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
+        [Dependency]
         private readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
@@ -199,10 +200,9 @@ namespace SS14.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
-        public PrototypeManager(IReflectionManager reflectionManager)
+        public void PostInject()
         {
-            ReflectionManager = reflectionManager;
-            reflectionManager.OnAssemblyAdded += (_, __) => ReloadPrototypeTypes();
+            ReflectionManager.OnAssemblyAdded += (_, __) => ReloadPrototypeTypes();
             ReloadPrototypeTypes();
         }
 

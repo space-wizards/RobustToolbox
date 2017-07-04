@@ -99,6 +99,8 @@ namespace SS14.Client
             IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IGameController, GameController>();
+
+            IoCManager.BuildGraph();
         }
 
         private static void LoadAssemblies()

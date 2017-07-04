@@ -22,7 +22,7 @@ namespace SS14.Shared.IoC
     /// </para>
     /// <para>
     /// To use the IoCManager, it first needs some types registered through <see cref="Register{TInterface, TImplementation}"/>.
-    /// These implementations can then be fetched with <see cref="Resolve{T}"/>.
+    /// These implementations can then be fetched with <see cref="Resolve{T}"/>, or through field injection with <see cref="DependencyAttribute" />.
     /// </para>
     /// </remarks>
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
@@ -135,14 +135,16 @@ namespace SS14.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and'll find us instead.
-                KeyValuePair<Type, Type>? dupeType = ResolveTypes
+                KeyValuePair<Type, Type> dupeType = ResolveTypes
                                                     .Where(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value)
                                                     .FirstOrDefault();
 
-                if (dupeType != null)
+                // Interface key can't be null so since KeyValuePair<> is a struct,
+                // this effectively checks whether we found something.
+                if (dupeType.Key != null)
                 {
                     // We have something with the same instance type, use that.
-                    Services[currentType.Key] = Services[dupeType.Value.Key];
+                    Services[currentType.Key] = Services[dupeType.Key];
                     continue;
                 }
 
@@ -169,8 +171,14 @@ namespace SS14.Shared.IoC
                         throw new UnregisteredDependencyException(implementation.GetType(), field.FieldType, field.Name);
                     }
 
+                    // Quick note: this DOES work with readonly fields, though it may be a CLR implementation detail.
                     field.SetValue(implementation, Services[field.FieldType]);
                 }
+            }
+
+            foreach (IPostInjectInit item in toInject.OfType<IPostInjectInit>())
+            {
+                item.PostInject();
             }
         }
     }

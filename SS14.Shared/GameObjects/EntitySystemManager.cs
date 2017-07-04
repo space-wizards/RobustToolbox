@@ -13,6 +13,7 @@ namespace SS14.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
+        [Dependency]
         private readonly IReflectionManager ReflectionManager;
         /// <summary>
         /// Maps system types to instances.
@@ -23,11 +24,6 @@ namespace SS14.Shared.GameObjects
         /// Maps child types of <see cref="EntitySystemMessage"/> to the system that will be receiving them.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> SystemMessageTypes = new Dictionary<Type, IEntitySystem>();
-
-        public EntitySystemManager(IReflectionManager reflectionManager)
-        {
-            ReflectionManager = reflectionManager;
-        }
 
         /// <exception cref="InvalidOperationException">Thrown if the specified type is already registered by another system.</exception>
         /// <exception cref="InvalidEntitySystemException">Thrown if the entity system instance is not registered with this <see cref="EntitySystemManager"/></exception>

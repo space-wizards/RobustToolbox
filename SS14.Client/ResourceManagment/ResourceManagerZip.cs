@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Log;
@@ -28,6 +29,7 @@ namespace SS14.Client.Resources
         private const int zipBufferSize = 4096;
         private MemoryStream VertexShader, FragmentShader;
 
+        [Dependency]
         private readonly IConfigurationManager _configurationManager;
         private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
         private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
@@ -44,11 +46,6 @@ namespace SS14.Client.Resources
         public Dictionary<Texture, string> TextureToKey => _textureToKey;
 
         public int done = 0;
-
-        public ResourceManager(IConfigurationManager configurationManager)
-        {
-            _configurationManager = configurationManager;
-        }
 
         #region Resource Loading & Disposal
 

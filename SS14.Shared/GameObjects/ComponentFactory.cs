@@ -9,20 +9,17 @@ using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentFactory : IComponentFactory
+    public class ComponentFactory : IComponentFactory, IPostInjectInit
     {
+        [Dependency]
         private readonly IReflectionManager ReflectionManager;
 
-        private readonly Dictionary<string, Type> componentNames;
+        private readonly Dictionary<string, Type> componentNames = new Dictionary<string, Type>();
 
-        public ComponentFactory(IReflectionManager reflectionManager)
+        public void PostInject()
         {
-            ReflectionManager = reflectionManager;
-            componentNames = new Dictionary<string, Type>();
-
             ReloadComponents();
-
-            reflectionManager.OnAssemblyAdded += (_, __) => ReloadComponents();
+            ReflectionManager.OnAssemblyAdded += (_, __) => ReloadComponents();
         }
 
         /// <summary>

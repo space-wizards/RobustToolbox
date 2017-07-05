@@ -91,7 +91,7 @@ namespace SS14.Client.Resources
         {
             var cfgMgr = _configurationManager;
 
-            cfgMgr.RegisterCVar("res.pack", @"..\..\Resources\ResourcePack.zip", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("res.pack", @"../../Resources/ResourcePack.zip", CVarFlags.ARCHIVE);
             cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
             string zipPath = path ?? _configurationManager.GetCVar<string>("res.pack");

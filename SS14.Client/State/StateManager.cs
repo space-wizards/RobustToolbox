@@ -54,6 +54,7 @@ namespace SS14.Client.State
             _managers[typeof(IPlayerManager)] = playerManager;
             _managers[typeof(IPlacementManager)] = placementManager;
             _managers[typeof(IKeyBindingManager)] = keyBindingManager;
+            _managers[typeof(IConfigurationManager)] = configurationManager;
             _managers[typeof(IStateManager)] = this;
 
             playerManager.RequestedStateSwitch += HandleStateChange;

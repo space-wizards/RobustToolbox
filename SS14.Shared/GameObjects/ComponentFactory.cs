@@ -73,9 +73,9 @@ namespace SS14.Shared.GameObjects
                     throw new InvalidImplementationException(type, typeof(IComponent), "Does not have a " + nameof(IComponent.Name));
                 }
 
-                if (componentNames.ContainsKey(instance.Name))
+                if (componentNames.TryGetValue(instance.Name, out Type duplicate))
                 {
-                    throw new InvalidImplementationException(type, typeof(IComponent), "Duplicate Name for component: " + instance.Name);
+                    throw new InvalidImplementationException(type, typeof(IComponent), $"Duplicate Name for component: {instance.Name}, previous: {duplicate}");
                 }
 
                 componentNames[instance.Name] = type;

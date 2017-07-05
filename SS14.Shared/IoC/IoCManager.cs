@@ -163,7 +163,9 @@ namespace SS14.Shared.IoC
             // Graph built, go over ones that need injection.
             foreach (var implementation in toInject)
             {
-                foreach (FieldInfo field in implementation.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+                foreach (FieldInfo field in implementation.GetType()
+                                                          .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                                                          .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
                 {
                     // Not using Resolve<T>() because we're literally building it right now.
                     if (!Services.ContainsKey(field.FieldType))

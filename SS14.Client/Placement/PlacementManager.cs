@@ -34,7 +34,6 @@ namespace SS14.Client.Placement
         public readonly IPlayerManager PlayerManager;
         [Dependency]
         public readonly IResourceManager ResourceManager;
-        [Dependency]
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;

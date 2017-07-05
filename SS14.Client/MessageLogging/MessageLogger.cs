@@ -14,18 +14,14 @@ namespace SS14.Client.MessageLogging
         [Dependency]
         private readonly IConfigurationManager _configurationManager;
         private Timer _pingTimer;
-        private readonly MessageLoggerServiceClient _loggerServiceClient;
+        private MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger()
-        {
-            _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
-        }
         public void Initialize()
         {
-            _logging = _configurationManager.GetCVar<bool>("log.enabled");
             if (_logging)
             {
+                _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
                 Ping();
                 _pingTimer = new Timer(5000);
                 _pingTimer.Elapsed += CheckServer;

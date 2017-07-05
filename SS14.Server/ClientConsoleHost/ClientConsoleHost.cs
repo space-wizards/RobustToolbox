@@ -17,8 +17,10 @@ using System;
 
 namespace SS14.Server.ClientConsoleHost
 {
-    public class ClientConsoleHost : IClientConsoleHost
+    public class ClientConsoleHost : IClientConsoleHost, IPostInjectInit
     {
+        [Dependency]
+        private readonly IReflectionManager reflectionManager;
         private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
         public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
 
@@ -38,9 +40,9 @@ namespace SS14.Server.ClientConsoleHost
             netMgr.SendMessage(message, senderConnection);
         }
 
-        public ClientConsoleHost(IReflectionManager reflactionManager)
+        public void PostInject()
         {
-            foreach (Type type in reflactionManager.GetAllChildren<IClientCommand>())
+            foreach (Type type in reflectionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
                 if (AvailableCommands.ContainsKey(instance.Command))

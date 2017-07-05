@@ -5,6 +5,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -47,6 +48,8 @@ namespace SS14.Client
         readonly private IMessageLogger _messageLogger;
         [Dependency]
         readonly private IEntityNetworkManager _entityNetworkManager;
+        [Dependency]
+        readonly private ITileDefinitionManager _tileDefinitionManager;
 
         private SFML.System.Clock _clock;
 
@@ -62,9 +65,6 @@ namespace SS14.Client
             ShowSplashScreen();
 
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
-            _messageLogger.Initialize();
-            _entityNetworkManager.Initialize();
-            
 
             _resourceManager.LoadBaseResources();
             _resourceManager.LoadLocalResources();
@@ -74,6 +74,10 @@ namespace SS14.Client
             CleanupSplashScreen();
 
             //Initialization of private members
+            _messageLogger.Initialize();
+            _entityNetworkManager.Initialize();
+            _tileDefinitionManager.InitializeResources();
+
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();

@@ -79,11 +79,8 @@ namespace SS14.Server
         private int lastRecievedBytes;
         private int lastSentBytes;
 
-        public SS14Server(ICommandLineArgs args, IServerLogManager logManager)
+        public bool Start()
         {
-            LogManager = logManager;
-            Runlevel = RunLevel.Init;
-
             var configMgr = IoCManager.Resolve<IConfigurationManager>();
             configMgr.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
@@ -113,8 +110,24 @@ namespace SS14.Server
             TickRate = configMgr.GetCVar<int>("net.tickrate");
             ServerRate = 1000.0f / TickRate;
 
-            EntityManager = IoCManager.Resolve<IServerEntityManager>();
-            ComponentManager = IoCManager.Resolve<IComponentManager>();
+            Time = DateTime.Now;
+
+            LoadSettings();
+
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.Resync();
+            IoCManager.Resolve<ISS14NetServer>().Start();
+            IoCManager.Resolve<IChatManager>().Initialize();
+            IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<IPlacementManager>().Initialize(this);
+            IoCManager.Resolve<IMapManager>().Initialize();
+
+            StartLobby();
+            StartGame();
+
+            _active = true;
+            return false;
         }
 
         public float ServerRate // desired server frame (tick) time in milliseconds
@@ -127,10 +140,13 @@ namespace SS14.Server
 
         #region ISS13Server Members
 
+        [Dependency]
         private readonly IServerEntityManager EntityManager;
+        [Dependency]
         private readonly IComponentManager ComponentManager;
+        [Dependency]
         private readonly IServerLogManager LogManager;
-        public RunLevel Runlevel { get; private set; }
+        public RunLevel Runlevel { get; private set; } = RunLevel.Init;
 
         public void Restart()
         {
@@ -508,27 +524,6 @@ namespace SS14.Server
                 EntityManager.Initialize();
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.StartGame();
             }
-        }
-
-        public bool Start()
-        {
-            Time = DateTime.Now;
-
-            LoadSettings();
-
-            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
-            prototypeManager.Resync();
-            IoCManager.Resolve<ISS14NetServer>().Start();
-            IoCManager.Resolve<IChatManager>().Initialize(this);
-            IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IPlacementManager>().Initialize(this);
-
-            StartLobby();
-            StartGame();
-
-            _active = true;
-            return false;
         }
 
         public void StartLobby()

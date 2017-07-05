@@ -11,6 +11,7 @@ namespace SS14.Server.Interfaces.Map
 
     public interface IMapManager
     {
+        void Initialize();
         bool LoadMap(string mapName);
         void SaveMap(string mapName);
 

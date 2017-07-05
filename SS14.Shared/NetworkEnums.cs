@@ -3,34 +3,37 @@
     public enum NetMessages
     {
         // Base engine messages
-        ERRROR = 0,
-        ClientName,             // C>S CL_GREET, This contains all info for server to create a CL_INFO
-        WelcomeMessageReq,      // C>S D Requests a welcome message, the server should send this to all established connections anyways.
-        WelcomeMessage,         // S<? D SERVER_INFO
-        PlayerListReq,          // C>S
-        PlayerList,             // S>C D CL_INFO, A list of CL_Info's
+        Error = 0,
+        ClientName,             // C>S Sends the server its client info.
+        WelcomeMessageReq,      // C>S Requests the server info.
+        WelcomeMessage,         // S>C Server info.
+        PlayerListReq,          // C>S Requests a full list of players.
+        PlayerList,             // S>C A full list of players.
 
         // Console Commands
-        LobbyChat,              //
-        ChatMessage,            // 
-        PlayerSessionMessage,   //
-        ConsoleCommand,         //
-        ConsoleCommandReply,    //
-        ConsoleCommandRegister, //
+        LobbyChat,              // C>S Does nothing atm, Obsolete?
+        ChatMessage,            // C<>S Contains all of the chat messages.
+        PlayerSessionMessage,   // C>S Tells (lol.) the server about state changes.
+        ConsoleCommand,         // C>S Sends the server a console command.
+        ConsoleCommandReply,    // S>C Acknowledges a received console command.
+        ConsoleCommandRegister, // S>C Registers all console commands.
 
         // Map Messages
-        RequestMap,
-        MapMessage,
+        RequestMap,             // C>S Requests a full copy of the map.
+        MapMessage,             // S>C Sends a full copy of the map.
 
-        PlacementManagerMessage,
-        PlayerUiMessage,
-        JoinGame,               // C>S Asks the server to move from lobby to the game. 
-        ForceRestart,
-        EntityMessage,
-        RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
-        StateUpdate,
-        StateAck,
-        FullState,
+        // misc stuff that will prob be removed
+        PlacementManagerMessage,// S<>C Contains all placement messages.
+        PlayerUiMessage,        // S>C Sends a user interface message.
+        JoinGame,               // S>C Tells the client to join the game.
+        ForceRestart,           // C>S Tells (lol.) the server to restart.
+
+        // entity stuff
+        EntityMessage,          // S<>C Contains all entity messages.
+        RequestEntityDeletion,  // C>S Client asks to delete entity.
+        StateUpdate,            // S>C Delta state update.
+        StateAck,               // C>S Acknowledges a state update.
+        FullState,              // S>C Full state of the game.
     }
 
     public enum ItemMessage

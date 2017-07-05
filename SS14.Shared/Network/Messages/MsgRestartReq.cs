@@ -3,20 +3,16 @@ using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
-    public class MsgPlayerListReq : NetMessage
+    public class MsgRestartReq : NetMessage
     {
         #region REQUIRED
-
-        public static readonly string NAME = "PlayerListReq";
+        public static readonly NetMessages ID = NetMessages.ForceRestart;
         public static readonly MsgGroups GROUP = MsgGroups.CORE;
-        public static readonly NetMessages ID = NetMessages.PlayerListReq; //TODO: Remove this and use the StringTable properly.
 
-        public MsgPlayerListReq(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        {
-        }
-
+        public static readonly string NAME = ID.ToString();
+        public MsgRestartReq(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
+
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

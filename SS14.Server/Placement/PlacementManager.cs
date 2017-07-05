@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
@@ -63,7 +62,7 @@ namespace SS14.Server.Placement
             float yRcv = msg.yRcv;
             var dirRcv = msg.dirRcv;
 
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.Channel.NetworkId);
+            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.MsgChannel.NetworkId);
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobodys
 
@@ -135,23 +134,21 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            message.Write((byte)NetMessages.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.StartPlacement);
-            message.Write(range);
-            message.Write(false); //Not a tile
-            message.Write(objectType);
-            message.Write(alignOption);
+            if (!mob.HasComponent(ComponentFamily.Actor))
+                return;
 
-            if (mob.HasComponent(ComponentFamily.Actor))
-            {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
-                if (playerConnection != null)
-                {
-                    IoCManager.Resolve<INetworkServer>().Server.SendMessage(message, playerConnection.Connection,
-                                                                     NetDeliveryMethod.ReliableOrdered);
-                }
-            }
+            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            if (playerConnection == null)
+                return;
+
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgPlacement>();
+            message.PlaceType = PlacementManagerMessage.StartPlacement;
+            message.range = range;
+            message.IsTile = false;
+            message.objType = objectType;
+            message.alignOption = alignOption;
+            net.SendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -159,22 +156,23 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            message.Write((byte)NetMessages.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.StartPlacement);
-            message.Write(range);
-            message.Write(true); //Is a tile.
-            message.Write(tileType);
-            message.Write(alignOption);
-            if (mob.HasComponent(ComponentFamily.Actor))
-            {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
-                if (playerConnection != null)
-                {
-                    IoCManager.Resolve<INetworkServer>().Server.SendMessage(message, playerConnection.Connection,
-                                                                     NetDeliveryMethod.ReliableOrdered);
-                }
-            }
+            if (!mob.HasComponent(ComponentFamily.Actor))
+                return;
+
+            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            if (playerConnection == null)
+                return;
+
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgPlacement>();
+
+            message.PlaceType = PlacementManagerMessage.StartPlacement;
+            message.range = range;
+            message.IsTile = true;
+            message.objType = tileType;
+            message.alignOption = alignOption;
+            
+            net.SendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -182,19 +180,17 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementCancel(IEntity mob)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            message.Write((byte)NetMessages.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.CancelPlacement);
+            if (!mob.HasComponent(ComponentFamily.Actor))
+                return;
 
-            if (mob.HasComponent(ComponentFamily.Actor))
-            {
-                var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
-                if (playerConnection != null)
-                {
-                    IoCManager.Resolve<INetworkServer>().Server.SendMessage(message, playerConnection.Connection,
-                                                                     NetDeliveryMethod.ReliableOrdered);
-                }
-            }
+            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            if (playerConnection == null)
+                return;
+
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgPlacement>();
+            message.PlaceType = PlacementManagerMessage.CancelPlacement;
+            net.SendMessage(message, playerConnection);
         }
 
         /// <summary>

@@ -9,9 +9,7 @@ using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Server.GameObjects;
 using System;
-using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Player
@@ -21,17 +19,17 @@ namespace SS14.Server.Player
         /* This class represents a connected player session */
 
         private readonly PlayerManager _playerManager;
-        public PlayerState PlayerState;
-        public PlayerSession(NetChannel client, PlayerManager playerManager)
+        public readonly PlayerState PlayerState;
+        public PlayerSession(INetChannel client, PlayerManager playerManager)
         {
             _playerManager = playerManager;
-            Name = "";
 
             PlayerState = new PlayerState()
             {
-                UniqueIdentifier = client.UUID
+                UniqueIdentifier = client.ConnectionId
 
             };
+
             if (client != null)
             {
                 ConnectedClient = client;
@@ -45,7 +43,7 @@ namespace SS14.Server.Player
 
         #region IPlayerSession Members
 
-        public NetChannel ConnectedClient { get; }
+        public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
         public int? AttachedEntityUid => attachedEntity?.Uid;
@@ -109,7 +107,7 @@ namespace SS14.Server.Player
         public void SetName(string _name)
         {
             Name = _name;
-            Logger.Log("Player set name: " + ConnectedClient.Connection.RemoteEndPoint.Address + " -> " + Name);
+            Logger.Log("Player set name: " + ConnectedClient.RemoteAddress + " -> " + Name);
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -120,7 +118,7 @@ namespace SS14.Server.Player
             Status = SessionStatus.Connected;
             UpdatePlayerState();
             //Put player in lobby immediately.
-            Logger.Log("Player connected - " + ConnectedClient.Connection.RemoteEndPoint.Address);
+            Logger.Log("Player connected - " + ConnectedClient.RemoteAddress);
             JoinLobby();
         }
 
@@ -134,25 +132,30 @@ namespace SS14.Server.Player
 
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
-            NetOutgoingMessage m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            m.Write((byte)NetMessages.PlayerSessionMessage);
-            m.Write((byte)PlayerSessionMessage.AddPostProcessingEffect);
-            m.Write((int)type);
-            m.Write(duration);
-            IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableUnordered);
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgSession>();
+
+            message.msgType = PlayerSessionMessage.AddPostProcessingEffect;
+            message.PpType = type;
+            message.PpDuration = duration;
+
+            net.SendMessage(message, ConnectedClient);
         }
 
         #endregion IPlayerSession Members
 
         private void SendAttachMessage()
         {
-            if (attachedEntity == null) //TODO proper exception
+            if (attachedEntity == null)
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
-            NetOutgoingMessage m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            m.Write((byte)NetMessages.PlayerSessionMessage);
-            m.Write((byte)PlayerSessionMessage.AttachToEntity);
-            m.Write(attachedEntity.Uid);
-            IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableOrdered);
+
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgSession>();
+
+            message.msgType = PlayerSessionMessage.AttachToEntity;
+            message.uid = attachedEntity.Uid;
+
+            net.SendMessage(message, ConnectedClient);
         }
 
         private void HandleVerb(MsgSession message)
@@ -197,10 +200,6 @@ namespace SS14.Server.Player
 
         public void JoinLobby()
         {
-            /*var m = IoCManager.Resolve<ISS13NetServer>().CreateMessage();
-            m.Write((byte)NetMessages.PlayerSessionMessage);
-            m.Write((byte)PlayerSessionMessage.JoinLobby);
-            IoCManager.Resolve<ISS13NetServer>().SendMessage(m, connectedClient);*/
             DetachFromEntity();
             Status = SessionStatus.InLobby;
             UpdatePlayerState();
@@ -211,24 +210,26 @@ namespace SS14.Server.Player
         /// </summary>
         public void JoinGame()
         {
-            if (ConnectedClient != null && Status != SessionStatus.InGame && _playerManager.RunLevel == RunLevel.Game)
-            {
-                var m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-                m.Write((byte) NetMessages.JoinGame);
-                IoCManager.Resolve<INetworkServer>().Server.SendMessage(m, ConnectedClient.Connection, NetDeliveryMethod.ReliableOrdered);
+            if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
+                return;
 
-                Status = SessionStatus.InGame;
-                UpdatePlayerState();
-            }
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgJoinGame>();
+            net.SendMessage(message, ConnectedClient);
+
+            Status = SessionStatus.InGame;
+            UpdatePlayerState();
         }
 
-        public NetOutgoingMessage CreateGuiMessage(GuiComponentType gui)
+        public void CreateGuiMessage(GuiComponentType gui)
         {
-            var m = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            m.Write((byte) NetMessages.PlayerUiMessage);
-            m.Write((byte) UiManagerMessage.ComponentMessage);
-            m.Write((byte) gui);
-            return m;
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgUi>();
+
+            message.UiType = UiManagerMessage.ComponentMessage;
+            message.CompType = gui;
+
+            net.SendMessage(message, ConnectedClient);
         }
 
         private void UpdatePlayerState()

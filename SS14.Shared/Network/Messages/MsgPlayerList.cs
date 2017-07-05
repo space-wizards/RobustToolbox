@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -10,15 +11,9 @@ namespace SS14.Shared.Network.Messages
         public static readonly string NAME = "PlayerList";
         public static readonly MsgGroups GROUP = MsgGroups.CORE;
         public static readonly NetMessages ID = NetMessages.PlayerList;
-        public static ProcessMessage _callback;
-        public override ProcessMessage Callback
-        {
-            get => _callback;
-            set => _callback = value;
-        }
 
-        public MsgPlayerList(NetChannel channel)
-            : base(channel, NAME, GROUP, ID)
+        public MsgPlayerList(INetChannel channel)
+            : base(NAME, GROUP, ID)
         {
         }
 

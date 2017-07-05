@@ -20,7 +20,7 @@ namespace SS14.Server.GameObjects
     {
         private bool _messageProfiling = false;
         [Dependency]
-        private readonly INetworkServer m_netServer;
+        private readonly INetManager _mNetManager;
 
         public void Initialize()
         {
@@ -31,20 +31,20 @@ namespace SS14.Server.GameObjects
 
         public NetOutgoingMessage CreateEntityMessage()
         {
-            NetOutgoingMessage message = m_netServer.Server.CreateMessage();
+            NetOutgoingMessage message = _mNetManager.Server.CreateMessage();
             message.Write((byte)NetMessages.EntityMessage);
             return message;
         }
 
         public void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            m_netServer.Server.SendToAll(message, method);
+            _mNetManager.Server.SendToAll(message, method);
         }
 
         public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            m_netServer.Server.SendMessage(message, recipient, method);
+            _mNetManager.Server.SendMessage(message, recipient, method);
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace SS14.Server.GameObjects
 
             //Send the message
             if (recipient == null)
-                m_netServer.Server.SendToAll(message, method);
+                _mNetManager.Server.SendToAll(message, method);
             else
-                m_netServer.Server.SendMessage(message, recipient, method);
+                _mNetManager.Server.SendMessage(message, recipient, method);
 
             if (_messageProfiling)
             {
@@ -242,11 +242,11 @@ namespace SS14.Server.GameObjects
             //Send the message
             if (targetConnection != null)
             {
-                m_netServer.Server.SendMessage(newMsg, targetConnection, method);
+                _mNetManager.Server.SendMessage(newMsg, targetConnection, method);
             }
             else
             {
-                m_netServer.Server.SendToAll(newMsg, method);
+                _mNetManager.Server.SendToAll(newMsg, method);
             }
         }
 

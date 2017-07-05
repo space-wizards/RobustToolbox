@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -50,12 +49,14 @@ namespace SS14.Server.Chat
             var channel = message.channel;
             string text = message.text;
 
-            var client = message.Channel;
-            string playerName = client.PlayerName;
+            var client = message.MsgChannel;
+
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel);
+            var playerName = session.Name;
 
             Logger.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
 
-            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionById(message.Channel.NetworkId).AttachedEntityUid;
+            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionById(message.MsgChannel.NetworkId).AttachedEntityUid;
 
             bool hasChannelIdentifier = false;
             if (channel != ChatChannel.Lobby)
@@ -67,14 +68,14 @@ namespace SS14.Server.Chat
             if (text[0] == '/')
                 ProcessCommand(text, playerName, channel, entityId, client);
             else if (text[0] == '*')
-                ProcessEmote(text, playerName, channel, entityId, message.Channel.Connection);
+                ProcessEmote(text, playerName, channel, entityId, message.MsgChannel);
             else
                 SendChatMessage(channel, text, playerName, entityId);
         }
 
         public void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)
         {
-            NetOutgoingMessage message = MakeNetChatMessage(channel, text, name, entityId);
+            MsgChat message = MakeNetChatMessage(channel, text, name, entityId);
 
             switch (channel)
             {
@@ -83,7 +84,7 @@ namespace SS14.Server.Chat
                 case ChatChannel.Radio:
                 case ChatChannel.Player:
                 case ChatChannel.Default:
-                    IoCManager.Resolve<INetworkServer>().SendToAll(message);
+                    IoCManager.Resolve<INetManager>().SendToAll(message);
                     break;
 
                 case ChatChannel.Damage:
@@ -99,13 +100,13 @@ namespace SS14.Server.Chat
             }
         }
 
-        public void SendPrivateMessage(NetChannel client, ChatChannel channel, string text, string name, int? entityId)
+        public void SendPrivateMessage(INetChannel client, ChatChannel channel, string text, string name, int? entityId)
         {
-            NetOutgoingMessage message = MakeNetChatMessage(channel, text, name, entityId);
-            IoCManager.Resolve<INetworkServer>().Server.SendMessage(message, client.Connection, NetDeliveryMethod.ReliableOrdered);
+            MsgChat message = MakeNetChatMessage(channel, text, name, entityId);
+            IoCManager.Resolve<INetManager>().SendMessage(message, client);
         }
 
-        private NetOutgoingMessage MakeNetChatMessage(ChatChannel channel, string text, string name, int? entityId)
+        private MsgChat MakeNetChatMessage(ChatChannel channel, string text, string name, int? entityId)
         {
             string fullmsg = text;
             if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
@@ -114,15 +115,11 @@ namespace SS14.Server.Chat
                      channel == ChatChannel.Lobby)
                 fullmsg = name + ": " + text;
 
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            MsgChat message = IoCManager.Resolve<INetManager>().CreateNetMessage<MsgChat>();
 
-            message.Write((byte)NetMessages.ChatMessage);
-            message.Write((byte)channel);
-            message.Write(fullmsg);
-            if (entityId == null)
-                message.Write(-1);
-            else
-                message.Write((int)entityId);
+            message.channel = channel;
+            message.text = fullmsg;
+            message.entityId = entityId;
 
             return message;
         }
@@ -202,28 +199,28 @@ namespace SS14.Server.Chat
             }
         }
 
-        private void SendToPlayersInRange(NetOutgoingMessage message, int? entityId)
+        private void SendToPlayersInRange(NetMessage message, int? entityId)
         {
             //TODO: Move this to a real PVS system.
             int withinRange = 512;
             if (entityId == null)
                 return;
-            List<NetConnection> recipients =
-                IoCManager.Resolve<IPlayerManager>().GetPlayersInRange(
-                    entityManager.GetEntity((int)entityId).GetComponent<ITransformComponent>(
-                        ComponentFamily.Transform).Position, withinRange).Select(p => p.ConnectedClient.Connection).ToList();
-            IoCManager.Resolve<INetworkServer>().SendToMany(message, recipients);
+            List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>()
+                .GetPlayersInRange(entityManager.GetEntity((int) entityId)
+                .GetComponent<ITransformComponent>(ComponentFamily.Transform).Position, withinRange)
+                .Select(p => p.ConnectedClient).ToList();
+
+            IoCManager.Resolve<INetManager>().SendToMany(message, recipients);
         }
 
-        private void SendToLobby(NetOutgoingMessage message)
+        private void SendToLobby(NetMessage message)
         {
             //TODO: Move this to the Content Assembly.
-            List<NetConnection> recipients =
-                IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient.Connection).ToList();
-            IoCManager.Resolve<INetworkServer>().SendToMany(message, recipients);
+            List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
+            IoCManager.Resolve<INetManager>().SendToMany(message, recipients);
         }
 
-        private void ProcessEmote(string text, string name, ChatChannel channel, int? entityId, NetConnection client)
+        private void ProcessEmote(string text, string name, ChatChannel channel, int? entityId, INetChannel client)
         {
             if (entityId == null)
                 return; //No emotes from non-entities!
@@ -250,7 +247,7 @@ namespace SS14.Server.Chat
         /// <param name="name">Player name that sent the chat text.</param>
         /// <param name="channel">Channel message was recieved on.</param>
         /// <param name="client">Client that sent the command.</param>
-        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, NetChannel client)
+        private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, INetChannel client)
         {
             List<string> args = new List<string>();
 

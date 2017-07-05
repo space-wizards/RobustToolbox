@@ -23,10 +23,10 @@ namespace SS14.Server.ServerConsole.Commands
             {
                 Console.Write("{0,20}", p.Name);
                 Console.WriteLine("{0,16}{1,12}{2,14}{3,9}",
-                                  p.ConnectedClient.Connection.RemoteEndPoint.Address,
+                                  p.ConnectedClient.RemoteAddress,
                                   p.Status.ToString(),
                                   (DateTime.Now - p.ConnectedTime).ToString(@"hh\:mm\:ss"),
-                                  Math.Round(p.ConnectedClient.Connection.AverageRoundtripTime*1000, 2) + "ms");
+                                  p.ConnectedClient.Ping + "ms");
             }
         }
     }

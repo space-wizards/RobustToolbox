@@ -1,8 +1,8 @@
-﻿using Lidgren.Network;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
@@ -20,8 +20,7 @@ namespace SS14.Server.Interfaces.Map
         event TileChangedEventHandler TileChanged;
 
         void HandleNetworkMessage(MsgMap message);
-        NetOutgoingMessage CreateMapMessage(MapMessage messageType);
-        void SendMap(NetConnection connection);
+        void SendMap(INetChannel connection);
 
         int TileSize { get; }
 

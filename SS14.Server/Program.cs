@@ -95,7 +95,7 @@ namespace SS14.Server
             IoCManager.Register<IServerLogManager, ServerLogManager>();
             IoCManager.Register<IMessageLogger, MessageLogger>();
             IoCManager.Register<IChatManager, ChatManager>();
-            IoCManager.Register<INetworkServer, NetworkServer>();
+            IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IConsoleManager, ConsoleManager>();

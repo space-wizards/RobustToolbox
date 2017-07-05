@@ -90,9 +90,6 @@ namespace SS14.Server
             logManager.LogPath = logPath;
         }
 
-        [Obsolete] //TODO: Kill this
-        private NetworkServer NetServer => IoCManager.Resolve<INetworkServer>() as NetworkServer;
-
         private RunLevel Level
         {
             get => _runLevel;
@@ -150,25 +147,35 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
 
-            var netMan = IoCManager.Resolve<INetworkServer>();
+            var netMan = IoCManager.Resolve<INetManager>();
             netMan.Initialize(true);
-
-            //TODO: Register all NetMessages
+            
             netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, HandleGenericMessage);
-
             netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleGenericMessage);
             netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleGenericMessage);
-
             netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandleGenericMessage);
             netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleGenericMessage);
 
+            // Unused: NetMessages.LobbyChat
+            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, HandleGenericMessage);
             netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, HandleGenericMessage);
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, HandleGenericMessage);
             netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, HandleGenericMessage);
 
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int)MsgJoinGame.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int)MsgRestartReq.ID, HandleGenericMessage);
+
             netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, HandleGenericMessage);
+            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, HandleGenericMessage);
+            // Not converted yet: NetMessages.StateUpdate
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, HandleGenericMessage);
+            // Not converted yet: NetMessages.FullState
 
             IoCManager.Resolve<IChatManager>().Initialize(this);
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
@@ -321,7 +328,7 @@ namespace SS14.Server
                 _lastBytesUpdate = DateTime.Now;
             }
 
-            IoCManager.Resolve<INetworkServer>().ProcessPackets();
+            IoCManager.Resolve<INetManager>().ProcessPackets();
 
             //Update takes elapsed time in seconds.
             Update(elapsedTime);
@@ -336,11 +343,13 @@ namespace SS14.Server
 
         private string UpdateBps()
         {
-            var bps = string.Format("Send: {0:N0} KiB/s, Recv: {1:N0} KiB/s",
-                (IoCManager.Resolve<INetworkServer>().Statistics.SentBytes - _lastSentBytes) >> 10,
-                (IoCManager.Resolve<INetworkServer>().Statistics.ReceivedBytes - _lastReceivedBytes) >> 10);
-            _lastSentBytes = IoCManager.Resolve<INetworkServer>().Statistics.SentBytes;
-            _lastReceivedBytes = IoCManager.Resolve<INetworkServer>().Statistics.ReceivedBytes;
+            var stats = IoCManager.Resolve<INetManager>().Statistics;
+
+            var bps = $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
+
+            _lastSentBytes = stats.SentBytes;
+            _lastReceivedBytes = stats.ReceivedBytes;
+
             return bps;
         }
 
@@ -403,7 +412,7 @@ namespace SS14.Server
                 stateManager.Add(state.Sequence, state);
 
                 //_log.Log("Update " + _lastState + " sent.");
-                var connections = IoCManager.Resolve<INetworkServer>().Connections;
+                var connections = IoCManager.Resolve<INetManager>().Channels;
                 if (!connections.Any())
                 {
                     //No clients -- don't send state
@@ -415,11 +424,11 @@ namespace SS14.Server
                     foreach (var c in connections)
                         if (c.Connection.Status == NetConnectionStatus.Connected)
                         {
-                            var session = IoCManager.Resolve<IPlayerManager>().GetSessionById(c.NetworkId);
+                            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
                             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
                                 continue;
-                            var stateMessage = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-                            var lastStateAcked = stateManager.GetLastStateAcked(c.Connection);
+                            var stateMessage = IoCManager.Resolve<INetManager>().Server.CreateMessage();
+                            var lastStateAcked = stateManager.GetLastStateAcked(c);
 
                             if (lastStateAcked == 0) // || forceFullState)
                             {
@@ -429,12 +438,12 @@ namespace SS14.Server
                             else
                             {
                                 stateMessage.Write((byte) NetMessages.StateUpdate);
-                                var delta = stateManager.GetDelta(c.Connection, _lastState);
+                                var delta = stateManager.GetDelta(c, _lastState);
                                 delta.WriteDelta(stateMessage);
                                 //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                             }
 
-                            IoCManager.Resolve<INetworkServer>().Server.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+                            IoCManager.Resolve<INetManager>().Server.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
                         }
                 }
                 stateManager.Cull();
@@ -467,16 +476,16 @@ namespace SS14.Server
         /// <param name="msg"></param>
         private void HandleGenericMessage(NetMessage msg)
         {
-            var chan = msg.Channel;
+            var chan = msg.MsgChannel;
             //Logger.Info($"[NET] Received message {chan}:{msg.Name}");
-            var messageType = msg.Id;
+            var messageType = msg.MsgId;
             var channel = chan;
 
             switch (messageType)
             {
                 case NetMessages.WelcomeMessageReq:
                 {
-                    var netMsg = channel.CreateMessage<MsgServerInfo>();
+                    var netMsg = channel.CreateNetMessage<MsgServerInfo>();
 
                     netMsg.ServerName = _serverName;
                     netMsg.ServerPort = _serverPort;
@@ -484,7 +493,7 @@ namespace SS14.Server
                     netMsg.ServerMaxPlayers = _serverMaxPlayers;
                     netMsg.ServerMapName = _serverMapName;
                     netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
-                    netMsg.ServerPlayerCount = NetServer.ConnectionCount;
+                    netMsg.ServerPlayerCount = IoCManager.Resolve<INetManager>().ChannelCount;
 
                     channel.SendMessage(netMsg);
                 }
@@ -502,7 +511,7 @@ namespace SS14.Server
                 {
                     var plyMgr = IoCManager.Resolve<IPlayerManager>();
                     var players = plyMgr.GetAllPlayers().ToArray();
-                    var netMsg = channel.CreateMessage<MsgPlayerList>();
+                    var netMsg = channel.CreateNetMessage<MsgPlayerList>();
                     netMsg.PlyCount = (byte)players.Length;
 
                     var list = new List<MsgPlayerList.PlyInfo>();
@@ -557,18 +566,23 @@ namespace SS14.Server
                 case NetMessages.ConsoleCommand:
                 {
                     var msgCmd = (MsgConCmd) msg;
-                    IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msgCmd.text, msg.Channel.Connection);
+                    IoCManager.Resolve<IClientConsoleHost>().ProcessCommand(msgCmd.text, msg.MsgChannel);
                 }
                     break;
 
                 case NetMessages.ConsoleCommandRegister:
-                    IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(msg.Channel.Connection);
+                    IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(msg.MsgChannel);
                     break;
 
                 default:
-                    Logger.Error($"[SRV] Unhandled NetMessage type: {msg.Id}");
+                    Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
                     break;
             }
+        }
+
+        private void HandleWelcomeMessage(NetMessage message)
+        {
+            
         }
 
         private void HandleAdminMessage(NetMessages adminMsgType, MsgAdmin msg)
@@ -589,27 +603,26 @@ namespace SS14.Server
 
         private static void HandleClientGreet(MsgClGreet msg)
         {
-            var fixedName = msg.Name.Trim();
+            var fixedName = msg.PlyName.Trim();
             if (fixedName.Length < 3)
-                fixedName = $"Player {msg.Channel.NetworkId}";
+                fixedName = $"Player {msg.MsgChannel.NetworkId}";
 
-            msg.Channel.PlayerName = fixedName;
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.Channel);
+            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             p.SetName(fixedName);
         }
 
         private static void HandleStateAck(MsgStateAck msg)
         {
-            IoCManager.Resolve<IGameStateManager>().Ack(msg.Channel.UUID, msg.Sequence);
+            IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
             //_log.Log("State Acked: " + sequence + " by client " + msg.SenderConnection.RemoteUniqueIdentifier + ".");
         }
 
         // The size of the map being sent is almost exaclty 1 byte per tile.
         // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).
-        private static void SendMap(NetChannel client)
+        private static void SendMap(INetChannel client)
         {
             // Send Tiles
-            IoCManager.Resolve<IMapManager>().SendMap(client.Connection);
+            IoCManager.Resolve<IMapManager>().SendMap(client);
 
             // Lets also send them all the items and mobs.
             //_entities.SendEntities(client);
@@ -624,16 +637,16 @@ namespace SS14.Server
 
         public void SendChangeTile(int x, int y, Tile newTile)
         {
-            var tileMessage = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
+            var tileMessage = IoCManager.Resolve<INetManager>().Server.CreateMessage();
             //tileMessage.Write((byte)NetMessages.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);
             tileMessage.Write((uint) newTile);
-            foreach (var connection in NetServer.Connections)
+            foreach (var connection in IoCManager.Resolve<INetManager>().Channels)
             {
-                IoCManager.Resolve<INetworkServer>().Server.SendMessage(tileMessage, connection.Connection,
+                IoCManager.Resolve<INetManager>().Server.SendMessage(tileMessage, connection.Connection,
                     NetDeliveryMethod.ReliableOrdered);
-                Logger.Log(connection.Connection.RemoteEndPoint.Address + ": Tile Change Being Sent", LogLevel.Debug);
+                Logger.Log(connection.RemoteAddress + ": Tile Change Being Sent", LogLevel.Debug);
             }
         }
 

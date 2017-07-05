@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -8,34 +9,55 @@ namespace SS14.Shared.Network.Messages
         public static readonly string NAME = "PlayerSessionMessage";
         public static readonly MsgGroups GROUP = MsgGroups.CORE;
         public static readonly NetMessages ID = NetMessages.PlayerSessionMessage;
-        public static ProcessMessage _callback;
-        public override ProcessMessage Callback
-        {
-            get => _callback;
-            set => _callback = value;
-        }
 
-        public MsgSession(NetChannel channel)
-            : base(channel, NAME, GROUP, ID)
+        public MsgSession(INetChannel channel)
+            : base(NAME, GROUP, ID)
         { }
         #endregion
 
         public PlayerSessionMessage msgType;
         public string verb;
         public int uid;
+        public PostProcessingEffectType PpType;
+        public float PpDuration;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             msgType = (PlayerSessionMessage) buffer.ReadByte();
-            verb = buffer.ReadString();
-            uid = buffer.ReadInt32();
+
+            switch (msgType)
+            {
+                case PlayerSessionMessage.Verb:
+                    verb = buffer.ReadString();
+                    uid = buffer.ReadInt32();
+                    break;
+                case PlayerSessionMessage.AttachToEntity:
+                    uid = buffer.ReadInt32();
+                    break;
+                case PlayerSessionMessage.AddPostProcessingEffect:
+                    PpType = (PostProcessingEffectType) buffer.ReadInt32();
+                    PpDuration = buffer.ReadFloat();
+                    break;
+            }
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write((byte)msgType);
-            buffer.Write(verb);
-            buffer.Write(uid);
+            switch (msgType)
+            {
+                case PlayerSessionMessage.Verb:
+                    buffer.Write(verb);
+                    buffer.Write(uid);
+                    break;
+                case PlayerSessionMessage.AttachToEntity:
+                    buffer.Write(uid);
+                    break;
+                case PlayerSessionMessage.AddPostProcessingEffect:
+                    buffer.Write((int)PpType);
+                    buffer.Write(PpDuration);
+                    break;
+            }
         }
     }
 }

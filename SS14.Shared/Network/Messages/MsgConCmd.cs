@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -14,14 +15,8 @@ namespace SS14.Shared.Network.Messages
         public static readonly MsgGroups GROUP = MsgGroups.CORE;
 
         public static readonly string NAME = ID.ToString();
-        public static ProcessMessage _callback;
-        public override ProcessMessage Callback
-        {
-            get => _callback;
-            set => _callback = value;
-        }
-        public MsgConCmd(NetChannel channel)
-            : base(channel, NAME, GROUP, ID)
+        public MsgConCmd(INetChannel channel)
+            : base(NAME, GROUP, ID)
         { }
         #endregion
 

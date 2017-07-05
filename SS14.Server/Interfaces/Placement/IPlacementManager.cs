@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;

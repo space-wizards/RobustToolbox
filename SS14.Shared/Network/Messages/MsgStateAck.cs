@@ -1,5 +1,6 @@
 ﻿using System;
 using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -10,14 +11,8 @@ namespace SS14.Shared.Network.Messages
         public static readonly MsgGroups GROUP = MsgGroups.ENTITY;
 
         public static readonly string NAME = ID.ToString();
-        public static ProcessMessage _callback;
-        public override ProcessMessage Callback
-        {
-            get => _callback;
-            set => _callback = value;
-        }
-        public MsgStateAck(NetChannel channel)
-            : base(channel, NAME, GROUP, ID)
+        public MsgStateAck(INetChannel channel)
+            : base(NAME, GROUP, ID)
         { }
         #endregion
 

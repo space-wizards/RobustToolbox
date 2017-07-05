@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared;
@@ -216,7 +215,7 @@ namespace SS14.Server.Map
                         mm.TileChanged(tileRef, oldTile);
 
                     if (!mm.suppressNetworkUpdatesOnTileChanged)
-                        mm.NetworkUpdateTile(tileRef);
+                        NetworkUpdateTile(tileRef);
                 }
             }
         }
@@ -225,41 +224,55 @@ namespace SS14.Server.Map
 
         #region Networking
 
-        public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
+        public void SendMap(INetChannel connection)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            message.Write((byte)NetMessages.MapMessage);
-            message.Write((byte)messageType);
-            return message;
-        }
+            Logger.Log($"[MAP] {connection.RemoteAddress}: Sending map");
 
-        public void SendMap(NetConnection connection)
-        {
-            Logger.Log(connection.RemoteEndPoint.Address + ": Sending map");
-            NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileMap);
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgMap>();
 
-            mapMessage.Write((int)1); // Format version.  Who knows, it could come in handy.
+            message.MessageType = MapMessage.SendTileMap;
+            message.Version = 1; // Format version.  Who knows, it could come in handy.
 
             // Tile definition mapping
             var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-            mapMessage.Write((int)tileDefManager.Count);
-            for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
-                mapMessage.Write((string)tileDefManager[tileId].Name);
 
-            // Map chunks
-            mapMessage.Write((int)chunks.Count);
-            foreach (var chunk in chunks)
+            // tile defs
+            message.TileDefs = new MsgMap.TileDef[tileDefManager.Count];
+            for (var tileId = 0; tileId < tileDefManager.Count; ++tileId)
             {
-                mapMessage.Write((int)chunk.Key.X);
-                mapMessage.Write((int)chunk.Key.Y);
-
-                foreach (var tile in chunk.Value.Tiles)
-                    mapMessage.Write((uint)tile);
+                message.TileDefs[tileId] = new MsgMap.TileDef
+                {
+                    name = tileDefManager[tileId].Name
+                };
             }
 
-            IoCManager.Resolve<INetworkServer>().Server.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            Logger.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
-                           mapMessage.LengthBytes + " bytes");
+            var counter = 0;
+            message.ChunkDefs = new MsgMap.ChunkDef[chunks.Count];
+
+            foreach (var chunk in chunks)
+            {
+                var chk = new MsgMap.ChunkDef
+                {
+                    X = chunk.Key.X,
+                    Y = chunk.Key.Y,
+                    TileDefs = new MsgMap.TileDef[chunk.Value.Tiles.Length]
+                };
+
+                var tileIndex = 0;
+                foreach (var tile in chunk.Value.Tiles)
+                {
+                    chk.TileDefs[tileIndex++] = new MsgMap.TileDef
+                    {
+                        tile = (uint)tile
+                    };
+                }
+
+                message.ChunkDefs[counter++] = chk;
+            }
+
+            net.SendMessage(message, connection);
+            Logger.Log($"[MAP] {connection.RemoteAddress}: Finished sending map");
         }
 
         public void HandleNetworkMessage(MsgMap message)
@@ -303,17 +316,21 @@ namespace SS14.Server.Map
                 }
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-        public void NetworkUpdateTile(TileRef tile)
+        
+        private static void NetworkUpdateTile(TileRef tile)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<INetworkServer>().Server.CreateMessage();
-            message.Write((byte)NetMessages.MapMessage);
-            message.Write((byte)MapMessage.TurfUpdate);
+            var net = IoCManager.Resolve<INetManager>();
+            var message = net.CreateNetMessage<MsgMap>();
 
-            message.Write((int)tile.X);
-            message.Write((int)tile.Y);
-            message.Write((uint)tile.Tile);
-            IoCManager.Resolve<INetworkServer>().SendToAll(message);
+            message.MessageType = MapMessage.TurfUpdate;
+            message.SingleTurf = new MsgMap.Turf
+            {
+                x = tile.X,
+                y = tile.Y,
+                tile = (uint)tile.Tile
+            };
+
+            net.SendToAll(message);
         }
 
         #endregion Networking

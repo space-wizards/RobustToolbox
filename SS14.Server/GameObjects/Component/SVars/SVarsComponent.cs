@@ -1,14 +1,15 @@
-﻿using Lidgren.Network;
-using SS14.Server.Interfaces.Player;
+﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
+using Lidgren.Network;
 
 namespace SS14.Server.GameObjects
 {
+    // This is used, don't delete.
     public class SVarsComponent : Component
     {
         public override string Name => "SVars";

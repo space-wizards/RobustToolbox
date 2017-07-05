@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -9,15 +10,9 @@ namespace SS14.Shared.Network.Messages
         public static readonly string NAME = "WelcomeMessage";
         public static readonly MsgGroups GROUP = MsgGroups.CORE;
         public static readonly NetMessages ID = NetMessages.WelcomeMessage;
-        public static ProcessMessage _callback;
-        public override ProcessMessage Callback
-        {
-            get => _callback;
-            set => _callback = value;
-        }
 
-        public MsgServerInfo(NetChannel channel)
-            : base(channel, NAME, GROUP, ID)
+        public MsgServerInfo(INetChannel channel)
+            : base(NAME, GROUP, ID)
         {
         }
 

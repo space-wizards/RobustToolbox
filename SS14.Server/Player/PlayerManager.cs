@@ -51,7 +51,7 @@ namespace SS14.Server.Player
             Server = server;
             Server.OnRunLevelChanged += RunLevelChanged;
 
-            var netMan = IoCManager.Resolve<INetworkServer>();
+            var netMan = IoCManager.Resolve<INetManager>();
 
             netMan.OnConnected += NewSession;
             netMan.OnDisconnect += EndSession;
@@ -69,10 +69,10 @@ namespace SS14.Server.Player
         /// Creates a new session for a client.
         /// </summary>
         /// <param name="client">The client network channel.</param>
-        public void NewSession(NetChannel client)
+        public void NewSession(INetChannel channel)
         {
-            var session = new PlayerSession(client, this);
-            _sessions.Add(client.NetworkId, session);
+            var session = new PlayerSession(channel, this);
+            _sessions.Add(channel.NetworkId, session);
         }
 
         /// <summary>
@@ -86,9 +86,8 @@ namespace SS14.Server.Player
             entity.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
             session.AttachToEntity(entity);
         }
-
-        [Obsolete("Use GetSessionById")]
-        public IPlayerSession GetSessionByChannel(NetChannel client)
+        
+        public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             IEnumerable<PlayerSession> sessions =
                 from s in _sessions
@@ -108,7 +107,7 @@ namespace SS14.Server.Player
             return _sessions.TryGetValue(networkId, out PlayerSession session) ? session : null;
         }
 
-        [Obsolete("Use GetSessionById")]
+        [Obsolete("Use GetSessionById/GetSessionByChannel")]
         public IPlayerSession GetSessionByConnection(NetConnection client)
         {
             IEnumerable<PlayerSession> sessions =
@@ -118,7 +117,7 @@ namespace SS14.Server.Player
 
             return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
         }
-        
+
         public RunLevel RunLevel { get; set; }
 
         /// <summary>
@@ -127,16 +126,16 @@ namespace SS14.Server.Player
         /// <param name="msg">Incoming message.</param>
         public void HandleNetworkMessage(MsgSession msg)
         {
-            GetSessionById(msg.Channel.NetworkId)?.HandleNetworkMessage(msg);
+            GetSessionById(msg.MsgChannel.NetworkId)?.HandleNetworkMessage(msg);
         }
 
         /// <summary>
         /// Ends a clients session, and disconnects them.
         /// </summary>
         /// <param name="client">Client network channel to close.</param>
-        public void EndSession(NetChannel client)
+        public void EndSession(INetChannel channel)
         {
-            var session = GetSessionById(client.NetworkId);
+            var session = GetSessionById(channel.NetworkId);
             if (session == null)
                 return; //There is no session!
 
@@ -144,7 +143,7 @@ namespace SS14.Server.Player
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
 
-            _sessions.Remove(client.NetworkId);
+            _sessions.Remove(channel.NetworkId);
         }
 
         /// <summary>

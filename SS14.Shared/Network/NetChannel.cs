@@ -1,51 +1,55 @@
 ﻿using System;
 using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network
 {
     /// <summary>
-    /// A network connection from this local peer to a remote peer. This class
-    /// sends and receives as well as processes NetMessages.
+    ///     A network connection from this local peer to a remote peer.
     /// </summary>
-    public class NetChannel
+    internal class NetChannel : INetChannel
     {
-        [Obsolete]
+        private readonly NetManager _manager;
+
+        public INetManager NetPeer => _manager;
+
+        /// <summary>
+        ///     Creates a new instance of a NetChannel.
+        /// </summary>
+        /// <param name="manager">The server this channel belongs to.</param>
+        /// <param name="connection">The raw NetConnection to the remote peer.</param>
+        internal NetChannel(NetManager manager, NetConnection connection)
+        {
+            _manager = manager;
+            Connection = connection;
+        }
+
+        /// <inheritdoc />
         public NetConnection Connection { get; }
 
+        /// <inheritdoc />
         public int NetworkId { get; set; }
-        public long UUID { get; set; }
 
-        public string PlayerName { get; set; }
-        public ClientStatus Status { get; set; }
-        public ushort MobID { get; set; }
+        /// <inheritdoc />
+        public long ConnectionId => Connection.RemoteUniqueIdentifier;
 
-        private NetworkServer _server;
+        /// <inheritdoc />
+        public string RemoteAddress => Connection.RemoteEndPoint.Address.ToString();
 
-        public NetChannel(NetworkServer server, NetConnection connection)
-        {
-            _server = server;
-            Connection = connection;
-            UUID = connection.RemoteUniqueIdentifier;
-        }
+        /// <inheritdoc />
+        public int Ping => (int) Math.Round(Connection.AverageRoundtripTime * 1000);
 
-        public T CreateMessage<T>()
+        /// <inheritdoc />
+        public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            return (T)Activator.CreateInstance(typeof(T), this);
+            return _manager.CreateNetMessage<T>();
         }
 
+        /// <inheritdoc />
         public void SendMessage(NetMessage message)
         {
-            var packet = _server.CreateMessage();
-
-            if (_server.TryFindStringId(message.Name, out int msgID))
-            {
-                packet.Write((byte)msgID);
-                message.WriteToBuffer(packet);
-                _server.SendMessage(packet, Connection);
-                return;
-            }
-            throw new Exception($"[NET] No string in table with name {message.Name}. Was it registered?");
+            _manager.SendMessage(message, this);
         }
     }
 }

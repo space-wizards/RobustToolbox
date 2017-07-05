@@ -1,10 +1,9 @@
 ﻿using System;
-using Lidgren.Network;
 using SFML.System;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
-using SS14.Shared.IoC;
-using SS14.Shared.Network;
+using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 
@@ -24,7 +23,7 @@ namespace SS14.Server.Interfaces.Player
 
         IPlayerSession GetSessionById(int networkID);
         
-        IPlayerSession GetSessionByChannel(NetChannel channel);
+        IPlayerSession GetSessionByChannel(INetChannel channel);
 
         void Initialize(BaseServer baseServer);
 
@@ -32,9 +31,9 @@ namespace SS14.Server.Interfaces.Player
 
         void SendJoinLobbyToAll();
 
-        void NewSession(NetChannel client);
+        void NewSession(INetChannel client);
 
-        void EndSession(NetChannel client);
+        void EndSession(INetChannel client);
 
         void HandleNetworkMessage(MsgSession msg);
 

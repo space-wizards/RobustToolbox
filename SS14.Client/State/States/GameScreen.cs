@@ -839,6 +839,7 @@ namespace SS14.Client.State.States
             message.Write((byte)NetMessages.ChatMessage);
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
+            message.Write(-1);
             NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 

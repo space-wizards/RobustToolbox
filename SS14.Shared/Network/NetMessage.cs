@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Lidgren.Network;
+﻿using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network
 {
@@ -12,6 +8,11 @@ namespace SS14.Shared.Network
     /// </summary>
     public enum MsgGroups
     {
+        /// <summary>
+        /// Error state, the message needs to set a different one.
+        /// </summary>
+        ERROR = 0,
+
         /// <summary>
         /// A core message, like connect, disconnect, and tick.
         /// </summary>
@@ -35,23 +36,20 @@ namespace SS14.Shared.Network
 
     public abstract class NetMessage
     {
-        public MsgGroups Group { get; }
-        public string Name { get; }
-        public NetChannel Channel { get; set; }
-        public NetMessages Id { get; set; }
+        public string MsgName { get; }
+        public MsgGroups MsgGroup { get; }
+        public NetMessages MsgId { get; }
 
-        protected NetMessage(NetChannel channel, string name, MsgGroups group, NetMessages id)
+        public INetChannel MsgChannel { get; set; }
+
+        internal NetMessage(string name, MsgGroups group, NetMessages id)
         {
-            Name = name;
-            Group = group;
-            Channel = channel;
-            Id = id;
+            MsgName = name;
+            MsgGroup = group;
+            MsgId = id;
         }
 
         public abstract void ReadFromBuffer(NetIncomingMessage buffer);
         public abstract void WriteToBuffer(NetOutgoingMessage buffer);
-
-        public delegate void ProcessMessage(NetMessage message);
-        public abstract ProcessMessage Callback { get; set; }
     }
 }

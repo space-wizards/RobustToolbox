@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using System;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 
@@ -12,7 +13,7 @@ namespace SS14.Server.Interfaces.Player
         int? AttachedEntityUid { get; }
         string Name { get; set; }
         SessionStatus Status { get; set; }
-        NetChannel ConnectedClient { get; }
+        INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
 
         void SetName(string name);

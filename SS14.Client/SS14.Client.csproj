@@ -336,7 +336,6 @@
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
-    <Compile Include="State\States\LobbyScreen.cs" />
     <Compile Include="State\States\MainMenu.cs" />
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="UserInterface\DragDropInfo.cs" />

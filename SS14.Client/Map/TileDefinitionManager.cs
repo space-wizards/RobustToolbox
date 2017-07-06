@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces.Resource;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.IoC;
@@ -8,15 +9,25 @@ namespace SS14.Client.Map
 {
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
+        [Dependency]
+        private readonly IResourceManager resourceManager;
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();
         Dictionary<string, ITileDefinition> tileNames = new Dictionary<string, ITileDefinition>();
         Dictionary<ITileDefinition, ushort> tileIds = new Dictionary<ITileDefinition, ushort>();
 
         public TileDefinitionManager()
         {
-            Register(SpaceTileDefinition.Instance);
+            Register(new SpaceTileDefinition());
             Register(new FloorTileDefinition());
             Register(new WallTileDefinition());
+        }
+
+        public void InitializeResources()
+        {
+            foreach (var item in tileDefs)
+            {
+                item.InitializeResources(resourceManager);
+            }
         }
 
         public ushort Register(ITileDefinition tileDef)

@@ -109,6 +109,8 @@ namespace SS14.Server
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
+
+            IoCManager.BuildGraph();
         }
 
         // TODO: Move to the main server so we can have proper logging and stuff.

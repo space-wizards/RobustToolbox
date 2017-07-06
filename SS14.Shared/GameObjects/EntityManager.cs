@@ -11,10 +11,15 @@ namespace SS14.Shared.GameObjects
     public class EntityManager : IEntityManager
     {
         #region Dependencies
+        [Dependency]
         protected readonly IEntityNetworkManager EntityNetworkManager;
+        [Dependency]
         protected readonly IPrototypeManager PrototypeManager;
+        [Dependency]
         protected readonly IEntitySystemManager EntitySystemManager;
+        [Dependency]
         protected readonly IComponentFactory ComponentFactory;
+        [Dependency]
         protected readonly IComponentManager ComponentManager;
         # endregion Dependencies
 
@@ -36,15 +41,6 @@ namespace SS14.Shared.GameObjects
         {
             ComponentFamily.Mover
         };
-
-        public EntityManager()
-        {
-            EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();
-            ComponentFactory = IoCManager.Resolve<IComponentFactory>();
-            EntityNetworkManager = IoCManager.Resolve<IEntityNetworkManager>();
-            ComponentManager = IoCManager.Resolve<IComponentManager>();
-            PrototypeManager = IoCManager.Resolve<IPrototypeManager>();
-        }
 
         public bool Initialized { get; protected set; }
 

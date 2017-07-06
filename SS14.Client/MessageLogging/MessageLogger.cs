@@ -11,16 +11,17 @@ namespace SS14.Client.MessageLogging
 {
     public class MessageLogger : IMessageLogger
     {
-        private readonly Timer _pingTimer;
-        private readonly MessageLoggerServiceClient _loggerServiceClient;
+        [Dependency]
+        private readonly IConfigurationManager _configurationManager;
+        private Timer _pingTimer;
+        private MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging;
 
-        public MessageLogger(IConfigurationManager _configurationManager)
+        public void Initialize()
         {
-            _logging = _configurationManager.GetCVar<bool>("log.enabled");
-            _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
             if (_logging)
             {
+                _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");
                 Ping();
                 _pingTimer = new Timer(5000);
                 _pingTimer.Elapsed += CheckServer;

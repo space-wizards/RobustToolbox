@@ -5,6 +5,8 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -13,6 +15,7 @@ using SS14.Client.Interfaces;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Configuration;
+using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
@@ -28,13 +31,25 @@ namespace SS14.Client
     {
         #region Fields
 
+        [Dependency]
         readonly private IConfigurationManager _configurationManager;
         //  private Input _input;
+        [Dependency]
         readonly private INetworkGrapher _netGrapher;
+        [Dependency]
         readonly private INetworkManager _networkManager;
+        [Dependency]
         readonly private IStateManager _stateManager;
+        [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
+        [Dependency]
         readonly private IResourceManager _resourceManager;
+        [Dependency]
+        readonly private IMessageLogger _messageLogger;
+        [Dependency]
+        readonly private IEntityNetworkManager _entityNetworkManager;
+        [Dependency]
+        readonly private ITileDefinitionManager _tileDefinitionManager;
 
         private SFML.System.Clock _clock;
 
@@ -43,22 +58,6 @@ namespace SS14.Client
         #region Methods
 
         #region Constructors
-
-        public GameController(IConfigurationManager configManager,
-                              INetworkGrapher networkGrapher,
-                              INetworkManager networkManager,
-                              IStateManager stateManager,
-                              IUserInterfaceManager userInterfaceManager,
-                              IResourceManager resourceManager)
-        {
-            _configurationManager = configManager;
-            _netGrapher = networkGrapher;
-            _networkManager = networkManager;
-            _stateManager = stateManager;
-            _userInterfaceManager = userInterfaceManager;
-            _resourceManager = resourceManager;
-        }
-
         public void Run()
         {
             Logger.Debug("Initialising GameController.");
@@ -75,6 +74,10 @@ namespace SS14.Client
             CleanupSplashScreen();
 
             //Initialization of private members
+            _messageLogger.Initialize();
+            _entityNetworkManager.Initialize();
+            _tileDefinitionManager.InitializeResources();
+
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();

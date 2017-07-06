@@ -8,12 +8,19 @@ namespace SS14.UnitTesting.Shared.Reflection
 {
     public sealed class ReflectionManagerTest : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.UnitTesting.", "SS14.Server.", "SS14.Client.", "SS14.Shared." };
+        protected override IEnumerable<string> TypePrefixes => new[] { "", "SS14.UnitTesting.", "SS14.Server.", "SS14.Shared." };
     }
 
     [TestFixture]
     public class ReflectionManager_Test : SS14UnitTest
     {
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+
+            IoCManager.Register<IReflectionManager, ReflectionManagerTest>(overwrite: true);
+        }
+
         [Test]
         public void ReflectionManager_TestGetAllChildren()
         {

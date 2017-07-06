@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
-using SS14.Client.Interfaces.Resource;
+using SS14.Server.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
@@ -13,36 +14,30 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Register<IIoCNoPublicConstructorTest, IoCNoPublicConstructorTest>();
             IoCManager.Register<IIoCTestPriories, IoCTestPriorities2>();
             IoCManager.Register<IIoCTestPriories, IoCTestPriorities1>(true);
-            IoCManager.Register<IIoCCircularDeps1, CircularDeps1>();
-            IoCManager.Register<IIoCCircularDeps2, CircularDeps2>();
-            IoCManager.Register<IConstructorException, ConstructorException>();
+            IoCManager.Register<TestFieldInjection, TestFieldInjection>();
+
+            IoCManager.BuildGraph();
+        }
+
+        [Test]
+        public void IoCTestFieldInjection()
+        {
+            var tester = IoCManager.Resolve<TestFieldInjection>();
+            tester.Test();
         }
 
         [Test]
         public void IoCTestBasic()
         {
-            Assert.That(IoCManager.Resolve<IConfigurationManager>(),
+            Assert.That(IoCManager.Resolve<IEntityManager>(),
                         Is.Not.Null,
                         "IoC failed to return an IServerConfigurationManager.");
 
-            Assert.That(IoCManager.Resolve<IResourceManager>(),
+            Assert.That(IoCManager.Resolve<IServerEntityManager>(),
                         Is.Not.Null,
                         "IoC failed to return an IResourceManager.");
-        }
-
-        [Test]
-        public void IoCTestExceptions()
-        {
-            Assert.That(() => IoCManager.Resolve<IIoCFailInterface>(),
-                        Throws.TypeOf<MissingImplementationException>(),
-                        "IoC did not throw a MissingImplementationException.");
-
-            Assert.That(() => IoCManager.Resolve<IIoCNoPublicConstructorTest>(),
-                        Throws.TypeOf<NoPublicConstructorException>(),
-                        "IoC did not throw a NoPublicConstructorException.");
         }
 
         [Test]
@@ -52,50 +47,19 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
         }
 
         [Test]
-        public void IoCTestCircularDependencies()
-        {
-            Assert.That(() => IoCManager.Resolve<IIoCCircularDeps1>(), Throws.InstanceOf<CircularDependencyException>());
-        }
-
-        [Test]
         public void IoCTestConstructorException()
         {
-            Assert.That(() => IoCManager.Resolve<IConstructorException>(), Throws.InstanceOf<ImplementationConstructorException>().And.InnerException.InstanceOf<TestConstructorExceptionException>());
+            IoCManager.Register<IConstructorException, ConstructorException>();
+            Assert.That(() => IoCManager.BuildGraph(), Throws.InstanceOf<ImplementationConstructorException>().And.InnerException.InstanceOf<TestConstructorExceptionException>());
         }
     }
 
     public interface IIoCFailInterface { }
 
-    public interface IIoCNoPublicConstructorTest { }
-
-    public class IoCNoPublicConstructorTest : IIoCNoPublicConstructorTest
-    {
-        private IoCNoPublicConstructorTest()
-        {
-        }
-    }
-
     public interface IIoCTestPriories { }
 
     public class IoCTestPriorities1 : IIoCTestPriories { }
     public class IoCTestPriorities2 : IIoCTestPriories { }
-
-    public interface IIoCCircularDeps1 { }
-    public interface IIoCCircularDeps2 { }
-
-    public class CircularDeps1 : IIoCCircularDeps1
-    {
-        public CircularDeps1(IIoCCircularDeps2 deps2)
-        {
-        }
-    }
-
-    public class CircularDeps2 : IIoCCircularDeps2
-    {
-        public CircularDeps2(IIoCCircularDeps1 deps1)
-        {
-        }
-    }
 
     public interface IConstructorException { }
 
@@ -109,5 +73,16 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
 
     public class TestConstructorExceptionException : Exception
     {
+    }
+
+    public class TestFieldInjection
+    {
+        [Dependency]
+        private readonly TestFieldInjection myself;
+
+        public void Test()
+        {
+            Assert.That(myself, Is.EqualTo(this));
+        }
     }
 }

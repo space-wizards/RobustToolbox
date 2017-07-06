@@ -17,12 +17,12 @@ namespace SS14.Server.GameObjects
 {
     public class EntityNetworkManager : IEntityNetworkManager
     {
-        private readonly bool _messageProfiling;
+        private bool _messageProfiling = false;
+        [Dependency]
         private readonly ISS14NetServer m_netServer;
 
-        public EntityNetworkManager(ISS14NetServer netServer)
+        public void Initialize()
         {
-            m_netServer = netServer;
             _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetCVar<bool>("log.enabled");
         }
 

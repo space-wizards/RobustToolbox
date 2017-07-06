@@ -17,6 +17,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
     {
         public override bool NeedsClientConfig => true;
         public override bool NeedsResourcePack => true;
+        public override UnitTestProject Project => UnitTestProject.Client;
 
         private IConfigurationManager _configurationManager;
         private IResourceManager _resourceManager;

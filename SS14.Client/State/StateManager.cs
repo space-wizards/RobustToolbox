@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
@@ -16,44 +17,48 @@ using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State
 {
-    public class StateManager : IStateManager
+    public class StateManager : IStateManager, IPostInjectInit
     {
-        private readonly Dictionary<Type, IState> _loadedStates;
-        private readonly Dictionary<Type, object> _managers;
+        [Dependency]
+        private readonly IConfigurationManager configurationManager;
+        [Dependency]
+        private readonly INetworkManager networkManager;
+        [Dependency]
+        private readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        private readonly IResourceManager resourceManager;
+        [Dependency]
+        private readonly IMapManager mapManager;
+        [Dependency]
+        private readonly IPlayerManager playerManager;
+        [Dependency]
+        private readonly IPlacementManager placementManager;
+        [Dependency]
+        private readonly IKeyBindingManager keyBindingManager;
+
+        private readonly Dictionary<Type, IState> _loadedStates = new Dictionary<Type, IState>();
+        private readonly Dictionary<Type, object> _managers = new Dictionary<Type, object>();
 
         #region IStateManager Members
 
-        public IState CurrentState { get; private set; }
+        public IState CurrentState { get; private set; } = null;
 
         #endregion
 
-        #region Constructor
-
-        public StateManager(IConfigurationManager configurationManager, INetworkManager networkManager,
-                            IUserInterfaceManager userInterfaceManager,
-                            IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
-                            IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
+        public void PostInject()
         {
-            _managers = new Dictionary<Type, object>
-                            {
-                                {typeof (INetworkManager), networkManager},
-                                {typeof (IUserInterfaceManager), userInterfaceManager},
-                                {typeof (IResourceManager), resourceManager},
-                                {typeof (IMapManager), mapManager},
-                                {typeof (IPlayerManager), playerManager},
-                                {typeof (IConfigurationManager), configurationManager},
-                                {typeof (IPlacementManager), placementManager},
-                                {typeof (IKeyBindingManager), keyBindingManager},
-                                {typeof (IStateManager), this}
-                            };
-
-            _loadedStates = new Dictionary<Type, IState>();
-            CurrentState = null;
+            _managers[typeof(INetworkManager)] = networkManager;
+            _managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
+            _managers[typeof(IResourceManager)] = resourceManager;
+            _managers[typeof(IMapManager)] = mapManager;
+            _managers[typeof(IPlayerManager)] = playerManager;
+            _managers[typeof(IPlacementManager)] = placementManager;
+            _managers[typeof(IKeyBindingManager)] = keyBindingManager;
+            _managers[typeof(IConfigurationManager)] = configurationManager;
+            _managers[typeof(IStateManager)] = this;
 
             playerManager.RequestedStateSwitch += HandleStateChange;
         }
-
-        #endregion
 
         #region Input
 

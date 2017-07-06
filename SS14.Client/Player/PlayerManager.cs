@@ -24,13 +24,9 @@ namespace SS14.Client.Player
          * This class also communicates with the server to let the server control what entity it is attached to. */
 
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
+        [Dependency]
         private readonly INetworkManager _networkManager;
         private SessionStatus status = SessionStatus.Zombie;
-
-        public PlayerManager(INetworkManager networkManager)
-        {
-            _networkManager = networkManager;
-        }
 
         #region IPlayerManager Members
 

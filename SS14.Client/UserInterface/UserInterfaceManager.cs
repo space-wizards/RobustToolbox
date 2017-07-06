@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
+using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Maths;
 using System;
@@ -22,14 +23,16 @@ namespace SS14.Client.UserInterface
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
-    public class UserInterfaceManager : IUserInterfaceManager
+    public class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit
     {
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
-        private readonly List<IGuiComponent> _components;
+        private readonly List<IGuiComponent> _components = new List<IGuiComponent>();
 
+        [Dependency]
         private readonly IConfigurationManager _config;
+        [Dependency]
         private readonly IResourceManager _resourceManager;
         private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
@@ -40,18 +43,9 @@ namespace SS14.Client.UserInterface
         private IGuiComponent movingComp;
         private bool showCursor = true;
 
-        /// <summary>
-        ///  Currently targeting action.
-        /// </summary>
-
-        public UserInterfaceManager(IResourceManager resourceManager, IConfigurationManager config)
+        public void PostInject()
         {
-            config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
-
-            _resourceManager = resourceManager;
-            DragInfo = new DragDropInfo();
-            _components = new List<IGuiComponent>();
-            _config = config;
+            _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
         }
 
         public void Initialize()
@@ -64,7 +58,7 @@ namespace SS14.Client.UserInterface
 
         #region IUserInterfaceManager Members
 
-        public IDragDropInfo DragInfo { get; private set; }
+        public IDragDropInfo DragInfo { get; private set; } = new DragDropInfo();
 
         public IDebugConsole Console => _console;
 

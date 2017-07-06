@@ -245,7 +245,7 @@
     <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
-    <Compile Include="GameObjects\EntityNetworkManager.cs" />
+    <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />

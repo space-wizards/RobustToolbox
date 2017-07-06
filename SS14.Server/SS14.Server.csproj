@@ -185,7 +185,7 @@
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
-    <Compile Include="GameObjects\EntityNetworkManager.cs" />
+    <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
     <Compile Include="GameObjects\MessageEnums.cs" />
     <Compile Include="GameObjects\Component\ClickableComponent.cs" />
     <Compile Include="GameObjects\Component\IInventoryContainer.cs" />

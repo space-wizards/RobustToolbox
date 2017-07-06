@@ -51,8 +51,6 @@ namespace SS14.Client
         [Dependency]
         readonly private ITileDefinitionManager _tileDefinitionManager;
 
-        private SFML.System.Clock _clock;
-
         #endregion Fields
 
         #region Methods
@@ -89,9 +87,9 @@ namespace SS14.Client
 
             FrameEventArgs _frameEvent;
             // EventArgs _frameEventArgs;
-            _clock = new Clock();
+            var _clock = new Clock();
 
-            while (CluwneLib.IsRunning == true)
+            while (CluwneLib.IsRunning)
             {
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();

@@ -6,6 +6,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Map;
+using SS14.Server.Interfaces.MessageLogging;
 using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
@@ -87,7 +88,6 @@ namespace SS14.Server
             configMgr.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
             configMgr.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
 
             configMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
 
@@ -120,8 +120,8 @@ namespace SS14.Server
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IMapManager>().Initialize();
+            IoCManager.Resolve<IMessageLogger>().Initialize();
 
             StartLobby();
             StartGame();

@@ -250,8 +250,8 @@ namespace SS14.Client.Collision
     internal class CollidableBucket
     {
         private readonly List<CollidablePoint> _points;
-        private Vector2i _coordinates;
-        private int _index;
+        private readonly Vector2i _coordinates;
+        private readonly int _index;
 
         public CollidableBucket(int index, Vector2i coordinates)
         {

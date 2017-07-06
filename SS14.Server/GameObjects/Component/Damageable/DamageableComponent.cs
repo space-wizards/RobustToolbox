@@ -68,12 +68,9 @@ namespace SS14.Server.GameObjects
         [Obsolete("This is old and should be removed. Everything that calls this should instead trigger Die() if necessary.")]
         protected virtual void SendHealthUpdate(NetConnection client)
         {
-            if (currentHealth <= 0)
+            if (currentHealth <= 0 && !isDead)
             {
-                if (isDead == false)
-                {
-                    Die();
-                }
+                Die();
             }
         }
 
@@ -86,6 +83,7 @@ namespace SS14.Server.GameObjects
                 DamagedBy(damager, damageamount, damType);
             }
             SendHealthUpdate();
+
         }
 
         protected virtual int GetArmor(DamageType damType)

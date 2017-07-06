@@ -116,7 +116,6 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
 
         #endregion ItemCapabilityQueryResultType enum
 
-        private ItemCapabilityQueryResultType resultStatus;
         private ItemCapability[] returnedCapabilities;
 
         public ItemCapabilityQueryResultType ResultStatus { get; set; }

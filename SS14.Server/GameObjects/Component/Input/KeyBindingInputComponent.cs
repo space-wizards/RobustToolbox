@@ -30,7 +30,6 @@ namespace SS14.Server.GameObjects
         public KeyBindingInputComponent()
         {
             Family = ComponentFamily.Input;
-            _keyStates = new Dictionary<BoundKeyFunctions, bool>();
         }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)

@@ -49,25 +49,12 @@ namespace SS14.Server.GameObjects
         private Direction DetermineDirection(Vector2f from, Vector2f to)
         {
             Vector2f delta = to - from;
-            if (delta.Length() < 0.1f)
+            if (delta.Length() < 0.1)
+            {
                 return _lastDeterminedDirection;
+            }
 
-            if (delta.X > 0 && delta.Y > 0)
-                _lastDeterminedDirection = Direction.SouthEast;
-            if (delta.X > 0 && delta.Y < 0)
-                _lastDeterminedDirection = Direction.NorthEast;
-            if (delta.X < 0 && delta.Y > 0)
-                _lastDeterminedDirection = Direction.SouthWest;
-            if (delta.X < 0 && delta.Y < 0)
-                _lastDeterminedDirection = Direction.NorthWest;
-            if (delta.X > 0 && Math.Abs(0 - delta.Y) < 0.05f)
-                _lastDeterminedDirection = Direction.East;
-            if (delta.X < 0 && Math.Abs(0 - delta.Y) < 0.05f)
-                _lastDeterminedDirection = Direction.West;
-            if (delta.Y > 0 && Math.Abs(0 - delta.X) < 0.05f)
-                _lastDeterminedDirection = Direction.South;
-            if (delta.Y < 0 && Math.Abs(0 - delta.X) < 0.05f)
-                _lastDeterminedDirection = Direction.North;
+            _lastDeterminedDirection = from.DirectionTo(to, fallback: _lastDeterminedDirection);
             return _lastDeterminedDirection;
         }
 

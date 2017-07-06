@@ -27,10 +27,6 @@ namespace SS14.Server.Placement
 
         #region IPlacementManager Members
 
-        public void Initialize()
-        {
-        }
-
         /// <summary>
         ///  Handles placement related client messages.
         /// </summary>

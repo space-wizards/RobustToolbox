@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.MessageLogging;
 using SS14.Shared;
+using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
@@ -9,13 +10,18 @@ using System.Timers;
 
 namespace SS14.Server.MessageLogging
 {
-    public class MessageLogger : IMessageLogger
+    public class MessageLogger : IMessageLogger, IPostInjectInit
     {
         [Dependency]
         private readonly IConfigurationManager _configurationManager;
         private Timer _pingTimer;
         private MessageLoggerServiceClient _loggerServiceClient;
         private bool _logging = false;
+
+        public void PostInject()
+        {
+            _configurationManager.RegisterCVar("log.enabled", false);
+        }
 
         public void Initialize()
         {

@@ -37,6 +37,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace SS14.Server
@@ -46,7 +47,6 @@ namespace SS14.Server
         private static void Main(string[] args)
         {
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
-
             RegisterIoC();
             LoadContentAssemblies();
 

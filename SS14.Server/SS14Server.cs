@@ -120,7 +120,7 @@ namespace SS14.Server
             IoCManager.Resolve<ISS14NetServer>().Start();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IPlacementManager>().Initialize(this);
+            IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IMapManager>().Initialize();
 
             StartLobby();

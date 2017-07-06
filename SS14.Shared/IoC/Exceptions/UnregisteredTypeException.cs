@@ -19,7 +19,7 @@ namespace SS14.Shared.IoC.Exceptions
             TypeName = type.AssemblyQualifiedName;
         }
 
-        public UnregisteredTypeException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected UnregisteredTypeException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             TypeName = info.GetString("TypeName");
         }

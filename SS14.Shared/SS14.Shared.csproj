@@ -155,7 +155,7 @@
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="TypeEventArgs.cs" />
-    <Compile Include="Utility\BitStream.cs" />
+    <!--<Compile Include="Utility\BitS>tream.cs" />-->
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PathHelpers.cs" />

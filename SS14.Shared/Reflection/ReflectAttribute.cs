@@ -27,7 +27,7 @@ namespace SS14.Shared.Reflection
         /// </summary>
         /// <value><see cref="DEFAULT_DISCOVERABLE"/></value>
         /// <seealso cref="ReflectAttribute(bool)"/>
-        public bool Discoverable { get; } = DEFAULT_DISCOVERABLE;
+        public bool Discoverable { get; }
 
         /// <summary>
         /// Controls whether or not the type can be discovered.

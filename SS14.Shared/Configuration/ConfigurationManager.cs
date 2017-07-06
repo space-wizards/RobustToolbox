@@ -40,7 +40,7 @@ namespace SS14.Shared.Configuration
                 Logger.Warning("[CFG] Unable to load configuration file:\n{0}", e);
             }
         }
-        
+
         /// <summary>
         /// A recursive function that walks over the config tree, transforming all key nodes into CVars.
         /// </summary>
@@ -102,7 +102,7 @@ namespace SS14.Shared.Configuration
                     {
                         value = cVar.DefaultValue;
                     }
-                    
+
                     if(value == null)
                     {
                         Logger.Error($"[CFG] CVar {name} has no value or default value, was the default value registered as null?");
@@ -120,7 +120,7 @@ namespace SS14.Shared.Configuration
                         if (!table.TryGetValue(curTblName, out TomlObject tblObject))
                             tblObject = table.AddTable(curTblName);
 
-                        table = tblObject as TomlTable ?? throw new Exception($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
+                        table = tblObject as TomlTable ?? throw new InvalidConfigurationException($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
                     }
 
                     //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
@@ -192,7 +192,7 @@ namespace SS14.Shared.Configuration
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
                 cVar.Value = value;
             else
-                throw new Exception($"[CVar] Trying to set unregistered variable '{name}'");
+                throw new InvalidConfigurationException($"[CVar] Trying to set unregistered variable '{name}'");
         }
 
         /// <inheritdoc />
@@ -202,7 +202,7 @@ namespace SS14.Shared.Configuration
                 //TODO: Make flags work, required non-derpy net system.
                 return (T) (cVar.Value ?? cVar.DefaultValue);
 
-            throw new Exception($"[CVar] Trying to get unregistered variable '{name}'");
+            throw new InvalidConfigurationException($"[CVar] Trying to get unregistered variable '{name}'");
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace SS14.Shared.Configuration
                     return obj.Get<string>();
 
                 default:
-                    throw new Exception($"[CFG] Cannot convert {tmlType}.");
+                    throw new InvalidConfigurationException($"[CFG] Cannot convert {tmlType}.");
             }
         }
 
@@ -277,5 +277,16 @@ namespace SS14.Shared.Configuration
             /// </summary>
             public bool Registered { get; set; }
         }
+    }
+
+    [System.Serializable]
+    public class InvalidConfigurationException : System.Exception
+    {
+        public InvalidConfigurationException() { }
+        public InvalidConfigurationException( string message ) : base( message ) { }
+        public InvalidConfigurationException( string message, System.Exception inner ) : base( message, inner ) { }
+        protected InvalidConfigurationException(
+            System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context ) : base( info, context ) { }
     }
 }

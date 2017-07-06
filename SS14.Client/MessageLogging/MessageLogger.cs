@@ -19,6 +19,8 @@ namespace SS14.Client.MessageLogging
 
         public void Initialize()
         {
+            _logging = _configurationManager.GetCVar<bool>("log.enabled");
+
             if (_logging)
             {
                 _loggerServiceClient = new MessageLoggerServiceClient("NetNamedPipeBinding_IMessageLoggerService");

@@ -23,7 +23,6 @@ namespace SS14.Server.GameObjects
 
         public void SaveEntities()
         {
-            //List<XElement> entities = new List<XElement>();
             IEnumerable<XElement> entities = from IEntity e in _entities.Values
                                              where e.Prototype.ID != "HumanMob"
                                              select ToXML(e);

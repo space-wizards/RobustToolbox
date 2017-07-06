@@ -110,6 +110,8 @@ namespace SS14.Client
 
         private void ShowSplashScreen()
         {
+            // Do nothing when we're on DEBUG builds.
+            // The splash is just annoying.
 #if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
@@ -146,6 +148,8 @@ namespace SS14.Client
 
         private void CleanupSplashScreen()
         {
+            // Do nothing when we're on DEBUG builds.
+            // The splash is just annoying.
 #if !DEBUG
             CluwneLib.CleanupSplashScreen();
 #endif

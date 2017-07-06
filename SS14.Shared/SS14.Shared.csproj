@@ -128,7 +128,9 @@
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
+    <Compile Include="Interfaces\Network\INetClientManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
+    <Compile Include="Interfaces\Network\INetServerManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
@@ -146,7 +148,8 @@
     <Compile Include="GlobalConstants.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
-    <Compile Include="IncomingNetworkMessageArgs.cs" />
+    <Compile Include="Network\NetChannelArgs.cs" />
+    <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgAdmin.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
     <Compile Include="Network\Messages\MsgClGreet.cs" />

@@ -271,7 +271,7 @@ namespace SS14.Server.Map
                 message.ChunkDefs[counter++] = chk;
             }
 
-            net.SendMessage(message, connection);
+            net.ServerSendMessage(message, connection);
             Logger.Log($"[MAP] {connection.RemoteAddress}: Finished sending map");
         }
 
@@ -330,7 +330,7 @@ namespace SS14.Server.Map
                 tile = (uint)tile.Tile
             };
 
-            net.SendToAll(message);
+            net.ServerSendToAll(message);
         }
 
         #endregion Networking

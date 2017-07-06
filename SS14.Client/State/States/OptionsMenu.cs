@@ -183,7 +183,7 @@ namespace SS14.Client.State.States
 
         public void Startup()
         {
-            NetworkManager.Disconnect(); //TODO: Is this really needed here?
+            NetworkManager.ClientDisconnect("Client killed old session."); //TODO: Is this really needed here?
             InitalizeGUI();
         }
 

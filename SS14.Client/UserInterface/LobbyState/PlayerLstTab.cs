@@ -4,6 +4,7 @@ using SFML.Window;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.UserInterface.Components
@@ -29,10 +30,10 @@ namespace SS14.Client.UserInterface.Components
 
         public void getPlayerList()
         {
-            var netManager = IoCManager.Resolve<INetworkManager>();
+            var netManager = IoCManager.Resolve<INetClientManager>();
             NetOutgoingMessage playerListMsg = netManager.CreateMessage();
             playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            netManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);          
+            netManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);          
         }
 
         public override void Update(float frameTime)

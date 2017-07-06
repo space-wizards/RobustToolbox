@@ -13,6 +13,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State
@@ -47,7 +48,7 @@ namespace SS14.Client.State
 
         public void PostInject()
         {
-            _managers[typeof(INetworkManager)] = networkManager;
+            _managers[typeof(INetClientManager)] = networkManager;
             _managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
             _managers[typeof(IResourceManager)] = resourceManager;
             _managers[typeof(IMapManager)] = mapManager;

@@ -139,7 +139,7 @@ namespace SS14.Server.Player
             message.PpType = type;
             message.PpDuration = duration;
 
-            net.SendMessage(message, ConnectedClient);
+            net.ServerSendMessage(message, ConnectedClient);
         }
 
         #endregion IPlayerSession Members
@@ -155,7 +155,7 @@ namespace SS14.Server.Player
             message.msgType = PlayerSessionMessage.AttachToEntity;
             message.uid = attachedEntity.Uid;
 
-            net.SendMessage(message, ConnectedClient);
+            net.ServerSendMessage(message, ConnectedClient);
         }
 
         private void HandleVerb(MsgSession message)
@@ -215,7 +215,7 @@ namespace SS14.Server.Player
 
             var net = IoCManager.Resolve<INetManager>();
             var message = net.CreateNetMessage<MsgJoinGame>();
-            net.SendMessage(message, ConnectedClient);
+            net.ServerSendMessage(message, ConnectedClient);
 
             Status = SessionStatus.InGame;
             UpdatePlayerState();
@@ -229,7 +229,7 @@ namespace SS14.Server.Player
             message.UiType = UiManagerMessage.ComponentMessage;
             message.CompType = gui;
 
-            net.SendMessage(message, ConnectedClient);
+            net.ServerSendMessage(message, ConnectedClient);
         }
 
         private void UpdatePlayerState()

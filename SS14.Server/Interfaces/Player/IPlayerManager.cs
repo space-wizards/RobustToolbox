@@ -31,13 +31,7 @@ namespace SS14.Server.Interfaces.Player
 
         void SendJoinLobbyToAll();
 
-        void NewSession(INetChannel client);
-
-        void EndSession(INetChannel client);
-
         void HandleNetworkMessage(MsgSession msg);
-
-        //IPlayerSession GetSessionByIp(string ipKick);
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();

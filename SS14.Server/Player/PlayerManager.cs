@@ -53,26 +53,26 @@ namespace SS14.Server.Player
 
             var netMan = IoCManager.Resolve<INetManager>();
 
-            netMan.OnConnected += NewSession;
-            netMan.OnDisconnect += EndSession;
+            netMan.Connected += NewSession;
+            netMan.Disconnect += EndSession;
         }
 
         private void RunLevelChanged(RunLevel oldLevel, RunLevel newLevel)
         {
             RunLevel = newLevel;
         }
-        
 
         #region IPlayerManager Members
 
         /// <summary>
         /// Creates a new session for a client.
         /// </summary>
-        /// <param name="client">The client network channel.</param>
-        public void NewSession(INetChannel channel)
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        public void NewSession(object sender, NetChannelArgs args)
         {
-            var session = new PlayerSession(channel, this);
-            _sessions.Add(channel.NetworkId, session);
+            var session = new PlayerSession(args.Channel, this);
+            _sessions.Add(args.Channel.NetworkId, session);
         }
 
         /// <summary>
@@ -133,9 +133,9 @@ namespace SS14.Server.Player
         /// Ends a clients session, and disconnects them.
         /// </summary>
         /// <param name="client">Client network channel to close.</param>
-        public void EndSession(INetChannel channel)
+        public void EndSession(object sender, NetChannelArgs args)
         {
-            var session = GetSessionById(channel.NetworkId);
+            var session = GetSessionById(args.Channel.NetworkId);
             if (session == null)
                 return; //There is no session!
 
@@ -143,7 +143,7 @@ namespace SS14.Server.Player
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
 
-            _sessions.Remove(channel.NetworkId);
+            _sessions.Remove(args.Channel.NetworkId);
         }
 
         /// <summary>

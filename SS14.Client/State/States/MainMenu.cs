@@ -185,7 +185,7 @@ namespace SS14.Client.State.States
             if (_isConnecting)
             {
                 _isConnecting = false;
-                NetworkManager.Disconnect();
+                NetworkManager.ClientDisconnect("Client disconnected from game.");
             }
 
             StateManager.RequestStateChange<OptionsMenu>();
@@ -198,7 +198,7 @@ namespace SS14.Client.State.States
             else
             {
                 _isConnecting = false;
-                NetworkManager.Disconnect();
+                NetworkManager.ClientDisconnect("Client disconnected from game.");
             }
         }
 
@@ -211,7 +211,7 @@ namespace SS14.Client.State.States
 
         public void Startup()
         {
-            NetworkManager.Disconnect();
+            NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
             /*
             DecoFloats.Add(new FloatingDecoration(ResourceManager, "coderart")
@@ -335,7 +335,7 @@ namespace SS14.Client.State.States
                 if (dif.TotalMilliseconds > ConnectTimeOut)
                 {
                     _isConnecting = false;
-                    NetworkManager.Disconnect();
+                    NetworkManager.ClientDisconnect("Client timed out.");
                 }
             }
         }
@@ -355,7 +355,7 @@ namespace SS14.Client.State.States
 
             _connectTime = DateTime.Now;
             _isConnecting = true;
-            NetworkManager.ConnectTo(address);
+            NetworkManager.ClientConnect(address);
         }
 
         #endregion

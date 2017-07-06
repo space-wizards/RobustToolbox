@@ -7,6 +7,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Network
 {
@@ -15,7 +16,7 @@ namespace SS14.Client.Network
         private const int MaxDataPoints = 200;
         private readonly List<NetworkStatisticsDataPoint> _dataPoints = new List<NetworkStatisticsDataPoint>();
         [Dependency]
-        private readonly INetworkManager _networkManager;
+        private readonly INetClientManager _networkManager;
         [Dependency]
         private readonly IResourceManager _resourceManager;
         private TextSprite _textSprite;
@@ -43,8 +44,8 @@ namespace SS14.Client.Network
 
             _dataPoints.Clear();
             _lastDataPointTime = DateTime.Now;
-            _lastRecievedBytes = _networkManager.CurrentStatistics.ReceivedBytes;
-            _lastSentBytes = _networkManager.CurrentStatistics.SentBytes;
+            _lastRecievedBytes = _networkManager.Statistics.ReceivedBytes;
+            _lastSentBytes = _networkManager.Statistics.SentBytes;
         }
 
         public void Update()
@@ -105,14 +106,14 @@ namespace SS14.Client.Network
 
             _dataPoints.Add(new NetworkStatisticsDataPoint
                                 (
-                                _networkManager.CurrentStatistics.ReceivedBytes - _lastRecievedBytes,
-                                _networkManager.CurrentStatistics.SentBytes - _lastSentBytes,
+                                _networkManager.Statistics.ReceivedBytes - _lastRecievedBytes,
+                                _networkManager.Statistics.SentBytes - _lastSentBytes,
                                 (DateTime.Now - _lastDataPointTime).TotalMilliseconds)
                 );
 
             _lastDataPointTime = DateTime.Now;
-            _lastRecievedBytes = _networkManager.CurrentStatistics.ReceivedBytes;
-            _lastSentBytes = _networkManager.CurrentStatistics.SentBytes;
+            _lastRecievedBytes = _networkManager.Statistics.ReceivedBytes;
+            _lastSentBytes = _networkManager.Statistics.SentBytes;
         }
     }
 

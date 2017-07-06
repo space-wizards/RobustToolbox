@@ -43,7 +43,7 @@ namespace SS14.Server.ClientConsoleHost
                 };
             }
             
-            netMgr.SendMessage(message, senderConnection);
+            netMgr.ServerSendMessage(message, senderConnection);
         }
 
         public void PostInject()
@@ -93,7 +93,7 @@ namespace SS14.Server.ClientConsoleHost
             var netMgr = IoCManager.Resolve<INetManager>();
             var replyMsg = netMgr.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
-            netMgr.SendMessage(replyMsg, target);
+            netMgr.ServerSendMessage(replyMsg, target);
         }
     }
 }

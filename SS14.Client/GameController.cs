@@ -23,6 +23,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.Interfaces.Network;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -37,7 +38,7 @@ namespace SS14.Client
         [Dependency]
         readonly private INetworkGrapher _netGrapher;
         [Dependency]
-        readonly private INetworkManager _networkManager;
+        readonly private INetClientManager _networkManager;
         [Dependency]
         readonly private IStateManager _stateManager;
         [Dependency]
@@ -58,7 +59,7 @@ namespace SS14.Client
         #region Constructors
         public void Run()
         {
-            Logger.Debug("Initialising GameController.");
+            Logger.Debug("Initializing GameController.");
 
             ShowSplashScreen();
 
@@ -79,7 +80,7 @@ namespace SS14.Client
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
-            _networkManager.Initialize();
+            _networkManager.Initialize(false);
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
 
@@ -99,7 +100,7 @@ namespace SS14.Client
                 CluwneLib.RunIdle(this, _frameEvent);
                 CluwneLib.Screen.Display();
             }
-            _networkManager.Disconnect();
+            _networkManager.ClientDisconnect("Client disconnected from game.");
             CluwneLib.Terminate();
             Logger.Info("GameController terminated.");
 
@@ -159,7 +160,7 @@ namespace SS14.Client
 
         private void CluwneLibIdle(object sender, FrameEventArgs e)
         {
-            _networkManager.UpdateNetwork();
+            _networkManager.ProcessPackets();
             _stateManager.Update(e);
 
             _userInterfaceManager.Update(e);

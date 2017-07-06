@@ -8,6 +8,7 @@ using SS14.Shared.IoC;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Network;
 using SFML.Graphics;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Console
 {
@@ -29,7 +30,7 @@ namespace SS14.Client.Console
                     string commandname = args[0];
                     if (!console.Commands.ContainsKey(commandname))
                     {
-                        if (!IoCManager.Resolve<INetworkManager>().IsConnected)
+                        if (!IoCManager.Resolve<INetClientManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
                             console.AddLine("Unknown command: " + commandname, Color.Red);

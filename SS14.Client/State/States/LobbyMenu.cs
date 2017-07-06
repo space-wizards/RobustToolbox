@@ -15,6 +15,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Network;
 
 namespace SS14.Client.State.States
 {
@@ -188,9 +189,9 @@ namespace SS14.Client.State.States
 
         #region Network
 
-        private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
+        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
-            NetIncomingMessage message = args.Message;
+            NetIncomingMessage message = args.RawMessage;
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
@@ -298,11 +299,11 @@ namespace SS14.Client.State.States
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
             message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
             playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void Shutdown()
@@ -414,7 +415,7 @@ namespace SS14.Client.State.States
         {
             StateManager.RequestStateChange<MainScreen>();
 
-            NetworkManager.Disconnect();
+            NetworkManager.ClientDisconnect("Client left the lobby.");
         }
 
         #endregion Startup, Shutdown, Update

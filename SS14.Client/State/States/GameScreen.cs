@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Network;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State.States
@@ -163,9 +164,16 @@ namespace SS14.Client.State.States
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-            NetworkManager.RequestMap();
+
+            NetOutgoingMessage message = NetworkManager.Peer.CreateMessage();
+            message.Write((byte)NetMessages.RequestMap);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name"));
+            var message1 = NetworkManager.Peer.CreateMessage();
+            message1.Write((byte) NetMessages.ClientName);
+            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
+            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceManager);
@@ -293,7 +301,7 @@ namespace SS14.Client.State.States
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
-            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
+            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetClientManager, ResourceManager));
 
             int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
@@ -630,7 +638,7 @@ namespace SS14.Client.State.States
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
                 message.Write((byte)NetMessages.ForceRestart);
-                NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
             if (e.Code == Keyboard.Key.Escape)
             {
@@ -840,7 +848,7 @@ namespace SS14.Client.State.States
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
             message.Write(-1);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion Chat
@@ -869,9 +877,9 @@ namespace SS14.Client.State.States
 
         #region Messages
 
-        private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
+        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
-            NetIncomingMessage message = args.Message;
+            NetIncomingMessage message = args.RawMessage;
             if (message == null)
             {
                 return;
@@ -1014,7 +1022,7 @@ namespace SS14.Client.State.States
             NetOutgoingMessage message = NetworkManager.CreateMessage();
             message.Write((byte)NetMessages.StateAck);
             message.Write(sequence);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.Unreliable);
         }
 
         public void FormResize()

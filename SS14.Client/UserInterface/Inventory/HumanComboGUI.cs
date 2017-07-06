@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -16,6 +16,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.UserInterface.Inventory
 {
@@ -61,7 +62,7 @@ namespace SS14.Client.UserInterface.Inventory
 
         private readonly Color _inactiveColor = new Color(90, 90, 90);
 
-        private readonly INetworkManager _networkManager;
+        private readonly INetClientManager _networkManager;
         private readonly IPlayerManager _playerManager;
         private readonly IResourceManager _resourceManager;
         private readonly ImageButton _tabEquip;
@@ -71,7 +72,7 @@ namespace SS14.Client.UserInterface.Inventory
         private byte _currentTab = 1; //1 = Inventory, 2 = Health, 3 = Crafting
         private bool _showTabbedWindow;
 
-        public HumanComboGui(IPlayerManager playerManager, INetworkManager networkManager,
+        public HumanComboGui(IPlayerManager playerManager, INetClientManager networkManager,
                              IResourceManager resourceManager, IUserInterfaceManager userInterfaceManager)
         {
             _networkManager = networkManager;

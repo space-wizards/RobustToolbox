@@ -31,20 +31,20 @@ namespace SS14.Server.GameObjects
 
         public NetOutgoingMessage CreateEntityMessage()
         {
-            NetOutgoingMessage message = _mNetManager.Server.CreateMessage();
+            NetOutgoingMessage message = _mNetManager.Peer.CreateMessage();
             message.Write((byte)NetMessages.EntityMessage);
             return message;
         }
 
         public void SendToAll(NetOutgoingMessage message, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            _mNetManager.Server.SendToAll(message, method);
+            _mNetManager.ServerSendToAll(message, method);
         }
 
         public void SendMessage(NetOutgoingMessage message, NetConnection recipient,
                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            _mNetManager.Server.SendMessage(message, recipient, method);
+            _mNetManager.Peer.SendMessage(message, recipient, method);
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace SS14.Server.GameObjects
 
             //Send the message
             if (recipient == null)
-                _mNetManager.Server.SendToAll(message, method);
+                _mNetManager.ServerSendToAll(message, method);
             else
-                _mNetManager.Server.SendMessage(message, recipient, method);
+                _mNetManager.Peer.SendMessage(message, recipient, method);
 
             if (_messageProfiling)
             {
@@ -242,11 +242,11 @@ namespace SS14.Server.GameObjects
             //Send the message
             if (targetConnection != null)
             {
-                _mNetManager.Server.SendMessage(newMsg, targetConnection, method);
+                _mNetManager.Peer.SendMessage(newMsg, targetConnection, method);
             }
             else
             {
-                _mNetManager.Server.SendToAll(newMsg, method);
+                _mNetManager.ServerSendToAll(newMsg, method);
             }
         }
 

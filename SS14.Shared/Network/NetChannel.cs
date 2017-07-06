@@ -49,7 +49,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void SendMessage(NetMessage message)
         {
-            _manager.SendMessage(message, this);
+            _manager.ServerSendMessage(message, this);
         }
     }
 }

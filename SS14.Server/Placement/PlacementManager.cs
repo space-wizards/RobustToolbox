@@ -148,7 +148,7 @@ namespace SS14.Server.Placement
             message.IsTile = false;
             message.objType = objectType;
             message.alignOption = alignOption;
-            net.SendMessage(message, playerConnection);
+            net.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace SS14.Server.Placement
             message.objType = tileType;
             message.alignOption = alignOption;
             
-            net.SendMessage(message, playerConnection);
+            net.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace SS14.Server.Placement
             var net = IoCManager.Resolve<INetManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
-            net.SendMessage(message, playerConnection);
+            net.ServerSendMessage(message, playerConnection);
         }
 
         /// <summary>

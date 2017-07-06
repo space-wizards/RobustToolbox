@@ -427,7 +427,7 @@ namespace SS14.Server
                             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
                             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
                                 continue;
-                            var stateMessage = IoCManager.Resolve<INetManager>().Server.CreateMessage();
+                            var stateMessage = IoCManager.Resolve<INetManager>().Peer.CreateMessage();
                             var lastStateAcked = stateManager.GetLastStateAcked(c);
 
                             if (lastStateAcked == 0) // || forceFullState)
@@ -443,7 +443,7 @@ namespace SS14.Server
                                 //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                             }
 
-                            IoCManager.Resolve<INetManager>().Server.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+                            IoCManager.Resolve<INetManager>().Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
                         }
                 }
                 stateManager.Cull();
@@ -637,14 +637,14 @@ namespace SS14.Server
 
         public void SendChangeTile(int x, int y, Tile newTile)
         {
-            var tileMessage = IoCManager.Resolve<INetManager>().Server.CreateMessage();
+            var tileMessage = IoCManager.Resolve<INetManager>().Peer.CreateMessage();
             //tileMessage.Write((byte)NetMessages.ChangeTile);
             tileMessage.Write(x);
             tileMessage.Write(y);
             tileMessage.Write((uint) newTile);
             foreach (var connection in IoCManager.Resolve<INetManager>().Channels)
             {
-                IoCManager.Resolve<INetManager>().Server.SendMessage(tileMessage, connection.Connection,
+                IoCManager.Resolve<INetManager>().Peer.SendMessage(tileMessage, connection.Connection,
                     NetDeliveryMethod.ReliableOrdered);
                 Logger.Log(connection.RemoteAddress + ": Tile Change Being Sent", LogLevel.Debug);
             }

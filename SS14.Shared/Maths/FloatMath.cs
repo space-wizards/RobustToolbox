@@ -5,22 +5,22 @@ namespace SS14.Shared.Maths
 {
     public static class FloatMath
      {
-    
+
          private const int LookupSize = 1024*64; //has to be power of 2
          private static readonly float[] getSin, getCos;
- 
+
          static FloatMath()
          {
              getSin = new float[LookupSize];
              getCos = new float[LookupSize];
- 
+
              for (var i = 0; i < LookupSize; i++)
              {
                  getSin[i] = (float)Math.Sin(i * Math.PI / LookupSize * 2);
                  getCos[i] = (float)Math.Cos(i * Math.PI / LookupSize * 2);
              }
          }
- 
+
          /// <summary>
          /// Fast innacurate sinus
          /// </summary>
@@ -29,7 +29,7 @@ namespace SS14.Shared.Maths
              var rot = GetIndex(degrees);
              return getSin[rot];
          }
- 
+
          /// <summary>
          /// Fast innacurate cosinus
          /// </summary>
@@ -38,7 +38,7 @@ namespace SS14.Shared.Maths
              var rot = GetIndex(degrees);
              return getCos[rot];
          }
- 
+
          static int GetIndex(float degrees)
          {
              return (int)(degrees * (LookupSize / 360f) + 0.5f) & (LookupSize - 1);
@@ -46,13 +46,13 @@ namespace SS14.Shared.Maths
          public static void SinCos(float degrees, out float sin, out float cos)
          {
              var rot = GetIndex(degrees);
- 
+
              sin = getSin[rot];
              cos = getCos[rot];
          }
- 
+
          public const float Pi = (float) Math.PI;
- 
+
          public static float ToDegrees(float radians)
          {
              return radians/Pi*180;

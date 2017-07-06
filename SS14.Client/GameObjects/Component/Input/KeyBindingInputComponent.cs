@@ -164,7 +164,7 @@ namespace SS14.Client.GameObjects
             //Delete false states from the dictionary so they don't get reprocessed and fuck up other stuff.
             foreach (var state in _keyStates.ToList())
             {
-                if (state.Value == false)
+                if (!state.Value)
                     _keyStates.Remove(state.Key);
                 else
                     Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);

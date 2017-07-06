@@ -6,8 +6,6 @@ namespace SS14.Server.Interfaces.Placement
 {
     public interface IPlacementManager
     {
-        void Initialize();
-
         /// <summary>
         ///  Handles placement related client messages.
         /// </summary>

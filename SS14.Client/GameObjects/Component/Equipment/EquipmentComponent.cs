@@ -103,16 +103,13 @@ namespace SS14.Client.GameObjects
                 {
                     UnEquipItem(curr.Key);
                 }
-                else if (retEnt != null)
+                else if (retEnt != null && !IsEquipped(retEnt, curr.Key))
                 {
-                    if (!IsEquipped(retEnt, curr.Key))
+                    if (IsEquipped(retEnt))
                     {
-                        if (IsEquipped(retEnt))
-                        {
-                            UnEquipItem(retEnt);
-                        }
-                        EquipItem(curr.Key, retEnt.Uid);
+                        UnEquipItem(retEnt);
                     }
+                    EquipItem(curr.Key, retEnt.Uid);
                 }
             }
 

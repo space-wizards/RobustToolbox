@@ -10,6 +10,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Reflection;
@@ -21,7 +22,7 @@ namespace SS14.Server.ClientConsoleHost
     {
         [Dependency]
         private readonly IReflectionManager reflectionManager;
-        private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
+        private readonly Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
         public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
 
         public void HandleRegistrationRequest(NetConnection senderConnection)
@@ -45,9 +46,9 @@ namespace SS14.Server.ClientConsoleHost
             foreach (Type type in reflectionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
-                if (AvailableCommands.ContainsKey(instance.Command))
+                if (AvailableCommands.TryGetValue(instance.Command, out IClientCommand duplicate))
                 {
-                    throw new Exception("Command name already registered: " + instance.Command);
+                    throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand), $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
                 }
 
                 AvailableCommands[instance.Command] = instance;

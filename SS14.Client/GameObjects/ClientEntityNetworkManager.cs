@@ -122,80 +122,81 @@ namespace SS14.Client.GameObjects
         {
             foreach (object messageParam in messageParams)
             {
-                if (messageParam.GetType().IsSubclassOf(typeof(Enum)))
+                switch (messageParam)
                 {
-                    message.Write((byte)NetworkDataType.d_enum);
-                    message.Write((int)messageParam); //Cast to int, because enums are stored as ints anyway.
-                }
-                else if (messageParam.GetType() == typeof(bool))
-                {
-                    message.Write((byte)NetworkDataType.d_bool);
-                    message.Write((bool)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(byte))
-                {
-                    message.Write((byte)NetworkDataType.d_byte);
-                    message.Write((byte)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(sbyte))
-                {
-                    message.Write((byte)NetworkDataType.d_sbyte);
-                    message.Write((sbyte)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(ushort))
-                {
-                    message.Write((byte)NetworkDataType.d_ushort);
-                    message.Write((ushort)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(short))
-                {
-                    message.Write((byte)NetworkDataType.d_short);
-                    message.Write((short)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(int))
-                {
-                    message.Write((byte)NetworkDataType.d_int);
-                    message.Write((int)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(uint))
-                {
-                    message.Write((byte)NetworkDataType.d_uint);
-                    message.Write((uint)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(ulong))
-                {
-                    message.Write((byte)NetworkDataType.d_ulong);
-                    message.Write((ulong)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(long))
-                {
-                    message.Write((byte)NetworkDataType.d_long);
-                    message.Write((long)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(float))
-                {
-                    message.Write((byte)NetworkDataType.d_float);
-                    message.Write((float)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(double))
-                {
-                    message.Write((byte)NetworkDataType.d_double);
-                    message.Write((double)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(string))
-                {
-                    message.Write((byte)NetworkDataType.d_string);
-                    message.Write((string)messageParam);
-                }
-                else if (messageParam.GetType() == typeof(byte[]))
-                {
-                    message.Write((byte)NetworkDataType.d_byteArray);
-                    message.Write(((byte[])messageParam).Length);
-                    message.Write((byte[])messageParam);
-                }
-                else
-                {
-                    throw new NotImplementedException("Cannot write specified type.");
+                    case Enum val:
+                        message.Write((byte)NetworkDataType.d_enum);
+                        message.Write(Convert.ToInt32(val));
+                        break;
+
+                    case bool val:
+                        message.Write((byte)NetworkDataType.d_bool);
+                        message.Write(val);
+                        break;
+
+                    case byte val:
+                        message.Write((byte)NetworkDataType.d_byte);
+                        message.Write(val);
+                        break;
+
+                    case sbyte val:
+                        message.Write((byte)NetworkDataType.d_sbyte);
+                        message.Write(val);
+                        break;
+
+                    case ushort val:
+                        message.Write((byte)NetworkDataType.d_ushort);
+                        message.Write(val);
+                        break;
+
+                    case short val:
+                        message.Write((byte)NetworkDataType.d_short);
+                        message.Write(val);
+                        break;
+
+                    case int val:
+                        message.Write((byte)NetworkDataType.d_int);
+                        message.Write(val);
+                        break;
+
+                    case uint val:
+                        message.Write((byte)NetworkDataType.d_uint);
+                        message.Write(val);
+                        break;
+
+                    case ulong val:
+                        message.Write((byte)NetworkDataType.d_ulong);
+                        message.Write(val);
+                        break;
+
+                    case long val:
+                        message.Write((byte)NetworkDataType.d_long);
+                        message.Write(val);
+                        break;
+
+                    case float val:
+                        message.Write((byte)NetworkDataType.d_float);
+                        message.Write(val);
+                        break;
+
+                    case double val:
+                        message.Write((byte)NetworkDataType.d_double);
+                        message.Write(val);
+                        break;
+
+                    case string val:
+                        message.Write((byte)NetworkDataType.d_string);
+                        message.Write(val);
+                        break;
+
+                    case Byte[] val:
+                        message.Write((byte)NetworkDataType.d_byteArray);
+                        message.Write(val.Length);
+                        message.Write(val);
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Cannot write specified type.");
                 }
             }
         }

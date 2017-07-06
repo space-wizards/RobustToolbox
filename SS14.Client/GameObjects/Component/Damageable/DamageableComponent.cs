@@ -36,8 +36,10 @@ namespace SS14.Client.GameObjects
         {
             dynamic newIsDeadState = state.IsDead;
 
-            if (newIsDeadState && IsDead == false)
+            if (newIsDeadState && !IsDead)
+            {
                 Die();
+            }
         }
     }
 }

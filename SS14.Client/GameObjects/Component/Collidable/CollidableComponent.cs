@@ -19,22 +19,16 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "Collidable";
 
-        public SFML.Graphics.Color DebugColor { get; set; }
+        public SFML.Graphics.Color DebugColor { get; set; } = Color.Red;
 
         private bool collisionEnabled = true;
         private FloatRect currentAABB;
         protected bool isHardCollidable = true;
 
-        /// <summary>
-        /// X - Top | Y - Right | Z - Bottom | W - Left
-        /// </summary>
-        private Vector4f tweakAABB;
 
         public CollidableComponent()
         {
             Family = ComponentFamily.Collidable;
-            DebugColor = Color.Red;
-            tweakAABB = new Vector4f(0, 0, 0, 0);
         }
 
         public override Type StateType
@@ -42,11 +36,10 @@ namespace SS14.Client.GameObjects
             get { return typeof(CollidableComponentState); }
         }
 
-        private Vector4f TweakAABB
-        {
-            get { return tweakAABB; }
-            set { tweakAABB = value; }
-        }
+        /// <summary>
+        /// X - Top | Y - Right | Z - Bottom | W - Left
+        /// </summary>
+        private Vector4f TweakAABB { get; set; } = new Vector4f(0, 0, 0, 0);
 
         private FloatRect OffsetAABB
         {
@@ -55,18 +48,18 @@ namespace SS14.Client.GameObjects
                 var ownerTransform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
 
                 // Return tweaked AABB
-                if (currentAABB != null && ownerTransform != null)
+                if (ownerTransform != null)
                 {
                     return
                         new FloatRect(
                             currentAABB.Left +
                             ownerTransform.Position.X -
-                            (currentAABB.Width / 2) + tweakAABB.W,
+                            (currentAABB.Width / 2) + TweakAABB.W,
                             currentAABB.Top +
                             ownerTransform.Position.Y -
-                            (currentAABB.Height / 2) + tweakAABB.X,
-                            currentAABB.Width - (tweakAABB.W - tweakAABB.Y),
-                            currentAABB.Height - (tweakAABB.X - tweakAABB.Z));
+                            (currentAABB.Height / 2) + TweakAABB.X,
+                            currentAABB.Width - (TweakAABB.W - TweakAABB.Y),
+                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z));
                 }
                 else
                 {
@@ -179,22 +172,22 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetValue("TweakAABBtop", out node))
             {
-                tweakAABB.X = node.AsFloat() / mapManager.TileSize;
+                TweakAABB = new Vector4f(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetValue("TweakAABBright", out node))
             {
-                tweakAABB.Y = node.AsFloat() / mapManager.TileSize;
+                TweakAABB = new Vector4f(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetValue("TweakAABBbottom", out node))
             {
-                tweakAABB.Z = node.AsFloat() / mapManager.TileSize;
+                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
             }
 
             if (mapping.TryGetValue("TweakAABBleft", out node))
             {
-                tweakAABB.W = node.AsFloat() / mapManager.TileSize;
+                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
             }
 
             if (mapping.TryGetValue("DebugColor", out node))
@@ -240,8 +233,6 @@ namespace SS14.Client.GameObjects
                     currentAABB.Width / tileSize,
                     currentAABB.Height / tileSize);
             }
-            else
-                return;
         }
 
         public override void HandleComponentState(dynamic state)

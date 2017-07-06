@@ -202,7 +202,7 @@ namespace SS14.Server.GameObjects
                     //Get all the capabilities of the object. Not particularly useful.
                     foreach (ItemCapability c in capabilities.Values)
                         result.AddCapability(c);
-                    if (capabilities.Count() > 0)
+                    if (capabilities.Any())
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success;
                     else
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty;
@@ -214,7 +214,7 @@ namespace SS14.Server.GameObjects
                                                        select c;
                     foreach (ItemCapability c in caps)
                         result.AddCapability(c);
-                    if (caps.Count() > 0)
+                    if (caps.Any())
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Success;
                     else
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.Empty;
@@ -224,7 +224,7 @@ namespace SS14.Server.GameObjects
                     IEnumerable<ItemCapability> hascap = from c in capabilities.Values
                                                          where (c.CapabilityType == query.capabilityType)
                                                          select c;
-                    if (hascap.Count() > 0)
+                    if (hascap.Any())
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.True;
                     else
                         result.ResultStatus = ItemCapabilityQueryResult.ItemCapabilityQueryResultType.False;

@@ -3,7 +3,7 @@
 path = "logs"
 format = "log_%(date)s-%(time)s.txt"
 level = 2
-enabled = true
+enabled = false
 
 [net]
 tickrate = 66

@@ -29,9 +29,9 @@ namespace SS14.Server.Chat
         [Dependency]
         private readonly IServerEntityManager entityManager;
 
-        private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
-        private Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
-        private string _emotePath = PathHelpers.ExecutableRelativeFile("emotes.xml");
+        private readonly Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
+        private readonly Dictionary<string, IChatCommand> _commands = new Dictionary<string, IChatCommand>();
+        private readonly string _emotePath = PathHelpers.ExecutableRelativeFile("emotes.xml");
 
         public IDictionary<string, IChatCommand> Commands => _commands;
 

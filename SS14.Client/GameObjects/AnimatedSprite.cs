@@ -75,9 +75,9 @@ namespace SS14.Client.Graphics.Sprite
         /// <summary>
         /// Dictionary of animation names to directional sprite set
         /// </summary>
-        private Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
+        private readonly Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
 
-        private Dictionary<string, Dictionary<Direction, FloatRect>> _averageAABBs = new Dictionary<string, Dictionary<Direction, FloatRect>>();
+        private readonly Dictionary<string, Dictionary<Direction, FloatRect>> _averageAABBs = new Dictionary<string, Dictionary<Direction, FloatRect>>();
         private SFML.Graphics.Sprite _currentSprite;
 
         private Direction _direction = Direction.South;

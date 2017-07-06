@@ -249,16 +249,10 @@ namespace SS14.Server.GameObjects
 
             ComponentReplyMessage reply = e.SendMessage(this, ComponentFamily.Equippable,
                                                         ComponentMessageType.GetWearLoc);
-            if (reply.MessageType == ComponentMessageType.ReturnWearLoc)
-            {
-                if (IsItem(e) && IsEmpty((EquipmentSlot)reply.ParamsList[0]) && e != null &&
-                    activeSlots.Contains((EquipmentSlot)reply.ParamsList[0]))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return reply.MessageType == ComponentMessageType.ReturnWearLoc
+                && IsItem(e)
+                && IsEmpty((EquipmentSlot)reply.ParamsList[0])
+                && activeSlots.Contains((EquipmentSlot)reply.ParamsList[0]);
         }
 
         public List<ItemCapability> GetEquipmentCapabilities()

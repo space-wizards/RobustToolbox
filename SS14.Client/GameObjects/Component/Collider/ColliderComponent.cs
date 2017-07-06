@@ -39,19 +39,19 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                // Return tweaked AABB
-                var aabb = AABB;
                 var trans = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
                 if (trans == null)
-                    return aabb;
-                else if (aabb != null)
-                    return new FloatRect(
-                        aabb.Left + trans.X,
-                        aabb.Top + trans.Y,
-                        aabb.Width,
-                        aabb.Height);
+                {
+                    return AABB;
+                }
                 else
-                    return new FloatRect();
+                {
+                    return new FloatRect(
+                        AABB.Left + trans.X,
+                        AABB.Top + trans.Y,
+                        AABB.Width,
+                        AABB.Height);
+                }
             }
         }
 

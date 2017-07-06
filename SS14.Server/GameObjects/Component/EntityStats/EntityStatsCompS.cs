@@ -58,11 +58,6 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
         public override void LoadParameters(Dictionary<string, YamlNode> mapping)
         {
             YamlNode node;

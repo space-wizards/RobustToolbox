@@ -28,6 +28,10 @@ namespace SS14.Server.Map
         public MapManager()
         {
             tileIndexer = new TileCollection(this);
+        }
+
+        public void Initialize()
+        {
             NewMap();
         }
 

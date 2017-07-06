@@ -13,18 +13,22 @@ using System.IO;
 
 namespace SS14.Client.GameObjects
 {
-    public class EntityNetworkManager : IEntityNetworkManager
+    public class EntityNetworkManager : IEntityNetworkManager, IPostInjectInit
     {
-        private readonly bool _messageProfiling;
+        private bool _messageProfiling = false;
+        [Dependency]
         private readonly INetworkManager _networkManager;
+        [Dependency]
+        private readonly IConfigurationManager _configManager;
 
-        public EntityNetworkManager(INetworkManager networkManager)
+        public void PostInject()
         {
-            _networkManager = networkManager;
+            _configManager.RegisterCVar("ent.logging", false);
+        }
 
-            var config = IoCManager.Resolve<IConfigurationManager>();
-            config.RegisterCVar("ent.logging", false);
-            _messageProfiling = config.GetCVar<bool>("ent.logging");
+        public void Initialize()
+        {
+            _messageProfiling = _configManager.GetCVar<bool>("ent.logging");
         }
 
         #region IEntityNetworkManager Members

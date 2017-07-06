@@ -6,6 +6,8 @@ namespace SS14.Shared.GameObjects
 {
     public interface IEntityNetworkManager
     {
+        void Initialize();
+
         NetOutgoingMessage CreateEntityMessage();
 
         /// <summary>

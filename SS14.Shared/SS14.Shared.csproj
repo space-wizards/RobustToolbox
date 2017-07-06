@@ -21,6 +21,7 @@
     </FileUpgradeFlags>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <TargetFrameworkProfile />
+    <NoWarn>0649</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <BaseAddress>285212672</BaseAddress>
@@ -131,7 +132,6 @@
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
-    <Compile Include="IoC\Exceptions\CircularDependencyException.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
     <Compile Include="Lighting.cs" />
     <Compile Include="Log\LogLevel.cs" />
@@ -175,8 +175,8 @@
       <DependentUpon>BitStream.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="IoC\IoCManager.cs" />
-    <Compile Include="IoC\Exceptions\MissingImplementationException.cs" />
-    <Compile Include="IoC\Exceptions\NoPublicConstructorException.cs" />
+    <Compile Include="IoC\IPostInjectInit.cs" />
+    <Compile Include="IoC\DependencyAttribute.cs" />
     <Compile Include="IoC\Exceptions\InvalidImplementationException.cs" />
     <Compile Include="GameObjects\Component.cs" />
     <Compile Include="GameObjects\ComponentFactory.cs" />
@@ -187,8 +187,6 @@
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="GameObjects\StaticConstants.cs" />
-    <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
-    <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
@@ -230,6 +228,8 @@
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />
     <Compile Include="Reflection\ReflectionManager.cs" />
+    <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
+    <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

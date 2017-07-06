@@ -1,10 +1,12 @@
 using SFML.System;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.Interfaces.Map
 {
     public interface ITileDefinition
     {
+        void InitializeResources(IResourceManager resourceManager);
         ushort TileId { get; }
         void InvalidateTileId();
 

@@ -12,6 +12,7 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
     {
         public override bool NeedsClientConfig => true;
         public override bool NeedsResourcePack => true;
+        public override UnitTestProject Project => UnitTestProject.Client;
 
         private IResourceManager resources;
         private RenderImage test;

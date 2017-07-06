@@ -6,6 +6,7 @@ namespace SS14.Client.Interfaces.MessageLogging
 {
     public interface IMessageLogger
     {
+        void Initialize();
         void LogOutgoingComponentNetMessage(int uid, ComponentFamily family, object[] parameters);
 
         void LogIncomingComponentNetMessage(int uid, EntityMessage entityMessage, ComponentFamily componentFamily,

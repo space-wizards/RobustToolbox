@@ -22,8 +22,11 @@ namespace SS14.Server.Chat
 {
     public class ChatManager : IChatManager
     {
-        private ISS14Server _serverMain;
+        [Dependency]
+        private readonly ISS14Server _serverMain;
+        [Dependency]
         private readonly IReflectionManager reflectionManager;
+        [Dependency]
         private readonly IServerEntityManager entityManager;
 
         private Dictionary<string, Emote> _emotes = new Dictionary<string, Emote>();
@@ -32,17 +35,10 @@ namespace SS14.Server.Chat
 
         public IDictionary<string, IChatCommand> Commands => _commands;
 
-        public ChatManager(IServerEntityManager entityManager, IReflectionManager reflectionManager)
-        {
-            this.entityManager = entityManager;
-            this.reflectionManager = reflectionManager;
-        }
-
         #region IChatManager Members
 
-        public void Initialize(ISS14Server server)
+        public void Initialize()
         {
-            _serverMain = server;
             LoadEmotes();
             LoadCommands();
         }

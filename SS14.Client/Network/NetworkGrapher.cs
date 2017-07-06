@@ -14,7 +14,9 @@ namespace SS14.Client.Network
     {
         private const int MaxDataPoints = 200;
         private readonly List<NetworkStatisticsDataPoint> _dataPoints = new List<NetworkStatisticsDataPoint>();
+        [Dependency]
         private readonly INetworkManager _networkManager;
+        [Dependency]
         private readonly IResourceManager _resourceManager;
         private TextSprite _textSprite;
         private bool _enabled;
@@ -22,10 +24,8 @@ namespace SS14.Client.Network
         private int _lastRecievedBytes;
         private int _lastSentBytes;
 
-        public NetworkGrapher(IResourceManager resourceManager, INetworkManager networkManager)
+        public NetworkGrapher()
         {
-            _resourceManager = resourceManager;
-            _networkManager = networkManager;
             _lastDataPointTime = DateTime.Now;
         }
 

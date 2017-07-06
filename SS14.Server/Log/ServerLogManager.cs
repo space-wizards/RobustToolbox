@@ -80,7 +80,7 @@ namespace SS14.Server.Log
                 return;
             }
 
-            if (disposing)
+            if (disposing && logStream != null)
             {
                 logStream.Dispose();
                 logStream = null;

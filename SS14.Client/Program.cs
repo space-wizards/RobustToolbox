@@ -96,7 +96,7 @@ namespace SS14.Client
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IMapManager, MapManager>();
-            IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
+            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IGameController, GameController>();
 

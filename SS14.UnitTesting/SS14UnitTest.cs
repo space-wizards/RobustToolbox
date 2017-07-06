@@ -146,24 +146,24 @@ namespace SS14.UnitTesting
             IoCManager.Clear();
             RegisterIoC();
 
-            var assemblies = new List<Assembly>(4);
-            string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+            var Assemblies = new List<Assembly>(4);
+            string AssemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Client.exe")));
+                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Client.exe")));
                     break;
                 case UnitTestProject.Server:
-                    assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Server.exe")));
+                    Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Server.exe")));
                     break;
                 default:
                     throw new NotSupportedException($"Unknown testing project: {Project}");
             }
 
-            assemblies.Add(Assembly.LoadFrom(Path.Combine(assemblyDir, "SS14.Shared.dll")));
-            assemblies.Add(Assembly.GetExecutingAssembly());
+            Assemblies.Add(Assembly.LoadFrom(Path.Combine(AssemblyDir, "SS14.Shared.dll")));
+            Assemblies.Add(Assembly.GetExecutingAssembly());
 
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(Assemblies);
 
             if (NeedsClientConfig)
             {
@@ -216,7 +216,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IResourceManager, ResourceManager>();
                     IoCManager.Register<ISS14Serializer, SS14Serializer>();
                     IoCManager.Register<IMapManager, MapManager>();
-                    IoCManager.Register<IEntityNetworkManager, Client.GameObjects.EntityNetworkManager>();
+                    IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
                     IoCManager.Register<IGameController, GameController>();
                     break;
@@ -236,7 +236,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IRoundManager, RoundManager>();
                     IoCManager.Register<ISS14Server, SS14Server>();
                     IoCManager.Register<ISS14Serializer, SS14Serializer>();
-                    IoCManager.Register<IEntityNetworkManager, Server.GameObjects.EntityNetworkManager>();
+                    IoCManager.Register<IEntityNetworkManager, Server.GameObjects.ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
                     IoCManager.Register<IGameStateManager, GameStateManager>();
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();

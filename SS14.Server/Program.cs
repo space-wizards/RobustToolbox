@@ -103,7 +103,7 @@ namespace SS14.Server
             IoCManager.Register<IRoundManager, RoundManager>();
             IoCManager.Register<ISS14Server, SS14Server>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
-            IoCManager.Register<IEntityNetworkManager, EntityNetworkManager>();
+            IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();

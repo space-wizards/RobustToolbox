@@ -60,24 +60,25 @@ namespace SS14.Shared.IoC
         /// </exception>
         public static void Register<TInterface, TImplementation>(bool overwrite = false) where TImplementation : class, TInterface, new()
         {
-            var interfaceType = typeof(TInterface);
-            if (ResolveTypes.ContainsKey(interfaceType))
+            var InterfaceType = typeof(TInterface);
+            if (ResolveTypes.ContainsKey(InterfaceType))
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidOperationException
+                    (
                         string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                        interfaceType, typeof(TImplementation), ResolveTypes[interfaceType]
+                        InterfaceType, typeof(TImplementation), ResolveTypes[InterfaceType] 
                     ));
                 }
 
-                if (Services.ContainsKey(interfaceType))
+                if (Services.ContainsKey(InterfaceType))
                 {
-                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {interfaceType}.");
+                    throw new InvalidOperationException($"Attempted to overwrite already instantiated interface {InterfaceType}.");
                 }
             }
 
-            ResolveTypes[interfaceType] = typeof(TImplementation);
+            ResolveTypes[InterfaceType] = typeof(TImplementation);
         }
 
         /// <summary>
@@ -126,7 +127,7 @@ namespace SS14.Shared.IoC
         public static void BuildGraph()
         {
             // List of all objects we need to inject dependencies into.
-            var toInject = new List<object>();
+            var InjectList = new List<object>();
 
             // First we build every type we have registered but isn't yet built.
             // This allows us to run this after the content assembly has been loaded.
@@ -135,16 +136,16 @@ namespace SS14.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and'll find us instead.
-                KeyValuePair<Type, Type> dupeType = ResolveTypes
+                KeyValuePair<Type, Type> DupeType = ResolveTypes
                                                     .Where(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value)
                                                     .FirstOrDefault();
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.
-                if (dupeType.Key != null)
+                if (DupeType.Key != null)
                 {
                     // We have something with the same instance type, use that.
-                    Services[currentType.Key] = Services[dupeType.Key];
+                    Services[currentType.Key] = Services[DupeType.Key];
                     continue;
                 }
 
@@ -152,7 +153,7 @@ namespace SS14.Shared.IoC
                 {
                     var instance = Activator.CreateInstance(currentType.Value);
                     Services[currentType.Key] = instance;
-                    toInject.Add(instance);
+                    InjectList.Add(instance);
                 }
                 catch (TargetInvocationException e)
                 {
@@ -161,26 +162,26 @@ namespace SS14.Shared.IoC
             }
 
             // Graph built, go over ones that need injection.
-            foreach (var implementation in toInject)
+            foreach (var Implementation in InjectList)
             {
-                foreach (FieldInfo field in implementation.GetType()
+                foreach (FieldInfo field in Implementation.GetType()
                                                           .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                                                           .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
                 {
                     // Not using Resolve<T>() because we're literally building it right now.
                     if (!Services.ContainsKey(field.FieldType))
                     {
-                        throw new UnregisteredDependencyException(implementation.GetType(), field.FieldType, field.Name);
+                        throw new UnregisteredDependencyException(Implementation.GetType(), field.FieldType, field.Name);
                     }
 
                     // Quick note: this DOES work with readonly fields, though it may be a CLR implementation detail.
-                    field.SetValue(implementation, Services[field.FieldType]);
+                    field.SetValue(Implementation, Services[field.FieldType]);
                 }
             }
 
-            foreach (IPostInjectInit item in toInject.OfType<IPostInjectInit>())
+            foreach (IPostInjectInit InjectedItem in InjectList.OfType<IPostInjectInit>())
             {
-                item.PostInject();
+                InjectedItem.PostInject();
             }
         }
     }

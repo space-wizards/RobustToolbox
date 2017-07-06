@@ -243,7 +243,6 @@
     <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityNetworkManager.cs" />
-    <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\IEquipmentComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IInventoryComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />

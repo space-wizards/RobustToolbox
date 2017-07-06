@@ -25,13 +25,10 @@ namespace SS14.Server.Placement
         public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>();
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
-        private ISS14Server _server;
-
         #region IPlacementManager Members
 
-        public void Initialize(ISS14Server server)
+        public void Initialize()
         {
-            _server = server;
         }
 
         /// <summary>

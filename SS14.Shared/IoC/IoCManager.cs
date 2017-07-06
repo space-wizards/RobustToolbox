@@ -29,12 +29,6 @@ namespace SS14.Shared.IoC
     public static class IoCManager
     {
         /// <summary>
-        /// Set of types that are currently being built by <see cref="BuildType(Type)"/>.
-        /// Used to track whether we have circular dependencies.
-        /// </summary>
-        private static readonly HashSet<Type> CurrentlyBuilding = new HashSet<Type>();
-
-        /// <summary>
         /// Dictionary that maps the types passed to <see cref="Resolve{T}"/> to their implementation.
         /// </summary>
         private static readonly Dictionary<Type, object> Services = new Dictionary<Type, object>();
@@ -68,7 +62,7 @@ namespace SS14.Shared.IoC
                     throw new InvalidOperationException
                     (
                         string.Format("Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                        InterfaceType, typeof(TImplementation), ResolveTypes[InterfaceType] 
+                        InterfaceType, typeof(TImplementation), ResolveTypes[InterfaceType]
                     ));
                 }
 
@@ -136,9 +130,8 @@ namespace SS14.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and'll find us instead.
-                KeyValuePair<Type, Type> DupeType = ResolveTypes
-                                                    .Where(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value)
-                                                    .FirstOrDefault();
+                KeyValuePair<Type, Type> DupeType = ResolveTypes.FirstOrDefault(p => Services.ContainsKey(p.Key) && p.Value == currentType.Value);
+
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.

@@ -16,7 +16,7 @@ namespace SS14.Shared.GameObjects
         public abstract string Name { get; }
         private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();
 
-        public Component()
+        protected Component()
         {
             Family = ComponentFamily.Generic;
         }

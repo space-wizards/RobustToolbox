@@ -5,6 +5,7 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
@@ -45,6 +46,10 @@ namespace SS14.Shared.GameObjects
         }
 
         #region Initialization
+
+        public virtual void LoadParameters(IDictionary<string, YamlNode> parameters)
+        {
+        }
 
         /// <summary>
         /// Sets up variables and shite

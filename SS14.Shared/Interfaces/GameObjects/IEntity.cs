@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SS14.Shared.GameObjects;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -20,6 +21,16 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         EntityPrototype Prototype { get; set; }
         event EntityShutdownEvent OnShutdown;
+
+        /// <summary>
+        /// Called after the entity is construted by its prototype to load parameters
+        /// from the prototype's <c>data</c> field.
+        /// </summary>
+        /// <remarks>
+        /// This method does not get called in case no data field is provided.
+        /// </remarks>
+        /// <param name="parameters">A dictionary representing the YAML mapping in the <c>data</c> field.</param>
+        void LoadData(YamlNode parameters);
 
         /// <summary>
         /// Match

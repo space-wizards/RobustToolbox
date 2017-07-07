@@ -82,8 +82,12 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        private Dictionary<string, Dictionary<string, YamlNode>> components = new Dictionary<string, Dictionary<string, YamlNode>>();
-        public Dictionary<string, Dictionary<string, YamlNode>> Components => components;
+        public Dictionary<string, YamlMappingNode> Components { get; private set; }
+
+        /// <summary>
+        /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
+        /// </summary>
+        public YamlMappingNode DataNode;
 
         public void LoadFrom(YamlMappingNode mapping)
         {
@@ -120,6 +124,19 @@ namespace SS14.Shared.GameObjects
                 foreach (var componentMapping in sequence.Select((YamlNode n) => (YamlMappingNode)n))
                 {
                     ReadComponent(componentMapping);
+                }
+            }
+
+            // DATA FIELD
+            if (mapping.Children.TryGetValue(new YamlScalarNode("data"), out node))
+            {
+                if (node is YamlMappingNode dataMapping)
+                {
+                    DataNode = dataMapping;
+                }
+                else
+                {
+                    throw new PrototypeLoadException($"Data field must be a mapping.");
                 }
             }
 
@@ -246,7 +263,7 @@ namespace SS14.Shared.GameObjects
         {
             var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager);
 
-            foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in components)
+            foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in Components)
             {
                 IComponent component;
                 try
@@ -276,7 +293,7 @@ namespace SS14.Shared.GameObjects
         {
             // Emotional programming.
             Dictionary<string, YamlNode> ಠ_ಠ;
-            if (components.TryGetValue("Icon", out ಠ_ಠ))
+            if (Components.TryGetValue("Icon", out ಠ_ಠ))
             {
                 YamlNode ಥ_ಥ;
                 if (ಠ_ಠ.TryGetValue("icon", out ಥ_ಥ) && ಥ_ಥ is YamlScalarNode)
@@ -290,11 +307,11 @@ namespace SS14.Shared.GameObjects
         private void ReadComponent(YamlMappingNode mapping)
         {
             // TODO: nonexistant component types are not checked here.
-            var type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
+            string type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
             Dictionary<string, YamlNode> dict = YamlHelpers.YamlMappingToDict(mapping);
             dict.Remove("type");
 
-            components[type] = dict;
+            Components[type] = dict;
             // TODO: figure out a better way to exclude the type node.
         }
 

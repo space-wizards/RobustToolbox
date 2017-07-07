@@ -11,6 +11,8 @@ namespace SS14.Shared.Utility
 {
     public static class YamlHelpers
     {
+        // Easy conversions for YamlScalarNodes.
+        // All of these take regular nodes, to make the API easier and less copy paste.
         public static int AsInt(this YamlNode node)
         {
             return int.Parse(((YamlScalarNode)node).Value, CultureInfo.InvariantCulture);
@@ -94,6 +96,32 @@ namespace SS14.Shared.Utility
         public static Color AsHexColor(this YamlNode node, Color? fallback = null)
         {
             return ColorUtils.FromHex(node.AsString(), fallback);
+        }
+
+        // Mapping specific helpers.
+
+        /// <summary>
+        /// Get the node corresponding to a scalar node with value <paramref name="key" /> inside <paramref name="mapping" />,
+        /// attempting to cast it to <typeparamref name="T" />.
+        /// </summary>
+        /// <param name="mapping">The mapping to retrieve the node from.</param>
+        /// <param name="name">The value of the scalar node that will be looked up.</param>
+        /// <returns>The corresponding node casted to <typeparamref name="T" />.</returns>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if <paramref name="mapping" /> does not contain a scalar with value <paramref name="key" />.
+        /// </exception>
+        /// <exception cref="InvalidCastException">
+        /// Thrown if the node could be found, but could not be cast to <typeparamref name="T" />.
+        /// </exception>
+        /// <seealso cref="GetNode(YamlNode, System.String)" />
+        public static T GetNode<T>(this YamlMappingNode mapping, string key) where T: YamlNode
+        {
+            return (T)mapping[new YamlScalarNode(key)];
+        }
+
+        public static YamlNode GetNode(this YamlMappingNode mapping, string key)
+        {
+            return mapping.GetNode<YamlNode>(key);
         }
 
         public static Dictionary<string, YamlNode> YamlMappingToDict(YamlMappingNode mapping)

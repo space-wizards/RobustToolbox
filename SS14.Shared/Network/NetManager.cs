@@ -294,7 +294,7 @@ namespace SS14.Shared.Network
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            //TODO: Literally kill this with fire
+            //TODO: Convert client code to the new net system, then remove this.
             if (!IsServer)
             {
                 OnMessageArrived(msg);

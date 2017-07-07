@@ -60,8 +60,10 @@ namespace SS14.Server.ClientConsoleHost
             }
         }
 
-        public void ProcessCommand(string text, INetChannel sender)
+        public void ProcessCommand(MsgConCmd message)
         {
+            string text = message.text;
+            INetChannel sender = message.MsgChannel;
             var args = new List<string>();
 
             CommandParsing.ParseArguments(text, args);

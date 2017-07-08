@@ -10,11 +10,22 @@ namespace SS14.Shared.Network
 {
     public class NetChannelArgs : EventArgs
     {
-        public INetChannel Channel;
+        public readonly INetChannel Channel;
 
         public NetChannelArgs(INetChannel channel)
         {
             Channel = channel;
+        }
+    }
+
+    public class NetConnectingArgs : EventArgs
+    {
+        public bool Deny;
+        public readonly string Ip;
+
+        public NetConnectingArgs(string ip)
+        {
+            Ip = ip;
         }
     }
 }

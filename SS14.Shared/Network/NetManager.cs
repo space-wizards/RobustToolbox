@@ -57,6 +57,9 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
+        public int Port => _config.GetCVar<int>("net.port");
+
+        /// <inheritdoc />
         public bool IsServer { get; private set; }
 
         /// <inheritdoc />
@@ -93,7 +96,7 @@ namespace SS14.Shared.Network
 
             if(isServer)
             {
-                netConfig.Port = config.GetCVar<int>("net.port");
+                netConfig.Port = Port;
                 netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             }
 
@@ -260,7 +263,7 @@ namespace SS14.Shared.Network
         {
             var sender = msg.SenderConnection;
             var senderIp = sender.RemoteEndPoint.Address.ToString();
-            Logger.Log($"[NET] {senderIp}: Status changed to {sender.Status}", LogLevel.Debug);
+            Logger.Debug($"[NET] {senderIp}: Status changed to {sender.Status}");
 
             switch (sender.Status)
             {
@@ -281,14 +284,19 @@ namespace SS14.Shared.Network
         private void HandleApproval(NetIncomingMessage message)
         {
             var sender = message.SenderConnection;
-            if (_config.GetCVar<bool>("net.allowdupeip") || !_channels.Any(item => Equals(item.Key.RemoteEndPoint.Address, message.SenderConnection.RemoteEndPoint.Address)))
+            var ip = sender.RemoteEndPoint.Address;
+            if (!_config.GetCVar<bool>("net.allowdupeip") && _channels.Any(item => Equals(item.Key.RemoteEndPoint.Address, ip)))
             {
-                message.SenderConnection.Approve();
-                return;
+                Logger.Info($"[NET] {sender.RemoteEndPoint.Address}: Already connected.");
+                sender.Deny("Duplicate connection.");
             }
-
-            Logger.Info($"[NET] {sender.RemoteEndPoint.Address}: Already connected.");
-            sender.Deny("Duplicate connection.");
+            else
+            {
+                if (OnConnecting(ip.ToString()))
+                    message.SenderConnection.Approve();
+                else
+                    sender.Deny("Server is full.");
+            }
         }
 
         private void HandleConnected(NetConnection sender)
@@ -432,9 +440,11 @@ namespace SS14.Shared.Network
 
         #region Events
 
-        protected virtual void OnConnecting(INetChannel channel)
+        protected virtual bool OnConnecting(string ip)
         {
-            Connecting?.Invoke(this, new NetChannelArgs(channel));
+            var args = new NetConnectingArgs(ip);
+            Connecting?.Invoke(this, args);
+            return !args.Deny;
         }
 
         protected virtual void OnConnected(INetChannel channel)
@@ -453,7 +463,7 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public event EventHandler<NetChannelArgs> Connecting;
+        public event EventHandler<NetConnectingArgs> Connecting;
 
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Connected;

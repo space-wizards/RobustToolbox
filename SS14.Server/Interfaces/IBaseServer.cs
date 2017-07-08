@@ -6,6 +6,26 @@
     public interface IBaseServer
     {
         /// <summary>
+        /// The name of the current running map.
+        /// </summary>
+        string MapName { get; }
+
+        /// <summary>
+        /// The maximum number of players allowed in the server.
+        /// </summary>
+        int MaxPlayers { get; }
+
+        /// <summary>
+        /// The displayed name of our server.
+        /// </summary>
+        string ServerName { get; }
+
+        /// <summary>
+        /// The MOTD displayed when joining the server.
+        /// </summary>
+        string Motd { get; }
+
+        /// <summary>
         /// Saves the current running game to disk.
         /// </summary>
         void SaveGame();

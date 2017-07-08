@@ -42,6 +42,8 @@ namespace SS14.Server.Player
             _sessions = new Dictionary<int, PlayerSession>();
         }
 
+        public int PlayerCount => _sessions.Count;
+
         /// <summary>
         /// Initializes the manager.
         /// </summary>
@@ -53,6 +55,7 @@ namespace SS14.Server.Player
 
             var netMan = IoCManager.Resolve<INetServerManager>();
 
+            netMan.Connecting += OnConnecting;
             netMan.Connected += NewSession;
             netMan.Disconnect += EndSession;
         }
@@ -63,6 +66,12 @@ namespace SS14.Server.Player
         }
 
         #region IPlayerManager Members
+
+        private void OnConnecting(object sender, NetConnectingArgs args)
+        {
+            if (PlayerCount >= Server.MaxPlayers)
+                args.Deny = true;
+        }
 
         /// <summary>
         /// Creates a new session for a client.

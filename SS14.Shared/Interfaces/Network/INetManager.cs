@@ -41,6 +41,11 @@ namespace SS14.Shared.Interfaces.Network
         int ChannelCount { get; }
 
         /// <summary>
+        /// The port that the peer is listening on.
+        /// </summary>
+        int Port { get; }
+
+        /// <summary>
         ///     Initializes the server, and starts listening for connections.
         /// </summary>
         /// <param name="isServer">Is this a server, or a client?</param>
@@ -86,7 +91,7 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     An incoming connection is being received.
         /// </summary>
-        event EventHandler<NetChannelArgs> Connecting;
+        event EventHandler<NetConnectingArgs> Connecting;
 
         /// <summary>
         ///     A client has just connected to the server.

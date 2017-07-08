@@ -16,6 +16,8 @@ namespace SS14.Server.Interfaces.Player
     {
         RunLevel RunLevel { get; set; }
 
+        int PlayerCount { get; }
+
         void SpawnPlayerMob(IPlayerSession session);
 
         [Obsolete("Use GetSessionById")]

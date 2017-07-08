@@ -42,17 +42,29 @@ namespace SS14.Server
     {
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
+        private readonly IConfigurationManager _config;
         private readonly List<float> _frameTimes = new List<float>();
         private readonly Stopwatch _stopWatch = new Stopwatch();
         private bool _active;
         private IComponentManager _components;
         private IServerEntityManager _entities;
         private int _lastAnnounced;
+
+        private DateTime _lastBytesUpdate = DateTime.Now;
+        private int _lastReceivedBytes;
+        private int _lastSentBytes;
         private uint _lastState;
         private DateTime _lastStateTime = DateTime.Now;
+
+        private DateTime _lastUpdate;
         private uint _oldestAckedState;
+
+        private RunLevel _runLevel;
         private float _serverClock;
+
+        private float _serverRate; // desired server frame (tick) time in milliseconds
         private DateTime _startAt;
+        private float _tickRate; // desired server frames (ticks) per second
         private DateTime _time;
 
         /// <summary>
@@ -86,7 +98,6 @@ namespace SS14.Server
             logManager.LogPath = logPath;
         }
 
-        private RunLevel _runLevel;
         private RunLevel Level
         {
             get => _runLevel;
@@ -96,13 +107,25 @@ namespace SS14.Server
                 _runLevel = value;
             }
         }
-        
+
+        /// <inheritdoc />
+        public string MapName => _config.GetCVar<string>("game.mapname");
+
+        /// <inheritdoc />
+        public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
+
+        /// <inheritdoc />
+        public string ServerName => _config.GetCVar<string>("game.hostname");
+
+        /// <inheritdoc />
+        public string Motd => _config.GetCVar<string>("game.welcomemsg");
+
         /// <inheritdoc />
         public event EventRunLevelChanged OnRunLevelChanged;
 
         /// <inheritdoc />
         public event EventTick OnTick;
-        
+
         /// <inheritdoc />
         public void Restart()
         {
@@ -127,7 +150,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public void SaveGame()
         {
-            IoCManager.Resolve<IMapManager>().SaveMap(_serverMapName);
+            IoCManager.Resolve<IMapManager>().SaveMap(MapName);
             _entities.SaveEntities();
         }
 
@@ -146,33 +169,33 @@ namespace SS14.Server
 
             var netMan = IoCManager.Resolve<INetServerManager>();
             netMan.Initialize(true);
-            
+
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
-            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
-            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
-            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int) MsgClGreet.ID, message => HandleClientGreet((MsgClGreet) message));
+            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int) MsgServerInfoReq.ID, HandleWelcomeMessageReq);
+            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int) MsgPlayerListReq.ID, HandlePlayerListReq);
+            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandleErrorMessage);
 
             // Unused: NetMessages.LobbyChat
-            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, message => IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat)message));
-            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession)message));
-            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, message => IoCManager.Resolve<IClientConsoleHost>().ProcessCommand((MsgConCmd)message));
-            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, message => IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat) message));
+            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int) MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession) message));
+            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int) MsgConCmd.ID, message => IoCManager.Resolve<IClientConsoleHost>().ProcessCommand((MsgConCmd) message));
+            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int) MsgConCmdAck.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
-            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, message => SendMap(message.MsgChannel));
-            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, message => IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap)message));
+            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int) MsgMapReq.ID, message => SendMap(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int) MsgMap.ID, message => IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap) message));
 
-            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
-            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int)MsgJoinGame.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int)MsgRestartReq.ID, message => Restart());
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) message));
+            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int) MsgUi.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int) MsgJoinGame.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int) MsgRestartReq.ID, message => Restart());
 
-            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage(((MsgEntity)message).Output));
-            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
+            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int) MsgEntity.ID, message => _entities.HandleEntityNetworkMessage(((MsgEntity) message).Output));
+            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int) MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin) message));
             // Not converted yet: NetMessages.StateUpdate
-            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
+            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
             // Not converted yet: NetMessages.FullState
 
             IoCManager.Resolve<IChatManager>().Initialize(this);
@@ -201,12 +224,6 @@ namespace SS14.Server
             }
 
             Cleanup();
-
-            /*   TimerCallback tcb = RunLoop;
-            var due = 1;// (long)ServerRate / 3;
-            stopWatch.Start(); //Start the clock
-            mainLoopTimer = new Timer(tcb, _autoResetEvent, 0, due);
-            _autoResetEvent.WaitOne(-1);*/
         }
 
         /// <summary>
@@ -224,25 +241,17 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("game.type", GameType.Game);
             cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
 
-            _serverPort = cfgMgr.GetCVar<int>("net.port");
-            _serverName = cfgMgr.GetCVar<string>("game.hostname");
-            _serverMapName = cfgMgr.GetCVar<string>("game.mapname");
-            _serverMaxPlayers = cfgMgr.GetCVar<int>("game.maxplayers");
-            _gameType = cfgMgr.GetCVar<GameType>("game.type");
-            _serverWelcomeMessage = cfgMgr.GetCVar<string>("game.welcomemsg");
             _tickRate = cfgMgr.GetCVar<int>("net.tickrate");
             _serverRate = 1000.0f / _tickRate;
 
             _entities = IoCManager.Resolve<IServerEntityManager>();
             _components = IoCManager.Resolve<IComponentManager>();
 
-            Logger.Info($"[SRV] Port: {_serverPort}");
-            Logger.Info($"[SRV] Name: {_serverName}");
+            Logger.Info($"[SRV] Name: {ServerName}");
             Logger.Info($"[SRV] TickRate: {_tickRate}({_serverRate}ms)");
-            Logger.Info($"[SRV] Map: {_serverMapName}");
-            Logger.Info($"[SRV] Max players: {_serverMaxPlayers}");
-            Logger.Info($"[SRV] Game type: {_gameType}");
-            Logger.Info($"[SRV] Welcome message: {_serverWelcomeMessage}");
+            Logger.Info($"[SRV] Map: {MapName}");
+            Logger.Info($"[SRV] Max players: {MaxPlayers}");
+            Logger.Info($"[SRV] Welcome message: {Motd}");
         }
 
         /// <summary>
@@ -261,7 +270,7 @@ namespace SS14.Server
             }
             else if (Level == RunLevel.Game)
             {
-                IoCManager.Resolve<IMapManager>().LoadMap(_serverMapName);
+                IoCManager.Resolve<IMapManager>().LoadMap(MapName);
                 _entities.Initialize();
                 IoCManager.Resolve<IRoundManager>().CurrentGameMode.StartGame();
             }
@@ -446,38 +455,20 @@ namespace SS14.Server
             }
         }
 
-        private DateTime _lastUpdate;
-
-        #region Server Settings
-
-        private GameType _gameType = GameType.Game;
-        private string _serverMapName = "SavedMap";
-        private int _serverMaxPlayers = 32;
-        private string _serverName = "SS13 Server";
-        private int _serverPort = 1212;
-        private string _serverWelcomeMessage = "Welcome to the server!";
-        private DateTime _lastBytesUpdate = DateTime.Now;
-        private int _lastReceivedBytes;
-        private int _lastSentBytes;
-
-        private float _serverRate; // desired server frame (tick) time in milliseconds
-        private float _tickRate; // desired server frames (ticks) per second
-
-        #endregion Server Settings
-
         #region MessageProcessing
 
         private void HandleWelcomeMessageReq(NetMessage message)
         {
+            var net = IoCManager.Resolve<INetServerManager>();
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
-            netMsg.ServerName = _serverName;
-            netMsg.ServerPort = _serverPort;
-            netMsg.ServerWelcomeMessage = _serverWelcomeMessage;
-            netMsg.ServerMaxPlayers = _serverMaxPlayers;
-            netMsg.ServerMapName = _serverMapName;
+            netMsg.ServerName = ServerName;
+            netMsg.ServerPort = net.Port;
+            netMsg.ServerWelcomeMessage = Motd;
+            netMsg.ServerMaxPlayers = MaxPlayers;
+            netMsg.ServerMapName = MapName;
             netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
-            netMsg.ServerPlayerCount = IoCManager.Resolve<INetServerManager>().ChannelCount;
+            netMsg.ServerPlayerCount = IoCManager.Resolve<IPlayerManager>().PlayerCount;
 
             message.MsgChannel.SendMessage(netMsg);
         }
@@ -509,7 +500,7 @@ namespace SS14.Server
             var plyMgr = IoCManager.Resolve<IPlayerManager>();
             var players = plyMgr.GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
-            netMsg.PlyCount = (byte)players.Length;
+            netMsg.PlyCount = (byte) players.Length;
 
             var list = new List<MsgPlayerList.PlyInfo>();
             foreach (var client in players)
@@ -517,7 +508,7 @@ namespace SS14.Server
                 var info = new MsgPlayerList.PlyInfo
                 {
                     name = client.Name,
-                    status = (byte)client.Status,
+                    status = (byte) client.Status,
                     ping = client.ConnectedClient.Connection.AverageRoundtripTime
                 };
                 list.Add(info);
@@ -526,7 +517,7 @@ namespace SS14.Server
 
             channel.SendMessage(netMsg);
         }
-        
+
         private static void HandleClientGreet(MsgClGreet msg)
         {
             var fixedName = msg.PlyName.Trim();

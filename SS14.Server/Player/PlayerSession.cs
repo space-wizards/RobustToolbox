@@ -14,10 +14,11 @@ using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Player
 {
+    /// <summary>
+    /// This is the session of a connected client.
+    /// </summary>
     public class PlayerSession : IPlayerSession
     {
-        /* This class represents a connected player session */
-
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
         public PlayerSession(INetChannel client, PlayerManager playerManager)

@@ -132,7 +132,7 @@ namespace SS14.Server.Player
 
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgSession>();
 
             message.msgType = PlayerSessionMessage.AddPostProcessingEffect;
@@ -149,7 +149,7 @@ namespace SS14.Server.Player
             if (attachedEntity == null)
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgSession>();
 
             message.msgType = PlayerSessionMessage.AttachToEntity;
@@ -213,7 +213,7 @@ namespace SS14.Server.Player
             if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
                 return;
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgJoinGame>();
             net.ServerSendMessage(message, ConnectedClient);
 
@@ -223,7 +223,7 @@ namespace SS14.Server.Player
 
         public void CreateGuiMessage(GuiComponentType gui)
         {
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgUi>();
 
             message.UiType = UiManagerMessage.ComponentMessage;

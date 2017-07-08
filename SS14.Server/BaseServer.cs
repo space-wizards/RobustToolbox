@@ -41,20 +41,16 @@ namespace SS14.Server
     public class BaseServer : IBaseServer
     {
         private const int GAME_COUNTDOWN = 15;
-        private const int UPDATE_RATE = 20; //20 updates per second
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
         private readonly List<float> _frameTimes = new List<float>();
         private readonly Stopwatch _stopWatch = new Stopwatch();
         private bool _active;
-        private uint _basePeriod;
         private IComponentManager _components;
         private IServerEntityManager _entities;
         private int _lastAnnounced;
         private uint _lastState;
         private DateTime _lastStateTime = DateTime.Now;
         private uint _oldestAckedState;
-        private uint _period;
-        private RunLevel _runLevel;
         private float _serverClock;
         private DateTime _startAt;
         private DateTime _time;
@@ -90,6 +86,7 @@ namespace SS14.Server
             logManager.LogPath = logPath;
         }
 
+        private RunLevel _runLevel;
         private RunLevel Level
         {
             get => _runLevel;
@@ -99,7 +96,7 @@ namespace SS14.Server
                 _runLevel = value;
             }
         }
-
+        
         /// <inheritdoc />
         public event EventRunLevelChanged OnRunLevelChanged;
 
@@ -109,7 +106,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public void Restart()
         {
-            //TODO: This needs to hard-reset all modules.
+            //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
             Logger.Info("[SRV] Soft restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
             SendGameStateUpdate(true, true);
@@ -147,9 +144,10 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
 
-            var netMan = IoCManager.Resolve<INetManager>();
+            var netMan = IoCManager.Resolve<INetServerManager>();
             netMan.Initialize(true);
             
+            //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
             netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
             netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
             netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
@@ -191,12 +189,9 @@ namespace SS14.Server
         /// <inheritdoc />
         public void MainLoop()
         {
-            _basePeriod = 1;
-            _period = _basePeriod;
-
             var timerObject = new MainLoopTimer();
             _stopWatch.Start();
-            timerObject.mainLoopTimer.CreateMainLoopTimer(RunLoop, _period);
+            timerObject.mainLoopTimer.CreateMainLoopTimer(RunLoop, 1);
 
             while (_active)
             {
@@ -328,7 +323,7 @@ namespace SS14.Server
                 _lastBytesUpdate = DateTime.Now;
             }
 
-            IoCManager.Resolve<INetManager>().ProcessPackets();
+            IoCManager.Resolve<INetServerManager>().ProcessPackets();
 
             //Update takes elapsed time in seconds.
             Update(elapsedTime);
@@ -343,7 +338,7 @@ namespace SS14.Server
 
         private string UpdateBps()
         {
-            var stats = IoCManager.Resolve<INetManager>().Statistics;
+            var stats = IoCManager.Resolve<INetServerManager>().Statistics;
 
             var bps = $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
 
@@ -398,8 +393,10 @@ namespace SS14.Server
         {
             //Obey the updates per second limit
             var elapsed = _time - _lastStateTime;
-            if (force || elapsed.TotalMilliseconds > 1000 / UPDATE_RATE)
+            if (force || elapsed.TotalMilliseconds > _serverRate)
             {
+                var netMan = IoCManager.Resolve<INetServerManager>();
+
                 //Save last state time
                 _lastStateTime = _time;
                 //Create a new GameState object
@@ -411,7 +408,7 @@ namespace SS14.Server
                 stateManager.Add(state.Sequence, state);
 
                 //_log.Log("Update " + _lastState + " sent.");
-                var connections = IoCManager.Resolve<INetManager>().Channels;
+                var connections = netMan.Channels;
                 if (!connections.Any())
                 {
                     //No clients -- don't send state
@@ -426,7 +423,7 @@ namespace SS14.Server
                             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
                             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
                                 continue;
-                            var stateMessage = IoCManager.Resolve<INetManager>().Peer.CreateMessage();
+                            var stateMessage = netMan.Peer.CreateMessage();
                             var lastStateAcked = stateManager.GetLastStateAcked(c);
 
                             if (lastStateAcked == 0) // || forceFullState)
@@ -442,16 +439,17 @@ namespace SS14.Server
                                 //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                             }
 
-                            IoCManager.Resolve<INetManager>().Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+                            netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
                         }
                 }
                 stateManager.Cull();
             }
         }
 
+        private DateTime _lastUpdate;
+
         #region Server Settings
 
-        private DateTime _lastUpdate;
         private GameType _gameType = GameType.Game;
         private string _serverMapName = "SavedMap";
         private int _serverMaxPlayers = 32;
@@ -479,7 +477,7 @@ namespace SS14.Server
             netMsg.ServerMaxPlayers = _serverMaxPlayers;
             netMsg.ServerMapName = _serverMapName;
             netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
-            netMsg.ServerPlayerCount = IoCManager.Resolve<INetManager>().ChannelCount;
+            netMsg.ServerPlayerCount = IoCManager.Resolve<INetServerManager>().ChannelCount;
 
             message.MsgChannel.SendMessage(netMsg);
         }

@@ -20,7 +20,7 @@ namespace SS14.Server.GameObjects
     {
         private bool _messageProfiling = false;
         [Dependency]
-        private readonly INetManager _mNetManager;
+        private readonly INetServerManager _mNetManager;
 
         public void Initialize()
         {

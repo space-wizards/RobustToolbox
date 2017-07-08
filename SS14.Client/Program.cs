@@ -78,6 +78,7 @@ namespace SS14.Client
             IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<INetManager, NetManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();

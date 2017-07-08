@@ -1,5 +1,9 @@
 ﻿namespace SS14.Shared
 {
+    //TODO: This will be removed once the Client gets migrated to the new network system.
+    /// <summary>
+    /// Contains all NetMessage IDs.
+    /// </summary>
     public enum NetMessages
     {
         // Base engine messages
@@ -9,6 +13,7 @@
         WelcomeMessage,         // S>C Server info.
         PlayerListReq,          // C>S Requests a full list of players.
         PlayerList,             // S>C A full list of players.
+        StringTableEntry,       // S>C An entry into the string table.
 
         // Console Commands
         LobbyChat,              // C>S Does nothing atm, Obsolete?

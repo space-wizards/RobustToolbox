@@ -228,7 +228,7 @@ namespace SS14.Server.Map
         {
             Logger.Log($"[MAP] {connection.RemoteAddress}: Sending map");
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgMap>();
 
             message.MessageType = MapMessage.SendTileMap;
@@ -319,7 +319,7 @@ namespace SS14.Server.Map
         
         private static void NetworkUpdateTile(TileRef tile)
         {
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgMap>();
 
             message.MessageType = MapMessage.TurfUpdate;

@@ -141,7 +141,7 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.range = range;
@@ -163,7 +163,7 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
 
             message.PlaceType = PlacementManagerMessage.StartPlacement;
@@ -187,7 +187,7 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetManager>();
+            var net = IoCManager.Resolve<INetServerManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
             net.ServerSendMessage(message, playerConnection);

@@ -172,6 +172,7 @@
     <Compile Include="Network\NetChannel.cs" />
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
+    <Compile Include="Network\StringTable.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />

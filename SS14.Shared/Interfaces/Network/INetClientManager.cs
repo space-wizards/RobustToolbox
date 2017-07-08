@@ -10,13 +10,14 @@ namespace SS14.Shared.Interfaces.Network
     public interface INetClientManager : INetManager
     {
         /// <summary>
-        ///     The first NetChannel on the client, which would be the server.
+        ///     The NetChannel of the server.
         /// </summary>
         INetChannel ServerChannel { get; }
 
         /// <summary>
-        ///     Called when we receive a new NetMessage.
+        ///     Called when a new NetMessage is received.
         /// </summary>
+        [Obsolete("You should be registering a callback in RegisterNetMessage.")]
         event EventHandler<NetMessageArgs> MessageArrived;
 
         /// <summary>

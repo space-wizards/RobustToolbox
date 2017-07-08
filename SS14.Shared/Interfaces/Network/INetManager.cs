@@ -11,9 +11,14 @@ namespace SS14.Shared.Interfaces.Network
     public interface INetManager
     {
         /// <summary>
-        ///     Is this a server or a client?
+        ///     Is this a server, or a client?
         /// </summary>
         bool IsServer { get; }
+
+        /// <summary>
+        ///     Is this a client, or a server?
+        /// </summary>
+        bool IsClient { get; }
 
         /// <summary>
         ///     Is there at least one open NetChannel?
@@ -48,7 +53,7 @@ namespace SS14.Shared.Interfaces.Network
         void Shutdown(string reason);
 
         /// <summary>
-        /// Restarts this peer, disconnecting all channels.
+        ///     Restarts this peer, disconnecting all channels.
         /// </summary>
         /// <param name="reason">String describing why the peer was restarted.</param>
         void Restart(string reason);
@@ -121,6 +126,10 @@ namespace SS14.Shared.Interfaces.Network
         [Obsolete("You should be using the INetManager interface.")]
         NetPeer Peer { get; }
 
+        /// <summary>
+        ///     Gets a new NetOutgoingMessage from the NetPeer.
+        /// </summary>
+        /// <returns>A new Outgoing message.</returns>
         [Obsolete("You should be using NetMessages.")]
         NetOutgoingMessage CreateMessage();
 

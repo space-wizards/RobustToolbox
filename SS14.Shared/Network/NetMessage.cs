@@ -49,7 +49,16 @@ namespace SS14.Shared.Network
             MsgId = id;
         }
 
+        /// <summary>
+        /// Deserializes the NetIncomingMessage into this NetMessage class.
+        /// </summary>
+        /// <param name="buffer">The buffer of the raw incoming packet.</param>
         public abstract void ReadFromBuffer(NetIncomingMessage buffer);
+
+        /// <summary>
+        /// Serializes this NetMessage into a new NetOutgoingMessage.
+        /// </summary>
+        /// <param name="buffer">The buffer of the new packet being serialized.</param>
         public abstract void WriteToBuffer(NetOutgoingMessage buffer);
     }
 }

@@ -28,7 +28,7 @@ namespace SS14.Server.ClientConsoleHost
 
         public void HandleRegistrationRequest(INetChannel senderConnection)
         {
-            var netMgr = IoCManager.Resolve<INetManager>();
+            var netMgr = IoCManager.Resolve<INetServerManager>();
             var message = netMgr.CreateNetMessage<MsgConCmdReg>();
 
             var counter = 0;
@@ -92,7 +92,7 @@ namespace SS14.Server.ClientConsoleHost
 
         public void SendConsoleReply(string text, INetChannel target)
         {
-            var netMgr = IoCManager.Resolve<INetManager>();
+            var netMgr = IoCManager.Resolve<INetServerManager>();
             var replyMsg = netMgr.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
             netMgr.ServerSendMessage(replyMsg, target);

@@ -37,16 +37,14 @@ namespace SS14.Shared.Network
         private readonly Dictionary<string, Type> _messages = new Dictionary<string, Type>();
 
         /// <summary>
-        ///     Holds a synced lookup table for NetMessage.Id -> NetMessage.Name
+        /// The StringTable for transforming packet Ids to Packet name.
         /// </summary>
-        private readonly Dictionary<int, string> _messageStringTable = new Dictionary<int, string>();
+        private readonly StringTable _strings = new StringTable();
 
         /// <summary>
         ///     The instance of the net server.
         /// </summary>
-        protected NetPeer NetPeer;
-
-        private int _strTblIndex;
+        private NetPeer _netPeer;
 
         /// <summary>
         ///     Default constructor.
@@ -62,15 +60,18 @@ namespace SS14.Shared.Network
         public bool IsServer { get; private set; }
 
         /// <inheritdoc />
-        public bool IsConnected => NetPeer.ConnectionsCount > 0;
+        public bool IsClient => !IsServer;
+
+        /// <inheritdoc />
+        public bool IsConnected => _netPeer.ConnectionsCount > 0;
 
         /// <inheritdoc />
         [Obsolete("You should be using NetPeer.")]
-        public NetPeer Peer => NetPeer;
+        public NetPeer Peer => _netPeer;
 
         /// <inheritdoc />
         [Obsolete]
-        public NetPeerStatistics Statistics => NetPeer.Statistics;
+        public NetPeerStatistics Statistics => _netPeer.Statistics;
 
         /// <inheritdoc />
         public List<INetChannel> Channels => _channels.Values.Cast<INetChannel>().ToList();
@@ -81,7 +82,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void Initialize(bool isServer)
         {
-            if (NetPeer != null)
+            if (_netPeer != null)
                 throw new InvalidOperationException("[NET] NetManager has already been initialized.");
 
             IsServer = isServer;
@@ -91,7 +92,10 @@ namespace SS14.Shared.Network
             var netConfig = new NetPeerConfiguration("SS13_NetTag");
 
             if(isServer)
+            {
                 netConfig.Port = config.GetCVar<int>("net.port");
+                netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+            }
 
             if (!isServer)
             {
@@ -118,17 +122,18 @@ namespace SS14.Shared.Network
 
             netConfig.ConnectionTimeout = 30000f;
 #endif
-            NetPeer = new NetPeer(netConfig);
+            _netPeer = new NetPeer(netConfig);
             
-            NetPeer.Start();
+            _netPeer.Start();
         }
 
         /// <inheritdoc />
         public void Shutdown(string reason)
         {
-            //TODO: Call Disconnect hook for each channel.
+            foreach (var kvChannel in _channels)
+                DisconnectChannel(kvChannel.Value, reason);
 
-            NetPeer.Shutdown(reason);
+            _netPeer.Shutdown(reason);
         }
 
         /// <inheritdoc />
@@ -143,27 +148,31 @@ namespace SS14.Shared.Network
         /// </summary>
         public void ProcessPackets()
         {
-            Debug.Assert(NetPeer != null);
+            Debug.Assert(_netPeer != null);
 
             NetIncomingMessage msg;
-            while ((msg = NetPeer.ReadMessage()) != null)
+            while ((msg = _netPeer.ReadMessage()) != null)
             {
                 switch (msg.MessageType)
                 {
                     case NetIncomingMessageType.VerboseDebugMessage:
-                        Logger.Log(msg.ReadString(), LogLevel.Debug);
+                        Logger.Debug($"[NET] {msg.ReadString()}");
                         break;
 
                     case NetIncomingMessageType.DebugMessage:
-                        Logger.Log(msg.ReadString(), LogLevel.Debug);
+                        Logger.Info("[NET] " + msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.WarningMessage:
-                        Logger.Log(msg.ReadString(), LogLevel.Warning);
+                        Logger.Warning("[NET] " + msg.ReadString());
                         break;
 
                     case NetIncomingMessageType.ErrorMessage:
-                        Logger.Log(msg.ReadString(), LogLevel.Error);
+                        Logger.Error("[NET] " + msg.ReadString());
+                        break;
+
+                    case NetIncomingMessageType.ConnectionApproval:
+                        HandleApproval(msg);
                         break;
 
                     case NetIncomingMessageType.Data:
@@ -175,35 +184,35 @@ namespace SS14.Shared.Network
                         break;
 
                     default:
-                        Logger.Log("[NET] Unhandled incoming packet type: " + msg.MessageType, LogLevel.Warning);
+                        Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Unhandled incoming packet type: {msg.MessageType}");
                         break;
                 }
-                NetPeer.Recycle(msg);
+                _netPeer.Recycle(msg);
             }
         }
 
         /// <inheritdoc />
         public void ClientConnect(string host)
         {
-            Debug.Assert(NetPeer != null);
+            Debug.Assert(_netPeer != null);
             Debug.Assert(!IsServer, "Should never be called on the server.");
 
-            if (NetPeer.ConnectionsCount > 0)
+            if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");
 
-            NetPeer.Connect(host, 1212);
+            _netPeer.Connect(host, 1212);
         }
 
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
-            Debug.Assert(NetPeer != null);
+            Debug.Assert(_netPeer != null);
             Debug.Assert(!IsServer, "Should never be called on the server.");
 
             // Client should never have more than one connection.
-            Debug.Assert(NetPeer.ConnectionsCount <= 1);
+            Debug.Assert(_netPeer.ConnectionsCount <= 1);
 
-            foreach (var connection in NetPeer.Connections)
+            foreach (var connection in _netPeer.Connections)
             {
                 connection.Disconnect(reason);
             }
@@ -216,11 +225,11 @@ namespace SS14.Shared.Network
             {
                 INetChannel retVal;
 
-                if (NetPeer.ConnectionsCount <= 0)
+                if (_netPeer.ConnectionsCount <= 0)
                     return null;
                 try
                 {
-                    retVal = GetChannel(NetPeer.Connections[0]);
+                    retVal = GetChannel(_netPeer.Connections[0]);
                 }
                 catch
                 {
@@ -257,44 +266,58 @@ namespace SS14.Shared.Network
             {
                 case NetConnectionStatus.Connected:
                     Logger.Info($"[NET] {senderIp}: Connected");
-
-                    // TODO: Move this to Connecting status
-                    if (_config.GetCVar<bool>("net.allowdupeip") && _channels.ContainsKey(sender))
-                    {
-                        Logger.Error("[NET] " + senderIp + ": Already connected");
-                        sender.Disconnect("Duplicate connection.");
-                        return;
-                    }
-                    HandleConnectionApproval(sender);
+                    HandleConnected(sender);
                     break;
 
                 case NetConnectionStatus.Disconnected:
                     Logger.Log("[NET]" + senderIp + ": Disconnected");
 
                     if (_channels.ContainsKey(sender))
-                        CleanupClientConnection(sender);
+                        HandleDisconnect(sender);
                     break;
             }
         }
 
-        private void HandleConnectionApproval(NetConnection sender)
+        private void HandleApproval(NetIncomingMessage message)
+        {
+            var sender = message.SenderConnection;
+            if (_config.GetCVar<bool>("net.allowdupeip") || !_channels.Any(item => Equals(item.Key.RemoteEndPoint.Address, message.SenderConnection.RemoteEndPoint.Address)))
+            {
+                message.SenderConnection.Approve();
+                return;
+            }
+
+            Logger.Info($"[NET] {sender.RemoteEndPoint.Address}: Already connected.");
+            sender.Deny("Duplicate connection.");
+        }
+
+        private void HandleConnected(NetConnection sender)
         {
             var channel = new NetChannel(this, sender);
             _channels.Add(sender, channel);
 
+            _strings.SendFullTable(channel);
+
             OnConnected(channel);
         }
 
-        private void CleanupClientConnection(NetConnection sender)
+        private void HandleDisconnect(NetConnection sender)
         {
             var channel = _channels[sender];
             OnDisconnected(channel);
             _channels.Remove(sender);
         }
 
+        private void DisconnectChannel(NetChannel channel, string reason)
+        {
+            OnDisconnected(channel);
+            _channels.Remove(channel.Connection);
+            channel.Connection.Disconnect(reason);
+        }
+
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            //TODO: Convert client code to the new net system, then remove this.
+            //TODO: Convert client code to the new net message system, then remove this.
             if (!IsServer)
             {
                 OnMessageArrived(msg);
@@ -303,7 +326,7 @@ namespace SS14.Shared.Network
 
             var id = msg.ReadByte();
 
-            if (!_messageStringTable.TryGetValue(id, out string name))
+            if (!_strings.TryGetString(id, out string name))
                 throw new Exception($"[NET] No string in table with ID {(NetMessages) id}. Did you register it?");
 
             if (!_messages.TryGetValue(name, out Type packetType))
@@ -323,71 +346,39 @@ namespace SS14.Shared.Network
 
         public NetOutgoingMessage CreateMessage()
         {
-            return NetPeer.CreateMessage();
+            return _netPeer.CreateMessage();
         }
 
         public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
         {
-            foreach (var connection in NetPeer.Connections)
+            foreach (var connection in _netPeer.Connections)
                 ServerSendMessage(message, connection, method);
         }
 
         public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
-            NetPeer.SendMessage(message, client, method);
+            _netPeer.SendMessage(message, client, method);
         }
 
         public void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients)
         {
-            NetPeer.SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
+            _netPeer.SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
         #endregion Packets
-
-        #region StringTable
-
-        public void AddString(string name, bool overwrite = false)
-        {
-            if (overwrite && TryFindStringId(name, out int id))
-                throw new Exception($"[NET] StringTable already contains the string '{name}'.");
-            var newID = IsServer ? ++_strTblIndex : --_strTblIndex; // Clients string table will be overwritten
-            _messageStringTable.Add(newID, name);
-        }
-
-        public bool TryFindStringId(string str, out int id)
-        {
-            // Does this need a better ADT?
-            var keys = _messageStringTable.Where(kvp => kvp.Value == str).Select(kvp => kvp.Key).ToList();
-            if (keys.Any())
-            {
-                id = keys.First();
-                return true;
-            }
-            id = 0;
-            return false;
-        }
-
-        public bool TryGetStringName(int id, out string name)
-        {
-            return _messageStringTable.TryGetValue(id, out name);
-        }
-
-        #endregion StringTable
-
+        
         #region NetMessages
 
         /// <inheritdoc />
         public void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
             where T : NetMessage
         {
-            _messageStringTable.Add(id, name);
+            _strings.AddStringFixed(id, name);
 
             _messages.Add(name, typeof(T));
 
-            if (rxCallback == null)
-                return;
-
-            _callbacks.Add(typeof(T), rxCallback);
+            if (rxCallback != null)
+                _callbacks.Add(typeof(T), rxCallback);
         }
 
         /// <inheritdoc />
@@ -399,9 +390,9 @@ namespace SS14.Shared.Network
 
         private NetOutgoingMessage BuildMessage(NetMessage message)
         {
-            var packet = NetPeer.CreateMessage(4);
+            var packet = _netPeer.CreateMessage(4);
 
-            if (!TryFindStringId(message.MsgName, out int msgId))
+            if (! _strings.TryFindStringId(message.MsgName, out int msgId))
                 throw new Exception($"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
             packet.Write((byte) msgId);
@@ -435,7 +426,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
         {
-            NetPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
+            _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
         }
         #endregion NetMessages
 

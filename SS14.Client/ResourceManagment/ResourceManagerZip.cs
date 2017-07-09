@@ -60,7 +60,11 @@ namespace SS14.Client.Resources
             {
                 if (stream != null)
                 {
-                    _fonts.Add("base_font", new Font(stream));
+                    // SFML font does not cache the manifest stream contents, we have to do it.
+                    var memStream = new MemoryStream();
+                    stream.CopyTo(memStream);
+
+                    _fonts.Add("base_font", new Font(memStream));
                 }
             }
 

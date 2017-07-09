@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Interface;
 
@@ -141,9 +141,6 @@ namespace SS14.Client.Graphics.Sprite
         {
             get
             {
-                // If an exception gets thrown here then curse SFML.
-                // This weird code is me trying to debug it without avail.
-                // Because it wouldn't reproduce after changing it.
                 var a = _textSprite;
                 var b = a.GetLocalBounds();
                 var c = b.Width;

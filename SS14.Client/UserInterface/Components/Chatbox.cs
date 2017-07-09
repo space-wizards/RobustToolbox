@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -182,7 +182,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "CALABRI", _resourceManager)
+                var label = new Label(content, "CALIBRI", _resourceManager)
                 {
                     Position = new Vector2i(5, last_y),
                     Text =

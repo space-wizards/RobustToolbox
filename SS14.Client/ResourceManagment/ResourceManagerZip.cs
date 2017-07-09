@@ -99,9 +99,8 @@ namespace SS14.Client.Resources
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
-                string debugPath = "..\\";
-                debugPath += zipPath;
-                zipPath = debugPath;
+                string debugPath = "..";
+                zipPath = Path.Combine(zipPath, debugPath);
             }
 
             zipPath = PathHelpers.ExecutableRelativeFile(zipPath);

@@ -47,7 +47,7 @@ namespace SS14.Shared.GameObjects
 
         #region Initialization
 
-        public virtual void LoadParameters(IDictionary<string, YamlNode> parameters)
+        public virtual void LoadData(YamlMappingNode parameters)
         {
         }
 
@@ -68,7 +68,7 @@ namespace SS14.Shared.GameObjects
         {
             //LogComponentMessage(sender, type, args);
 
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents())
             {
                 if (_components.ContainsValue(component))
                     //Check to see if the component is still a part of this entity --- collection may change in process.
@@ -87,7 +87,7 @@ namespace SS14.Shared.GameObjects
         {
             //LogComponentMessage(sender, type, args);
 
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents())
             {
                 //Check to see if the component is still a part of this entity --- collection may change in process.
                 if (_components.ContainsValue(component))
@@ -110,7 +110,7 @@ namespace SS14.Shared.GameObjects
             //LogComponentMessage(sender, type, args);
 
             if (HasComponent(family))
-                return GetComponent<Component>(family).RecieveMessage(sender, type, args);
+                return GetComponent<IComponent>(family).RecieveMessage(sender, type, args);
 
             return ComponentReplyMessage.Empty;
         }
@@ -119,7 +119,7 @@ namespace SS14.Shared.GameObjects
         {
             if (GetComponentFamilies().Contains(message.ComponentFamily))
             {
-                GetComponent<Component>(message.ComponentFamily).HandleNetworkMessage(message, client);
+                GetComponent<IComponent>(message.ComponentFamily).HandleNetworkMessage(message, client);
             }
         }
 
@@ -133,7 +133,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="component">Sending component</param>
         /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        public void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                 params object[] messageParams)
         {
             EntityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered,
@@ -147,7 +147,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        public void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                         NetConnection recipient, params object[] messageParams)
         {
             if (!Initialized)
@@ -182,7 +182,7 @@ namespace SS14.Shared.GameObjects
         protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
         {
             if (HasComponent((ComponentFamily)message.Message))
-                GetComponent<Component>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
+                GetComponent<IComponent>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
         }
 
         #endregion Network messaging
@@ -411,7 +411,7 @@ namespace SS14.Shared.GameObjects
         private List<ComponentState> GetComponentStates()
         {
             var stateComps = new List<ComponentState>();
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents())
             {
                 ComponentState componentState = component.GetComponentState();
                 stateComps.Add(componentState);

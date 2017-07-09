@@ -190,7 +190,6 @@ namespace SS14.UnitTesting
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
 
             switch (Project)
@@ -219,6 +218,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
                     IoCManager.Register<IGameController, GameController>();
+                    IoCManager.Register<IComponentFactory, ClientComponentFactory>();
                     break;
 
                 case UnitTestProject.Server:
@@ -242,6 +242,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
                     IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
+                    IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     break;
 
                 default:

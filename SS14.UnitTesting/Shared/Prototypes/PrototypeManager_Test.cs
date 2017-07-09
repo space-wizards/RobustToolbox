@@ -29,8 +29,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            Dictionary<string, YamlNode> node = prototype.Components["TestBasicPrototypeComponent"];
-            Assert.That(node["foo"], Is.EqualTo(new YamlScalarNode("bar!")));
+            var mapping = prototype.Components["TestBasicPrototypeComponent"];
+            Assert.That(mapping.GetNode("foo"), Is.EqualTo(new YamlScalarNode("bar!")));
         }
 
         [Test, Combinatorial]
@@ -54,8 +54,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             });
 
             var componentData = prototype.Components["Light"];
-            var expected = new Dictionary<string, YamlNode>();
-            expected["startState"] = new YamlScalarNode("Off");
+            var expected = new YamlMappingNode();
+            expected.Children[new YamlScalarNode("startState")] = new YamlScalarNode("Off");
 
             Assert.That(componentData, Is.EquivalentTo(expected));
         }

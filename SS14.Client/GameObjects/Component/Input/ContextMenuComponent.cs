@@ -62,28 +62,28 @@ namespace SS14.Client.GameObjects
             _entries.Add(entry);
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            YamlNode node;
-            if (mapping.TryGetValue("entries", out node))
+            if (mapping.TryGetNode<YamlSequenceNode>("entries", out var sequence))
             {
-                foreach (YamlMappingNode entry in ((YamlSequenceNode)node).Cast<YamlMappingNode>())
+                foreach (YamlMappingNode entry in sequence.Cast<YamlMappingNode>())
                 {
                     string name = "NULL";
                     string icon = "NULL";
                     string message = "NULL";
+                    YamlNode node;
 
-                    if (entry.Children.TryGetValue(new YamlScalarNode("name"), out node))
+                    if (entry.TryGetNode("name", out node))
                     {
                         name = node.AsString();
                     }
 
-                    if (entry.Children.TryGetValue(new YamlScalarNode("icon"), out node))
+                    if (entry.TryGetNode("icon", out node))
                     {
                         icon = node.AsString();
                     }
 
-                    if (entry.Children.TryGetValue(new YamlScalarNode("message"), out node))
+                    if (entry.TryGetNode("message", out node))
                     {
                         message = node.AsString();
                     }

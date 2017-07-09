@@ -83,10 +83,10 @@ namespace SS14.Server.GameObjects
             return containedEntities.Exists(x => x.Prototype.ID == templatename);
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("size", out node))
+            if (mapping.TryGetNode("size", out node))
             {
                 maxSlots = node.AsInt();
             }

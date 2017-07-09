@@ -9,17 +9,37 @@ using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentFactory : IComponentFactory, IPostInjectInit
+    public abstract class ComponentFactory : IComponentFactory, IPostInjectInit
     {
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
 
         private readonly Dictionary<string, Type> componentNames = new Dictionary<string, Type>();
 
+        /// <summary>
+        /// Set of components that should be ignored. Probably just the list of components unique to the other project.
+        /// </summary>
+        protected abstract HashSet<string> IgnoredComponentNames { get; }
+
         public void PostInject()
         {
             ReloadComponents();
             ReflectionManager.OnAssemblyAdded += (_, __) => ReloadComponents();
+        }
+
+        public ComponentAvailability GetComponentAvailability(string componentName)
+        {
+            if (componentNames.ContainsKey(componentName))
+            {
+                return ComponentAvailability.Available;
+            }
+
+            if (IgnoredComponentNames.Contains(componentName))
+            {
+                return ComponentAvailability.Ignore;
+            }
+
+            return ComponentAvailability.Unknown;
         }
 
         /// <summary>
@@ -71,6 +91,11 @@ namespace SS14.Shared.GameObjects
                 if (instance.Name == null || instance.Name == "")
                 {
                     throw new InvalidImplementationException(type, typeof(IComponent), "Does not have a " + nameof(IComponent.Name));
+                }
+
+                if (IgnoredComponentNames.Contains(instance.Name))
+                {
+                    throw new InvalidImplementationException(type, typeof(IComponent), "Name is in the ignored components list.");
                 }
 
                 if (componentNames.TryGetValue(instance.Name, out Type duplicate))

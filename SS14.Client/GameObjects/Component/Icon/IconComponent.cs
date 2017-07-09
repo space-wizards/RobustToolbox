@@ -18,10 +18,10 @@ namespace SS14.Client.GameObjects
             Family = ComponentFamily.Icon;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("icon", out node))
+            if (mapping.TryGetNode("icon", out node))
             {
                 SetIcon(node.AsString());
             }

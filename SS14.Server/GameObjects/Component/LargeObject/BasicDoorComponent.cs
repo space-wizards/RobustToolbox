@@ -178,25 +178,25 @@ namespace SS14.Server.GameObjects
             //    t.GasPermeable = true;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("openSprite", out node))
+            if (mapping.TryGetNode("openSprite", out node))
             {
                 openSprite = node.AsString();
             }
 
-            if (mapping.TryGetValue("closedSprite", out node))
+            if (mapping.TryGetNode("closedSprite", out node))
             {
                 closedSprite = node.AsString();
             }
 
-            if (mapping.TryGetValue("openOnBump", out node))
+            if (mapping.TryGetNode("openOnBump", out node))
             {
                 openonbump = node.AsBool();
             }
 
-            if (mapping.TryGetValue("autoCloseInterval", out node))
+            if (mapping.TryGetNode("autoCloseInterval", out node))
             {
                 var autocloseinterval = node.AsInt();
                 if (autocloseinterval == 0)

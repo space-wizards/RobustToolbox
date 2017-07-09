@@ -60,10 +60,10 @@ namespace SS14.Client.GameObjects
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("debugColor", out node))
+            if (mapping.TryGetNode("debugColor", out node))
             {
                 DebugColor = node.AsHexColor(Color.Blue);
             }

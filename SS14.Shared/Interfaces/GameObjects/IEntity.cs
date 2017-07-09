@@ -29,8 +29,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <remarks>
         /// This method does not get called in case no data field is provided.
         /// </remarks>
-        /// <param name="parameters">A dictionary representing the YAML mapping in the <c>data</c> field.</param>
-        void LoadData(YamlNode parameters);
+        /// <param name="parameters">The mapping representing the <c>data</c> field.</param>
+        void LoadData(YamlMappingNode parameters);
 
         /// <summary>
         /// Match
@@ -101,7 +101,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="component">Sending component</param>
         /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams);
+        void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method, params object[] messageParams);
 
         /// <summary>
         /// Sends a message to the counterpart component on the server side
@@ -110,7 +110,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
 
         /// <summary>

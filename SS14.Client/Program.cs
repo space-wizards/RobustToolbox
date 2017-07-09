@@ -73,7 +73,6 @@ namespace SS14.Client
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
 
@@ -99,6 +98,7 @@ namespace SS14.Client
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IGameController, GameController>();
+            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
 
             IoCManager.BuildGraph();
         }

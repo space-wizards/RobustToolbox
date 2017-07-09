@@ -42,10 +42,10 @@ namespace SS14.Server.GameObjects
         //    }
         //}
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("mass", out node))
+            if (mapping.TryGetNode("mass", out node))
             {
                 Mass = node.AsFloat();
             }

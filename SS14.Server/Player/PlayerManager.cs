@@ -148,7 +148,6 @@ namespace SS14.Server.Player
             if (session == null)
                 return; //There is no session!
 
-            Logger.Info(session.Name + " disconnected.");
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
 

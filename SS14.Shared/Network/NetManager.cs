@@ -22,24 +22,24 @@ namespace SS14.Shared.Network
     /// </summary>
     public class NetManager : INetClientManager, INetServerManager
     {
-        private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
+        private readonly Dictionary<Type, ProcessMessage> _callbacks;
 
         /// <summary>
         ///     Holds the synced lookup table of NetConnection -> NetChannel
         /// </summary>
-        private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
+        private readonly Dictionary<NetConnection, NetChannel> _channels;
 
         private readonly IConfigurationManager _config;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
         /// </summary>
-        private readonly Dictionary<string, Type> _messages = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _messages;
 
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
         /// </summary>
-        private readonly StringTable _strings = new StringTable();
+        private readonly StringTable _strings;
 
         /// <summary>
         ///     The instance of the net server.
@@ -51,9 +51,16 @@ namespace SS14.Shared.Network
         /// </summary>
         public NetManager()
         {
+            _callbacks = new Dictionary<Type, ProcessMessage>();
+            _channels = new Dictionary<NetConnection, NetChannel>();
+
             _config = IoCManager.Resolve<IConfigurationManager>();
             _config.RegisterCVar("net.port", 1212, CVarFlags.ARCHIVE);
             _config.RegisterCVar("net.allowdupeip", false, CVarFlags.ARCHIVE);
+
+            _messages = new Dictionary<string, Type>();
+
+            _strings = new StringTable();
         }
 
         /// <inheritdoc />
@@ -128,6 +135,8 @@ namespace SS14.Shared.Network
             _netPeer = new NetPeer(netConfig);
             
             _netPeer.Start();
+
+            _strings.Initialize(this);
         }
 
         /// <inheritdoc />
@@ -195,7 +204,7 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public void ClientConnect(string host)
+        public void ClientConnect(string host, int port)
         {
             Debug.Assert(_netPeer != null);
             Debug.Assert(!IsServer, "Should never be called on the server.");
@@ -203,14 +212,15 @@ namespace SS14.Shared.Network
             if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");
 
-            _netPeer.Connect(host, 1212);
+            Logger.Info($"[NET] Connecting to {host}:{port}...");
+            _netPeer.Connect(host, port);
         }
 
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
             Debug.Assert(_netPeer != null);
-            Debug.Assert(!IsServer, "Should never be called on the server.");
+            Debug.Assert(IsClient, "Should never be called on the server.");
 
             // Client should never have more than one connection.
             Debug.Assert(_netPeer.ConnectionsCount <= 1);
@@ -268,15 +278,12 @@ namespace SS14.Shared.Network
             switch (sender.Status)
             {
                 case NetConnectionStatus.Connected:
-                    Logger.Info($"[NET] {senderIp}: Connected");
                     HandleConnected(sender);
                     break;
 
                 case NetConnectionStatus.Disconnected:
-                    Logger.Log("[NET]" + senderIp + ": Disconnected");
-
                     if (_channels.ContainsKey(sender))
-                        HandleDisconnect(sender);
+                        HandleDisconnect(msg);
                     break;
             }
         }
@@ -306,20 +313,36 @@ namespace SS14.Shared.Network
 
             _strings.SendFullTable(channel);
 
+            Logger.Info($"[NET] {channel.RemoteAddress}: Connected");
+
             OnConnected(channel);
         }
 
-        private void HandleDisconnect(NetConnection sender)
+        private void HandleDisconnect(NetIncomingMessage message)
         {
-            var channel = _channels[sender];
+            string reason;
+            try
+            {
+                message.ReadByte(); // status
+                reason = message.ReadString();
+            }
+            catch (NetException e)
+            {
+                reason = String.Empty;
+            }
+
+            var conn = message.SenderConnection;
+            var channel = _channels[conn];
+
+            Logger.Info($"[NET] {channel.RemoteAddress}: Disconnected ({reason})");
+
             OnDisconnected(channel);
-            _channels.Remove(sender);
+            _channels.Remove(conn);
         }
 
+        // server-side disconnect
         private void DisconnectChannel(NetChannel channel, string reason)
         {
-            OnDisconnected(channel);
-            _channels.Remove(channel.Connection);
             channel.Connection.Disconnect(reason);
         }
 

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.IoC;
 
 namespace SS14.Shared.Network
 {
@@ -10,7 +9,7 @@ namespace SS14.Shared.Network
     /// </summary>
     public class StringTable
     {
-        private readonly INetManager _network;
+        private INetManager _network;
         private readonly Dictionary<int, string> _strings;
         private int _lastStringIndex;
 
@@ -20,14 +19,25 @@ namespace SS14.Shared.Network
         public StringTable()
         {
             _strings = new Dictionary<int, string>();
+        }
 
-            _network = IoCManager.Resolve<INetManager>();
-            _network.RegisterNetMessage<MsgStringTableEntry>(MsgStringTableEntry.NAME, (int) MsgStringTableEntry.ID, message =>
+        /// <summary>
+        /// The ID of an invalid string.
+        /// </summary>
+        public static int InvalidStringId => -1;
+
+        /// <summary>
+        /// Initializes the string table.
+        /// </summary>
+        public void Initialize(INetManager network)
+        {
+            _network = network;
+            _network.RegisterNetMessage<MsgStringTableEntry>(MsgStringTableEntry.NAME, (int)MsgStringTableEntry.ID, message =>
             {
                 if (_network.IsServer) // Server does not receive entries from clients.
                     return;
 
-                var entry = (MsgStringTableEntry) message;
+                var entry = (MsgStringTableEntry)message;
                 var id = entry.EntryId;
                 var str = string.IsNullOrEmpty(entry.EntryString) ? null : entry.EntryString;
 
@@ -44,11 +54,6 @@ namespace SS14.Shared.Network
                 }
             });
         }
-
-        /// <summary>
-        /// The ID of an invalid string.
-        /// </summary>
-        public static int InvalidStringId => -1;
 
         /// <summary>
         ///     Adds a string to the table. The ID is generated automatically.
@@ -190,7 +195,7 @@ namespace SS14.Shared.Network
         public static readonly MsgGroups GROUP = MsgGroups.STRING;
 
         public static readonly string NAME = ID.ToString();
-        public MsgStringTableEntry() : base(NAME, GROUP, ID) { }
+        public MsgStringTableEntry(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
         /// <summary>

@@ -355,7 +355,7 @@ namespace SS14.Client.State.States
 
             _connectTime = DateTime.Now;
             _isConnecting = true;
-            NetworkManager.ClientConnect(address);
+            NetworkManager.ClientConnect(address, 1212);
         }
 
         #endregion

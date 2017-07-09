@@ -52,7 +52,7 @@ namespace SS14.Server.Player
         private string _name;
         public string Name
         {
-            get => String.IsNullOrWhiteSpace(_name) ? _name : "Unknown";
+            get => string.IsNullOrWhiteSpace(_name) ? "Unknown" : _name;
             set => _name = value;
         }
         
@@ -105,10 +105,10 @@ namespace SS14.Server.Player
             }
         }
 
-        public void SetName(string _name)
+        public void SetName(string name)
         {
-            Name = _name;
-            Logger.Log("Player set name: " + ConnectedClient.RemoteAddress + " -> " + Name);
+            Name = name;
+            Logger.Log($"[SRV] {ConnectedClient.RemoteAddress}: Player set name: {Name}");
             SetAttachedEntityName();
             UpdatePlayerState();
         }
@@ -118,8 +118,8 @@ namespace SS14.Server.Player
             ConnectedTime = DateTime.Now;
             Status = SessionStatus.Connected;
             UpdatePlayerState();
+
             //Put player in lobby immediately.
-            Logger.Log("Player connected - " + ConnectedClient.RemoteAddress);
             JoinLobby();
         }
 

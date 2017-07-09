@@ -87,17 +87,17 @@ namespace SS14.Server
         public BaseServer(ICommandLineArgs args, IServerLogManager logManager)
         {
             //Sets up the configMgr
-            var configMgr = IoCManager.Resolve<IConfigurationManager>();
-            configMgr.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
+            _config = IoCManager.Resolve<IConfigurationManager>();
+            _config.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
 
             //Sets up Logging
-            configMgr.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
-            configMgr.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
 
-            var logPath = configMgr.GetCVar<string>("log.path");
-            var logFormat = configMgr.GetCVar<string>("log.format");
+            var logPath = _config.GetCVar<string>("log.path");
+            var logFormat = _config.GetCVar<string>("log.format");
             var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             var fullPath = Path.Combine(logPath, logFilename);
 
@@ -106,7 +106,7 @@ namespace SS14.Server
 
             // Create log directory if it does not exist yet.
             Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-            logManager.CurrentLevel = configMgr.GetCVar<LogLevel>("log.level");
+            logManager.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
             logManager.LogPath = logPath;
         }
 

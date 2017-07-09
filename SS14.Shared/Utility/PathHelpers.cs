@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System;
 using System.Reflection;
 using System.Collections.Generic;
@@ -22,13 +22,13 @@ namespace SS14.Shared.Utility
         /// </summary>
         public static string ExecutableRelativeFile(string file)
         {
-            return Path.GetFullPath(Path.Combine(GetExecutableDirectory(), file));
+            return Path.Combine(GetExecutableDirectory(), file);
         }
 
         public static string AssemblyRelativeFile(string file, Assembly assembly)
         {
-            //string path = new Uri(assembly.CodeBase).LocalPath;
-            return Path.GetFullPath(Path.Combine(GetExecutableDirectory(), file));
+            string path = new Uri(assembly.CodeBase).LocalPath;
+            return Path.Combine(GetExecutableDirectory(), file);
         }
 
         public static IEnumerable<string> GetFiles(string path)

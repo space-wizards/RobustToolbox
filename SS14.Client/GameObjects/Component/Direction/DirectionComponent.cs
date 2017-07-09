@@ -54,11 +54,11 @@ namespace SS14.Client.GameObjects
         private Direction DetermineDirection(Vector2f from, Vector2f to)
         {
             Vector2f delta = to - from;
-            if (delta.Length() < 0.001)
+            if (delta.Length() < 0.1)
             {
                 return _lastDeterminedDirection;
             }
-            
+
             _lastDeterminedDirection = from.DirectionTo(to, fallback: _lastDeterminedDirection);
             return _lastDeterminedDirection;
         }

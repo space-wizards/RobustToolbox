@@ -103,7 +103,7 @@ namespace SS14.Client.Resources
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
-                string debugPath = ".." + Path.DirectorySeparatorChar;
+                string debugPath = "..\\";
                 debugPath += zipPath;
                 zipPath = debugPath;
             }

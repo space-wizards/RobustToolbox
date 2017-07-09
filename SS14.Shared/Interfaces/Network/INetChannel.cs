@@ -16,7 +16,7 @@ namespace SS14.Shared.Interfaces.Network
         NetConnection Connection { get; }
 
         /// <summary>
-        /// The NetPeer this belongs to.
+        ///     The NetPeer this belongs to.
         /// </summary>
         INetManager NetPeer { get; }
 
@@ -31,12 +31,12 @@ namespace SS14.Shared.Interfaces.Network
         long ConnectionId { get; }
 
         /// <summary>
-        /// The IP address of the remote peer.
+        ///     The IP address of the remote peer.
         /// </summary>
         string RemoteAddress { get; }
 
         /// <summary>
-        /// Average round trip time in milliseconds between the remote peer and us. 
+        ///     Average round trip time in milliseconds between the remote peer and us.
         /// </summary>
         int Ping { get; }
 

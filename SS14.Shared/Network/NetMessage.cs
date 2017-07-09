@@ -4,7 +4,7 @@ using SS14.Shared.Interfaces.Network;
 namespace SS14.Shared.Network
 {
     /// <summary>
-    /// The group the message belongs to, used for statistics.
+    /// The group the message belongs to, used for statistics and packet channels.
     /// </summary>
     public enum MsgGroups
     {
@@ -34,14 +34,37 @@ namespace SS14.Shared.Network
         COMMAND,
     }
 
+    /// <summary>
+    /// A packet message that the NetManager sends/receives.
+    /// </summary>
     public abstract class NetMessage
     {
+        /// <summary>
+        /// String identifier of the message type.
+        /// </summary>
         public string MsgName { get; }
+
+        /// <summary>
+        /// The group this message type belongs to.
+        /// </summary>
         public MsgGroups MsgGroup { get; }
+
+        /// <summary>
+        /// Legacy enum ID for this message.
+        /// </summary>
         public NetMessages MsgId { get; }
 
+        /// <summary>
+        /// The channel that this message came in on.
+        /// </summary>
         public INetChannel MsgChannel { get; set; }
 
+        /// <summary>
+        /// Constructs an instance of the NetMessage.
+        /// </summary>
+        /// <param name="name">String identifier of the message type.</param>
+        /// <param name="group">The group this message type belongs to.</param>
+        /// <param name="id">Legacy enum ID for this message.</param>
         internal NetMessage(string name, MsgGroups group, NetMessages id)
         {
             MsgName = name;

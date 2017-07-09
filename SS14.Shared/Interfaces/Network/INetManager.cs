@@ -41,7 +41,7 @@ namespace SS14.Shared.Interfaces.Network
         int ChannelCount { get; }
 
         /// <summary>
-        /// The port that the peer is listening on.
+        ///     The port that the peer is listening on.
         /// </summary>
         int Port { get; }
 
@@ -110,6 +110,7 @@ namespace SS14.Shared.Interfaces.Network
         /// </summary>
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
+        /// <param name="id">Legacy ID of this message. Will be removed.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
         void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
             where T : NetMessage;
@@ -138,9 +139,20 @@ namespace SS14.Shared.Interfaces.Network
         [Obsolete("You should be using NetMessages.")]
         NetOutgoingMessage CreateMessage();
 
+        /// <summary>
+        /// Legacy function for sending a raw packet to a NetConnection. This will be removed.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="client"></param>
+        /// <param name="method"></param>
         [Obsolete("You should be using NetMessages.")]
         void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method);
 
+        /// <summary>
+        /// Legacy function for sending a raw packet to all connected NetConnectionss on the peer. This will be removed.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="method"></param>
         [Obsolete("You should be using NetMessages.")]
         void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method);
 

@@ -332,21 +332,41 @@ namespace SS14.Shared.Network
                 return;
             }
 
+            string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
+
+            if (msg.LengthBytes < 1)
+                Logger.Warning($"[NET] {address}: Received empty packet.");
+
             var id = msg.ReadByte();
 
             if (!_strings.TryGetString(id, out string name))
-                throw new Exception($"[NET] No string in table with ID {(NetMessages) id}. Did you register it?");
+            {
+                Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages) id}.");
+                return;
+            }
 
             if (!_messages.TryGetValue(name, out Type packetType))
-                throw new Exception($"[NET] No message with Name {name}. Did you register it?");
+            {
+                Logger.Warning($"[NET] {address}: No message with Name {name}.");
+                return;
+            }
 
             var channel = GetChannel(msg.SenderConnection);
             var instance = (NetMessage) Activator.CreateInstance(packetType, channel);
             instance.MsgChannel = channel;
+
+            try
+            {
+                instance.ReadFromBuffer(msg);
+            }
+            catch (NetException e)
+            {
+                Logger.Warning($"[NET] {address}: Failed to deserialize packet: {e.Message}");
+            }
+
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
                 return;
 
-            instance.ReadFromBuffer(msg);
             callback?.Invoke(instance);
         }
 
@@ -366,11 +386,6 @@ namespace SS14.Shared.Network
         public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
         {
             _netPeer.SendMessage(message, client, method);
-        }
-
-        public void SendToMany(NetOutgoingMessage message, List<NetConnection> recipients)
-        {
-            _netPeer.SendMessage(message, recipients, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
         #endregion Packets
@@ -401,7 +416,7 @@ namespace SS14.Shared.Network
             var packet = _netPeer.CreateMessage(4);
 
             if (! _strings.TryFindStringId(message.MsgName, out int msgId))
-                throw new Exception($"[NET] No string in table with name {message.MsgName}. Was it registered?");
+                throw new NetManagerException($"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
             packet.Write((byte) msgId);
             message.WriteToBuffer(packet);
@@ -475,5 +490,25 @@ namespace SS14.Shared.Network
         public event EventHandler<NetMessageArgs> MessageArrived;
 
         #endregion Events
+    }
+
+    /// <summary>
+    ///     Generic exception thrown by the NetManager class.
+    /// </summary>
+    public class NetManagerException : Exception
+    {
+        public NetManagerException()
+        {
+        }
+
+        public NetManagerException(string message)
+            : base(message)
+        {
+        }
+
+        public NetManagerException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 }

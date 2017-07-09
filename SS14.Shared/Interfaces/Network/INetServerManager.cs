@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace SS14.Shared.Interfaces.Network
 {
+    /// <summary>
+    /// The server version of the INetManager.
+    /// </summary>
     public interface INetServerManager : INetManager
     {
     }

@@ -34,10 +34,22 @@ using SS14.Shared.Utility;
 
 namespace SS14.Server
 {
+    /// <summary>
+    /// Event delegate for when the run level of the BaseServer changes.
+    /// </summary>
+    /// <param name="oldLevel">Previous level.</param>
+    /// <param name="newLevel">Net Level.</param>
     public delegate void EventRunLevelChanged(RunLevel oldLevel, RunLevel newLevel);
 
+    /// <summary>
+    /// Event delegate for when the server ticks.
+    /// </summary>
+    /// <param name="curTick">Current tick the server is at.</param>
     public delegate void EventTick(int curTick);
 
+    /// <summary>
+    /// The master class that runs the rest of the engine.
+    /// </summary>
     public class BaseServer : IBaseServer
     {
         private const int GAME_COUNTDOWN = 15;
@@ -475,17 +487,14 @@ namespace SS14.Server
 
         private void HandleAdminMessage(MsgAdmin msg)
         {
-            switch (msg.MsgId)
+            if (msg.MsgId == NetMessages.RequestEntityDeletion)
             {
-                case NetMessages.RequestEntityDeletion:
+                //TODO: Admin Permissions, requires admin system.
+                //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
+                //        adminPermissions.isAdmin || true)
 
-                    //TODO: Admin Permissions, requires admin system.
-                    //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
-                    //        adminPermissions.isAdmin || true)
-
-                    var delEnt = _entities.GetEntity(msg.EntityId);
-                    if (delEnt != null) _entities.DeleteEntity(delEnt);
-                    break;
+                var delEnt = _entities.GetEntity(msg.EntityId);
+                if (delEnt != null) _entities.DeleteEntity(delEnt);
             }
         }
 

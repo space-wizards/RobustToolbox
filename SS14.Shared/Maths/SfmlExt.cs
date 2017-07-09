@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using System;
 
@@ -93,9 +93,15 @@ namespace SS14.Shared.Maths
                 return fallback;
             }
 
+            // Direction vector of travel
+            var delta = target - origin;
+
+            //Clunelib specific rendering code
+            delta.Y = delta.Y * -1.0f;
+
             // Angle in degrees.
             // Keep in mind: Cartesian plane so 0° is to the right.
-            var angle = FloatMath.ToDegrees((float)Math.Atan2(target.Y - origin.Y, target.X - origin.X));
+            var angle = FloatMath.ToDegrees((float)Math.Atan2(delta.Y, delta.X));
 
             // The directions are assumed to be perfect 45° surfaces.
             // So 0° is between the east one, and 22.5° is the edge between east and north east.

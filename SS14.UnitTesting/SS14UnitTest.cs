@@ -242,6 +242,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
                     IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
+                    IoCManager.Register<IBaseServer, BaseServer>();
                     break;
 
                 default:

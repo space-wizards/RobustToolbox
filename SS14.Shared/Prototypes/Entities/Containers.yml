@@ -5,6 +5,7 @@
   - type: Transform
   - type: Velocity
   - type: Clickable
+  - type: Direction
   - type: WearableAnimatedSprite
     sprite: player_toolbox
     notWornSprite: toolbox_r

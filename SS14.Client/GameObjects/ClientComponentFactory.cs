@@ -7,6 +7,11 @@ namespace SS14.Client.GameObjects
     {
         protected override HashSet<string> IgnoredComponentNames { get; } = new HashSet<string>()
         {
+            "BasicInteractable",
+            "BasicDoor",
+            "WallMounted",
+            "Worktop",
+            "BasicLargeObject"
         };
     }
 }

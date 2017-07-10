@@ -211,6 +211,7 @@
     <Compile Include="GameObjects\Component\LargeObject\BasicDoorComponent.cs" />
     <Compile Include="GameObjects\Component\LargeObject\BasicLargeObjectComponent.cs" />
     <Compile Include="GameObjects\Component\Light\LightComponent.cs" />
+    <Compile Include="GameObjects\Component\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\SlaveMoverComponent.cs" />
@@ -289,48 +290,6 @@
     <Compile Include="ServerConsole\Commands\ServerManagement.cs" />
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\Commands\ThrowException.cs" />
-    <Content Include="Prototypes\Clothing.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Containers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Doors.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\GlassWalls.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Internals.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\JanitorItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Lights.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Lockers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\MedicalItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Misc.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Mobs.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Tables.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Wallmounted.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Weapons.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

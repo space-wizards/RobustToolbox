@@ -1,21 +1,25 @@
 - type: entity
-  id: Glass
-  name: Glass
+  id: Door
+  name: Door
   components:
   - type: Transform
   - type: Velocity
   - type: Direction
   - type: Clickable
   - type: Sprite
-    sprites:
-    - glass
-    - glass_shattered
     drawdepth: FloorPlaceable
+    sprites:
+    - door_ew
+    - door_ewo
+
+  - type: Icon
+    icon: door_ew
+
   - type: BasicInteractable
   - type: BasicMover
-  - type: BasicLargeObjectComponents
   - type: Collidable
-    TweakAABBTop: 48
-  - type: Icon
-    icon: glass
-
+  - type: BasicDoor
+    openSprite: door_ewo
+    closedSprite: door_ew
+    openOnBump: true
+    autoCloseInterval: 5000

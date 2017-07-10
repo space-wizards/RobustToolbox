@@ -7,6 +7,7 @@ namespace SS14.Server.GameObjects
     {
         protected override HashSet<string> IgnoredComponentNames { get; } = new HashSet<string>()
         {
+            "Icon"
         };
     }
 }

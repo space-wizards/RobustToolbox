@@ -230,8 +230,31 @@
     <Compile Include="Reflection\ReflectionManager.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
+    <Content Include="Prototypes\Entities\Clothing.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Containers.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Doors.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\JanitorItems.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Lights.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Mobs.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Tables.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prototypes\Entities\Wallmounted.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

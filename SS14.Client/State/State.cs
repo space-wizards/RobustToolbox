@@ -18,7 +18,7 @@ namespace SS14.Client.State
         protected readonly IConfigurationManager ConfigurationManager;
         protected readonly IKeyBindingManager KeyBindingManager;
         protected readonly IMapManager MapManager;
-        protected readonly INetClientManager NetworkManager;
+        protected readonly IClientNetManager NetworkManager;
         protected readonly IPlacementManager PlacementManager;
         protected readonly IPlayerManager PlayerManager;
         protected readonly IResourceManager ResourceManager;
@@ -28,7 +28,7 @@ namespace SS14.Client.State
         protected State(IDictionary<Type, object> managers)
         {
             StateManager = (IStateManager) managers[typeof (IStateManager)];
-            NetworkManager = (INetClientManager) managers[typeof (INetClientManager)];
+            NetworkManager = (IClientNetManager) managers[typeof (IClientNetManager)];
             ResourceManager = (IResourceManager) managers[typeof (IResourceManager)];
             UserInterfaceManager = (IUserInterfaceManager) managers[typeof (IUserInterfaceManager)];
             MapManager = (IMapManager) managers[typeof (IMapManager)];

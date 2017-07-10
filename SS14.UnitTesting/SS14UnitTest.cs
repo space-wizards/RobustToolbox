@@ -210,7 +210,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<ICollisionManager, CollisionManager>();
                     IoCManager.Register<IEntityManager, ClientEntityManager>();
                     IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-                    IoCManager.Register<INetClientManager, NetManager>();
+                    IoCManager.Register<IClientNetManager, NetManager>();
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<ILightManager, LightManager>();
@@ -229,7 +229,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IServerLogManager, ServerLogManager>();
                     IoCManager.Register<IMessageLogger, MessageLogger>();
                     IoCManager.Register<IChatManager, ChatManager>();
-                    IoCManager.Register<INetServerManager, NetManager>();
+                    IoCManager.Register<IServerNetManager, NetManager>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<IConsoleManager, ConsoleManager>();

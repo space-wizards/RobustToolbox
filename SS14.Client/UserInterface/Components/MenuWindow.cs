@@ -16,7 +16,7 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class MenuWindow : Window
     {
-        private readonly INetClientManager _netMgr = IoCManager.Resolve<INetClientManager>();
+        private readonly IClientNetManager _netMgr = IoCManager.Resolve<IClientNetManager>();
         private readonly IPlacementManager _placeMgr = IoCManager.Resolve<IPlacementManager>();
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();

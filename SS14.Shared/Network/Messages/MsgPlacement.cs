@@ -8,47 +8,46 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.PlacementManagerMessage;
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
 
         public static readonly string NAME = ID.ToString();
         public MsgPlacement(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public PlacementManagerMessage PlaceType;
-        public string align;
-        public bool isTile;
-        public ushort tileType;
-        public string entityTemplateName;
-        public float xRcv;
-        public float yRcv;
-        public Direction dirRcv;
+        public PlacementManagerMessage PlaceType { get; set; }
+        public string Align { get; set; }
+        public bool IsTile { get; set; }
+        public ushort TileType { get; set; }
+        public string EntityTemplateName { get; set; }
+        public float XRcv { get; set; }
+        public float YRcv { get; set; }
+        public Direction DirRcv { get; set; }
 
-        public bool IsTile;
-        public int range;
-        public string objType;
-        public string alignOption;
+        public int Range { get; set; }
+        public string ObjType { get; set; }
+        public string AlignOption { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             PlaceType = (PlacementManagerMessage) buffer.ReadByte();
             if(PlaceType == PlacementManagerMessage.RequestPlacement)
             {
-                align = buffer.ReadString();
-                isTile = buffer.ReadBoolean();
+                Align = buffer.ReadString();
+                IsTile = buffer.ReadBoolean();
 
-                if (isTile) tileType = buffer.ReadUInt16();
-                else entityTemplateName = buffer.ReadString();
+                if (IsTile) TileType = buffer.ReadUInt16();
+                else EntityTemplateName = buffer.ReadString();
 
-                xRcv = buffer.ReadFloat();
-                yRcv = buffer.ReadFloat();
-                dirRcv = (Direction)buffer.ReadByte();
+                XRcv = buffer.ReadFloat();
+                YRcv = buffer.ReadFloat();
+                DirRcv = (Direction)buffer.ReadByte();
             }
             else if (PlaceType == PlacementManagerMessage.StartPlacement)
             {
-                range = buffer.ReadInt32();
+                Range = buffer.ReadInt32();
                 IsTile = buffer.ReadBoolean();
-                objType = buffer.ReadString();
-                alignOption = buffer.ReadString();
+                ObjType = buffer.ReadString();
+                AlignOption = buffer.ReadString();
             } 
             else if (PlaceType == PlacementManagerMessage.CancelPlacement)
                 throw new NotImplementedException();
@@ -63,19 +62,19 @@ namespace SS14.Shared.Network.Messages
             switch (PlaceType)
             {
                 case PlacementManagerMessage.RequestPlacement:
-                    buffer.Write(align);
-                    buffer.Write(isTile);
-                    if(isTile) buffer.Write(tileType);
-                    else buffer.Write(entityTemplateName);
-                    buffer.Write(xRcv);
-                    buffer.Write(yRcv);
-                    buffer.Write((byte)dirRcv);
+                    buffer.Write(Align);
+                    buffer.Write(IsTile);
+                    if(IsTile) buffer.Write(TileType);
+                    else buffer.Write(EntityTemplateName);
+                    buffer.Write(XRcv);
+                    buffer.Write(YRcv);
+                    buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:
-                    buffer.Write(range);
+                    buffer.Write(Range);
                     buffer.Write(IsTile);
-                    buffer.Write(objType);
-                    buffer.Write(alignOption);
+                    buffer.Write(ObjType);
+                    buffer.Write(AlignOption);
                     break;
                 case PlacementManagerMessage.CancelPlacement:
                 case PlacementManagerMessage.PlacementFailed:

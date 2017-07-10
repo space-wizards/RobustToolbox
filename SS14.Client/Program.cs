@@ -92,7 +92,7 @@ namespace SS14.Client
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<INetClientManager, NetManager>();
+            IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<ILightManager, LightManager>();

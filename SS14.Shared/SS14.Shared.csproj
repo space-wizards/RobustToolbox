@@ -128,9 +128,9 @@
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
-    <Compile Include="Interfaces\Network\INetClientManager.cs" />
+    <Compile Include="Interfaces\Network\IClientNetManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
-    <Compile Include="Interfaces\Network\INetServerManager.cs" />
+    <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />

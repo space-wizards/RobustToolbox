@@ -8,13 +8,14 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public const NetMessages ID = NetMessages.RequestEntityDeletion;
-        public const MsgGroups GROUP = MsgGroups.ENTITY;
+        public const MsgGroups GROUP = MsgGroups.Entity;
         public static readonly string NAME = ID.ToString();
         
         public MsgAdmin(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public int EntityId;
+        public int EntityId { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             EntityId = buffer.ReadInt32();

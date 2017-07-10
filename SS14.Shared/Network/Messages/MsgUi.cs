@@ -7,14 +7,14 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.PlayerUiMessage;
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
 
         public static readonly string NAME = ID.ToString();
         public MsgUi(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public UiManagerMessage UiType;
-        public GuiComponentType CompType;
+        public UiManagerMessage UiType { get; set; }
+        public GuiComponentType CompType { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

@@ -18,7 +18,7 @@ namespace SS14.Client.GameObjects
     {
         private bool _messageProfiling = false;
         [Dependency]
-        private readonly INetClientManager _networkManager;
+        private readonly IClientNetManager _networkManager;
         [Dependency]
         private readonly IConfigurationManager _configManager;
 

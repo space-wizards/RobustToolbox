@@ -38,7 +38,7 @@ namespace SS14.Client
         [Dependency]
         readonly private INetworkGrapher _netGrapher;
         [Dependency]
-        readonly private INetClientManager _networkManager;
+        readonly private IClientNetManager _networkManager;
         [Dependency]
         readonly private IStateManager _stateManager;
         [Dependency]

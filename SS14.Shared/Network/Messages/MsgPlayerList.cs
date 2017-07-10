@@ -9,7 +9,7 @@ namespace SS14.Shared.Network.Messages
         #region REQUIRED
 
         public static readonly string NAME = "PlayerList";
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
         public static readonly NetMessages ID = NetMessages.PlayerList;
 
         public MsgPlayerList(INetChannel channel)
@@ -19,27 +19,27 @@ namespace SS14.Shared.Network.Messages
 
         #endregion
 
-        public byte PlyCount;
-        public List<PlyInfo> plyrs;
+        public byte PlyCount { get; set; }
+        public List<PlyInfo> Plyrs { get; set; }
 
         public class PlyInfo
         {
-            public string name;
-            public byte status;
-            public float ping;
+            public string Name { get; set; }
+            public byte Status { get; set; }
+            public float Ping { get; set; }
         }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            plyrs = new List<PlyInfo>();
+            Plyrs = new List<PlyInfo>();
             PlyCount = buffer.ReadByte();
             for (var i = 0; i < PlyCount; i++)
             {
                 var plyNfo = new PlyInfo();
-                plyNfo.name = buffer.ReadString();
-                plyNfo.status = buffer.ReadByte();
-                plyNfo.ping = buffer.ReadFloat();
-                plyrs.Add(plyNfo);
+                plyNfo.Name = buffer.ReadString();
+                plyNfo.Status = buffer.ReadByte();
+                plyNfo.Ping = buffer.ReadFloat();
+                Plyrs.Add(plyNfo);
             }
         }
 
@@ -47,11 +47,11 @@ namespace SS14.Shared.Network.Messages
         {
             buffer.Write(PlyCount);
 
-            foreach (var ply in plyrs)
+            foreach (var ply in Plyrs)
             {
-                buffer.Write(ply.name);
-                buffer.Write(ply.status);
-                buffer.Write(ply.ping);
+                buffer.Write(ply.Name);
+                buffer.Write(ply.Status);
+                buffer.Write(ply.Ping);
             }
         }
     }

@@ -93,7 +93,7 @@ namespace SS14.Server.Player
 
         public void HandleNetworkMessage(MsgSession message)
         {
-            var messageType = message.msgType;
+            var messageType = message.MsgType;
             switch (messageType)
             {
                 case PlayerSessionMessage.Verb:
@@ -133,10 +133,10 @@ namespace SS14.Server.Player
 
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgSession>();
 
-            message.msgType = PlayerSessionMessage.AddPostProcessingEffect;
+            message.MsgType = PlayerSessionMessage.AddPostProcessingEffect;
             message.PpType = type;
             message.PpDuration = duration;
 
@@ -150,18 +150,18 @@ namespace SS14.Server.Player
             if (attachedEntity == null)
                 throw new Exception("Cannot attach player session to entity: No entity attached.");
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgSession>();
 
-            message.msgType = PlayerSessionMessage.AttachToEntity;
-            message.uid = attachedEntity.Uid;
+            message.MsgType = PlayerSessionMessage.AttachToEntity;
+            message.Uid = attachedEntity.Uid;
 
             net.ServerSendMessage(message, ConnectedClient);
         }
 
         private void HandleVerb(MsgSession message)
         {
-            DispatchVerb(message.verb, message.uid);
+            DispatchVerb(message.Verb, message.Uid);
         }
 
         public void DispatchVerb(string verb, int uid)
@@ -214,7 +214,7 @@ namespace SS14.Server.Player
             if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
                 return;
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgJoinGame>();
             net.ServerSendMessage(message, ConnectedClient);
 
@@ -224,7 +224,7 @@ namespace SS14.Server.Player
 
         public void CreateGuiMessage(GuiComponentType gui)
         {
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgUi>();
 
             message.UiType = UiManagerMessage.ComponentMessage;

@@ -11,27 +11,27 @@ namespace SS14.Shared.Network
         /// <summary>
         /// Error state, the message needs to set a different one.
         /// </summary>
-        ERROR = 0,
+        Error = 0,
 
         /// <summary>
         /// A core message, like connect, disconnect, and tick.
         /// </summary>
-        CORE,
+        Core,
 
         /// <summary>
         /// Entity message, for keeping entities in sync.
         /// </summary>
-        ENTITY,
+        Entity,
 
         /// <summary>
         /// A string message, for chat.
         /// </summary>
-        STRING,
+        String,
 
         /// <summary>
         /// A command message from client -> server.
         /// </summary>
-        COMMAND,
+        Command,
     }
 
     /// <summary>

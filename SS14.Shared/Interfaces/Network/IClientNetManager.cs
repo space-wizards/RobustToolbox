@@ -7,7 +7,7 @@ namespace SS14.Shared.Interfaces.Network
     /// <summary>
     ///     The Client version of the INetManager.
     /// </summary>
-    public interface INetClientManager : INetManager
+    public interface IClientNetManager : INetManager
     {
         /// <summary>
         ///     The NetChannel of the server.

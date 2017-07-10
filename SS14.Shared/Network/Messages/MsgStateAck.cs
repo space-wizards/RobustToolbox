@@ -8,7 +8,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.StateAck;
-        public static readonly MsgGroups GROUP = MsgGroups.ENTITY;
+        public static readonly MsgGroups GROUP = MsgGroups.Entity;
 
         public static readonly string NAME = ID.ToString();
         public MsgStateAck(INetChannel channel)
@@ -16,7 +16,8 @@ namespace SS14.Shared.Network.Messages
         { }
         #endregion
 
-        public uint Sequence;
+        public uint Sequence { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             Sequence = buffer.ReadUInt32();

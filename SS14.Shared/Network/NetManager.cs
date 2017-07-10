@@ -20,48 +20,32 @@ namespace SS14.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public class NetManager : INetClientManager, INetServerManager
+    public class NetManager : IClientNetManager, IServerNetManager
     {
-        private readonly Dictionary<Type, ProcessMessage> _callbacks;
+        private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
         /// <summary>
         ///     Holds the synced lookup table of NetConnection -> NetChannel
         /// </summary>
-        private readonly Dictionary<NetConnection, NetChannel> _channels;
+        private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
 
+        [Dependency]
         private readonly IConfigurationManager _config;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
         /// </summary>
-        private readonly Dictionary<string, Type> _messages;
+        private readonly Dictionary<string, Type> _messages = new Dictionary<string, Type>();
 
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
         /// </summary>
-        private readonly StringTable _strings;
+        private readonly StringTable _strings = new StringTable();
 
         /// <summary>
         ///     The instance of the net server.
         /// </summary>
         private NetPeer _netPeer;
-
-        /// <summary>
-        ///     Default constructor.
-        /// </summary>
-        public NetManager()
-        {
-            _callbacks = new Dictionary<Type, ProcessMessage>();
-            _channels = new Dictionary<NetConnection, NetChannel>();
-
-            _config = IoCManager.Resolve<IConfigurationManager>();
-            _config.RegisterCVar("net.port", 1212, CVarFlags.ARCHIVE);
-            _config.RegisterCVar("net.allowdupeip", false, CVarFlags.ARCHIVE);
-
-            _messages = new Dictionary<string, Type>();
-
-            _strings = new StringTable();
-        }
 
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
@@ -97,7 +81,8 @@ namespace SS14.Shared.Network
 
             IsServer = isServer;
 
-            var config = IoCManager.Resolve<IConfigurationManager>();
+            _config.RegisterCVar("net.port", 1212, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("net.allowdupeip", false, CVarFlags.ARCHIVE);
 
             var netConfig = new NetPeerConfiguration("SS13_NetTag");
 
@@ -109,25 +94,25 @@ namespace SS14.Shared.Network
 
             if (!isServer)
             {
-                config.RegisterCVar("net.server", "127.0.0.1", CVarFlags.ARCHIVE);
-                config.RegisterCVar("net.updaterate", 20, CVarFlags.ARCHIVE);
-                config.RegisterCVar("net.cmdrate", 30, CVarFlags.ARCHIVE);
-                config.RegisterCVar("net.interpolation", 0.1f, CVarFlags.ARCHIVE);
-                config.RegisterCVar("net.rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.server", "127.0.0.1", CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.updaterate", 20, CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.cmdrate", 30, CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.interpolation", 0.1f, CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
             }
 
 #if DEBUG
-            config.RegisterCVar("net.fakelag", false, CVarFlags.CHEAT);
-            config.RegisterCVar("net.fakeloss", 0.0f, CVarFlags.CHEAT);
-            config.RegisterCVar("net.fakelagmin", 0.0f, CVarFlags.CHEAT);
-            config.RegisterCVar("net.fakelagrand", 0.0f, CVarFlags.CHEAT);
+            _config.RegisterCVar("net.fakelag", false, CVarFlags.CHEAT);
+            _config.RegisterCVar("net.fakeloss", 0.0f, CVarFlags.CHEAT);
+            _config.RegisterCVar("net.fakelagmin", 0.0f, CVarFlags.CHEAT);
+            _config.RegisterCVar("net.fakelagrand", 0.0f, CVarFlags.CHEAT);
 
             //Simulate Latency
-            if (config.GetCVar<bool>("net.fakelag"))
+            if (_config.GetCVar<bool>("net.fakelag"))
             {
-                netConfig.SimulatedLoss = config.GetCVar<float>("net.fakeloss");
-                netConfig.SimulatedMinimumLatency = config.GetCVar<float>("net.fakelagmin");
-                netConfig.SimulatedRandomLatency = config.GetCVar<float>("net.fakelagrand");
+                netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
+                netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
+                netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
             }
 
             netConfig.ConnectionTimeout = 30000f;
@@ -232,26 +217,7 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public INetChannel ServerChannel
-        {
-            get
-            {
-                INetChannel retVal;
-
-                if (_netPeer.ConnectionsCount <= 0)
-                    return null;
-                try
-                {
-                    retVal = GetChannel(_netPeer.Connections[0]);
-                }
-                catch
-                {
-                    // preempted!
-                    return null;
-                }
-                return retVal;
-            }
-        }
+        public INetChannel ServerChannel => _netPeer.ConnectionsCount > 0 ? GetChannel(_netPeer.Connections[0]) : null;
 
         /// <summary>
         ///     Gets the NetChannel of a peer NetConnection.
@@ -261,12 +227,12 @@ namespace SS14.Shared.Network
         private INetChannel GetChannel(NetConnection connection)
         {
             if (connection == null)
-                return null;
+                throw new ArgumentNullException(nameof(connection));
 
             if (_channels.TryGetValue(connection, out NetChannel channel))
                 return channel;
 
-            return null;
+            throw new NetManagerException("There is no NetChannel for this NetConnection.");
         }
 
         private void HandleStatusChanged(NetIncomingMessage msg)

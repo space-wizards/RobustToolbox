@@ -7,7 +7,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly string NAME = "ServerInfoReq";
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
         public static readonly NetMessages ID = NetMessages.WelcomeMessageReq;
 
         public MsgServerInfoReq(INetChannel channel)

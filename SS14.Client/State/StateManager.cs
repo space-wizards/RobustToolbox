@@ -23,7 +23,7 @@ namespace SS14.Client.State
         [Dependency]
         private readonly IConfigurationManager configurationManager;
         [Dependency]
-        private readonly INetClientManager networkManager;
+        private readonly IClientNetManager networkManager;
         [Dependency]
         private readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
@@ -48,7 +48,7 @@ namespace SS14.Client.State
 
         public void PostInject()
         {
-            _managers[typeof(INetClientManager)] = networkManager;
+            _managers[typeof(IClientNetManager)] = networkManager;
             _managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
             _managers[typeof(IResourceManager)] = resourceManager;
             _managers[typeof(IMapManager)] = mapManager;

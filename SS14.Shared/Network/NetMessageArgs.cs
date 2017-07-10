@@ -8,8 +8,8 @@ namespace SS14.Shared.Network
     /// </summary>
     public class NetMessageArgs : EventArgs
     {
-        public NetMessage Message;
-        public NetIncomingMessage RawMessage;
+        public NetMessage Message { get; }
+        public NetIncomingMessage RawMessage { get; }
 
         public NetMessageArgs(NetMessage message, NetIncomingMessage rawMessage)
         {

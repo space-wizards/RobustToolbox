@@ -192,7 +192,7 @@ namespace SS14.Shared.Network
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.StringTableEntry;
-        public static readonly MsgGroups GROUP = MsgGroups.STRING;
+        public static readonly MsgGroups GROUP = MsgGroups.String;
 
         public static readonly string NAME = ID.ToString();
         public MsgStringTableEntry(INetChannel channel) : base(NAME, GROUP, ID) { }
@@ -201,12 +201,12 @@ namespace SS14.Shared.Network
         /// <summary>
         /// The string contained inside of the message.
         /// </summary>
-        public string EntryString;
+        public string EntryString { get; set; }
 
         /// <summary>
         /// The ID of the string inside of the message.
         /// </summary>
-        public int EntryId;
+        public int EntryId { get; set; }
 
         /// <inheritdoc />
         public override void ReadFromBuffer(NetIncomingMessage buffer)

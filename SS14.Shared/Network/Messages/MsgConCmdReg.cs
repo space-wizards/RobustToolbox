@@ -12,18 +12,19 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public const NetMessages ID = NetMessages.ConsoleCommandRegister;
-        public const MsgGroups GROUP = MsgGroups.STRING;
+        public const MsgGroups GROUP = MsgGroups.String;
 
         public static readonly string NAME = ID.ToString();
         public MsgConCmdReg(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public Command[] Commands;
+        public Command[] Commands { get; set; }
+
         public class Command
         {
-            public string Name;
-            public string Description;
-            public string Help;
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string Help { get; set; }
         }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

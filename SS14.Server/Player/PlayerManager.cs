@@ -53,7 +53,7 @@ namespace SS14.Server.Player
             Server = server;
             Server.OnRunLevelChanged += RunLevelChanged;
 
-            var netMan = IoCManager.Resolve<INetServerManager>();
+            var netMan = IoCManager.Resolve<IServerNetManager>();
 
             netMan.Connecting += OnConnecting;
             netMan.Connected += NewSession;

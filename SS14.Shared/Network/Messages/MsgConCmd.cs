@@ -12,7 +12,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.ConsoleCommand;
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
 
         public static readonly string NAME = ID.ToString();
         public MsgConCmd(INetChannel channel)
@@ -20,16 +20,16 @@ namespace SS14.Shared.Network.Messages
         { }
         #endregion
 
-        public string text;
+        public string Text { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            text = buffer.ReadString();
+            Text = buffer.ReadString();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(text);
+            buffer.Write(Text);
         }
     }
 }

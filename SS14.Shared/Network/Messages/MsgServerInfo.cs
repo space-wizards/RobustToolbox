@@ -8,7 +8,7 @@ namespace SS14.Shared.Network.Messages
         #region REQUIRED
 
         public static readonly string NAME = "WelcomeMessage";
-        public static readonly MsgGroups GROUP = MsgGroups.CORE;
+        public static readonly MsgGroups GROUP = MsgGroups.Core;
         public static readonly NetMessages ID = NetMessages.WelcomeMessage;
 
         public MsgServerInfo(INetChannel channel)

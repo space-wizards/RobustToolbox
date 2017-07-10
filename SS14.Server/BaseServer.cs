@@ -178,7 +178,7 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
 
-            var netMan = IoCManager.Resolve<INetServerManager>();
+            var netMan = IoCManager.Resolve<IServerNetManager>();
             netMan.Initialize(true);
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
@@ -343,7 +343,7 @@ namespace SS14.Server
                 _lastBytesUpdate = DateTime.Now;
             }
 
-            IoCManager.Resolve<INetServerManager>().ProcessPackets();
+            IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
             //Update takes elapsed time in seconds.
             Update(elapsedTime);
@@ -358,7 +358,7 @@ namespace SS14.Server
 
         private string UpdateBps()
         {
-            var stats = IoCManager.Resolve<INetServerManager>().Statistics;
+            var stats = IoCManager.Resolve<IServerNetManager>().Statistics;
 
             var bps = $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
 
@@ -415,7 +415,7 @@ namespace SS14.Server
             var elapsed = _time - _lastStateTime;
             if (force || elapsed.TotalMilliseconds > _serverRate)
             {
-                var netMan = IoCManager.Resolve<INetServerManager>();
+                var netMan = IoCManager.Resolve<IServerNetManager>();
 
                 //Save last state time
                 _lastStateTime = _time;
@@ -470,7 +470,7 @@ namespace SS14.Server
 
         private void HandleWelcomeMessageReq(NetMessage message)
         {
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
             netMsg.ServerName = ServerName;
@@ -515,13 +515,13 @@ namespace SS14.Server
             {
                 var info = new MsgPlayerList.PlyInfo
                 {
-                    name = client.Name,
-                    status = (byte) client.Status,
-                    ping = client.ConnectedClient.Connection.AverageRoundtripTime
+                    Name = client.Name,
+                    Status = (byte) client.Status,
+                    Ping = client.ConnectedClient.Connection.AverageRoundtripTime
                 };
                 list.Add(info);
             }
-            netMsg.plyrs = list;
+            netMsg.Plyrs = list;
 
             channel.SendMessage(netMsg);
         }

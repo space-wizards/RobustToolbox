@@ -48,19 +48,19 @@ namespace SS14.Server.Placement
 
         public void HandlePlacementRequest(MsgPlacement msg)
         {
-            var alignRcv = msg.align;
-            var isTile = msg.isTile;
+            var alignRcv = msg.Align;
+            var isTile = msg.IsTile;
             var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
 
             ushort tileType = 0;
             var entityTemplateName = "";
 
-            if (isTile) tileType = msg.tileType;
-            else entityTemplateName = msg.entityTemplateName;
+            if (isTile) tileType = msg.TileType;
+            else entityTemplateName = msg.EntityTemplateName;
 
-            float xRcv = msg.xRcv;
-            float yRcv = msg.yRcv;
-            var dirRcv = msg.dirRcv;
+            float xRcv = msg.XRcv;
+            float yRcv = msg.YRcv;
+            var dirRcv = msg.DirRcv;
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.MsgChannel.NetworkId);
             if (session.attachedEntity == null)
@@ -141,13 +141,13 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
-            message.range = range;
+            message.Range = range;
             message.IsTile = false;
-            message.objType = objectType;
-            message.alignOption = alignOption;
+            message.ObjType = objectType;
+            message.AlignOption = alignOption;
             net.ServerSendMessage(message, playerConnection);
         }
 
@@ -163,14 +163,14 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
 
             message.PlaceType = PlacementManagerMessage.StartPlacement;
-            message.range = range;
+            message.Range = range;
             message.IsTile = true;
-            message.objType = tileType;
-            message.alignOption = alignOption;
+            message.ObjType = tileType;
+            message.AlignOption = alignOption;
             
             net.ServerSendMessage(message, playerConnection);
         }
@@ -187,7 +187,7 @@ namespace SS14.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgPlacement>();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
             net.ServerSendMessage(message, playerConnection);

@@ -228,7 +228,7 @@ namespace SS14.Server.Map
         {
             Logger.Log($"[MAP] {connection.RemoteAddress}: Sending map");
 
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgMap>();
 
             message.MessageType = MapMessage.SendTileMap;
@@ -243,7 +243,7 @@ namespace SS14.Server.Map
             {
                 message.TileDefs[tileId] = new MsgMap.TileDef
                 {
-                    name = tileDefManager[tileId].Name
+                    Name = tileDefManager[tileId].Name
                 };
             }
 
@@ -256,15 +256,15 @@ namespace SS14.Server.Map
                 {
                     X = chunk.Key.X,
                     Y = chunk.Key.Y,
-                    TileDefs = new MsgMap.TileDef[chunk.Value.Tiles.Length]
+                    Defs = new MsgMap.TileDef[chunk.Value.Tiles.Length]
                 };
 
                 var tileIndex = 0;
                 foreach (var tile in chunk.Value.Tiles)
                 {
-                    chk.TileDefs[tileIndex++] = new MsgMap.TileDef
+                    chk.Defs[tileIndex++] = new MsgMap.TileDef
                     {
-                        tile = (uint)tile
+                        Tile = (uint)tile
                     };
                 }
 
@@ -319,15 +319,15 @@ namespace SS14.Server.Map
         
         private static void NetworkUpdateTile(TileRef tile)
         {
-            var net = IoCManager.Resolve<INetServerManager>();
+            var net = IoCManager.Resolve<IServerNetManager>();
             var message = net.CreateNetMessage<MsgMap>();
 
             message.MessageType = MapMessage.TurfUpdate;
             message.SingleTurf = new MsgMap.Turf
             {
-                x = tile.X,
-                y = tile.Y,
-                tile = (uint)tile.Tile
+                X = tile.X,
+                Y = tile.Y,
+                Tile = (uint)tile.Tile
             };
 
             net.ServerSendToAll(message);

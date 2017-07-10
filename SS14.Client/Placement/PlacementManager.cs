@@ -30,7 +30,7 @@ namespace SS14.Client.Placement
         [Dependency]
         public readonly ICollisionManager CollisionManager;
         [Dependency]
-        public readonly INetClientManager NetworkManager;
+        public readonly IClientNetManager NetworkManager;
         [Dependency]
         public readonly IPlayerManager PlayerManager;
         [Dependency]

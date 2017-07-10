@@ -30,7 +30,7 @@ namespace SS14.Client.Console
                     string commandname = args[0];
                     if (!console.Commands.ContainsKey(commandname))
                     {
-                        if (!IoCManager.Resolve<INetClientManager>().IsConnected)
+                        if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
                             console.AddLine("Unknown command: " + commandname, Color.Red);

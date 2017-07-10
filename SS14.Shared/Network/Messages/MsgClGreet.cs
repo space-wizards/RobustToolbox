@@ -8,13 +8,13 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public const NetMessages ID = NetMessages.ClientName;
-        public const MsgGroups GROUP = MsgGroups.CORE;
+        public const MsgGroups GROUP = MsgGroups.Core;
 
         public static readonly string NAME = ID.ToString();
         public MsgClGreet(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public string PlyName;
+        public string PlyName { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

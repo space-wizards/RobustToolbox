@@ -46,8 +46,8 @@ namespace SS14.Server.Chat
 
         public void HandleNetMessage(MsgChat message)
         {
-            var channel = message.channel;
-            string text = message.text;
+            var channel = message.Channel;
+            string text = message.Text;
 
             var client = message.MsgChannel;
 
@@ -84,7 +84,7 @@ namespace SS14.Server.Chat
                 case ChatChannel.Radio:
                 case ChatChannel.Player:
                 case ChatChannel.Default:
-                    IoCManager.Resolve<INetServerManager>().ServerSendToAll(message);
+                    IoCManager.Resolve<IServerNetManager>().ServerSendToAll(message);
                     break;
 
                 case ChatChannel.Damage:
@@ -103,7 +103,7 @@ namespace SS14.Server.Chat
         public void SendPrivateMessage(INetChannel client, ChatChannel channel, string text, string name, int? entityId)
         {
             MsgChat message = MakeNetChatMessage(channel, text, name, entityId);
-            IoCManager.Resolve<INetServerManager>().ServerSendMessage(message, client);
+            IoCManager.Resolve<IServerNetManager>().ServerSendMessage(message, client);
         }
 
         private MsgChat MakeNetChatMessage(ChatChannel channel, string text, string name, int? entityId)
@@ -115,11 +115,11 @@ namespace SS14.Server.Chat
                      channel == ChatChannel.Lobby)
                 fullmsg = name + ": " + text;
 
-            MsgChat message = IoCManager.Resolve<INetServerManager>().CreateNetMessage<MsgChat>();
+            MsgChat message = IoCManager.Resolve<IServerNetManager>().CreateNetMessage<MsgChat>();
 
-            message.channel = channel;
-            message.text = fullmsg;
-            message.entityId = entityId;
+            message.Channel = channel;
+            message.Text = fullmsg;
+            message.EntityId = entityId;
 
             return message;
         }
@@ -210,14 +210,14 @@ namespace SS14.Server.Chat
                 .GetComponent<ITransformComponent>(ComponentFamily.Transform).Position, withinRange)
                 .Select(p => p.ConnectedClient).ToList();
 
-            IoCManager.Resolve<INetServerManager>().ServerSendToMany(message, recipients);
+            IoCManager.Resolve<IServerNetManager>().ServerSendToMany(message, recipients);
         }
 
         private void SendToLobby(NetMessage message)
         {
             //TODO: Move this to the Content Assembly.
             List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>().GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
-            IoCManager.Resolve<INetServerManager>().ServerSendToMany(message, recipients);
+            IoCManager.Resolve<IServerNetManager>().ServerSendToMany(message, recipients);
         }
 
         private void ProcessEmote(string text, string name, ChatChannel channel, int? entityId, INetChannel client)

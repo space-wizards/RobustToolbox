@@ -7,36 +7,36 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.ChatMessage;
-        public static readonly MsgGroups GROUP = MsgGroups.STRING;
+        public static readonly MsgGroups GROUP = MsgGroups.String;
 
         public static readonly string NAME = ID.ToString();
         public MsgChat(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
 
-        public ChatChannel channel;
-        public string text;
-        public int? entityId;
+        public ChatChannel Channel { get; set; }
+        public string Text { get; set; }
+        public int? EntityId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            channel = (ChatChannel)buffer.ReadByte();
-            text = buffer.ReadString();
+            Channel = (ChatChannel)buffer.ReadByte();
+            Text = buffer.ReadString();
 
             var id = buffer.ReadInt32();
             if (id == -1)
-                entityId = null;
+                EntityId = null;
             else
-                entityId = id;
+                EntityId = id;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write((byte)channel);
-            buffer.Write(text);
-            if (entityId == null)
+            buffer.Write((byte)Channel);
+            buffer.Write(Text);
+            if (EntityId == null)
                 buffer.Write(-1);
             else
-                buffer.Write((int)entityId);
+                buffer.Write((int)EntityId);
 
         }
     }

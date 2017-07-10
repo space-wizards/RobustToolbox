@@ -16,7 +16,7 @@ namespace SS14.Client.Network
         private const int MaxDataPoints = 200;
         private readonly List<NetworkStatisticsDataPoint> _dataPoints = new List<NetworkStatisticsDataPoint>();
         [Dependency]
-        private readonly INetClientManager _networkManager;
+        private readonly IClientNetManager _networkManager;
         [Dependency]
         private readonly IResourceManager _resourceManager;
         private TextSprite _textSprite;

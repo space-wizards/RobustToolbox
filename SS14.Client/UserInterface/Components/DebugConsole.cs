@@ -86,7 +86,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void ToggleVisible()
         {
-            var netMgr = IoCManager.Resolve<INetClientManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             // var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             base.ToggleVisible();
             if (IsVisible())
@@ -227,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
-            else if (!IoCManager.Resolve<INetClientManager>().IsConnected)
+            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
                 AddLine("Unknown command: " + commandname, Color.Red);
                 return;
@@ -254,7 +254,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void SendServerConsoleCommand(string text)
         {
-            var netMgr = IoCManager.Resolve<INetClientManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (netMgr != null && netMgr.IsConnected)
             {
                 NetOutgoingMessage outMsg = netMgr.CreateMessage();
@@ -266,7 +266,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void SendServerCommandRequest()
         {
-            var netMgr = IoCManager.Resolve<INetClientManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (!netMgr.IsConnected)
                 return;
 

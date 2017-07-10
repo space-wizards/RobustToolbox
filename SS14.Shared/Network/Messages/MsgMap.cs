@@ -9,38 +9,38 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public const NetMessages ID = NetMessages.MapMessage;
-        public const MsgGroups Group = MsgGroups.ENTITY;
+        public const MsgGroups Group = MsgGroups.Entity;
 
         public static readonly string NAME = ID.ToString();
         public MsgMap(INetChannel channel) : base(NAME, Group, ID) { }
         #endregion
 
-        public MapMessage MessageType;
-        public int Version;
+        public MapMessage MessageType { get; set; }
+        public int Version { get; set; }
 
-        public Turf SingleTurf;
+        public Turf SingleTurf { get; set; }
 
-        public TileDef[] TileDefs;
-        public ChunkDef[] ChunkDefs;
- 
+        public TileDef[] TileDefs { get; set; }
+        public ChunkDef[] ChunkDefs { get; set; }
+
         public class Turf
         {
-            public int x;
-            public int y;
-            public uint tile;
+            public int X { get; set; }
+            public int Y { get; set; }
+            public uint Tile { get; set; }
         }
 
         public class TileDef
         {
-            public string name;
-            public uint tile;
+            public string Name { get; set; }
+            public uint Tile { get; set; }
         }
 
         public class ChunkDef
         {
-            public int X;
-            public int Y;
-            public TileDef[] TileDefs;
+            public int X { get; set; }
+            public int Y { get; set; }
+            public TileDef[] Defs { get; set; }
         }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
@@ -51,9 +51,9 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.TurfUpdate:
                     SingleTurf = new Turf()
                     {
-                        x = buffer.ReadInt32(),
-                        y = buffer.ReadInt32(),
-                        tile = buffer.ReadUInt32()
+                        X = buffer.ReadInt32(),
+                        Y = buffer.ReadInt32(),
+                        Tile = buffer.ReadUInt32()
                     };
                     break;
                 case MapMessage.SendTileMap:
@@ -69,9 +69,9 @@ namespace SS14.Shared.Network.Messages
             switch (MessageType)
             {
                 case MapMessage.TurfUpdate:
-                    buffer.Write(SingleTurf.x);
-                    buffer.Write(SingleTurf.y);
-                    buffer.Write(SingleTurf.tile);
+                    buffer.Write(SingleTurf.X);
+                    buffer.Write(SingleTurf.Y);
+                    buffer.Write(SingleTurf.Tile);
                     break;
                 case MapMessage.SendTileMap:
                     buffer.Write(Version);
@@ -79,7 +79,7 @@ namespace SS14.Shared.Network.Messages
 
                     // Tile defs, ordered list
                     foreach (TileDef tileId in TileDefs)
-                        buffer.Write(tileId.name);
+                        buffer.Write(tileId.Name);
 
                     // Map chunks
                     buffer.Write(ChunkDefs.Length);
@@ -89,8 +89,8 @@ namespace SS14.Shared.Network.Messages
                         buffer.Write(chunk.Y);
 
                         // ordered list
-                        foreach (var tile in chunk.TileDefs)
-                            buffer.Write(tile.tile);
+                        foreach (var tile in chunk.Defs)
+                            buffer.Write(tile.Tile);
                     }
 
                     break;

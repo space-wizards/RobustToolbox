@@ -26,7 +26,7 @@ namespace SS14.Client.Player
 
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
         [Dependency]
-        private readonly INetClientManager _networkManager;
+        private readonly IClientNetManager _networkManager;
         private SessionStatus status = SessionStatus.Zombie;
 
         #region IPlayerManager Members

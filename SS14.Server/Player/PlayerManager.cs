@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+﻿using System;
 using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
@@ -12,135 +12,232 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
+using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
+using SS14.Shared.ServerEnums;
 
 namespace SS14.Server.Player
 {
+    /// <summary>
+    /// This class will manage connected player sessions.
+    /// </summary>
     public class PlayerManager : IPlayerManager
     {
-        /* This class will manage connected player sessions. */
-        public Dictionary<int, PlayerSession> playerSessions;
-        public ISS14Server server;
-        private readonly IServerEntityManager entityManager;
+        /// <summary>
+        /// The server that instantiated this manager.
+        /// </summary>
+        public IBaseServer Server;
 
+        private readonly Dictionary<int, PlayerSession> _sessions;
+        private readonly IServerEntityManager _entityManager;
+
+        /// <summary>
+        /// Constructs an instance of the player manager.
+        /// </summary>
         public PlayerManager()
         {
-            entityManager = IoCManager.Resolve<IServerEntityManager>();
-            playerSessions = new Dictionary<int, PlayerSession>();
-            //We can actually query this by client connection or whatever we want using linq
+            _entityManager = IoCManager.Resolve<IServerEntityManager>();
+            _sessions = new Dictionary<int, PlayerSession>();
+        }
+
+        public int PlayerCount => _sessions.Count;
+
+        /// <summary>
+        /// Initializes the manager.
+        /// </summary>
+        /// <param name="server">The server that instantiated this manager.</param>
+        public void Initialize(BaseServer server)
+        {
+            Server = server;
+            Server.OnRunLevelChanged += RunLevelChanged;
+
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+
+            netMan.Connecting += OnConnecting;
+            netMan.Connected += NewSession;
+            netMan.Disconnect += EndSession;
+        }
+
+        private void RunLevelChanged(RunLevel oldLevel, RunLevel newLevel)
+        {
+            RunLevel = newLevel;
         }
 
         #region IPlayerManager Members
 
-        public void Initialize(ISS14Server _server)
+        private void OnConnecting(object sender, NetConnectingArgs args)
         {
-            server = _server;
+            if (PlayerCount >= Server.MaxPlayers)
+                args.Deny = true;
         }
 
-        public void NewSession(NetConnection client)
+        /// <summary>
+        /// Creates a new session for a client.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        public void NewSession(object sender, NetChannelArgs args)
         {
-            var session = new PlayerSession(client, this);
-            playerSessions.Add(playerSessions.Values.Count + 1, session);
+            var session = new PlayerSession(args.Channel, this);
+            _sessions.Add(args.Channel.NetworkId, session);
         }
 
-        public void SpawnPlayerMob(IPlayerSession s)
+        /// <summary>
+        /// Spawns the players entity.
+        /// </summary>
+        /// <param name="session"></param>
+        public void SpawnPlayerMob(IPlayerSession session)
         {
-            //Spawn the player's entity. There's probably a much better place to do this.
-            IEntity a = entityManager.SpawnEntity("HumanMob");
-            a.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
-            s.AttachToEntity(a);
+            //TODO: There's probably a much better place to do this.
+            IEntity entity = _entityManager.SpawnEntity("HumanMob");
+            entity.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
+            session.AttachToEntity(entity);
         }
-
-        public IPlayerSession GetSessionByConnection(NetConnection client)
+        
+        public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             IEnumerable<PlayerSession> sessions =
-                from s in playerSessions
-                where s.Value.connectedClient == client
+                from s in _sessions
+                where s.Value.ConnectedClient == client
                 select s.Value;
 
             return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
         }
 
-        public IPlayerSession GetSessionByIp(string ip)
+        /// <summary>
+        /// Returns the client session of the networkId.
+        /// </summary>
+        /// <param name="networkId">The network id of the client.</param>
+        /// <returns></returns>
+        public IPlayerSession GetSessionById(int networkId)
+        {
+            return _sessions.TryGetValue(networkId, out PlayerSession session) ? session : null;
+        }
+
+        [Obsolete("Use GetSessionById/GetSessionByChannel")]
+        public IPlayerSession GetSessionByConnection(NetConnection client)
         {
             IEnumerable<PlayerSession> sessions =
-                from s in playerSessions
-                where s.Value.connectedClient.RemoteEndPoint.Address.ToString().Equals(ip)
-                //This is kinda silly. Comparing strings. Bleh.
+                from s in _sessions
+                where s.Value.ConnectedClient.Connection == client
                 select s.Value;
 
-            return sessions.First(); // Should only be one session per client. Returns that session, in theory.
+            return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
         }
 
-        public void HandleNetworkMessage(NetIncomingMessage message)
+        public RunLevel RunLevel { get; set; }
+
+        /// <summary>
+        /// Processes an incoming network message.
+        /// </summary>
+        /// <param name="msg">Incoming message.</param>
+        public void HandleNetworkMessage(MsgSession msg)
         {
-            // Pass message on to session
-            IPlayerSession s = GetSessionByConnection(message.SenderConnection);
-            if (s == null)
-                return;
-            s.HandleNetworkMessage(message);
+            GetSessionById(msg.MsgChannel.NetworkId)?.HandleNetworkMessage(msg);
         }
 
-        public void EndSession(NetConnection client)
+        /// <summary>
+        /// Ends a clients session, and disconnects them.
+        /// </summary>
+        /// <param name="client">Client network channel to close.</param>
+        public void EndSession(object sender, NetChannelArgs args)
         {
-            // Ends the session.
-            IPlayerSession session = GetSessionByConnection(client);
+            var session = GetSessionById(args.Channel.NetworkId);
             if (session == null)
                 return; //There is no session!
-            Logger.Log(session.name + " disconnected.", LogLevel.Information);
-            //Detach the entity and (dont)delete it.
+
+            //Detach the entity and (don't)delete it.
             session.OnDisconnect();
+
+            _sessions.Remove(args.Channel.NetworkId);
         }
 
+        /// <summary>
+        /// Causes all sessions to switch from the lobby to the the game.
+        /// </summary>
         public void SendJoinGameToAll()
         {
-            foreach (PlayerSession s in playerSessions.Values)
+            foreach (PlayerSession s in _sessions.Values)
             {
                 s.JoinGame();
             }
         }
 
+        /// <summary>
+        /// Causes all sessions to switch from the game to the lobby.
+        /// </summary>
         public void SendJoinLobbyToAll()
         {
-            foreach (PlayerSession s in playerSessions.Values)
+            foreach (PlayerSession s in _sessions.Values)
             {
                 s.JoinLobby();
             }
         }
 
+        /// <summary>
+        /// Causes all sessions to detach from their entity.
+        /// </summary>
         public void DetachAll()
         {
-            foreach (PlayerSession s in playerSessions.Values)
+            foreach (PlayerSession s in _sessions.Values)
             {
                 s.DetachFromEntity();
             }
         }
 
-        public IPlayerSession[] GetPlayersInRange(Vector2f position, int range)
+        /// <summary>
+        /// Gets all players inside of a circle.
+        /// </summary>
+        /// <param name="position">Position of the circle in world-space.</param>
+        /// <param name="range">Radius of the circle in world units.</param>
+        /// <returns></returns>
+        public List<IPlayerSession> GetPlayersInRange(Vector2f position, int range)
         {
+            //TODO: This needs to be moved to the PVS system.
             return
-                playerSessions.Values.Where(x =>
+                _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
                     (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).LengthSquared() < range * range)
-                        .ToArray();
+                    .Cast<IPlayerSession>()
+                    .ToList();
         }
 
-        public IPlayerSession[] GetPlayersInLobby()
+        /// <summary>
+        /// Gets all the players in the game lobby.
+        /// </summary>
+        /// <returns></returns>
+        public List<IPlayerSession> GetPlayersInLobby()
         {
+            //TODO: Lobby system needs to be moved to Content Assemblies.
             return
-                playerSessions.Values.Where(
-                    x => x.status == SessionStatus.InLobby).ToArray();
+                _sessions.Values.Where(
+                    x => x.Status == SessionStatus.InLobby)
+                    .Cast<IPlayerSession>()
+                    .ToList();
         }
 
-        public IPlayerSession[] GetAllPlayers()
+        /// <summary>
+        /// Gets all players in the server.
+        /// </summary>
+        /// <returns></returns>
+        public List<IPlayerSession> GetAllPlayers()
         {
-            return playerSessions.Values.ToArray();
+            return _sessions.Values.Cast<IPlayerSession>().ToList();
         }
 
+        /// <summary>
+        /// Gets all player states in the server.
+        /// </summary>
+        /// <returns></returns>
         public List<PlayerState> GetPlayerStates()
         {
-            return playerSessions.Values.Select(s => s.PlayerState).ToList();
+            return _sessions.Values
+                .Select(s => s.PlayerState)
+                .ToList();
         }
 
-        #endregion IPlayerManager Members
+#endregion IPlayerManager Members
     }
 }

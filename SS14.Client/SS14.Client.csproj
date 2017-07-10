@@ -289,7 +289,6 @@
     <Compile Include="Interfaces\Map\TileRef.cs" />
     <Compile Include="Interfaces\MessageLogging\IMessageLogger.cs" />
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
-    <Compile Include="Interfaces\Network\INetworkManager.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Resource\IResourceManager.cs" />
@@ -314,7 +313,6 @@
     <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <None Include="MessageLogging\messageLoggerService.config" />
     <Compile Include="Network\NetworkGrapher.cs" />
-    <Compile Include="Network\NetworkManager.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />
     <Compile Include="Placement\Modes\AlignFree.cs" />
@@ -334,7 +332,6 @@
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
-    <Compile Include="State\States\LobbyScreen.cs" />
     <Compile Include="State\States\MainMenu.cs" />
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="UserInterface\DragDropInfo.cs" />

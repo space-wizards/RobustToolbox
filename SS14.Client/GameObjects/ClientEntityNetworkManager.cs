@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.GameObjects
 {
@@ -17,7 +18,7 @@ namespace SS14.Client.GameObjects
     {
         private bool _messageProfiling = false;
         [Dependency]
-        private readonly INetworkManager _networkManager;
+        private readonly IClientNetManager _networkManager;
         [Dependency]
         private readonly IConfigurationManager _configManager;
 
@@ -36,7 +37,7 @@ namespace SS14.Client.GameObjects
         public NetOutgoingMessage CreateEntityMessage()
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte)NetMessage.EntityMessage);
+            message.Write((byte)NetMessages.EntityMessage);
             return message;
         }
 
@@ -64,7 +65,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Send the message
-            _networkManager.SendMessage(newMsg, method);
+            _networkManager.ClientSendMessage(newMsg, method);
         }
 
         public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
@@ -100,7 +101,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Send the message
-            _networkManager.SendMessage(message, method);
+            _networkManager.ClientSendMessage(message, method);
         }
 
         /// <summary>
@@ -115,7 +116,7 @@ namespace SS14.Client.GameObjects
             message.Write((byte)type);
             message.Write(sendingEntity.Uid); //Write this entity's UID
             PackParams(message, list);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         private void PackParams(NetOutgoingMessage message, params object[] messageParams)
@@ -212,7 +213,7 @@ namespace SS14.Client.GameObjects
             message.Write((byte)EntityMessage.SetSVar);
             message.Write(sendingEntity.Uid);
             svar.Serialize(message);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion Sending

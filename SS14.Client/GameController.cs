@@ -14,6 +14,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -50,6 +51,8 @@ namespace SS14.Client
         readonly private IEntityNetworkManager _entityNetworkManager;
         [Dependency]
         readonly private ITileDefinitionManager _tileDefinitionManager;
+        [Dependency]
+        readonly private ISS14Serializer _serializer;
 
         #endregion Fields
 
@@ -76,6 +79,7 @@ namespace SS14.Client
             _entityNetworkManager.Initialize();
             _tileDefinitionManager.InitializeResources();
 
+            _serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();

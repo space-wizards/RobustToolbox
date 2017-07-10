@@ -1,6 +1,7 @@
 using NetSerializer;
 using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.Interfaces.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,9 +10,9 @@ using System.Reflection;
 
 namespace SS14.Shared.Serialization
 {
-    public class SS14Serializer
+    public class SS14Serializer : ISS14Serializer
     {
-        static SS14Serializer()
+        public void Initialize()
         {
             Serializer.Initialize(
                 (from asm in AppDomain.CurrentDomain.GetAssemblies()

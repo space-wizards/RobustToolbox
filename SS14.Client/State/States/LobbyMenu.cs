@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -15,6 +15,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Network;
 
 namespace SS14.Client.State.States
 {
@@ -188,9 +189,9 @@ namespace SS14.Client.State.States
 
         #region Network
 
-        private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
+        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
-            NetIncomingMessage message = args.Message;
+            NetIncomingMessage message = args.RawMessage;
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
@@ -206,26 +207,26 @@ namespace SS14.Client.State.States
                     break;
 
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessage)message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessage.LobbyChat:
+                        case NetMessages.LobbyChat:
                             //TODO: Send player messages to a lobby chat
                             break;
 
-                        case NetMessage.PlayerList:
+                        case NetMessages.PlayerList:
                             HandlePlayerList(message);
                             break;
 
-                        case NetMessage.WelcomeMessage:
+                        case NetMessages.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
 
-                        case NetMessage.ChatMessage:
+                        case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
 
-                        case NetMessage.JoinGame:
+                        case NetMessages.JoinGame:
                             HandleJoinGame();
                             break;
                     }
@@ -297,12 +298,12 @@ namespace SS14.Client.State.States
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.WelcomeMessage); //Request Welcome msg.
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessage.PlayerList); //Request Playerlist.
-            NetworkManager.SendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
+            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void Shutdown()
@@ -414,7 +415,7 @@ namespace SS14.Client.State.States
         {
             StateManager.RequestStateChange<MainScreen>();
 
-            NetworkManager.Disconnect();
+            NetworkManager.ClientDisconnect("Client left the lobby.");
         }
 
         #endregion Startup, Shutdown, Update

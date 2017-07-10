@@ -1,14 +1,15 @@
-﻿using Lidgren.Network;
-using SS14.Server.Interfaces.Player;
+﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using System.Collections.Generic;
+using Lidgren.Network;
 
 namespace SS14.Server.GameObjects
 {
+    // This is used, don't delete.
     public class SVarsComponent : Component
     {
         public override string Name => "SVars";
@@ -42,7 +43,7 @@ namespace SS14.Server.GameObjects
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
 
             Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
-            Logger.Log("Player " + player.name + " set SVar."); //Make this message better
+            Logger.Log("Player " + player.Name + " set SVar."); //Make this message better
         }
 
         /// <summary>
@@ -78,7 +79,7 @@ namespace SS14.Server.GameObjects
         {
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
             SendSVars(client);
-            Logger.Log("Sending SVars to " + player.name + " for entity " + Owner.Uid + ":" + Owner.Name);
+            Logger.Log("Sending SVars to " + player.Name + " for entity " + Owner.Uid + ":" + Owner.Name);
         }
     }
 }

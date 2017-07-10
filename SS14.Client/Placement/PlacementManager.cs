@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Placement
 {
@@ -29,7 +30,7 @@ namespace SS14.Client.Placement
         [Dependency]
         public readonly ICollisionManager CollisionManager;
         [Dependency]
-        public readonly INetworkManager NetworkManager;
+        public readonly IClientNetManager NetworkManager;
         [Dependency]
         public readonly IPlayerManager PlayerManager;
         [Dependency]
@@ -123,9 +124,9 @@ namespace SS14.Client.Placement
             if (!IsActive || !Eraser) return;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.RequestEntityDeletion);
+            message.Write((byte)NetMessages.RequestEntityDeletion);
             message.Write(entity.Uid);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public void ToggleEraser()
@@ -243,7 +244,7 @@ namespace SS14.Client.Placement
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
 
-            message.Write((byte)NetMessage.PlacementManagerMessage);
+            message.Write((byte)NetMessages.PlacementManagerMessage);
             message.Write((byte)PlacementManagerMessage.RequestPlacement);
             message.Write(CurrentMode.ModeName);
 
@@ -257,7 +258,7 @@ namespace SS14.Client.Placement
 
             message.Write((byte)Direction);
 
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public Sprite GetDirectionalSprite()

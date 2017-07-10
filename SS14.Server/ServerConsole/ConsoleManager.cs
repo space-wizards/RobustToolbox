@@ -251,7 +251,7 @@ namespace SS14.Server.ServerConsole
         {
             // Handle process exiting ourself.
             args.Cancel = true;
-            IoCManager.Resolve<ISS14Server>().Shutdown();
+            IoCManager.Resolve<IBaseServer>().Shutdown();
         }
     }
 }

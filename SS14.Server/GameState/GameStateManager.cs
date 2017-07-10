@@ -1,9 +1,9 @@
-﻿using Lidgren.Network;
-using SS14.Server.Interfaces.GameState;
+﻿using SS14.Server.Interfaces.GameState;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Server.GameStates
 {
@@ -36,13 +36,13 @@ namespace SS14.Server.GameStates
                 ackedStates[uniqueIdentifier] = stateAcked;
         }
 
-        public GameStateDelta GetDelta(NetConnection client, uint state)
+        public GameStateDelta GetDelta(INetChannel client, uint state)
         {
             SS14.Shared.GameStates.GameState toState = GetFullState(state);
-            if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
+            if (!ackedStates.ContainsKey(client.ConnectionId))
                 return toState - new SS14.Shared.GameStates.GameState(0); //The client has no state!
 
-            SS14.Shared.GameStates.GameState fromState = this[ackedStates[client.RemoteUniqueIdentifier]];
+            SS14.Shared.GameStates.GameState fromState = this[ackedStates[client.ConnectionId]];
             return toState - fromState;
         }
 
@@ -53,14 +53,14 @@ namespace SS14.Server.GameStates
             return null; //TODO SHIT
         }
 
-        public uint GetLastStateAcked(NetConnection client)
+        public uint GetLastStateAcked(INetChannel client)
         {
-            if (!ackedStates.ContainsKey(client.RemoteUniqueIdentifier))
+            if (!ackedStates.ContainsKey(client.ConnectionId))
             {
-                ackedStates[client.RemoteUniqueIdentifier] = 0;
+                ackedStates[client.ConnectionId] = 0;
             }
 
-            return ackedStates[client.RemoteUniqueIdentifier];
+            return ackedStates[client.ConnectionId];
         }
 
         #endregion IGameStateManager Members

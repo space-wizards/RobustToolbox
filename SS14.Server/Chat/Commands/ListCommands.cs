@@ -3,6 +3,8 @@ using SS14.Server.Interfaces.Chat;
 using SS14.Shared.IoC;
 using System;
 using System.Text;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Server.Chat.Commands
 {
@@ -12,7 +14,7 @@ namespace SS14.Server.Chat.Commands
         public string Description => "Lists all available commands.";
         public string Help => "Outputs a list of all commands which are currently available to you, and a total command number.";
 
-        public void Execute(IChatManager manager, IClient client, params string[] args)
+        public void Execute(IChatManager manager, INetChannel client, params string[] args)
         {
             StringBuilder builder = new StringBuilder("Available commands:\n");
             foreach (IChatCommand command in manager.Commands.Values)

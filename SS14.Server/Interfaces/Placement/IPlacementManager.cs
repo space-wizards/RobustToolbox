@@ -1,17 +1,19 @@
-﻿using Lidgren.Network;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.Placement
 {
     public interface IPlacementManager
     {
+
         /// <summary>
         ///  Handles placement related client messages.
         /// </summary>
-        void HandleNetMessage(NetIncomingMessage msg);
+        void HandleNetMessage(MsgPlacement msg);
 
-        void HandlePlacementRequest(NetIncomingMessage msg);
+        void HandlePlacementRequest(MsgPlacement msg);
 
         /// <summary>
         ///  Places mob in entity placement mode with given settings.

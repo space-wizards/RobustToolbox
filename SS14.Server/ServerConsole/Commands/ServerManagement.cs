@@ -13,7 +13,7 @@ namespace SS14.Server.ServerConsole.Commands
 
         public void Execute(params string[] args)
         {
-            IoCManager.Resolve<ISS14Server>().Restart();
+            IoCManager.Resolve<IBaseServer>().Restart();
         }
     }
 
@@ -26,7 +26,7 @@ namespace SS14.Server.ServerConsole.Commands
 
         public  void Execute(params string[] args)
         {
-            IoCManager.Resolve<ISS14Server>().Shutdown();
+            IoCManager.Resolve<IBaseServer>().Shutdown();
         }
     }
 }

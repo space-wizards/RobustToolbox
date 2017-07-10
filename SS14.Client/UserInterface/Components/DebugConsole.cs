@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SFML.Graphics;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -84,7 +86,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void ToggleVisible()
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             // var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             base.ToggleVisible();
             if (IsVisible())
@@ -107,27 +109,27 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        private void NetMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
+        private void NetMgr_MessageArrived(object sender, NetMessageArgs e)
         {
             //Make sure we reset the position - we might recieve this message after the gamestates.
-            if (e.Message.Position > 0)
-                e.Message.Position = 0;
+            if (e.RawMessage.Position > 0)
+                e.RawMessage.Position = 0;
 
-            if (e.Message.MessageType != NetIncomingMessageType.Data)
+            if (e.RawMessage.MessageType != NetIncomingMessageType.Data)
                 return;
 
-            switch ((NetMessage)e.Message.PeekByte())
+            switch ((NetMessages)e.RawMessage.PeekByte())
             {
-                case NetMessage.ConsoleCommandReply:
-                    e.Message.ReadByte();
-                    AddLine("< " + e.Message.ReadString(), new Color(65, 105, 225));
+                case NetMessages.ConsoleCommandReply:
+                    e.RawMessage.ReadByte();
+                    AddLine("< " + e.RawMessage.ReadString(), new Color(65, 105, 225));
                     break;
 
-                case NetMessage.ConsoleCommandRegister:
-                    e.Message.ReadByte();
-                    for (ushort amount = e.Message.ReadUInt16(); amount > 0; amount--)
+                case NetMessages.ConsoleCommandRegister:
+                    e.RawMessage.ReadByte();
+                    for (ushort amount = e.RawMessage.ReadUInt16(); amount > 0; amount--)
                     {
-                        string commandName = e.Message.ReadString();
+                        string commandName = e.RawMessage.ReadString();
                         // Do not do duplicate commands.
                         if (commands.ContainsKey(commandName))
                         {
@@ -135,8 +137,8 @@ namespace SS14.Client.UserInterface.Components
                             continue;
                         }
 
-                        string description = e.Message.ReadString();
-                        string help = e.Message.ReadString();
+                        string description = e.RawMessage.ReadString();
+                        string help = e.RawMessage.ReadString();
 
                         var command = new ServerDummyCommand(commandName, help, description);
                         commands[commandName] = command;
@@ -145,7 +147,7 @@ namespace SS14.Client.UserInterface.Components
             }
 
             //Again, make sure we reset the position - we might get it before the gamestate and then that would break.
-            e.Message.Position = 0;
+            e.RawMessage.Position = 0;
         }
 
         public override void Render()
@@ -216,7 +218,7 @@ namespace SS14.Client.UserInterface.Components
             //var entMgr = IoCManager.Resolve<IEntityManager>();
             //var plrMgr = IoCManager.Resolve<IPlayerManager>();
             //player = plrMgr.ControlledEntity;
-            //IoCManager.Resolve<INetworkManager>().
+            //IoCManager.Resolve<INetClientManager>().
 
             bool forward = true;
             if (commands.ContainsKey(commandname))
@@ -225,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
-            else if (!IoCManager.Resolve<INetworkManager>().IsConnected)
+            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
                 AddLine("Unknown command: " + commandname, Color.Red);
                 return;
@@ -252,25 +254,25 @@ namespace SS14.Client.UserInterface.Components
 
         private void SendServerConsoleCommand(string text)
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (netMgr != null && netMgr.IsConnected)
             {
                 NetOutgoingMessage outMsg = netMgr.CreateMessage();
-                outMsg.Write((byte)NetMessage.ConsoleCommand);
+                outMsg.Write((byte)NetMessages.ConsoleCommand);
                 outMsg.Write(text);
-                netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
         }
 
         private void SendServerCommandRequest()
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (!netMgr.IsConnected)
                 return;
 
             NetOutgoingMessage outMsg = netMgr.CreateMessage();
-            outMsg.Write((byte)NetMessage.ConsoleCommandRegister);
-            netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            outMsg.Write((byte)NetMessages.ConsoleCommandRegister);
+            netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             sentCommandRequestToServer = true;
         }
 

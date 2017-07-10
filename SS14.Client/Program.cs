@@ -42,6 +42,8 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Client
 {
@@ -76,6 +78,7 @@ namespace SS14.Client
             IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<INetManager, NetManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -89,7 +92,7 @@ namespace SS14.Client
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<INetworkManager, NetworkManager>();
+            IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<ILightManager, LightManager>();

@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Network;
@@ -8,6 +8,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
@@ -15,7 +16,7 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class MenuWindow : Window
     {
-        private readonly INetworkManager _netMgr = IoCManager.Resolve<INetworkManager>();
+        private readonly IClientNetManager _netMgr = IoCManager.Resolve<IClientNetManager>();
         private readonly IPlacementManager _placeMgr = IoCManager.Resolve<IPlacementManager>();
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
         private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
@@ -52,7 +53,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void button_quit_Clicked(Button sender)
         {
-            _netMgr.Disconnect();
+            _netMgr.ClientDisconnect("Client disconnected from game.");
             _stateManager.RequestStateChange<MainScreen>();
             Dispose();
         }

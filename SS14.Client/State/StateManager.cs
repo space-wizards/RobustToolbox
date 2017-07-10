@@ -23,7 +23,7 @@ namespace SS14.Client.State
         [Dependency]
         private readonly IConfigurationManager configurationManager;
         [Dependency]
-        private readonly INetworkManager networkManager;
+        private readonly INetClientManager networkManager;
         [Dependency]
         private readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]

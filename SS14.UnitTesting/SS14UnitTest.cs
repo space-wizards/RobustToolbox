@@ -235,7 +235,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IConsoleManager, ConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IRoundManager, RoundManager>();
-                    IoCManager.Register<ISS14Server, SS14Server>();
                     IoCManager.Register<ISS14Serializer, SS14Serializer>();
                     IoCManager.Register<IEntityNetworkManager, Server.GameObjects.ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();

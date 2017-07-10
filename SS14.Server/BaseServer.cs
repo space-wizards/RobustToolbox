@@ -52,14 +52,23 @@ namespace SS14.Server
     /// </summary>
     public class BaseServer : IBaseServer
     {
+        [Dependency]
+        private readonly IConfigurationManager _config;
+
+        [Dependency]
+        private IComponentManager _components;
+
+        [Dependency]
+        private IServerEntityManager _entities;
+
+        [Dependency]
+        private IServerLogManager _logman;
+
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
-        private readonly IConfigurationManager _config;
         private readonly List<float> _frameTimes = new List<float>();
         private readonly Stopwatch _stopWatch = new Stopwatch();
         private bool _active;
-        private IComponentManager _components;
-        private IServerEntityManager _entities;
         private int _lastAnnounced;
 
         private DateTime _lastBytesUpdate = DateTime.Now;
@@ -78,37 +87,6 @@ namespace SS14.Server
         private DateTime _startAt;
         private float _tickRate; // desired server frames (ticks) per second
         private DateTime _time;
-
-        /// <summary>
-        ///     Constructs an instance of the server.
-        /// </summary>
-        /// <param name="args"></param>
-        /// <param name="logManager"></param>
-        public BaseServer(ICommandLineArgs args, IServerLogManager logManager)
-        {
-            //Sets up the configMgr
-            _config = IoCManager.Resolve<IConfigurationManager>();
-            _config.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
-
-            //Sets up Logging
-            _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
-            _config.RegisterCVar("log.enabled", true, CVarFlags.ARCHIVE);
-
-            var logPath = _config.GetCVar<string>("log.path");
-            var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
-            var fullPath = Path.Combine(logPath, logFilename);
-
-            if (!Path.IsPathRooted(fullPath))
-                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
-
-            // Create log directory if it does not exist yet.
-            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
-            logManager.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
-            logManager.LogPath = logPath;
-        }
 
         private RunLevel Level
         {
@@ -169,6 +147,27 @@ namespace SS14.Server
         /// <inheritdoc />
         public bool Start()
         {
+            //Sets up the configMgr
+            _config.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
+
+            //Sets up Logging
+            _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
+
+            var logPath = _config.GetCVar<string>("log.path");
+            var logFormat = _config.GetCVar<string>("log.format");
+            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            var fullPath = Path.Combine(logPath, logFilename);
+
+            if (!Path.IsPathRooted(fullPath))
+                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+
+            // Create log directory if it does not exist yet.
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+            _logman.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
+            _logman.LogPath = logPath;
+
             _time = DateTime.Now;
 
             Level = RunLevel.Init;
@@ -210,9 +209,9 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
             // Not converted yet: NetMessages.FullState
 
-            IoCManager.Resolve<IChatManager>().Initialize(this);
+            IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IPlacementManager>().Initialize(this);
+            IoCManager.Resolve<IMapManager>().Initialize();
 
             StartLobby();
             StartGame();

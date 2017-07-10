@@ -42,7 +42,6 @@ using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
-using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
 using SS14.Server.Map;
@@ -52,7 +51,6 @@ using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Reflection;
 using SS14.Server.Round;
-using SS14.Server.Serialization;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
@@ -60,9 +58,11 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -192,6 +192,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<ISS14Serializer, SS14Serializer>();
 
             switch (Project)
             {
@@ -214,7 +215,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<ILightManager, LightManager>();
                     IoCManager.Register<IResourceManager, ResourceManager>();
-                    IoCManager.Register<ISS14Serializer, SS14Serializer>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
@@ -235,7 +235,6 @@ namespace SS14.UnitTesting
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IRoundManager, RoundManager>();
                     IoCManager.Register<ISS14Server, SS14Server>();
-                    IoCManager.Register<ISS14Serializer, SS14Serializer>();
                     IoCManager.Register<IEntityNetworkManager, Server.GameObjects.ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
                     IoCManager.Register<IGameStateManager, GameStateManager>();

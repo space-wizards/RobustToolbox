@@ -128,6 +128,7 @@
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
+    <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />

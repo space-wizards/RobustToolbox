@@ -11,7 +11,6 @@ using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
-using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Modules;
 using SS14.Server.Modules.Client;
@@ -24,6 +23,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
@@ -114,6 +114,7 @@ namespace SS14.Server
 
             LoadSettings();
 
+            Serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
             prototypeManager.Resync();
@@ -146,6 +147,9 @@ namespace SS14.Server
         private readonly IComponentManager ComponentManager;
         [Dependency]
         private readonly IServerLogManager LogManager;
+        [Dependency]
+        private readonly ISS14Serializer Serializer;
+
         public RunLevel Runlevel { get; private set; } = RunLevel.Init;
 
         public void Restart()

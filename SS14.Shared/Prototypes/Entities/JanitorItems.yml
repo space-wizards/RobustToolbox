@@ -1,0 +1,18 @@
+- type: entity
+  id: Mop
+  name: Mop
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+    notWornSprite: mop
+
+  - type: Icon
+    icon: mop
+
+  - type: Physics
+  - type: Clickable
+  - type: BasicItem

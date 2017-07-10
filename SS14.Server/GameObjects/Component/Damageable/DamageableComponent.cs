@@ -118,16 +118,16 @@ namespace SS14.Server.GameObjects
             _damageHistory.Add(new DamageHistoryItem(damager, amount, damType));
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("maxHealth", out node))
+            if (mapping.TryGetNode("maxHealth", out node))
             {
                 maxHealth = node.AsInt();
                 currentHealth = maxHealth;
             }
 
-            if (mapping.TryGetValue("currentHealth", out node))
+            if (mapping.TryGetNode("currentHealth", out node))
             {
                 currentHealth = node.AsInt();
             }

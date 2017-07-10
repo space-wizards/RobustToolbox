@@ -67,7 +67,7 @@ namespace SS14.Shared.GameObjects
         /// This should basically be overridden by every inheriting component, as parameters will be different
         /// across the board.
         /// </summary>
-        public virtual void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public virtual void LoadParameters(YamlMappingNode mapping)
         {
         }
 

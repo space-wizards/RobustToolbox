@@ -1,6 +1,7 @@
 ﻿using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
@@ -42,7 +43,7 @@ namespace SS14.Server.GameObjects
             MarshalComponentParameter parameter = MarshalComponentParameter.Deserialize(serializedParameter);
             IPlayerSession player = IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(client);
 
-            Owner.GetComponent<Component>(parameter.Family).SetSVar(parameter);
+            Owner.GetComponent<IComponent>(parameter.Family).SetSVar(parameter);
             Logger.Log("Player " + player.Name + " set SVar."); //Make this message better
         }
 
@@ -54,7 +55,7 @@ namespace SS14.Server.GameObjects
         {
             var svars = new List<MarshalComponentParameter>();
             var serializedSvars = new List<byte[]>();
-            foreach (Component component in Owner.GetComponents())
+            foreach (IComponent component in Owner.GetComponents())
             {
                 svars.AddRange(component.GetSVars());
             }

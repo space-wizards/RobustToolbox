@@ -157,9 +157,8 @@ namespace SS14.Shared.IoC
             // Graph built, go over ones that need injection.
             foreach (var Implementation in InjectList)
             {
-                foreach (FieldInfo field in Implementation.GetType()
-                                                          .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                                                          .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
+                foreach (FieldInfo field in GetAllFields(Implementation.GetType())
+                                            .Where(p => Attribute.GetCustomAttribute(p, typeof(DependencyAttribute)) != null))
                 {
                     // Not using Resolve<T>() because we're literally building it right now.
                     if (!Services.ContainsKey(field.FieldType))
@@ -175,6 +174,28 @@ namespace SS14.Shared.IoC
             foreach (IPostInjectInit InjectedItem in InjectList.OfType<IPostInjectInit>())
             {
                 InjectedItem.PostInject();
+            }
+        }
+
+        /// <summary>
+        /// Returns absolutely all fields, privates, readonlies, and ones from parents.
+        /// </summary>
+        private static IEnumerable<FieldInfo> GetAllFields(Type t)
+        {
+            // We need to fetch the entire class hierarchy and SelectMany(),
+            // Because BindingFlags.FlattenHierarchy doesn't read privates,
+            // Even when you pass BindingFlags.NonPublic.
+            return GetClassHierarchy(t).SelectMany(p => p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance));
+        }
+
+        private static IEnumerable<Type> GetClassHierarchy(Type t)
+        {
+            yield return t;
+
+            while (t.BaseType != null)
+            {
+                t = t.BaseType;
+                yield return t;
             }
         }
     }

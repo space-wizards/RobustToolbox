@@ -26,30 +26,30 @@ namespace SS14.Server.GameObjects
             return new HitboxComponentState(AABB);
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
             YamlNode node;
-            if (mapping.TryGetValue("sizeX", out node))
+            if (mapping.TryGetNode("sizeX", out node))
             {
                 var width = node.AsFloat() / tileSize;
                 AABB = new FloatRect(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
             }
 
-            if (mapping.TryGetValue("sizeY", out node))
+            if (mapping.TryGetNode("sizeY", out node))
             {
                 var height = node.AsFloat() / tileSize;
                 AABB = new FloatRect(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
             }
 
-            if (mapping.TryGetValue("offsetX", out node))
+            if (mapping.TryGetNode("offsetX", out node))
             {
                 var x = node.AsFloat() / tileSize;
                 AABB = new FloatRect(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
             }
 
-            if (mapping.TryGetValue("offsetY", out node))
+            if (mapping.TryGetNode("offsetY", out node))
             {
                 var y = node.AsFloat() / tileSize;
                 AABB = new FloatRect(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);

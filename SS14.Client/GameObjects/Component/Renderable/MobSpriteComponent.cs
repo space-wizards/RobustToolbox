@@ -92,17 +92,17 @@ namespace SS14.Client.GameObjects
             return reply;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             base.LoadParameters(mapping);
 
             YamlNode node;
-            if (mapping.TryGetValue("drawdepth", out node))
+            if (mapping.TryGetNode("drawdepth", out node))
             {
                 SetDrawDepth(node.AsEnum<DrawDepth>());
             }
 
-            if (mapping.TryGetValue("drawdepth", out node))
+            if (mapping.TryGetNode("drawdepth", out node))
             {
                 _basename = node.AsString();
                 LoadSprites();

@@ -40,9 +40,9 @@ namespace SS14.Server.GameObjects
             return reply;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            if (mapping.TryGetValue("wearloc", out YamlNode node))
+            if (mapping.TryGetNode("wearloc", out YamlNode node))
             {
                 wearloc = node.AsEnum<EquipmentSlot>();
             }

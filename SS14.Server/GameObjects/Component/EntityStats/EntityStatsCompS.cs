@@ -58,10 +58,10 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("armor", out node))
+            if (mapping.TryGetNode("armor", out node))
             {
                 foreach (KeyValuePair<YamlNode, YamlNode> stat in (YamlMappingNode)node)
                 {

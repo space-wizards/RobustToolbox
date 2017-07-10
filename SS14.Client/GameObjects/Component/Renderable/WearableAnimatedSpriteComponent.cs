@@ -43,17 +43,17 @@ namespace SS14.Client.GameObjects
             CarriedSprite = spritename;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             base.LoadParameters(mapping);
 
             YamlNode node;
-            if (mapping.TryGetValue("notWornSprite", out node))
+            if (mapping.TryGetNode("notWornSprite", out node))
             {
                 SetNotWornSprite(node.AsString());
             }
 
-            if (mapping.TryGetValue("carriedSprite", out node))
+            if (mapping.TryGetNode("carriedSprite", out node))
             {
                 SetCarriedSprite(node.AsString());
             }

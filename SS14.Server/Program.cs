@@ -85,7 +85,6 @@ namespace SS14.Server
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
 
@@ -110,6 +109,7 @@ namespace SS14.Server
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<IComponentFactory, ServerComponentFactory>();
 
             IoCManager.BuildGraph();
         }

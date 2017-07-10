@@ -61,40 +61,40 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("lightoffsetx", out node))
+            if (mapping.TryGetNode("lightoffsetx", out node))
             {
                 _lightOffset.X = node.AsFloat();
             }
 
-            if (mapping.TryGetValue("lightoffsety", out node))
+            if (mapping.TryGetNode("lightoffsety", out node))
             {
                 _lightOffset.Y = node.AsFloat();
             }
 
-            if (mapping.TryGetValue("lightradius", out node))
+            if (mapping.TryGetNode("lightradius", out node))
             {
                 _lightRadius = node.AsInt();
             }
 
-            if (mapping.TryGetValue("lightColorR", out node))
+            if (mapping.TryGetNode("lightColorR", out node))
             {
                 _lightColor.X = node.AsInt();
             }
 
-            if (mapping.TryGetValue("lightColorG", out node))
+            if (mapping.TryGetNode("lightColorG", out node))
             {
                 _lightColor.Y = node.AsInt();
             }
 
-            if (mapping.TryGetValue("lightColorB", out node))
+            if (mapping.TryGetNode("lightColorB", out node))
             {
                 _lightColor.Z = node.AsInt();
             }
 
-            if (mapping.TryGetValue("mask", out node))
+            if (mapping.TryGetNode("mask", out node))
             {
                 _mask = node.AsString();
             }

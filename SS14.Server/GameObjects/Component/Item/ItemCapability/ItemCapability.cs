@@ -10,7 +10,7 @@ namespace SS14.Server.GameObjects.Item.ItemCapability
         public string capabilityName;
         protected ItemCapabilityType capabilityType;
         public InteractsWith interactsWith; //What types of shit this interacts with
-        public Component owner;
+        public IComponent owner;
         public int priority; //Where in the stack this puppy is
 
         /// <summary>

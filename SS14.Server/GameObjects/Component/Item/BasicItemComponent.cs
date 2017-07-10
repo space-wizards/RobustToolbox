@@ -283,7 +283,7 @@ namespace SS14.Server.GameObjects
             cap.owner = this;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> yaml)
+        public override void LoadParameters(YamlMappingNode yaml)
         {
             /*
             TODO: figure something out for this cancerous mess.

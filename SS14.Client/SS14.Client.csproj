@@ -6,8 +6,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0C31DFDF-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>ss14.ico</ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>SS14.Client</AssemblyName>
@@ -176,6 +175,7 @@
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="ss14.ico" />
     <None Include="app.config">
     </None>
     <Content Include="KeyBindings.xml">

@@ -161,36 +161,36 @@ namespace SS14.Client.GameObjects
         /// Settable params:
         /// TweakAABB - Vector4
         /// </summary>
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
             YamlNode node;
-            if (mapping.TryGetValue("tweakAABB", out node))
+            if (mapping.TryGetNode("tweakAABB", out node))
             {
                 TweakAABB = node.AsVector4f() / mapManager.TileSize;
             }
 
-            if (mapping.TryGetValue("TweakAABBtop", out node))
+            if (mapping.TryGetNode("TweakAABBtop", out node))
             {
                 TweakAABB = new Vector4f(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
             }
 
-            if (mapping.TryGetValue("TweakAABBright", out node))
+            if (mapping.TryGetNode("TweakAABBright", out node))
             {
                 TweakAABB = new Vector4f(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
             }
 
-            if (mapping.TryGetValue("TweakAABBbottom", out node))
+            if (mapping.TryGetNode("TweakAABBbottom", out node))
             {
                 TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
             }
 
-            if (mapping.TryGetValue("TweakAABBleft", out node))
+            if (mapping.TryGetNode("TweakAABBleft", out node))
             {
                 TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
             }
 
-            if (mapping.TryGetValue("DebugColor", out node))
+            if (mapping.TryGetNode("DebugColor", out node))
             {
                 DebugColor = ColorUtils.FromHex(node.AsString(), Color.Red);
             }

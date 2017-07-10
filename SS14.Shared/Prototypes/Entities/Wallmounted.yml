@@ -7,6 +7,9 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - fire_extinguisher
+
   - type: BasicInteractable
   - type: BasicMover
   - type: BasicLargeObject
@@ -15,6 +18,10 @@
   placement:
     mode: AlignWall
     range: 200
+    modes:
+    - 18
+    - 26
+    - 32
 
 - type: entity
   id: FireAlarm
@@ -25,14 +32,23 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - fire_alarm_off
+
   - type: BasicInteractable
   - type: BasicMover
   - type: BasicLargeObject
   - type: WallMounted
+  - type: Icon
+    icon: fire_alarm_off
 
   placement:
     mode: AlignWall
     range: 180
+    nodes:
+    - 5
+    - 10
+    - 15
 
 - type: entity
   id: MedCabinet
@@ -43,10 +59,15 @@
   - type: Direction
   - type: Clickable
   - type: Sprite
+    sprites:
+    - med_cabinet
+
   - type: BasicInteractable
   - type: BasicMover
   - type: BasicLargeObject
   - type: WallMounted
+  - type: Icon
+    icon: med_cabinet
 
   placement:
     mode: AlignWall

@@ -24,25 +24,25 @@ namespace SS14.Server.GameObjects
             Family = ComponentFamily.Light;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetValue("startState", out node))
+            if (mapping.TryGetNode("startState", out node))
             {
                 _state = node.AsEnum<LightState>();
             }
 
-            if (mapping.TryGetValue("lightColorR", out node))
+            if (mapping.TryGetNode("lightColorR", out node))
             {
                 _colorR = node.AsInt();
             }
 
-            if (mapping.TryGetValue("lightColorG", out node))
+            if (mapping.TryGetNode("lightColorG", out node))
             {
                 _colorG = node.AsInt();
             }
 
-            if (mapping.TryGetValue("lightColorB", out node))
+            if (mapping.TryGetNode("lightColorB", out node))
             {
                 _colorB = node.AsInt();
             }

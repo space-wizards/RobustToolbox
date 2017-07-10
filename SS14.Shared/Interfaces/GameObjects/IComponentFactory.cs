@@ -8,11 +8,40 @@ using SS14.Shared.IoC;
 namespace SS14.Shared.Interfaces.GameObjects
 {
     /// <summary>
+    /// Used by <see cref="Shared.GameObjects.EntityPrototype" /> to determine whether a component is available.
+    /// This distinction is important because prototypes are shared across client and server, but the two might have different components.
+    /// </summary>
+    public enum ComponentAvailability
+    {
+        /// <summary>
+        /// The component is available and can be insantiated.
+        /// </summary>
+        Available,
+
+        /// <summary>
+        /// The component is not available, but should be ignored (prevent warnings for missing components).
+        /// </summary>
+        Ignore,
+
+        /// <summary>
+        /// The component is unknown entirely. This may warrant a warning or error.
+        /// </summary>
+        Unknown
+    }
+
+    /// <summary>
     /// Handles the spawning of components.
     /// Does IoC magic to allow accessing components by <see cref="IComponent.Name"/>.
     /// </summary>
     public interface IComponentFactory
     {
+        /// <summary>
+        /// Get whether a component is available right now.
+        /// </summary>
+        /// <param name="componentName">The name of the component to check.</param>
+        /// <returns>The availability of the component.</returns>
+        ComponentAvailability GetComponentAvailability(string componentName);
+
         /// <summary>
         /// Gets a new component instantiated of the specified type.
         /// </summary>

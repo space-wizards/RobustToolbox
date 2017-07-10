@@ -24,12 +24,11 @@ namespace SS14.Server.GameObjects
             Family = ComponentFamily.Hands;
         }
 
-        public override void LoadParameters(Dictionary<string, YamlNode> mapping)
+        public override void LoadParameters(YamlMappingNode mapping)
         {
-            YamlNode node;
-            if (mapping.TryGetValue("slots", out node))
+            if (mapping.TryGetNode<YamlSequenceNode>("slots", out var sequence))
             {
-                foreach (YamlNode slot in (YamlSequenceNode)mapping["slots"])
+                foreach (YamlNode slot in sequence)
                 {
                     Handslots.Add(slot.AsEnum<InventoryLocation>(), null);
                 }

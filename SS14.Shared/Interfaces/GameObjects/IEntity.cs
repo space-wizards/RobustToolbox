@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SS14.Shared.GameObjects;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -20,6 +21,16 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         EntityPrototype Prototype { get; set; }
         event EntityShutdownEvent OnShutdown;
+
+        /// <summary>
+        /// Called after the entity is construted by its prototype to load parameters
+        /// from the prototype's <c>data</c> field.
+        /// </summary>
+        /// <remarks>
+        /// This method does not get called in case no data field is provided.
+        /// </remarks>
+        /// <param name="parameters">The mapping representing the <c>data</c> field.</param>
+        void LoadData(YamlMappingNode parameters);
 
         /// <summary>
         /// Match
@@ -90,7 +101,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="component">Sending component</param>
         /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        void SendComponentNetworkMessage(Component component, NetDeliveryMethod method, params object[] messageParams);
+        void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method, params object[] messageParams);
 
         /// <summary>
         /// Sends a message to the counterpart component on the server side
@@ -99,7 +110,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
 
         /// <summary>

@@ -14,6 +14,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Player
 {
@@ -25,7 +26,7 @@ namespace SS14.Client.Player
 
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
         [Dependency]
-        private readonly INetworkManager _networkManager;
+        private readonly IClientNetManager _networkManager;
         private SessionStatus status = SessionStatus.Zombie;
 
         #region IPlayerManager Members
@@ -90,7 +91,7 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-            PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
+            PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.Peer.UniqueIdentifier);
             if (myState == null)
                 return;
             if (myState.ControlledEntity != null &&
@@ -139,11 +140,11 @@ namespace SS14.Client.Player
         public void SendVerb(string verb, int uid)
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte)NetMessage.PlayerSessionMessage);
+            message.Write((byte)NetMessages.PlayerSessionMessage);
             message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandleAttachToEntity(NetIncomingMessage message)

@@ -9,6 +9,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.State
 {
@@ -17,7 +18,7 @@ namespace SS14.Client.State
         protected readonly IConfigurationManager ConfigurationManager;
         protected readonly IKeyBindingManager KeyBindingManager;
         protected readonly IMapManager MapManager;
-        protected readonly INetworkManager NetworkManager;
+        protected readonly IClientNetManager NetworkManager;
         protected readonly IPlacementManager PlacementManager;
         protected readonly IPlayerManager PlayerManager;
         protected readonly IResourceManager ResourceManager;
@@ -27,7 +28,7 @@ namespace SS14.Client.State
         protected State(IDictionary<Type, object> managers)
         {
             StateManager = (IStateManager) managers[typeof (IStateManager)];
-            NetworkManager = (INetworkManager) managers[typeof (INetworkManager)];
+            NetworkManager = (IClientNetManager) managers[typeof (IClientNetManager)];
             ResourceManager = (IResourceManager) managers[typeof (IResourceManager)];
             UserInterfaceManager = (IUserInterfaceManager) managers[typeof (IUserInterfaceManager)];
             MapManager = (IMapManager) managers[typeof (IMapManager)];

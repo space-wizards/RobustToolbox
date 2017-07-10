@@ -6,8 +6,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0C31DFDF-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>ss14.ico</ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>SS14.Client</AssemblyName>
@@ -176,6 +175,7 @@
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="ss14.ico" />
     <None Include="app.config">
     </None>
     <Content Include="KeyBindings.xml">
@@ -183,10 +183,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="plugins.cfg">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="player_config.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -294,11 +290,9 @@
     <Compile Include="Interfaces\Map\TileRef.cs" />
     <Compile Include="Interfaces\MessageLogging\IMessageLogger.cs" />
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
-    <Compile Include="Interfaces\Network\INetworkManager.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Resource\IResourceManager.cs" />
-    <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\State\IState.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
@@ -320,7 +314,6 @@
     <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <None Include="MessageLogging\messageLoggerService.config" />
     <Compile Include="Network\NetworkGrapher.cs" />
-    <Compile Include="Network\NetworkManager.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />
     <Compile Include="Placement\Modes\AlignFree.cs" />
@@ -336,12 +329,10 @@
     <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
     <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
     <Compile Include="ResourceManagment\ResourceManagerZip.cs" />
-    <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
-    <Compile Include="State\States\LobbyScreen.cs" />
     <Compile Include="State\States\MainMenu.cs" />
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="UserInterface\DragDropInfo.cs" />

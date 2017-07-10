@@ -60,7 +60,11 @@ namespace SS14.Client.Resources
             {
                 if (stream != null)
                 {
-                    _fonts.Add("base_font", new Font(stream));
+                    // SFML font does not cache the manifest stream contents, we have to do it.
+                    var memStream = new MemoryStream();
+                    stream.CopyTo(memStream);
+
+                    _fonts.Add("base_font", new Font(memStream));
                 }
             }
 
@@ -91,7 +95,7 @@ namespace SS14.Client.Resources
         {
             var cfgMgr = _configurationManager;
 
-            cfgMgr.RegisterCVar("res.pack", @"../../Resources/ResourcePack.zip", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVarFlags.ARCHIVE);
             cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
             string zipPath = path ?? _configurationManager.GetCVar<string>("res.pack");
@@ -99,9 +103,8 @@ namespace SS14.Client.Resources
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
-                string debugPath = "..\\";
-                debugPath += zipPath;
-                zipPath = debugPath;
+                string debugPath = "..";
+                zipPath = Path.Combine(debugPath, zipPath);
             }
 
             zipPath = PathHelpers.ExecutableRelativeFile(zipPath);

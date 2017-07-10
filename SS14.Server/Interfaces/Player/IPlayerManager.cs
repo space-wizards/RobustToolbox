@@ -1,34 +1,44 @@
-﻿using Lidgren.Network;
+﻿using System;
 using SFML.System;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
-using SS14.Shared.IoC;
+using Lidgren.Network;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network.Messages;
+using SS14.Shared.ServerEnums;
 
 namespace SS14.Server.Interfaces.Player
 {
+    /// <summary>
+    /// Manages each players session when connected to the server.
+    /// </summary>
     public interface IPlayerManager
     {
-        void SpawnPlayerMob(IPlayerSession player);
+        RunLevel RunLevel { get; set; }
+
+        int PlayerCount { get; }
+
+        void SpawnPlayerMob(IPlayerSession session);
+
+        [Obsolete("Use GetSessionById")]
         IPlayerSession GetSessionByConnection(NetConnection senderConnection);
 
-        void Initialize(ISS14Server server);
+        IPlayerSession GetSessionById(int networkID);
+        
+        IPlayerSession GetSessionByChannel(INetChannel channel);
+
+        void Initialize(BaseServer baseServer);
 
         void SendJoinGameToAll();
 
         void SendJoinLobbyToAll();
 
-        void NewSession(NetConnection sender);
-
-        void EndSession(NetConnection sender);
-
-        void HandleNetworkMessage(NetIncomingMessage msg);
-
-        IPlayerSession GetSessionByIp(string ipKick);
+        void HandleNetworkMessage(MsgSession msg);
 
         void DetachAll();
-        IPlayerSession[] GetPlayersInLobby();
-        IPlayerSession[] GetPlayersInRange(Vector2f position, int range);
-        IPlayerSession[] GetAllPlayers();
+        List<IPlayerSession> GetPlayersInLobby();
+        List<IPlayerSession> GetPlayersInRange(Vector2f position, int range);
+        List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }
 }

@@ -13,7 +13,6 @@ using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
@@ -25,7 +24,6 @@ using SS14.Client.Placement;
 using SS14.Client.Player;
 using SS14.Client.Reflection;
 using SS14.Client.Resources;
-using SS14.Client.Serialization;
 using SS14.Client.State;
 using SS14.Client.UserInterface;
 using SS14.Client.Utility;
@@ -34,14 +32,18 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Client
 {
@@ -75,6 +77,7 @@ namespace SS14.Client
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<INetManager, NetManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -88,7 +91,7 @@ namespace SS14.Client
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<INetworkManager, NetworkManager>();
+            IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<ILightManager, LightManager>();

@@ -9,21 +9,17 @@ using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
 using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.MessageLogging;
-using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
-using SS14.Server.Interfaces.Serialization;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
 using SS14.Server.Map;
 using SS14.Server.MessageLogging;
-using SS14.Server.Network;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Reflection;
 using SS14.Server.Round;
-using SS14.Server.Serialization;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
@@ -31,14 +27,18 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Server
 {
@@ -50,7 +50,7 @@ namespace SS14.Server
             RegisterIoC();
             LoadContentAssemblies();
 
-            var server = IoCManager.Resolve<ISS14Server>();
+            var server = IoCManager.Resolve<IBaseServer>();
 
             Logger.Log("Server -> Starting");
 
@@ -86,6 +86,7 @@ namespace SS14.Server
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<INetManager, NetManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
@@ -94,13 +95,13 @@ namespace SS14.Server
             IoCManager.Register<IServerLogManager, ServerLogManager>();
             IoCManager.Register<IMessageLogger, MessageLogger>();
             IoCManager.Register<IChatManager, ChatManager>();
-            IoCManager.Register<ISS14NetServer, SS14NetServer>();
+            IoCManager.Register<IServerNetManager, NetManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IConsoleManager, ConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IRoundManager, RoundManager>();
-            IoCManager.Register<ISS14Server, SS14Server>();
+            IoCManager.Register<IBaseServer, BaseServer>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<ICommandLineArgs, CommandLineArgs>();

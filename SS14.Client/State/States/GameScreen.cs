@@ -14,7 +14,6 @@ using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.Serialization;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Helpers;
 using SS14.Client.Lighting;
@@ -25,12 +24,15 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Maths;
+using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Network;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State.States
@@ -163,9 +165,16 @@ namespace SS14.Client.State.States
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-            NetworkManager.RequestMap();
+
+            NetOutgoingMessage message = NetworkManager.Peer.CreateMessage();
+            message.Write((byte)NetMessages.RequestMap);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            NetworkManager.SendClientName(ConfigurationManager.GetCVar<string>("player.name"));
+            var message1 = NetworkManager.Peer.CreateMessage();
+            message1.Write((byte) NetMessages.ClientName);
+            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
+            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceManager);
@@ -293,7 +302,7 @@ namespace SS14.Client.State.States
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
 
-            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetworkManager, ResourceManager));
+            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetClientManager, ResourceManager));
 
             int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
 
@@ -629,8 +638,8 @@ namespace SS14.Client.State.States
             if (e.Code == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
-                message.Write((byte)NetMessage.ForceRestart);
-                NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                message.Write((byte)NetMessages.ForceRestart);
+                NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
             if (e.Code == Keyboard.Key.Escape)
             {
@@ -836,10 +845,11 @@ namespace SS14.Client.State.States
         private void SendChatMessage(string text)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.ChatMessage);
+            message.Write((byte)NetMessages.ChatMessage);
             message.Write((byte)ChatChannel.Player);
             message.Write(text);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            message.Write(-1);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         #endregion Chat
@@ -868,9 +878,9 @@ namespace SS14.Client.State.States
 
         #region Messages
 
-        private void NetworkManagerMessageArrived(object sender, IncomingNetworkMessageArgs args)
+        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
-            NetIncomingMessage message = args.Message;
+            NetIncomingMessage message = args.RawMessage;
             if (message == null)
             {
                 return;
@@ -889,34 +899,34 @@ namespace SS14.Client.State.States
                     }
                     break;
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessage)message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessage.MapMessage:
+                        case NetMessages.MapMessage:
                             MapManager.HandleNetworkMessage(message);
                             break;
-                        //case NetMessage.AtmosDisplayUpdate:
+                        //case NetMessages.AtmosDisplayUpdate:
                         //    MapManager.HandleAtmosDisplayUpdate(message);
                         //    break;
-                        case NetMessage.PlayerSessionMessage:
+                        case NetMessages.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
-                        case NetMessage.PlayerUiMessage:
+                        case NetMessages.PlayerUiMessage:
                             UserInterfaceManager.HandleNetMessage(message);
                             break;
-                        case NetMessage.PlacementManagerMessage:
+                        case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
-                        case NetMessage.ChatMessage:
+                        case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
-                        case NetMessage.EntityMessage:
+                        case NetMessages.EntityMessage:
                             _entityManager.HandleEntityNetworkMessage(message);
                             break;
-                        case NetMessage.StateUpdate:
+                        case NetMessages.StateUpdate:
                             HandleStateUpdate(message);
                             break;
-                        case NetMessage.FullState:
+                        case NetMessages.FullState:
                             HandleFullState(message);
                             break;
                     }
@@ -1011,9 +1021,9 @@ namespace SS14.Client.State.States
         private void SendStateAck(uint sequence)
         {
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessage.StateAck);
+            message.Write((byte)NetMessages.StateAck);
             message.Write(sequence);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.Unreliable);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.Unreliable);
         }
 
         public void FormResize()

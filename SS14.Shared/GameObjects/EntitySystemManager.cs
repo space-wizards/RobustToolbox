@@ -102,7 +102,9 @@ namespace SS14.Shared.GameObjects
 
         public void Shutdown()
         {
-            foreach (var system in Systems.Values)
+            // System.Values is modified by RemoveSystem
+            var values = Systems.Values.ToArray();
+            foreach (var system in values)
             {
                 RemoveSystem(system);
             }

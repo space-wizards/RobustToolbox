@@ -292,7 +292,6 @@
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Resource\IResourceManager.cs" />
-    <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\State\IState.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
@@ -329,7 +328,6 @@
     <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
     <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
     <Compile Include="ResourceManagment\ResourceManagerZip.cs" />
-    <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\GameScreen.cs" />

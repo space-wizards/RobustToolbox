@@ -258,7 +258,6 @@
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />
     <Compile Include="Interfaces\Round\IRoundManager.cs" />
-    <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleCommand.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleManager.cs" />
     <Compile Include="Map\HardcodedTileDefinitions.cs" />
@@ -273,7 +272,6 @@
     <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Round\Gamemodes.cs" />
     <Compile Include="Round\RoundManager.cs" />
-    <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="ServerConsole\ConsoleManager.cs" />
     <Compile Include="ServerConsole\Commands\HelpCommand.cs" />
     <Compile Include="ServerConsole\Commands\ListCommands.cs" />

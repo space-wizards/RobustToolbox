@@ -24,6 +24,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
@@ -63,6 +64,9 @@ namespace SS14.Server
 
         [Dependency]
         private IServerLogManager _logman;
+
+        [Dependency]
+        private readonly ISS14Serializer Serializer;
 
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
@@ -209,6 +213,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
             // Not converted yet: NetMessages.FullState
 
+            Serializer.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<IMapManager>().Initialize();

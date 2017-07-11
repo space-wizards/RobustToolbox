@@ -239,6 +239,8 @@ namespace SS14.Server
                 DoMainLoopStuff();
             }
 
+            timerObject.mainLoopTimer.Dispose();
+
             Cleanup();
         }
 

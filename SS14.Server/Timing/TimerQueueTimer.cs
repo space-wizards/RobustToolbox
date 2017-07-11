@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -127,6 +127,7 @@ namespace SS14.Server.Timing
                         int err = Marshal.GetLastWin32Error();
                         throw new Win32Exception(err, "Error disposing timer queue");
                     }
+                    Handle = IntPtr.Zero;
                 }
                 Disposed = true;
             }
@@ -200,12 +201,15 @@ namespace SS14.Server.Timing
         {
             if (!disposed)
             {
-                bool rslt = TQTimerWin32.DeleteTimerQueueTimer(MyQueue.Handle,
-                    Handle, completionEventHandle);
-                if (!rslt)
+                // TimerQueue disposes of all of its Timers
+                if(MyQueue.Handle != IntPtr.Zero)
                 {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Error deleting timer.");
+                    var rslt = TQTimerWin32.DeleteTimerQueueTimer(MyQueue.Handle, Handle, completionEventHandle);
+
+                    if (!rslt)
+                        throw new Win32Exception(Marshal.GetLastWin32Error(), "Error deleting timer.");
                 }
+
                 disposed = true;
             }
         }

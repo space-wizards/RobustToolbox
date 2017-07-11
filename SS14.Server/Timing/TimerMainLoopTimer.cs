@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Timers;
 
 namespace SS14.Server.Timing
 {
     public delegate void MainServerLoop();
-    public interface IMainLoopTimer
+    public interface IMainLoopTimer : IDisposable
     {
         Object CreateMainLoopTimer(MainServerLoop mainLoop, uint period);
     }
@@ -17,6 +17,11 @@ namespace SS14.Server.Timing
             myTimer.Elapsed += (sender, e) => {mainLoop();};
             myTimer.Enabled = true;
             return myTimer;
+        }
+
+        public void Dispose()
+        {
+            myTimer.Dispose();
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using SS14.Client.Interfaces.Resource;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Map;
@@ -9,8 +8,8 @@ namespace SS14.Shared.Map
 {
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
-        [Dependency]
-        private readonly IResourceManager resourceManager;
+        //[Dependency]
+        //private readonly IResourceManager resourceManager;
         private readonly List<ITileDefinition> tileDefs;
         private readonly Dictionary<string, ITileDefinition> tileNames;
         private readonly Dictionary<ITileDefinition, ushort> tileIds;
@@ -28,15 +27,17 @@ namespace SS14.Shared.Map
             Register(new FloorTileDefinition());
             Register(new WallTileDefinition());
         }
-
+        
         public void InitializeResources()
         {
+            /*
             foreach (var item in tileDefs)
             {
                 item.InitializeResources(resourceManager);
             }
+            */
         }
-
+        
         public ushort Register(ITileDefinition tileDef)
         {
             ushort id;

@@ -1,50 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
-using SS14.Shared.Network.Messages;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Maths;
 
 namespace SS14.Shared.Map
 {
-    internal class MapManager : IMapManager
+    public class MapManager : IMapManager
     {
         private const int GRID_INDEX = 0;
         private const ushort TILE_SIZE = 32;
 
         /// <summary>
-        /// A tile is being modified.
-        /// </summary>
-        public event TileChangedEventHandler OnTileChanged;
-
-        /// <summary>
-        /// If you are only going to have one giant global grid, this is your gridId.
-        /// </summary>
-        public int DefaultGridId => GRID_INDEX;
-
-        /// <summary>
-        /// Should the OnTileChanged event be suppressed? This is useful for initially loading the map 
-        /// so that you don't spam an event for each of the million station tiles.
-        /// </summary>
-        public bool SuppressOnTileChanged { get; set; }
-
-        /// <summary>
-        /// The length of the side of a square tile in world units.
-        /// </summary>
-        public ushort TileSize { get; set; }
-        
-        /// <summary>
-        /// Default constructor.
+        ///     Default constructor.
         /// </summary>
         public MapManager()
         {
@@ -55,7 +26,28 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Raises the OnTileChanged event.
+        ///     A tile is being modified.
+        /// </summary>
+        public event TileChangedEventHandler OnTileChanged;
+
+        /// <summary>
+        ///     If you are only going to have one giant global grid, this is your gridId.
+        /// </summary>
+        public int DefaultGridId => GRID_INDEX;
+
+        /// <summary>
+        ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
+        ///     so that you don't spam an event for each of the million station tiles.
+        /// </summary>
+        public bool SuppressOnTileChanged { get; set; }
+
+        /// <summary>
+        ///     The length of the side of a square tile in world units.
+        /// </summary>
+        public ushort TileSize { get; set; }
+
+        /// <summary>
+        ///     Raises the OnTileChanged event.
         /// </summary>
         /// <param name="gridId">The ID of the grid that was modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
@@ -68,16 +60,22 @@ namespace SS14.Shared.Map
             OnTileChanged?.Invoke(gridId, tileRef, oldTile);
         }
 
+        #region Networking
+
+
+
+        #endregion
+
         #region GridAccess
 
         /// <summary>
-        /// Holds an indexed collection of map grids.
+        ///     Holds an indexed collection of map grids.
         /// </summary>
         private readonly Dictionary<int, MapGrid> _grids = new Dictionary<int, MapGrid>();
 
         /// <summary>
-        /// Creates a new empty grid with the given ID and optional chunk size. If a grid already 
-        /// exists with the gridID, it is overwritten with the new grid.
+        ///     Creates a new empty grid with the given ID and optional chunk size. If a grid already
+        ///     exists with the gridID, it is overwritten with the new grid.
         /// </summary>
         /// <param name="gridId">The id of the new grid to create.</param>
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
@@ -90,7 +88,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Checks if a grid exists with the given ID.
+        ///     Checks if a grid exists with the given ID.
         /// </summary>
         /// <param name="gridId">The ID of the grid to check.</param>
         /// <returns></returns>
@@ -100,7 +98,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Gets the grid associated with the given grid ID. If the grid with the given ID does not exist, return null.
+        ///     Gets the grid associated with the given grid ID. If the grid with the given ID does not exist, return null.
         /// </summary>
         /// <param name="gridId">The id of the grid to get.</param>
         /// <returns></returns>
@@ -112,7 +110,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Gets the grid associated with the given grid ID.
+        ///     Gets the grid associated with the given grid ID.
         /// </summary>
         /// <param name="gridId">The id of the grid to get.</param>
         /// <param name="mapGrid">The grid associated with the grid ID. If no grid exists, this is null.</param>
@@ -124,7 +122,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
+        ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
         /// </summary>
         /// <returns></returns>
         public IMapGrid GetDefaultGrid()
@@ -133,7 +131,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Deletes the grid associated with the given grid ID.
+        ///     Deletes the grid associated with the given grid ID.
         /// </summary>
         /// <param name="gridId">The grid to remove.</param>
         public void RemoveGrid(int gridId)
@@ -147,7 +145,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Is there any grid at this position in the world?
+        ///     Is there any grid at this position in the world?
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
@@ -155,15 +153,13 @@ namespace SS14.Shared.Map
         public bool IsGridAt(float xWorld, float yWorld)
         {
             foreach (var kvGrid in _grids)
-            {
                 if (kvGrid.Value.AABBWorld.Contains(xWorld, yWorld))
                     return true;
-            }
             return false;
         }
 
         /// <summary>
-        /// Is the specified grid at this position in the world?
+        ///     Is the specified grid at this position in the world?
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
@@ -176,7 +172,7 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        /// Finds all of the grids at this position in the world.
+        ///     Finds all of the grids at this position in the world.
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
@@ -185,15 +181,13 @@ namespace SS14.Shared.Map
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
-            {
                 if (kvGrid.Value.AABBWorld.Contains(xWorld, yWorld))
                     gridList.Add(kvGrid.Value);
-            }
             return gridList;
         }
 
         /// <summary>
-        /// Finds all of the grids at this position in the world.
+        ///     Finds all of the grids at this position in the world.
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
@@ -201,15 +195,13 @@ namespace SS14.Shared.Map
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
-            {
                 if (kvGrid.Value.AABBWorld.Contains(worldPos.X, worldPos.Y))
                     gridList.Add(kvGrid.Value);
-            }
             return gridList;
         }
 
         /// <summary>
-        /// Finds all grids that intersect the rectangle in the world.
+        ///     Finds all grids that intersect the rectangle in the world.
         /// </summary>
         /// <param name="worldArea">The are in world coordinates to search.</param>
         /// <returns></returns>
@@ -217,17 +209,15 @@ namespace SS14.Shared.Map
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
-            {
                 if (kvGrid.Value.AABBWorld.Intersects(worldArea))
                     gridList.Add(kvGrid.Value);
-            }
             return gridList;
         }
 
         #endregion Networking
 
-#region File Operations
-        
+        #region File Operations
+
         public void SaveMap(string mapName)
         {
             throw new NotImplementedException();
@@ -366,7 +356,7 @@ namespace SS14.Shared.Map
 
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
         /// <summary>
-        /// Generates 'Demo' grid and inserts it into the map manager.
+        ///     Generates 'Demo' grid and inserts it into the map manager.
         /// </summary>
         /// <param name="mapManager">The map manager to work with.</param>
         /// <param name="defManager">The definition manager to work with.</param>
@@ -377,8 +367,8 @@ namespace SS14.Shared.Map
             try
             {
                 Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
-                ushort floor = defManager["Floor"].TileId;
-                ushort wall = defManager["Wall"].TileId;
+                var floor = defManager["Floor"].TileId;
+                var wall = defManager["Wall"].TileId;
 
                 Debug.Assert(floor > 0);
                 Debug.Assert(wall > 0);
@@ -386,19 +376,11 @@ namespace SS14.Shared.Map
                 var grid = mapManager.GetGrid(gridId) ?? mapManager.CreateGrid(gridId);
 
                 for (var y = -32; y <= 32; ++y)
-                {
-                    for (var x = -32; x <= 32; ++x)
-                    {
-                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || (Math.Abs(x) == 5 && Math.Abs(y) < 5) || (Math.Abs(y) == 7 && Math.Abs(x) < 3))
-                        {
-                            grid.SetTile(x, y, new Tile(wall));
-                        }
-                        else
-                        {
-                            grid.SetTile(x, y, new Tile(floor));
-                        }
-                    }
-                }
+                for (var x = -32; x <= 32; ++x)
+                    if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
+                        grid.SetTile(x, y, new Tile(wall));
+                    else
+                        grid.SetTile(x, y, new Tile(floor));
             }
             finally
             {
@@ -406,7 +388,6 @@ namespace SS14.Shared.Map
             }
         }
 
-#endregion
-        
+        #endregion
     }
 }

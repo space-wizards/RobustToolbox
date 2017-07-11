@@ -10,8 +10,7 @@ namespace SS14.Shared.Interfaces.Map
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
         void InitializeResources();
-        ushort Register(ITileDefinition tileDef);
-        void RegisterServerTileMapping(NetIncomingMessage message);
+
         /// <summary>
         ///     Indexer to retrieve a tile definition by name.
         /// </summary>

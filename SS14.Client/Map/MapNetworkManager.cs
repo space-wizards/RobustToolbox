@@ -12,7 +12,6 @@ namespace SS14.Client.Map
     ///     TODO: This is a temporary class. Once the Client and Server NetworkManagers are merged
     ///     to a unified shared version, this class should be merged with its twin in SS14.Server.
     /// </summary>
-    [IoCTarget]
     public class MapNetworkManager : IMapNetworkManager
     {
         /// <summary>

@@ -11,7 +11,6 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
-using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
@@ -23,6 +22,7 @@ using SS14.Shared.Configuration;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
@@ -200,7 +200,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int) MsgMapReq.ID, message => SendMap(message.MsgChannel));
-            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int) MsgMap.ID, message => IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap) message));
+            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int) MsgMap.ID, message => IoCManager.Resolve<IMapNetworkManager>().HandleNetworkMessage((MsgMap) message));
 
             netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) message));
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int) MsgUi.ID, HandleErrorMessage);

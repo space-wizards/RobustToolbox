@@ -1,10 +1,12 @@
 ﻿using Lidgren.Network;
-using SS14.Server.Interfaces.Network;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Map
 {
@@ -14,7 +16,6 @@ namespace SS14.Server.Map
     ///     TODO: This is a temporary class. Once the Client and Server NetworkManagers are merged
     ///     to a unified shared version, this class should be merged with its twin in SS14.Client.
     /// </summary>
-    [IoCTarget]
     public class MapNetworkManager : IMapNetworkManager
     {
         /// <summary>
@@ -56,7 +57,7 @@ namespace SS14.Server.Map
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
             const int MAP_INDEX = 0;
 
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
+            Logger.Log(connection.RemoteEndPoint.Address + ": Sending map");
             var mapMessage = CreateMapMessage(MapMessage.SendTileMap);
 
             mapMessage.Write(MAP_VERSION); // Format version.  Who knows, it could come in handy.
@@ -80,8 +81,8 @@ namespace SS14.Server.Map
                     mapMessage.Write((uint) tile.Tile);
             }
 
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
+            IoCManager.Resolve<INetManager>().Peer.SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
+            Logger.Info(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
                            mapMessage.LengthBytes + " bytes");
         }
 
@@ -100,17 +101,17 @@ namespace SS14.Server.Map
         /// <param name="oldTile">The old tile being modified.</param>
         private static void MapMgrOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
         {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
+            var netMgr = IoCManager.Resolve<IServerNetManager>();
 
             var message = netMgr.CreateMessage();
-            message.Write((byte) NetMessage.MapMessage);
+            message.Write((byte) NetMessages.MapMessage);
             message.Write((byte) MapMessage.TurfUpdate);
 
             message.Write(tileRef.X);
             message.Write(tileRef.Y);
             message.Write((uint) tileRef.Tile);
 
-            netMgr.SendToAll(message);
+            netMgr.ServerSendToAll(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         /// <summary>
@@ -120,8 +121,8 @@ namespace SS14.Server.Map
         /// <returns></returns>
         private static NetOutgoingMessage CreateMapMessage(MapMessage messageType)
         {
-            var message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte) NetMessage.MapMessage);
+            var message = IoCManager.Resolve<IServerNetManager>().CreateMessage();
+            message.Write((byte) NetMessages.MapMessage);
             message.Write((byte) messageType);
             return message;
         } // TODO HOOK ME BACK UP WITH ENTITY SYSTEM

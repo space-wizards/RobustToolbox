@@ -38,6 +38,8 @@ namespace SS14.Shared.Map
 
         public bool IsVentedIntoSpace { get; protected set; }
         
+        public bool IsFloor { get; protected set; }
+
         public bool IsWall { get; protected set; }
 
         public string SpriteName { get; protected set; }

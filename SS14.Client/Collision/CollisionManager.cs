@@ -2,9 +2,9 @@
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Collision;
-using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;

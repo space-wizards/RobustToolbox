@@ -72,10 +72,10 @@ def install_hooks():
     hooks_source_dir = Path("hooks")
 
     # Clear entire tree since we need to kill deleted files too.
-    for filename in os.listdir(hooks_target_dir):
+    for filename in os.listdir(str(hooks_target_dir)):
         os.remove(str(hooks_target_dir/filename))
 
-    for filename in os.listdir(hooks_source_dir):
+    for filename in os.listdir(str(hooks_source_dir)):
         print("Copying hook {}".format(filename))
         shutil.copyfile(str(hooks_source_dir/filename), str(hooks_target_dir/filename))
 
@@ -92,11 +92,5 @@ def reset_solution():
         f.write(content)
 
 if __name__ == '__main__':
-    try:
-        install_hooks()
-        update_submodules()
-
-    except Exception as e:
-        print("Error: script threw an exception: {}".format(e))
-
-exit(0)
+    install_hooks()
+    update_submodules()

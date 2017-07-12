@@ -1,0 +1,3 @@
+[submodule "SS14.Shared.Bsdiff"]
+	path = SS14.Shared.Bsdiff
+	url = https://github.com/space-wizards/ss14.shared.bsdiff.git

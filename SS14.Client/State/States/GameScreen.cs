@@ -100,7 +100,7 @@ namespace SS14.Client.State.States
         private Sprite _lightTargetIntermediateSprite;
         private Sprite _lightTargetSprite;
 
-        private bool bPlayerVision = true;
+        private bool bPlayerVision = false;
         private bool bFullVision = false;
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
@@ -172,7 +172,7 @@ namespace SS14.Client.State.States
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             var message1 = NetworkManager.Peer.CreateMessage();
-            message1.Write((byte) NetMessages.ClientName);
+            message1.Write((byte)NetMessages.ClientName);
             message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
             NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 

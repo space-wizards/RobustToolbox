@@ -1,6 +1,6 @@
-using BsDiffLib;
 using Lidgren.Network;
 using NetSerializer;
+using SS14.Shared.Bsdiff;
 using SS14.Shared.GameStates;
 using SS14.Shared.Serialization;
 using System;
@@ -11,14 +11,13 @@ namespace SS14.Shared
     [Serializable]
     public class GameStateDelta : INetSerializableType
     {
-        private readonly MemoryStream deltaBytes = new MemoryStream();
+        private byte[] deltaBytes;
         public uint FromSequence;
         public uint Sequence;
 
         public GameStateDelta(byte[] bytes)
         {
-            deltaBytes = new MemoryStream(bytes);
-            deltaBytes.Seek(0, SeekOrigin.Begin);
+            deltaBytes = bytes;
         }
 
         public GameStateDelta()
@@ -34,7 +33,7 @@ namespace SS14.Shared
         {
             Sequence = toState.Sequence;
             FromSequence = fromState.Sequence;
-            BinaryPatchUtility.Create(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer(), deltaBytes);
+            deltaBytes = Bsdiff.Bsdiff.GenerateBzip2Diff(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer());
         }
 
         public GameState Apply(GameState fromState)
@@ -42,11 +41,8 @@ namespace SS14.Shared
             if (fromState.Sequence != FromSequence)
                 throw new Exception("Cannot apply GameStateDelta. Sequence incorrect.");
             byte[] fromBuffer = fromState.GetSerializedDataStream().ToArray();
-            var toStream = new MemoryStream();
-            BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()),
-                                     toStream);
-            toStream.Seek(0, SeekOrigin.Begin);
-            return (GameState) Serializer.Deserialize(toStream);
+            var newBytes = Bsdiff.Bsdiff.ApplyBzip2Patch(fromBuffer, deltaBytes);
+            return (GameState) Serializer.Deserialize(new MemoryStream(newBytes));
         }
 
         public static GameStateDelta ReadDelta(NetIncomingMessage message)
@@ -67,9 +63,8 @@ namespace SS14.Shared
         {
             message.Write(Sequence);
             message.Write(FromSequence);
-            byte[] bytes = deltaBytes.ToArray();
-            message.Write(bytes.Length);
-            message.Write(bytes);
+            message.Write(deltaBytes.Length);
+            message.Write(deltaBytes);
         }
     }
 }

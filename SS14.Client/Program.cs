@@ -8,7 +8,6 @@ using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
@@ -18,7 +17,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
 using SS14.Client.Lighting;
 using SS14.Client.Map;
-using SS14.Client.MessageLogging;
 using SS14.Client.Network;
 using SS14.Client.Placement;
 using SS14.Client.Player;
@@ -66,46 +64,6 @@ namespace SS14.Client
             IoCManager.Clear();
         }
 
-        /// <summary>
-        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
-        /// </summary>
-        private static void RegisterIoC()
-        {
-            // Shared stuff.
-            IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
-            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<INetManager, NetManager>();
-
-            // Client stuff.
-            IoCManager.Register<IRand, Rand>();
-            IoCManager.Register<IStateManager, StateManager>();
-            IoCManager.Register<INetworkGrapher, NetworkGrapher>();
-            IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
-            IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
-            IoCManager.Register<IGameTimer, GameTimer.GameTimer>();
-            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-            IoCManager.Register<IMessageLogger, MessageLogger>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
-            IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<IClientNetManager, NetManager>();
-            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
-            IoCManager.Register<IPlacementManager, PlacementManager>();
-            IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
-            IoCManager.Register<ISS14Serializer, SS14Serializer>();
-            IoCManager.Register<IMapManager, MapManager>();
-            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
-            IoCManager.Register<IPlayerManager, PlayerManager>();
-            IoCManager.Register<IGameController, GameController>();
-            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
-
-            IoCManager.BuildGraph();
-        }
-
         private static void LoadAssemblies()
         {
             var assemblies = new List<Assembly>(4)
@@ -144,6 +102,52 @@ namespace SS14.Client
             }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+        }
+
+        /// <summary>
+        /// Registers all the types into the <see cref="IoCManager"/> with <see cref="IoCManager.Register{TInterface, TImplementation}"/>
+        /// </summary>
+        private static void RegisterIoC()
+        {
+            // Shared stuff.
+            IoCManager.Register<IComponentManager, ComponentManager>();
+            IoCManager.Register<IPrototypeManager, PrototypeManager>();
+            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
+            IoCManager.Register<ILogManager, LogManager>();
+            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<INetManager, NetManager>();
+
+            // Client stuff.
+            IoCManager.Register<IRand, Rand>();
+            IoCManager.Register<IStateManager, StateManager>();
+            IoCManager.Register<INetworkGrapher, NetworkGrapher>();
+            IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
+            IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
+            IoCManager.Register<IGameTimer, GameTimer.GameTimer>();
+            IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
+            IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IEntityManager, ClientEntityManager>();
+            IoCManager.Register<IClientEntityManager, ClientEntityManager>();
+            IoCManager.Register<IClientNetManager, NetManager>();
+            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
+            IoCManager.Register<IPlacementManager, PlacementManager>();
+            IoCManager.Register<ILightManager, LightManager>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<ISS14Serializer, SS14Serializer>();
+            IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+            IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<IGameController, GameController>();
+            IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+
+            IoCManager.BuildGraph();
+        }
+
+        private static void RegisterComponents()
+        {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+
+            factory.Register<BasicMoverComponent>();
         }
     }
 }

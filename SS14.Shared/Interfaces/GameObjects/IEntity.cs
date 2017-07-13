@@ -45,9 +45,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// Public method to add a component to an entity.
         /// Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>
-        /// <param name="family">the family of component -- there can only be one at a time per family.</param>
         /// <param name="component">The component.</param>
-        void AddComponent(ComponentFamily family, IComponent component);
+        void AddComponent(IComponent component);
 
         /// <summary>
         /// Public method to remove a component from an entity.
@@ -55,27 +54,22 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// from the component manager and shutting down the component.
         /// </summary>
         /// <param name="family"></param>
-        void RemoveComponent(ComponentFamily family);
+        void RemoveComponent(IComponent component);
 
-        /// <summary>
-        /// Checks to see if a component of a certain family exists
-        /// </summary>
-        /// <param name="family">componentfamily to check</param>
-        /// <returns>true if component exists, false otherwise</returns>
-        bool HasComponent(ComponentFamily family);
+        void RemoveComponent<T>() where T : IComponent;
 
-        T GetComponent<T>(ComponentFamily family) where T : class;
-
-        /// <summary>
-        /// Gets the component of the specified family, if it exists
-        /// </summary>
-        /// <param name="family">componentfamily to get</param>
-        /// <returns></returns>
-        IComponent GetComponent(ComponentFamily family);
+        bool HasComponent<T>() where T : IComponent;
+        bool HasComponent(Type t);
+        T GetComponent<T>() where T : IComponent;
+        IComponent GetComponent(Type type);
+        IComponent GetComponent(uint netID);
+        bool TryGetComponent<T>(out T component) where T : class, IComponent;
+        bool TryGetComponent(Type type, out IComponent component);
+        bool TryGetComponent(uint netID, out IComponent component);
 
         void Shutdown();
-        List<IComponent> GetComponents();
-        List<ComponentFamily> GetComponentFamilies();
+        IEnumerable<IComponent> GetComponents();
+        IEnumerable<T> GetComponents<T>() where T : IComponent;
         void SendMessage(object sender, ComponentMessageType type, params object[] args);
 
         /// <summary>
@@ -86,9 +80,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="args">message parameters</param>
         void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
                          params object[] args);
-
-        ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
-                                          params object[] args);
 
         /// <summary>
         /// Requests Description string from components and returns it. If no component answers, returns default description from template.

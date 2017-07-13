@@ -8,7 +8,7 @@ namespace SS14.Shared.GameObjects.Components.Collidable
         public bool CollisionEnabled;
 
         public CollidableComponentState(bool collisionEnabled)
-            : base(ComponentFamily.Collidable)
+            : base(NetIDs.COLLIDABLE)
         {
             CollisionEnabled = collisionEnabled;
         }

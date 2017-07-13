@@ -2,7 +2,6 @@
 using NetSerializer;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Server.Interfaces.MessageLogging;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -18,14 +17,8 @@ namespace SS14.Server.GameObjects
 {
     public class ServerEntityNetworkManager : IEntityNetworkManager
     {
-        private bool _messageProfiling = false;
         [Dependency]
         private readonly IServerNetManager _mNetManager;
-
-        public void Initialize()
-        {
-            _messageProfiling = IoCManager.Resolve<IConfigurationManager>().GetCVar<bool>("log.enabled");
-        }
 
         #region IEntityNetworkManager Members
 
@@ -57,7 +50,7 @@ namespace SS14.Server.GameObjects
         {
         }
 
-        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        public void SendComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered, params object[] messageParams)
         {
             throw new NotImplementedException();
@@ -76,14 +69,14 @@ namespace SS14.Server.GameObjects
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Client connection to send to. If null, send to all.</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                                         NetDeliveryMethod method,
                                                         NetConnection recipient, params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write((byte)EntityMessage.ComponentMessage);
             message.Write(sendingEntity.Uid); //Write this entity's UID
-            message.Write((byte)family);
+            message.Write(netID);
             //Loop through the params and write them as is proper
             foreach (object messageParam in messageParams)
             {
@@ -166,18 +159,12 @@ namespace SS14.Server.GameObjects
 
             //Send the message
             if (recipient == null)
-                _mNetManager.ServerSendToAll(message, method);
-            else
-                _mNetManager.Peer.SendMessage(message, recipient, method);
-
-            if (_messageProfiling)
             {
-                var logger = IoCManager.Resolve<IMessageLogger>();
-                logger.LogOutgoingComponentNetMessage(
-                    (recipient == null) ? 0 : recipient.RemoteUniqueIdentifier,
-                    sendingEntity.Uid,
-                    family,
-                    PackParamsForLog(messageParams));
+                _mNetManager.ServerSendToAll(message, method);
+            }
+            else
+            {
+                _mNetManager.Peer.SendMessage(message, recipient, method);
             }
         }
 
@@ -234,11 +221,6 @@ namespace SS14.Server.GameObjects
             newMsg.Write((int)stream.Length);
             newMsg.Write(stream.ToArray());
 
-            if (_messageProfiling)
-            {
-                //Log the message
-            }
-
             //Send the message
             if (targetConnection != null)
             {
@@ -284,46 +266,10 @@ namespace SS14.Server.GameObjects
                     uid = message.ReadInt32();
                     incomingEntityMessage = new IncomingEntityMessage(uid,
                                                                       EntityMessage.ComponentInstantiationMessage,
-                                                                      (ComponentFamily)
+                                                                      (uint)
                                                                       UnPackParams(message).First(),
                                                                       message.SenderConnection);
                     break;
-                case EntityMessage.SetSVar:
-                    uid = message.ReadInt32();
-                    incomingEntityMessage = new IncomingEntityMessage(uid,
-                                                                      EntityMessage.SetSVar,
-                                                                      MarshalComponentParameter.Deserialize(message),
-                                                                      message.SenderConnection);
-                    break;
-                case EntityMessage.GetSVars:
-                    uid = message.ReadInt32();
-                    incomingEntityMessage = new IncomingEntityMessage(uid,
-                                                                      EntityMessage.GetSVars, null,
-                                                                      message.SenderConnection);
-                    break;
-            }
-
-            if (_messageProfiling)
-            {
-                var logger = IoCManager.Resolve<IMessageLogger>();
-
-                if (messageType == EntityMessage.ComponentMessage)
-                {
-                    var messageContent = (IncomingEntityComponentMessage)incomingEntityMessage.Message;
-                    logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
-                                                          uid,
-                                                          messageType,
-                                                          messageContent.ComponentFamily,
-                                                          PackParamsForLog(messageContent.MessageParameters.ToArray()));
-                }
-                else if (messageType == EntityMessage.ComponentInstantiationMessage)
-                {
-                    logger.LogIncomingComponentNetMessage(message.SenderConnection.RemoteUniqueIdentifier,
-                                                          uid,
-                                                          messageType,
-                                                          (ComponentFamily)incomingEntityMessage.Message,
-                                                          new object[0]);
-                }
             }
 
             return incomingEntityMessage;
@@ -335,9 +281,9 @@ namespace SS14.Server.GameObjects
         /// <param name="message"></param>
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
-            var componentFamily = (ComponentFamily)message.ReadByte();
+            var netID = message.ReadUInt32();
 
-            return new IncomingEntityComponentMessage(componentFamily, UnPackParams(message));
+            return new IncomingEntityComponentMessage(netID, UnPackParams(message));
         }
 
         #endregion Receiving

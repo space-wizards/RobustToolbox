@@ -15,11 +15,5 @@
   - type: Icon
     icon: door_ew
 
-  - type: BasicInteractable
   - type: BasicMover
   - type: Collidable
-  - type: BasicDoor
-    openSprite: door_ewo
-    closedSprite: door_ew
-    openOnBump: true
-    autoCloseInterval: 5000

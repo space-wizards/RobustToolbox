@@ -7,6 +7,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -18,47 +19,34 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class SpriteComponent : ClientComponent, IRenderableComponent, ISpriteComponent
+    public class SpriteComponent : ClientComponent, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
     {
         public override string Name => "Sprite";
+        public override uint? NetID => NetIDs.SPRITE;
         protected Sprite currentBaseSprite;
         protected string currentBaseSpriteKey;
-        protected Dictionary<string, Sprite> dirSprites;
+        protected Dictionary<string, Sprite> dirSprites = new Dictionary<string, Sprite>();
         protected bool HorizontalFlip { get; set; }
         protected IRenderableComponent master;
-        protected List<IRenderableComponent> slaves;
-        protected Dictionary<string, Sprite> sprites;
+        protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
+        protected Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
 
-        public SpriteComponent()
-        {
-            Family = ComponentFamily.Renderable;
-            sprites = new Dictionary<string, Sprite>();
-            dirSprites = new Dictionary<string, Sprite>();
-            slaves = new List<IRenderableComponent>();
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(SpriteComponentState); }
-        }
+        public override Type StateType => typeof(SpriteComponentState);
 
         public float Bottom
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
+                return Owner.GetComponent<TransformComponent>().Position.Y +
                        (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
             }
         }
 
         #region ISpriteComponent Members
 
-        public FloatRect AverageAABB
-        {
-            get { return AABB; }
-        }
+        public FloatRect AverageAABB => AABB;
 
         public FloatRect AABB
         {
@@ -179,13 +167,6 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
-                case ComponentMessageType.CheckSpriteClick:
-                    reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((Vector2f)list[0]), DrawDepth);
-                    break;
-                case ComponentMessageType.GetAABB:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
-                    break;
                 case ComponentMessageType.GetSprite:
                     reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, GetBaseSprite());
                     break;
@@ -222,7 +203,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 Owner.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction.ToString()).
+                 Owner.GetComponent<DirectionComponent>().Direction.ToString()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
@@ -231,7 +212,7 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
-        protected virtual bool WasClicked(Vector2f worldPos)
+        public virtual bool WasClicked(Vector2f worldPos)
         {
             if (currentBaseSprite == null || !visible) return false;
 
@@ -240,8 +221,8 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 new FloatRect(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<TransformComponent>().Position.X - (bounds.Width / 2),
+                    Owner.GetComponent<TransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
             // Get the sprite's position within the texture
@@ -311,14 +292,14 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>().Position);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<TransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<TransformComponent>().Position.X > bottomRight.X
+                || Owner.GetComponent<TransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<TransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
@@ -361,9 +342,9 @@ namespace SS14.Client.GameObjects
 
         public void SetMaster(IEntity m)
         {
-            if (!m.HasComponent(ComponentFamily.Renderable))
+            if (!m.HasComponent<ISpriteRenderableComponent>())
                 return;
-            var mastercompo = m.GetComponent<SpriteComponent>(ComponentFamily.Renderable);
+            var mastercompo = m.GetComponent<ISpriteRenderableComponent>();
             //If there's no sprite component, then FUCK IT
             if (mastercompo == null)
                 return;

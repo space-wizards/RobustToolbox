@@ -1,5 +1,6 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Velocity;
 using SS14.Shared.IoC;
 using System;
@@ -9,13 +10,14 @@ namespace SS14.Client.GameObjects
     public class VelocityComponent : ClientComponent
     {
         public override string Name => "Velocity";
+        public override uint? NetID => NetIDs.VELOCITY;
+
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
-        private Vector2f _velocity = new Vector2f();
+        private Vector2f _velocity = new Vector2f(0, 0);
 
         public VelocityComponent()
         {
-            Family = ComponentFamily.Velocity;
             Velocity = new Vector2f(0, 0);
         }
 
@@ -49,7 +51,7 @@ namespace SS14.Client.GameObjects
 
         public override void HandleComponentState(dynamic state)
         {
-            if (Owner.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) == null)
+            if (!Owner.HasComponent<PlayerInputMoverComponent>())
                 SetNewState(state);
         }
 

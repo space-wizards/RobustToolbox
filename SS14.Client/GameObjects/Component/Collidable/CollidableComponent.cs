@@ -1,9 +1,11 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
 using SS14.Client.Interfaces.Collision;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Collidable;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -18,6 +20,7 @@ namespace SS14.Client.GameObjects
     public class CollidableComponent : ClientComponent, ICollidable
     {
         public override string Name => "Collidable";
+        public override uint? NetID => NetIDs.COLLIDABLE;
 
         public SFML.Graphics.Color DebugColor { get; set; } = Color.Red;
 
@@ -25,16 +28,7 @@ namespace SS14.Client.GameObjects
         private FloatRect currentAABB;
         protected bool isHardCollidable = true;
 
-
-        public CollidableComponent()
-        {
-            Family = ComponentFamily.Collidable;
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(CollidableComponentState); }
-        }
+        public override Type StateType => typeof(CollidableComponentState);
 
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
@@ -45,10 +39,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                var ownerTransform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
-
-                // Return tweaked AABB
-                if (ownerTransform != null)
+                if (Owner.TryGetComponent<TransformComponent>(out var ownerTransform))
                 {
                     return
                         new FloatRect(
@@ -145,12 +136,6 @@ namespace SS14.Client.GameObjects
                         cm.UpdateCollidable(this);
                     }
                     break;
-                case ComponentMessageType.DisableCollision:
-                    DisableCollision();
-                    break;
-                case ComponentMessageType.EnableCollision:
-                    EnableCollision();
-                    break;
             }
 
             return reply;
@@ -221,18 +206,14 @@ namespace SS14.Client.GameObjects
         /// </summary>
         private void GetAABB()
         {
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
-                                                            ComponentMessageType.GetAABB);
-            if (reply.MessageType == ComponentMessageType.CurrentAABB)
-            {
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-                currentAABB = (FloatRect)reply.ParamsList[0];
-                currentAABB = new FloatRect(
-                    currentAABB.Left / tileSize,
-                    currentAABB.Top / tileSize,
-                    currentAABB.Width / tileSize,
-                    currentAABB.Height / tileSize);
-            }
+            var component = Owner.GetComponent<ISpriteRenderableComponent>();
+            var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
+
+            currentAABB = new FloatRect(
+                component.AABB.Left / tileSize,
+                component.AABB.Top / tileSize,
+                component.AABB.Width / tileSize,
+                component.AABB.Height / tileSize);
         }
 
         public override void HandleComponentState(dynamic state)

@@ -4,6 +4,7 @@ using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
@@ -14,32 +15,33 @@ namespace SS14.Client.GameObjects
     public class ColliderComponent : ClientComponent
     {
         public override string Name => "Collider";
-        public SFML.Graphics.Color DebugColor { get; set; }
+        public override uint? NetID => NetIDs.COLLIDER;
+        public SFML.Graphics.Color DebugColor { get; set; } = Color.Blue;
 
         private FloatRect AABB
         {
             get
             {
-                if (Owner.HasComponent(ComponentFamily.Hitbox))
-                    return Owner.GetComponent<HitboxComponent>(ComponentFamily.Hitbox).AABB;
-                else if (Owner.HasComponent(ComponentFamily.Renderable))
-                    return Owner.GetComponent<IRenderableComponent>(ComponentFamily.Renderable).AverageAABB;
+                if (Owner.HasComponent<HitboxComponent>())
+                {
+                    return Owner.GetComponent<HitboxComponent>().AABB;
+                }
+                else if (Owner.HasComponent<IRenderableComponent>())
+                {
+                    return Owner.GetComponent<IRenderableComponent>().AverageAABB;
+                }
                 else
+                {
                     return new FloatRect();
+                }
             }
-        }
-
-        public ColliderComponent()
-        {
-            Family = ComponentFamily.Collider;
-            DebugColor = Color.Blue;
         }
 
         public FloatRect WorldAABB
         {
             get
             {
-                var trans = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                var trans = Owner.GetComponent<TransformComponent>();
                 if (trans == null)
                 {
                     return AABB;

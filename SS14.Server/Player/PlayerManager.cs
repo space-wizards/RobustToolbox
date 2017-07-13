@@ -92,10 +92,10 @@ namespace SS14.Server.Player
         {
             //TODO: There's probably a much better place to do this.
             IEntity entity = _entityManager.SpawnEntity("HumanMob");
-            entity.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
+            entity.GetComponent<ITransformComponent>().TranslateTo(new Vector2f(0, 0));
             session.AttachToEntity(entity);
         }
-        
+
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             IEnumerable<PlayerSession> sessions =
@@ -199,7 +199,7 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).LengthSquared() < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared() < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

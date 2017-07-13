@@ -199,8 +199,6 @@
         Null,
         SetDirection,
         NameUpdate,
-        SetSVar,
-        GetSVars,
         SetCVar,
         GetCVars
     }

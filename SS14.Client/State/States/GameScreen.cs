@@ -18,7 +18,6 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Helpers;
 using SS14.Client.Lighting;
 using SS14.Client.UserInterface.Components;
-using SS14.Client.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -88,12 +87,6 @@ namespace SS14.Client.State.States
 
         private MenuWindow _menu;
         private Chatbox _gameChat;
-        private HandsGui _handsGui;
-        private HumanComboGui _combo;
-        private HealthPanel _healthPanel;
-        private ImageButton _inventoryButton;
-        private ImageButton _statusButton;
-        private ImageButton _menuButton;
         #endregion UI Variables
 
         #region Lighting
@@ -273,21 +266,6 @@ namespace SS14.Client.State.States
         private void UpdateGUIPosition()
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
-
-            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
-
-            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
-
-            // 712 is width of hotbar background I think?
-            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
-                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
-
-            _healthPanel.Position = new Vector2i(712 - 1, hotbar_pos_y + 11);
-
-            _inventoryButton.Position = new Vector2i(172, hotbar_pos_y + 2);
-            _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
-
-            _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
         }
 
         private void InitializeGUI()
@@ -301,53 +279,6 @@ namespace SS14.Client.State.States
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
-
-            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetClientManager, ResourceManager));
-
-            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
-
-            _handsGui = new HandsGui();
-            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
-            UserInterfaceManager.AddComponent(_handsGui);
-
-            _combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
-                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
-            _combo.Update(0);
-            UserInterfaceManager.AddComponent(_combo);
-
-            _healthPanel = new HealthPanel();
-            _healthPanel.Position = new Vector2i(711, hotbar_pos_y + 11);
-            _healthPanel.Update(0);
-            UserInterfaceManager.AddComponent(_healthPanel);
-
-            _inventoryButton = new ImageButton
-            {
-                ImageNormal = "button_inv",
-                Position = new Vector2i(172, hotbar_pos_y + 2)
-            };
-            _inventoryButton.Update(0);
-            _inventoryButton.Clicked += inventoryButton_Clicked;
-            UserInterfaceManager.AddComponent(_inventoryButton);
-
-            _statusButton = new ImageButton
-            {
-                ImageNormal = "button_status",
-                Position =
-                    new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y)
-            };
-            _statusButton.Update(0);
-            _statusButton.Clicked += statusButton_Clicked;
-            UserInterfaceManager.AddComponent(_statusButton);
-
-            _menuButton = new ImageButton
-            {
-                ImageNormal = "button_menu",
-                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
-            };
-            _menuButton.Update(0);
-            _menuButton.Clicked += menuButton_Clicked;
-            UserInterfaceManager.AddComponent(_menuButton);
         }
 
         private void InitalizeLighting()
@@ -410,7 +341,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -519,14 +450,12 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _componentManager.GetComponents(ComponentFamily.Collider)
-                    .OfType<ColliderComponent>()
+                    _componentManager.GetComponents<ColliderComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
                 var collidables =
-                    _componentManager.GetComponents(ComponentFamily.Collidable)
-                    .OfType<CollidableComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
@@ -547,7 +476,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
                 Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -715,7 +644,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
+                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position,
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -723,7 +652,7 @@ namespace SS14.Client.State.States
             var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
-                var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
+                var clickable = entity.GetComponent<ClickableComponent>();
                 if (clickable == null) continue;
                 if (clickable.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
@@ -742,7 +671,7 @@ namespace SS14.Client.State.States
 
                 IEntity entToClick = (from cd in clickedEntities
                                       orderby cd.Drawdepth ascending,
-                                          cd.Clicked.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
+                                          cd.Clicked.GetComponent<TransformComponent>().Position
                                           .Y ascending
                                       select cd.Clicked).Last();
 
@@ -756,11 +685,11 @@ namespace SS14.Client.State.States
                 switch (e.Button)
                 {
                     case Mouse.Button.Left:
-                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c = entToClick.GetComponent<ClickableComponent>();
                         c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
                         break;
                     case Mouse.Button.Right:
-                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
+                        c = entToClick.GetComponent<ClickableComponent>();
                         c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
                         break;
                     case Mouse.Button.Middle:
@@ -1259,7 +1188,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
@@ -1388,8 +1317,9 @@ namespace SS14.Client.State.States
         /// <param name="frametime">time since the last frame was rendered.</param>
         private void RenderComponents(float frameTime, FloatRect viewPort)
         {
-            IEnumerable<IComponent> components = _componentManager.GetComponents(ComponentFamily.Renderable)
-                                          .Union(_componentManager.GetComponents(ComponentFamily.Particles));
+            IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
+                                          .Cast<IComponent>()
+                                          .Union(_componentManager.GetComponents<ParticleSystemComponent>());
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending

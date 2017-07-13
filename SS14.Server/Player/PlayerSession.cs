@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.Player;
+﻿using SS14.Server.Interfaces.GameObjects;
+using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -55,7 +56,7 @@ namespace SS14.Server.Player
             get => string.IsNullOrWhiteSpace(_name) ? "Unknown" : _name;
             set => _name = value;
         }
-        
+
 
         public SessionStatus Status { get; set; }
 
@@ -67,12 +68,16 @@ namespace SS14.Server.Player
             //a.attachedClient = connectedClient;
             //Add input component.
             var factory = IoCManager.Resolve<IComponentFactory>();
-            a.AddComponent(ComponentFamily.Input, factory.GetComponent<KeyBindingInputComponent>());
-            a.AddComponent(ComponentFamily.Mover, factory.GetComponent<PlayerInputMoverComponent>());
+            a.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            if (a.HasComponent<IMoverComponent>())
+            {
+                a.RemoveComponent<IMoverComponent>();
+            }
+            a.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
 
             BasicActorComponent actorComponent = factory.GetComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
-            a.AddComponent(ComponentFamily.Actor, actorComponent);
+            a.AddComponent(actorComponent);
 
             attachedEntity = a;
             SendAttachMessage();
@@ -84,9 +89,9 @@ namespace SS14.Server.Player
         {
             if (attachedEntity == null) return;
 
-            attachedEntity.RemoveComponent(ComponentFamily.Input);
-            attachedEntity.RemoveComponent(ComponentFamily.Mover);
-            attachedEntity.RemoveComponent(ComponentFamily.Actor);
+            attachedEntity.RemoveComponent<KeyBindingInputComponent>();
+            attachedEntity.RemoveComponent<PlayerInputMoverComponent>();
+            attachedEntity.RemoveComponent<BasicActorComponent>();
             attachedEntity = null;
             UpdatePlayerState();
         }

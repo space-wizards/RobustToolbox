@@ -10,10 +10,7 @@
     sprites:
     - fire_extinguisher
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicLargeObject
-  - type: WallMounted
 
   placement:
     mode: AlignWall
@@ -35,10 +32,7 @@
     sprites:
     - fire_alarm_off
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicLargeObject
-  - type: WallMounted
   - type: Icon
     icon: fire_alarm_off
 
@@ -62,10 +56,7 @@
     sprites:
     - med_cabinet
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicLargeObject
-  - type: WallMounted
   - type: Icon
     icon: med_cabinet
 

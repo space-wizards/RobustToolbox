@@ -1,6 +1,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
@@ -19,20 +20,19 @@ namespace SS14.Client.UserInterface.Components
 
             components.Add(_entityDescription);
 
-            ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
-                                                             ComponentMessageType.GetSprite);
-
             SetVisible(true);
 
-            if (reply.MessageType == ComponentMessageType.CurrentSprite)
+            if (entity.TryGetComponent<ISpriteRenderableComponent>(out var component))
             {
-                _entitySprite = (Sprite) reply.ParamsList[0];
+                _entitySprite = component.GetCurrentSprite();
                 _entityDescription.Position = new Vector2i(10,
-                                                        (int)_entitySprite.GetLocalBounds().Height +
-                                                        _entityDescription.ClientArea.Height + 10);
+                                        (int)_entitySprite.GetLocalBounds().Height +
+                                        _entityDescription.ClientArea.Height + 10);
             }
             else
+            {
                 _entityDescription.Position = new Vector2i(10, 10);
+            }
         }
 
         public override void Render()

@@ -16,11 +16,6 @@ namespace SS14.Client.GameObjects
         public override string Name => "ContextMenu";
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
-        public ContextMenuComponent()
-        {
-            Family = ComponentFamily.ContextMenu;
-        }
-
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {

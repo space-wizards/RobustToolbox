@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Direction;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -13,13 +14,8 @@ namespace SS14.Server.GameObjects
     public class DirectionComponent : Component, IDirectionComponent
     {
         public override string Name => "Direction";
+        public override uint? NetID => NetIDs.DIRECTION;
         private Direction _lastDeterminedDirection = Direction.South;
-
-        public DirectionComponent()
-        {
-            Direction = Direction.South;
-            Family = ComponentFamily.Direction;
-        }
 
         #region IDirectionComponent Members
 
@@ -30,12 +26,12 @@ namespace SS14.Server.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
+            owner.GetComponent<TransformComponent>().OnMove += HandleOnMove;
         }
 
         public override void OnRemove()
         {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= HandleOnMove;
+            Owner.GetComponent<TransformComponent>().OnMove -= HandleOnMove;
             base.OnRemove();
         }
 

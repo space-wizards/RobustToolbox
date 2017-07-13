@@ -1,16 +1,16 @@
 ﻿using SFML.System;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
 {
-    internal class BasicMoverComponent : Component
+    internal class BasicMoverComponent : Component, IMoverComponent
     {
         public override string Name => "BasicMover";
-        public BasicMoverComponent()
-        {
-            Family = ComponentFamily.Mover;
-        }
+        public override uint? NetID => NetIDs.BASIC_MOVER;
+        public override bool NetworkSynchronizeExistence => true;
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -31,7 +31,7 @@ namespace SS14.Server.GameObjects
 
         public void Translate(float x, float y)
         {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2f(x, y);
+            Owner.GetComponent<TransformComponent>().Position = new Vector2f(x, y);
         }
 
     }

@@ -23,7 +23,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, TransformComponent transform)
         {
             //Check for collision
-            var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
+            var collider = entity.GetComponent<ColliderComponent>();
             bool collided = collider.TryCollision(newPosition - transform.Position, true);
             if (!collided)
             {
@@ -68,9 +68,9 @@ namespace SS14.Client.GameObjects.EntitySystems
             foreach (var entity in entities)
             {
                 //Get transform component
-                var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                var transform = entity.GetComponent<TransformComponent>();
                 //Check if the entity has a keyboard input mover component
-                bool isLocallyControlled = entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) != null
+                bool isLocallyControlled = entity.HasComponent<PlayerInputMoverComponent>()
                     && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
@@ -113,8 +113,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position +
-                    var velocityComponent = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                    if (velocityComponent != null)
+                    if (entity.TryGetComponent<VelocityComponent>(out var velocityComponent))
                     {
                         var movement = velocityComponent.Velocity * frametime;
                         var playerPosition = movement + transform.Position;
@@ -137,7 +136,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         //Only for components with a keyboard input mover component, and a collider component
                         // Check for collision so we don't get shit stuck in objects
-                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        if (entity.HasComponent<ColliderComponent>())
                         {
                             Vector2f? _newPosition = calculateNewPosition(entity, newPosition, transform);
                             if (_newPosition != null)
@@ -155,7 +154,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         transform.TranslateTo(newPosition);
                         if (isLocallyControlled)
-                            entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+                            entity.GetComponent<PlayerInputMoverComponent>().SendPositionUpdate(newPosition);
                     }
                 }
             }

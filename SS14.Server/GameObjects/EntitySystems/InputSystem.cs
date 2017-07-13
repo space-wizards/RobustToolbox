@@ -18,12 +18,11 @@ namespace SS14.Server.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach (var entity in entities)
             {
-                var inputs = entity.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input);
+                var inputs = entity.GetComponent<KeyBindingInputComponent>();
 
                 //Animation setting
-                if (entity.GetComponent(ComponentFamily.Renderable) is AnimatedSpriteComponent)
+                if (entity.TryGetComponent<AnimatedSpriteComponent>(out var animation))
                 {
-                    var animation = entity.GetComponent<AnimatedSpriteComponent>(ComponentFamily.Renderable);
                     if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveLeft) ||

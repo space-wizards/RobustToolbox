@@ -1,5 +1,7 @@
 ﻿using SFML.System;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.IoC;
 using System;
@@ -9,24 +11,17 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Recieves movement data from the server and updates the entity's position accordingly.
     /// </summary>
-    public class BasicMoverComponent : ClientComponent
+    public class BasicMoverComponent : ClientComponent, IMoverComponent
     {
         public override string Name => "BasicMover";
+        public override uint? NetID => NetIDs.BASIC_MOVER;
+        public override bool NetworkSynchronizeExistence => true;
+
         private bool interpolating;
         private float movedtime; // Amount of time we've been moving since the last update packet.
         private const float movetime = 0.05f; // Milliseconds it should take to move.
         private Vector2f startPosition;
         private Vector2f targetPosition;
-
-        public BasicMoverComponent()
-        {
-            Family = ComponentFamily.Mover;
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(MoverComponentState); }
-        }
 
         public override void Update(float frameTime)
         {
@@ -36,7 +31,7 @@ namespace SS14.Client.GameObjects
                 movedtime = movedtime + frameTime;
                 if (movedtime >= movetime)
                 {
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = targetPosition;
+                    Owner.GetComponent<TransformComponent>().Position = targetPosition;
                     startPosition = targetPosition;
                     interpolating = false;
                 }
@@ -44,7 +39,7 @@ namespace SS14.Client.GameObjects
                 {
                     float X = Ease(movedtime, startPosition.X, targetPosition.X, movetime);
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = new Vector2f(X, Y);
+                    Owner.GetComponent<TransformComponent>().Position = new Vector2f(X, Y);
                 }
             }
         }

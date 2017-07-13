@@ -1,20 +1,25 @@
 ﻿using Lidgren.Network;
 using SFML.System;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
-    public class PlayerInputMoverComponent : ClientComponent
+    public class PlayerInputMoverComponent : ClientComponent, IMoverComponent
     {
         public override string Name => "PlayerInputMover";
+        public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
+        public override bool NetworkSynchronizeExistence => true;
+
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
         public const float FastMoveSpeed = Constants.HumanRunSpeed;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
-        private float _currentMoveSpeed;
+        private float _currentMoveSpeed = BaseMoveSpeed;
 
         private bool _moveDown;
         private bool _moveLeft;
@@ -23,17 +28,10 @@ namespace SS14.Client.GameObjects
         private bool _moveUp;
         public bool ShouldSendPositionUpdate;
 
-        public PlayerInputMoverComponent()
-        {
-            Family = ComponentFamily.Mover;
-            ;
-            _currentMoveSpeed = BaseMoveSpeed;
-        }
-
         private Vector2f Velocity
         {
-            get { return Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity; }
-            set { Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity = value; }
+            get => Owner.GetComponent<VelocityComponent>().Velocity;
+            set => Owner.GetComponent<VelocityComponent>().Velocity = value;
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
@@ -172,12 +170,13 @@ namespace SS14.Client.GameObjects
 
         public virtual void SendPositionUpdate(Vector2f nextPosition)
         {
+            var velocity = Owner.GetComponent<VelocityComponent>();
             Owner.SendComponentNetworkMessage(this,
                                               NetDeliveryMethod.ReliableUnordered,
                                               nextPosition.X,
                                               nextPosition.Y,
-                                              Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.X,
-                                              Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity).Velocity.Y);
+                                              velocity.Velocity.X,
+                                              velocity.Velocity.Y);
         }
     }
 }

@@ -3,6 +3,7 @@ using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -16,6 +17,7 @@ namespace SS14.Client.GameObjects
     public class PointLightComponent : ClientComponent
     {
         public override string Name => "PointLight";
+        public override uint? NetID => NetIDs.POINT_LIGHT;
         //Contains a standard light
         public ILight _light;
         public Vector3f _lightColor = new Vector3f(190, 190, 190);
@@ -24,15 +26,7 @@ namespace SS14.Client.GameObjects
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;
 
-        public PointLightComponent()
-        {
-            Family = ComponentFamily.Light;
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(LightComponentState); }
-        }
+        public override Type StateType => typeof(PointLightComponentState);
 
         //When added, set up the light.
         public override void OnAdd(IEntity owner)
@@ -44,21 +38,9 @@ namespace SS14.Client.GameObjects
 
             _light.SetRadius(_lightRadius);
             _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
-            _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
+            _light.Move(Owner.GetComponent<TransformComponent>().Position + _lightOffset);
             _light.SetMask(_mask);
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += OnMove;
-        }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            base.HandleNetworkMessage(message, sender);
-            var type = (ComponentMessageType)message.MessageParameters[0];
-            switch (type)
-            {
-                case ComponentMessageType.SetLightMode:
-                    SetMode((LightModeClass)message.MessageParameters[1]);
-                    break;
-            }
+            Owner.GetComponent<TransformComponent>().OnMove += OnMove;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -112,14 +94,14 @@ namespace SS14.Client.GameObjects
 
         public override void OnRemove()
         {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= OnMove;
+            Owner.GetComponent<TransformComponent>().OnMove -= OnMove;
             IoCManager.Resolve<ILightManager>().RemoveLight(_light);
             base.OnRemove();
         }
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + _lightOffset);
+            _light.Move(Owner.GetComponent<TransformComponent>().Position + _lightOffset);
         }
 
         public override void Update(float frameTime)

@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 
@@ -7,6 +8,7 @@ namespace SS14.Server.GameObjects
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
         public override string Name => "WearableAnimatedSprite";
+        public override uint? NetID => NetIDs.WEARABLE_ANIMATED_SPRITE;
         public bool IsCurrentlyWorn = false;
         public bool IsCurrentlyCarried = false;
 

@@ -3,6 +3,7 @@ using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -16,16 +17,14 @@ namespace SS14.Client.GameObjects
     public class WearableAnimatedSpriteComponent : AnimatedSpriteComponent
     {
         public override string Name => "WearableAnimatedSprite";
+        public override uint? NetID => NetIDs.WEARABLE_ANIMATED_SPRITE;
         public bool IsCurrentlyWorn;
         public Sprite NotWornSprite;
 
         public bool IsCurrentlyCarried;
         public string CarriedSprite;
 
-        public override Type StateType
-        {
-            get { return typeof(WearableAnimatedSpriteComponentState); }
-        }
+        public override Type StateType => typeof(WearableAnimatedSpriteComponentState);
 
         public override void HandleComponentState(dynamic state)
         {
@@ -93,14 +92,14 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToRender.GetLocalBounds();
 
             Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                    Owner.GetComponent<TransformComponent>().Position);
             spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));
 
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<TransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<TransformComponent>().Position.X > bottomRight.X
+                || Owner.GetComponent<TransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<TransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);

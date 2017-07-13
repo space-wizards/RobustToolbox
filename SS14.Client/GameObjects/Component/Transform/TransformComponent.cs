@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
@@ -13,15 +14,12 @@ namespace SS14.Client.GameObjects
     public class TransformComponent : ClientComponent
     {
         public override string Name => "Transform";
+        public override uint? NetID => NetIDs.TRANSFORM;
         private Vector2f _position = new Vector2f();
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
         public TransformComponentState lerpStateFrom;
         public TransformComponentState lerpStateTo;
-        public TransformComponent()
-        {
-            Family = ComponentFamily.Transform;
-        }
 
         public Vector2f Position
         {
@@ -31,7 +29,7 @@ namespace SS14.Client.GameObjects
                 Vector2f oldPosition = _position;
                 _position = value;
 
-                if (OnMove != null) OnMove(this, new VectorEventArgs(oldPosition, _position));
+                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 

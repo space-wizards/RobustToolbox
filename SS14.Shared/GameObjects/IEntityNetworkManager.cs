@@ -6,8 +6,6 @@ namespace SS14.Shared.GameObjects
 {
     public interface IEntityNetworkManager
     {
-        void Initialize();
-
         NetOutgoingMessage CreateEntityMessage();
 
         /// <summary>
@@ -18,7 +16,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        void SendComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                          NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                          params object[] messageParams);
 
@@ -40,11 +38,10 @@ namespace SS14.Shared.GameObjects
         /// counterpart entities on all clients.
         /// </summary>
         /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
-        /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Intended recipient of the message</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
+        void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
 
         /// <summary>

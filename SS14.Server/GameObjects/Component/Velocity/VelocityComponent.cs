@@ -1,5 +1,6 @@
 ﻿using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Velocity;
 using SS14.Shared.IoC;
 
@@ -8,13 +9,8 @@ namespace SS14.Server.GameObjects
     public class VelocityComponent : Component
     {
         public override string Name => "Velocity";
+        public override uint? NetID => NetIDs.VELOCITY;
         private Vector2f _velocity = new Vector2f();
-
-
-        public VelocityComponent()
-        {
-            Family = ComponentFamily.Velocity;
-        }
 
         public Vector2f Velocity
         {

@@ -21,7 +21,7 @@ namespace SS14.Client.GameObjects
             return from e in _entities.Values
                    where
                        (position -
-                        e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position).
+                        e.GetComponent<TransformComponent>().Position).
                            LengthSquared() < Range
                    select e;
         }

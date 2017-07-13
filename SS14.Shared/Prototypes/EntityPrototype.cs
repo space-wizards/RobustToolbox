@@ -249,7 +249,7 @@ namespace SS14.Shared.GameObjects
         /// <returns></returns>
         public IEntity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager);
+            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager, componentFactory);
 
             entity.Name = Name;
             entity.Prototype = this;
@@ -260,7 +260,7 @@ namespace SS14.Shared.GameObjects
 
                 component.LoadParameters(componentData.Value);
 
-                entity.AddComponent(component.Family, component);
+                entity.AddComponent(component);
             }
 
             entity.LoadData(DataNode);

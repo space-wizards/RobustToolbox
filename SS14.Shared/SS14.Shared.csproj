@@ -184,7 +184,12 @@
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="TypeEventArgs.cs" />
-    <!--<Compile Include="Utility\BitS>tream.cs" />-->
+    <!--
+    <Compile Include="Utility\BitS>tream.cs" />
+    <EmbeddedResource Include="Utility\BitStream.resx">
+      <DependentUpon>BitStream.cs</DependentUpon>
+    </EmbeddedResource>
+    -->
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PathHelpers.cs" />
@@ -200,9 +205,6 @@
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />
     <Compile Include="VectorEventArgs.cs" />
-    <EmbeddedResource Include="Utility\BitStream.resx">
-      <DependentUpon>BitStream.cs</DependentUpon>
-    </EmbeddedResource>
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\IPostInjectInit.cs" />
     <Compile Include="IoC\DependencyAttribute.cs" />

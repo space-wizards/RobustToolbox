@@ -1,4 +1,4 @@
-namespace SS14.Shared.IoC
+﻿namespace SS14.Shared.IoC
 {
     /// <summary>
     /// If implemented on a type instantiated by IoC,

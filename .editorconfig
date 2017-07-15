@@ -7,5 +7,5 @@ indent_size = 4
 trim_trailing_whitespace = true
 charset = utf-8-bom
 
-[*.{csproj,xml,yml,dll.config}]
+[*.{csproj,xml,yml,dll.config,msbuildproj,targets}]
 indent_size = 2

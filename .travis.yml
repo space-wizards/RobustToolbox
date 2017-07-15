@@ -11,6 +11,7 @@ before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
 
 before_script:
+- "git submodule update --init --recursive"
 - "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 

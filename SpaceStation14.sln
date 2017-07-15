@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{59250BAF-0000-0000-0000-000000000000}"
 EndProject
@@ -13,6 +13,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Client.Graphics", "SS14.Client.Graphics\SS14.Client.Graphics.csproj", "{302B877E-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.UnitTesting", "SS14.UnitTesting\SS14.UnitTesting.csproj", "{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildChecker", "BuildChecker\BuildChecker.csproj", "{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.Shared.Bsdiff", "SS14.Shared.Bsdiff\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff.csproj", "{0E0723E8-D785-4F61-81F4-182A12BCAA52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -92,6 +96,29 @@ Global
 		{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}.Release|x86.ActiveCfg = Release|Any CPU
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Debug|x86.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Debug|x86.Build.0 = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|Any CPU.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|Any CPU.Build.0 = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|Mixed Platforms.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|Mixed Platforms.Build.0 = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|x86.ActiveCfg = Debug|x86
+		{CA2416E2-60B3-4EEB-B10B-C787050ECA0D}.Release|x86.Build.0 = Debug|x86
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Debug|x86.Build.0 = Debug|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|x86.ActiveCfg = Release|Any CPU
+		{0E0723E8-D785-4F61-81F4-182A12BCAA52}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -156,7 +183,6 @@ Global
 		$10.inheritsSet = null
 		$10.scope = text/microsoft-resx
 		$0.StandardHeader = $11
-		$11.Text = 
 		$11.IncludeInNewFiles = True
 		$0.NameConventionPolicy = $12
 		$12.Rules = $13

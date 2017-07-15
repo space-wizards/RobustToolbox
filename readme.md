@@ -4,6 +4,10 @@ Space Station 14 is a revived attempt at an SS13 remake.
 
 **If you want to run the game and contribute, see our [wiki](https://github.com/space-wizards/space-station-14/wiki).**
 
+## DOWNLOADING ##
+
+Before you go to build SS14, you should run the `RUN_THIS.py` Python script using Python 3.5+. If you don't do this, it will happen on the first build, **but the first build will fail**. This is necessary to initialize Git submodules and hooks.
+
 ## GETTING IN TOUCH ##
 
 * Website: [space-wizards.github.io](https://space-wizards.github.io/)

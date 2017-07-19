@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -41,6 +42,6 @@ namespace SS14.Shared.Interfaces.Map
         ///     Erases all tile definitions, and the loads all definitions inside of a net message.
         /// </summary>
         /// <param name="message">The message containing new tile definitions.</param>
-        void RegisterServerTileMapping(NetIncomingMessage message);
+        void RegisterServerTileMapping(MsgMap message);
     }
 }

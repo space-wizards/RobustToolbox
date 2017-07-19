@@ -200,7 +200,6 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int) MsgMapReq.ID, message => SendMap(message.MsgChannel));
-            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int) MsgMap.ID, message => IoCManager.Resolve<IMapNetworkManager>().HandleNetworkMessage((MsgMap) message));
 
             netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) message));
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int) MsgUi.ID, HandleErrorMessage);
@@ -216,7 +215,6 @@ namespace SS14.Server
             Serializer.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
-            IoCManager.Resolve<IMapManager>().Initialize();
 
             StartLobby();
             StartGame();
@@ -552,7 +550,7 @@ namespace SS14.Server
         private static void SendMap(INetChannel client)
         {
             // Send Tiles
-            IoCManager.Resolve<IMapManager>().SendMap(client);
+            IoCManager.Resolve<IMapNetworkManager>().SendMap(client);
 
             // Lets also send them all the items and mobs.
             //_entities.SendEntities(client);

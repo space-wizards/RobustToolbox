@@ -4,7 +4,6 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;

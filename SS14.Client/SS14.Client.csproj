@@ -174,7 +174,6 @@
     <Compile Include="GameObjects\Component\ClientComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
-    <Compile Include="Map\MapNetworkManager.cs" />
     <Compile Include="Map\MapRenderer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

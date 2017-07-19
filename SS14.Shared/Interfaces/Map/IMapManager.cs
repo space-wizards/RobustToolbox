@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.Map
 {

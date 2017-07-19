@@ -904,9 +904,6 @@ namespace SS14.Client.State.States
                     var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessages.MapMessage:
-                            IoCManager.Resolve<IMapNetworkManager>().HandleNetworkMessage(MapManager, message);
-                            break;
                         //case NetMessages.AtmosDisplayUpdate:
                         //    MapManager.HandleAtmosDisplayUpdate(message);
                         //    break;

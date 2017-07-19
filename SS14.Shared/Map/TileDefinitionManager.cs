@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
@@ -46,7 +47,7 @@ namespace SS14.Shared.Map
 
             string name = tileDef.Name;
             if (tileNames.ContainsKey(name))
-                throw new ArgumentException("Another tile definition with the same name has already been registered.", "tileDef");
+                throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
 
             id = checked((ushort)tileDefs.Count);
             tileDefs.Add(tileDef);
@@ -55,7 +56,7 @@ namespace SS14.Shared.Map
             return id;
         }
 
-        public void RegisterServerTileMapping(NetIncomingMessage message)
+        public void RegisterServerTileMapping(MsgMap message)
         {
             foreach (var tileDef in tileDefs)
                 tileDef.InvalidateTileId();
@@ -63,10 +64,9 @@ namespace SS14.Shared.Map
             tileDefs.Clear();
             tileIds.Clear();
 
-            int tileDefCount = message.ReadInt32();
-            for (int i = 0; i < tileDefCount; ++i)
+            for (var i = 0; i < message.TileDefs.Length; ++i)
             {
-                string tileName = message.ReadString();
+                var tileName = message.TileDefs[i].Name;
                 var tileDef = this[tileName];
 
                 tileDefs.Add(tileDef);

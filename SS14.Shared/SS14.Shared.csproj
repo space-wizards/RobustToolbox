@@ -152,6 +152,7 @@
     <Compile Include="Map\DefaultTileDefinitions.cs" />
     <Compile Include="Map\MapGrid.cs" />
     <Compile Include="Map\MapManager.cs" />
+    <Compile Include="Map\MapNetworkManager.cs" />
     <Compile Include="Map\Tile.cs" />
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
@@ -274,10 +275,10 @@
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Folder Include="GO\" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

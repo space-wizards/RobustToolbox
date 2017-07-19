@@ -68,6 +68,8 @@ namespace SS14.Server
         [Dependency]
         private readonly ISS14Serializer Serializer;
 
+        private Shared.Network.Timing _timing;
+
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
         private readonly List<float> _frameTimes = new List<float>();
@@ -173,6 +175,8 @@ namespace SS14.Server
             _logman.LogPath = logPath;
 
             _time = DateTime.Now;
+
+            _timing = new Shared.Network.Timing();
 
             Level = RunLevel.Init;
 

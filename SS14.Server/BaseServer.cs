@@ -215,6 +215,7 @@ namespace SS14.Server
             Serializer.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<IMapManager>().Initialize();
 
             StartLobby();
             StartGame();
@@ -550,7 +551,7 @@ namespace SS14.Server
         private static void SendMap(INetChannel client)
         {
             // Send Tiles
-            IoCManager.Resolve<IMapNetworkManager>().SendMap(client);
+            IoCManager.Resolve<IMapManager>().SendMap(client);
 
             // Lets also send them all the items and mobs.
             //_entities.SendEntities(client);

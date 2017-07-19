@@ -48,6 +48,13 @@ namespace SS14.Shared.Interfaces.Map
 
         void SaveMap(string mapName);
 
+        /// <summary>
+        /// Starts up the map system.
+        /// </summary>
+        void Initialize();
+
+        void SendMap(INetChannel channel);
+
         #region GridAccess
 
         /// <summary>

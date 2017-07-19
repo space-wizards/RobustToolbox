@@ -8,9 +8,9 @@ using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
-    public class MapNetworkManager : IMapNetworkManager
+    public partial class MapManager
     {
-        [Dependency]
+        [Dependency] //TODO: kill self
         private readonly IMapManager _mapManager;
 
         [Dependency]
@@ -25,11 +25,10 @@ namespace SS14.Shared.Map
         /// </summary>
         private const int MapVersion = 1;
 
-
         /// <summary>
         ///     Default constructor.
         /// </summary>
-        public MapNetworkManager()
+        public void NetSetup()
         {
             _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, message => HandleNetworkMessage((MsgMap)message));
 
@@ -40,7 +39,7 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     Default finalizer.
         /// </summary>
-        ~MapNetworkManager()
+        ~MapManager()
         {
             if (_netManager.IsServer)
                 _mapManager.OnTileChanged -= MapMgrOnTileChanged;

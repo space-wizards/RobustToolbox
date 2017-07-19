@@ -9,25 +9,23 @@ using SS14.Shared.Log;
 
 namespace SS14.Shared.Map
 {
-    public class MapManager : IMapManager
+    public partial class MapManager : IMapManager
     {
         private const int GRID_INDEX = 0;
         private const ushort TILE_SIZE = 32;
 
-        /// <summary>
-        ///     Default constructor.
-        /// </summary>
-        public MapManager()
+        /// <inheritdoc />
+        public void Initialize()
         {
-            TileSize = TILE_SIZE;
+                NetSetup();
+
+               TileSize = TILE_SIZE;
 
             //create default grid.
             CreateGrid(DefaultGridId, 16);
         }
 
-        /// <summary>
-        ///     A tile is being modified.
-        /// </summary>
+        /// <inheritdoc />
         public event TileChangedEventHandler OnTileChanged;
 
         /// <summary>

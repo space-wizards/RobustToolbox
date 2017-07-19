@@ -147,8 +147,6 @@
     <Compile Include="GameObjects\Component\SVars\SVarsComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
-    <Compile Include="Helper Classes\InterpolationPacket.cs" />
-    <Compile Include="Modules\Client\Client.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ServerReflectionManager.cs" />

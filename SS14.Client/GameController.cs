@@ -54,6 +54,8 @@ namespace SS14.Client
         readonly private ITileDefinitionManager _tileDefinitionManager;
         [Dependency]
         readonly private ISS14Serializer _serializer;
+        [Dependency]
+        private readonly IMapManager _mapManager;
 
         #endregion Fields
 
@@ -87,6 +89,7 @@ namespace SS14.Client
             _networkManager.Initialize(false);
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
+            _mapManager.Initialize();
 
             _stateManager.RequestStateChange<MainScreen>();
 

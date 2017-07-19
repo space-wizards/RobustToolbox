@@ -136,7 +136,6 @@
     <Compile Include="Interfaces\Map\IMapChunk.cs" />
     <Compile Include="Interfaces\Map\IMapGrid.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
-    <Compile Include="Interfaces\Map\IMapNetworkManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="InventoryLocEnum.cs" />
@@ -152,7 +151,7 @@
     <Compile Include="Map\DefaultTileDefinitions.cs" />
     <Compile Include="Map\MapGrid.cs" />
     <Compile Include="Map\MapManager.cs" />
-    <Compile Include="Map\MapNetworkManager.cs" />
+    <Compile Include="Map\MapManager.Network.cs" />
     <Compile Include="Map\Tile.cs" />
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />

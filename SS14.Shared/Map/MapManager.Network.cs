@@ -93,6 +93,7 @@ namespace SS14.Shared.Map
             var gridSize = grid.ChunkSize;
             message.ChunkSize = gridSize;
             message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
+            var defCounter = 0;
             foreach (var chunk in grid.GetMapChunks())
             {
                 var newChunk = new MsgMap.ChunkDef()
@@ -108,6 +109,8 @@ namespace SS14.Shared.Map
                     newChunk.Tiles[counter] = (uint)tile.Tile;
                     counter++;
                 }
+
+                message.ChunkDefs[defCounter++] = newChunk;
             }
 
             _netManager.ServerSendMessage(message, channel);

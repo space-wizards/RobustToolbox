@@ -32,7 +32,8 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
         private Sprite sprite;
 
-        public GaussianBlur_Test()
+        [OneTimeSetUp]
+        public void Setup()
         {
             //PreTest Setup
             base.InitializeCluwneLib(1280, 720, false, 60);

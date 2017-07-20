@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -19,7 +19,8 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
         private RenderImage testRenderImage;
         private SFML.Graphics.Sprite testsprite;
 
-        public TestShader_Test()
+        [OneTimeSetUp]
+        public void Setup()
         {
             base.InitializeCluwneLib(1280,720,false,60);
 

@@ -2,31 +2,30 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Shared.Network
 {
     public class Timing
     {
+        private const int NumFrames = 50;
 
-        public List<float> FrameTimes;
+        private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
 
-        private static Stopwatch _sysTimer;
-        private Stopwatch _realTime;
-
+        private static Stopwatch _realTimer;
+        private TimeSpan _lastRealTime;
 
         public Timing()
         {
-            if(_sysTimer == null)
+            if (_realTimer == null)
             {
-                _sysTimer = new Stopwatch();
-                _sysTimer.Start();
+                _realTimer = new Stopwatch();
+                _realTimer.Start();
             }
 
-            _realTime = new Stopwatch();
+            Paused = false;
+            TimeScale = 1.0f;
+            TickRate = NumFrames;
         }
-
 
         /// <summary>
         /// Is the simulation currently paused?
@@ -44,43 +43,102 @@ namespace SS14.Shared.Network
         /// The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for 
         /// prediction, and is affected by Paused and TimeScale.
         /// </summary>
-        public double CurTime { get; set; }
+        public TimeSpan CurTime => TimeSpan.FromTicks(TickPeriod.Ticks * CurTick);
 
         /// <summary>
         /// The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
-        public double RealTime { get; set; }
+        public TimeSpan RealTime => _realTimer.Elapsed;
 
         /// <summary>
-        /// High accuracy real time (milliseconds) since the program started. Use this for profiling.
+        /// The simulated time it took to render the last frame.
         /// </summary>
-        public double SysTime => _sysTimer.Elapsed.TotalMilliseconds;
-
+        public TimeSpan FrameTime { get; set; }
 
         /// <summary>
-        /// The simulated time (milliseconds) it took to render the last frame.
+        /// The real time it took to render the last frame.
         /// </summary>
-        public double FrameTime { get; set; }
+        public TimeSpan RealFrameTime { get; set; }
 
         /// <summary>
-        /// The real time (milliseconds) it took to render the last frame.
+        /// Average real frame time over the last 50 frames.
         /// </summary>
-        public double RealFrameTime { get; set; }
+        public TimeSpan RealFrameTimeAvg => TimeSpan.FromTicks((long)_realFrameTimes.Average());
 
+        /// <summary>
+        /// Standard Deviation of the frame time over the last 50 frames.
+        /// </summary>
+        public TimeSpan RealFrameTimeStdDev => CalcRftStdDev();
+
+        /// <summary>
+        /// Average real FPS over the last 50 frames.
+        /// </summary>
+        public double FramesPerSecondAvg => CalcFpsAvg();
 
         /// <summary>
         /// The current simulation tick being processed.
         /// </summary>
-        public int CurTick { get; set; }
+        public uint CurTick { get; set; }
         
         /// <summary>
-        /// The current real tickrate of the simulation.
+        /// The target ticks/second of the simulation.
         /// </summary>
         public int TickRate { get; set; }
 
-        public void RealTimeRestart()
+        /// <summary>
+        /// The length of a tick at the current TickRate. 1/TickRate.
+        /// </summary>
+        public TimeSpan TickPeriod => new TimeSpan((long) (1.0 / TickRate * TimeSpan.TicksPerSecond));
+
+        /// <summary>
+        /// Ends the 'lap' of the timer, updating frame time info.
+        /// </summary>
+        public void StartFrame()
         {
-            _realTime.Restart();
+            var curTime = _realTimer.Elapsed;
+            var delta = curTime - _lastRealTime;
+            _lastRealTime = curTime;
+            RealFrameTime = delta;
+
+            if (_realFrameTimes.Count >= NumFrames)
+                _realFrameTimes.RemoveAt(0);
+            _realFrameTimes.Add(delta.Ticks);
+        }
+
+        public void ResetRealTime()
+        {
+            _realTimer.Restart();
+            _lastRealTime = TimeSpan.Zero;
+        }
+
+        private double CalcFpsAvg()
+        {
+            if (_realFrameTimes.Count == 0)
+                return 0;
+
+            return 1 / (_realFrameTimes.Average() / TimeSpan.TicksPerSecond);
+        }
+
+        private TimeSpan CalcRftStdDev()
+        {
+            var sum = _realFrameTimes.Sum();
+            var count = _realFrameTimes.Count;
+            var avg = sum / (double)count;
+            double devSquared = 0.0f;
+            for (var i = 0; i < count; ++i)
+            {
+                if (_realFrameTimes[i] == 0)
+                    continue;
+
+                var ft = _realFrameTimes[i];
+
+                var dt = ft - avg;
+
+                devSquared += (dt * dt);
+            }
+
+            var variance = devSquared / (count - 1);
+            return TimeSpan.FromTicks((long) Math.Sqrt(variance));
         }
     }
 }

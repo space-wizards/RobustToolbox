@@ -132,7 +132,8 @@ namespace SS14.UnitTesting
 
         #endregion Accessors
 
-        public SS14UnitTest()
+        [OneTimeSetUp]
+        public void BaseSetup()
         {
             TestFixtureAttribute a = Attribute.GetCustomAttribute(GetType(), typeof(TestFixtureAttribute)) as TestFixtureAttribute;
             if (NeedsResourcePack && Headless)

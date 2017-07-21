@@ -17,7 +17,6 @@ using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Round;
-using SS14.Server.Timing;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameStates;
@@ -223,11 +222,12 @@ namespace SS14.Server
         /// <inheritdoc />
         public void MainLoop()
         {
+            var tickRate = _config.GetCVar<int>("net.tickrate");
+
             // maximum number of ticks to queue before the loop slows down.
             const int MaxTicks = 5;
 
-            var timerObject = new MainLoopTimer();
-            timerObject.mainLoopTimer.CreateMainLoopTimer(() => AutoResetEvent.Set(), 1);
+            Time.RegisterMainLoop(tickRate, () => AutoResetEvent.Set());
 
             Time.ResetRealTime();
             _maxTime = TimeSpan.FromTicks(Time.TickPeriod.Ticks * MaxTicks);
@@ -278,7 +278,7 @@ namespace SS14.Server
                 }
             }
 
-            timerObject.mainLoopTimer.Dispose();
+            Time.StopMainLoop();
 
             Cleanup();
         }
@@ -297,8 +297,6 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVarFlags.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
             cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
-
-            Time.TickRate = cfgMgr.GetCVar<int>("net.tickrate");
 
             _entities = IoCManager.Resolve<IServerEntityManager>();
             _components = IoCManager.Resolve<IComponentManager>();

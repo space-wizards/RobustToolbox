@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace SS14.Shared.Network
 {
@@ -13,7 +14,7 @@ namespace SS14.Shared.Network
 
         private static Stopwatch _realTimer;
         private TimeSpan _lastRealTime;
-
+        
         public Timing()
         {
             if (_realTimer == null)
@@ -38,7 +39,7 @@ namespace SS14.Shared.Network
         /// </summary>
         public double TimeScale { get; set; }
 
-
+        //TODO: Figure out how to relate CurTime to RealTime
         /// <summary>
         /// The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for 
         /// prediction, and is affected by Paused and TimeScale.
@@ -50,6 +51,7 @@ namespace SS14.Shared.Network
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
 
+        //TODO: Figure out how to relate FrameTime to RealFrameTime
         /// <summary>
         /// The simulated time it took to render the last frame.
         /// </summary>
@@ -83,7 +85,7 @@ namespace SS14.Shared.Network
         /// <summary>
         /// The target ticks/second of the simulation.
         /// </summary>
-        public int TickRate { get; set; }
+        public int TickRate { get; private set; }
 
         /// <summary>
         /// The length of a tick at the current TickRate. 1/TickRate.
@@ -105,12 +107,19 @@ namespace SS14.Shared.Network
             _realFrameTimes.Add(delta.Ticks);
         }
 
+        /// <summary>
+        /// Resets the real uptime of the server.
+        /// </summary>
         public void ResetRealTime()
         {
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
         }
 
+        /// <summary>
+        /// Calculates the average FPS of the last 50 real frame times.
+        /// </summary>
+        /// <returns></returns>
         private double CalcFpsAvg()
         {
             if (_realFrameTimes.Count == 0)
@@ -119,6 +128,10 @@ namespace SS14.Shared.Network
             return 1 / (_realFrameTimes.Average() / TimeSpan.TicksPerSecond);
         }
 
+        /// <summary>
+        /// Calculates the standard deviation of the last 50 real frame times.
+        /// </summary>
+        /// <returns></returns>
         private TimeSpan CalcRftStdDev()
         {
             var sum = _realFrameTimes.Sum();
@@ -140,5 +153,32 @@ namespace SS14.Shared.Network
             var variance = devSquared / (count - 1);
             return TimeSpan.FromTicks((long) Math.Sqrt(variance));
         }
+
+        #region MainLoop
+
+        /// <summary>
+        /// Delegate of the main loop.
+        /// </summary>
+        public delegate void MainLoopDelegate();
+        private Timer _timer;
+        
+        /// <summary>
+        /// Runs the registered function at the target tick rate interval.
+        /// </summary>
+        /// <param name="tickRate">Target ticks per second.</param>
+        /// <param name="mainLoop">Function to run at tick rate.</param>
+        public void RegisterMainLoop(int tickRate, MainLoopDelegate mainLoop)
+        {
+            _timer?.Dispose();
+            TickRate = tickRate;
+            _timer = new Timer(state => mainLoop.Invoke(), null, 0, 1);
+        }
+
+        public void StopMainLoop()
+        {
+            _timer?.Dispose();
+        }
+        #endregion
+
     }
 }

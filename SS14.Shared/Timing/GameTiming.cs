@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Shared.Timing
 {
+    /// <summary>
+    /// This holds main loop timing information and helper functions.
+    /// </summary>
     public class GameTiming : IGameTiming
     {
+        // number of sample frames to store for profiling
         private const int NumFrames = 50;
 
         private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
@@ -16,6 +19,9 @@ namespace SS14.Shared.Timing
         private static Stopwatch _realTimer;
         private TimeSpan _lastRealTime;
         
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
         public GameTiming()
         {
             if (_realTimer == null)
@@ -40,7 +46,7 @@ namespace SS14.Shared.Timing
         /// </summary>
         public double TimeScale { get; set; }
 
-        //TODO: Figure out how to relate CurTime to RealTime
+        //TODO: Figure out how to actually relate CurTime to RealTime
         /// <summary>
         /// The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for 
         /// prediction, and is affected by Paused and TimeScale.
@@ -52,7 +58,7 @@ namespace SS14.Shared.Timing
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
 
-        //TODO: Figure out how to relate FrameTime to RealFrameTime
+        //TODO: Figure out how to actually relate FrameTime to RealFrameTime
         /// <summary>
         /// The simulated time it took to render the last frame.
         /// </summary>
@@ -69,7 +75,7 @@ namespace SS14.Shared.Timing
         public TimeSpan RealFrameTimeAvg => TimeSpan.FromTicks((long)_realFrameTimes.Average());
 
         /// <summary>
-        /// Standard Deviation of the frame time over the last 50 frames.
+        /// Standard Deviation of the real frame time over the last 50 frames.
         /// </summary>
         public TimeSpan RealFrameTimeStdDev => CalcRftStdDev();
 
@@ -86,7 +92,7 @@ namespace SS14.Shared.Timing
         /// <summary>
         /// The target ticks/second of the simulation.
         /// </summary>
-        public int TickRate { get; private set; }
+        public int TickRate { get; set; }
 
         /// <summary>
         /// The length of a tick at the current TickRate. 1/TickRate.
@@ -154,32 +160,5 @@ namespace SS14.Shared.Timing
             var variance = devSquared / (count - 1);
             return TimeSpan.FromTicks((long) Math.Sqrt(variance));
         }
-
-        #region MainLoop
-
-        /// <summary>
-        /// Delegate of the main loop.
-        /// </summary>
-        public delegate void MainLoopDelegate();
-        private Timer _timer;
-        
-        /// <summary>
-        /// Runs the registered function at the target tick rate interval.
-        /// </summary>
-        /// <param name="tickRate">Target ticks per second.</param>
-        /// <param name="mainLoop">Function to run at tick rate.</param>
-        public void RegisterMainLoop(int tickRate, MainLoopDelegate mainLoop)
-        {
-            _timer?.Dispose();
-            TickRate = tickRate;
-            _timer = new Timer(state => mainLoop.Invoke(), null, 0, 1);
-        }
-
-        public void StopMainLoop()
-        {
-            _timer?.Dispose();
-        }
-        #endregion
-
     }
 }

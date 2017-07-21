@@ -31,7 +31,6 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
-using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Server
@@ -223,21 +222,16 @@ namespace SS14.Server
         /// <inheritdoc />
         public void MainLoop()
         {
-            var tickRate = _config.GetCVar<int>("net.tickrate");
+            _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
             // maximum number of ticks to queue before the loop slows down.
             const int MaxTicks = 5;
-
-            _time.RegisterMainLoop(tickRate, () => AutoResetEvent.Set());
-
+            
             _time.ResetRealTime();
             _maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * MaxTicks);
 
             while (_active)
             {
-                // block the thread until the LoopTimer triggers
-                AutoResetEvent.WaitOne(-1);
-
                 var accumulator = _time.RealTime - _lastTick;
 
                 // If the game can't keep up, limit time.
@@ -274,12 +268,19 @@ namespace SS14.Server
                 if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)
                 {
                     var netStats = UpdateBps();
-                    Console.Title = $"FPS: {Math.Round(_time.FramesPerSecondAvg, 2):N2} SD:{_time.RealFrameTimeStdDev.TotalMilliseconds:N2}ms | Net: ({netStats}) | Memory: {Process.GetCurrentProcess().PrivateMemorySize64 >> 10:N0} KiB";
+                    Console.Title = string.Format("FPS: {0:N2} SD:{1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
+                        Math.Round(_time.FramesPerSecondAvg, 2),
+                        _time.RealFrameTimeStdDev.TotalMilliseconds,
+                        netStats,
+                        Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
                     _lastTitleUpdate = _time.RealTime;
                 }
+                
+                // Set this to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
+                // Set this to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
+                // comment this out if you want to be 'that thread' and hog 100% cpu.
+                Thread.Sleep(1);
             }
-
-            _time.StopMainLoop();
 
             Cleanup();
         }

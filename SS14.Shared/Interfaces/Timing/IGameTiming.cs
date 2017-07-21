@@ -1,8 +1,10 @@
 ﻿using System;
-using SS14.Shared.Timing;
 
 namespace SS14.Shared.Interfaces.Timing
 {
+    /// <summary>
+    /// This holds main loop timing information and helper functions.
+    /// </summary>
     public interface IGameTiming
     {
         /// <summary>
@@ -60,7 +62,7 @@ namespace SS14.Shared.Interfaces.Timing
         /// <summary>
         /// The target ticks/second of the simulation.
         /// </summary>
-        int TickRate { get; }
+        int TickRate { get; set; }
 
         /// <summary>
         /// The length of a tick at the current TickRate. 1/TickRate.
@@ -76,17 +78,5 @@ namespace SS14.Shared.Interfaces.Timing
         /// Resets the real uptime of the server.
         /// </summary>
         void ResetRealTime();
-
-        /// <summary>
-        /// Runs the registered function at the target tick rate interval.
-        /// </summary>
-        /// <param name="tickRate">Target ticks per second.</param>
-        /// <param name="mainLoop">Function to run at tick rate.</param>
-        void RegisterMainLoop(int tickRate, GameTiming.MainLoopDelegate mainLoop);
-
-        /// <summary>
-        /// Stops the MainLoop timer from running.
-        /// </summary>
-        void StopMainLoop();
     }
 }

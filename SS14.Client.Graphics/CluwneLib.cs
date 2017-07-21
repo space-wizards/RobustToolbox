@@ -1,4 +1,4 @@
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -6,20 +6,20 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Timing;
 using SS14.Client.Graphics.View;
 using System;
 using System.Reflection;
+using SS14.Shared.Network;
+using SS14.Shared.Timing;
 
 
 namespace SS14.Client.Graphics
 {
     public class CluwneLib
     {
-
         private static RenderTarget[] renderTargetArray;
-        private static Clock _timer;
 
+        public static GameTiming Time { get; private set; }
         public static event FrameEventHandler FrameEvent;
         public static Viewport CurrentClippingViewport;
 
@@ -51,7 +51,6 @@ namespace SS14.Client.Graphics
 
         public static CluwneWindow SplashScreen { get; set; }
         public static CluwneWindow Screen { get; set; }
-        public static TimingData FrameStats { get; set; }
         public static VideoSettings Video { get; private set; }
         public static Debug Debug { get; private set; }
         public static GLSLShader CurrentShader { get; internal set; }
@@ -108,9 +107,6 @@ namespace SS14.Client.Graphics
             if (IsRunning)
                 return;
 
-            _timer.Restart();
-            FrameStats.Reset();
-
             if (renderTargetArray != null)
             {
                 for (int i = 0; i < renderTargetArray.Length; i++)
@@ -152,10 +148,10 @@ namespace SS14.Client.Graphics
             if (IsInitialized)
                 Terminate();
 
-            Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
+            Time = new GameTiming();
 
-            _timer = new Clock();
-            FrameStats = new TimingData(_timer);
+            Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
+            
             renderTargetArray = new RenderTarget[5];
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
             IsInitialized = true;

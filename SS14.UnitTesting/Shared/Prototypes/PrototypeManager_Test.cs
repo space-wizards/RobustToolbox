@@ -16,7 +16,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
     public class PrototypeManager_Test : SS14UnitTest
     {
         private IPrototypeManager manager;
-        public PrototypeManager_Test()
+        [OneTimeSetUp]
+        public void Setup()
         {
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));

@@ -222,8 +222,6 @@ namespace SS14.Server
         /// <inheritdoc />
         public void MainLoop()
         {
-            _time.TickRate = _config.GetCVar<int>("net.tickrate");
-
             // maximum number of ticks to queue before the loop slows down.
             const int MaxTicks = 5;
             
@@ -302,6 +300,8 @@ namespace SS14.Server
 
             _entities = IoCManager.Resolve<IServerEntityManager>();
             _components = IoCManager.Resolve<IComponentManager>();
+
+            _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
             Logger.Info($"[SRV] Name: {ServerName}");
             Logger.Info($"[SRV] TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");

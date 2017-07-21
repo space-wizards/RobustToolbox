@@ -3,6 +3,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.GameTimer
 {
+#if DELME
     public class GameTimer : IGameTimer
     {
         public GameTimer()
@@ -19,4 +20,5 @@ namespace SS14.Client.GameTimer
             CurrentTime = time;
         }
     }
+#endif
 }

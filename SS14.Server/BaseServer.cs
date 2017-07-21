@@ -24,12 +24,14 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 
 namespace SS14.Server
@@ -67,7 +69,8 @@ namespace SS14.Server
         [Dependency]
         private readonly ISS14Serializer Serializer;
 
-        public Shared.Network.Timing Time { get; private set; }
+        [Dependency]
+        private readonly IGameTiming _time;
 
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
@@ -162,8 +165,6 @@ namespace SS14.Server
             _logman.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
             _logman.LogPath = logPath;
 
-            Time = new Shared.Network.Timing();
-
             Level = RunLevel.Init;
 
             LoadSettings();
@@ -227,17 +228,17 @@ namespace SS14.Server
             // maximum number of ticks to queue before the loop slows down.
             const int MaxTicks = 5;
 
-            Time.RegisterMainLoop(tickRate, () => AutoResetEvent.Set());
+            _time.RegisterMainLoop(tickRate, () => AutoResetEvent.Set());
 
-            Time.ResetRealTime();
-            _maxTime = TimeSpan.FromTicks(Time.TickPeriod.Ticks * MaxTicks);
+            _time.ResetRealTime();
+            _maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * MaxTicks);
 
             while (_active)
             {
                 // block the thread until the LoopTimer triggers
                 AutoResetEvent.WaitOne(-1);
 
-                var accumulator = Time.RealTime - _lastTick;
+                var accumulator = _time.RealTime - _lastTick;
 
                 // If the game can't keep up, limit time.
                 if (accumulator > _maxTime)
@@ -248,37 +249,37 @@ namespace SS14.Server
                     // pull lastTick up to the current realTime
                     // This will slow down the simulation, but if we are behind from a
                     // lag spike hopefully it will be able to catch up.
-                    _lastTick = Time.RealTime - _maxTime;
+                    _lastTick = _time.RealTime - _maxTime;
 
                     // announce we are falling behind
-                    if ((Time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
+                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
                     {
                         Logger.Log("[SRV] MainLoop: Cannot keep up!");
-                        _lastKeepUpAnnounce = Time.RealTime;
+                        _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }
 
                 // run the simulation for every accumulated tick
-                while (accumulator >= Time.TickPeriod)
+                while (accumulator >= _time.TickPeriod)
                 {
-                    accumulator -= Time.TickPeriod;
-                    _lastTick += Time.TickPeriod;
-                    Time.StartFrame();
+                    accumulator -= _time.TickPeriod;
+                    _lastTick += _time.TickPeriod;
+                    _time.StartFrame();
                     
-                    Update((float)Time.CurTime.TotalSeconds);
-                    Time.CurTick++;
+                    Update((float)_time.CurTime.TotalSeconds);
+                    _time.CurTick++;
                 }
 
                 // every 1 second update stats in the console window title
-                if ((Time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)
+                if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)
                 {
                     var netStats = UpdateBps();
-                    Console.Title = $"FPS: {Math.Round(Time.FramesPerSecondAvg, 2):N2} SD:{Time.RealFrameTimeStdDev.TotalMilliseconds:N2}ms | Net: ({netStats}) | Memory: {Process.GetCurrentProcess().PrivateMemorySize64 >> 10:N0} KiB";
-                    _lastTitleUpdate = Time.RealTime;
+                    Console.Title = $"FPS: {Math.Round(_time.FramesPerSecondAvg, 2):N2} SD:{_time.RealFrameTimeStdDev.TotalMilliseconds:N2}ms | Net: ({netStats}) | Memory: {Process.GetCurrentProcess().PrivateMemorySize64 >> 10:N0} KiB";
+                    _lastTitleUpdate = _time.RealTime;
                 }
             }
 
-            Time.StopMainLoop();
+            _time.StopMainLoop();
 
             Cleanup();
         }
@@ -302,7 +303,7 @@ namespace SS14.Server
             _components = IoCManager.Resolve<IComponentManager>();
 
             Logger.Info($"[SRV] Name: {ServerName}");
-            Logger.Info($"[SRV] TickRate: {Time.TickRate}({Time.TickPeriod.TotalMilliseconds:0.00}ms)");
+            Logger.Info($"[SRV] TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.Info($"[SRV] Map: {MapName}");
             Logger.Info($"[SRV] Max players: {MaxPlayers}");
             Logger.Info($"[SRV] Welcome message: {Motd}");
@@ -409,7 +410,7 @@ namespace SS14.Server
 
             //Create a new GameState object
             var stateManager = IoCManager.Resolve<IGameStateManager>();
-            var state = new GameState(Time.CurTick);
+            var state = new GameState(_time.CurTick);
             if (_entities != null)
                 state.EntityStates = _entities.GetEntityStates();
             state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
@@ -441,7 +442,7 @@ namespace SS14.Server
                         else
                         {
                             stateMessage.Write((byte) NetMessages.StateUpdate);
-                            var delta = stateManager.GetDelta(c, Time.CurTick);
+                            var delta = stateManager.GetDelta(c, _time.CurTick);
                             delta.WriteDelta(stateMessage);
                             //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                         }

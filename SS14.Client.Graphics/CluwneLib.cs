@@ -10,6 +10,7 @@ using SS14.Client.Graphics.View;
 using System;
 using System.Reflection;
 using SS14.Shared.Network;
+using SS14.Shared.Timing;
 
 
 namespace SS14.Client.Graphics
@@ -18,7 +19,7 @@ namespace SS14.Client.Graphics
     {
         private static RenderTarget[] renderTargetArray;
 
-        public static Timing Time { get; private set; }
+        public static GameTiming Time { get; private set; }
         public static event FrameEventHandler FrameEvent;
         public static Viewport CurrentClippingViewport;
 
@@ -147,7 +148,7 @@ namespace SS14.Client.Graphics
             if (IsInitialized)
                 Terminate();
 
-            Time = new Timing();
+            Time = new GameTiming();
 
             Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
             

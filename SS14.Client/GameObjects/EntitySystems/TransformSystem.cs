@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -74,7 +75,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
-                var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
+                var currentTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds - interpolation;
 
                 //Limit to how far a human can move
                 var humanMoveLimit = 6 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;

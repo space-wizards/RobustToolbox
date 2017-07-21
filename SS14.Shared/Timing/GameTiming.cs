@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using SS14.Shared.Interfaces.Timing;
 
-namespace SS14.Shared.Network
+namespace SS14.Shared.Timing
 {
-    public class Timing
+    public class GameTiming : IGameTiming
     {
         private const int NumFrames = 50;
 
@@ -15,7 +16,7 @@ namespace SS14.Shared.Network
         private static Stopwatch _realTimer;
         private TimeSpan _lastRealTime;
         
-        public Timing()
+        public GameTiming()
         {
             if (_realTimer == null)
             {

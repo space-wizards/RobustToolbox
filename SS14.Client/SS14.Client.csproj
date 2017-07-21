@@ -258,7 +258,6 @@
     <Compile Include="Console\ParticleCommands.cs" />
     <Compile Include="Console\QuitCommand.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
-    <Compile Include="GameTimer\GameTimer.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
     <Compile Include="Helpers\InterpolationPacket.cs" />
     <Compile Include="Helpers\StarScroller.cs" />
@@ -275,7 +274,6 @@
     <Compile Include="Interfaces\GameObjects\ISVarsComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
-    <Compile Include="Interfaces\GameTimer\IGameTimer.cs" />
     <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
     <Compile Include="Interfaces\Lighting\ILight.cs" />
     <Compile Include="Interfaces\Lighting\ILightArea.cs" />

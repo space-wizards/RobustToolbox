@@ -8,7 +8,6 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
@@ -25,6 +24,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using System;
@@ -402,7 +402,6 @@ namespace SS14.Client.State.States
 
             CluwneLib.TileSize = MapManager.TileSize;
 
-            IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _componentManager.Update(e.FrameDeltaTime);
             _entityManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
@@ -960,7 +959,7 @@ namespace SS14.Client.State.States
             GameState fromState = _lastStates[delta.FromSequence];
             //Apply the delta
             GameState newState = fromState + delta;
-            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
+            newState.GameTime = (float) IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
 
             // Go ahead and store it even if our current state is newer than this one, because
             // a newer state delta may later reference this one.
@@ -996,7 +995,7 @@ namespace SS14.Client.State.States
         private void HandleFullState(NetIncomingMessage message)
         {
             GameState newState = GameState.ReadStateMessage(message);
-            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
+            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
             SendStateAck(newState.Sequence);
 
             //Store the new state

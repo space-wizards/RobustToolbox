@@ -133,6 +133,7 @@
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
+    <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -183,6 +184,7 @@
     <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
+    <Compile Include="Timing\GameTiming.cs" />
     <Compile Include="TypeEventArgs.cs" />
     <!--
     <Compile Include="Utility\BitS>tream.cs" />
@@ -289,6 +291,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

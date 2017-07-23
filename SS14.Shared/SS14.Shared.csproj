@@ -136,6 +136,7 @@
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
+    <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -186,8 +187,14 @@
     <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
+    <Compile Include="Timing\GameTiming.cs" />
     <Compile Include="TypeEventArgs.cs" />
-    <!--<Compile Include="Utility\BitS>tream.cs" />-->
+    <!--
+    <Compile Include="Utility\BitS>tream.cs" />
+    <EmbeddedResource Include="Utility\BitStream.resx">
+      <DependentUpon>BitStream.cs</DependentUpon>
+    </EmbeddedResource>
+    -->
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
     <Compile Include="Utility\PathHelpers.cs" />
@@ -203,9 +210,6 @@
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />
     <Compile Include="VectorEventArgs.cs" />
-    <EmbeddedResource Include="Utility\BitStream.resx">
-      <DependentUpon>BitStream.cs</DependentUpon>
-    </EmbeddedResource>
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\IPostInjectInit.cs" />
     <Compile Include="IoC\DependencyAttribute.cs" />
@@ -282,6 +286,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

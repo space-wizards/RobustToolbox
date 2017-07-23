@@ -151,9 +151,6 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Signals.cs" />
-    <Compile Include="Timing\MainLoopTimer.cs" />
-    <Compile Include="Timing\TimerMainLoopTimer.cs" />
-    <Compile Include="Timing\TimerQueueTimer.cs" />
     <None Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -33,10 +33,11 @@ using SS14.Shared.Serialization;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
+using SS14.Shared.Timing;
 
 namespace SS14.Server
 {
@@ -85,6 +86,7 @@ namespace SS14.Server
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
+            IoCManager.Register<IGameTiming, GameTiming>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

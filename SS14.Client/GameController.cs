@@ -24,6 +24,7 @@ using System;
 using System.Reflection;
 using System.Windows.Forms;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -51,6 +52,8 @@ namespace SS14.Client
         readonly private ITileDefinitionManager _tileDefinitionManager;
         [Dependency]
         readonly private ISS14Serializer _serializer;
+        [Dependency]
+        private readonly IGameTiming _time;
 
         #endregion Fields
 
@@ -91,6 +94,9 @@ namespace SS14.Client
 
             while (CluwneLib.IsRunning)
             {
+                //TODO: The client needs a real game loop...
+                _time.StartFrame();
+
                 var lastFrameTime = _clock.ElapsedTime.AsSeconds();
                 _clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);

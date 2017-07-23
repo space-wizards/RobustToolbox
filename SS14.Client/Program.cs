@@ -4,7 +4,6 @@ using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
@@ -31,11 +30,13 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -116,6 +117,7 @@ namespace SS14.Client
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
+            IoCManager.Register<IGameTiming, GameTiming>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -123,7 +125,6 @@ namespace SS14.Client
             IoCManager.Register<INetworkGrapher, NetworkGrapher>();
             IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
-            IoCManager.Register<IGameTimer, GameTimer.GameTimer>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();

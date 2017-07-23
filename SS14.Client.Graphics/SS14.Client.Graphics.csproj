@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -119,9 +119,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\TextSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Timing\TimingData.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="VertexData\VertexEnums.cs">

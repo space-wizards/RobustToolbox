@@ -56,7 +56,7 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["Light"];
+            var componentData = prototype.Components["PointLight"];
             var expected = new YamlMappingNode();
             expected.Children[new YamlScalarNode("startState")] = new YamlScalarNode("Off");
 

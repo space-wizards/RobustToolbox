@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SFML.Graphics;
 using NUnit.Framework;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using SS14.Shared.GameObjects;
@@ -19,6 +20,9 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
         [OneTimeSetUp]
         public void Setup()
         {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            factory.Register<TestBasicPrototypeComponent>();
+
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
             manager.Resync();
@@ -48,10 +52,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("Direction"));
                 Assert.That(prototype.Components, Contains.Key("Clickable"));
                 Assert.That(prototype.Components, Contains.Key("Sprite"));
-                Assert.That(prototype.Components, Contains.Key("BasicInteractable"));
                 Assert.That(prototype.Components, Contains.Key("BasicMover"));
-                Assert.That(prototype.Components, Contains.Key("WallMounted"));
-                Assert.That(prototype.Components, Contains.Key("Light"));
+                Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
             var componentData = prototype.Components["Light"];
@@ -118,10 +120,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
   - type: Direction
   - type: Clickable
   - type: Sprite
-  - type: BasicInteractable
   - type: BasicMover
-  - type: WallMounted
-  - type: Light
+  - type: PointLight
     startState: Off
 
 - type: entity

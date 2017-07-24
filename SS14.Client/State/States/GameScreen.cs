@@ -132,6 +132,11 @@ namespace SS14.Client.State.States
 
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
         {
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                // Disable lighting on non-Windows versions by default because the rendering is broken.
+                bFullVision = true;
+            }
         }
 
         #region IState Members

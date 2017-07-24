@@ -13,16 +13,6 @@
   - type: Icon
     icon: toolbox_r
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicItem
   - type: Physics
     mass: 5
-
-  - type: BasicItem
-  # <ItemCapability name="MeleeWeaponCapability">
-  #   <ItemCapabilityParameters>
-  #     <ItemCapabilityParameter name="damageAmount" type="int" value="200" />
-  #     <ItemCapabilityParameter name="damageType" type="string" value="Bludgeon" />
-  #   </ItemCapabilityParameters>
-  # </ItemCapability>

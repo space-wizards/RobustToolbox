@@ -11,18 +11,37 @@ using YamlDotNet.RepresentationModel;
 namespace SS14.Shared.Interfaces.GameObjects
 {
     /// <remarks>
-    /// All discoverable implementations of IComponent must override the Name property.
+    /// All discoverable implementations of IComponent must override the <see cref="Name" />.
     /// </remarks>
     public interface IComponent : IEntityEventSubscriber
     {
-        ComponentFamily Family { get; }
-        IEntity Owner { get; }
-        Type StateType { get; }
+        /// <summary>
+        /// Represents the network ID for the component.
+        /// The network ID is used to determine which component will receive the component state
+        /// on the other side of the network.
+        /// If this is <c>null</c>, the component is not replicated across the network.
+        /// </summary>
+        /// <seealso cref="NetworkSynchronizeExistence" />
+        /// <seealso cref="IComponentRegistration.NetID" />
+        uint? NetID { get; }
 
         /// <summary>
-        /// Name that this component is represented with in prototypes and over the network.
+        /// Name that this component is represented with in prototypes.
         /// </summary>
+        /// <seealso cref="IComponentRegistration.Name" />
         string Name { get; }
+
+        /// <summary>
+        /// Whether the client should synchronize component additions and removals.
+        /// If this is false and the component gets added or removed server side, the client will not do the same.
+        /// If this is true and the server adds or removes the component, the client will do as such too.
+        /// This flag has no effect if <see cref="NetID" /> is <c>null</c>.
+        /// </summary>
+        /// <seealso cref="IComponentRegistration.NetworkSynchronizeExistence" />
+        bool NetworkSynchronizeExistence { get; }
+
+        IEntity Owner { get; }
+        Type StateType { get; }
 
         /// <summary>
         /// Called when the component is removed from an entity.
@@ -77,27 +96,5 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="netConnection"></param>
         void HandleInstantiationMessage(NetConnection netConnection);
-
-        /// <summary>
-        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
-        /// If it isn't going to return a current value, it shouldn't return it at all.
-        /// </summary>
-        /// <returns></returns>
-        IList<ComponentParameter> GetParameters();
-
-        /// <summary>
-        /// Gets all available SVars for the entity.
-        /// This gets current values, or at least it should...
-        /// </summary>
-        /// <returns>Returns a list of component parameters for marshaling</returns>
-        IList<MarshalComponentParameter> GetSVars();
-
-        /// <summary>
-        /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this
-        /// function.
-        /// </summary>
-        /// <param name="sVar">ComponentParameter</param>
-        void SetSVar(MarshalComponentParameter sVar);
     }
 }

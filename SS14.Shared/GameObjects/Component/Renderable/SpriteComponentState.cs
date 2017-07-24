@@ -10,7 +10,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
         public bool Visible;
 
         public SpriteComponentState(bool visible, DrawDepth drawDepth, string spriteKey, string baseName)
-            : base(drawDepth, null)
+            : base(drawDepth, null, NetIDs.SPRITE)
         {
             Visible = visible;
             SpriteKey = spriteKey;

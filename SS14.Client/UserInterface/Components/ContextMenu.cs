@@ -50,14 +50,6 @@ namespace SS14.Client.UserInterface.Components
                 examineButton.Update(0);
             }
 
-            var sVarButton =
-                new ContextMenuButton(
-                    new ContextMenuEntry { ComponentMessage = "svars", EntryName = "SVars", IconName = "context_eye" },
-                    _buttonSize, _resourceManager);
-            sVarButton.Selected += ContextSelected;
-            _buttons.Add(sVarButton);
-            sVarButton.Update(0);
-
             foreach (ContextMenuEntry entry in entries)
             {
                 var newButton = new ContextMenuButton(entry, _buttonSize, _resourceManager);
@@ -84,17 +76,10 @@ namespace SS14.Client.UserInterface.Components
                 _userInterfaceManager.AddComponent(newExamine);
                 newExamine.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
             }
-            else if ((string)sender.UserData == "svars")
+            else
             {
-                var newSVars = new SVarEditWindow(new Vector2i(350, 400), _owningEntity);
-                _userInterfaceManager.AddComponent(newSVars);
-                newSVars.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
-
-                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).GetSVarsCallback +=
-                    newSVars.GetSVarsCallback;
-                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoGetSVars();
+                _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
             }
-            else _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
         }
 
         public override void Update(float frameTime)

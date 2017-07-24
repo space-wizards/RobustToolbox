@@ -100,6 +100,9 @@
     <Reference Include="YamlDotNet">
       <HintPath>..\packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>..\packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -226,18 +229,10 @@
     <Compile Include="Utility\AppDomainHelpers.cs" />
     <Compile Include="Utility\AssemblyHelpers.cs" />
     <Compile Include="GameObjects\Component\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Damageable\DamageableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Damageable\Health\HealthComponentState.cs" />
     <Compile Include="GameObjects\Component\Direction\DirectionComponentState.cs" />
-    <Compile Include="GameObjects\Component\EntityStats\EntityStatsComponentState.cs" />
-    <Compile Include="GameObjects\Component\Equipment\EquipmentComponentState.cs" />
-    <Compile Include="GameObjects\Component\Equippable\EquippableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Hands\HandsComponentState.cs" />
     <Compile Include="GameObjects\Component\Hitbox\HitboxComponentState.cs" />
-    <Compile Include="GameObjects\Component\Inventory\InventoryComponentState.cs" />
-    <Compile Include="GameObjects\Component\Item\ItemComponentState.cs" />
-    <Compile Include="GameObjects\Component\Light\LightComponentState.cs" />
-    <Compile Include="GameObjects\Component\Mover\MoverComponentState.cs" />
+    <Compile Include="GameObjects\Component\Light\PointLightComponentState.cs" />
+    <Compile Include="GameObjects\Component\Mover\SlaveMoverComponentState.cs" />
     <Compile Include="GameObjects\Component\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Component\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponentState.cs" />
@@ -256,7 +251,6 @@
     <Compile Include="GameObjects\ComponentState.cs" />
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="GameObjects\ItemFlags.cs" />
-    <Compile Include="GameObjects\MarshalComponentParameter.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />
@@ -287,6 +281,7 @@
     <Content Include="Prototypes\Entities\Wallmounted.yml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="GameObjects\Component\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

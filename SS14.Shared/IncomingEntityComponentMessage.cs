@@ -5,12 +5,12 @@ namespace SS14.Shared
 {
     public struct IncomingEntityComponentMessage
     {
-        public ComponentFamily ComponentFamily;
+        public uint NetID;
         public List<object> MessageParameters;
 
-        public IncomingEntityComponentMessage(ComponentFamily componentFamily, List<object> messageParameters)
+        public IncomingEntityComponentMessage(uint netID, List<object> messageParameters)
         {
-            ComponentFamily = componentFamily;
+            NetID = netID;
             MessageParameters = messageParameters;
         }
     }

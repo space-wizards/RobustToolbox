@@ -1,4 +1,5 @@
 ﻿using SFML.System;
+using SS14.Server.GameObjects;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
@@ -100,12 +101,10 @@ namespace SS14.Server.Placement
                     IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
                     if (created != null)
                     {
-                        created.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(
+                        created.GetComponent<ITransformComponent>().TranslateTo(
                             new Vector2f(xRcv, yRcv));
-                        if (created.HasComponent(ComponentFamily.Direction))
-                            created.GetComponent<IDirectionComponent>(ComponentFamily.Direction).Direction = dirRcv;
-                        if (created.HasComponent(ComponentFamily.WallMounted))
-                            created.GetComponent<IWallMountedComponent>(ComponentFamily.WallMounted).AttachToTile(mapMgr.GetTileRef(tilePos));
+                        if (created.TryGetComponent<DirectionComponent>(out var component))
+                            component.Direction = dirRcv;
                     }
                 }
                 else
@@ -134,10 +133,10 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
-            if (!mob.HasComponent(ComponentFamily.Actor))
+            if (!mob.TryGetComponent<IActorComponent>(out var actor))
                 return;
 
-            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            var playerConnection = actor.playerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -156,10 +155,10 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
-            if (!mob.HasComponent(ComponentFamily.Actor))
+            if (!mob.TryGetComponent<IActorComponent>(out var actor))
                 return;
 
-            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            var playerConnection = actor.playerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -171,7 +170,7 @@ namespace SS14.Server.Placement
             message.IsTile = true;
             message.ObjType = tileType;
             message.AlignOption = alignOption;
-            
+
             net.ServerSendMessage(message, playerConnection);
         }
 
@@ -180,10 +179,10 @@ namespace SS14.Server.Placement
         /// </summary>
         public void SendPlacementCancel(IEntity mob)
         {
-            if (!mob.HasComponent(ComponentFamily.Actor))
+            if (!mob.TryGetComponent<IActorComponent>(out var actor))
                 return;
 
-            var playerConnection = mob.GetComponent<IActorComponent>(ComponentFamily.Actor).playerSession.ConnectedClient;
+            var playerConnection = actor.playerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 

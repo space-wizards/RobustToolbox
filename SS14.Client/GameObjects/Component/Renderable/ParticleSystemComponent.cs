@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Particles;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -17,12 +18,13 @@ namespace SS14.Client.GameObjects
     public class ParticleSystemComponent : ClientComponent, IParticleSystemComponent, IRenderableComponent
     {
         public override string Name => "ParticleSystem";
+        public override uint? NetID => NetIDs.PARTICLE_SYSTEM;
         #region Variables.
         private Dictionary<string, ParticleSystem> _emitters = new Dictionary<string, ParticleSystem>(); // List of particle emitters.
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
 
-        public DrawDepth DrawDepth { get; set; }
+        public DrawDepth DrawDepth { get; set; } = DrawDepth.ItemsOnTables;
         #endregion Variables.
 
         #region Properties
@@ -37,16 +39,8 @@ namespace SS14.Client.GameObjects
         }
         #endregion Properties
 
-        public ParticleSystemComponent()
-        {
-            Family = ComponentFamily.Particles;
-            DrawDepth = DrawDepth.ItemsOnTables;
-        }
 
-        public override Type StateType
-        {
-            get { return typeof(ParticleSystemComponentState); }
-        }
+        public override Type StateType => typeof(ParticleSystemComponentState);
 
         public void OnMove(object sender, VectorEventArgs args)
         {
@@ -62,13 +56,13 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+            var transform = Owner.GetComponent<TransformComponent>();
             transform.OnMove += OnMove;
         }
 
         public override void OnRemove()
         {
-            var transform = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform);
+            var transform = Owner.GetComponent<TransformComponent>();
             transform.OnMove -= OnMove;
             base.OnRemove();
         }
@@ -85,7 +79,7 @@ namespace SS14.Client.GameObjects
         public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                    Owner.GetComponent<TransformComponent>().Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
@@ -98,7 +92,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y;
+                return Owner.GetComponent<TransformComponent>().Position.Y;
                 //return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
                 //       (_particleSprite.Height / 2);
             }
@@ -111,9 +105,9 @@ namespace SS14.Client.GameObjects
 
         public void SetMaster(IEntity m)
         {
-            if (!m.HasComponent(ComponentFamily.Renderable))
+            if (!m.HasComponent<IRenderableComponent>())
                 return;
-            var mastercompo = m.GetComponent<SpriteComponent>(ComponentFamily.Renderable);
+            var mastercompo = m.GetComponent<IRenderableComponent>();
             //If there's no sprite component, then FUCK IT
             if (mastercompo == null)
                 return;

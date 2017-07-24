@@ -34,7 +34,7 @@ namespace SS14.Client.Placement.Modes
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>()
                          .Position - mouseWorld).LengthSquared() > rangeSquared)
                     return false;
 

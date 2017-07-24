@@ -12,11 +12,6 @@ namespace SS14.Server.GameObjects
         public override string Name => "BasicActor";
         public IPlayerSession playerSession { get; internal set; }
 
-        public BasicActorComponent()
-        {
-            Family = ComponentFamily.Actor;
-        }
-
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {

@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using NetSerializer;
-using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -14,23 +13,10 @@ using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.GameObjects
 {
-    public class ClientEntityNetworkManager : IEntityNetworkManager, IPostInjectInit
+    public class ClientEntityNetworkManager : IEntityNetworkManager
     {
-        private bool _messageProfiling = false;
         [Dependency]
         private readonly IClientNetManager _networkManager;
-        [Dependency]
-        private readonly IConfigurationManager _configManager;
-
-        public void PostInject()
-        {
-            _configManager.RegisterCVar("ent.logging", false);
-        }
-
-        public void Initialize()
-        {
-            _messageProfiling = _configManager.GetCVar<bool>("ent.logging");
-        }
 
         #region IEntityNetworkManager Members
 
@@ -59,16 +45,11 @@ namespace SS14.Client.GameObjects
             newMsg.Write((int)stream.Length);
             newMsg.Write(stream.ToArray());
 
-            if (_messageProfiling)
-            {
-                //Log the message
-            }
-
             //Send the message
             _networkManager.ClientSendMessage(newMsg, method);
         }
 
-        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                                         NetDeliveryMethod method, NetConnection recipient,
                                                         params object[] messageParams)
         {
@@ -83,22 +64,15 @@ namespace SS14.Client.GameObjects
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        public void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        public void SendComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                                 NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                                 params object[] messageParams)
         {
             NetOutgoingMessage message = CreateEntityMessage();
             message.Write((byte)EntityMessage.ComponentMessage);
             message.Write(sendingEntity.Uid); //Write this entity's UID
-            message.Write((byte)family);
+            message.Write(netID);
             PackParams(message, messageParams);
-
-            if (_messageProfiling)
-            {
-                //Log the message
-                var logger = IoCManager.Resolve<IMessageLogger>();
-                logger.LogOutgoingComponentNetMessage(sendingEntity.Uid, family, messageParams);
-            }
 
             //Send the message
             _networkManager.ClientSendMessage(message, method);
@@ -202,20 +176,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        /// <summary>
-        /// Sends an SVar to the server to be set on the server-side entity.
-        /// </summary>
-        /// <param name="sendingEntity"></param>
-        /// <param name="svar"></param>
-        public void SendSVar(IEntity sendingEntity, MarshalComponentParameter svar)
-        {
-            NetOutgoingMessage message = CreateEntityMessage();
-            message.Write((byte)EntityMessage.SetSVar);
-            message.Write(sendingEntity.Uid);
-            svar.Serialize(message);
-            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
         #endregion Sending
 
         #region Receiving
@@ -239,15 +199,6 @@ namespace SS14.Client.GameObjects
                     result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent,
                                                        message.SenderConnection);
 
-                    if (_messageProfiling)
-                    {
-                        //Log the message
-                        var logger = IoCManager.Resolve<IMessageLogger>();
-                        logger.LogIncomingComponentNetMessage(result.Uid, result.MessageType,
-                                                              messageContent.ComponentFamily,
-                                                              messageContent.MessageParameters.ToArray());
-                    }
-
                     break;
                 case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
                     var manager = IoCManager.Resolve<IEntitySystemManager>();
@@ -256,10 +207,6 @@ namespace SS14.Client.GameObjects
                 case EntityMessage.PositionMessage:
                     uid = message.ReadInt32();
                     //TODO: Handle position messages!
-                    break;
-                case EntityMessage.GetSVars:
-                    uid = message.ReadInt32();
-                    result = new IncomingEntityMessage(uid, EntityMessage.GetSVars, message, message.SenderConnection);
                     break;
             }
             return result;
@@ -272,7 +219,7 @@ namespace SS14.Client.GameObjects
         /// <returns>An IncomingEntityComponentMessage object</returns>
         public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
         {
-            var componentFamily = (ComponentFamily)message.ReadByte();
+            var netID = message.ReadUInt32();
             var messageParams = new List<object>();
             while (message.Position < message.LengthBits)
             {
@@ -323,7 +270,7 @@ namespace SS14.Client.GameObjects
                         break;
                 }
             }
-            return new IncomingEntityComponentMessage(componentFamily, messageParams);
+            return new IncomingEntityComponentMessage(netID, messageParams);
         }
 
         #endregion Receiving

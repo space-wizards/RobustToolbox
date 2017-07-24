@@ -11,7 +11,7 @@ namespace SS14.Shared.GameObjects.Components.Renderable
         public bool Loop;
 
         public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation, bool loop, int? masterUid)
-            : base(drawDepth, masterUid)
+            : base(drawDepth, masterUid, NetIDs.ANIMATED_SPRITE)
         {
             Visible = visible;
             CurrentAnimation = currentAnimation;

@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Particles;
 using SS14.Shared.IoC;
 using System;
@@ -12,17 +13,16 @@ namespace SS14.Server.GameObjects
     public class ParticleSystemComponent : Component, IParticleSystemComponent
     {
         public override string Name => "ParticleSystem";
+        public override uint? NetID => NetIDs.PARTICLE_SYSTEM;
+
         private Dictionary<string, Boolean> emitters = new Dictionary<string, bool>();
 
         //Notes: The server doesn't actually care about whether the client can't find a particle system when we tell it to add it.
-        //       The server is literally just a list of stuff we wan't the clients to use - if they can't then tough luck.
+        //       The server is literally just a list of stuff we want the clients to use - if they can't then tough luck.
         //       It's not the most elegant Solution but short of passing around a whole bunch of messages to verify that everything worked
         //       there's not much else i can do. And quite frankly - it doesn't matter if the client cant find a particle system - it just wont show up - no error.
-
-        public ParticleSystemComponent()
-        {
-            Family = ComponentFamily.Particles;
-        }
+        // --- years later ---
+        // You're retarded. An error is an error. TODO fix this.
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)

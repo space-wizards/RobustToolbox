@@ -13,9 +13,7 @@
   - type: Icon
     icon: wall_light
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: WallMounted
   - type: PointLight
     lightoffsetx: 0
     lightoffsety: 0

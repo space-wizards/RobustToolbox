@@ -2,6 +2,7 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
+using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
@@ -44,7 +45,7 @@ namespace SS14.Client.Placement.Modes
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>()
                          .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             var manager = IoCManager.Resolve<IClientEntityManager>();
@@ -54,29 +55,22 @@ namespace SS14.Client.Placement.Modes
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
                     (entity.GetComponent<TransformComponent>(
-                        ComponentFamily.Transform).Position - mouseWorld).LengthSquared()
+                        ).Position - mouseWorld).LengthSquared()
                     ascending
                 select entity;
 
             if (snapToEntities.Any())
             {
                 IEntity closestEntity = snapToEntities.First();
-                ComponentReplyMessage reply = closestEntity.SendMessage(this, ComponentFamily.Renderable,
-                                                                        ComponentMessageType.GetSprite);
-
-                //if(replies.Any(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite))
-                //{
-                //    Sprite closestSprite = (Sprite)replies.Find(x => x.messageType == SS13_Shared.GO.ComponentMessageType.CurrentSprite).paramsList[0]; //This is safer but slower.
-
-                if (reply.MessageType == ComponentMessageType.CurrentSprite)
+                if (closestEntity.TryGetComponent<ISpriteRenderableComponent>(out var component))
                 {
-                    var closestSprite = (Sprite)reply.ParamsList[0]; //This is faster but kinda unsafe.
+                    var closestSprite = component.GetCurrentSprite();
                     var closestBounds = closestSprite.GetLocalBounds();
 
                     var closestRect =
                         new FloatRect(
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X - closestBounds.Width / 2f,
-                            closestEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y - closestBounds.Height / 2f,
+                            closestEntity.GetComponent<TransformComponent>().Position.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<TransformComponent>().Position.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
                     var sides = new List<Vector2f>

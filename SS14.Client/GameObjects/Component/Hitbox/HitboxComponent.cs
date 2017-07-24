@@ -1,6 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Hitbox;
 using SS14.Shared.IoC;
 using System;
@@ -10,6 +11,7 @@ namespace SS14.Client.GameObjects
     public class HitboxComponent : ClientComponent
     {
         public override string Name => "Hitbox";
+        public override uint? NetID => NetIDs.HITBOX;
         public FloatRect AABB { get; set; }
         public Vector2f Size
         {
@@ -46,7 +48,6 @@ namespace SS14.Client.GameObjects
 
         public HitboxComponent()
         {
-            Family = ComponentFamily.Hitbox;
             Size = new Vector2f();
             Offset = new Vector2f();
         }

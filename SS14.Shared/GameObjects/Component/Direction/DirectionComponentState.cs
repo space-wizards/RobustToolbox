@@ -8,7 +8,7 @@ namespace SS14.Shared.GameObjects.Components.Direction
         public SS14.Shared.Direction Direction;
 
         public DirectionComponentState(SS14.Shared.Direction dir)
-            :base(ComponentFamily.Direction)
+            :base(NetIDs.DIRECTION)
         {
             Direction = dir;
         }

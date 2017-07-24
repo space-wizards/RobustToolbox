@@ -2,6 +2,7 @@
 using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 
@@ -13,6 +14,7 @@ namespace SS14.Server.GameObjects
     public class KeyBindingInputComponent : Component
     {
         public override string Name => "KeyBindingInput";
+        public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
@@ -26,11 +28,6 @@ namespace SS14.Server.GameObjects
         }
 
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();
-
-        public KeyBindingInputComponent()
-        {
-            Family = ComponentFamily.Input;
-        }
 
         protected void SetKeyState(BoundKeyFunctions k, bool state)
         {

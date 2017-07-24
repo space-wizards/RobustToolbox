@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -8,9 +9,10 @@ using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
-    public class SpriteComponent : Component, IRenderableComponent
+    public class SpriteComponent : Component, ISpriteRenderableComponent
     {
         public override string Name => "Sprite";
+        public override uint? NetID => NetIDs.SPRITE;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
         private string _currentBaseName;
@@ -20,7 +22,6 @@ namespace SS14.Server.GameObjects
 
         public SpriteComponent()
         {
-            Family = ComponentFamily.Renderable;
             slaves = new List<IRenderableComponent>();
         }
 
@@ -96,9 +97,9 @@ namespace SS14.Server.GameObjects
 
         public void SetMaster(IEntity m)
         {
-            if (!m.HasComponent(ComponentFamily.Renderable))
+            if (!m.HasComponent<ISpriteRenderableComponent>())
                 return;
-            var mastercompo = m.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
+            var mastercompo = m.GetComponent<ISpriteRenderableComponent>();
             //If there's no sprite component, then FUCK IT
             if (mastercompo == null)
                 return;

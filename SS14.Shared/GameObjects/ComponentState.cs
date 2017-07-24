@@ -1,4 +1,4 @@
-using SS14.Shared.Serialization;
+﻿using SS14.Shared.Serialization;
 using System;
 
 namespace SS14.Shared.GameObjects
@@ -6,16 +6,18 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class ComponentState : INetSerializableType
     {
-        [NonSerialized] public float ReceivedTime;
-        public ComponentState(ComponentFamily family)
+        [NonSerialized]
+        public float ReceivedTime;
+
+        public uint NetID { get; protected set; }
+
+        public ComponentState(uint netID)
         {
-            Family = family;
+            NetID = netID;
         }
 
         public ComponentState()
         {
         }
-
-        public ComponentFamily Family { get; protected set; }
     }
 }

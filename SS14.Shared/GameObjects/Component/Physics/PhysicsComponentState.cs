@@ -8,7 +8,7 @@ namespace SS14.Shared.GameObjects.Components.Physics
         public float Mass;
 
         public PhysicsComponentState(float mass)
-            : base(ComponentFamily.Physics)
+            : base(NetIDs.PHYSICS)
         {
             Mass = mass;
         }

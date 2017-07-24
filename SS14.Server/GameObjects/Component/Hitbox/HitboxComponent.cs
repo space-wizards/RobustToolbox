@@ -1,6 +1,7 @@
 ﻿using SFML.Graphics;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Hitbox;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -13,13 +14,8 @@ namespace SS14.Server.GameObjects
     public class HitboxComponent : Component
     {
         public override string Name => "Hitbox";
-        public FloatRect AABB { get; set; }
-
-        public HitboxComponent()
-        {
-            Family = ComponentFamily.Hitbox;
-            AABB = new FloatRect();
-        }
+        public override uint? NetID => NetIDs.HITBOX;
+        public FloatRect AABB { get; set; } = new FloatRect();
 
         public override ComponentState GetComponentState()
         {

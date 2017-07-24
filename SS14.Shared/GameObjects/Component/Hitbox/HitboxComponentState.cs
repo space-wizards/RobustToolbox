@@ -14,7 +14,7 @@ namespace SS14.Shared.GameObjects.Components.Hitbox
         public FloatRect AABB;
 
         public HitboxComponentState(FloatRect aabb)
-            :base(ComponentFamily.Hitbox)
+            :base(NetIDs.HITBOX)
         {
             AABB = aabb;
         }

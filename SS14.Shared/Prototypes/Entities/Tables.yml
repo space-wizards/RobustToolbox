@@ -14,9 +14,7 @@
   - type: Icon
     icon: worktop_single
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: Worktop
   - type: Hitbox
     sizeX: 64
     sizeY: 47

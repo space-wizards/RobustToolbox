@@ -37,11 +37,11 @@ namespace SS14.Client.UserInterface.Components
             input = new Textbox(size.X, resourceManager)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new Color(128, 128, 128, 100),
+                drawColor = new Color(64, 64, 64, 100),
                 textColor = new Color(255, 250, 240)
             };
             input.OnSubmit += input_OnSubmit;
-            this.BackgroundColor = new Color(128, 128, 128, 200);
+            this.BackgroundColor = new Color(64, 64, 64, 200);
             this.DrawBackground = true;
             this.DrawBorder = true;
             // Update(0);

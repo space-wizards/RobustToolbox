@@ -20,8 +20,6 @@ namespace SS14.Server.GameObjects
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 
-            System.Console.WriteLine("Hi!");
-
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
             Owner.RaiseEvent(new BoundKeyChangeEventArgs{KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
             var boolState = keyState == BoundKeyState.Down;

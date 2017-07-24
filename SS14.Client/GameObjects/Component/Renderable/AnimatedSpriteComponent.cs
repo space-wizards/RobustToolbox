@@ -8,6 +8,7 @@ using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -19,34 +20,26 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class AnimatedSpriteComponent : ClientComponent, IRenderableComponent
+    public class AnimatedSpriteComponent : ClientComponent, ISpriteRenderableComponent, IClickTargetComponent
     {
         public override string Name => "AnimatedSprite";
+        public override uint? NetID => NetIDs.ANIMATED_SPRITE;
         protected string baseSprite;
         protected string currentSprite;
         protected AnimatedSprite sprite;
         protected IRenderableComponent master;
-        protected List<IRenderableComponent> slaves;
+        protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
 
-        public AnimatedSpriteComponent()
-        {
-            Family = ComponentFamily.Renderable;
-            slaves = new List<IRenderableComponent>();
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(AnimatedSpriteComponentState); }
-        }
+        public override Type StateType => typeof(AnimatedSpriteComponentState);
 
         public float Bottom
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
+                return Owner.GetComponent<TransformComponent>().Position.Y +
                        (sprite.AABB.Height / 2);
             }
         }
@@ -123,16 +116,6 @@ namespace SS14.Client.GameObjects
 
             switch (type)
             {
-                case ComponentMessageType.CheckSpriteClick:
-                    reply = new ComponentReplyMessage(ComponentMessageType.SpriteWasClicked,
-                                                      WasClicked((Vector2f)list[0]), DrawDepth);
-                    break;
-                case ComponentMessageType.GetAABB:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentAABB, AABB);
-                    break;
-                case ComponentMessageType.GetSprite:
-                    reply = new ComponentReplyMessage(ComponentMessageType.CurrentSprite, sprite.GetCurrentSprite());
-                    break;
                 case ComponentMessageType.SlaveAttach:
                     SetMaster(Owner.EntityManager.GetEntity((int)list[0]));
                     break;
@@ -192,7 +175,12 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        protected virtual bool WasClicked(Vector2f worldPos)
+        public Sprite GetCurrentSprite()
+        {
+            return sprite.GetCurrentSprite();
+        }
+
+        public virtual bool WasClicked(Vector2f worldPos)
         {
             if (sprite == null || !visible) return false;
 
@@ -201,9 +189,9 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 new FloatRect(
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X -
+                    Owner.GetComponent<TransformComponent>().Position.X -
                     (bounds.Width / 2),
-                    Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y -
+                    Owner.GetComponent<TransformComponent>().Position.Y -
                     (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
@@ -265,7 +253,7 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            var ownerPos = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+            var ownerPos = Owner.GetComponent<TransformComponent>().Position;
 
             Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
@@ -297,7 +285,7 @@ namespace SS14.Client.GameObjects
             //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>().Position),
                                    new Vector2f(), aabb);
         }
 
@@ -347,9 +335,9 @@ namespace SS14.Client.GameObjects
                 UnsetMaster();
                 return;
             }
-            if (!m.HasComponent(ComponentFamily.Renderable))
+            if (!m.HasComponent<ISpriteRenderableComponent>())
                 return;
-            var mastercompo = m.GetComponent<IRenderableComponent>(ComponentFamily.Renderable);
+            var mastercompo = m.GetComponent<ISpriteRenderableComponent>();
             //If there's no sprite component, then FUCK IT
             if (mastercompo == null)
                 return;

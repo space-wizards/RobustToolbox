@@ -44,11 +44,16 @@ namespace SS14.Client.GameObjects
         [Obsolete("Getting rid of this messaging paradigm.")]
         public void SendComponentInstantiationMessage()
         {
+            if (NetID == null)
+            {
+                return;
+            }
+
             var manager = IoCManager.Resolve<IEntityNetworkManager>();
             manager.SendEntityNetworkMessage(
                 Owner,
                 EntityMessage.ComponentInstantiationMessage,
-                Family);
+                NetID.Value);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Network;
@@ -52,11 +53,15 @@ namespace SS14.Client.Player
             var factory = IoCManager.Resolve<IComponentFactory>();
 
             ControlledEntity = newEntity;
-            ControlledEntity.AddComponent(ComponentFamily.Input, factory.GetComponent<KeyBindingInputComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Mover, factory.GetComponent<PlayerInputMoverComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Collider, factory.GetComponent<ColliderComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            if (ControlledEntity.HasComponent<IMoverComponent>())
+            {
+                ControlledEntity.RemoveComponent<IMoverComponent>();
+            }
+            ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<ColliderComponent>());
 
-            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
+            ControlledEntity.GetComponent<TransformComponent>().OnMove += PlayerEntityMoved;
         }
 
         public void ApplyEffects(RenderImage image)
@@ -71,12 +76,14 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                ControlledEntity.RemoveComponent(ComponentFamily.Input);
-                ControlledEntity.RemoveComponent(ComponentFamily.Mover);
-                ControlledEntity.RemoveComponent(ComponentFamily.Collider);
-                var transform = ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
+                ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
+                ControlledEntity.RemoveComponent<ColliderComponent>();
+                var transform = ControlledEntity.GetComponent<TransformComponent>();
                 if (transform != null)
+                {
                     transform.OnMove -= PlayerEntityMoved;
+                }
             }
             ControlledEntity = null;
         }

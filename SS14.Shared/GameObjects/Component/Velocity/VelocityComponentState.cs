@@ -9,7 +9,7 @@ namespace SS14.Shared.GameObjects.Components.Velocity
         public float VelocityY;
 
         public VelocityComponentState(float velx, float vely)
-            : base(ComponentFamily.Velocity)
+            : base(NetIDs.VELOCITY)
         {
             VelocityX = velx;
             VelocityY = vely;

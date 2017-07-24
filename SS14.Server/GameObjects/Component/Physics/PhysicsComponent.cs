@@ -1,4 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -10,12 +11,8 @@ namespace SS14.Server.GameObjects
     public class PhysicsComponent : Component
     {
         public override string Name => "Physics";
+        public override uint? NetID => NetIDs.PHYSICS;
         public float Mass { get; set; }
-
-        public PhysicsComponent()
-        {
-            Family = ComponentFamily.Physics;
-        }
 
         public override void Update(float frameTime)
         {

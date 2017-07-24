@@ -8,8 +8,8 @@ namespace SS14.Shared.GameObjects.Components.Renderable
         public DrawDepth DrawDepth;
         public int? MasterUid;
 
-        public RenderableComponentState(DrawDepth drawDepth, int? masterUid) :
-            base(ComponentFamily.Renderable)
+        public RenderableComponentState(DrawDepth drawDepth, int? masterUid, uint netID) :
+            base(netID)
         {
             DrawDepth = drawDepth;
             MasterUid = masterUid;

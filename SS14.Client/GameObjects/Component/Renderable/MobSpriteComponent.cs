@@ -3,6 +3,7 @@ using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -15,6 +16,7 @@ namespace SS14.Client.GameObjects
     public class MobSpriteComponent : SpriteComponent
     {
         public override string Name => "MobSprite";
+        public override uint? NetID => NetIDs.MOB_SPRITE;
         private string _basename;
         private SpeechBubble _speechBubble;
 
@@ -131,17 +133,25 @@ namespace SS14.Client.GameObjects
 
         public override void Render(Vector2f topLeft, Vector2f bottomRight)
         {
-            if (!visible) return;
-            if (Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X < topLeft.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X > bottomRight.X
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y < topLeft.Y
-                || Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y > bottomRight.Y)
+            if (!visible)
+            {
                 return;
+            }
+
+            var position = Owner.GetComponent<TransformComponent>().Position;
+
+            if (position.X < topLeft.X
+                || position.X > bottomRight.X
+                || position.Y < topLeft.Y
+                || position.Y > bottomRight.Y)
+            {
+                return;
+            }
 
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(position),
                                    new Vector2f(), currentBaseSprite);
         }
 

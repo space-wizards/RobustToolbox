@@ -6,7 +6,6 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -48,8 +47,6 @@ namespace SS14.Client
         [Dependency]
         readonly private IResourceManager _resourceManager;
         [Dependency]
-        readonly private IMessageLogger _messageLogger;
-        [Dependency]
         readonly private IEntityNetworkManager _entityNetworkManager;
         [Dependency]
         readonly private ITileDefinitionManager _tileDefinitionManager;
@@ -79,8 +76,6 @@ namespace SS14.Client
             CleanupSplashScreen();
 
             //Initialization of private members
-            _messageLogger.Initialize();
-            _entityNetworkManager.Initialize();
             _tileDefinitionManager.InitializeResources();
 
             _serializer.Initialize();

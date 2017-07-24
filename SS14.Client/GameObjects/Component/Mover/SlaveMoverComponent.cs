@@ -1,6 +1,8 @@
 ﻿using SFML.System;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -11,20 +13,14 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
-    public class SlaveMoverComponent : ClientComponent
+    public class SlaveMoverComponent : ClientComponent, IMoverComponent
     {
         public override string Name => "SlaveMover";
+        public override uint? NetID => NetIDs.SLAVE_MOVER;
+        public override bool NetworkSynchronizeExistence => true;
         private IEntity _master;
 
-        public SlaveMoverComponent()
-        {
-            Family = ComponentFamily.Mover;
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(MoverComponentState); }
-        }
+        public override Type StateType => typeof(SlaveMoverComponentState);
 
         public override void OnRemove()
         {
@@ -36,15 +32,15 @@ namespace SS14.Client.GameObjects
         {
             _master = Owner.EntityManager.GetEntity(uid);
             // TODO handle this using event queue so that these sorts of interactions are deferred until we can be sure the target entity exists
-            _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += HandleOnMove;
-            Translate(_master.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+            _master.GetComponent<TransformComponent>().OnMove += HandleOnMove;
+            Translate(_master.GetComponent<TransformComponent>().Position);
         }
 
         private void Detach()
         {
             if (_master == null) return;
 
-            _master.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove -= HandleOnMove;
+            _master.GetComponent<TransformComponent>().OnMove -= HandleOnMove;
             _master = null;
         }
 
@@ -55,7 +51,7 @@ namespace SS14.Client.GameObjects
 
         private void Translate(Vector2f toPosition)
         {
-            Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position = toPosition;
+            Owner.GetComponent<TransformComponent>().Position = toPosition;
         }
 
         public override void HandleComponentState(dynamic state)
@@ -63,7 +59,7 @@ namespace SS14.Client.GameObjects
             SetNewState(state);
         }
 
-        private void SetNewState(MoverComponentState state)
+        private void SetNewState(SlaveMoverComponentState state)
         {
             if (_master == null && state.Master != null)
             {

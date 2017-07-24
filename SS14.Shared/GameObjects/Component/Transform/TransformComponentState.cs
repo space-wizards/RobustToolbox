@@ -10,7 +10,7 @@ namespace SS14.Shared.GameObjects.Components.Transform
         public float Y;
 
         public TransformComponentState(float x, float y, bool forceUpdate)
-            : base(ComponentFamily.Transform)
+            : base(NetIDs.TRANSFORM)
         {
             X = x;
             Y = y;

@@ -9,7 +9,7 @@ namespace SS14.Shared.GameObjects.Components.Particles
         public Dictionary<string, Boolean> emitters;
 
         public ParticleSystemComponentState(Dictionary<string, Boolean> _emitters)
-            : base(ComponentFamily.Particles)
+            : base(NetIDs.PARTICLE_SYSTEM)
         {
             emitters = _emitters;
         }

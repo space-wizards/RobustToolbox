@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.IoC;
 using System;
@@ -11,12 +12,9 @@ namespace SS14.Server.GameObjects
     public class TransformComponent : Component, ITransformComponent
     {
         public override string Name => "Transform";
+        public override uint? NetID => NetIDs.TRANSFORM;
         private Vector2f _position = new Vector2f();
         private bool firstState = true;
-        public TransformComponent()
-        {
-            Family = ComponentFamily.Transform;
-        }
 
         public float X
         {

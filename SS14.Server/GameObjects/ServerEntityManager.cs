@@ -40,7 +40,7 @@ namespace SS14.Server.GameObjects
         public IEntity SpawnEntityAt(string EntityType, Vector2f position)
         {
             IEntity e = SpawnEntity(EntityType);
-            e.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(position);
+            e.GetComponent<TransformComponent>().TranslateTo(position);
             e.Initialize();
             return e;
         }
@@ -94,23 +94,23 @@ namespace SS14.Server.GameObjects
             string name = e.Attribute("name").Value;
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
-            ent.GetComponent<TransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(X, Y));
-            ent.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction = dir;
+            ent.GetComponent<TransformComponent>().TranslateTo(new Vector2f(X, Y));
+            ent.GetComponent<DirectionComponent>().Direction = dir;
         }
 
         private XElement ToXML(IEntity e)
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X",
-                                                 e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                                                 e.GetComponent<TransformComponent>().Position.
                                                      X.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("Y",
-                                                 e.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.
+                                                 e.GetComponent<TransformComponent>().Position.
                                                      Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction",
-                                                 e.GetComponent<DirectionComponent>(ComponentFamily.Direction).Direction
+                                                 e.GetComponent<DirectionComponent>().Direction
                                                      .ToString()));
             return el;
         }

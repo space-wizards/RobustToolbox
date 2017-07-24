@@ -8,15 +8,13 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntityManager
     {
-        IList<ComponentFamily> SynchedComponentTypes { get; }
-
         void InitializeEntities();
         void LoadEntities();
         void Shutdown();
         void Update(float frameTime);
         void HandleEntityNetworkMessage(NetIncomingMessage msg);
 
-        # region Entity Management
+        #region Entity Management
 
         /// <summary>
         /// Returns an entity by id

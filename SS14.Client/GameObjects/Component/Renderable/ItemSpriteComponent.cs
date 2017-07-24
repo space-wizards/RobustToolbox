@@ -4,6 +4,7 @@ using SFML.System;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
@@ -16,6 +17,7 @@ namespace SS14.Client.GameObjects
     public class ItemSpriteComponent : SpriteComponent
     {
         public override string Name => "ItemSprite";
+        public override uint? NetID => NetIDs.ITEM_SPRITE;
         private bool IsInHand;
         private string basename = "";
         private InventoryLocation holdingHand = InventoryLocation.None;
@@ -190,7 +192,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        protected override bool WasClicked(Vector2f worldPos)
+        public override bool WasClicked(Vector2f worldPos)
         {
             return !IsInHand && base.WasClicked(worldPos);
         }

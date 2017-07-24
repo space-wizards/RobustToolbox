@@ -13,15 +13,9 @@ namespace SS14.Client.GameObjects
         public override string Name => "Icon";
         public Sprite Icon;
 
-        public IconComponent()
-        {
-            Family = ComponentFamily.Icon;
-        }
-
         public override void LoadParameters(YamlMappingNode mapping)
         {
-            YamlNode node;
-            if (mapping.TryGetNode("icon", out node))
+            if (mapping.TryGetNode("icon", out YamlNode node))
             {
                 SetIcon(node.AsString());
             }

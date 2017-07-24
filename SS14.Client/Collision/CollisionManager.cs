@@ -101,7 +101,7 @@ namespace SS14.Client.Collision
         /// <returns></returns>
         public bool TryCollide(IEntity entity, Vector2f offset, bool bump = true)
         {
-            var collider = (ColliderComponent)entity.GetComponent(ComponentFamily.Collider);
+            var collider = entity.GetComponent<ColliderComponent>();
             if (collider == null) return false;
 
             var ColliderAABB = collider.WorldAABB;

@@ -1,11 +1,9 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -14,21 +12,13 @@ namespace SS14.Shared.GameObjects
     public abstract class Component : IComponent
     {
         public abstract string Name { get; }
-        private readonly Dictionary<string, Type> _sVars = new Dictionary<string, Type>();
-
-        protected Component()
-        {
-            Family = ComponentFamily.Generic;
-        }
+        public virtual uint? NetID => null;
+        public virtual bool NetworkSynchronizeExistence => false;
 
         #region IComponent Members
 
         public IEntity Owner { get; private set; }
-        public ComponentFamily Family { get; protected set; }
-
-        public virtual Type StateType => null;
-
-        //Contains SVars -- Server only
+        public virtual Type StateType => typeof(ComponentState);
 
         /// <summary>
         /// Called when the component is removed from an entity.
@@ -108,7 +98,11 @@ namespace SS14.Shared.GameObjects
         /// <returns>ComponentState object</returns>
         public virtual ComponentState GetComponentState()
         {
-            return new ComponentState(Family);
+            if (NetID == null)
+            {
+                throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
+            }
+            return new ComponentState(NetID.Value);
         }
 
         public virtual void HandleComponentState(dynamic state)
@@ -142,74 +136,6 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion IComponent Members
-
-        #region SVars Stuff
-
-        /// <summary>
-        /// Gets all available SVars for the entity.
-        /// This gets current values, or at least it should...
-        /// </summary>
-        /// <returns>Returns a list of component parameters for marshaling</returns>
-        public IList<MarshalComponentParameter> GetSVars()
-        {
-            return (from param in GetParameters()
-                    where SVarIsRegistered(param.MemberName)
-                    select new MarshalComponentParameter(Family, param)).ToList();
-        }
-
-        /// <summary>
-        /// Sets a component parameter via the sVar interface. Only
-        /// parameters that are registered as sVars will be set through this
-        /// function.
-        /// </summary>
-        /// <param name="sVar">ComponentParameter</param>
-        public void SetSVar(MarshalComponentParameter sVar)
-        {
-            /*
-            ComponentParameter param = sVar.Parameter;
-
-            //If it is registered, and the types match, set it.
-            if (_sVars.ContainsKey(param.MemberName) &&
-                _sVars[param.MemberName] == param.ParameterType)
-                SetParameter(param);
-            */
-        }
-
-        /// <summary>
-        /// Checks if an SVar is registered
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        protected bool SVarIsRegistered(string name)
-        {
-            if (!_sVars.ContainsKey(name))
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Registers an SVar
-        /// </summary>
-        /// <param name="sVar"></param>
-        /// <param name="type"></param>
-        protected void RegisterSVar(string sVar, Type type)
-        {
-            if (!SVarIsRegistered(sVar))
-                _sVars[sVar] = type;
-            else
-                _sVars.Add(sVar, type);
-        }
-
-        /// <summary>
-        /// Unregisters an SVar
-        /// </summary>
-        /// <param name="name"></param>
-        protected void UnRegisterSVar(string name)
-        {
-            if (SVarIsRegistered(name))
-                _sVars.Remove(name);
-        }
-        #endregion SVars Stuff
 
         protected virtual void SubscribeEvents()
         { }

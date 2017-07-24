@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace SS14.Client.GameObjects
     public class KeyBindingInputComponent : ClientComponent
     {
         public override string Name => "KeyBindingInput";
+        public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
 
         #region Delegates
 
@@ -27,8 +29,6 @@ namespace SS14.Client.GameObjects
 
         public KeyBindingInputComponent()
         {
-            Family = ComponentFamily.Input;
-
             _keyStates = new Dictionary<BoundKeyFunctions, bool>();
             _keyHandlers = new Dictionary<BoundKeyFunctions, KeyEvent>();
             //Set up keystates

@@ -144,7 +144,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GameObjects\Component\SVars\SVarsComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Program.cs" />
@@ -183,28 +182,11 @@
     <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
     <Compile Include="GameObjects\MessageEnums.cs" />
     <Compile Include="GameObjects\Component\ClickableComponent.cs" />
-    <Compile Include="GameObjects\Component\IInventoryContainer.cs" />
-    <Compile Include="GameObjects\Component\WallMountedComponent.cs" />
-    <Compile Include="GameObjects\Component\WorktopComponent.cs" />
     <Compile Include="GameObjects\Component\Actor\BasicActorComponent.cs" />
     <Compile Include="GameObjects\Component\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Component\Damageable\DamageableComponent.cs" />
-    <Compile Include="GameObjects\Component\Damageable\Health\HealthComponent.cs" />
     <Compile Include="GameObjects\Component\Direction\DirectionComponent.cs" />
-    <Compile Include="GameObjects\Component\EntityStats\EntityStatsCompS.cs" />
-    <Compile Include="GameObjects\Component\Equipment\EquipmentComponent.cs" />
-    <Compile Include="GameObjects\Component\Equipment\HumanEquipmentComponent.cs" />
-    <Compile Include="GameObjects\Component\Equippable\EquippableComponent.cs" />
-    <Compile Include="GameObjects\Component\Hands\HumanHandsComponent.cs" />
     <Compile Include="GameObjects\Component\Hitbox\HitboxComponent.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="GameObjects\Component\Interactable\BasicInteractableComponent.cs" />
-    <Compile Include="GameObjects\Component\Inventory\InventoryComponent.cs" />
-    <Compile Include="GameObjects\Component\Item\BasicItemComponent.cs" />
-    <Compile Include="GameObjects\Component\Item\ItemCapability\ItemCapability.cs" />
-    <Compile Include="GameObjects\Component\LargeObject\BasicDoorComponent.cs" />
-    <Compile Include="GameObjects\Component\LargeObject\BasicLargeObjectComponent.cs" />
-    <Compile Include="GameObjects\Component\Light\LightComponent.cs" />
     <Compile Include="GameObjects\Component\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\BasicMoverComponent.cs" />
     <Compile Include="GameObjects\Component\Mover\PlayerInputMoverComponent.cs" />
@@ -217,12 +199,9 @@
     <Compile Include="GameObjects\Component\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\Component\Velocity\VelocityComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\InteractionSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Events\InventoryEvents.cs" />
     <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
     <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
@@ -234,14 +213,13 @@
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
     <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
-    <Compile Include="Interfaces\GameObjects\IEquipmentComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IInventoryComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ITransformComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IWallMountedComponent.cs" />
     <Compile Include="Interfaces\GameState\IGameStateManager.cs" />
     <Compile Include="Interfaces\Map\Chunk.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />
@@ -250,7 +228,6 @@
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="Interfaces\Map\Tile.cs" />
     <Compile Include="Interfaces\Map\TileRef.cs" />
-    <Compile Include="Interfaces\MessageLogging\IMessageLogger.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />
@@ -261,9 +238,6 @@
     <Compile Include="Map\MapManager.cs" />
     <Compile Include="Map\TileDefinition.cs" />
     <Compile Include="Map\TileDefinitionManager.cs" />
-    <Compile Include="MessageLogging\MessageLogger.cs" />
-    <None Include="MessageLogging\MessageLoggerService.config" />
-    <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />

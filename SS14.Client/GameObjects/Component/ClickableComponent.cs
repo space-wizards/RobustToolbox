@@ -1,6 +1,8 @@
 ﻿using Lidgren.Network;
 using SFML.System;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
@@ -9,10 +11,7 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "Clickable";
 
-        public ClickableComponent()
-        {
-            Family = ComponentFamily.Click;
-        }
+        public override uint? NetID => NetIDs.CLICKABLE;
 
         public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
@@ -33,17 +32,10 @@ namespace SS14.Client.GameObjects
 
         public bool CheckClick(Vector2f worldPos, out int drawdepth)
         {
-            ComponentReplyMessage reply = Owner.SendMessage(this, ComponentFamily.Renderable,
-                                                            ComponentMessageType.CheckSpriteClick, worldPos);
+            var component = Owner.GetComponent<IClickTargetComponent>();
 
-            if (reply.MessageType == ComponentMessageType.SpriteWasClicked && (bool)reply.ParamsList[0])
-            {
-                drawdepth = (int)reply.ParamsList[1];
-                return (bool)reply.ParamsList[0];
-            }
-
-            drawdepth = -1;
-            return false;
+            drawdepth = (int)component.DrawDepth;
+            return component.WasClicked(worldPos);
         }
 
         public void DispatchClick(int userUID, int clickType)

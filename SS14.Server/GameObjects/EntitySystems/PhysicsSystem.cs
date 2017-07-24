@@ -24,8 +24,8 @@ namespace SS14.Server.GameObjects.EntitySystems
             {
                 //GasEffect(entity, frametime);
 
-                var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
-                var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
+                var transform = entity.GetComponent<TransformComponent>();
+                var velocity = entity.GetComponent<VelocityComponent>();
 
                 if (velocity.Velocity.LengthSquared() < 0.00001f)
                     continue;

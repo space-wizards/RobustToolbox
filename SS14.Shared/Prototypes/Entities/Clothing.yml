@@ -13,14 +13,9 @@
   - type: Icon
     icon: janitorsuit
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicItem
   - type: Physics
     mass: 5
-
-  - type: Equippable
-    wearloc: Inner
 
 - type: entity
   id: Shoes
@@ -37,11 +32,6 @@
   - type: Icon
     icon: shoes
 
-  - type: BasicInteractable
   - type: BasicMover
-  - type: BasicItem
   - type: Physics
     mass: 5
-
-  - type: Equippable
-    wearloc: Feet

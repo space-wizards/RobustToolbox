@@ -245,6 +245,7 @@
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
     <Compile Include="Console\QuitCommand.cs" />
+    <Compile Include="Console\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
     <Compile Include="Helpers\InterpolationPacket.cs" />

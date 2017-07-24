@@ -117,6 +117,10 @@ namespace SS14.Shared.GameObjects
             }
 
             var registration = types[typeof(TTarget)];
+            if (registration.References.Contains(typeof(TInterface)))
+            {
+                throw new InvalidOperationException($"Attempted to register a reference twice: {typeof(TInterface)}");
+            }
             registration.References.Add(typeof(TInterface));
         }
 

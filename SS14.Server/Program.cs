@@ -48,6 +48,7 @@ namespace SS14.Server
             //Register minidump dumper only if the app isn't being debugged. No use filling up hard drives with shite
             RegisterIoC();
             LoadContentAssemblies();
+            HandleCommandLineArgs();
 
             var server = IoCManager.Resolve<IBaseServer>();
 
@@ -73,6 +74,15 @@ namespace SS14.Server
             // Used to dispose of systems that want to be disposed.
             // Such as the log manager.
             IoCManager.Clear();
+        }
+
+        private static void HandleCommandLineArgs()
+        {
+            var commandLine = IoCManager.Resolve<ICommandLineArgs>();
+            if (!commandLine.Parse())
+            {
+                Environment.Exit(0);
+            }
         }
 
         /// <summary>

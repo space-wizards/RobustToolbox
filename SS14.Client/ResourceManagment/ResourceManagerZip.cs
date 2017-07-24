@@ -10,7 +10,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,6 +20,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SS14.Client.Graphics.TexHelpers;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
+using SS14.Shared.GameLoader;
 
 namespace SS14.Client.Resources
 {
@@ -118,10 +119,9 @@ namespace SS14.Client.Resources
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
             #region Sort Resource pack
-            var directories = from ZipEntry a in zipFile
-                              where a.IsDirectory
-                              orderby a.Name.ToLowerInvariant() == "textures" descending
-                              select a;
+            var directories = zipFile.Cast<ZipEntry>()
+                .Where(a => a.IsDirectory)
+                .OrderByDescending(a => a.Name.ToLowerInvariant() == "textures");
 
             Dictionary<string, List<ZipEntry>> sorted = new Dictionary<string, List<ZipEntry>>();
 

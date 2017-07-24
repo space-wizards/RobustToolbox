@@ -19,6 +19,8 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
+using SS14.Shared.GameLoader;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -31,7 +33,6 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
 
 namespace SS14.Server
 {
@@ -207,6 +208,24 @@ namespace SS14.Server
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<IMapManager>().Initialize();
+
+            // Set up the VFS
+            ResourceManager.Instance.Initialize();
+
+            //mount the engine content pack
+            ResourceManager.Instance.MountContentPack(@"../../Resources/EngineContentPack.zip");
+
+            //mount the default game ContentPack defined in config
+            ResourceManager.Instance.MountDefaultPack();
+
+            // get the assembly from the file system
+            var gameDll = ResourceManager.Instance.GetFile(@"Assemblies/Game.Shared.dll");
+            
+            // load the assembly into the process, and bootstrap the GameServer entry point.
+            AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
+            
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             StartLobby();
             StartGame();

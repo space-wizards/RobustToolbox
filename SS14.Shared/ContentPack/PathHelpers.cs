@@ -1,9 +1,9 @@
-﻿using System.IO;
-using System;
-using System.Reflection;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
-namespace SS14.Shared.Utility
+namespace SS14.Shared.ContentPack
 {
     public static class PathHelpers
     {
@@ -81,5 +81,6 @@ namespace SS14.Shared.Utility
         {
             return Directory.CreateDirectory(ExecutableRelativeFile(path));
         }
+        
     }
 }

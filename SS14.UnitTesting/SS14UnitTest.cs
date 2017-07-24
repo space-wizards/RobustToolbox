@@ -19,7 +19,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
 using SS14.Client.Lighting;
 using SS14.Client.Network;
-using SS14.Client.Resources;
 using SS14.Client.State;
 using SS14.Client.Reflection;
 using SS14.Client.UserInterface;
@@ -63,10 +62,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
 using SS14.Shared.Timing;
+using ResourceManager = SS14.Client.Resources.ResourceManager;
 
 namespace SS14.UnitTesting
 {

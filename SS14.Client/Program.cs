@@ -41,6 +41,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 
@@ -56,53 +57,13 @@ namespace SS14.Client
         private static void Main()
         {
             RegisterIoC();
-            LoadAssemblies();
+            RegisterComponents();
 
             var controller = IoCManager.Resolve<IGameController>();
             controller.Run();
 
             Logger.Info("Goodbye.");
             IoCManager.Clear();
-        }
-
-        private static void LoadAssemblies()
-        {
-            var assemblies = new List<Assembly>(4)
-            {
-                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
-                Assembly.GetExecutingAssembly()
-            };
-
-            // TODO this should be done on connect.
-            // The issue is that due to our giant trucks of shit code.
-            // It'd be extremely hard to integrate correctly.
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
 
         /// <summary>
@@ -149,6 +110,44 @@ namespace SS14.Client
             var factory = IoCManager.Resolve<IComponentFactory>();
 
             factory.Register<BasicMoverComponent>();
+
+
+            var assemblies = new List<Assembly>(4)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
+                Assembly.GetExecutingAssembly()
+            };
+
+            // TODO this should be done on connect.
+            // The issue is that due to our giant trucks of shit code.
+            // It'd be extremely hard to integrate correctly.
+            try
+            {
+                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Shared.Content.dll");
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
+                System.Console.ResetColor();
+            }
+
+            try
+            {
+                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Server.Content.dll");
+                assemblies.Add(contentAssembly);
+            }
+            catch (Exception e)
+            {
+                // LogManager won't work yet.
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
+                System.Console.ResetColor();
+            }
+
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
     }
 }

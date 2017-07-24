@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
+using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;

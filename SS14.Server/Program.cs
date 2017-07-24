@@ -34,6 +34,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
@@ -124,7 +125,7 @@ namespace SS14.Server
 
             try
             {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
+                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Shared.Content.dll");
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)
@@ -137,7 +138,7 @@ namespace SS14.Server
 
             try
             {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
+                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Server.Content.dll");
                 assemblies.Add(contentAssembly);
             }
             catch (Exception e)

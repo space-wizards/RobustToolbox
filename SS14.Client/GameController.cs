@@ -23,6 +23,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;

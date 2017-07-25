@@ -19,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion Delegates
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         public bool ClearFocusOnSubmit = true;
         public bool ClearOnSubmit = true;
         public bool AllowEmptySubmit = true;
@@ -53,16 +53,16 @@ namespace SS14.Client.UserInterface.Components
         // Set to true after handling a KeyDown that produces a character to this.
         public bool ignoreNextText = false;
 
-        public Textbox(int width, IResourceManager resourceManager)
+        public Textbox(int width, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            _textboxLeft = _resourceManager.GetSprite("text_left");
-            _textboxMain = _resourceManager.GetSprite("text_middle");
-            _textboxRight = _resourceManager.GetSprite("text_right");
+            _resourceCache = resourceCache;
+            _textboxLeft = _resourceCache.GetSprite("text_left");
+            _textboxMain = _resourceCache.GetSprite("text_middle");
+            _textboxRight = _resourceCache.GetSprite("text_right");
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceManager.GetFont("CALIBRI")) { Color = Color.Black };
+            Label = new TextSprite("Textbox", "", _resourceCache.GetFont("CALIBRI")) { Color = Color.Black };
 
             Update(0);
         }

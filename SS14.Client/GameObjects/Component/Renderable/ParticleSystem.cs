@@ -672,7 +672,7 @@ namespace SS14.Client.GameObjects
             this.Lifetime = settings.Lifetime;
             this.LifetimeVariance = settings.LifetimeVariance;
             this.MaximumParticleCount = settings.MaximumParticleCount;
-            this.ParticleSprite = IoCManager.Resolve<IResourceManager>().GetSprite(settings.Sprite);
+            this.ParticleSprite = IoCManager.Resolve<IResourceCache>().GetSprite(settings.Sprite);
             this.RadialAcceleration = settings.RadialAcceleration;
             this.RadialAccelerationVariance = settings.RadialAccelerationVariance;
             this.RadialVelocity = settings.RadialVelocity;

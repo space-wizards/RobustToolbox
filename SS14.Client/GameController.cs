@@ -46,7 +46,7 @@ namespace SS14.Client
         [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
-        readonly private IResourceManager _resourceManager;
+        readonly private IResourceCache _resourceCache;
         [Dependency]
         readonly private IEntityNetworkManager _entityNetworkManager;
         [Dependency]
@@ -69,8 +69,8 @@ namespace SS14.Client
 
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            _resourceManager.LoadBaseResources();
-            _resourceManager.LoadLocalResources();
+            _resourceCache.LoadBaseResources();
+            _resourceCache.LoadLocalResources();
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();

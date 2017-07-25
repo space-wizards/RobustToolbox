@@ -18,23 +18,23 @@ namespace SS14.Client.UserInterface.Components
         private readonly ScrollableContainer _tileList;
         private readonly Textbox _tileSearchTextbox;
 
-        public TileSpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
-            : base("Tile Spawn Panel", size, resourceManager)
+        public TileSpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
+            : base("Tile Spawn Panel", size, resourceCache)
         {
             _placementManager = placementManager;
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceManager)
+            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceCache)
                             {Position = new Vector2i(5, 5)};
             components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceManager) {Position = new Vector2i(210, 0)};
+            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceCache) {Position = new Vector2i(210, 0)};
             components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceManager) {Position = new Vector2i(210, 20)};
+            _tileSearchTextbox = new Textbox(125, _resourceCache) {Position = new Vector2i(210, 20)};
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceManager)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceCache)
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
@@ -87,7 +87,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string entry in tileDefs)
             {
-                var tileLabel = new Label(entry, "CALIBRI", _resourceManager);
+                var tileLabel = new Label(entry, "CALIBRI", _resourceCache);
                 _tileList.components.Add(tileLabel);
                 tileLabel.Position = new Vector2i(5, yOffset);
                 tileLabel.DrawBackground = true;

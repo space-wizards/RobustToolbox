@@ -143,6 +143,7 @@
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
+    <Compile Include="Interfaces\IResourceManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />

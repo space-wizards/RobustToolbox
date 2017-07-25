@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared.GameObjects.Components.Mover
 {

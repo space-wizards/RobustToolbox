@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameLoader;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -12,12 +13,12 @@ namespace SS14.Shared.ContentPack
     /// <summary>
     /// Virtual file system for all disk resources.
     /// </summary>
-    public class ResourceManager
+    public class ResourceManager : IResourceManager
     {
         private static ResourceManager _instance;
         public static ResourceManager Instance => _instance ?? (_instance = new ResourceManager());
 
-        private List<IContentRoot> _contentRoots = new List<IContentRoot>();
+        private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
 
         /// <summary>
         /// Default constructor.
@@ -107,7 +108,7 @@ namespace SS14.Shared.ContentPack
             
         }
 
-        public MemoryStream GetFile(string path)
+        public MemoryStream FileRead(string path)
         {
             // loop over each root trying to get the file
             foreach (IContentRoot root in _contentRoots)
@@ -117,6 +118,11 @@ namespace SS14.Shared.ContentPack
                     return file;
             }
             return null;
+        }
+
+        public bool FileExists(string path)
+        {
+            throw new NotImplementedException();
         }
     }
 }

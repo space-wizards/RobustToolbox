@@ -25,7 +25,7 @@ using SS14.Shared.GameLoader;
 
 namespace SS14.Client.Resources
 {
-    public class ResourceManager : IResourceManager
+    public class ResourceCache : IResourceCache
     {
         private const int zipBufferSize = 4096;
         private MemoryStream VertexShader, FragmentShader;

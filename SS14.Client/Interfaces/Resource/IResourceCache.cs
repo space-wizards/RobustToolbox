@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Resource
 {
-    public interface IResourceManager
+    public interface IResourceCache
     {
         Dictionary<Texture, string> TextureToKey { get; }
         void LoadResourceZip(string path = null, string pw = null);

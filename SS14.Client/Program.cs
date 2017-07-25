@@ -37,11 +37,12 @@ using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
 using SS14.Shared.Timing;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameLoader;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 
@@ -79,6 +80,7 @@ namespace SS14.Client
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -94,7 +96,7 @@ namespace SS14.Client
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
@@ -107,9 +109,9 @@ namespace SS14.Client
 
         private static void RegisterComponents()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
+            //var factory = IoCManager.Resolve<IComponentFactory>();
 
-            factory.Register<BasicMoverComponent>();
+            //factory.Register<BasicMoverComponent>();
 
 
             var assemblies = new List<Assembly>(4)

@@ -40,7 +40,7 @@ namespace SS14.Client.GameObjects
         /// Reference to Resource Manager service to prevent
         /// calling IoCManager every time speechbubble is drawn.
         /// </summary>
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
 
         /// <summary>
         /// StringBuilder to handle 
@@ -67,10 +67,10 @@ namespace SS14.Client.GameObjects
 
         public SpeechBubble(string mobname)
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
             _mobName = mobname;
             _buildTime = DateTime.Now;
-            _textSprite = new Text(String.Empty, _resourceManager.GetFont("CALIBRI"));
+            _textSprite = new Text(String.Empty, _resourceCache.GetFont("CALIBRI"));
             _textSprite.Color = Color.Black;
             // TODO Word wrap!
             _textSprite.Position = new Vector2f(5, 3);
@@ -137,7 +137,7 @@ namespace SS14.Client.GameObjects
         {
             // TODO unfuck this
             /*RenderTarget originalTarget = CluwneLib.CurrentRenderTarget;
-            Sprite cornerSprite = _resourceManager.GetSprite("corners");
+            Sprite cornerSprite = _resourceCache.GetSprite("corners");
 
             //Set up dimensions
             _bubbleRender.SetDimensions((int) _textSprite.Size.X + 10, (int) _textSprite.Size.Y + 10);

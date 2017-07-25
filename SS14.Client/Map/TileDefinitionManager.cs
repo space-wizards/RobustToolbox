@@ -10,7 +10,7 @@ namespace SS14.Client.Map
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         [Dependency]
-        private readonly IResourceManager resourceManager;
+        private readonly IResourceCache resourceCache;
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();
         Dictionary<string, ITileDefinition> tileNames = new Dictionary<string, ITileDefinition>();
         Dictionary<ITileDefinition, ushort> tileIds = new Dictionary<ITileDefinition, ushort>();
@@ -26,7 +26,7 @@ namespace SS14.Client.Map
         {
             foreach (var item in tileDefs)
             {
-                item.InitializeResources(resourceManager);
+                item.InitializeResources(resourceCache);
             }
         }
 

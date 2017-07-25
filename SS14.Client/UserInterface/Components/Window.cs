@@ -22,8 +22,8 @@ namespace SS14.Client.UserInterface.Components
         protected Label title;
         protected IntRect titleArea;
 
-        public Window(string windowTitle, Vector2i size, IResourceManager resourceManager)
-            : base(windowTitle, size, resourceManager)
+        public Window(string windowTitle, Vector2i size, IResourceCache resourceCache)
+            : base(windowTitle, size, resourceCache)
         {
             closeButton = new ImageButton
                               {
@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Components
                               };
 
             closeButton.Clicked += CloseButtonClicked;
-            title = new Label(windowTitle, "CALIBRI", _resourceManager);
+            title = new Label(windowTitle, "CALIBRI", _resourceCache);
             gradient = new GradientBox();
             DrawBackground = true;
             Update(0);

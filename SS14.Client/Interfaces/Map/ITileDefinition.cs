@@ -6,7 +6,7 @@ namespace SS14.Client.Interfaces.Map
 {
     public interface ITileDefinition
     {
-        void InitializeResources(IResourceManager resourceManager);
+        void InitializeResources(IResourceCache resourceCache);
         ushort TileId { get; }
         void InvalidateTileId();
 

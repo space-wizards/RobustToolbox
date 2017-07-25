@@ -92,7 +92,7 @@ namespace SS14.Client.GameObjects
         public void SetSprite(string name)
         {
             currentSprite = name;
-            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceManager>().GetAnimatedSprite(name);
+            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceCache>().GetAnimatedSprite(name);
         }
 
         public void SetAnimationState(string state, bool loop = true)
@@ -205,8 +205,8 @@ namespace SS14.Client.GameObjects
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
-            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
-            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
+            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
+            Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'

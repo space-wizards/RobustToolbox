@@ -62,12 +62,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Client.Resources;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
 using SS14.Shared.Timing;
-using ResourceManager = SS14.Client.Resources.ResourceManager;
 
 namespace SS14.UnitTesting
 {
@@ -117,7 +117,7 @@ namespace SS14.UnitTesting
             private set;
         }
 
-        public IResourceManager GetResourceManager
+        public IResourceCache GetResourceCache
         {
             get;
             private set;
@@ -174,7 +174,7 @@ namespace SS14.UnitTesting
 
             if (NeedsResourcePack)
             {
-                GetResourceManager = IoCManager.Resolve<IResourceManager>();
+                GetResourceCache = IoCManager.Resolve<IResourceCache>();
                 InitializeResources();
             }
         }
@@ -213,7 +213,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IReflectionManager, ClientReflectionManager>();
                     IoCManager.Register<IPlacementManager, PlacementManager>();
                     IoCManager.Register<ILightManager, LightManager>();
-                    IoCManager.Register<IResourceManager, ResourceManager>();
+                    IoCManager.Register<IResourceCache, ResourceCache>();
                     IoCManager.Register<IMapManager, MapManager>();
                     IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
@@ -263,8 +263,8 @@ namespace SS14.UnitTesting
 
         public void InitializeResources()
         {
-            GetResourceManager.LoadBaseResources();
-            GetResourceManager.LoadLocalResources();
+            GetResourceCache.LoadBaseResources();
+            GetResourceCache.LoadLocalResources();
         }
 
         public void InitializeCluwneLib()

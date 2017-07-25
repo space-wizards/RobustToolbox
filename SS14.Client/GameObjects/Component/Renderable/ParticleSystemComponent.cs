@@ -139,7 +139,7 @@ namespace SS14.Client.GameObjects
         {
             if (!_emitters.ContainsKey(name))
             {
-                ParticleSettings toAdd = IoCManager.Resolve<IResourceManager>().GetParticles(name);
+                ParticleSettings toAdd = IoCManager.Resolve<IResourceCache>().GetParticles(name);
                 if (toAdd != null)
                 {
                     _emitters.Add(name, new ParticleSystem(toAdd, new Vector2f()));

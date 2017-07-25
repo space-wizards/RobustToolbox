@@ -37,7 +37,7 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
 
             Assert.That(IoCManager.Resolve<IServerEntityManager>(),
                         Is.Not.Null,
-                        "IoC failed to return an IResourceManager.");
+                        "IoC failed to return an IResourceCache.");
         }
 
         [Test]

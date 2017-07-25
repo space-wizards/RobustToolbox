@@ -13,10 +13,10 @@ namespace SS14.Client.UserInterface.Components
         private readonly Label _entityDescription;
         private Sprite _entitySprite;
 
-        public ExamineWindow(Vector2i size, IEntity entity, IResourceManager resourceManager)
-            : base(entity.Name, size, resourceManager)
+        public ExamineWindow(Vector2i size, IEntity entity, IResourceCache resourceCache)
+            : base(entity.Name, size, resourceCache)
         {
-            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceManager);
+            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceCache);
 
             components.Add(_entityDescription);
 

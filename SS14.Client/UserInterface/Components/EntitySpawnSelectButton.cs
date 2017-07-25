@@ -19,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly EntityPrototype associatedTemplate;
         private readonly string associatedTemplateName;
         private readonly Font font;
@@ -31,9 +31,9 @@ namespace SS14.Client.UserInterface.Components
         public bool selected = false;
 
         public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName,
-                                       IResourceManager resourceManager)
+                                       IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             var spriteNameParam = entityTemplate.GetBaseSpriteParamaters().FirstOrDefault();
             string SpriteName = "";
@@ -46,9 +46,9 @@ namespace SS14.Client.UserInterface.Components
             associatedTemplate = entityTemplate;
             associatedTemplateName = templateName;
 
-            objectSprite = _resourceManager.GetSprite(SpriteName);
+            objectSprite = _resourceCache.GetSprite(SpriteName);
 
-            font = _resourceManager.GetFont("CALIBRI");
+            font = _resourceCache.GetFont("CALIBRI");
             name = new TextSprite("Label" + SpriteName, "Name", font);
             name.Color = Color.Black;
             name.Text = ObjectName;

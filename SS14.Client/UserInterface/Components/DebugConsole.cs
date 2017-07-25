@@ -32,9 +32,9 @@ namespace SS14.Client.UserInterface.Components
 
         public IDictionary<string, IConsoleCommand> Commands => commands;
 
-        public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
-            input = new Textbox(size.X, resourceManager)
+            input = new Textbox(size.X, resourceCache)
             {
                 ClearFocusOnSubmit = false,
                 drawColor = new Color(64, 64, 64, 100),
@@ -58,7 +58,7 @@ namespace SS14.Client.UserInterface.Components
         public void AddLine(string text, Color color)
         {
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI", this._resourceManager)
+            Label newLabel = new Label(text, "CALIBRI", this._resourceCache)
             {
                 Position = new Vector2i(5, last_y),
                 TextColor = color

@@ -279,7 +279,7 @@
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
-    <Compile Include="Interfaces\Resource\IResourceManager.cs" />
+    <Compile Include="Interfaces\Resource\IResourceCache.cs" />
     <Compile Include="Interfaces\State\IState.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />

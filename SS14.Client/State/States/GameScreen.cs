@@ -175,7 +175,7 @@ namespace SS14.Client.State.States
             NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
-            _gaussianBlur = new GaussianBlur(ResourceManager);
+            _gaussianBlur = new GaussianBlur(ResourceCache);
 
             _realScreenWidthTiles = (float)CluwneLib.Screen.Size.X / MapManager.TileSize;
             _realScreenHeightTiles = (float)CluwneLib.Screen.Size.Y / MapManager.TileSize;
@@ -281,7 +281,7 @@ namespace SS14.Client.State.States
             _menu.SetVisible(false);
 
             //Init GUI components
-            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
+            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
         }
@@ -289,7 +289,7 @@ namespace SS14.Client.State.States
         private void InitalizeLighting()
         {
             shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024,
-                                                      ResourceManager);
+                                                      ResourceCache);
             shadowMapResolver.LoadContent();
             lightArea128 = new LightArea(ShadowmapSize.Size128);
             lightArea256 = new LightArea(ShadowmapSize.Size256);
@@ -313,8 +313,8 @@ namespace SS14.Client.State.States
             _cleanupList.Add(playerOcclusionTarget);
             playerOcclusionTarget.UseDepthBuffer = false;
 
-            LightblendTechnique = IoCManager.Resolve<IResourceManager>().GetTechnique("lightblend");
-            Lightmap = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
+            LightblendTechnique = IoCManager.Resolve<IResourceCache>().GetTechnique("lightblend");
+            Lightmap = IoCManager.Resolve<IResourceCache>().GetShader("lightmap");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Blue);
@@ -585,13 +585,13 @@ namespace SS14.Client.State.States
             if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                      PlacementManager)); //Create a new one.
             }
             if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                        PlacementManager)); //Create a new one.
             }
 
@@ -698,7 +698,7 @@ namespace SS14.Client.State.States
                         break;
                     case Mouse.Button.Middle:
                         UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
+                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
                                                                              entToClick));
                         break;
                 }
@@ -827,7 +827,7 @@ namespace SS14.Client.State.States
                         string disconnectMessage = message.ReadString();
                         UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
                                                                                         UserInterfaceManager,
-                                                                                        ResourceManager,
+                                                                                        ResourceCache,
                                                                                         disconnectMessage));
                     }
                     break;
@@ -1062,7 +1062,7 @@ namespace SS14.Client.State.States
             int num_lights = 6;
             bool draw = false;
             bool fill = false;
-            Texture black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Texture;
+            Texture black = IoCManager.Resolve<IResourceCache>().GetSprite("black5x5").Texture;
             var r_img = new Texture[num_lights];
             var r_col = new Vector4f[num_lights];
             var r_pos = new Vector4f[num_lights];
@@ -1141,8 +1141,8 @@ namespace SS14.Client.State.States
                 screenShadows.EndDrawing();
             }
 
-            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
-            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
+            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
+            Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
             string textureKey = tmp[screenShadows.Texture];
             Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
@@ -1221,7 +1221,7 @@ namespace SS14.Client.State.States
                     _occluderDebugTarget.EndDrawing();
                 }
 
-                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
+                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceCache>().GetSprite("whitemask").Texture); // Calc shadows
 
                 if (debugPlayerShadowMap)
                 {
@@ -1361,7 +1361,7 @@ namespace SS14.Client.State.States
             _composedSceneTarget.BeginDrawing();
             _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
-            Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
+            Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
             float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
             float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4f(texratiox, texratioy, 0, 0);

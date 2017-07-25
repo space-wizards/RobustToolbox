@@ -18,7 +18,7 @@ namespace SS14.Client.Network
         [Dependency]
         private readonly IClientNetManager _networkManager;
         [Dependency]
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private TextSprite _textSprite;
         private bool _enabled;
         private DateTime _lastDataPointTime;
@@ -32,7 +32,7 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("CALIBRI"));
+            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetFont("CALIBRI"));
         }
 
         #region INetworkGrapher Members

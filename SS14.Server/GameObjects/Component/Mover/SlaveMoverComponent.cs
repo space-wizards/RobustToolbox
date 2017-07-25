@@ -19,8 +19,7 @@ namespace SS14.Server.GameObjects
         public override bool NetworkSynchronizeExistence => true;
         private IEntity master;
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type, params object[] list)
         {
             ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
 

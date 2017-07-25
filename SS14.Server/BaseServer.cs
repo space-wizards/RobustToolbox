@@ -219,7 +219,7 @@ namespace SS14.Server
             ResourceManager.Instance.MountDefaultPack();
 
             // get the assembly from the file system
-            var gameDll = ResourceManager.Instance.GetFile(@"Assemblies/Game.Shared.dll");
+            var gameDll = ResourceManager.Instance.FileRead(@"Assemblies/Game.Shared.dll");
             
             // load the assembly into the process, and bootstrap the GameServer entry point.
             AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());

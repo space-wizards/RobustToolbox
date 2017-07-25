@@ -70,7 +70,7 @@ namespace SS14.Client.Map
         {
         }
 
-        public virtual void InitializeResources(IResourceManager resourceManager)
+        public virtual void InitializeResources(IResourceCache resourceCache)
         {
 
         }

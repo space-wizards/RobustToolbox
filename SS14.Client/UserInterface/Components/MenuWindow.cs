@@ -19,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
         private readonly IClientNetManager _netMgr = IoCManager.Resolve<IClientNetManager>();
         private readonly IPlacementManager _placeMgr = IoCManager.Resolve<IPlacementManager>();
         private readonly IPlayerManager _playerManager = IoCManager.Resolve<IPlayerManager>();
-        private readonly IResourceManager _resMgr = IoCManager.Resolve<IResourceManager>();
+        private readonly IResourceCache _resMgr = IoCManager.Resolve<IResourceCache>();
         private readonly IStateManager _stateManager = IoCManager.Resolve<IStateManager>();
         private readonly IUserInterfaceManager _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
 
@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.Components
         private readonly Button button_quit;
         private readonly Button button_tile;
 
-        public MenuWindow() : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceManager>())
+        public MenuWindow() : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceCache>())
         {
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));

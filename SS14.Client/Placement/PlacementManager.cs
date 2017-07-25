@@ -15,6 +15,7 @@ using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
@@ -176,7 +177,7 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position);
+                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
                 CluwneLib.drawCircle(pos.X,
                     pos.Y,
                     CurrentPermission.Range,

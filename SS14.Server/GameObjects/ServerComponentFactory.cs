@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects

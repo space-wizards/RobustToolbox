@@ -1,4 +1,5 @@
 ﻿using SFML.System;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
@@ -11,19 +12,25 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
-    public class TransformComponent : ClientComponent
+    public class TransformComponent : ClientComponent, IClientTransformComponent
     {
         public override string Name => "Transform";
         public override uint? NetID => NetIDs.TRANSFORM;
         private Vector2f _position = new Vector2f();
         private List<TransformComponentState> states = new List<TransformComponentState>();
         private TransformComponentState lastState;
-        public TransformComponentState lerpStateFrom;
-        public TransformComponentState lerpStateTo;
+        public TransformComponentState lerpStateFrom { get; private set; }
+        public TransformComponentState lerpStateTo { get; private set ; }
+
+        public override Type StateType => typeof(TransformComponentState);
+
+        #region ITransformComponent Members
+
+        public event EventHandler<VectorEventArgs> OnMove;
 
         public Vector2f Position
         {
-            get { return _position; }
+            get => _position;
             set
             {
                 Vector2f oldPosition = _position;
@@ -33,38 +40,28 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override Type StateType
-        {
-            get { return typeof(TransformComponentState); }
-        }
-
         public float X
         {
-            get { return Position.X; }
-            set { Position = new Vector2f(value, Position.Y); }
+            get => Position.X;
+            set => Position = new Vector2f(value, Position.Y);
         }
 
         public float Y
         {
-            get { return Position.Y; }
-            set { Position = new Vector2f(Position.X, value); }
+            get => Position.Y;
+            set => Position = new Vector2f(Position.X, value);
         }
 
-        public event EventHandler<VectorEventArgs> OnMove;
+        public void Offset(Vector2f offset)
+        {
+            Position += offset;
+        }
+
+        #endregion
 
         public override void Shutdown()
         {
             Position = new Vector2f();
-        }
-
-        public void TranslateTo(Vector2f toPosition)
-        {
-            Position = toPosition;
-        }
-
-        public void TranslateByOffset(Vector2f offset)
-        {
-            Position = Position + offset;
         }
 
         public override void HandleComponentState(dynamic state)
@@ -95,7 +92,7 @@ namespace SS14.Client.GameObjects
             }
             if (lastState.ForceUpdate)
             {
-                TranslateTo(new Vector2f(state.X, state.Y));
+                Position = state.Position;
             }
         }
     }

@@ -6,6 +6,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -38,9 +39,9 @@ namespace SS14.Client.GameObjects
 
             _light.SetRadius(_lightRadius);
             _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
-            _light.Move(Owner.GetComponent<TransformComponent>().Position + _lightOffset);
+            _light.Move(Owner.GetComponent<ITransformComponent>().Position + _lightOffset);
             _light.SetMask(_mask);
-            Owner.GetComponent<TransformComponent>().OnMove += OnMove;
+            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -94,14 +95,14 @@ namespace SS14.Client.GameObjects
 
         public override void OnRemove()
         {
-            Owner.GetComponent<TransformComponent>().OnMove -= OnMove;
+            Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
             IoCManager.Resolve<ILightManager>().RemoveLight(_light);
             base.OnRemove();
         }
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(Owner.GetComponent<TransformComponent>().Position + _lightOffset);
+            _light.Move(Owner.GetComponent<ITransformComponent>().Position + _lightOffset);
         }
 
         public override void Update(float frameTime)

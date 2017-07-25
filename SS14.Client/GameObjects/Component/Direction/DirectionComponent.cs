@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Direction;
 using SS14.Shared.Maths;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 
@@ -22,12 +23,12 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            owner.GetComponent<TransformComponent>().OnMove += HandleOnMove;
+            owner.GetComponent<ITransformComponent>().OnMove += HandleOnMove;
         }
 
         public override void OnRemove()
         {
-            Owner.GetComponent<TransformComponent>().OnMove -= HandleOnMove;
+            Owner.GetComponent<ITransformComponent>().OnMove -= HandleOnMove;
             base.OnRemove();
         }
 

@@ -22,6 +22,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Maths;
@@ -340,7 +341,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -475,7 +476,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -643,7 +644,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position,
+                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position,
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -670,7 +671,7 @@ namespace SS14.Client.State.States
 
                 IEntity entToClick = (from cd in clickedEntities
                                       orderby cd.Drawdepth ascending,
-                                          cd.Clicked.GetComponent<TransformComponent>().Position
+                                          cd.Clicked.GetComponent<ITransformComponent>().Position
                                           .Y ascending
                                       select cd.Clicked).Last();
 
@@ -1187,7 +1188,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position

@@ -1,5 +1,7 @@
 ﻿using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
@@ -17,6 +19,9 @@ namespace SS14.Client.GameObjects
             Register<PhysicsComponent>();
             Register<ColliderComponent>();
             Register<TransformComponent>();
+            RegisterReference<TransformComponent, ITransformComponent>();
+            RegisterReference<TransformComponent, IClientTransformComponent>();
+
             Register<DirectionComponent>();
             Register<BasicMoverComponent>();
             RegisterReference<BasicMoverComponent, IMoverComponent>();

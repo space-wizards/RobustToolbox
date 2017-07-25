@@ -219,7 +219,6 @@
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameState\IGameStateManager.cs" />
     <Compile Include="Interfaces\Map\Chunk.cs" />
     <Compile Include="Interfaces\Map\IMapManager.cs" />

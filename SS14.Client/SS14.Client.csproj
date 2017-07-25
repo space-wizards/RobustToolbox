@@ -257,6 +257,7 @@
     <Compile Include="Interfaces\Collision\ICollisionManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IClientTransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />

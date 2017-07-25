@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
@@ -46,16 +47,16 @@ namespace SS14.Server.GameObjects
         {
             master = Owner.EntityManager.GetEntity(uid);
             master.OnShutdown += master_OnShutdown;
-            master.GetComponent<TransformComponent>().OnMove += HandleOnMasterMove;
-            Translate(master.GetComponent<TransformComponent>().Position);
+            master.GetComponent<ITransformComponent>().OnMove += HandleOnMasterMove;
+            Translate(master.GetComponent<ITransformComponent>().Position);
         }
 
         public void Attach(IEntity newMaster)
         {
             master = newMaster;
             master.OnShutdown += master_OnShutdown;
-            master.GetComponent<TransformComponent>().OnMove += HandleOnMasterMove;
-            Translate(master.GetComponent<TransformComponent>().Position);
+            master.GetComponent<ITransformComponent>().OnMove += HandleOnMasterMove;
+            Translate(master.GetComponent<ITransformComponent>().Position);
         }
 
         private void master_OnShutdown(IEntity e)
@@ -67,7 +68,7 @@ namespace SS14.Server.GameObjects
         {
             if (master != null)
             {
-                master.GetComponent<TransformComponent>().OnMove -= HandleOnMasterMove;
+                master.GetComponent<ITransformComponent>().OnMove -= HandleOnMasterMove;
                 master = null;
             }
         }
@@ -79,12 +80,12 @@ namespace SS14.Server.GameObjects
 
         public void Translate(Vector2f toPosition)
         {
-            Owner.GetComponent<TransformComponent>().Position = toPosition;
+            Owner.GetComponent<ITransformComponent>().Position = toPosition;
         }
 
-        private TransformComponent getTransform()
+        private ITransformComponent getTransform()
         {
-            return Owner.GetComponent<TransformComponent>();
+            return Owner.GetComponent<ITransformComponent>();
         }
 
         public override ComponentState GetComponentState()

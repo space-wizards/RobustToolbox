@@ -23,6 +23,8 @@ namespace SS14.Client.GameObjects
             RegisterReference<TransformComponent, IClientTransformComponent>();
 
             Register<DirectionComponent>();
+            RegisterReference<DirectionComponent, IDirectionComponent>();
+
             Register<BasicMoverComponent>();
             RegisterReference<BasicMoverComponent, IMoverComponent>();
 

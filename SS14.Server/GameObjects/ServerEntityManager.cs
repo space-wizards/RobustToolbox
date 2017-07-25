@@ -96,7 +96,7 @@ namespace SS14.Server.GameObjects
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<ITransformComponent>().Position = new Vector2f(X, Y);
-            ent.GetComponent<DirectionComponent>().Direction = dir;
+            ent.GetComponent<IDirectionComponent>().Direction = dir;
         }
 
         private XElement ToXML(IEntity e)
@@ -111,7 +111,7 @@ namespace SS14.Server.GameObjects
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction",
-                                                 e.GetComponent<DirectionComponent>().Direction
+                                                 e.GetComponent<IDirectionComponent>().Direction
                                                      .ToString()));
             return el;
         }

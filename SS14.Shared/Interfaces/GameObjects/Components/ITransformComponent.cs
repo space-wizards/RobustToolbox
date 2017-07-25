@@ -3,6 +3,9 @@ using System;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components
 {
+    /// <summary>
+    /// Stores the position of an entity in the world. These are global coordinates, not related to grids or alike.
+    /// </summary>
     public interface ITransformComponent : IComponent
     {
         /// <summary>

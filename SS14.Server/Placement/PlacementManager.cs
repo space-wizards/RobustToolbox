@@ -104,7 +104,7 @@ namespace SS14.Server.Placement
                     {
                         created.GetComponent<ITransformComponent>().Position =
                             new Vector2f(xRcv, yRcv);
-                        if (created.TryGetComponent<DirectionComponent>(out var component))
+                        if (created.TryGetComponent<IDirectionComponent>(out var component))
                             component.Direction = dirRcv;
                     }
                 }

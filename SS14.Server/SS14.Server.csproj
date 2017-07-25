@@ -214,7 +214,6 @@
     <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />

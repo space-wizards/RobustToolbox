@@ -204,7 +204,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 Owner.GetComponent<DirectionComponent>().Direction.ToString()).
+                 Owner.GetComponent<IDirectionComponent>().Direction.ToString()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))

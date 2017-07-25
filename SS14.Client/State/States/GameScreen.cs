@@ -9,6 +9,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
@@ -652,52 +653,52 @@ namespace SS14.Client.State.States
             var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
-                var clickable = entity.GetComponent<ClickableComponent>();
-                if (clickable == null) continue;
-                if (clickable.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                if (entity.TryGetComponent<IClientClickableComponent>(out var component)
+                 && component.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                {
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
+                }
             }
 
-            if (clickedEntities.Any())
+            if (!clickedEntities.Any())
             {
-                //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
-                //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
-                //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
-                //                  select cd.Clicked).Last();
+                return;
+            }
+            //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+            //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
+            //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
+            //                  select cd.Clicked).Last();
 
-                IEntity entToClick = (from cd in clickedEntities
-                                      orderby cd.Drawdepth ascending,
-                                          cd.Clicked.GetComponent<ITransformComponent>().Position
-                                          .Y ascending
-                                      select cd.Clicked).Last();
+            IEntity entToClick = (from cd in clickedEntities
+                                    orderby cd.Drawdepth ascending,
+                                        cd.Clicked.GetComponent<ITransformComponent>().Position
+                                        .Y ascending
+                                    select cd.Clicked).Last();
 
-                if (PlacementManager.Eraser && PlacementManager.IsActive)
-                {
-                    PlacementManager.HandleDeletion(entToClick);
+            if (PlacementManager.Eraser && PlacementManager.IsActive)
+            {
+                PlacementManager.HandleDeletion(entToClick);
+                return;
+            }
+
+            var clickable = entToClick.GetComponent<IClientClickableComponent>();
+            switch (e.Button)
+            {
+                case Mouse.Button.Left:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Left);
+                    break;
+                case Mouse.Button.Right:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Right);
+                    break;
+                case Mouse.Button.Middle:
+                    UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
+                    UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
+                                                                            entToClick));
                     return;
-                }
-
-                ClickableComponent c;
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        c = entToClick.GetComponent<ClickableComponent>();
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
-                        break;
-                    case Mouse.Button.Right:
-                        c = entToClick.GetComponent<ClickableComponent>();
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
-                        break;
-                    case Mouse.Button.Middle:
-                        UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
-                                                                             entToClick));
-                        break;
-                }
             }
 
             #endregion Object clicking

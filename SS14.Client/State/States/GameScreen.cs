@@ -874,7 +874,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// HandleStateUpdate
         ///
-        /// Recieves a state update message and unpacks the delicious GameStateDelta hidden inside
+        /// Receives a state update message and unpacks the delicious GameStateDelta hidden inside
         /// Then it applies the gamestatedelta to a past state to form: a full game state!
         /// </summary>
         /// <param name="message">incoming state update message</param>
@@ -948,7 +948,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// SendStateAck
         ///
-        /// Acknowledge a game state being recieved
+        /// Acknowledge a game state being received
         /// </summary>
         /// <param name="sequence">State sequence number</param>
         private void SendStateAck(uint sequence)

@@ -9,7 +9,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     /// <summary>
-    /// Recieves movement data from the server and updates the entity's position accordingly.
+    /// Receives movement data from the server and updates the entity's position accordingly.
     /// </summary>
     public class BasicMoverComponent : ClientComponent, IMoverComponent
     {

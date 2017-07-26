@@ -4,6 +4,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace SS14.Client.Placement.Modes
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>()
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld).LengthSquared() > rangeSquared)
                     return false;
 
@@ -70,7 +71,7 @@ namespace SS14.Client.Placement.Modes
             var range = pManager.CurrentPermission.Range;
             if (range > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>()
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld).LengthSquared() > range * range)
                     return false;
 

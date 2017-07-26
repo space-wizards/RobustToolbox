@@ -1,34 +1,23 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class ClickableComponent : ClientComponent
+    // Notice: Most actual logic for clicking is done by the game screen.
+    public class ClickableComponent : ClientComponent, IClientClickableComponent
     {
         public override string Name => "Clickable";
-
         public override uint? NetID => NetIDs.CLICKABLE;
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
-            if (sender == this)
-                return reply;
-
-            switch (type)
-            {
-                case ComponentMessageType.ClickedInHand:
-                    DispatchInHandClick((int)list[0]);
-                    break;
-            }
-
-            return reply;
-        }
+        public event EventHandler<ClickEventArgs> OnClick;
 
         public bool CheckClick(Vector2f worldPos, out int drawdepth)
         {
@@ -38,16 +27,14 @@ namespace SS14.Client.GameObjects
             return component.WasClicked(worldPos);
         }
 
-        public void DispatchClick(int userUID, int clickType)
+        public void DispatchClick(IEntity user, int clickType)
         {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered, MouseClickType.ConvertClickTypeToComponentMessageType(clickType),
-                                              userUID);
-        }
+            OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
 
-        public void DispatchInHandClick(int userUID)
-        {
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableOrdered,
-                                              ComponentMessageType.ClickedInHand, userUID);
+            Owner.SendComponentNetworkMessage(this,
+                                              NetDeliveryMethod.ReliableOrdered,
+                                              clickType,
+                                              user.Uid);
         }
     }
 }

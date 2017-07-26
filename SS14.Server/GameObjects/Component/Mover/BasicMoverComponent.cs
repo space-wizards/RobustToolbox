@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
@@ -31,7 +32,7 @@ namespace SS14.Server.GameObjects
 
         public void Translate(float x, float y)
         {
-            Owner.GetComponent<TransformComponent>().Position = new Vector2f(x, y);
+            Owner.GetComponent<ITransformComponent>().Position = new Vector2f(x, y);
         }
 
     }

@@ -2,6 +2,7 @@
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -21,7 +22,7 @@ namespace SS14.Client.GameObjects
             return from e in _entities.Values
                    where
                        (position -
-                        e.GetComponent<TransformComponent>().Position).
+                        e.GetComponent<ITransformComponent>().Position).
                            LengthSquared() < Range
                    select e;
         }

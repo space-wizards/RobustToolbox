@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 
@@ -32,15 +33,15 @@ namespace SS14.Client.GameObjects
         {
             _master = Owner.EntityManager.GetEntity(uid);
             // TODO handle this using event queue so that these sorts of interactions are deferred until we can be sure the target entity exists
-            _master.GetComponent<TransformComponent>().OnMove += HandleOnMove;
-            Translate(_master.GetComponent<TransformComponent>().Position);
+            _master.GetComponent<ITransformComponent>().OnMove += HandleOnMove;
+            Translate(_master.GetComponent<ITransformComponent>().Position);
         }
 
         private void Detach()
         {
             if (_master == null) return;
 
-            _master.GetComponent<TransformComponent>().OnMove -= HandleOnMove;
+            _master.GetComponent<ITransformComponent>().OnMove -= HandleOnMove;
             _master = null;
         }
 
@@ -51,7 +52,7 @@ namespace SS14.Client.GameObjects
 
         private void Translate(Vector2f toPosition)
         {
-            Owner.GetComponent<TransformComponent>().Position = toPosition;
+            Owner.GetComponent<ITransformComponent>().Position = toPosition;
         }
 
         public override void HandleComponentState(dynamic state)

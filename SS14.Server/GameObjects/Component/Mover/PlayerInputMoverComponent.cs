@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
@@ -21,8 +22,8 @@ namespace SS14.Server.GameObjects
         /// <param name="message"></param>
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            var velComp = Owner.GetComponent<VelocityComponent>();
-            var transform = Owner.GetComponent<TransformComponent>();
+            var velComp = Owner.GetComponent<IVelocityComponent>();
+            var transform = Owner.GetComponent<ITransformComponent>();
 
             velComp.Velocity = new Vector2f((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
             transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);

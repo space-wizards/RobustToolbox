@@ -10,6 +10,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -39,7 +40,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>().Position.Y +
+                return Owner.GetComponent<ITransformComponent>().Position.Y +
                        (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
             }
         }
@@ -203,7 +204,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 Owner.GetComponent<DirectionComponent>().Direction.ToString()).
+                 Owner.GetComponent<IDirectionComponent>().Direction.ToString()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
@@ -221,8 +222,8 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 new FloatRect(
-                    Owner.GetComponent<TransformComponent>().Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<TransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
+                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
             // Get the sprite's position within the texture
@@ -292,14 +293,14 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>().Position);
+            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.GetComponent<TransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<TransformComponent>().Position.X > bottomRight.X
-                || Owner.GetComponent<TransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<TransformComponent>().Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<ITransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<ITransformComponent>().Position.X > bottomRight.X
+                || Owner.GetComponent<ITransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);

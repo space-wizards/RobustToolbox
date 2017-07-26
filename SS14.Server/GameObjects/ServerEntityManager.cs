@@ -3,6 +3,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -40,7 +41,7 @@ namespace SS14.Server.GameObjects
         public IEntity SpawnEntityAt(string EntityType, Vector2f position)
         {
             IEntity e = SpawnEntity(EntityType);
-            e.GetComponent<TransformComponent>().TranslateTo(position);
+            e.GetComponent<ITransformComponent>().Position = position;
             e.Initialize();
             return e;
         }
@@ -94,23 +95,23 @@ namespace SS14.Server.GameObjects
             string name = e.Attribute("name").Value;
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
-            ent.GetComponent<TransformComponent>().TranslateTo(new Vector2f(X, Y));
-            ent.GetComponent<DirectionComponent>().Direction = dir;
+            ent.GetComponent<ITransformComponent>().Position = new Vector2f(X, Y);
+            ent.GetComponent<IDirectionComponent>().Direction = dir;
         }
 
         private XElement ToXML(IEntity e)
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X",
-                                                 e.GetComponent<TransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().Position.
                                                      X.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("Y",
-                                                 e.GetComponent<TransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().Position.
                                                      Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction",
-                                                 e.GetComponent<DirectionComponent>().Direction
+                                                 e.GetComponent<IDirectionComponent>().Direction
                                                      .ToString()));
             return el;
         }

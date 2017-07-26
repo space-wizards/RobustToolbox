@@ -2,46 +2,34 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Velocity;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class VelocityComponent : ClientComponent
+    public class VelocityComponent : ClientComponent, IVelocityComponent
     {
         public override string Name => "Velocity";
         public override uint? NetID => NetIDs.VELOCITY;
 
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
-        private Vector2f _velocity = new Vector2f(0, 0);
 
-        public VelocityComponent()
-        {
-            Velocity = new Vector2f(0, 0);
-        }
+        public Vector2f Velocity { get; set; }
 
-        public Vector2f Velocity
-        {
-            get { return _velocity; }
-            set { _velocity = value; }
-        }
-
-        public override Type StateType
-        {
-            get { return typeof(VelocityComponentState); }
-        }
+        public override Type StateType => typeof(VelocityComponentState);
 
         public float X
         {
-            get { return Velocity.X; }
-            set { Velocity = new Vector2f(value, Velocity.Y); }
+            get => Velocity.X;
+            set => Velocity = new Vector2f(value, Velocity.Y);
         }
 
         public float Y
         {
-            get { return Velocity.Y; }
-            set { Velocity = new Vector2f(Velocity.X, value); }
+            get => Velocity.Y;
+            set => Velocity = new Vector2f(Velocity.X, value);
         }
 
         public override void Shutdown()

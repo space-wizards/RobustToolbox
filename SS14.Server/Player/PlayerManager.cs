@@ -7,6 +7,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -91,8 +92,7 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession session)
         {
             //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.SpawnEntity("HumanMob");
-            entity.GetComponent<ITransformComponent>().TranslateTo(new Vector2f(0, 0));
+            IEntity entity = _entityManager.SpawnEntityAt("HumanMob", new Vector2f(0, 0));
             session.AttachToEntity(entity);
         }
 

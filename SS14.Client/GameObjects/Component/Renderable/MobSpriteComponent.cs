@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -138,7 +139,7 @@ namespace SS14.Client.GameObjects
                 return;
             }
 
-            var position = Owner.GetComponent<TransformComponent>().Position;
+            var position = Owner.GetComponent<ITransformComponent>().Position;
 
             if (position.X < topLeft.X
                 || position.X > bottomRight.X

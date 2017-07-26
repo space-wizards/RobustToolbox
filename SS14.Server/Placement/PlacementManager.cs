@@ -9,6 +9,7 @@ using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System;
@@ -101,9 +102,9 @@ namespace SS14.Server.Placement
                     IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
                     if (created != null)
                     {
-                        created.GetComponent<ITransformComponent>().TranslateTo(
-                            new Vector2f(xRcv, yRcv));
-                        if (created.TryGetComponent<DirectionComponent>(out var component))
+                        created.GetComponent<ITransformComponent>().Position =
+                            new Vector2f(xRcv, yRcv);
+                        if (created.TryGetComponent<IDirectionComponent>(out var component))
                             component.Direction = dirRcv;
                     }
                 }

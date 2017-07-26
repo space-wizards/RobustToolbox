@@ -3,6 +3,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Mover;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 
@@ -31,7 +32,7 @@ namespace SS14.Client.GameObjects
                 movedtime = movedtime + frameTime;
                 if (movedtime >= movetime)
                 {
-                    Owner.GetComponent<TransformComponent>().Position = targetPosition;
+                    Owner.GetComponent<ITransformComponent>().Position = targetPosition;
                     startPosition = targetPosition;
                     interpolating = false;
                 }
@@ -39,7 +40,7 @@ namespace SS14.Client.GameObjects
                 {
                     float X = Ease(movedtime, startPosition.X, targetPosition.X, movetime);
                     float Y = Ease(movedtime, startPosition.Y, targetPosition.Y, movetime);
-                    Owner.GetComponent<TransformComponent>().Position = new Vector2f(X, Y);
+                    Owner.GetComponent<ITransformComponent>().Position = new Vector2f(X, Y);
                 }
             }
         }

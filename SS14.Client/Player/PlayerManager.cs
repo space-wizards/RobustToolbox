@@ -11,6 +11,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -61,7 +62,7 @@ namespace SS14.Client.Player
             ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
             ControlledEntity.AddComponent(factory.GetComponent<ColliderComponent>());
 
-            ControlledEntity.GetComponent<TransformComponent>().OnMove += PlayerEntityMoved;
+            ControlledEntity.GetComponent<ITransformComponent>().OnMove += PlayerEntityMoved;
         }
 
         public void ApplyEffects(RenderImage image)
@@ -79,7 +80,7 @@ namespace SS14.Client.Player
                 ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.RemoveComponent<ColliderComponent>();
-                var transform = ControlledEntity.GetComponent<TransformComponent>();
+                var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {
                     transform.OnMove -= PlayerEntityMoved;

@@ -1,5 +1,7 @@
 ﻿using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
@@ -17,7 +19,12 @@ namespace SS14.Client.GameObjects
             Register<PhysicsComponent>();
             Register<ColliderComponent>();
             Register<TransformComponent>();
+            RegisterReference<TransformComponent, ITransformComponent>();
+            RegisterReference<TransformComponent, IClientTransformComponent>();
+
             Register<DirectionComponent>();
+            RegisterReference<DirectionComponent, IDirectionComponent>();
+
             Register<BasicMoverComponent>();
             RegisterReference<BasicMoverComponent, IMoverComponent>();
 
@@ -29,6 +36,7 @@ namespace SS14.Client.GameObjects
 
             Register<HitboxComponent>();
             Register<VelocityComponent>();
+            RegisterReference<VelocityComponent, IVelocityComponent>();
 
             Register<AnimatedSpriteComponent>();
             RegisterReference<AnimatedSpriteComponent, IClickTargetComponent>();
@@ -57,6 +65,8 @@ namespace SS14.Client.GameObjects
             RegisterReference<ParticleSystemComponent, IParticleSystemComponent>();
 
             Register<ClickableComponent>();
+            RegisterReference<ClickableComponent, IClientClickableComponent>();
+            RegisterReference<ClickableComponent, IClickableComponent>();
         }
     }
 }

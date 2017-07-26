@@ -121,6 +121,7 @@
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IVelocityComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IDirectionComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />

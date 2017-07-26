@@ -36,6 +36,7 @@ namespace SS14.Client.GameObjects
 
             Register<HitboxComponent>();
             Register<VelocityComponent>();
+            RegisterReference<VelocityComponent, IVelocityComponent>();
 
             Register<AnimatedSpriteComponent>();
             RegisterReference<AnimatedSpriteComponent, IClickTargetComponent>();
@@ -64,6 +65,8 @@ namespace SS14.Client.GameObjects
             RegisterReference<ParticleSystemComponent, IParticleSystemComponent>();
 
             Register<ClickableComponent>();
+            RegisterReference<ClickableComponent, IClientClickableComponent>();
+            RegisterReference<ClickableComponent, IClickableComponent>();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(VelocityComponent));
+            EntityQuery.AllSet.Add(typeof(IVelocityComponent));
             EntityQuery.AllSet.Add(typeof(ITransformComponent));
             EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
         }

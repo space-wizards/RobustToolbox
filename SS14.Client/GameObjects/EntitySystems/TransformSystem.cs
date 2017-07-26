@@ -115,7 +115,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position +
-                    if (entity.TryGetComponent<VelocityComponent>(out var velocityComponent))
+                    if (entity.TryGetComponent<IVelocityComponent>(out var velocityComponent))
                     {
                         var movement = velocityComponent.Velocity * frametime;
                         var playerPosition = movement + transform.Position;

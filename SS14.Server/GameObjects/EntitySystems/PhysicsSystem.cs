@@ -12,7 +12,7 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(VelocityComponent));
+            EntityQuery.AllSet.Add(typeof(IVelocityComponent));
             EntityQuery.AllSet.Add(typeof(ITransformComponent));
             EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
             EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
@@ -26,7 +26,7 @@ namespace SS14.Server.GameObjects.EntitySystems
                 //GasEffect(entity, frametime);
 
                 var transform = entity.GetComponent<ITransformComponent>();
-                var velocity = entity.GetComponent<VelocityComponent>();
+                var velocity = entity.GetComponent<IVelocityComponent>();
 
                 if (velocity.Velocity.LengthSquared() < 0.00001f)
                     continue;

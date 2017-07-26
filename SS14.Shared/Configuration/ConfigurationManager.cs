@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Nett;
+﻿using Nett;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Log;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace SS14.Shared.Configuration
 {
@@ -33,7 +34,7 @@ namespace SS14.Shared.Configuration
                 ProcessTomlObject(tblRoot);
 
                 _configFile = configFile;
-                Logger.Info($"[CFG] Configuration Loaded from '{configFile}'");
+                Logger.Info($"[CFG] Configuration Loaded from '{Path.GetFullPath(configFile)}'");
             }
             catch (Exception e)
             {

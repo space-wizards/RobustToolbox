@@ -54,6 +54,8 @@ namespace SS14.Server
     public class BaseServer : IBaseServer
     {
         [Dependency]
+        private readonly ICommandLineArgs _commandLine;
+        [Dependency]
         private readonly IConfigurationManager _config;
 
         [Dependency]
@@ -73,7 +75,7 @@ namespace SS14.Server
 
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
-        
+
         private RunLevel _runLevel;
         private bool _active;
         private int _lastAnnounced;
@@ -144,7 +146,7 @@ namespace SS14.Server
         public bool Start()
         {
             //Sets up the configMgr
-            _config.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
+            _config.LoadFromFile(_commandLine.ConfigFile);
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
@@ -224,7 +226,7 @@ namespace SS14.Server
         {
             // maximum number of ticks to queue before the loop slows down.
             const int MaxTicks = 5;
-            
+
             _time.ResetRealTime();
             _maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * MaxTicks);
 
@@ -257,7 +259,7 @@ namespace SS14.Server
                     accumulator -= _time.TickPeriod;
                     _lastTick += _time.TickPeriod;
                     _time.StartFrame();
-                    
+
                     Update((float)_time.CurTime.TotalSeconds);
                     _time.CurTick++;
                 }
@@ -273,7 +275,7 @@ namespace SS14.Server
                         Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
                     _lastTitleUpdate = _time.RealTime;
                 }
-                
+
                 // Set this to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set this to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // comment this out if you want to be 'that thread' and hog 100% cpu.
@@ -381,7 +383,7 @@ namespace SS14.Server
 
                     _components.Update(frameTime);
                     _entities.Update(frameTime);
-                    
+
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
 
                     break;

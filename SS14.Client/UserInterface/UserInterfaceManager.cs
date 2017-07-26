@@ -223,7 +223,7 @@ namespace SS14.Client.UserInterface
             else
             {
                 IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                              where comp.RecieveInput
+                                                              where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
                                                               //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -258,7 +258,7 @@ namespace SS14.Client.UserInterface
             else
             {
                 IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                              where comp.RecieveInput
+                                                              where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
                                                               //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -290,7 +290,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           select comp;
 
@@ -309,7 +309,7 @@ namespace SS14.Client.UserInterface
             }
 
             IGuiComponent inputTo = (from IGuiComponent comp in _components
-                                     where comp.RecieveInput
+                                     where comp.ReceiveInput
                                      where comp.Focus
                                      select comp).FirstOrDefault();
 
@@ -349,7 +349,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
                                                           // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -367,7 +367,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
                                                           // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.

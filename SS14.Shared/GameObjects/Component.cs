@@ -70,12 +70,12 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Recieve a message from another component within the owner entity
+        /// Receive a message from another component within the owner entity
         /// </summary>
         /// <param name="sender">the component that sent the message</param>
         /// <param name="type">the message type in CGO.MessageType</param>
         /// <param name="list">parameters list</param>
-        public virtual ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                             params object[] list)
         {
             ComponentReplyMessage reply = ComponentReplyMessage.Empty;

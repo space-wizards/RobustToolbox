@@ -111,7 +111,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void NetMgr_MessageArrived(object sender, NetMessageArgs e)
         {
-            //Make sure we reset the position - we might recieve this message after the gamestates.
+            //Make sure we reset the position - we might receive this message after the gamestates.
             if (e.RawMessage.Position > 0)
                 e.RawMessage.Position = 0;
 

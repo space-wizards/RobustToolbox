@@ -52,10 +52,10 @@ namespace SS14.Client.GameObjects
             keyBindingManager.BoundKeyUp += KeyUp;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;

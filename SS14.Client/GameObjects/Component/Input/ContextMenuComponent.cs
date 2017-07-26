@@ -16,10 +16,10 @@ namespace SS14.Client.GameObjects
         public override string Name => "ContextMenu";
         private readonly List<ContextMenuEntry> _entries = new List<ContextMenuEntry>();
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;

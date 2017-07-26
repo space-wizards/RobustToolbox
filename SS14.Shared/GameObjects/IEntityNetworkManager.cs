@@ -27,7 +27,7 @@ namespace SS14.Shared.GameObjects
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
         /// <param name="sendingEntity">Entity sending the message</param>
-        /// <param name="targetSystem">Type of the System that should recieve the message. Also includes derived systems.</param>
+        /// <param name="targetSystem">Type of the System that should receive the message. Also includes derived systems.</param>
         /// <param name="message">Message that should be sent.</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>

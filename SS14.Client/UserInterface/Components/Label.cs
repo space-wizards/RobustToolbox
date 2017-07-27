@@ -1,10 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -29,14 +30,14 @@ namespace SS14.Client.UserInterface.Components
         public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetFont(font), size) { Color = Color.Black };
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color.Black };
             Update(0);
         }
 
         public Label(string text, string font, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetFont(font)) {Color = Color.Black};
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color.Black};
             Update(0);
         }
 

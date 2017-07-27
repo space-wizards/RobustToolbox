@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -10,6 +10,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -44,7 +45,7 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceCache.GetFont("CALIBRI"))
+            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
                                  {Color = Color.Black};
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);

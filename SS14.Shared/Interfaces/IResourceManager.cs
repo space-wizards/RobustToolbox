@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace SS14.Shared.Interfaces
 {
@@ -24,5 +24,6 @@ namespace SS14.Shared.Interfaces
         void MountDirectory(string path);
         MemoryStream FileRead(string path);
         bool FileExists(string path);
+        bool TryFileRead(string path, out MemoryStream fileStream);
     }
 }

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Placement
@@ -267,9 +268,10 @@ namespace SS14.Client.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSpriteKey + "_" + Direction.ToString()).ToLowerInvariant();
-            if (ResourceCache.SpriteExists(dirName))
-                spriteToUse = ResourceCache.GetSprite(dirName);
+            string dirName = (CurrentBaseSpriteKey + "_" + Direction).ToLowerInvariant();
+
+            if (ResourceCache.TryGetResource(dirName, out SpriteResource spriteRes))
+                spriteToUse = spriteRes.Sprite;
 
             return spriteToUse;
         }

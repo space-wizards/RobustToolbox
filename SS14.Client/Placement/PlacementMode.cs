@@ -36,7 +36,7 @@ namespace SS14.Client.Placement
         {
             if (key == null || !pManager.ResourceCache.SpriteExists(key))
             {
-                return pManager.ResourceCache.GetNoSprite();
+                return pManager.ResourceCache.DefaultSprite();
             }
             else
             {
@@ -46,7 +46,7 @@ namespace SS14.Client.Placement
 
         public Sprite GetDirectionalSprite(string baseSprite)
         {
-            if (baseSprite == null) pManager.ResourceCache.GetNoSprite();
+            if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
 
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
         }

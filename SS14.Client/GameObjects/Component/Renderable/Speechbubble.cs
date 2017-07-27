@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Text;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.GameObjects
 {
@@ -70,7 +71,7 @@ namespace SS14.Client.GameObjects
             _resourceCache = IoCManager.Resolve<IResourceCache>();
             _mobName = mobname;
             _buildTime = DateTime.Now;
-            _textSprite = new Text(String.Empty, _resourceCache.GetFont("CALIBRI"));
+            _textSprite = new Text(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
             _textSprite.Color = Color.Black;
             // TODO Word wrap!
             _textSprite.Position = new Vector2f(5, 3);

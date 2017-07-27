@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -7,6 +7,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 using System.Linq;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -48,7 +49,7 @@ namespace SS14.Client.UserInterface.Components
 
             objectSprite = _resourceCache.GetSprite(SpriteName);
 
-            font = _resourceCache.GetFont("CALIBRI");
+            font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
             name = new TextSprite("Label" + SpriteName, "Name", font);
             name.Color = Color.Black;
             name.Text = ObjectName;

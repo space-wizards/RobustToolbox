@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -37,7 +38,7 @@ namespace SS14.Client.UserInterface.Components
             _buttonMain = _resourceCache.GetSprite("button_middle");
             _buttonRight = _resourceCache.GetSprite("button_right");
 
-            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetFont("CALIBRI"))
+            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
                         {
                             Color = Color.Black
                         };

@@ -22,6 +22,7 @@ using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameLoader;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -71,6 +72,9 @@ namespace SS14.Server
 
         [Dependency]
         private readonly IGameTiming _time;
+
+        [Dependency]
+        private readonly IResourceManager _resources;
 
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
@@ -210,16 +214,16 @@ namespace SS14.Server
             IoCManager.Resolve<IMapManager>().Initialize();
 
             // Set up the VFS
-            ResourceManager.Instance.Initialize();
+            _resources.Initialize();
 
             //mount the engine content pack
-            ResourceManager.Instance.MountContentPack(@"../../Resources/EngineContentPack.zip");
+            _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
 
             //mount the default game ContentPack defined in config
-            ResourceManager.Instance.MountDefaultPack();
+            _resources.MountDefaultPack();
 
             // get the assembly from the file system
-            var gameDll = ResourceManager.Instance.FileRead(@"Assemblies/Game.Shared.dll");
+            var gameDll = _resources.FileRead(@"Assemblies/Game.Shared.dll");
             
             // load the assembly into the process, and bootstrap the GameServer entry point.
             AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());

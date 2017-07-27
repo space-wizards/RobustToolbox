@@ -30,11 +30,12 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameLoader;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
@@ -88,6 +89,7 @@ namespace SS14.Server
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

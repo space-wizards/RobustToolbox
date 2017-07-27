@@ -1,10 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -62,7 +63,7 @@ namespace SS14.Client.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceCache.GetFont("CALIBRI")) { Color = Color.Black };
+            Label = new TextSprite("Textbox", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color.Black };
 
             Update(0);
         }

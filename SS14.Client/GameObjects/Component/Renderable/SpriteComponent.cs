@@ -23,7 +23,12 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-        protected Sprite currentBaseSprite;
+
+        protected Sprite currentBaseSprite
+        {
+            get;
+            private set;
+        }
         protected string currentBaseSpriteKey;
         protected Dictionary<string, Sprite> dirSprites = new Dictionary<string, Sprite>();
         protected bool HorizontalFlip { get; set; }

@@ -1,10 +1,11 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.ResourceManagement;
 using System;
 
 namespace SS14.Client.UserInterface.Components
@@ -55,7 +56,7 @@ namespace SS14.Client.UserInterface.Components
             if (Horizontal) scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
             else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
 
-            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetFont("CALIBRI"));
+            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             DEBUG.Color = new Color(255, 128, 0);
             DEBUG.ShadowColor = new Color(0, 0, 128);
             DEBUG.Shadowed = true;

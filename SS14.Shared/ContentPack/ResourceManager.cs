@@ -11,17 +11,19 @@ using SS14.Shared.Log;
 namespace SS14.Shared.ContentPack
 {
     /// <summary>
-    /// Virtual file system for all disk resources.
+    ///     Virtual file system for all disk resources.
     /// </summary>
     public class ResourceManager : IResourceManager
     {
-        private static ResourceManager _instance;
-        public static ResourceManager Instance => _instance ?? (_instance = new ResourceManager());
+        /// <summary>
+        ///     Configuration Manager.
+        /// </summary>
+        [Dependency] private readonly IConfigurationManager _config;
 
         private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
 
         /// <summary>
-        /// Default constructor.
+        ///     Default constructor.
         /// </summary>
         public ResourceManager()
         {
@@ -29,39 +31,24 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <summary>
-        /// Configuration Manager.
-        /// </summary>
-        [Dependency]
-        private readonly IConfigurationManager _config;
-
-        /// <summary>
-        /// Sets the manager up so that the base game can run.
+        ///     Sets the manager up so that the base game can run.
         /// </summary>
         public void Initialize()
         {
-            _config.RegisterCVar("resource.pack", Path.Combine("..", "..", "Resources", "ResourcePack.zip"), CVarFlags.ARCHIVE);
+            _config.RegisterCVar("resource.pack", Path.Combine("..", "..", "Resources", "ResourcePack.zip"),
+                CVarFlags.ARCHIVE);
             _config.RegisterCVar("resource.password", string.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
-
-            MountEngineContent();
         }
 
         /// <summary>
-        /// Loads the content needed for the engine to run.
-        /// </summary>
-        private void MountEngineContent()
-        {
-            
-        }
-
-        /// <summary>
-        /// Loads the default content pack from the configuration file into the VFS.
+        ///     Loads the default content pack from the configuration file into the VFS.
         /// </summary>
         public void MountDefaultPack()
         {
             //Assert server only
 
-            string zipPath = _config.GetCVar<string>("resource.pack");
-            string password = _config.GetCVar<string>("resource.password");
+            var zipPath = _config.GetCVar<string>("resource.pack");
+            var password = _config.GetCVar<string>("resource.password");
 
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
@@ -69,12 +56,12 @@ namespace SS14.Shared.ContentPack
                 Logger.Log("[RES] No default ContentPack to load in configuration.");
                 return;
             }
-            
+
             MountContentPack(zipPath, password);
         }
 
         /// <summary>
-        /// Loads a content pack from disk into the VFS.
+        ///     Loads a content pack from disk into the VFS.
         /// </summary>
         /// <param name="pack"></param>
         /// <param name="password"></param>
@@ -82,7 +69,7 @@ namespace SS14.Shared.ContentPack
         {
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
-                string debugPath = "..";
+                var debugPath = "..";
                 pack = Path.Combine(debugPath, pack);
             }
 
@@ -96,28 +83,37 @@ namespace SS14.Shared.ContentPack
             //create new PackLoader
             var loader = new PackLoader(packInfo, password);
 
-            if(loader.LoadPack())
-            {
-                //add packloader to sources
+            if (loader.LoadPack())
                 _contentRoots.Add(loader);
-            }
         }
 
         public void MountDirectory(string path)
         {
-            
+            throw new NotImplementedException();
         }
 
         public MemoryStream FileRead(string path)
         {
             // loop over each root trying to get the file
-            foreach (IContentRoot root in _contentRoots)
+            foreach (var root in _contentRoots)
             {
                 var file = root.GetFile(path);
                 if (file != null)
                     return file;
             }
             return null;
+        }
+
+        public bool TryFileRead(string path, out MemoryStream fileStream)
+        {
+            var file = FileRead(path);
+            if (file != null)
+            {
+                fileStream = file;
+                return true;
+            }
+            fileStream = default(MemoryStream);
+            return false;
         }
 
         public bool FileExists(string path)

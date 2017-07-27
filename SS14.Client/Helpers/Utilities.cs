@@ -20,7 +20,7 @@ namespace SS14.Client.Helpers
             {
                 icon = component.Icon;
             }
-            return icon ?? IoCManager.Resolve<IResourceCache>().GetNoSprite();
+            return icon ?? IoCManager.Resolve<IResourceCache>().DefaultSprite();
         }
     }
 }

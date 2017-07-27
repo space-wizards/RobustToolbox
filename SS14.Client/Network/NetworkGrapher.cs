@@ -7,6 +7,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Network
@@ -32,7 +33,7 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetFont("CALIBRI"));
+            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
         }
 
         #region INetworkGrapher Members

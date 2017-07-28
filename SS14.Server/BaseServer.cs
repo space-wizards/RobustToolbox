@@ -223,10 +223,37 @@ namespace SS14.Server
             _resources.MountDefaultPack();
 
             // get the assembly from the file system
-            var gameDll = _resources.FileRead(@"Assemblies/Game.Shared.dll");
+            if(_resources.TryFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
+            {
+                Logger.Log("[SRV] Loading Server Content DLL");
+
+                // see if debug info is present
+                if (_resources.TryFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                    }
+                }
+            }
             
-            // load the assembly into the process, and bootstrap the GameServer entry point.
-            AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
             
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.IoC;
 using SS14.Shared.Log;
 
 namespace SS14.Shared.GameLoader
@@ -15,13 +17,15 @@ namespace SS14.Shared.GameLoader
             Init = 1,
         }
 
-        private static List<ModInfo> _mods = new List<ModInfo>();
+        private static readonly List<ModInfo> _mods = new List<ModInfo>();
 
         [Obsolete]
-        public static Assembly RelativeLoadFrom(string path)
+        public static void RelativeLoadFrom(string path)
         {
             string assemblyDir = Path.GetDirectoryName(new Uri(Assembly.GetCallingAssembly().CodeBase).LocalPath);
-            return Assembly.Load(Path.Combine(assemblyDir, path));
+            var assembly = Assembly.Load(Path.Combine(assemblyDir, path));
+
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assembly);
         }
 
         public static Assembly GetAssemblyByName(this AppDomain domain, string name)
@@ -29,24 +33,30 @@ namespace SS14.Shared.GameLoader
             return domain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
         }
 
-        public static void LoadGameAssembly<T>(byte[] file)
+        public static void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
             where T : GameShared
         {
             //TODO: enforce sandbox in assembly
-
+            
             var mod = new ModInfo();
-            mod.GameAssembly = Assembly.Load(file);
+
+            if (symbols != null)
+                mod.GameAssembly = AppDomain.CurrentDomain.Load(assembly, symbols);
+            else
+                mod.GameAssembly = AppDomain.CurrentDomain.Load(assembly);
+
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(mod.GameAssembly);
 
             var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
 
-            if(entryPoints.Length == 0)
+            if (entryPoints.Length == 0)
                 Logger.Log($"[RES] Assembly has no entry points: {mod.GameAssembly.FullName}");
 
             foreach (var entryPoint in entryPoints)
             {
                 mod.EntryPoints.Add(Activator.CreateInstance(entryPoint) as T);
             }
-            
+
             _mods.Add(mod);
         }
 
@@ -73,7 +83,7 @@ namespace SS14.Shared.GameLoader
         private class ModInfo
         {
             public Assembly GameAssembly { get; set; }
-            public List<GameShared> EntryPoints { get; set; }
+            public List<GameShared> EntryPoints { get; }
 
             public ModInfo()
             {

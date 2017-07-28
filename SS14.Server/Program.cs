@@ -115,43 +115,15 @@ namespace SS14.Server
 
             IoCManager.BuildGraph();
         }
-
-        // TODO: Move to the main server so we can have proper logging and stuff.
+        
         private static void LoadContentAssemblies()
         {
-            var assemblies = new List<Assembly>(4)
+            // gets a handle to the shared and the current (server) dll.
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
                 Assembly.GetExecutingAssembly()
-            };
-
-            try
-            {
-                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Shared.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
-                Console.ResetColor();
-            }
-
-            try
-            {
-                var contentAssembly = AssemblyLoader.RelativeLoadFrom("SS14.Server.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
-                Console.ResetColor();
-            }
-
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+            });
         }
     }
 }

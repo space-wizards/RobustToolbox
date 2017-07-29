@@ -8,7 +8,7 @@ namespace SS14.Client.ResourceManagement
     {
         public virtual string Fallback => null;
 
-        public abstract void Load(ResourceCache cache, string path, MemoryStream stream);
+        public abstract void Load(ResourceCache cache, string path, Stream stream);
 
         public virtual void Dispose() { }
     }

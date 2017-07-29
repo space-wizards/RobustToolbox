@@ -10,7 +10,7 @@ namespace SS14.Client.ResourceManagement
 
         public Font Font { get; private set; }
 
-        public override void Load(ResourceCache cache, string path, MemoryStream stream)
+        public override void Load(ResourceCache cache, string path, Stream stream)
         {
             Font = new Font(stream);
         }

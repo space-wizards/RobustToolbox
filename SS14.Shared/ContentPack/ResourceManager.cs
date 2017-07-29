@@ -43,7 +43,7 @@ namespace SS14.Shared.ContentPack
         /// <summary>
         ///     Loads the default content pack from the configuration file into the VFS.
         /// </summary>
-        public void MountDefaultPack()
+        public void MountDefaultContentPack()
         {
             //Assert server only
 
@@ -83,16 +83,25 @@ namespace SS14.Shared.ContentPack
             //create new PackLoader
             var loader = new PackLoader(packInfo, password);
 
-            if (loader.LoadPack())
+            if (loader.Mount())
                 _contentRoots.Add(loader);
         }
 
-        public void MountDirectory(string path)
+        /// <summary>
+        /// Mounts a directory into the VFS.
+        /// </summary>
+        /// <param name="path"></param>
+        public void MountContentDirectory(string path)
         {
-            throw new NotImplementedException();
+            path = PathHelpers.ExecutableRelativeFile(path);
+            var pathInfo = new DirectoryInfo(path);
+
+            var loader = new DirLoader(pathInfo);
+            if (loader.Mount())
+                _contentRoots.Add(loader);
         }
 
-        public MemoryStream FileRead(string path)
+        public MemoryStream ContentFileRead(string path)
         {
             // loop over each root trying to get the file
             foreach (var root in _contentRoots)
@@ -104,9 +113,9 @@ namespace SS14.Shared.ContentPack
             return null;
         }
 
-        public bool TryFileRead(string path, out MemoryStream fileStream)
+        public bool TryContentFileRead(string path, out MemoryStream fileStream)
         {
-            var file = FileRead(path);
+            var file = ContentFileRead(path);
             if (file != null)
             {
                 fileStream = file;
@@ -116,7 +125,7 @@ namespace SS14.Shared.ContentPack
             return false;
         }
 
-        public bool FileExists(string path)
+        public bool ContentFileExists(string path)
         {
             throw new NotImplementedException();
         }

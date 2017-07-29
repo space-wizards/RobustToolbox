@@ -63,7 +63,7 @@ namespace SS14.Client.Resources
 
             _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
 
-            _resources.MountDefaultPack();
+            _resources.MountDefaultContentPack();
         }
 
         /// <summary>
@@ -691,7 +691,7 @@ namespace SS14.Client.Resources
             }
 
             // cache miss, lets try to find it in the VFS
-            if (_resources.TryFileRead(path, out MemoryStream stream))
+            if (_resources.TryContentFileRead(path, out MemoryStream stream))
             {
                 resource = new T();
                 resource.Load(this, path, stream);
@@ -735,13 +735,6 @@ namespace SS14.Client.Resources
         public bool PreCacheResource<T>(string path)
         {
             throw new NotImplementedException();
-
-            if (_resources.TryFileRead(path, out MemoryStream stream))
-            {
-                
-            }
-
-            return false;
         }
 
         /// <summary>

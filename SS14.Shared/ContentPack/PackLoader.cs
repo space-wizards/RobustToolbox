@@ -19,7 +19,7 @@ namespace SS14.Shared.ContentPack
             _password = password;
         }
 
-        public bool LoadPack()
+        public bool Mount()
         {
             Logger.Info($"[RES] Loading ContentPack: {_pack.FullName}...");
 
@@ -32,9 +32,9 @@ namespace SS14.Shared.ContentPack
             return true;
         }
 
-        public MemoryStream GetFile(string path)
+        public MemoryStream GetFile(string relPath)
         {
-            var entry = _zip.GetEntry(path);
+            var entry = _zip.GetEntry(relPath);
 
             if (entry == null)
                 return null;

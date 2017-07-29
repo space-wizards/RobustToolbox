@@ -123,6 +123,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVarFlags.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />
+    <Compile Include="ContentPack\DirLoader.cs" />
     <Compile Include="ContentPack\GameClient.cs" />
     <Compile Include="ContentPack\GameServer.cs" />
     <Compile Include="ContentPack\GameShared.cs" />

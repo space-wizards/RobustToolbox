@@ -11,7 +11,7 @@ namespace SS14.Client.ResourceManagment
 
         public Texture Texture { get; private set; }
 
-        public override void Load(ResourceCache cache, string path, MemoryStream stream)
+        public override void Load(ResourceCache cache, string path, Stream stream)
         {
             Texture = new Texture(stream);
         }

@@ -212,19 +212,21 @@ namespace SS14.Server
             // Set up the VFS
             _resources.Initialize();
 
+            _resources.MountContentDirectory(@"");
+
             //mount the engine content pack
             _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
 
             //mount the default game ContentPack defined in config
-            _resources.MountDefaultPack();
+            _resources.MountDefaultContentPack();
 
             // get the assembly from the file system
-            if(_resources.TryFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
+            if(_resources.TryContentFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
             {
                 Logger.Log("[SRV] Loading Server Content DLL");
 
                 // see if debug info is present
-                if (_resources.TryFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
+                if (_resources.TryContentFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
                 {
                     try
                     {

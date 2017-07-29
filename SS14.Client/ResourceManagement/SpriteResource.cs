@@ -9,7 +9,7 @@ namespace SS14.Client.ResourceManagement
     {
         public Sprite Sprite { get; private set; }
 
-        public override void Load(ResourceCache cache, string path, MemoryStream stream)
+        public override void Load(ResourceCache cache, string path, Stream stream)
         {
             if (!cache.TryGetResource(path, out TextureResource res))
             {

@@ -131,6 +131,7 @@
     <Compile Include="ContentPack\PackLoader.cs" />
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
+    <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />

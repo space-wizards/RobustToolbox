@@ -64,8 +64,6 @@ namespace SS14.Client.Resources
             _resources.MountContentDirectory("");
 
             _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
-
-            _resources.MountDefaultContentPack();
         }
 
         /// <summary>
@@ -73,6 +71,8 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadLocalResources()
         {
+            _resources.MountDefaultContentPack();
+
             LoadResourceZip();
             LoadAnimatedSprites();
         }

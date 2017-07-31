@@ -68,11 +68,12 @@ namespace SS14.Client
         {
             Logger.Debug("Initializing GameController.");
 
-            ShowSplashScreen();
-
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceCache.LoadBaseResources();
+            
+            ShowSplashScreen();
+
             _resourceCache.LoadLocalResources();
 
 
@@ -165,19 +166,17 @@ namespace SS14.Client
             const float NT_SIZE_Y = SIZE_Y / 10f;
             CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
 
-            var assembly = Assembly.GetExecutingAssembly();
-
-            var logoTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.logo.png"));
+            var logoTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/logo.png"));
             var logo = new SFML.Graphics.Sprite(logoTexture);
             var logoSize = logoTexture.Size;
             logo.Position = new Vector2f(SIZE_X / 2 - logoSize.X / 2, SIZE_Y / 2 - logoSize.Y / 2);
 
-            var backgroundTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.background.png"));
+            var backgroundTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/background.png"));
             var background = new SFML.Graphics.Sprite(backgroundTexture);
             var backgroundSize = backgroundTexture.Size;
             background.Scale = new Vector2f((float)SIZE_X / backgroundSize.X, (float)SIZE_Y / backgroundSize.Y);
 
-            var nanotrasenTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.nanotrasen.png"));
+            var nanotrasenTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/nanotrasen.png"));
             var nanotrasen = new SFML.Graphics.Sprite(nanotrasenTexture);
             var nanotrasenSize = nanotrasenTexture.Size;
             nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasenSize.X, NT_SIZE_Y / nanotrasenSize.Y);

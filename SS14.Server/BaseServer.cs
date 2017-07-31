@@ -20,7 +20,6 @@ using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
-using SS14.Shared.GameLoader;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;

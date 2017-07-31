@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SS14.Shared.GameLoader
+﻿namespace SS14.Shared.ContentPack
 {
+    /// <summary>
+    ///     Entry point for the Content server dll.
+    /// </summary>
     public abstract class GameServer : GameShared
     {
     }

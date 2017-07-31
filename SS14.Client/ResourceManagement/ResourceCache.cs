@@ -21,16 +21,12 @@ using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
-using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces;
 
 namespace SS14.Client.Resources
 {
     public class ResourceCache : IResourceCache, IDisposable
     {
-        private const int zipBufferSize = 4096;
-        private MemoryStream VertexShader, FragmentShader;
-
         [Dependency]
         private readonly IConfigurationManager _config;
 
@@ -39,6 +35,10 @@ namespace SS14.Client.Resources
 
         private readonly Dictionary<Type, Dictionary<string, BaseResource>> _cachedObjects = new Dictionary<Type, Dictionary<string, BaseResource>>();
         
+        #region OldCode
+
+        private const int zipBufferSize = 4096;
+        private MemoryStream VertexShader, FragmentShader;
         private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
         private readonly Dictionary<string, Texture> _textures = new Dictionary<string, Texture>();
         private readonly Dictionary<string, GLSLShader> _shaders = new Dictionary<string, GLSLShader>();
@@ -540,7 +540,7 @@ namespace SS14.Client.Resources
         }
 #endregion Resource Loading & Disposal
 
-#region Resource Retrieval
+        #region Resource Retrieval
 
         /// <summary>
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
@@ -645,9 +645,11 @@ namespace SS14.Client.Resources
             if (_textures.ContainsKey(key)) return _textures[key];
             else return _textures["nosprite"];
         }
-        
+
 
         #endregion Resource Retrieval
+
+        #endregion OldCode
 
         /// <summary>
         /// fetches the resource from the cache.

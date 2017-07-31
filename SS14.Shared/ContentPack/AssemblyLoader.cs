@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -23,6 +22,9 @@ namespace SS14.Shared.ContentPack
             Init = 1
         }
 
+        /// <summary>
+        ///     Loaded assemblies.
+        /// </summary>
         private static readonly List<ModInfo> _mods = new List<ModInfo>();
 
         /// <summary>
@@ -88,6 +90,9 @@ namespace SS14.Shared.ContentPack
                 }
         }
 
+        /// <summary>
+        ///     Holds info about a loaded assembly.
+        /// </summary>
         private class ModInfo
         {
             public ModInfo()

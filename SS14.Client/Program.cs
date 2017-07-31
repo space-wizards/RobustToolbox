@@ -41,7 +41,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SS14.Shared.ContentPack;
-using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;

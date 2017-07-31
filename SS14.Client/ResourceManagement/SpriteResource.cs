@@ -5,10 +5,17 @@ using SS14.Client.Resources;
 
 namespace SS14.Client.ResourceManagement
 {
-    class SpriteResource : BaseResource
+    /// <summary>
+    ///     Holds a SFML Sprite resource in the cache.
+    /// </summary>
+    public class SpriteResource : BaseResource
     {
+        /// <summary>
+        /// The contained SFML Sprite.
+        /// </summary>
         public Sprite Sprite { get; private set; }
 
+        /// <inheritdoc />
         public override void Load(ResourceCache cache, string path, Stream stream)
         {
             if (!cache.TryGetResource(path, out TextureResource res))
@@ -21,6 +28,7 @@ namespace SS14.Client.ResourceManagement
             Sprite = new Sprite(res.Texture);
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             Sprite.Dispose();

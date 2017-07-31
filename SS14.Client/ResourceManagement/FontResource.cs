@@ -4,17 +4,25 @@ using SS14.Client.Resources;
 
 namespace SS14.Client.ResourceManagement
 {
+    /// <summary>
+    ///     Holds a SFML Font resource in the cache.
+    /// </summary>
     public class FontResource : BaseResource
     {
         public override string Fallback => @"Fonts/bluehigh.ttf";
 
+        /// <summary>
+        ///     The contained font.
+        /// </summary>
         public Font Font { get; private set; }
 
+        /// <inheritdoc />
         public override void Load(ResourceCache cache, string path, Stream stream)
         {
             Font = new Font(stream);
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             Font.Dispose();

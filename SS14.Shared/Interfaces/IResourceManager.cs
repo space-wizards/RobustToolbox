@@ -2,6 +2,9 @@
 
 namespace SS14.Shared.Interfaces
 {
+    /// <summary>
+    ///     Virtual file system for all disk resources.
+    /// </summary>
     public interface IResourceManager
     {
         /// <summary>
@@ -27,9 +30,26 @@ namespace SS14.Shared.Interfaces
         /// <param name="path"></param>
         void MountContentDirectory(string path);
         
-
+        /// <summary>
+        /// Read a file from the mounted content roots.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         MemoryStream ContentFileRead(string path);
+
+        /// <summary>
+        /// Check if a file exists in any of the mounted content roots.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         bool ContentFileExists(string path);
+
+        /// <summary>
+        /// Try to read a file from the mounted content roots.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="fileStream"></param>
+        /// <returns></returns>
         bool TryContentFileRead(string path, out MemoryStream fileStream);
     }
 }

@@ -11,7 +11,7 @@ namespace SS14.Shared.ContentPack
     internal static class AssemblyTypeChecker
     {
         /// <summary>
-        /// Namespaces/Types that are explicitly allowed.
+        ///     Namespaces/Types that are explicitly allowed.
         /// </summary>
         private static readonly List<string> _typeWhiteList = new List<string>
         {
@@ -74,9 +74,10 @@ namespace SS14.Shared.ContentPack
         public static bool DumpTypes { get; set; }
 
         /// <summary>
-        ///     Check the assembly for any illegal types.
+        ///     Check the assembly for any illegal types. Any types not on the white list
+        ///     will cause the assembly to be rejected.
         /// </summary>
-        /// <param name="assembly"></param>
+        /// <param name="assembly">Assembly to load.</param>
         /// <returns></returns>
         public static bool CheckAssembly(byte[] assembly)
         {
@@ -114,9 +115,9 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <summary>
-        ///     Runs an enumerable of types through the white/black lists and prints results to log.
+        ///     Runs an enumeration of types through the white/black lists and prints results to log.
         /// </summary>
-        /// <param name="types"></param>
+        /// <param name="types">Types to check.</param>
         private static void AnalyzeTypes(IEnumerable<TypeReference> types)
         {
             foreach (var typeRef in types)

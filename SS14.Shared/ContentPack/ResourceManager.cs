@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using SS14.Shared.Configuration;
-using SS14.Shared.GameLoader;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
@@ -15,9 +14,6 @@ namespace SS14.Shared.ContentPack
     /// </summary>
     public class ResourceManager : IResourceManager
     {
-        /// <summary>
-        ///     Configuration Manager.
-        /// </summary>
         [Dependency] private readonly IConfigurationManager _config;
 
         private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
@@ -30,9 +26,7 @@ namespace SS14.Shared.ContentPack
             _config = IoCManager.Resolve<IConfigurationManager>();
         }
 
-        /// <summary>
-        ///     Sets the manager up so that the base game can run.
-        /// </summary>
+        /// <inheritdoc />
         public void Initialize()
         {
             _config.RegisterCVar("resource.pack", Path.Combine("..", "..", "Resources", "ResourcePack.zip"),
@@ -40,9 +34,7 @@ namespace SS14.Shared.ContentPack
             _config.RegisterCVar("resource.password", string.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
         }
 
-        /// <summary>
-        ///     Loads the default content pack from the configuration file into the VFS.
-        /// </summary>
+        /// <inheritdoc />
         public void MountDefaultContentPack()
         {
             //Assert server only
@@ -60,11 +52,7 @@ namespace SS14.Shared.ContentPack
             MountContentPack(zipPath, password);
         }
 
-        /// <summary>
-        ///     Loads a content pack from disk into the VFS.
-        /// </summary>
-        /// <param name="pack"></param>
-        /// <param name="password"></param>
+        /// <inheritdoc />
         public void MountContentPack(string pack, string password = null)
         {
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
@@ -87,10 +75,7 @@ namespace SS14.Shared.ContentPack
                 _contentRoots.Add(loader);
         }
 
-        /// <summary>
-        /// Mounts a directory into the VFS.
-        /// </summary>
-        /// <param name="path"></param>
+        /// <inheritdoc />
         public void MountContentDirectory(string path)
         {
             path = PathHelpers.ExecutableRelativeFile(path);
@@ -101,6 +86,7 @@ namespace SS14.Shared.ContentPack
                 _contentRoots.Add(loader);
         }
 
+        /// <inheritdoc />
         public MemoryStream ContentFileRead(string path)
         {
             // loop over each root trying to get the file
@@ -113,6 +99,7 @@ namespace SS14.Shared.ContentPack
             return null;
         }
 
+        /// <inheritdoc />
         public bool TryContentFileRead(string path, out MemoryStream fileStream)
         {
             var file = ContentFileRead(path);
@@ -125,6 +112,7 @@ namespace SS14.Shared.ContentPack
             return false;
         }
 
+        /// <inheritdoc />
         public bool ContentFileExists(string path)
         {
             throw new NotImplementedException();

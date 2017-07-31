@@ -56,7 +56,6 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -64,6 +63,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using SS14.Client.Resources;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
@@ -194,6 +194,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
 
             switch (Project)
             {

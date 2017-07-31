@@ -11,6 +11,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -39,7 +40,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>().Position.Y +
+                return Owner.GetComponent<ITransformComponent>().Position.Y +
                        (sprite.AABB.Height / 2);
             }
         }
@@ -106,10 +107,10 @@ namespace SS14.Client.GameObjects
             }*/
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -189,9 +190,9 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 new FloatRect(
-                    Owner.GetComponent<TransformComponent>().Position.X -
+                    Owner.GetComponent<ITransformComponent>().Position.X -
                     (bounds.Width / 2),
-                    Owner.GetComponent<TransformComponent>().Position.Y -
+                    Owner.GetComponent<ITransformComponent>().Position.Y -
                     (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
 
@@ -253,7 +254,7 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            var ownerPos = Owner.GetComponent<TransformComponent>().Position;
+            var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
 
             Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
@@ -285,7 +286,7 @@ namespace SS14.Client.GameObjects
             //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<TransformComponent>().Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
                                    new Vector2f(), aabb);
         }
 

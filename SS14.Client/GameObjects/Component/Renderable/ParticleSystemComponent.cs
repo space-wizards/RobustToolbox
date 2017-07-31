@@ -8,6 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Particles;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -56,13 +57,13 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            var transform = Owner.GetComponent<TransformComponent>();
+            var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove += OnMove;
         }
 
         public override void OnRemove()
         {
-            var transform = Owner.GetComponent<TransformComponent>();
+            var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove -= OnMove;
             base.OnRemove();
         }
@@ -79,7 +80,7 @@ namespace SS14.Client.GameObjects
         public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
         {
             Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>().Position);
+                    Owner.GetComponent<ITransformComponent>().Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
@@ -92,7 +93,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<TransformComponent>().Position.Y;
+                return Owner.GetComponent<ITransformComponent>().Position.Y;
                 //return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
                 //       (_particleSprite.Height / 2);
             }

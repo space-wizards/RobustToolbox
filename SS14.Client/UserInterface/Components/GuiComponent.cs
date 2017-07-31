@@ -12,7 +12,7 @@ namespace SS14.Client.UserInterface.Components
     public class GuiComponent : IGuiComponent
     {
         public object UserData;
-        private bool _recieveInput = true;
+        private bool _receiveInput = true;
         private bool _visible = true;
 
         public string name { get; protected set; }
@@ -25,10 +25,10 @@ namespace SS14.Client.UserInterface.Components
 
         public int ZDepth { get; set; }
 
-        public bool RecieveInput
+        public bool ReceiveInput
         {
-            get { return _recieveInput; }
-            set { _recieveInput = value; }
+            get { return _receiveInput; }
+            set { _receiveInput = value; }
         }
 
         public virtual bool Focus { get; set; }

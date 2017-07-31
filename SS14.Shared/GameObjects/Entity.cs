@@ -75,7 +75,7 @@ namespace SS14.Shared.GameObjects
             {
                 if (_components.Contains(component))
                     //Check to see if the component is still a part of this entity --- collection may change in process.
-                    component.RecieveMessage(sender, type, args);
+                    component.ReceiveMessage(sender, type, args);
             }
         }
 
@@ -97,12 +97,12 @@ namespace SS14.Shared.GameObjects
                 {
                     if (replies != null)
                     {
-                        ComponentReplyMessage reply = component.RecieveMessage(sender, type, args);
+                        ComponentReplyMessage reply = component.ReceiveMessage(sender, type, args);
                         if (reply.MessageType != ComponentMessageType.Empty)
                             replies.Add(reply);
                     }
                     else
-                        component.RecieveMessage(sender, type, args);
+                        component.ReceiveMessage(sender, type, args);
                 }
             }
         }

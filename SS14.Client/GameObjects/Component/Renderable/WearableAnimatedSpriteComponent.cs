@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -92,14 +93,14 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToRender.GetLocalBounds();
 
             Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<TransformComponent>().Position);
+                    Owner.GetComponent<ITransformComponent>().Position);
             spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));
 
-            if (Owner.GetComponent<TransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<TransformComponent>().Position.X > bottomRight.X
-                || Owner.GetComponent<TransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<TransformComponent>().Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<ITransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<ITransformComponent>().Position.X > bottomRight.X
+                || Owner.GetComponent<ITransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);

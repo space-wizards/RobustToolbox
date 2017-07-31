@@ -185,7 +185,7 @@ namespace SS14.Shared.IoC
             // We need to fetch the entire class hierarchy and SelectMany(),
             // Because BindingFlags.FlattenHierarchy doesn't read privates,
             // Even when you pass BindingFlags.NonPublic.
-            return GetClassHierarchy(t).SelectMany(p => p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance));
+            return GetClassHierarchy(t).SelectMany(p => p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public));
         }
 
         private static IEnumerable<Type> GetClassHierarchy(Type t)

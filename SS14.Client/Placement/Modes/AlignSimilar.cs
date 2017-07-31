@@ -7,6 +7,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System.Collections.Generic;
@@ -45,7 +46,7 @@ namespace SS14.Client.Placement.Modes
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>()
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             var manager = IoCManager.Resolve<IClientEntityManager>();
@@ -54,7 +55,7 @@ namespace SS14.Client.Placement.Modes
                 from IEntity entity in manager.GetEntitiesInRange(mouseWorld, snapToRange)
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
-                    (entity.GetComponent<TransformComponent>(
+                    (entity.GetComponent<ITransformComponent>(
                         ).Position - mouseWorld).LengthSquared()
                     ascending
                 select entity;
@@ -69,8 +70,8 @@ namespace SS14.Client.Placement.Modes
 
                     var closestRect =
                         new FloatRect(
-                            closestEntity.GetComponent<TransformComponent>().Position.X - closestBounds.Width / 2f,
-                            closestEntity.GetComponent<TransformComponent>().Position.Y - closestBounds.Height / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().Position.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
                     var sides = new List<Vector2f>

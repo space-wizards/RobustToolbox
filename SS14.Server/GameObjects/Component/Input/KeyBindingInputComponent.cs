@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace SS14.Server.GameObjects
 {
     /// <summary>
-    /// This class recieves keypresses from the attached client and forwards them to other components.
+    /// This class receives keypresses from the attached client and forwards them to other components.
     /// </summary>
     public class KeyBindingInputComponent : Component
     {

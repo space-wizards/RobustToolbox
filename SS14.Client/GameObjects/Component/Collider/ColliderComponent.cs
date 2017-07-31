@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                var trans = Owner.GetComponent<TransformComponent>();
+                var trans = Owner.GetComponent<ITransformComponent>();
                 if (trans == null)
                 {
                     return AABB;

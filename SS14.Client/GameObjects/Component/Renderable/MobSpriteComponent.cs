@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Renderable;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
@@ -25,10 +26,10 @@ namespace SS14.Client.GameObjects
             DrawDepth = DrawDepth.MobBase;
         }
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -138,7 +139,7 @@ namespace SS14.Client.GameObjects
                 return;
             }
 
-            var position = Owner.GetComponent<TransformComponent>().Position;
+            var position = Owner.GetComponent<ITransformComponent>().Position;
 
             if (position.X < topLeft.X
                 || position.X > bottomRight.X

@@ -1,9 +1,11 @@
 ﻿using SFML.System;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -16,11 +18,11 @@ namespace SS14.Client.GameObjects.EntitySystems
         public TransformSystem()
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(TransformComponent));
+            EntityQuery.AllSet.Add(typeof(ITransformComponent));
             EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
         }
 
-        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, TransformComponent transform)
+        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, ITransformComponent transform)
         {
             //Check for collision
             var collider = entity.GetComponent<ColliderComponent>();
@@ -68,7 +70,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             foreach (var entity in entities)
             {
                 //Get transform component
-                var transform = entity.GetComponent<TransformComponent>();
+                var transform = entity.GetComponent<IClientTransformComponent>();
                 //Check if the entity has a keyboard input mover component
                 bool isLocallyControlled = entity.HasComponent<PlayerInputMoverComponent>()
                     && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
@@ -87,14 +89,14 @@ namespace SS14.Client.GameObjects.EntitySystems
                     currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
                     // Fall back to setting the position to the "To" state
-                    newPosition = new Vector2f(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    newPosition = transform.lerpStateTo.Position;
                 }
                 else //OTHERWISE
                 {
                     //Interpolate
 
-                    var p1 = new Vector2f(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
-                    var p2 = new Vector2f(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    var p1 = new Vector2f(transform.lerpStateFrom.Position.X, transform.lerpStateTo.Position.Y);
+                    var p2 = new Vector2f(transform.lerpStateTo.Position.X, transform.lerpStateTo.Position.Y);
                     var t1 = transform.lerpStateFrom.ReceivedTime;
                     var t2 = transform.lerpStateTo.ReceivedTime;
 
@@ -113,7 +115,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position +
-                    if (entity.TryGetComponent<VelocityComponent>(out var velocityComponent))
+                    if (entity.TryGetComponent<IVelocityComponent>(out var velocityComponent))
                     {
                         var movement = velocityComponent.Velocity * frametime;
                         var playerPosition = movement + transform.Position;
@@ -152,7 +154,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     }
                     if (doTranslate)
                     {
-                        transform.TranslateTo(newPosition);
+                        transform.Position = newPosition;
                         if (isLocallyControlled)
                             entity.GetComponent<PlayerInputMoverComponent>().SendPositionUpdate(newPosition);
                     }

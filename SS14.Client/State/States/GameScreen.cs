@@ -9,6 +9,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
@@ -22,6 +23,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Maths;
@@ -345,7 +347,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -480,7 +482,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position;
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -648,7 +650,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position,
+                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position,
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -656,52 +658,52 @@ namespace SS14.Client.State.States
             var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
-                var clickable = entity.GetComponent<ClickableComponent>();
-                if (clickable == null) continue;
-                if (clickable.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                if (entity.TryGetComponent<IClientClickableComponent>(out var component)
+                 && component.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                {
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
+                }
             }
 
-            if (clickedEntities.Any())
+            if (!clickedEntities.Any())
             {
-                //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
-                //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
-                //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
-                //                  select cd.Clicked).Last();
+                return;
+            }
+            //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+            //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
+            //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
+            //                  select cd.Clicked).Last();
 
-                IEntity entToClick = (from cd in clickedEntities
-                                      orderby cd.Drawdepth ascending,
-                                          cd.Clicked.GetComponent<TransformComponent>().Position
-                                          .Y ascending
-                                      select cd.Clicked).Last();
+            IEntity entToClick = (from cd in clickedEntities
+                                    orderby cd.Drawdepth ascending,
+                                        cd.Clicked.GetComponent<ITransformComponent>().Position
+                                        .Y ascending
+                                    select cd.Clicked).Last();
 
-                if (PlacementManager.Eraser && PlacementManager.IsActive)
-                {
-                    PlacementManager.HandleDeletion(entToClick);
+            if (PlacementManager.Eraser && PlacementManager.IsActive)
+            {
+                PlacementManager.HandleDeletion(entToClick);
+                return;
+            }
+
+            var clickable = entToClick.GetComponent<IClientClickableComponent>();
+            switch (e.Button)
+            {
+                case Mouse.Button.Left:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Left);
+                    break;
+                case Mouse.Button.Right:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Right);
+                    break;
+                case Mouse.Button.Middle:
+                    UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
+                    UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
+                                                                            entToClick));
                     return;
-                }
-
-                ClickableComponent c;
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        c = entToClick.GetComponent<ClickableComponent>();
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
-                        break;
-                    case Mouse.Button.Right:
-                        c = entToClick.GetComponent<ClickableComponent>();
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
-                        break;
-                    case Mouse.Button.Middle:
-                        UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
-                                                                             entToClick));
-                        break;
-                }
             }
 
             #endregion Object clicking
@@ -874,7 +876,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// HandleStateUpdate
         ///
-        /// Recieves a state update message and unpacks the delicious GameStateDelta hidden inside
+        /// Receives a state update message and unpacks the delicious GameStateDelta hidden inside
         /// Then it applies the gamestatedelta to a past state to form: a full game state!
         /// </summary>
         /// <param name="message">incoming state update message</param>
@@ -948,7 +950,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// SendStateAck
         ///
-        /// Acknowledge a game state being recieved
+        /// Acknowledge a game state being received
         /// </summary>
         /// <param name="sequence">State sequence number</param>
         private void SendStateAck(uint sequence)
@@ -1192,7 +1194,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>().Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position

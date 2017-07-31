@@ -2,6 +2,7 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects
@@ -12,10 +13,10 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.BASIC_MOVER;
         public override bool NetworkSynchronizeExistence => true;
 
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this)
                 return ComponentReplyMessage.Empty;
@@ -31,7 +32,7 @@ namespace SS14.Server.GameObjects
 
         public void Translate(float x, float y)
         {
-            Owner.GetComponent<TransformComponent>().Position = new Vector2f(x, y);
+            Owner.GetComponent<ITransformComponent>().Position = new Vector2f(x, y);
         }
 
     }

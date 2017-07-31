@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -246,7 +247,7 @@ namespace SS14.Server.Chat
         /// </summary>
         /// <param name="text">Text content.</param>
         /// <param name="name">Player name that sent the chat text.</param>
-        /// <param name="channel">Channel message was recieved on.</param>
+        /// <param name="channel">Channel message was received on.</param>
         /// <param name="client">Client that sent the command.</param>
         private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, INetChannel client)
         {

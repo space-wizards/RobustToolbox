@@ -8,6 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.Components;
 using SS14.Shared.GameObjects.Components.Collidable;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
@@ -39,7 +40,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                if (Owner.TryGetComponent<TransformComponent>(out var ownerTransform))
+                if (Owner.TryGetComponent<ITransformComponent>(out var ownerTransform))
                 {
                     return
                         new FloatRect(
@@ -118,10 +119,10 @@ namespace SS14.Client.GameObjects
         /// <param name="type"></param>
         /// <param name="reply"></param>
         /// <param name="list"></param>
-        public override ComponentReplyMessage RecieveMessage(object sender, ComponentMessageType type,
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                              params object[] list)
         {
-            ComponentReplyMessage reply = base.RecieveMessage(sender, type, list);
+            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;

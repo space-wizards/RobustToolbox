@@ -45,7 +45,7 @@ namespace SS14.Shared.ContentPack
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
             {
-                Logger.Log("[RES] No default ContentPack to load in configuration.");
+                Logger.Warning("[RES] No default ContentPack to load in configuration.");
                 return;
             }
 

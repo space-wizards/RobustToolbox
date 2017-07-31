@@ -224,7 +224,7 @@ namespace SS14.Server
             // get the assembly from the file system
             if(_resources.TryContentFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
             {
-                Logger.Log("[SRV] Loading Server Content DLL");
+                Logger.Info("[SRV] Loading Server Content DLL");
 
                 // see if debug info is present
                 if (_resources.TryContentFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
@@ -236,7 +236,7 @@ namespace SS14.Server
                     }
                     catch (Exception e)
                     {
-                        Logger.Log($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
                     }
                 }
                 else
@@ -248,9 +248,13 @@ namespace SS14.Server
                     }
                     catch (Exception e)
                     {
-                        Logger.Log($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
                     }
                 }
+            }
+            else
+            {
+                Logger.Warning("[ENG] Could not find Client Content DLL");
             }
 
             // because of 'reasons' this has to be called after the last assembly is loaded
@@ -300,7 +304,7 @@ namespace SS14.Server
                     // announce we are falling behind
                     if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
                     {
-                        Logger.Log("[SRV] MainLoop: Cannot keep up!");
+                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
                         _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }

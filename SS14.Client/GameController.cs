@@ -18,12 +18,13 @@ using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
@@ -55,6 +56,8 @@ namespace SS14.Client
         readonly private ISS14Serializer _serializer;
         [Dependency]
         private readonly IGameTiming _time;
+        [Dependency]
+        private readonly IResourceManager _resourceManager;
 
         #endregion Fields
 
@@ -71,6 +74,43 @@ namespace SS14.Client
 
             _resourceCache.LoadBaseResources();
             _resourceCache.LoadLocalResources();
+
+
+            // get the assembly from the file system
+            if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.dll", out MemoryStream gameDll))
+            {
+                Logger.Info("[ENG] Loading Client Content DLL");
+
+                // see if debug info is present
+                if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning("[ENG] Could not find Client Content DLL");
+            }
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();

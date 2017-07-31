@@ -61,6 +61,8 @@ namespace SS14.Client.Resources
         {
             _resources.Initialize();
 
+            _resources.MountContentDirectory("");
+
             _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
 
             _resources.MountDefaultContentPack();

@@ -73,25 +73,21 @@ namespace SS14.Client.UserInterface.Components
             //Create a new one.
             Dispose();
         }
+
+        override protected void CloseButtonClicked(ImageButton sender)
+        {
+            ToggleVisible();
+        }
+
         public override bool KeyDown(KeyEventArgs e)
         {
             if (e.Code != Keyboard.Key.Escape)
             {
                 return false;
             }
- 
-            if (!Focus)
-            {
-                SetVisible(true);
-                Focus = true;
-                return true;
-            }
-            else
-            {
-                SetVisible(false);
-                Focus = false;
-                return true;
-            }
+            
+            ToggleVisible();
+            return true;
         }
     }
 }

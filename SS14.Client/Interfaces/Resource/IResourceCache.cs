@@ -26,5 +26,8 @@ namespace SS14.Client.Interfaces.Resource
 
         bool TryGetResource<T>(string path, out T resource)
             where T : BaseResource, new();
+
+        void CacheResource<T>(string path, T resource)
+            where T : BaseResource, new();
     }
 }

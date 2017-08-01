@@ -66,12 +66,12 @@ namespace SS14.Shared.ContentPack
         /// <summary>
         ///     Completely disables type checking, allowing everything.
         /// </summary>
-        public static bool DisableTypeCheck { get; set; }
+        public static bool DisableTypeCheck { get; set; } = false;
 
         /// <summary>
         ///     Dump the assembly types into the log.
         /// </summary>
-        public static bool DumpTypes { get; set; }
+        public static bool DumpTypes { get; set; } = true;
 
         /// <summary>
         ///     Check the assembly for any illegal types. Any types not on the white list

@@ -18,14 +18,6 @@ namespace SS14.Shared.ContentPack
 
         private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
 
-        /// <summary>
-        ///     Default constructor.
-        /// </summary>
-        public ResourceManager()
-        {
-            _config = IoCManager.Resolve<IConfigurationManager>();
-        }
-
         /// <inheritdoc />
         public void Initialize()
         {

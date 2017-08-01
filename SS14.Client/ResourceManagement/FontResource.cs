@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using SFML.Graphics;
-using SS14.Client.Resources;
+using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -17,7 +17,7 @@ namespace SS14.Client.ResourceManagement
         public Font Font { get; private set; }
 
         /// <inheritdoc />
-        public override void Load(ResourceCache cache, string path, Stream stream)
+        public override void Load(IResourceCache cache, string path, Stream stream)
         {
             Font = new Font(stream);
         }

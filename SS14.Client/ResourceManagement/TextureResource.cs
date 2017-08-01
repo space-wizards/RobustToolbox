@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using SFML.Graphics;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
-using SS14.Client.Resources;
 
 namespace SS14.Client.ResourceManagment
 {
@@ -16,7 +16,7 @@ namespace SS14.Client.ResourceManagment
         public Texture Texture { get; private set; }
 
         /// <inheritdoc />
-        public override void Load(ResourceCache cache, string path, Stream stream)
+        public override void Load(IResourceCache cache, string path, Stream stream)
         {
             Texture = new Texture(stream);
         }

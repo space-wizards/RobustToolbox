@@ -73,6 +73,9 @@
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
     </Reference>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -222,6 +225,7 @@
     <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
+    <Compile Include="Utility\SfmlCompatibility.cs" />
     <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
@@ -303,6 +307,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

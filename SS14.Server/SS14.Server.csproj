@@ -81,6 +81,9 @@
       <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-system-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
@@ -151,6 +154,7 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Signals.cs" />
+    <None Include="OpenTK.dll.config" />
     <None Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

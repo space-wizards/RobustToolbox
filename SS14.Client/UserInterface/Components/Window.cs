@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics.VertexData;
@@ -37,7 +37,7 @@ namespace SS14.Client.UserInterface.Components
             Update(0);
         }
 
-        private void CloseButtonClicked(ImageButton sender)
+        virtual protected void CloseButtonClicked(ImageButton sender)
         {
             Dispose();
         }

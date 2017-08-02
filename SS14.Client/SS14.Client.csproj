@@ -202,7 +202,9 @@
     <None Include="client_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="OpenTK.dll.config" />
+    <None Include="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <Compile Include="GameObjects\AnimatedSprite.cs" />
     <Compile Include="GameObjects\Component\ClickableComponent.cs" />

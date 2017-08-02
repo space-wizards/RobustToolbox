@@ -154,7 +154,9 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Signals.cs" />
-    <None Include="OpenTK.dll.config" />
+    <None Include="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

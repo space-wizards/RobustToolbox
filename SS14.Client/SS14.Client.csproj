@@ -90,6 +90,9 @@
       <HintPath>..\packages\Microsoft.Diagnostics.Runtime.0.8.31-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
       <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
@@ -197,6 +200,9 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="client_config.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />

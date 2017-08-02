@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.Components
         #endregion
 
         protected readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
-        protected readonly IResourceManager _resourceManager;
+        protected readonly IResourceCache _resourceCache;
         protected readonly SimpleImage _selectionGlow;
 
         public int AdditionalColumns = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
@@ -48,7 +48,7 @@ namespace SS14.Client.UserInterface.Components
 
         public Showcase()
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
 
             _buttonLeft = new ImageButton();
             _buttonLeft.Clicked += _buttonLeft_Clicked;

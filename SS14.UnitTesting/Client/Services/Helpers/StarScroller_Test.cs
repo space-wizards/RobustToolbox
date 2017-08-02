@@ -40,7 +40,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)
                 renderimage.Clear();       //Clear
-                base.GetResourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
+                base.GetResourceCache.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
 
                 renderimage.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 

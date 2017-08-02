@@ -11,8 +11,8 @@ namespace SS14.Client.UserInterface.Components
     {
         private Stopwatch stopwatch;
 
-        public Timer_Bar(Vector2i size, TimeSpan countdownTime, IResourceManager resourceManager)
-            : base(size, resourceManager)
+        public Timer_Bar(Vector2i size, TimeSpan countdownTime, IResourceCache resourceCache)
+            : base(size, resourceCache)
         {
             stopwatch = new Stopwatch();
             max = (float) Math.Round(countdownTime.TotalSeconds);

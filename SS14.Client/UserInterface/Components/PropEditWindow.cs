@@ -27,13 +27,13 @@ namespace SS14.Client.UserInterface.Components
         private Object assigned;
         private FieldInfo[] fields;
 
-        public PropEditWindow(Vector2i size, IResourceManager resourceManager, Object obj)
-            : base("Object Properties : " + obj, size, resourceManager)
+        public PropEditWindow(Vector2i size, IResourceCache resourceCache, Object obj)
+            : base("Object Properties : " + obj, size, resourceCache)
         {
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
-            search = new Textbox(150, resourceManager);
+            search = new Textbox(150, resourceCache);
             search.Position = new Vector2i(5, 5);
             search.OnSubmit += search_OnSubmit;
             search.ClearOnSubmit = true;
@@ -75,7 +75,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (o is String || o is string)
             {
-                var editStr = new Textbox(100, _resourceManager);
+                var editStr = new Textbox(100, _resourceCache);
                 editStr.ClearOnSubmit = false;
                 editStr.UserData = field;
                 editStr.Text = ((string) o);
@@ -84,7 +84,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is Enum)
             {
-                var editEnum = new Listbox(100, 100, _resourceManager, Enum.GetNames(o.GetType()).ToList());
+                var editEnum = new Listbox(100, 100, _resourceCache, Enum.GetNames(o.GetType()).ToList());
                 editEnum.UserData = field;
                 editEnum.SelectItem(o.ToString());
                 editEnum.ItemSelected += editEnum_ItemSelected;
@@ -93,7 +93,7 @@ namespace SS14.Client.UserInterface.Components
             else if (o is float || o is int || o is Int16 || o is Int32 || o is Int64 || o is double || o is Double ||
                      o is decimal || o is Decimal || o is Single)
             {
-                var editNum = new Textbox(100, _resourceManager);
+                var editNum = new Textbox(100, _resourceCache);
                 editNum.ClearOnSubmit = false;
                 editNum.UserData = field;
                 editNum.Text = o.ToString();
@@ -102,7 +102,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is bool || o is Boolean)
             {
-                var editBool = new Checkbox(_resourceManager);
+                var editBool = new Checkbox(_resourceCache);
                 editBool.UserData = field;
                 editBool.Value = ((Boolean) o);
                 editBool.ValueChanged += editBool_ValueChanged;
@@ -176,7 +176,7 @@ namespace SS14.Client.UserInterface.Components
                 {
                     newEntry.VarName = field.Name;
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   _resourceManager);
+                                                   _resourceCache);
                     newEntry.CanEdit = false;
                     newEntry.IsListItem = false;
 
@@ -202,7 +202,7 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.IsListItem = true;
                         newEntry.ListItem = item;
 
-                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceManager);
+                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceCache);
                         newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
                         newEntry.LabelName.BorderColor = new SFML.Graphics.Color(0, 191, 255);
@@ -227,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
                     newEntry.IsListItem = false;
 
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   _resourceManager);
+                                                   _resourceCache);
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = newEntry.CanEdit ? new SFML.Graphics.Color(127, 255, 0) : new SFML.Graphics.Color(205, 92, 92);

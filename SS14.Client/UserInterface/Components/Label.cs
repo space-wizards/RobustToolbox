@@ -1,10 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using System;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -16,7 +17,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         public Color BackgroundColor = new Color(128, 128, 128);
         public Color BorderColor = Color.Black;
         public float BorderWidth = 2f;
@@ -26,17 +27,17 @@ namespace SS14.Client.UserInterface.Components
         public TextSprite Text;
 
 
-        public Label(string text, string font, uint size, IResourceManager resourceManager)
+        public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font), size) { Color = Color.Black };
+            _resourceCache = resourceCache;
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color.Black };
             Update(0);
         }
 
-        public Label(string text, string font, IResourceManager resourceManager)
+        public Label(string text, string font, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            Text = new TextSprite("Label" + text, text, _resourceManager.GetFont(font)) {Color = Color.Black};
+            _resourceCache = resourceCache;
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color.Black};
             Update(0);
         }
 

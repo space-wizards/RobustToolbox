@@ -14,13 +14,13 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
         public override bool NeedsResourcePack => true;
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IResourceManager resources;
+        private IResourceCache resources;
         private RenderImage test;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            resources = base.GetResourceManager;
+            resources = base.GetResourceCache;
 
             base.InitializeCluwneLib();
 

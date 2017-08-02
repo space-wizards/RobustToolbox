@@ -23,7 +23,7 @@ namespace SS14.Client.GameObjects
 
         public void SetIcon(string name)
         {
-            Icon = IoCManager.Resolve<IResourceManager>().GetSprite(name);
+            Icon = IoCManager.Resolve<IResourceCache>().GetSprite(name);
         }
     }
 }

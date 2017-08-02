@@ -18,11 +18,13 @@ using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
@@ -45,7 +47,7 @@ namespace SS14.Client
         [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
-        readonly private IResourceManager _resourceManager;
+        readonly private IResourceCache _resourceCache;
         [Dependency]
         readonly private IEntityNetworkManager _entityNetworkManager;
         [Dependency]
@@ -54,6 +56,8 @@ namespace SS14.Client
         readonly private ISS14Serializer _serializer;
         [Dependency]
         private readonly IGameTiming _time;
+        [Dependency]
+        private readonly IResourceManager _resourceManager;
 
         #endregion Fields
 
@@ -64,12 +68,50 @@ namespace SS14.Client
         {
             Logger.Debug("Initializing GameController.");
 
-            ShowSplashScreen();
-
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            _resourceManager.LoadBaseResources();
-            _resourceManager.LoadLocalResources();
+            _resourceCache.LoadBaseResources();
+            
+            ShowSplashScreen();
+
+            _resourceCache.LoadLocalResources();
+
+
+            // get the assembly from the file system
+            if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.dll", out MemoryStream gameDll))
+            {
+                Logger.Info("[ENG] Loading Client Content DLL");
+
+                // see if debug info is present
+                if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning("[ENG] Could not find Client Content DLL");
+            }
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
@@ -124,19 +166,17 @@ namespace SS14.Client
             const float NT_SIZE_Y = SIZE_Y / 10f;
             CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
 
-            var assembly = Assembly.GetExecutingAssembly();
-
-            var logoTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.logo.png"));
+            var logoTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/logo.png"));
             var logo = new SFML.Graphics.Sprite(logoTexture);
             var logoSize = logoTexture.Size;
             logo.Position = new Vector2f(SIZE_X / 2 - logoSize.X / 2, SIZE_Y / 2 - logoSize.Y / 2);
 
-            var backgroundTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.background.png"));
+            var backgroundTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/background.png"));
             var background = new SFML.Graphics.Sprite(backgroundTexture);
             var backgroundSize = backgroundTexture.Size;
             background.Scale = new Vector2f((float)SIZE_X / backgroundSize.X, (float)SIZE_Y / backgroundSize.Y);
 
-            var nanotrasenTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.nanotrasen.png"));
+            var nanotrasenTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/nanotrasen.png"));
             var nanotrasen = new SFML.Graphics.Sprite(nanotrasenTexture);
             var nanotrasenSize = nanotrasenTexture.Size;
             nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasenSize.X, NT_SIZE_Y / nanotrasenSize.Y);

@@ -11,9 +11,9 @@ namespace SS14.Client.Map
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public sealed class SpaceTileDefinition : ITileDefinition
     {
-        public void InitializeResources(IResourceManager resourceManager)
+        public void InitializeResources(IResourceCache resourceCache)
         {
-            tileSprite = resourceManager.GetSprite("space_texture");
+            tileSprite = resourceCache.GetSprite("space_texture");
         }
 
         public ushort TileId { get { return 0; } }
@@ -74,9 +74,9 @@ namespace SS14.Client.Map
             IsWall = false;
         }
 
-        public override void InitializeResources(IResourceManager resourceManager)
+        public override void InitializeResources(IResourceCache resourceCache)
         {
-            tileSprite = resourceManager.GetSprite("floor_texture");
+            tileSprite = resourceCache.GetSprite("floor_texture");
         }
     }
 
@@ -103,9 +103,9 @@ namespace SS14.Client.Map
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 
-        public override void InitializeResources(IResourceManager resourceManager)
+        public override void InitializeResources(IResourceCache resourceCache)
         {
-            tileSprite = resourceManager.GetSprite("wall_texture");
+            tileSprite = resourceCache.GetSprite("wall_texture");
             var bounds = tileSprite.GetLocalBounds();
             shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
         }

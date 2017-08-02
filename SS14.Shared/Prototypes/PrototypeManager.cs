@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Runtime.Serialization;
+using SS14.Shared.ContentPack;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Prototypes

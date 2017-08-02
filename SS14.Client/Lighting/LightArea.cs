@@ -59,7 +59,7 @@ namespace SS14.Client.Lighting
             RenderTarget = new RenderImage("LightArea"+ size, (uint)baseSize, (uint)baseSize);
 
 
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+            Mask = IoCManager.Resolve<IResourceCache>().GetSprite("whitemask");
         }
 
         public LightArea(ShadowmapSize shadowmapSize)
@@ -69,7 +69,7 @@ namespace SS14.Client.Lighting
             RenderTarget = new RenderImage("LightArea"+ shadowmapSize,(uint)baseSize, (uint)baseSize);
 
 
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite("whitemask");
+            Mask = IoCManager.Resolve<IResourceCache>().GetSprite("whitemask");
          
         }
 
@@ -95,7 +95,7 @@ namespace SS14.Client.Lighting
 
         public void SetMask(string mask)
         {
-            Mask = IoCManager.Resolve<IResourceManager>().GetSprite(mask);
+            Mask = IoCManager.Resolve<IResourceCache>().GetSprite(mask);
         }
 
         #endregion

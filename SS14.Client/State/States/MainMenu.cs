@@ -45,7 +45,7 @@ namespace SS14.Client.State.States
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background = ResourceManager.GetSprite("coderart");
+            _background = ResourceCache.GetSprite("coderart");
 
 
             _btnConnect = new ImageButton
@@ -69,14 +69,14 @@ namespace SS14.Client.State.States
                             };
             _btnExit.Clicked += _buttExit_Clicked;
 
-            _txtConnect = new Textbox(100, ResourceManager) {Text = ConfigurationManager.GetCVar<string>("net.server")};
+            _txtConnect = new Textbox(100, ResourceCache) {Text = ConfigurationManager.GetCVar<string>("net.server")};
             _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
-            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceManager);
+            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
             _lblVersion.Text.Color = new SFML.Graphics.Color(245, 245, 245);
 
             _lblVersion.Position = new Vector2i(_Width -  _lblVersion.ClientArea.Width  - 3,
@@ -214,7 +214,7 @@ namespace SS14.Client.State.States
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
             /*
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "coderart")
+            DecoFloats.Add(new FloatingDecoration(ResourceCache, "coderart")
                                {
                                    BounceRotate = false,
                                    BounceRotateAngle = 10,
@@ -225,7 +225,7 @@ namespace SS14.Client.State.States
                                });
 */
             // DrawSprite.Axis = new Vector2(DrawSprite.Width / 2f, DrawSprite.Height / 2f);
-/*            var clouds = new FloatingDecoration(ResourceManager, "mainbg_clouds")
+/*            var clouds = new FloatingDecoration(ResourceCache, "mainbg_clouds")
                              {
                                  BounceRotate = true,
                                  BounceRotateAngle = 10,
@@ -239,7 +239,7 @@ namespace SS14.Client.State.States
 
            /* DecoFloats.Add(clouds);
 
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_dude")
+            DecoFloats.Add(new FloatingDecoration(ResourceCache, "floating_dude")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 10,
@@ -249,7 +249,7 @@ namespace SS14.Client.State.States
                                    RotationSpeed = 0.5f
                                });*/
 
-          /*  DecoFloats.Add(new FloatingDecoration(ResourceManager, "floating_oxy")
+          /*  DecoFloats.Add(new FloatingDecoration(ResourceCache, "floating_oxy")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
@@ -260,7 +260,7 @@ namespace SS14.Client.State.States
                                });*/
 
 /*
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_mid_back")
+            DecoFloats.Add(new FloatingDecoration(ResourceCache, "debris_mid_back")
                                {
                                    BounceRotate = false,
                                    ParallaxScale = 0.003f,
@@ -270,7 +270,7 @@ namespace SS14.Client.State.States
                                });
 */
 /*
-            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_back")
+            DecoFloats.Add(new FloatingDecoration(ResourceCache, "debris_far_right_back")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 20,
@@ -280,7 +280,7 @@ namespace SS14.Client.State.States
                                    RotationSpeed = 0.1f
                                });*/
 
-/*            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_right_fore")
+/*            DecoFloats.Add(new FloatingDecoration(ResourceCache, "debris_far_right_fore")
                                {
                                    BounceRotate = true,
                                    BounceRotateAngle = 15,
@@ -290,7 +290,7 @@ namespace SS14.Client.State.States
                                    RotationSpeed = -0.36f
                                });*/
 
-/*            DecoFloats.Add(new FloatingDecoration(ResourceManager, "debris_far_left_fore")
+/*            DecoFloats.Add(new FloatingDecoration(ResourceCache, "debris_far_left_fore")
                                {
                                    BounceRotate = false,
                                    ParallaxScale = 0.019f,

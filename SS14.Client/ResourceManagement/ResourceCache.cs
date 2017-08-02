@@ -10,42 +10,47 @@ using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SS14.Client.Graphics.TexHelpers;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 
 namespace SS14.Client.Resources
 {
-    public class ResourceManager : IResourceManager
+    public class ResourceCache : IResourceCache, IDisposable
     {
-        private const int zipBufferSize = 4096;
-        private MemoryStream VertexShader, FragmentShader;
+        [Dependency]
+        private readonly IConfigurationManager _config;
 
         [Dependency]
-        private readonly IConfigurationManager _configurationManager;
-        private readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
+        private readonly IResourceManager _resources;
+
+        private readonly Dictionary<Type, Dictionary<string, BaseResource>> _cachedObjects = new Dictionary<Type, Dictionary<string, BaseResource>>();
+        
+        #region OldCode
+
+        private const int zipBufferSize = 4096;
+        private MemoryStream VertexShader, FragmentShader;
         private readonly Dictionary<string, ParticleSettings> _particles = new Dictionary<string, ParticleSettings>();
         private readonly Dictionary<string, Texture> _textures = new Dictionary<string, Texture>();
         private readonly Dictionary<string, GLSLShader> _shaders = new Dictionary<string, GLSLShader>();
-        private readonly Dictionary<string, TechniqueList> _TechniqueList = new Dictionary<string, TechniqueList>();
+        private readonly Dictionary<string, TechniqueList> _techniqueList = new Dictionary<string, TechniqueList>();
         private readonly Dictionary<string, SpriteInfo> _spriteInfos = new Dictionary<string, SpriteInfo>();
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>();
         private readonly Dictionary<string, AnimationCollection> _animationCollections = new Dictionary<string, AnimationCollection>();
         private readonly Dictionary<string, AnimatedSprite> _animatedSprites = new Dictionary<string, AnimatedSprite>();
-        private readonly List<string> supportedImageExtensions = new List<string> { ".png" };
+        private readonly List<string> _supportedImageExtensions = new List<string> { ".png" };
 
         private readonly Dictionary<Texture, string> _textureToKey = new Dictionary<Texture, string>();
         public Dictionary<Texture, string> TextureToKey => _textureToKey;
-
-        public int done = 0;
 
         #region Resource Loading & Disposal
 
@@ -54,29 +59,11 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadBaseResources()
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
+            _resources.Initialize();
 
-            using (Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.bluehigh.ttf"))
-            {
-                if (stream != null)
-                {
-                    // SFML font does not cache the manifest stream contents, we have to do it.
-                    var memStream = new MemoryStream();
-                    stream.CopyTo(memStream);
+            _resources.MountContentDirectory("");
 
-                    _fonts.Add("base_font", new Font(memStream));
-                }
-            }
-
-            using (Stream stream = assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.noSprite.png"))
-            {
-                if (stream != null)
-                {
-                    Texture nospriteimage = new Texture(stream);
-                    _textures.Add("nosprite", nospriteimage);
-                    _sprites.Add("nosprite", new Sprite(nospriteimage));
-                }
-            }
+            _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
         }
 
         /// <summary>
@@ -84,6 +71,8 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadLocalResources()
         {
+            _resources.MountDefaultContentPack();
+
             LoadResourceZip();
             LoadAnimatedSprites();
         }
@@ -93,13 +82,13 @@ namespace SS14.Client.Resources
         /// </summary>
         public void LoadResourceZip(string path = null, string pw = null)
         {
-            var cfgMgr = _configurationManager;
+            var cfgMgr = _config;
 
             cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVarFlags.ARCHIVE);
             cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
-            string zipPath = path ?? _configurationManager.GetCVar<string>("res.pack");
-            string password = pw ?? _configurationManager.GetCVar<string>("res.password");
+            string zipPath = path ?? _config.GetCVar<string>("res.pack");
+            string password = pw ?? _config.GetCVar<string>("res.password");
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
@@ -117,11 +106,10 @@ namespace SS14.Client.Resources
 
             if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
-            #region Sort Resource pack
-            var directories = from ZipEntry a in zipFile
-                              where a.IsDirectory
-                              orderby a.Name.ToLowerInvariant() == "textures" descending
-                              select a;
+#region Sort Resource pack
+            var directories = zipFile.Cast<ZipEntry>()
+                .Where(a => a.IsDirectory)
+                .OrderByDescending(a => a.Name.ToLowerInvariant() == "textures");
 
             Dictionary<string, List<ZipEntry>> sorted = new Dictionary<string, List<ZipEntry>>();
 
@@ -138,11 +126,11 @@ namespace SS14.Client.Resources
             }
 
             sorted = sorted.OrderByDescending(x => x.Key == "textures/").ToDictionary(x => x.Key, x => x.Value); //Textures first.
-            #endregion Sort Resource pack
+#endregion Sort Resource pack
 
             Logger.Log("Loading resources...");
 
-            #region Load Resources
+#region Load Resources
             foreach (KeyValuePair<string, List<ZipEntry>> current in sorted)
             {
                 switch (current.Key)
@@ -155,7 +143,7 @@ namespace SS14.Client.Resources
                         {
                             ZipEntry texture = current.Value[i];
 
-                            if (supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
+                            if (_supportedImageExtensions.Contains(Path.GetExtension(texture.Name).ToLowerInvariant()))
                             {
                                 taskArray[i] = Task<Texture>.Factory.StartNew(() =>
                                 {
@@ -186,7 +174,7 @@ namespace SS14.Client.Resources
                             }
                         }
                         break;
-
+#if _DELME
                     case ("fonts/"):
                         Logger.Log("Loading fonts...");
                         foreach (ZipEntry font in current.Value)
@@ -200,7 +188,7 @@ namespace SS14.Client.Resources
                             }
                         }
                         break;
-
+#endif
                     case ("particlesystems/"):
                         Logger.Log("Loading particlesystems...");
                         foreach (ZipEntry particles in current.Value)
@@ -229,16 +217,16 @@ namespace SS14.Client.Resources
                                 {
                                     string FolderName = shader.Name.Substring(FirstIndex + 1, LastIndex - FirstIndex - 1);
 
-                                    if (!_TechniqueList.Keys.Contains(FolderName))
+                                    if (!_techniqueList.Keys.Contains(FolderName))
                                     {
                                         List = new TechniqueList();
                                         List.Name = FolderName;
-                                        _TechniqueList.Add(FolderName, List);
+                                        _techniqueList.Add(FolderName, List);
                                     }
 
                                     LoadedShader = LoadShaderFrom(zipFile, shader);
                                     if (LoadedShader == null) continue;
-                                    else _TechniqueList[FolderName].Add(LoadedShader);
+                                    else _techniqueList[FolderName].Add(LoadedShader);
                                 }
 
                                 // if the shader is not in a folder/technique group, add it to the shader dictionary
@@ -266,7 +254,7 @@ namespace SS14.Client.Resources
                         break;
                 }
             }
-            #endregion Load Resources
+#endregion Load Resources
 
             zipFile.Close();
             zipFileStream.Close();
@@ -282,8 +270,7 @@ namespace SS14.Client.Resources
         {
             _textures.Clear();
             _shaders.Clear();
-            _TechniqueList.Clear();
-            _fonts.Clear();
+            _techniqueList.Clear();
             _spriteInfos.Clear();
             _sprites.Clear();
         }
@@ -553,7 +540,7 @@ namespace SS14.Client.Resources
 
             return loadedSprites;
         }
-        #endregion Resource Loading & Disposal
+#endregion Resource Loading & Disposal
 
         #region Resource Retrieval
 
@@ -577,12 +564,13 @@ namespace SS14.Client.Resources
                     return newSprite;
                 }
             }
-            return GetNoSprite();
+            return DefaultSprite();
         }
 
         /// <summary>
         ///  Retrieves the Sprite with the given key from the Resource List. Returns error Sprite if not found.
         /// </summary>
+        [Obsolete]
         public Sprite GetSprite(string key)
         {
             key = key.ToLowerInvariant();
@@ -592,16 +580,7 @@ namespace SS14.Client.Resources
                 return _sprites[key];
             }
             else return GetSpriteFromImage(key);
-        }
-
-        public List<Sprite> GetSprites()
-        {
-            return _sprites.Values.ToList();
-        }
-
-        public List<string> GetSpriteKeys()
-        {
-            return _sprites.Keys.ToList();
+            
         }
 
         public object GetAnimatedSprite(string key)
@@ -611,12 +590,12 @@ namespace SS14.Client.Resources
             {
                 return new AnimatedSprite(key, _animationCollections[key], this);
             }
-            return GetNoSprite();
+            return DefaultSprite();
         }
 
-        public Sprite GetNoSprite()
+        public Sprite DefaultSprite()
         {
-            return _sprites["nosprite"];
+            return GetResource<SpriteResource>("Textures/noSprite.png").Sprite;
         }
 
         /// <summary>
@@ -628,27 +607,6 @@ namespace SS14.Client.Resources
         {
             key = key.ToLowerInvariant();
             return _sprites.ContainsKey(key);
-        }
-
-        /// <summary>
-        /// Checks if an Image with the given key is in the Resource List.
-        /// </summary>
-        /// <param name="key">key to check</param>
-        /// <returns></returns>
-        public bool TextureExists(string key)
-        {
-            key = key.ToLowerInvariant();
-            return _textures.ContainsKey(key);
-        }
-
-        /// <summary>
-        ///  Retrieves the SpriteInfo with the given key from the Resource List. Returns null if not found.
-        /// </summary>
-        public SpriteInfo? GetSpriteInfo(string key)
-        {
-            key = key.ToLowerInvariant();
-            if (_spriteInfos.ContainsKey(key)) return _spriteInfos[key];
-            else return null;
         }
 
         /// <summary>
@@ -666,7 +624,7 @@ namespace SS14.Client.Resources
         /// </summary>
         public TechniqueList GetTechnique(string key)
         {
-            if (_TechniqueList.ContainsKey(key)) return _TechniqueList[key];
+            if (_techniqueList.ContainsKey(key)) return _techniqueList[key];
             else return null;
         }
 
@@ -679,7 +637,7 @@ namespace SS14.Client.Resources
             if (_particles.ContainsKey(key)) return _particles[key];
             else return null;
         }
-
+        
         /// <summary>
         ///  Retrieves the Texture with the given key from the Resource List. Returns error Image if not found.
         /// </summary>
@@ -690,16 +648,135 @@ namespace SS14.Client.Resources
             else return _textures["nosprite"];
         }
 
-        /// <summary>
-        ///  Retrieves the Font with the given key from the Resource List. Returns base_font if not found.
-        /// </summary>
-        public Font GetFont(string key)
-        {
-            key = key.ToLowerInvariant();
-            if (_fonts.ContainsKey(key)) return _fonts[key];
-            else return _fonts["base_font"];
-        }
 
         #endregion Resource Retrieval
+
+        #endregion OldCode
+
+        /// <summary>
+        /// fetches the resource from the cache.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public T GetResource<T>(string path)
+            where T : BaseResource, new()
+        {
+            if (TryGetResource(path, out T resource))
+            {
+                return resource;
+            }
+
+            throw new FileNotFoundException($"The file {path} of type {typeof(T)} cannot be found.");
+        }
+
+        /// <summary>
+        /// Tries to fetch the resource from the cache. On a cache miss the resource will try to be fetched from the VFS.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="resource"></param>
+        /// <returns></returns>
+        public bool TryGetResource<T>(string path, out T resource) 
+            where T : BaseResource, new()
+        {
+            // make sure path map exists for this type...
+            if (!_cachedObjects.TryGetValue(typeof(T), out Dictionary<string, BaseResource> pathMap))
+            {
+                pathMap = new Dictionary<string, BaseResource>();
+                _cachedObjects.Add(typeof(T), pathMap);
+            }
+
+            // found it!
+            if (pathMap.TryGetValue(path, out BaseResource obj))
+            {
+                resource = (T) obj;
+                return true;
+            }
+
+            // cache miss, lets try to find it in the VFS
+            if (_resources.TryContentFileRead(path, out MemoryStream stream))
+            {
+                resource = new T();
+                resource.Load(this, path, stream);
+                CacheResource(path, resource);
+                return true;
+            }
+
+            // ok, can't find it, lets try the fallback
+            var tempRes = new T();
+            
+            // stop this, we failed
+            if (tempRes.Fallback != null && tempRes.Fallback != path)
+            {
+                TryGetResource(tempRes.Fallback, out T fallbackRes);
+                resource = fallbackRes;
+                return true;
+            }
+
+            resource = default(T);
+            return false;
+        }
+        
+        /// <summary>
+        /// Is the resource cached? Will not cache the resource if false.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public bool ResourceCached<T>(string path)
+        {
+            if(_cachedObjects.TryGetValue(typeof(T), out Dictionary<string, BaseResource> typeMap))
+                return typeMap.ContainsKey(path);
+            return false;
+        }
+
+        /// <summary>
+        /// Pre-caches a resource, without returning it.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public bool PreCacheResource<T>(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Adds a resource to the cache.
+        /// </summary>
+        /// <param name="resource"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public void CacheResource<T>(string path, T resource)
+            where T : BaseResource, new()
+        {
+            if (!_cachedObjects.TryGetValue(typeof(T), out Dictionary<string, BaseResource> typeMap))
+            {
+                typeMap = new Dictionary<string, BaseResource>();
+                _cachedObjects.Add(typeof(T), typeMap);
+            }
+
+            if (typeMap.TryGetValue(path, out BaseResource res))
+            {
+                typeMap.Remove(path);
+                res.Dispose();
+            }
+
+            typeMap.Add(path, resource);
+        }
+
+        /// <summary>
+        /// Disposes all cached resources.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var kvTypeMap in _cachedObjects)
+            {
+                foreach (var kvResource in kvTypeMap.Value)
+                {
+                    kvResource.Value.Dispose();
+                }
+            }
+        }
     }
 }

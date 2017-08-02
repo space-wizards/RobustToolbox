@@ -19,7 +19,9 @@ using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Round;
 using SS14.Shared;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
@@ -31,7 +33,6 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
 
 namespace SS14.Server
 {
@@ -72,6 +73,9 @@ namespace SS14.Server
 
         [Dependency]
         private readonly IGameTiming _time;
+
+        [Dependency]
+        private readonly IResourceManager _resources;
 
         private const int GAME_COUNTDOWN = 15;
         private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
@@ -170,10 +174,6 @@ namespace SS14.Server
 
             LoadSettings();
 
-            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
-            prototypeManager.Resync();
-
             var netMan = IoCManager.Resolve<IServerNetManager>();
             netMan.Initialize(true);
 
@@ -209,6 +209,62 @@ namespace SS14.Server
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<IMapManager>().Initialize();
+
+            // Set up the VFS
+            _resources.Initialize();
+
+            _resources.MountContentDirectory(@"");
+
+            //mount the engine content pack
+            _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
+
+            //mount the default game ContentPack defined in config
+            _resources.MountDefaultContentPack();
+
+            // get the assembly from the file system
+            if(_resources.TryContentFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
+            {
+                Logger.Info("[SRV] Loading Server Content DLL");
+
+                // see if debug info is present
+                if (_resources.TryContentFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning("[ENG] Could not find Client Content DLL");
+            }
+
+            // because of 'reasons' this has to be called after the last assembly is loaded
+            // otherwise the prototypes will be cleared
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.Resync();
+
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             StartLobby();
             StartGame();
@@ -248,7 +304,7 @@ namespace SS14.Server
                     // announce we are falling behind
                     if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
                     {
-                        Logger.Log("[SRV] MainLoop: Cannot keep up!");
+                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
                         _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }

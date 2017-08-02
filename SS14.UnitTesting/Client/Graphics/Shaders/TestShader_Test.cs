@@ -15,7 +15,7 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
         public override bool NeedsResourcePack => true;
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IResourceManager resources;
+        private IResourceCache resources;
         private RenderImage testRenderImage;
         private SFML.Graphics.Sprite testsprite;
 
@@ -24,7 +24,7 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
         {
             base.InitializeCluwneLib(1280,720,false,60);
 
-            resources = base.GetResourceManager;
+            resources = base.GetResourceCache;
             testRenderImage = new RenderImage("TestShaders",1280,720);
             testsprite = resources.GetSprite("flashlight_mask");
 

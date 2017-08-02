@@ -21,7 +21,7 @@ namespace SS14.Client.State
         protected readonly IClientNetManager NetworkManager;
         protected readonly IPlacementManager PlacementManager;
         protected readonly IPlayerManager PlayerManager;
-        protected readonly IResourceManager ResourceManager;
+        protected readonly IResourceCache ResourceCache;
         protected readonly IStateManager StateManager;
         protected readonly IUserInterfaceManager UserInterfaceManager;
 
@@ -29,7 +29,7 @@ namespace SS14.Client.State
         {
             StateManager = (IStateManager) managers[typeof (IStateManager)];
             NetworkManager = (IClientNetManager) managers[typeof (IClientNetManager)];
-            ResourceManager = (IResourceManager) managers[typeof (IResourceManager)];
+            ResourceCache = (IResourceCache) managers[typeof (IResourceCache)];
             UserInterfaceManager = (IUserInterfaceManager) managers[typeof (IUserInterfaceManager)];
             MapManager = (IMapManager) managers[typeof (IMapManager)];
             PlayerManager = (IPlayerManager) managers[typeof (IPlayerManager)];

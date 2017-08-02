@@ -7,6 +7,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Network
@@ -18,7 +19,7 @@ namespace SS14.Client.Network
         [Dependency]
         private readonly IClientNetManager _networkManager;
         [Dependency]
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private TextSprite _textSprite;
         private bool _enabled;
         private DateTime _lastDataPointTime;
@@ -32,7 +33,7 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("CALIBRI"));
+            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
         }
 
         #region INetworkGrapher Members

@@ -13,12 +13,12 @@ namespace SS14.Client.UserInterface.Components
     {
         public ScrollableContainer _scPlayerList;
 
-        public PlayerListTab(string uniqueName, Vector2i size, IResourceManager resourceManager)
-            : base(uniqueName, size, resourceManager)
+        public PlayerListTab(string uniqueName, Vector2i size, IResourceCache resourceCache)
+            : base(uniqueName, size, resourceCache)
         {
             DrawBorder = false;
 
-            _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceManager);
+            _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceCache);
             _scPlayerList.Position = new Vector2i(5,10);
             components.Add(_scPlayerList);
         }

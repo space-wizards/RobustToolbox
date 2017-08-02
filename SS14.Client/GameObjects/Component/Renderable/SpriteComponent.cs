@@ -24,7 +24,12 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-        protected Sprite currentBaseSprite;
+
+        protected Sprite currentBaseSprite
+        {
+            get;
+            private set;
+        }
         protected string currentBaseSpriteKey;
         protected Dictionary<string, Sprite> dirSprites = new Dictionary<string, Sprite>();
         protected bool HorizontalFlip { get; set; }
@@ -93,8 +98,8 @@ namespace SS14.Client.GameObjects
         {
             if (sprites.ContainsKey(spriteKey))
                 throw new Exception("That sprite is already added.");
-            if (IoCManager.Resolve<IResourceManager>().SpriteExists(spriteKey))
-                AddSprite(spriteKey, IoCManager.Resolve<IResourceManager>().GetSprite(spriteKey));
+            if (IoCManager.Resolve<IResourceCache>().SpriteExists(spriteKey))
+                AddSprite(spriteKey, IoCManager.Resolve<IResourceCache>().GetSprite(spriteKey));
 
             //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
             if (sprites.Count == 1)
@@ -120,7 +125,7 @@ namespace SS14.Client.GameObjects
         private void BuildDirectionalSprites()
         {
             dirSprites.Clear();
-            var resMgr = IoCManager.Resolve<IResourceManager>();
+            var resMgr = IoCManager.Resolve<IResourceCache>();
 
             foreach (var curr in sprites)
             {
@@ -236,8 +241,8 @@ namespace SS14.Client.GameObjects
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
-            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
-            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
+            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
+            Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
             bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'

@@ -57,8 +57,14 @@
       <Name>BsDiffLib</Name>
       <HintPath>..\Third-Party\BsDiffLib.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
+    </Reference>
+    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="NetSerializer">
       <Name>NetSerializer</Name>
@@ -116,6 +122,16 @@
     <Compile Include="ColorUtils.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVarFlags.cs" />
+    <Compile Include="ContentPack\AssemblyLoader.cs" />
+    <Compile Include="ContentPack\DirLoader.cs" />
+    <Compile Include="ContentPack\GameClient.cs" />
+    <Compile Include="ContentPack\GameServer.cs" />
+    <Compile Include="ContentPack\GameShared.cs" />
+    <Compile Include="ContentPack\IContentRoot.cs" />
+    <Compile Include="ContentPack\PackLoader.cs" />
+    <Compile Include="ContentPack\PathHelpers.cs" />
+    <Compile Include="ContentPack\ResourceManager.cs" />
+    <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
@@ -133,6 +149,7 @@
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
+    <Compile Include="Interfaces\IResourceManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />
@@ -201,7 +218,6 @@
     -->
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
-    <Compile Include="Utility\PathHelpers.cs" />
     <Compile Include="Utility\PlatformDetector.cs" />
     <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
@@ -230,8 +246,6 @@
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
-    <Compile Include="Utility\AppDomainHelpers.cs" />
-    <Compile Include="Utility\AssemblyHelpers.cs" />
     <Compile Include="GameObjects\Component\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Component\Direction\DirectionComponentState.cs" />
     <Compile Include="GameObjects\Component\Hitbox\HitboxComponentState.cs" />
@@ -288,6 +302,7 @@
     <Compile Include="GameObjects\Component\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

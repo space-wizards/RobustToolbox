@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -10,6 +10,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -22,7 +23,7 @@ namespace SS14.Client.UserInterface.Components
         #endregion
 
         private readonly List<string> _contentStrings = new List<string>();
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly int _width;
         private IntRect _clientAreaLeft;
         private IntRect _clientAreaMain;
@@ -34,20 +35,20 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _listboxRight;
         private TextSprite _selectedLabel;
 
-        public Listbox(int dropDownLength, int width, IResourceManager resourceManager,
+        public Listbox(int dropDownLength, int width, IResourceCache resourceCache,
                        List<string> initialOptions = null)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             _width = width;
-            _listboxLeft = _resourceManager.GetSprite("button_left");
-            _listboxMain = _resourceManager.GetSprite("button_middle");
-            _listboxRight = _resourceManager.GetSprite("button_right");
+            _listboxLeft = _resourceCache.GetSprite("button_left");
+            _listboxMain = _resourceCache.GetSprite("button_middle");
+            _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceManager.GetFont("CALIBRI"))
+            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
                                  {Color = Color.Black};
 
-            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceManager);
+            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);
             _dropDown.SetVisible(false);
 
             if (initialOptions != null)
@@ -106,7 +107,7 @@ namespace SS14.Client.UserInterface.Components
             _dropDown.components.Clear();
             int offset = 0;
             foreach (
-                ListboxItem newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceManager)))
+                ListboxItem newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceCache)))
             {
                 newEntry.Position = new Vector2i(0, offset);
                 newEntry.Update(0);
@@ -214,8 +215,8 @@ namespace SS14.Client.UserInterface.Components
         private readonly int _width;
         public bool Selected;
 
-        public ListboxItem(string text, int width, IResourceManager resourceManager)
-            : base(text, "CALIBRI", resourceManager)
+        public ListboxItem(string text, int width, IResourceCache resourceCache)
+            : base(text, "CALIBRI", resourceCache)
         {
             _width = width;
             DrawBorder = true;

@@ -30,10 +30,11 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
@@ -97,6 +98,7 @@ namespace SS14.Server
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();
@@ -122,43 +124,15 @@ namespace SS14.Server
 
             IoCManager.BuildGraph();
         }
-
-        // TODO: Move to the main server so we can have proper logging and stuff.
+        
         private static void LoadContentAssemblies()
         {
-            var assemblies = new List<Assembly>(4)
+            // gets a handle to the shared and the current (server) dll.
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
                 Assembly.GetExecutingAssembly()
-            };
-
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
-                Console.ResetColor();
-            }
-
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
-                Console.ResetColor();
-            }
-
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+            });
         }
     }
 }

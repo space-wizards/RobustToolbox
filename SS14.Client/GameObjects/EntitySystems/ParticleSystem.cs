@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects.EntitySystems
 
         public void AddParticleSystem(IEntity ent, string systemName)
         {
-            ParticleSettings settings = IoCManager.Resolve<IResourceManager>().GetParticles(systemName);
+            ParticleSettings settings = IoCManager.Resolve<IResourceCache>().GetParticles(systemName);
             if (settings != null)
             {
                 //Add it.

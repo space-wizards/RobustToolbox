@@ -33,7 +33,7 @@ namespace SS14.Client.UserInterface
         [Dependency]
         private readonly IConfigurationManager _config;
         [Dependency]
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
         private DebugConsole _console;
@@ -50,7 +50,7 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), _resourceManager);
+            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), _resourceCache);
             _console.SetVisible(false);
         }
 
@@ -499,7 +499,7 @@ namespace SS14.Client.UserInterface
             {
                 _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
                                     ? DragInfo.DragSprite
-                                    : _resourceManager.GetSprite("cursor");
+                                    : _resourceCache.GetSprite("cursor");
 
                 _cursorSprite.Position = MousePos.ToFloat();
                 _cursorSprite.Draw();

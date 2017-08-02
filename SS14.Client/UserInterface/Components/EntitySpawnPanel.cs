@@ -24,30 +24,30 @@ namespace SS14.Client.UserInterface.Components
         private readonly Listbox _lstOverride;
         private readonly Label _overLabel;
         private readonly IPlacementManager _placementManager;
-        public EntitySpawnPanel(Vector2i size, IResourceManager resourceManager, IPlacementManager placementManager)
-            : base("Entity Spawn Panel", size, resourceManager)
+        public EntitySpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
+            : base("Entity Spawn Panel", size, resourceCache)
         {
             _placementManager = placementManager;
 
-            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceManager)
+            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceCache)
             { Position = new Vector2i(5, 5) };
             components.Add(_entityList);
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceManager) { Position = new Vector2i(210, 0) };
+            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceCache) { Position = new Vector2i(210, 0) };
             components.Add(searchLabel);
 
-            _entSearchTextbox = new Textbox(125, _resourceManager) { Position = new Vector2i(210, 20) };
+            _entSearchTextbox = new Textbox(125, _resourceCache) { Position = new Vector2i(210, 20) };
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
             components.Add(_entSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceManager)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceCache)
             {
                 DrawBackground = true,
                 DrawBorder = true,
                 Position = new Vector2i(210, 55)
             };
 
-            _overLabel = new Label("Override Placement:", "CALIBRI", _resourceManager)
+            _overLabel = new Label("Override Placement:", "CALIBRI", _resourceCache)
             {
                 Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
             };
@@ -70,7 +70,7 @@ namespace SS14.Client.UserInterface.Components
                                       "AlignWallTops"
                                   });
 
-            _lstOverride = new Listbox(150, 125, resourceManager, initOpts);
+            _lstOverride = new Listbox(150, 125, resourceCache, initOpts);
             _lstOverride.SelectItem("AlignFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
@@ -169,7 +169,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 EntitySpawnSelectButton newButton in
-                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, _resourceManager)))
+                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, _resourceCache)))
             {
                 _entityList.components.Add(newButton);
                 newButton.Position = new Vector2i(5, yOffset);

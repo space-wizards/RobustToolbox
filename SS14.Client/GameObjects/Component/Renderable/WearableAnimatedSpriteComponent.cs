@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects
 
         public void SetNotWornSprite(string spritename)
         {
-            NotWornSprite = IoCManager.Resolve<IResourceManager>().GetSprite(spritename);
+            NotWornSprite = IoCManager.Resolve<IResourceCache>().GetSprite(spritename);
         }
 
         public void SetCarriedSprite(string spritename)

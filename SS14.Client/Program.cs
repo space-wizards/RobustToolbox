@@ -37,10 +37,11 @@ using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
 using SS14.Shared.Timing;
-using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 
@@ -56,53 +57,13 @@ namespace SS14.Client
         private static void Main()
         {
             RegisterIoC();
-            LoadAssemblies();
+            RegisterComponents();
 
             var controller = IoCManager.Resolve<IGameController>();
             controller.Run();
 
             Logger.Info("Goodbye.");
             IoCManager.Clear();
-        }
-
-        private static void LoadAssemblies()
-        {
-            var assemblies = new List<Assembly>(4)
-            {
-                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
-                Assembly.GetExecutingAssembly()
-            };
-
-            // TODO this should be done on connect.
-            // The issue is that due to our giant trucks of shit code.
-            // It'd be extremely hard to integrate correctly.
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Shared.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the shared content assembly (SS14.Shared.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            try
-            {
-                var contentAssembly = AssemblyHelpers.RelativeLoadFrom("SS14.Server.Content.dll");
-                assemblies.Add(contentAssembly);
-            }
-            catch (Exception e)
-            {
-                // LogManager won't work yet.
-                System.Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("**ERROR: Unable to load the server content assembly (SS14.Server.Content.dll): {0}", e);
-                System.Console.ResetColor();
-            }
-
-            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
         }
 
         /// <summary>
@@ -118,6 +79,7 @@ namespace SS14.Client
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IResourceManager, ResourceManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -133,7 +95,7 @@ namespace SS14.Client
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<ILightManager, LightManager>();
-            IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<IResourceCache, ResourceCache>();
             IoCManager.Register<ISS14Serializer, SS14Serializer>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
@@ -146,9 +108,12 @@ namespace SS14.Client
 
         private static void RegisterComponents()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-
-            factory.Register<BasicMoverComponent>();
+            // gets a handle to the shared and the current (client) dll.
+            IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
+                Assembly.GetExecutingAssembly()
+            });
         }
     }
 }

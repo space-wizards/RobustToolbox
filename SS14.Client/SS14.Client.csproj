@@ -233,12 +233,11 @@
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\bluehigh.ttf" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\noSprite.png" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\background.png" Condition="'$(Configuration)' != 'Debug'" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\logo.png" Condition="'$(Configuration)' != 'Debug'" />
-    <EmbeddedResource Include="_EmbeddedBaseResources\Logo\nanotrasen.png" Condition="'$(Configuration)' != 'Debug'" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />
+    <Compile Include="ResourceManagement\BaseResource.cs" />
+    <Compile Include="ResourceManagement\FontResource.cs" />
+    <Compile Include="ResourceManagement\SpriteResource.cs" />
+    <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
@@ -281,7 +280,7 @@
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
-    <Compile Include="Interfaces\Resource\IResourceManager.cs" />
+    <Compile Include="Interfaces\Resource\IResourceCache.cs" />
     <Compile Include="Interfaces\State\IState.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
@@ -314,7 +313,7 @@
     <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
     <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
     <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
-    <Compile Include="ResourceManagment\ResourceManagerZip.cs" />
+    <Compile Include="ResourceManagement\ResourceCache.cs" />
     <Compile Include="State\State.cs" />
     <Compile Include="State\StateManager.cs" />
     <Compile Include="State\States\GameScreen.cs" />

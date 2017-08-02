@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Reflection;
+using SS14.Shared.ContentPack;
 
 namespace SS14.Server
 {

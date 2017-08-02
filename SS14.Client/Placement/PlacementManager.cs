@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Placement
@@ -35,7 +36,7 @@ namespace SS14.Client.Placement
         [Dependency]
         public readonly IPlayerManager PlayerManager;
         [Dependency]
-        public readonly IResourceManager ResourceManager;
+        public readonly IResourceCache ResourceCache;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
@@ -213,7 +214,7 @@ namespace SS14.Client.Placement
             //if (spriteParam == null) return;
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
-            Sprite sprite = ResourceManager.GetSprite(spriteName);
+            Sprite sprite = ResourceCache.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;
@@ -226,12 +227,12 @@ namespace SS14.Client.Placement
         {
             if (tileType.TileDef.IsWall)
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("wall");
+                CurrentBaseSprite = ResourceCache.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";
             }
             else
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+                CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
                 CurrentBaseSpriteKey = "tilebuildoverlay";
             }
 
@@ -268,9 +269,10 @@ namespace SS14.Client.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSpriteKey + "_" + Direction.ToString()).ToLowerInvariant();
-            if (ResourceManager.SpriteExists(dirName))
-                spriteToUse = ResourceManager.GetSprite(dirName);
+            string dirName = (CurrentBaseSpriteKey + "_" + Direction).ToLowerInvariant();
+
+            if (ResourceCache.TryGetResource(dirName, out SpriteResource spriteRes))
+                spriteToUse = spriteRes.Sprite;
 
             return spriteToUse;
         }

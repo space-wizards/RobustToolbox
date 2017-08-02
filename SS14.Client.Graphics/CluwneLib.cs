@@ -94,13 +94,7 @@ namespace SS14.Client.Graphics
             {
                 Initialize();
             }
-
-            FrameEvent += (delegate(object sender, FrameEventArgs e) {
-
-                System.Threading.Thread.Sleep(10); // maybe pickup vsync here?
-
-            });
-
+            
             if ((Screen != null) && (renderTargetArray == null))
                 throw new InvalidOperationException("Something has gone terribly wrong!");
 
@@ -151,6 +145,8 @@ namespace SS14.Client.Graphics
             Time = new GameTiming();
 
             Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
+            Screen.SetVerticalSyncEnabled(true);
+            Screen.SetFramerateLimit(300);
             
             renderTargetArray = new RenderTarget[5];
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);

@@ -9,7 +9,7 @@ namespace SS14.Client.Player.PostProcessing
 {
     public class BlurPostProcessingEffect : PostProcessingEffect
     {
-        private readonly GaussianBlur _gaussianBlur = new GaussianBlur(IoCManager.Resolve<IResourceManager>());
+        private readonly GaussianBlur _gaussianBlur = new GaussianBlur(IoCManager.Resolve<IResourceCache>());
 
         public BlurPostProcessingEffect(float duration)
             : base(duration)

@@ -187,7 +187,7 @@ namespace SS14.Client.GameObjects
                 AddSprite(name);
                 AddSprite(name + "_inhand");
                 AddSprite(name + "_inhand_side");
-                if (IoCManager.Resolve<IResourceManager>().SpriteExists(name + "_inhand_back"))
+                if (IoCManager.Resolve<IResourceCache>().SpriteExists(name + "_inhand_back"))
                     AddSprite(name + "_inhand_back");
             }
         }

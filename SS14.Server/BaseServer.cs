@@ -306,6 +306,8 @@ namespace SS14.Server
                     }
                 }
 
+                _time.InSimulation = true;
+
                 // run the simulation for every accumulated tick
                 while (accumulator >= _time.TickPeriod)
                 {
@@ -313,9 +315,19 @@ namespace SS14.Server
                     _lastTick += _time.TickPeriod;
                     _time.StartFrame();
 
-                    Update((float)_time.CurTime.TotalSeconds);
-                    _time.CurTick++;
+                    // only run the sim if unpaused, but still use up the accumulated time
+                    if(!_time.Paused)
+                    {
+                        Update((float)_time.CurTime.TotalSeconds);
+                        _time.CurTick++;
+                    }
                 }
+
+                // if not paused, save how far between ticks we are so interpolation works
+                if (!_time.Paused)
+                    _time.TickRemainder = accumulator;
+
+                _time.InSimulation = false;
 
                 // every 1 second update stats in the console window title
                 if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)

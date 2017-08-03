@@ -64,6 +64,10 @@ namespace SS14.Client
         #region Methods
 
         #region Constructors
+
+        private TimeSpan _lastTick;
+        private TimeSpan _lastKeepUpAnnounce;
+
         public void Run()
         {
             Logger.Debug("Initializing GameController.");
@@ -130,28 +134,121 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            FrameEventArgs _frameEvent;
-            // EventArgs _frameEventArgs;
-            var _clock = new Clock();
+            #region GameLoop
+            
+            // maximum number of ticks to queue before the loop slows down.
+            const int maxTicks = 5;
+
+            _time.ResetRealTime();
+            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
 
             while (CluwneLib.IsRunning)
             {
-                //TODO: The client needs a real game loop...
+                var accumulator = _time.RealTime - _lastTick;
+
+                // If the game can't keep up, limit time.
+                if (accumulator > maxTime)
+                {
+                    // limit accumulator to max time.
+                    accumulator = maxTime;
+
+                    // pull lastTick up to the current realTime
+                    // This will slow down the simulation, but if we are behind from a
+                    // lag spike hopefully it will be able to catch up.
+                    _lastTick = _time.RealTime - maxTime;
+
+                    // announce we are falling behind
+                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
+                    {
+                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
+                        _lastKeepUpAnnounce = _time.RealTime;
+                    }
+                }
+
                 _time.StartFrame();
 
-                var lastFrameTime = _clock.ElapsedTime.AsSeconds();
-                _clock.Restart();
-                _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
-                CluwneLib.Screen.DispatchEvents();
-                CluwneLib.RunIdle(this, _frameEvent);
-                CluwneLib.Screen.Display();
+                var realFrameEvent = new FrameEventArgs((float)_time.RealFrameTime.TotalSeconds);
+
+                // process Net/KB/Mouse input
+                Process(realFrameEvent);
+
+                _time.InSimulation = true;
+                // run the simulation for every accumulated tick
+                while (accumulator >= _time.TickPeriod)
+                {
+                    accumulator -= _time.TickPeriod;
+                    _lastTick += _time.TickPeriod;
+
+                    // only run the sim if unpaused, but still use up the accumulated time
+                    if (!_time.Paused)
+                    {
+                        // update the simulation
+                        var simFrameEvent = new FrameEventArgs((float) _time.FrameTime.TotalSeconds);
+                        Update(simFrameEvent);
+                        _time.CurTick++;
+                    }
+                }
+
+                // if not paused, save how close to the next tick we are so interpolation works
+                if (!_time.Paused)
+                    _time.TickRemainder = accumulator;
+
+                _time.InSimulation = false;
+
+                // render the simulation
+                Render(realFrameEvent);
             }
+
+            #endregion
+
             _networkManager.ClientDisconnect("Client disconnected from game.");
             CluwneLib.Terminate();
             Logger.Info("GameController terminated.");
 
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
+        }
+
+        /// <summary>
+        /// Processes all simulation I/O. Keyboard/Mouse/Network code gets called here.
+        /// </summary>
+        private void Process(FrameEventArgs e)
+        {
+            //TODO: Keyboard/Mouse input needs to be processed here.
+
+        }
+
+        /// <summary>
+        /// Runs a tick of the simulation.
+        /// </summary>
+        /// <param name="e">Current GameTiming.FrameTime</param>
+        private void Update(FrameEventArgs e)
+        {
+            _networkManager.ProcessPackets();
+            CluwneLib.RunIdle(this, e);
+            _stateManager.Update(e);
+        }
+
+        /// <summary>
+        /// Renders the view of the simulation.
+        /// </summary>
+        /// <param name="e">Current GameTiming.RealFrameTime</param>
+        private void Render(FrameEventArgs e)
+        {
+            CluwneLib.ClearCurrentRendertarget(Color.Black);
+            CluwneLib.Screen.DispatchEvents();
+
+            // draw everything
+            _stateManager.Render(e);
+
+            // interface runs in realtime, so it is updated here
+            _userInterfaceManager.Update(e);
+
+            _userInterfaceManager.Render(e);
+
+            _netGrapher.Update();
+
+            // swap buffers to show the screen
+            CluwneLib.Screen.Display();
         }
 
         private void ShowSplashScreen()
@@ -203,17 +300,6 @@ namespace SS14.Client
 
         #region EventHandlers
 
-        private void CluwneLibIdle(object sender, FrameEventArgs e)
-        {
-            _networkManager.ProcessPackets();
-            _stateManager.Update(e);
-
-            _userInterfaceManager.Update(e);
-            _userInterfaceManager.Render(e);
-
-            _netGrapher.Update();
-        }
-
         private void MainWindowLoad(object sender, EventArgs e)
         {
             _stateManager.RequestStateChange<MainScreen>();
@@ -233,7 +319,7 @@ namespace SS14.Client
             CluwneLib.Stop();
         }
 
-        #region Input Handling
+#region Input Handling
 
         /// <summary>
         /// Handles any keydown events.
@@ -338,11 +424,11 @@ namespace SS14.Client
                 _stateManager.TextEntered(e);
         }
 
-        #endregion Input Handling
+#endregion Input Handling
 
-        #endregion EventHandlers
+#endregion EventHandlers
 
-        #region Privates
+#region Privates
 
         bool onetime = true;
 
@@ -367,7 +453,6 @@ namespace SS14.Client
             {
                 //every time the video settings change we close the old screen and create a new one
                 //SetupCluwne Gets called to reset the event handlers to the new screen
-                CluwneLib.FrameEvent += CluwneLibIdle;
                 CluwneLib.RefreshVideoSettings += SetupCluwne;
                 onetime = false;
             }
@@ -389,8 +474,8 @@ namespace SS14.Client
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
 
-        #endregion Privates
+#endregion Privates
 
-        #endregion Methods
+#endregion Methods
     }
 }

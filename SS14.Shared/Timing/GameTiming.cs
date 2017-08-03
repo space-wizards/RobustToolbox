@@ -14,7 +14,7 @@ namespace SS14.Shared.Timing
         // number of sample frames to store for profiling
         private const int NumFrames = 50;
 
-        private static Stopwatch _realTimer;
+        private static readonly Stopwatch _realTimer = new Stopwatch();
         private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
         private TimeSpan _lastRealTime;
 
@@ -23,11 +23,8 @@ namespace SS14.Shared.Timing
         /// </summary>
         public GameTiming()
         {
-            if (_realTimer == null)
-            {
-                _realTimer = new Stopwatch();
-                _realTimer.Start();
-            }
+            // does nothing if timer is already running
+            _realTimer.Start();
 
             Paused = false;
             TimeScale = 1.0f;

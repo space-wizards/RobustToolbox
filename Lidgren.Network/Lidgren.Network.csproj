@@ -107,18 +107,6 @@
     <Compile Include="Encryption\NetBlockEncryptionBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Encryption\NetDESEncryption.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Encryption\NetRC2Encryption.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Encryption\NetTripleDESEncryption.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Encryption\NetXorEncryption.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Encryption\NetXteaEncryption.cs">
       <SubType>Code</SubType>
     </Compile>

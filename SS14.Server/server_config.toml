@@ -2,7 +2,7 @@
 [log]
 path = "logs"
 format = "log_%(date)s-%(time)s.txt"
-level = 2
+level = 1
 enabled = false
 
 [net]

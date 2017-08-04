@@ -216,7 +216,7 @@ namespace SS14.Server
             _resources.MountContentDirectory(@"");
 
             //mount the engine content pack
-            _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
+            _resources.MountContentPack(@"EngineContentPack.zip");
 
             //mount the default game ContentPack defined in config
             _resources.MountDefaultContentPack();

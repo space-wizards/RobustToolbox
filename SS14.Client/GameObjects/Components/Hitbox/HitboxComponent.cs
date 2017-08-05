@@ -52,17 +52,12 @@ namespace SS14.Client.GameObjects
             Offset = new Vector2f();
         }
 
-        public override Type StateType
-        {
-            get
-            {
-                return typeof(HitboxComponentState);
-            }
-        }
+        public override Type StateType => typeof(HitboxComponentState);
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            AABB = state.AABB;
+            AABB = ((HitboxComponentState)state).AABB;
         }
     }
 }

@@ -37,18 +37,18 @@ namespace SS14.Client.GameObjects
             Velocity = new Vector2f();
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            if (!Owner.HasComponent<PlayerInputMoverComponent>())
-                SetNewState(state);
-        }
+            if (Owner.HasComponent<PlayerInputMoverComponent>())
+                return;
 
-        private void SetNewState(VelocityComponentState state)
-        {
+            var newState = (VelocityComponentState)state;
             if (_lastState != null)
                 _previousState = _lastState;
-            _lastState = state;
-            Velocity = new Vector2f(state.VelocityX, state.VelocityY);
+
+            _lastState = newState;
+            Velocity = new Vector2f(newState.VelocityX, newState.VelocityY);
         }
     }
 }

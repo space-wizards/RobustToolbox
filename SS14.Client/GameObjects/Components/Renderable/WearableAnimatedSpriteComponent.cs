@@ -27,10 +27,11 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(WearableAnimatedSpriteComponentState);
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            base.HandleComponentState((WearableAnimatedSpriteComponentState)state);
-            IsCurrentlyWorn = state.IsCurrentlyWorn;
+            base.HandleComponentState(state);
+            IsCurrentlyWorn = ((WearableAnimatedSpriteComponentState) state).IsCurrentlyWorn;
         }
 
         public void SetNotWornSprite(string spritename)

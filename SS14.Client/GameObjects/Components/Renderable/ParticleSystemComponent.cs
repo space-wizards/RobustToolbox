@@ -161,19 +161,19 @@ namespace SS14.Client.GameObjects
                 _emitters[name].Emit = active;
         }
 
-        public override void HandleComponentState(dynamic _state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            ParticleSystemComponentState state = (ParticleSystemComponentState)_state;
+            var newState = (ParticleSystemComponentState) state;
 
-            foreach (var a in state.emitters)
-            {
+            foreach (var a in newState.emitters)
                 if (_emitters.ContainsKey(a.Key))
                     SetParticleSystemActive(a.Key, a.Value);
                 else
                     AddParticleSystem(a.Key, a.Value);
-            }
 
-            foreach (var toRemove in new List<string>(_emitters.Keys.Except<string>(state.emitters.Keys))) //Remove emitters that are not in the new state.
+            //Remove emitters that are not in the new state.
+            foreach (var toRemove in new List<string>(_emitters.Keys.Except(newState.emitters.Keys)))
                 RemoveParticleSystem(toRemove);
         }
     }

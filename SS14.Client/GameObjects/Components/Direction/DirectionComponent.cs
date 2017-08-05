@@ -62,9 +62,11 @@ namespace SS14.Client.GameObjects
             Owner.SendMessage(this, ComponentMessageType.MoveDirection, movedir);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            var dir = (Direction)state.Direction;
+            var newState = (DirectionComponentState) state;
+            var dir = newState.Direction;
             SetMoveDir(dir);
         }
     }

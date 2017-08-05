@@ -55,26 +55,22 @@ namespace SS14.Client.GameObjects
             Owner.GetComponent<ITransformComponent>().Position = toPosition;
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            SetNewState(state);
-        }
+            var newState = (SlaveMoverComponentState) state;
 
-        private void SetNewState(SlaveMoverComponentState state)
-        {
-            if (_master == null && state.Master != null)
-            {
-                Attach((int)state.Master);
-            }
-            if (_master != null && state.Master == null)
-            {
+            if (_master == null && newState.Master != null)
+                Attach((int) newState.Master);
+
+            if (_master != null && newState.Master == null)
                 Detach();
-            }
-            if (_master != null && state.Master != null && _master.Uid != state.Master)
-            {
-                Detach();
-                Attach((int)state.Master);
-            }
+
+            if (_master == null || newState.Master == null || _master.Uid == newState.Master)
+                return;
+
+            Detach();
+            Attach((int) newState.Master);
         }
     }
 }

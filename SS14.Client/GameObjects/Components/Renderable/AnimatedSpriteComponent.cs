@@ -386,22 +386,21 @@ namespace SS14.Client.GameObjects
                 slaves.Remove(slavecompo);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            DrawDepth = state.DrawDepth;
-            visible = state.Visible;
-            if (sprite.Name != state.Name)
-                SetSprite(state.Name);
-            if (sprite.CurrentAnimationStateKey != state.CurrentAnimation)
-            {
-                if (state.CurrentAnimation == null)
-                    sprite.SetAnimationState("idle");
-                else
-                    sprite.SetAnimationState(state.CurrentAnimation);
-            }
-            SetMaster((int?)state.MasterUid);
+            var newState = (AnimatedSpriteComponentState) state;
+            DrawDepth = newState.DrawDepth;
+            visible = newState.Visible;
+            if (sprite.Name != newState.Name)
+                SetSprite(newState.Name);
 
-            sprite.SetLoop(state.Loop);
+            if (sprite.CurrentAnimationStateKey != newState.CurrentAnimation)
+                sprite.SetAnimationState(newState.CurrentAnimation ?? "idle");
+
+            SetMaster(newState.MasterUid);
+
+            sprite.SetLoop(newState.Loop);
         }
     }
 }

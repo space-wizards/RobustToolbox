@@ -217,15 +217,17 @@ namespace SS14.Client.GameObjects
                 component.AABB.Height / tileSize);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            if (state.CollisionEnabled != collisionEnabled)
-            {
-                if (state.CollisionEnabled)
-                    EnableCollision();
-                else
-                    DisableCollision();
-            }
+            var newState = (CollidableComponentState) state;
+            if (newState.CollisionEnabled == collisionEnabled)
+                return;
+
+            if (newState.CollisionEnabled)
+                EnableCollision();
+            else
+                DisableCollision();
         }
     }
 }

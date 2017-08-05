@@ -83,11 +83,6 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        protected void SetState(LightState state)
-        {
-            _light.SetState(state);
-        }
-
         protected void SetMode(LightModeClass mode)
         {
             IoCManager.Resolve<ILightManager>().SetLightMode(mode, _light);
@@ -116,16 +111,18 @@ namespace SS14.Client.GameObjects
             _light.SetMask(mask);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            if (_light.LightState != state.State)
-                _light.SetState(state.State);
-            if (_light.Color.R != state.ColorR || _light.Color.G != state.ColorG || _light.Color.B != state.ColorB)
-            {
-                SetColor(state.ColorR, state.ColorG, state.ColorB);
-            }
-            if (_mode != state.Mode)
-                SetMode(state.Mode);
+            var newState = (PointLightComponentState) state;
+            if (_light.LightState != newState.State)
+                _light.SetState(newState.State);
+
+            if (_light.Color.R != newState.ColorR || _light.Color.G != newState.ColorG || _light.Color.B != newState.ColorB)
+                SetColor(newState.ColorR, newState.ColorG, newState.ColorB);
+
+            if (_mode != newState.Mode)
+                SetMode(newState.Mode);
         }
 
         protected void SetColor(int R, int G, int B)

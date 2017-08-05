@@ -41,6 +41,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         bool NetworkSynchronizeExistence { get; }
 
         IEntity Owner { get; }
+
+        /// <summary>
+        /// Class Type that deserializes this component. This is the type that GetComponentState returns, 
+        /// and is the type that is passed to HandleComponentState.
+        /// </summary>
         Type StateType { get; }
 
         /// <summary>
@@ -89,7 +94,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         ComponentState GetComponentState();
 
         void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
-        void HandleComponentState(dynamic state);
+
+        /// <summary>
+        /// Handles an incoming component state from the server.
+        /// </summary>
+        /// <param name="state"></param>
+        void HandleComponentState(ComponentState state);
 
         /// <summary>
         /// Handles a message that a client has just instantiated a component

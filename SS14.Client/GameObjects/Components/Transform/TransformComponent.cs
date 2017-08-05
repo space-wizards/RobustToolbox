@@ -64,18 +64,15 @@ namespace SS14.Client.GameObjects
             Position = new Vector2f();
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            SetNewState(state);
-        }
-
-        private void SetNewState(TransformComponentState state)
-        {
-            lastState = state;
-            states.Add(state);
+            var newState = (TransformComponentState)state;
+            lastState = newState;
+            states.Add(newState);
             var interp = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
             //Remove all states older than the one just before the interp time.
-            lerpStateFrom = states.Where(s => s.ReceivedTime <= state.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
+            lerpStateFrom = states.Where(s => s.ReceivedTime <= newState.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
             if (lerpStateFrom != null)
             {
                 lerpStateTo =
@@ -87,12 +84,12 @@ namespace SS14.Client.GameObjects
             }
             else
             {
-                lerpStateFrom = state;
-                lerpStateTo = state;
+                lerpStateFrom = newState;
+                lerpStateTo = newState;
             }
             if (lastState.ForceUpdate)
             {
-                Position = state.Position;
+                Position = newState.Position;
             }
         }
     }

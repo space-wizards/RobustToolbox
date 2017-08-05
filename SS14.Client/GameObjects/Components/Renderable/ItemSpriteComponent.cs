@@ -197,15 +197,17 @@ namespace SS14.Client.GameObjects
             return !IsInHand && base.WasClicked(worldPos);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
+            var newState = (SpriteComponentState) state;
             base.HandleComponentState((SpriteComponentState)state);
 
-            if (state.BaseName != null && basename != state.BaseName)
-            {
-                basename = state.BaseName;
-                LoadSprites();
-            }
+            if (newState.BaseName == null || basename == newState.BaseName)
+                return;
+
+            basename = newState.BaseName;
+            LoadSprites();
         }
     }
 }

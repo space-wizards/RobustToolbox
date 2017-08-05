@@ -378,16 +378,17 @@ namespace SS14.Client.GameObjects
                 slaves.Remove(slavecompo);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            DrawDepth = state.DrawDepth;
-            if (state.SpriteKey != null && sprites.ContainsKey(state.SpriteKey) &&
-                currentBaseSprite != sprites[state.SpriteKey])
-            {
-                SetSpriteByKey(state.SpriteKey);
-            }
+            var newState = (SpriteComponentState) state;
+            DrawDepth = newState.DrawDepth;
 
-            visible = state.Visible;
+            if (newState.SpriteKey != null && sprites.ContainsKey(newState.SpriteKey) &&
+                currentBaseSprite != sprites[newState.SpriteKey])
+                SetSpriteByKey(newState.SpriteKey);
+
+            visible = newState.Visible;
         }
     }
 }

@@ -156,15 +156,15 @@ namespace SS14.Client.GameObjects
                                    new Vector2f(), currentBaseSprite);
         }
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            base.HandleComponentState((SpriteComponentState)state);
+            var newState = (SpriteComponentState) state;
+            base.HandleComponentState(state);
 
-            if (state.BaseName != null && _basename != state.BaseName)
-            {
-                _basename = state.BaseName;
-                LoadSprites();
-            }
+            if (newState.BaseName == null || _basename == newState.BaseName) return;
+            _basename = newState.BaseName;
+            LoadSprites();
         }
     }
 }

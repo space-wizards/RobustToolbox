@@ -14,9 +14,10 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(PhysicsComponentState);
 
-        public override void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState state)
         {
-            Mass = state.Mass;
+            Mass = ((PhysicsComponentState)state).Mass;
         }
     }
 }

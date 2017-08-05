@@ -221,41 +221,8 @@ namespace SS14.Server
             //mount the default game ContentPack defined in config
             _resources.MountDefaultContentPack();
 
-            // get the assembly from the file system
-            if(_resources.TryContentFileRead(@"Assemblies/Content.Server.dll", out MemoryStream gameDll))
-            {
-                Logger.Info("[SRV] Loading Server Content DLL");
-
-                // see if debug info is present
-                if (_resources.TryContentFileRead(@"Assemblies/Content.Server.pdb", out MemoryStream gamePdb))
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Info($"[SRV] Exception loading DLL Content.Server.dll, {e}");
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warning("[ENG] Could not find Client Content DLL");
-            }
+            LoadContentAssembly<GameShared>("Shared");
+            LoadContentAssembly<GameServer>("Server");
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
@@ -271,6 +238,45 @@ namespace SS14.Server
 
             _active = true;
             return false;
+        }
+
+        private void LoadContentAssembly<T>(string name) where T: GameShared
+        {
+            // get the assembly from the file system
+            if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            {
+                Logger.Debug($"[SRV] Loading {name} Content DLL");
+
+                // see if debug info is present
+                if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+            }
         }
 
         private TimeSpan _lastTick;

@@ -71,47 +71,13 @@ namespace SS14.Client
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceCache.LoadBaseResources();
-            
+
             ShowSplashScreen();
 
             _resourceCache.LoadLocalResources();
 
-
-            // get the assembly from the file system
-            if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.dll", out MemoryStream gameDll))
-            {
-                Logger.Info("[ENG] Loading Client Content DLL");
-
-                // see if debug info is present
-                if (_resourceManager.TryContentFileRead(@"Assemblies/Content.Client.pdb", out MemoryStream gamePdb))
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray(), gamePdb.ToArray());
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        // load the assembly into the process, and bootstrap the GameServer entry point.
-                        AssemblyLoader.LoadGameAssembly<GameServer>(gameDll.ToArray());
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Info($"[ENG] Exception loading DLL Content.Client.dll, {e.Message}");
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warning("[ENG] Could not find Client Content DLL");
-            }
+            LoadContentAssembly<GameShared>("Shared");
+            LoadContentAssembly<GameClient>("Client");
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
@@ -152,6 +118,45 @@ namespace SS14.Client
             Logger.Info("GameController terminated.");
 
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
+        }
+
+        private void LoadContentAssembly<T>(string name) where T: GameShared
+        {
+            // get the assembly from the file system
+            if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            {
+                Logger.Debug($"[SRV] Loading {name} Content DLL");
+
+                // see if debug info is present
+                if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+            }
         }
 
         private void ShowSplashScreen()

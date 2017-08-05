@@ -2,7 +2,6 @@
 using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 

@@ -1,6 +1,4 @@
 ﻿using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System.Collections.Generic;

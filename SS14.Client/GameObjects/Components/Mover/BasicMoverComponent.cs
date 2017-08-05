@@ -1,8 +1,6 @@
 ﻿using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;

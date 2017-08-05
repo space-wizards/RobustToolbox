@@ -2,8 +2,6 @@
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Mover;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
@@ -83,19 +81,10 @@ namespace SS14.Server.GameObjects
             Owner.GetComponent<ITransformComponent>().Position = toPosition;
         }
 
-        private ITransformComponent getTransform()
-        {
-            return Owner.GetComponent<ITransformComponent>();
-        }
-
+        /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            var transform = getTransform();
-            if (master == null)
-            {
-                return new SlaveMoverComponentState(transform.X, transform.Y, 0, 0);
-            }
-            return new SlaveMoverComponentState(transform.X, transform.Y, 0, 0, master.Uid);
+            return master == null ? new SlaveMoverComponentState(null) : new SlaveMoverComponentState(master.Uid);
         }
     }
 }

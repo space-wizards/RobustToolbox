@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared.GameObjects.Components
+﻿namespace SS14.Shared.GameObjects
 {
     public static class NetIDs
     {

@@ -1,8 +1,6 @@
 ﻿using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Light;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;

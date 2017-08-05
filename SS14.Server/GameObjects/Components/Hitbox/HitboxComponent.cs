@@ -1,8 +1,6 @@
 ﻿using SFML.Graphics;
 using SS14.Server.Interfaces.Map;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Hitbox;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using Component = SS14.Shared.GameObjects.Component;

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 
-namespace SS14.Shared.GameObjects.Components.Physics
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class PhysicsComponentState : ComponentState
     {
-        public float Mass;
+        public readonly float Mass;
 
         public PhysicsComponentState(float mass)
             : base(NetIDs.PHYSICS)

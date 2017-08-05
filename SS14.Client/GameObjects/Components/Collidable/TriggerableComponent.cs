@@ -1,4 +1,4 @@
-﻿using SS14.Shared.GameObjects.Components;
+﻿using SS14.Shared.GameObjects;
 
 namespace SS14.Client.GameObjects
 {

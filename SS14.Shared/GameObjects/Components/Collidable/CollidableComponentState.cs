@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 
-namespace SS14.Shared.GameObjects.Components.Collidable
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class CollidableComponentState : ComponentState
     {
-        public bool CollisionEnabled;
+        public readonly bool CollisionEnabled;
 
         public CollidableComponentState(bool collisionEnabled)
             : base(NetIDs.COLLIDABLE)

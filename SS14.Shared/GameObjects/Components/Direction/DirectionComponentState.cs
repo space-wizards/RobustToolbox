@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 
-namespace SS14.Shared.GameObjects.Components.Direction
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class DirectionComponentState : ComponentState
     {
-        public SS14.Shared.Direction Direction;
+        public readonly Direction Direction;
 
-        public DirectionComponentState(SS14.Shared.Direction dir)
-            :base(NetIDs.DIRECTION)
+        public DirectionComponentState(Direction dir)
+            : base(NetIDs.DIRECTION)
         {
             Direction = dir;
         }

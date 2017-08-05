@@ -4,7 +4,6 @@ using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;

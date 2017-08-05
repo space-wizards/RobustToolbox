@@ -1,13 +1,13 @@
+﻿using System;
 using SFML.System;
-using System;
 
-namespace SS14.Shared.GameObjects.Components.Transform
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class TransformComponentState : ComponentState
     {
-        public bool ForceUpdate { get; set; }
-        public Vector2f Position { get; set; }
+        public readonly bool ForceUpdate;
+        public readonly Vector2f Position;
 
         public TransformComponentState(Vector2f position, bool forceUpdate)
             : base(NetIDs.TRANSFORM)

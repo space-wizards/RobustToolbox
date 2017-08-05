@@ -2,8 +2,6 @@
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Transform;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using System;

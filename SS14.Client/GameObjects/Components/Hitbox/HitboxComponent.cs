@@ -1,8 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameObjects.Components;
-using SS14.Shared.GameObjects.Components.Hitbox;
 using SS14.Shared.IoC;
 using System;
 

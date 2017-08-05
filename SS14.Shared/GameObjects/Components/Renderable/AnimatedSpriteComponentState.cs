@@ -1,16 +1,17 @@
-using System;
+﻿using System;
 
-namespace SS14.Shared.GameObjects.Components.Renderable
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class AnimatedSpriteComponentState : RenderableComponentState
     {
-        public string Name;
-        public bool Visible;
-        public string CurrentAnimation;
-        public bool Loop;
+        public readonly string CurrentAnimation;
+        public readonly bool Loop;
+        public readonly string Name;
+        public readonly bool Visible;
 
-        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation, bool loop, int? masterUid)
+        public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation,
+            bool loop, int? masterUid)
             : base(drawDepth, masterUid, NetIDs.ANIMATED_SPRITE)
         {
             Visible = visible;

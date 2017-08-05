@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 
-namespace SS14.Shared.GameObjects.Components.Velocity
+namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class VelocityComponentState : ComponentState
     {
-        public float VelocityX;
-        public float VelocityY;
+        public readonly float VelocityX;
+        public readonly float VelocityY;
 
         public VelocityComponentState(float velx, float vely)
             : base(NetIDs.VELOCITY)

@@ -21,8 +21,7 @@ namespace SS14.Shared.ContentPack
         /// <inheritdoc />
         public void Initialize()
         {
-            _config.RegisterCVar("resource.pack", Path.Combine("..", "..", "Resources", "ResourcePack.zip"),
-                CVarFlags.ARCHIVE);
+            _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVarFlags.ARCHIVE);
             _config.RegisterCVar("resource.password", string.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
         }
 
@@ -47,12 +46,6 @@ namespace SS14.Shared.ContentPack
         /// <inheritdoc />
         public void MountContentPack(string pack, string password = null)
         {
-            if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
-            {
-                var debugPath = "..";
-                pack = Path.Combine(debugPath, pack);
-            }
-
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
             var packInfo = new FileInfo(pack);

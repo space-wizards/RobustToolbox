@@ -40,9 +40,31 @@ namespace SS14.Shared.ContentPack
             "SS14.Client.",
             "SS14.Server.",
 
+            // Content assemblies
+            "Content.Shared.",
+            "Content.Client.",
+            "Content.server.",
+
             // base type assemblies
             "System.Object",
-            "System.Nullable`1"
+            "System.Nullable`1",
+            "System.ValueType",
+            "System.Array",
+
+            // Primitives
+            "System.String",
+            "System.Byte",
+            "System.SByte",
+            "System.UInt16",
+            "System.Int16",
+            "System.UInt32",
+            "System.Int32",
+            "System.UInt64",
+            "System.Int64",
+
+            // Common System things.
+            "System.Collections.Generic",
+            "System.Console",
         };
 
         /// <summary>
@@ -140,7 +162,7 @@ namespace SS14.Shared.ContentPack
                     result = 'B';
                     break;
                 }
-                Logger.Info($"[RES] RefType: [{result}] {typeRef.FullName}");
+                Logger.Debug($"[RES] RefType: [{result}] {typeRef.FullName}");
             }
         }
     }

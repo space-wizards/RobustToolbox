@@ -22,6 +22,26 @@ namespace SS14.Shared.ContentPack
             Init = 1
         }
 
+        static AssemblyLoader()
+        {
+            // Make it attempt to use already loaded assemblies,
+            // as .NET doesn't do it automatically.
+            // (It attempts to load dependencies from disk next to executable only)
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingAssembly;
+        }
+
+        private static Assembly ResolveMissingAssembly(object sender, ResolveEventArgs args)
+        {
+            foreach (var mod in _mods)
+            {
+                if (mod.GameAssembly.FullName == args.Name)
+                {
+                    return mod.GameAssembly;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         ///     Loaded assemblies.
         /// </summary>
@@ -66,7 +86,9 @@ namespace SS14.Shared.ContentPack
                 Logger.Warning($"[RES] Assembly has no entry points: {mod.GameAssembly.FullName}");
 
             foreach (var entryPoint in entryPoints)
+            {
                 mod.EntryPoints.Add(Activator.CreateInstance(entryPoint) as T);
+            }
 
             _mods.Add(mod);
         }
@@ -78,16 +100,20 @@ namespace SS14.Shared.ContentPack
         public static void BroadcastRunLevel(RunLevel level)
         {
             foreach (var mod in _mods)
-            foreach (var entry in mod.EntryPoints)
-                switch (level)
+            {
+                foreach (var entry in mod.EntryPoints)
                 {
-                    case RunLevel.Init:
-                        entry.Init();
-                        break;
-                    default:
-                        Logger.Error($"[RES] Unknown RunLevel: {level}");
-                        break;
+                    switch (level)
+                    {
+                        case RunLevel.Init:
+                            entry.Init();
+                            break;
+                        default:
+                            Logger.Error($"[RES] Unknown RunLevel: {level}");
+                            break;
+                    }
                 }
+            }
         }
 
         /// <summary>

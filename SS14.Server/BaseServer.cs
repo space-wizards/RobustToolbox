@@ -78,7 +78,6 @@ namespace SS14.Server
         private readonly IResourceManager _resources;
 
         private const int GAME_COUNTDOWN = 15;
-        private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
 
         private RunLevel _runLevel;
         private bool _active;
@@ -88,7 +87,6 @@ namespace SS14.Server
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
-        private uint _lastState;
 
         private RunLevel Level
         {
@@ -281,31 +279,30 @@ namespace SS14.Server
 
         private TimeSpan _lastTick;
         private TimeSpan _lastKeepUpAnnounce;
-        private TimeSpan _maxTime;
 
         /// <inheritdoc />
         public void MainLoop()
         {
             // maximum number of ticks to queue before the loop slows down.
-            const int MaxTicks = 5;
+            const int maxTicks = 5;
 
             _time.ResetRealTime();
-            _maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * MaxTicks);
+            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
 
             while (_active)
             {
                 var accumulator = _time.RealTime - _lastTick;
 
                 // If the game can't keep up, limit time.
-                if (accumulator > _maxTime)
+                if (accumulator > maxTime)
                 {
                     // limit accumulator to max time.
-                    accumulator = _maxTime;
+                    accumulator = maxTime;
 
                     // pull lastTick up to the current realTime
                     // This will slow down the simulation, but if we are behind from a
                     // lag spike hopefully it will be able to catch up.
-                    _lastTick = _time.RealTime - _maxTime;
+                    _lastTick = _time.RealTime - maxTime;
 
                     // announce we are falling behind
                     if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
@@ -315,6 +312,8 @@ namespace SS14.Server
                     }
                 }
 
+                _time.InSimulation = true;
+
                 // run the simulation for every accumulated tick
                 while (accumulator >= _time.TickPeriod)
                 {
@@ -322,9 +321,19 @@ namespace SS14.Server
                     _lastTick += _time.TickPeriod;
                     _time.StartFrame();
 
-                    Update((float)_time.CurTime.TotalSeconds);
-                    _time.CurTick++;
+                    // only run the sim if unpaused, but still use up the accumulated time
+                    if(!_time.Paused)
+                    {
+                        Update((float)_time.CurTime.TotalSeconds);
+                        _time.CurTick++;
+                    }
                 }
+
+                // if not paused, save how far between ticks we are so interpolation works
+                if (!_time.Paused)
+                    _time.TickRemainder = accumulator;
+
+                _time.InSimulation = false;
 
                 // every 1 second update stats in the console window title
                 if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)

@@ -179,7 +179,7 @@ namespace SS14.Client.Graphics
 
         public static void RunIdle(object sender, FrameEventArgs e)
         {
-            FrameEvent(sender, e);
+            FrameEvent?.Invoke(sender, e);
         }
 
         public static void Stop()

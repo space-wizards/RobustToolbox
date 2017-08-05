@@ -250,19 +250,19 @@
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
-    <Compile Include="GameObjects\Component\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Direction\DirectionComponentState.cs" />
-    <Compile Include="GameObjects\Component\Hitbox\HitboxComponentState.cs" />
-    <Compile Include="GameObjects\Component\Light\PointLightComponentState.cs" />
-    <Compile Include="GameObjects\Component\Mover\SlaveMoverComponentState.cs" />
-    <Compile Include="GameObjects\Component\Particles\ParticleSystemComponentState.cs" />
-    <Compile Include="GameObjects\Component\Physics\PhysicsComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\RenderableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\SpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\WearableAnimatedSpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Transform\TransformComponentState.cs" />
-    <Compile Include="GameObjects\Component\Velocity\VelocityComponentState.cs" />
+    <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
+    <Compile Include="GameObjects\Components\Direction\DirectionComponentState.cs" />
+    <Compile Include="GameObjects\Components\Hitbox\HitboxComponentState.cs" />
+    <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
+    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponentState.cs" />
+    <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
+    <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
+    <Compile Include="GameObjects\Components\Velocity\VelocityComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
@@ -303,7 +303,7 @@
     <Content Include="Prototypes\Entities\Wallmounted.yml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="GameObjects\Component\NetIDs.cs" />
+    <Compile Include="GameObjects\Components\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

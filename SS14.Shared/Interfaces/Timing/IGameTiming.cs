@@ -8,6 +8,11 @@ namespace SS14.Shared.Interfaces.Timing
     public interface IGameTiming
     {
         /// <summary>
+        /// Is program execution inside of the simulation, or rendering?
+        /// </summary>
+        bool InSimulation { get; set; }
+
+        /// <summary>
         ///     Is the simulation currently paused?
         /// </summary>
         bool Paused { get; set; }
@@ -32,12 +37,12 @@ namespace SS14.Shared.Interfaces.Timing
         /// <summary>
         ///     The simulated time it took to render the last frame.
         /// </summary>
-        TimeSpan FrameTime { get; set; }
+        TimeSpan FrameTime { get; }
 
         /// <summary>
         ///     The real time it took to render the last frame.
         /// </summary>
-        TimeSpan RealFrameTime { get; set; }
+        TimeSpan RealFrameTime { get; }
 
         /// <summary>
         ///     Average real frame time over the last 50 frames.
@@ -68,6 +73,11 @@ namespace SS14.Shared.Interfaces.Timing
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
         TimeSpan TickPeriod { get; }
+
+        /// <summary>
+        /// The remaining time left over after the last tick was ran.
+        /// </summary>
+        TimeSpan TickRemainder { get; set; }
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.

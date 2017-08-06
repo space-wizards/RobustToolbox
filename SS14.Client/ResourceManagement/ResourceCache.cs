@@ -63,7 +63,7 @@ namespace SS14.Client.Resources
 
             _resources.MountContentDirectory("");
 
-            _resources.MountContentPack(@"../../Resources/EngineContentPack.zip");
+            _resources.MountContentPack(@"./EngineContentPack.zip");
         }
 
         /// <summary>

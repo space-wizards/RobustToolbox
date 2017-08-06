@@ -15,8 +15,6 @@ namespace SS14.Shared.GameObjects
         public virtual uint? NetID => null;
         public virtual bool NetworkSynchronizeExistence => false;
 
-        #region IComponent Members
-
         public IEntity Owner { get; private set; }
         public virtual Type StateType => typeof(ComponentState);
 
@@ -105,7 +103,8 @@ namespace SS14.Shared.GameObjects
             return new ComponentState(NetID.Value);
         }
 
-        public virtual void HandleComponentState(dynamic state)
+        /// <inheritdoc />
+        public virtual void HandleComponentState(ComponentState state)
         {
         }
 
@@ -134,8 +133,6 @@ namespace SS14.Shared.GameObjects
         {
             return new List<ComponentParameter>();
         }
-
-        #endregion IComponent Members
 
         protected virtual void SubscribeEvents()
         { }

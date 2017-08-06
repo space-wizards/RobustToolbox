@@ -459,18 +459,17 @@ namespace SS14.Shared.GameObjects
                 }
             }
 
-            foreach (ComponentState compState in state.ComponentStates)
+            foreach (var compState in state.ComponentStates)
             {
                 compState.ReceivedTime = state.ReceivedTime;
-                if (TryGetComponent(compState.NetID, out var component))
-                {
-                    Type stateType = component.StateType;
-                    if (compState.GetType() != stateType)
-                    {
-                        throw new InvalidOperationException($"Incorrect component state type: {stateType}, component: {component.GetType()}");
-                    }
-                    component.HandleComponentState(compState);
-                }
+
+                if (!TryGetComponent(compState.NetID, out var component))
+                    continue;
+
+                if (compState.GetType() != component.StateType)
+                    throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
+
+                component.HandleComponentState(compState);
             }
         }
 

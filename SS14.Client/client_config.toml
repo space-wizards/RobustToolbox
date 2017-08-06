@@ -5,7 +5,7 @@
 console = 64
 
 [res]
-pack = "../../Resources/ResourcePack.zip"
+pack = "./ResourcePack.zip"
 password = ""
 
 [display]

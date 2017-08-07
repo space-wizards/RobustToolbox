@@ -74,11 +74,6 @@
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSScriptLibrary">
-      <Name>CSScriptLibrary</Name>
-      <HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
@@ -162,12 +157,7 @@
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="app.config">
-    </None>
-    <Content Include="atoms.ss13">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="app.config" />
     <Content Include="emotes.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

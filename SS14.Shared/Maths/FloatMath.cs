@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 
 namespace SS14.Shared.Maths
@@ -57,10 +57,25 @@ namespace SS14.Shared.Maths
          {
              return radians/Pi*180;
          }
-         public static float ToRadians(float degrees)
-         {
-             return degrees/180*Pi;
-         }
-     }
- }
+        public static float ToRadians(float degrees)
+        {
+            return degrees / 180 * Pi;
+        }
+
+        public static float Clamp(float val, float min, float max)
+        {
+            if (val < min) return min;
+            else if (val > max) return max;
+            else return val;
+        }
+
+        public static int Clamp(int val, int min, int max)
+        {
+            if (val < min) return min;
+            else if (val > max) return max;
+            else return val;
+        }
+
+    }
+}
 

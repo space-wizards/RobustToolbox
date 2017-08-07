@@ -264,10 +264,12 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
 </Project>

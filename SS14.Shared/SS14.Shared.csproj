@@ -279,30 +279,6 @@
     <Compile Include="Reflection\ReflectionManager.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
-    <Content Include="Prototypes\Entities\Clothing.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Containers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Doors.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\JanitorItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Lights.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Mobs.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Tables.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Wallmounted.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Compile Include="GameObjects\Components\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -314,10 +290,62 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
+    <Resources Include="..\Resources\Fonts\**\*.*" >
+      <ResourceRoot>Fonts</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\ParticleSystems\**\*.*" >
+      <ResourceRoot>ParticleSystems</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Shaders\**\*.*" >
+      <ResourceRoot>Shaders</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Unatlased\**\*.*" >
+      <ResourceRoot>Textures\Unatlased</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\UserInterface\**\*.*" >
+      <ResourceRoot>Textures\UserInterface</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Decals\**\*.*" >
+      <ResourceRoot>Textures\Decals</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Effects\**\*.*" >
+      <ResourceRoot>Textures\Effects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Items\**\*.*" >
+      <ResourceRoot>Textures\Items</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Objects\**\*.*" >
+      <ResourceRoot>Textures\Objects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Tiles\**\*.*" >
+      <ResourceRoot>Textures\Tiles</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Prototypes\**\*.*" >
+      <ResourceRoot>Engine\Prototypes</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <RemoveDir Directories="$(OutputPath)Resources" />
+    <Copy SourceFiles="@(Resources)" DestinationFiles="$(OutputPath)Resources\%(ResourceRoot)\%(RecursiveDir)%(Filename)%(Extension)" />
+  </Target>
 </Project>

@@ -62,19 +62,13 @@ namespace SS14.Shared.Maths
             return degrees / 180 * Pi;
         }
 
-        public static float Clamp(float val, float min, float max)
+        public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
         {
-            if (val < min) return min;
-            else if (val > max) return max;
+            if (val.CompareTo(min) < 0) return min;
+            else if (val.CompareTo(max) > 0) return max;
             else return val;
         }
 
-        public static int Clamp(int val, int min, int max)
-        {
-            if (val < min) return min;
-            else if (val > max) return max;
-            else return val;
-        }
 
     }
 }

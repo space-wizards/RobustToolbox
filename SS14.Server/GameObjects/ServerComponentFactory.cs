@@ -18,7 +18,7 @@ namespace SS14.Server.GameObjects
             Register<DirectionComponent>();
             RegisterReference<DirectionComponent, IDirectionComponent>();
 
-            Register<HitboxComponent>();
+            Register<BoundingBoxComponent>();
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();
             Register<BasicMoverComponent>();

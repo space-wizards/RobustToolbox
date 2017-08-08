@@ -1,4 +1,4 @@
-using NetSerializer;
+﻿using NetSerializer;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.Serialization;
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using OpenTK;
 
 namespace SS14.Shared.Serialization
 {
@@ -40,6 +41,7 @@ namespace SS14.Shared.Serialization
             typeof(IntRect),
             typeof(FloatRect),
             typeof(Color),
+            typeof(Box2)
         };
 
         public bool Handles(Type type) => handledTypes.Contains(type);
@@ -212,6 +214,33 @@ namespace SS14.Shared.Serialization
             value = new Color(r, g, b, a);
         }
 
+        #endregion
+
+        #region Box2
+
+        public static void Write(Stream stream, Box2 value)
+        {
+            stream.Write(BitConverter.GetBytes(value.Left), 0, sizeof(float));
+            stream.Write(BitConverter.GetBytes(value.Right), 0, sizeof(float));
+            stream.Write(BitConverter.GetBytes(value.Top), 0, sizeof(float));
+            stream.Write(BitConverter.GetBytes(value.Bottom), 0, sizeof(float));
+        }
+
+        public static void Read(Stream stream, out Box2 value)
+        {
+            var buffer = new byte[sizeof(float)];
+
+            stream.Read(buffer, 0, buffer.Length);
+            var left = BitConverter.ToSingle(buffer, 0);
+            stream.Read(buffer, 0, buffer.Length);
+            var right = BitConverter.ToSingle(buffer, 0);
+            stream.Read(buffer, 0, buffer.Length);
+            var top = BitConverter.ToSingle(buffer, 0);
+            stream.Read(buffer, 0, buffer.Length);
+            var bottom = BitConverter.ToSingle(buffer, 0);
+
+            value = new Box2(left, top, right, bottom);
+        }
         #endregion
     }
 }

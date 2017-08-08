@@ -22,9 +22,9 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                if (Owner.HasComponent<HitboxComponent>())
+                if (Owner.HasComponent<BoundingBoxComponent>())
                 {
-                    return Owner.GetComponent<HitboxComponent>().AABB;
+                    return Owner.GetComponent<BoundingBoxComponent>().AABB.Convert();
                 }
                 else if (Owner.HasComponent<IRenderableComponent>())
                 {

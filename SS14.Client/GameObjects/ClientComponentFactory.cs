@@ -34,7 +34,7 @@ namespace SS14.Client.GameObjects
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();
 
-            Register<HitboxComponent>();
+            Register<BoundingBoxComponent>();
 
             Register<AnimatedSpriteComponent>();
             RegisterReference<AnimatedSpriteComponent, IClickTargetComponent>();

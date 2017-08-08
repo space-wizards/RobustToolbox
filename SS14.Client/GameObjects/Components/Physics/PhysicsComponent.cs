@@ -8,7 +8,8 @@ namespace SS14.Client.GameObjects
 {
     /// <summary>
     ///     Contains physical properties of the entity. This component registers the entity
-    ///     in the physics system as a dynamic ridged body object that has physics.
+    ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
+    ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
     internal class PhysicsComponent : ClientComponent
     {
@@ -45,8 +46,8 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             // This component requires that the entity has an AABB.
-            if (!owner.HasComponent<HitboxComponent>())
-                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(HitboxComponent)}. ");
+            if (!owner.HasComponent<BoundingBoxComponent>())
+                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
 
             base.OnAdd(owner);
         }

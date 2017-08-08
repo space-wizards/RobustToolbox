@@ -197,7 +197,7 @@
     <Compile Include="GameObjects\Components\Actor\BasicActorComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
     <Compile Include="GameObjects\Components\Direction\DirectionComponent.cs" />
-    <Compile Include="GameObjects\Components\Hitbox\HitboxComponent.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\BasicMoverComponent.cs" />

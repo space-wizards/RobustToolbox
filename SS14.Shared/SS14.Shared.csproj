@@ -251,7 +251,7 @@
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\Direction\DirectionComponentState.cs" />
-    <Compile Include="GameObjects\Components\Hitbox\HitboxComponentState.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Mover\SlaveMoverComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />

@@ -218,7 +218,7 @@
     <Compile Include="GameObjects\Components\Collidable\TriggerableComponent.cs" />
     <Compile Include="GameObjects\Components\Collider\ColliderComponent.cs" />
     <Compile Include="GameObjects\Components\Direction\DirectionComponent.cs" />
-    <Compile Include="GameObjects\Components\Hitbox\HitboxComponent.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />

@@ -1,4 +1,4 @@
-- type: entity
+﻿- type: entity
   id: HumanMob
   name: Urist McHuman
   components:
@@ -17,6 +17,6 @@
   - type: Physics
     mass: 5
 
-  - type: Hitbox
+  - type: BoundingBox
     sizeX: 25
     sizeY: 25

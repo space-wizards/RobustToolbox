@@ -85,10 +85,8 @@ namespace SS14.Client.Resources
             var cfgMgr = _config;
 
             cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
             string zipPath = path ?? _config.GetCVar<string>("res.pack");
-            string password = pw ?? _config.GetCVar<string>("res.password");
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
@@ -103,8 +101,6 @@ namespace SS14.Client.Resources
 
             FileStream zipFileStream = File.OpenRead(zipPath);
             var zipFile = new ZipFile(zipFileStream);
-
-            if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
 #region Sort Resource pack
             var directories = zipFile.Cast<ZipEntry>()
@@ -344,8 +340,6 @@ namespace SS14.Client.Resources
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
             GLSLShader loadedShader;
 
-            //Will throw exception if missing or wrong password. Handle this.
-
             if (shaderEntry.Name.Contains(".frag"))
             {
                 FragmentShader = new MemoryStream();
@@ -386,7 +380,6 @@ namespace SS14.Client.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(fontEntry);
-            //Will throw exception is missing or wrong password. Handle this.
 
             var memStream = new MemoryStream();
 
@@ -412,7 +405,6 @@ namespace SS14.Client.Resources
         private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
         {
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
 
@@ -432,7 +424,6 @@ namespace SS14.Client.Resources
         private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
         {
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
@@ -462,7 +453,6 @@ namespace SS14.Client.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             var memStream = new MemoryStream();
 

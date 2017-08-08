@@ -6,7 +6,6 @@ console = 64
 
 [res]
 pack = "./ResourcePack.zip"
-password = ""
 
 [display]
 width = 1280

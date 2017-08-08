@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using System;
 using System.Diagnostics;
@@ -234,17 +234,9 @@ namespace SS14.Client.Graphics.Render
         }
 
 
-        /// <summary>
-        /// Deconstructs and disposes this instance
-        /// </summary>
-        protected override void Destroy(bool disposing)
-        {
-            GC.Collect();
-        }
+#endregion
 
-        #endregion
-
-        #region Drawing Methods
+#region Drawing Methods
 
         /// <summary>
         /// Draws the RenderImage Texture to the screen
@@ -393,7 +385,7 @@ namespace SS14.Client.Graphics.Render
         //    _blit.Draw(destination);
         // }
 
-        #endregion
+#endregion
 
 
     }

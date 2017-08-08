@@ -1,32 +1,96 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using SFML.System;
+﻿using OpenTK;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Log;
 
 namespace SS14.Server.GameObjects
 {
-    //Moves the entity based on input from a Clientside PlayerInputMoverComponent.
+    /// <summary>
+    ///     Moves the entity based on input from a KeyBindingInputComponent.
+    /// </summary>
     public class PlayerInputMoverComponent : Component, IMoverComponent
     {
+        private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
+        private const float FastMoveSpeed = Constants.HumanRunSpeed;
+
+        private Vector2 _moveDir;
+        private bool _run;
+
+        /// <inheritdoc />
         public override string Name => "PlayerInputMover";
-        public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
-        public override bool NetworkSynchronizeExistence => true;
 
-        /// <summary>
-        /// Handles position messages. that should be it.
-        /// </summary>
-        /// <param name="message"></param>
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
+        /// <inheritdoc />
+        public override uint? NetID => null;
+        //public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
+
+        /// <inheritdoc />
+        public override bool NetworkSynchronizeExistence => false;
+        //public override bool NetworkSynchronizeExistence => true;
+
+        /// <inheritdoc />
+        public override void OnAdd(IEntity owner)
         {
-            var physComp = Owner.GetComponent<PhysicsComponent>();
-            var transform = Owner.GetComponent<ITransformComponent>();
+            // This component requires that the entity has an AABB.
+            if (!owner.HasComponent<KeyBindingInputComponent>())
+                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
 
-            physComp.Velocity = new Vector2((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
-            transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
+            // This component requires that the entity has an AABB.
+            if (!owner.HasComponent<PhysicsComponent>())
+                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
+
+            base.OnAdd(owner);
+        }
+
+        /// <inheritdoc />
+        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
+        {
+            //Don't listen to our own messages!
+            if (sender == this)
+                return ComponentReplyMessage.Empty;
+
+            switch (type)
+            {
+                case ComponentMessageType.BoundKeyChange:
+                    HandleKeyChange();
+                    break;
+            }
+
+            return base.ReceiveMessage(sender, type, list);
+        }
+
+        /// <inheritdoc />
+        public override void Update(float frameTime)
+        {
+            var physics = Owner.GetComponent<PhysicsComponent>();
+
+            physics.Velocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
+
+            base.Update(frameTime);
+        }
+
+        private void HandleKeyChange()
+        {
+            // receiving BoundKeyChange asserts KeyBindingInputComponent exists.
+            var input = Owner.GetComponent<KeyBindingInputComponent>();
+
+            var x = 0;
+            x -= input.GetKeyState(BoundKeyFunctions.MoveLeft) ? 1 : 0;
+            x += input.GetKeyState(BoundKeyFunctions.MoveRight) ? 1 : 0;
+
+            var y = 0;
+            y -= input.GetKeyState(BoundKeyFunctions.MoveDown) ? 1 : 0;
+            y += input.GetKeyState(BoundKeyFunctions.MoveUp) ? 1 : 0;
+
+            _moveDir = new Vector2(x, y);
+
+            // can't normalize zero length vector
+            if (_moveDir.LengthSquared > 0.0001)
+                _moveDir.Normalize();
+
+            // players can run or walk
+            _run = input.GetKeyState(BoundKeyFunctions.Run);
         }
     }
 }

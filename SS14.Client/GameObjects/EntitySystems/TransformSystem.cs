@@ -64,6 +64,8 @@ namespace SS14.Client.GameObjects.EntitySystems
 
         public override void Update(float frametime)
         {
+            return;
+
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
@@ -73,8 +75,11 @@ namespace SS14.Client.GameObjects.EntitySystems
                 //Get transform component
                 var transform = entity.GetComponent<IClientTransformComponent>();
                 //Check if the entity has a keyboard input mover component
+
                 bool isLocallyControlled = entity.HasComponent<PlayerInputMoverComponent>()
                     && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
+
+                isLocallyControlled = false;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
                 var currentTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds - interpolation;
@@ -153,12 +158,16 @@ namespace SS14.Client.GameObjects.EntitySystems
                             doTranslate = true;
                         }
                     }
+
                     if (doTranslate)
                     {
                         transform.Position = newPosition;
+#if _DELME
                         if (isLocallyControlled)
                             entity.GetComponent<PlayerInputMoverComponent>().SendPositionUpdate(newPosition);
+#endif
                     }
+
                 }
             }
         }

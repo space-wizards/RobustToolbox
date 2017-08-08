@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -96,24 +95,6 @@ namespace SS14.Shared.GameObjects
 
         /// <inheritdoc />
         public virtual void HandleInstantiationMessage(NetConnection netConnection)
-        {
-        }
-
-        public virtual void HandleComponentEvent<T>(T args)
-        {
-        }
-
-        /// <summary>
-        ///     This gets a list of runtime-settable component parameters, with CURRENT VALUES
-        ///     If it isn't going to return a current value, it shouldn't return it at all.
-        /// </summary>
-        /// <returns></returns>
-        public virtual IList<ComponentParameter> GetParameters()
-        {
-            return new List<ComponentParameter>();
-        }
-
-        protected virtual void SubscribeEvents()
         {
         }
     }

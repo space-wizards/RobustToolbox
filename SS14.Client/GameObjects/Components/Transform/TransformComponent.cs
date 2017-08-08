@@ -31,10 +31,13 @@ namespace SS14.Client.GameObjects
             get => _position;
             set
             {
-                Vector2f oldPosition = _position;
-                _position = value;
+                if(_position != value)
+                {
+                    Vector2f oldPosition = _position;
+                    _position = value;
 
-                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                    OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                }
             }
         }
 
@@ -66,29 +69,8 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState state)
         {
             var newState = (TransformComponentState)state;
-            lastState = newState;
-            states.Add(newState);
-            var interp = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
-            //Remove all states older than the one just before the interp time.
-            lerpStateFrom = states.Where(s => s.ReceivedTime <= newState.ReceivedTime - interp).OrderByDescending(s => s.ReceivedTime).FirstOrDefault();
-            if (lerpStateFrom != null)
-            {
-                lerpStateTo =
-                    states.Where(s => s.ReceivedTime > lerpStateFrom.ReceivedTime).OrderByDescending(s => s.ReceivedTime).
-                        LastOrDefault();
-                if (lerpStateTo == null)
-                    lerpStateTo = lerpStateFrom;
-                states.RemoveAll(s => s.ReceivedTime < lerpStateFrom.ReceivedTime);
-            }
-            else
-            {
-                lerpStateFrom = newState;
-                lerpStateTo = newState;
-            }
-            if (lastState.ForceUpdate)
-            {
-                Position = newState.Position;
-            }
+
+            Position = newState.Position;
         }
     }
 }

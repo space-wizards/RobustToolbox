@@ -12,14 +12,22 @@ namespace SS14.Client.GameObjects
     //Moves an entity based on key binding input
     public class PlayerInputMoverComponent : ClientComponent, IMoverComponent
     {
+        /// <inheritdoc />
         public override string Name => "PlayerInputMover";
-        public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
-        public override bool NetworkSynchronizeExistence => true;
+
+        /// <inheritdoc />
+        public override uint? NetID => null;
+        //public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
+
+        /// <inheritdoc />
+        public override bool NetworkSynchronizeExistence => false;
+        //public override bool NetworkSynchronizeExistence => true;
 
         private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
         public const float FastMoveSpeed = Constants.HumanRunSpeed;
         private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
+#if _DELME
         private float _currentMoveSpeed = BaseMoveSpeed;
 
         private bool _moveDown;
@@ -33,14 +41,6 @@ namespace SS14.Client.GameObjects
         {
             get => Owner.GetComponent<PhysicsComponent>().Velocity.Convert();
             set => Owner.GetComponent<PhysicsComponent>().Velocity = value.Convert();
-        }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            /*var x = (float)message.MessageParameters[0];
-            var y = (float)message.MessageParameters[1];
-            if((bool)message.MessageParameters[2]) //"forced" parameter -- if true forces position update
-            PlainTranslate((float)x, (float)y);*/
         }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
@@ -134,39 +134,6 @@ namespace SS14.Client.GameObjects
             {
                 Velocity = new Vector2f(0f, 0f);
             }
-
-            /*Vector2 translationVector = Velocity*frameTime;
-            var velcomp = Owner.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-
-            bool translated = TryTranslate(translationVector, false); //Only bump once...
-            bool translatedx = false, translatedy = false;
-            if (!translated)
-                translatedx = TryTranslate(new Vector2(translationVector.X, 0), true);
-            if (!translated && !translatedx)
-                translatedy = TryTranslate(new Vector2(0, translationVector.Y), true);
-
-            if (!translated)
-            {
-                if (!translatedx)
-                {
-                    velcomp.Velocity = new Vector2(0, velcomp.Velocity.Y);
-                }
-                if (!translatedy)
-                    velcomp.Velocity = new Vector2(velcomp.Velocity.X, 0);
-                if (!translatedx && !translatedy)
-                    velcomp.Velocity = Vector2.Zero;
-
-                translationVector = new Vector2(translatedx?translationVector.X:0, translatedy?translationVector.Y:0);
-            }
-
-            if (_moveTimeCache >= MoveRateLimit)
-            {
-                var nextPosition = Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position + translationVector;
-
-                SendPositionUpdate(nextPosition);
-
-                _moveTimeCache = 0;
-            }*/
         }
 
         public virtual void SendPositionUpdate(Vector2f nextPosition)
@@ -178,6 +145,10 @@ namespace SS14.Client.GameObjects
                                               nextPosition.Y,
                                               physics.Velocity.X,
                                               physics.Velocity.Y);
+
         }
+
+#endif
+
     }
 }

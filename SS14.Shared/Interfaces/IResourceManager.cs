@@ -21,8 +21,7 @@ namespace SS14.Shared.Interfaces
         /// Loads a content pack from disk into the VFS.
         /// </summary>
         /// <param name="pack"></param>
-        /// <param name="password"></param>
-        void MountContentPack(string pack, string password = null);
+        void MountContentPack(string pack);
 
         /// <summary>
         /// Adds a directory to search inside of to the VFS.

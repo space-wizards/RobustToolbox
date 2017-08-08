@@ -10,18 +10,15 @@ namespace SS14.Shared.ContentPack
     internal class PackLoader : IContentRoot
     {
         private readonly FileInfo _pack;
-        private readonly string _password;
         private ZipFile _zip;
 
         /// <summary>
         ///     Constructor.
         /// </summary>
         /// <param name="pack">The zip file to mount in the VFS.</param>
-        /// <param name="password">Optional password to unlock to zip file.</param>
-        public PackLoader(FileInfo pack, string password = null)
+        public PackLoader(FileInfo pack)
         {
             _pack = pack;
-            _password = password;
         }
 
         /// <inheritdoc />
@@ -31,9 +28,6 @@ namespace SS14.Shared.ContentPack
 
             var zipFileStream = File.OpenRead(_pack.FullName);
             _zip = new ZipFile(zipFileStream);
-
-            if (!string.IsNullOrWhiteSpace(_password))
-                _zip.Password = _password;
 
             return true;
         }

@@ -1,7 +1,8 @@
 using BsDiffLib;
 using Lidgren.Network;
-using NetSerializer;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
 using System;
 using System.IO;
@@ -46,7 +47,8 @@ namespace SS14.Shared
             BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()),
                                      toStream);
             toStream.Seek(0, SeekOrigin.Begin);
-            return (GameState) Serializer.Deserialize(toStream);
+            var serializer = IoCManager.Resolve<ISS14Serializer>();
+            return serializer.Deserialize<GameState>(toStream);
         }
 
         public static GameStateDelta ReadDelta(NetIncomingMessage message)

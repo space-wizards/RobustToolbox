@@ -90,6 +90,9 @@
       <HintPath>$(SolutionDir)packages\Microsoft.Diagnostics.Runtime.0.8.31-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -139,11 +142,6 @@
     <Reference Include="System.ServiceModel">
       <Name>System.ServiceModel</Name>
       <Private>False</Private>
-    </Reference>
-    <Reference Include="NetSerializer">
-      <Name>NetSerializer</Name>
-      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>

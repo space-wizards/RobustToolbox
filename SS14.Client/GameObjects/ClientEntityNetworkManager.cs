@@ -1,20 +1,20 @@
 ﻿using Lidgren.Network;
-using NetSerializer;
-using SS14.Client.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.GameObjects
 {
     public class ClientEntityNetworkManager : IEntityNetworkManager
     {
+        [Dependency]
+        private readonly ISS14Serializer serializer;
         [Dependency]
         private readonly IClientNetManager _networkManager;
 
@@ -40,10 +40,12 @@ namespace SS14.Client.GameObjects
             NetOutgoingMessage newMsg = CreateEntityMessage();
             newMsg.Write((byte)EntityMessage.SystemMessage);
 
-            var stream = new MemoryStream();
-            Serializer.Serialize(stream, message);
-            newMsg.Write((int)stream.Length);
-            newMsg.Write(stream.ToArray());
+            using (var stream = new MemoryStream())
+            {
+                serializer.Serialize(stream, message);
+                newMsg.Write((int)stream.Length);
+                newMsg.Write(stream.ToArray());
+            }
 
             //Send the message
             _networkManager.ClientSendMessage(newMsg, method);

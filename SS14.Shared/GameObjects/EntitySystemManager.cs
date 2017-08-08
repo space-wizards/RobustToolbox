@@ -1,8 +1,8 @@
 ﻿using Lidgren.Network;
-using NetSerializer;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,8 @@ namespace SS14.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
+        [Dependency]
+        private readonly ISS14Serializer serializer;
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
         /// <summary>
@@ -113,12 +115,17 @@ namespace SS14.Shared.GameObjects
         public void HandleSystemMessage(EntitySystemData sysMsg)
         {
             int messageLength = sysMsg.message.ReadInt32();
+            EntitySystemMessage deserialized;
 
-            object deserialized = Serializer.Deserialize(new MemoryStream(sysMsg.message.ReadBytes(messageLength)));
+            using (var stream = new MemoryStream(sysMsg.message.ReadBytes(messageLength)))
+            {
+                deserialized = serializer.Deserialize<EntitySystemMessage>(stream);
+            }
 
-            if (deserialized is EntitySystemMessage)
-                foreach (KeyValuePair<Type, IEntitySystem> current in SystemMessageTypes.Where(x => x.Key == deserialized.GetType()))
-                    current.Value.HandleNetMessage((EntitySystemMessage)deserialized);
+            foreach (var current in SystemMessageTypes.Where(x => x.Key == deserialized.GetType()))
+            {
+                current.Value.HandleNetMessage((EntitySystemMessage)deserialized);
+            }
         }
 
         public void Update(float frameTime)

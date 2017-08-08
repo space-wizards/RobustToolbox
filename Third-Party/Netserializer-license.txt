@@ -1,2 +1,0 @@
-NetSerializer is under the following license:
-https://www.mozilla.org/MPL/2.0/

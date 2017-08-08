@@ -92,7 +92,7 @@ namespace SS14.Client
 
             _serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
             _networkManager.Initialize(false);
             _netGrapher.Initialize();
@@ -101,7 +101,7 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
 
             #region GameLoop
-            
+
             // maximum number of ticks to queue before the loop slows down.
             const int maxTicks = 5;
 

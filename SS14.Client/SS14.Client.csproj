@@ -369,6 +369,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
@@ -378,4 +379,5 @@
   <PropertyGroup>
     <DefineConstants Condition="Exists('Microsoft.VisualStudio.DebuggerVisualizers.dll') ">$(DefineConstants);VS_DEBUGGERVISUALIZERS_EXISTS</DefineConstants>
   </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
 </Project>

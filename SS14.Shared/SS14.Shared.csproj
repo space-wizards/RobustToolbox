@@ -66,9 +66,8 @@
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="NetSerializer">
-      <Name>NetSerializer</Name>
-      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
     </Reference>
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>

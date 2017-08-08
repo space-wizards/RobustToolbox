@@ -341,7 +341,7 @@
       <Visible>False</Visible>
     </Resources>
     <Resources Include="..\Resources\Prototypes\**\*.*" >
-      <ResourceRoot>Engine\Prototypes</ResourceRoot>
+      <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
   </ItemGroup>

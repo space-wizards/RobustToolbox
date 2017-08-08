@@ -56,6 +56,7 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         /// <summary>
         ///     Called when the component gets added to an entity.
+        ///     This function must be called on the base class by any children.
         /// </summary>
         /// <param name="owner"></param>
         void OnAdd(IEntity owner);

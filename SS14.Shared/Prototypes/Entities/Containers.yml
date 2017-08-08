@@ -3,7 +3,6 @@
   name: Toolbox
   components:
   - type: Transform
-  - type: Velocity
   - type: Clickable
   - type: Direction
   - type: WearableAnimatedSprite

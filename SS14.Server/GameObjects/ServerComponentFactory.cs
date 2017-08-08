@@ -38,9 +38,6 @@ namespace SS14.Server.GameObjects
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
 
-            Register<VelocityComponent>();
-            RegisterReference<VelocityComponent, IVelocityComponent>();
-
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
         }

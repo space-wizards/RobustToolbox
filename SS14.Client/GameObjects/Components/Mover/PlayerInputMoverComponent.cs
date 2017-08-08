@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -30,8 +31,8 @@ namespace SS14.Client.GameObjects
 
         private Vector2f Velocity
         {
-            get => Owner.GetComponent<IVelocityComponent>().Velocity;
-            set => Owner.GetComponent<IVelocityComponent>().Velocity = value;
+            get => Owner.GetComponent<PhysicsComponent>().Velocity.Convert();
+            set => Owner.GetComponent<PhysicsComponent>().Velocity = value.Convert();
         }
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
@@ -170,13 +171,13 @@ namespace SS14.Client.GameObjects
 
         public virtual void SendPositionUpdate(Vector2f nextPosition)
         {
-            var velocity = Owner.GetComponent<IVelocityComponent>();
+            var physics = Owner.GetComponent<PhysicsComponent>();
             Owner.SendComponentNetworkMessage(this,
                                               NetDeliveryMethod.ReliableUnordered,
                                               nextPosition.X,
                                               nextPosition.Y,
-                                              velocity.Velocity.X,
-                                              velocity.Velocity.Y);
+                                              physics.Velocity.X,
+                                              physics.Velocity.Y);
         }
     }
 }

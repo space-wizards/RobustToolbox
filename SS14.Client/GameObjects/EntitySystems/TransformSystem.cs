@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -115,9 +116,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position +
-                    if (entity.TryGetComponent<IVelocityComponent>(out var velocityComponent))
+                    if (entity.TryGetComponent<PhysicsComponent>(out var physicsComponent))
                     {
-                        var movement = velocityComponent.Velocity * frametime;
+                        var movement = physicsComponent.Velocity.Convert() * frametime;
                         var playerPosition = movement + transform.Position;
                         var difference = playerPosition - newPosition;
                         if (difference.LengthSquared() <= humanMoveLimit * humanMoveLimit)

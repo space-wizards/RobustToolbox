@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.System;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
@@ -21,10 +22,10 @@ namespace SS14.Server.GameObjects
         /// <param name="message"></param>
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            var velComp = Owner.GetComponent<IVelocityComponent>();
+            var physComp = Owner.GetComponent<PhysicsComponent>();
             var transform = Owner.GetComponent<ITransformComponent>();
 
-            velComp.Velocity = new Vector2f((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
+            physComp.Velocity = new Vector2((float)message.MessageParameters[2], (float)message.MessageParameters[3]);
             transform.Position = new Vector2f((float)message.MessageParameters[0], (float)message.MessageParameters[1]);
         }
     }

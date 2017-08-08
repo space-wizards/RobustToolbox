@@ -5,7 +5,6 @@
         public const uint BASIC_MOVER = 1;
         public const uint SLAVE_MOVER = 2;
         public const uint PLAYER_INPUT_MOVER = 3;
-        public const uint VELOCITY = 4;
         public const uint TRANSFORM = 5;
         public const uint PHYSICS = 6;
         public const uint PARTICLE_SYSTEM = 7;

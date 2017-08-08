@@ -3,7 +3,6 @@
   name: Janitor Jumpsuit
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: WearableAnimatedSprite
@@ -22,7 +21,6 @@
   name: Shoes
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: WearableAnimatedSprite

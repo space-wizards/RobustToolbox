@@ -3,7 +3,6 @@
   name: Mop
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: WearableAnimatedSprite

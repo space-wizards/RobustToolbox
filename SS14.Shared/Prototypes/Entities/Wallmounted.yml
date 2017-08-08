@@ -3,7 +3,6 @@
   name: Extinguisher Cabinet
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: Sprite
@@ -25,7 +24,6 @@
   name: Fire Alarm
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: Sprite
@@ -49,7 +47,6 @@
   name: Medical Cabinet
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: Sprite

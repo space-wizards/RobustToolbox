@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -12,7 +13,6 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(IVelocityComponent));
             EntityQuery.AllSet.Add(typeof(ITransformComponent));
             EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
             EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
@@ -26,16 +26,16 @@ namespace SS14.Server.GameObjects.EntitySystems
                 //GasEffect(entity, frametime);
 
                 var transform = entity.GetComponent<ITransformComponent>();
-                var velocity = entity.GetComponent<IVelocityComponent>();
+                var physics = entity.GetComponent<PhysicsComponent>();
 
-                if (velocity.Velocity.LengthSquared() < 0.00001f)
+                if (physics.Velocity.LengthSquared < 0.00001f)
                     continue;
                 //Decelerate
-                velocity.Velocity -= (velocity.Velocity * (frametime * 0.01f));
+                physics.Velocity -= (physics.Velocity * (frametime * 0.01f));
 
-                var movement = velocity.Velocity * frametime;
+                var movement = physics.Velocity * frametime;
                 //Apply velocity
-                transform.Position += movement;
+                transform.Position += movement.Convert();
             }
         }
 

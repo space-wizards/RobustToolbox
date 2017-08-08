@@ -3,7 +3,6 @@
   name: Urist McHuman
   components:
   - type: Transform
-  - type: Velocity
   - type: Direction
   - type: Clickable
   - type: AnimatedSprite

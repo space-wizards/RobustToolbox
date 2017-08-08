@@ -147,7 +147,9 @@
   </Choose>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\SS14.Engine.targets" />
   <PropertyGroup>
     <DefineConstants Condition="'$(HEADLESS)'!=''">$(DefineConstants);HEADLESS</DefineConstants>
   </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
 </Project>

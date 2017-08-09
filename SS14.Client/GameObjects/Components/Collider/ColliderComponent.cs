@@ -49,8 +49,8 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     return new FloatRect(
-                        AABB.Left + trans.X,
-                        AABB.Top + trans.Y,
+                        AABB.Left + trans.Position.X,
+                        AABB.Top + trans.Position.Y,
                         AABB.Width,
                         AABB.Height);
                 }

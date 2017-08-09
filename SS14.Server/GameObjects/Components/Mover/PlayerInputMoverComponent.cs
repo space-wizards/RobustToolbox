@@ -4,6 +4,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -12,8 +13,8 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class PlayerInputMoverComponent : Component, IMoverComponent
     {
-        private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
-        private const float FastMoveSpeed = Constants.HumanRunSpeed;
+        private const float BaseMoveSpeed = 4.0f;
+        private const float FastMoveSpeed = 10.0f;
 
         private Vector2 _moveDir;
         private bool _run;
@@ -63,9 +64,12 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
+            var transform = Owner.GetComponent<TransformComponent>();
             var physics = Owner.GetComponent<PhysicsComponent>();
 
-            physics.Velocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
+            var vel = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
+            physics.Velocity = vel;
+            transform.Rotation = _moveDir.LengthSquared > 0.001 ? _moveDir : Direction.South.ToVec();
 
             base.Update(frameTime);
         }

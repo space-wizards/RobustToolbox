@@ -15,9 +15,10 @@ namespace SS14.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<CollidableComponent>();
+#if _DELME
             Register<DirectionComponent>();
             RegisterReference<DirectionComponent, IDirectionComponent>();
-
+#endif
             Register<BoundingBoxComponent>();
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();

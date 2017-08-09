@@ -141,7 +141,6 @@
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IDirectionComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
@@ -170,10 +169,10 @@
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
     <Compile Include="Maths\FloatMath.cs" />
+    <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
     <Compile Include="EntityBaseClass.cs" />
-    <Compile Include="GlobalConstants.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
@@ -250,7 +249,6 @@
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Components\Direction\DirectionComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
     <Compile Include="GameObjects\Components\Mover\SlaveMoverComponentState.cs" />

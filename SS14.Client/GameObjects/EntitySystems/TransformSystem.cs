@@ -14,6 +14,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
+#if _DELME
     internal class TransformSystem : EntitySystem
     {
         public TransformSystem()
@@ -212,4 +213,5 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
         }
     }
+#endif
 }

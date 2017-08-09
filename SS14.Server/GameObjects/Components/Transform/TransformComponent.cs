@@ -1,65 +1,42 @@
-﻿using SFML.System;
-using SS14.Server.Interfaces.GameObjects;
+﻿using System;
+using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
-using System;
 
 namespace SS14.Server.GameObjects
 {
+    /// <summary>
+    ///     Stores the position and orientation of the entity.
+    /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
+        private Vector2 _position;
+
+        public Vector2 Rotation { get; set; }
+
         public override string Name => "Transform";
         public override uint? NetID => NetIDs.TRANSFORM;
-        private Vector2f _position = new Vector2f();
-        private bool firstState = true;
-
-        #region ITransformComponent Members
 
         public event EventHandler<VectorEventArgs> OnMove;
 
-        public float X
-        {
-            get => Position.X;
-            set => Position = new Vector2f(value, Position.Y);
-        }
-
-        public float Y
-        {
-            get => Position.Y;
-            set => Position = new Vector2f(Position.X, value);
-        }
-
-        public Vector2f Position
+        /// <inheritdoc />
+        public Vector2 Position
         {
             get => _position;
             set
             {
-                Vector2f oldPosition = _position;
+                var oldPosition = _position;
                 _position = value;
 
                 OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 
-        public void Offset(Vector2f offset)
-        {
-            Position += offset;
-        }
-
-        #endregion
-
-        public override void Shutdown()
-        {
-            Position = new Vector2f(0, 0);
-        }
-
+        /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            var state = new TransformComponentState(Position, firstState);
-            firstState = false;
-            return state;
+            return new TransformComponentState(Position, Rotation);
         }
     }
 }

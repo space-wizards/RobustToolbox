@@ -8,6 +8,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -22,7 +23,7 @@ namespace SS14.Client.GameObjects
             return from e in _entities.Values
                    where
                        (position -
-                        e.GetComponent<ITransformComponent>().Position).
+                        e.GetComponent<ITransformComponent>().Position.Convert()).
                            LengthSquared() < Range
                    select e;
         }

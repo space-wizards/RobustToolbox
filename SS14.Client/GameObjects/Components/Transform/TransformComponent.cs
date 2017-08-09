@@ -1,75 +1,36 @@
-﻿using SFML.System;
-using SS14.Client.Interfaces.GameObjects.Components;
+﻿using System;
+using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.Configuration;
-using SS14.Shared.IoC;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
 {
-    public class TransformComponent : ClientComponent, IClientTransformComponent
+    /// <summary>
+    ///     Stores the position and orientation of the entity.
+    /// </summary>
+    public class TransformComponent : ClientComponent, ITransformComponent
     {
+        public Vector2 Position { get; private set; }
+        public Vector2 Rotation { get; private set; }
+
         public override string Name => "Transform";
         public override uint? NetID => NetIDs.TRANSFORM;
-        private Vector2f _position = new Vector2f();
-        private List<TransformComponentState> states = new List<TransformComponentState>();
-        private TransformComponentState lastState;
-        public TransformComponentState lerpStateFrom { get; private set; }
-        public TransformComponentState lerpStateTo { get; private set ; }
 
         public override Type StateType => typeof(TransformComponentState);
 
-        #region ITransformComponent Members
-
         public event EventHandler<VectorEventArgs> OnMove;
-
-        public Vector2f Position
-        {
-            get => _position;
-            set
-            {
-                if(_position != value)
-                {
-                    Vector2f oldPosition = _position;
-                    _position = value;
-
-                    OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
-                }
-            }
-        }
-
-        public float X
-        {
-            get => Position.X;
-            set => Position = new Vector2f(value, Position.Y);
-        }
-
-        public float Y
-        {
-            get => Position.Y;
-            set => Position = new Vector2f(Position.X, value);
-        }
-
-        public void Offset(Vector2f offset)
-        {
-            Position += offset;
-        }
-
-        #endregion
-
-        public override void Shutdown()
-        {
-            Position = new Vector2f();
-        }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (TransformComponentState)state;
+            var newState = (TransformComponentState) state;
+            Rotation = newState.Rotation;
 
+            if (Position == newState.Position)
+                return;
+
+            OnMove?.Invoke(this, new VectorEventArgs(Position, newState.Position));
             Position = newState.Position;
         }
     }

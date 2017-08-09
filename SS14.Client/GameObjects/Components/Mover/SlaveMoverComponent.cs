@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -32,7 +33,7 @@ namespace SS14.Client.GameObjects
             _master = Owner.EntityManager.GetEntity(uid);
             // TODO handle this using event queue so that these sorts of interactions are deferred until we can be sure the target entity exists
             _master.GetComponent<ITransformComponent>().OnMove += HandleOnMove;
-            Translate(_master.GetComponent<ITransformComponent>().Position);
+            Translate(_master.GetComponent<ITransformComponent>().Position.Convert());
         }
 
         private void Detach()
@@ -45,12 +46,14 @@ namespace SS14.Client.GameObjects
 
         private void HandleOnMove(object sender, VectorEventArgs args)
         {
-            Translate(args.VectorTo);
+            Translate(args.VectorTo.Convert());
         }
 
         private void Translate(Vector2f toPosition)
         {
+#if _DELME
             Owner.GetComponent<ITransformComponent>().Position = toPosition;
+#endif
         }
 
         /// <inheritdoc />

@@ -1,6 +1,7 @@
 ﻿using System;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Network.Messages
 {

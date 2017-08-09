@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.GameObjects
 {
@@ -46,7 +47,7 @@ namespace SS14.Server.GameObjects
             master = Owner.EntityManager.GetEntity(uid);
             master.OnShutdown += master_OnShutdown;
             master.GetComponent<ITransformComponent>().OnMove += HandleOnMasterMove;
-            Translate(master.GetComponent<ITransformComponent>().Position);
+            Translate(master.GetComponent<ITransformComponent>().Position.Convert());
         }
 
         public void Attach(IEntity newMaster)
@@ -54,7 +55,7 @@ namespace SS14.Server.GameObjects
             master = newMaster;
             master.OnShutdown += master_OnShutdown;
             master.GetComponent<ITransformComponent>().OnMove += HandleOnMasterMove;
-            Translate(master.GetComponent<ITransformComponent>().Position);
+            Translate(master.GetComponent<ITransformComponent>().Position.Convert());
         }
 
         private void master_OnShutdown(IEntity e)
@@ -73,12 +74,12 @@ namespace SS14.Server.GameObjects
 
         private void HandleOnMasterMove(object sender, VectorEventArgs args)
         {
-            Translate(args.VectorTo);
+            Translate(args.VectorTo.Convert());
         }
 
         public void Translate(Vector2f toPosition)
         {
-            Owner.GetComponent<ITransformComponent>().Position = toPosition;
+            //Owner.GetComponent<ITransformComponent>().Position = toPosition;
         }
 
         /// <inheritdoc />

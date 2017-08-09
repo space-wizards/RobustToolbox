@@ -94,6 +94,7 @@
     <Compile Include="Client\Services\Helpers\StarScroller_Test.cs" />
     <Compile Include="Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
+    <Compile Include="Shared\Math\Direction_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
     <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />

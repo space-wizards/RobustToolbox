@@ -20,11 +20,12 @@ namespace SS14.Client.GameObjects
             Register<ColliderComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+#if _DELME
             RegisterReference<TransformComponent, IClientTransformComponent>();
 
             Register<DirectionComponent>();
             RegisterReference<DirectionComponent, IDirectionComponent>();
-
+#endif
             Register<BasicMoverComponent>();
             RegisterReference<BasicMoverComponent, IMoverComponent>();
 

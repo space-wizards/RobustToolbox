@@ -21,7 +21,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach (var entity in entities)
             {
-                var transform = entity.GetComponent<ITransformComponent>();
+                var transform = entity.GetComponent<TransformComponent>();
                 var physics = entity.GetComponent<PhysicsComponent>();
 
                 if (physics.Velocity.LengthSquared < 0.00001f)
@@ -32,7 +32,7 @@ namespace SS14.Server.GameObjects.EntitySystems
 
                 var movement = physics.Velocity * frametime;
                 //Apply velocity
-                transform.Position += movement.Convert();
+                transform.Position += movement;
             }
         }
     }

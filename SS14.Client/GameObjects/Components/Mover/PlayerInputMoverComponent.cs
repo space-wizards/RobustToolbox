@@ -23,9 +23,9 @@ namespace SS14.Client.GameObjects
         public override bool NetworkSynchronizeExistence => false;
         //public override bool NetworkSynchronizeExistence => true;
 
-        private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
-        public const float FastMoveSpeed = Constants.HumanRunSpeed;
-        private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
+        //private const float BaseMoveSpeed = Constants.HumanWalkSpeed;
+        //public const float FastMoveSpeed = Constants.HumanRunSpeed;
+       // private const float MoveRateLimit = .06666f; // 15 movements allowed to be sent to the server per second.
 
 #if _DELME
         private float _currentMoveSpeed = BaseMoveSpeed;

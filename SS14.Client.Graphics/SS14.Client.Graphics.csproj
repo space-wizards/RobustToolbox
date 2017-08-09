@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Import Project="..\MSBuild\SS14.Properties.targets" />
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{302B877E-0000-0000-0000-000000000000}</ProjectGuid>
@@ -145,7 +146,7 @@
       <Name>SS14.Shared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(OS)' != 'Unix'">
+  <ItemGroup Condition="'$(TargetOS)' == 'Windows_NT'">
     <Content Include="..\Third-Party\extlibs\csfml-graphics-2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

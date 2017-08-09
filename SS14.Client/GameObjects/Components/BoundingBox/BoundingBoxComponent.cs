@@ -19,7 +19,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Axis Aligned Bounding Box of the entity.
         /// </summary>
-        public Box2 AABB { get; set; }
+        public Box2 AABB { get; private set; }
 
         /// <inheritdoc />
         public override Type StateType => typeof(BoundingBoxComponentState);

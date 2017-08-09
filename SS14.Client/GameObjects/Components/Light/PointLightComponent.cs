@@ -95,7 +95,7 @@ namespace SS14.Client.GameObjects
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(Owner.GetComponent<ITransformComponent>().Position.Convert() + _lightOffset);
+            _light.Move(args.VectorTo.Convert() + _lightOffset);
         }
 
         public override void Update(float frameTime)

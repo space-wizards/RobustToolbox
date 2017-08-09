@@ -13,8 +13,6 @@ namespace SS14.Client.GameObjects
     /// </summary>
     internal class PhysicsComponent : ClientComponent
     {
-        private Vector2 _velocity = Vector2.Zero;
-
         /// <inheritdoc />
         public override string Name => "Physics";
 
@@ -32,15 +30,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     Current velocity of the entity.
         /// </summary>
-        public Vector2 Velocity
-        {
-            get => _velocity;
-            set
-            {
-                // Empty setter because nothing should be modifying this value on the client.
-                //TODO: This property needs to be readonly.
-            }
-        }
+        public Vector2 Velocity { get; private set; }
 
         /// <inheritdoc />
         public override void OnAdd(IEntity owner)
@@ -57,7 +47,7 @@ namespace SS14.Client.GameObjects
         {
             var newState = (PhysicsComponentState) state;
             Mass = newState.Mass;
-            _velocity = newState.Velocity;
+            Velocity = newState.Velocity;
         }
     }
 }

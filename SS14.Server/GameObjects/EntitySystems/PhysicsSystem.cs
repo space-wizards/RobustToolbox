@@ -1,6 +1,5 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -10,8 +9,6 @@ namespace SS14.Server.GameObjects.EntitySystems
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(ITransformComponent));
-            //EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
         }
 
         public override void Update(float frametime)
@@ -20,7 +17,10 @@ namespace SS14.Server.GameObjects.EntitySystems
             foreach (var entity in entities)
             {
                 var transform = entity.GetComponent<TransformComponent>();
+                var bounds = entity.GetComponent<BoundingBoxComponent>();
                 var physics = entity.GetComponent<PhysicsComponent>();
+
+                //TODO: All physics happens in here.
 
                 if (physics.Velocity.LengthSquared < 0.00001f)
                     continue;

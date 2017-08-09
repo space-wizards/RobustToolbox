@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -15,6 +16,8 @@ namespace SS14.Client.GameObjects
         public Vector2 Position { get; private set; }
         public Vector2 Rotation { get; private set; }
         public IEntity Parent { get; private set; }
+
+        //TODO: Make parenting actually work.
 
         /// <inheritdoc />
         public override string Name => "Transform";

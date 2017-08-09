@@ -233,15 +233,6 @@ namespace SS14.Client.Graphics.Render
             CluwneLib.ResetRenderTarget();
         }
 
-
-        /// <summary>
-        /// Deconstructs and disposes this instance
-        /// </summary>
-        protected override void Destroy(bool disposing)
-        {
-            GC.Collect();
-        }
-
         #endregion
 
         #region Drawing Methods

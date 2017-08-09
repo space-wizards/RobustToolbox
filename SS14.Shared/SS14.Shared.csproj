@@ -251,7 +251,6 @@
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
-    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
@@ -308,7 +307,9 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="GameObjects\Components\Mover\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

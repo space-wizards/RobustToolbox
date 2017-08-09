@@ -199,9 +199,7 @@
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\BasicMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />

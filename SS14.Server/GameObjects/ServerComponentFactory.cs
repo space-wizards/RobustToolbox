@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
 {
@@ -15,21 +14,12 @@ namespace SS14.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<CollidableComponent>();
-#if _DELME
-            Register<DirectionComponent>();
-            RegisterReference<DirectionComponent, IDirectionComponent>();
-#endif
             Register<BoundingBoxComponent>();
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();
-            Register<BasicMoverComponent>();
-            RegisterReference<BasicMoverComponent, IMoverComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();
-
-            Register<SlaveMoverComponent>();
-            RegisterReference<SlaveMoverComponent, IMoverComponent>();
 
             Register<ParticleSystemComponent>();
             Register<PhysicsComponent>();

@@ -33,11 +33,11 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override void OnAdd(IEntity owner)
         {
-            // This component requires that the entity has an AABB.
+            // This component requires that the entity has a KeyBindingInputComponent.
             if (!owner.HasComponent<KeyBindingInputComponent>())
                 Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(KeyBindingInputComponent)}. ");
 
-            // This component requires that the entity has an AABB.
+            // This component requires that the entity has a PhysicsComponent.
             if (!owner.HasComponent<PhysicsComponent>())
                 Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PlayerInputMoverComponent)} requires {nameof(PhysicsComponent)}. ");
 
@@ -76,7 +76,6 @@ namespace SS14.Server.GameObjects
 
         private void HandleKeyChange()
         {
-            // receiving BoundKeyChange asserts KeyBindingInputComponent exists.
             var input = Owner.GetComponent<KeyBindingInputComponent>();
 
             var x = 0;
@@ -90,7 +89,7 @@ namespace SS14.Server.GameObjects
             _moveDir = new Vector2(x, y);
 
             // can't normalize zero length vector
-            if (_moveDir.LengthSquared > 0.0001)
+            if (_moveDir.LengthSquared > 1.0e-6)
                 _moveDir.Normalize();
 
             // players can run or walk

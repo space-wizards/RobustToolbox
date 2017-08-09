@@ -2,6 +2,7 @@
 using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Server.GameObjects
@@ -11,13 +12,26 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
+
+        /// <summary>
+        ///     Current parent entity of this entity.
+        /// </summary>
+        public IEntity Parent { get; set; }
+
         private Vector2 _position;
 
+        /// <summary>
+        ///     Current rotation offset of the entity.
+        /// </summary>
         public Vector2 Rotation { get; set; }
 
+        /// <inheritdoc />
         public override string Name => "Transform";
+
+        /// <inheritdoc />
         public override uint? NetID => NetIDs.TRANSFORM;
 
+        /// <inheritdoc />
         public event EventHandler<VectorEventArgs> OnMove;
 
         /// <inheritdoc />
@@ -36,7 +50,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(Position, Rotation);
+            return new TransformComponentState(Position, Rotation, Parent);
         }
     }
 }

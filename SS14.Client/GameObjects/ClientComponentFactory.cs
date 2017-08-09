@@ -2,7 +2,6 @@
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects
 {
@@ -20,17 +19,6 @@ namespace SS14.Client.GameObjects
             Register<ColliderComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
-#if _DELME
-            RegisterReference<TransformComponent, IClientTransformComponent>();
-
-            Register<DirectionComponent>();
-            RegisterReference<DirectionComponent, IDirectionComponent>();
-#endif
-            Register<BasicMoverComponent>();
-            RegisterReference<BasicMoverComponent, IMoverComponent>();
-
-            Register<SlaveMoverComponent>();
-            RegisterReference<SlaveMoverComponent, IMoverComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();

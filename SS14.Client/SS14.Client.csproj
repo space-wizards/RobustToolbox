@@ -222,8 +222,6 @@
     <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\BasicMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\ParticleSystem.cs" />
@@ -237,12 +235,10 @@
     <Compile Include="GameObjects\ContextMenuEntry.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\FontResource.cs" />

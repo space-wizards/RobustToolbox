@@ -141,7 +141,7 @@
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IColliderComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\ICollidableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
@@ -315,9 +315,7 @@
     </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GameObjects\Components\Mover\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

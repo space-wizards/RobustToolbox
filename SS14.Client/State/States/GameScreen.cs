@@ -457,7 +457,7 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _componentManager.GetComponents<ColliderComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 

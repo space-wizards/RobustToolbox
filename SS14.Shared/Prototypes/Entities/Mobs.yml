@@ -3,7 +3,6 @@
   name: Urist McHuman
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: AnimatedSprite
     sprite: player
@@ -11,12 +10,11 @@
   - type: Icon
     icon: player
 
-  - type: BasicMover
-
+  - type: BoundingBox
+    sizeX: 25
+    sizeY: 25
+    
   - type: ParticleSystem
   - type: Physics
     mass: 5
 
-  - type: BoundingBox
-    sizeX: 25
-    sizeY: 25

@@ -3,7 +3,6 @@
   name: Door
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: Sprite
     drawdepth: FloorPlaceable
@@ -14,5 +13,5 @@
   - type: Icon
     icon: door_ew
 
-  - type: BasicMover
+  - type: BoundingBox
   - type: Collidable

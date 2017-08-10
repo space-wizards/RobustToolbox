@@ -93,7 +93,7 @@ namespace SS14.Shared.Physics
         /// <returns></returns>
         public bool TryCollide(IEntity entity, Vector2f offset, bool bump = true)
         {
-            var collider = entity.GetComponent<IColliderComponent>();
+            var collider = entity.GetComponent<ICollidableComponent>();
             if (collider == null) return false;
 
             var ColliderAABB = collider.WorldAABB;

@@ -215,7 +215,6 @@
     <Compile Include="GameObjects\AnimatedSprite.cs" />
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Components\Collider\ColliderComponent.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />

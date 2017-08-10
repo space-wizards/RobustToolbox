@@ -3,13 +3,10 @@
   name: Extinguisher Cabinet
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: Sprite
     sprites:
     - fire_extinguisher
-
-  - type: BasicMover
 
   placement:
     mode: AlignWall
@@ -24,13 +21,11 @@
   name: Fire Alarm
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: Sprite
     sprites:
     - fire_alarm_off
 
-  - type: BasicMover
   - type: Icon
     icon: fire_alarm_off
 
@@ -47,13 +42,11 @@
   name: Medical Cabinet
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: Sprite
     sprites:
     - med_cabinet
 
-  - type: BasicMover
   - type: Icon
     icon: med_cabinet
 

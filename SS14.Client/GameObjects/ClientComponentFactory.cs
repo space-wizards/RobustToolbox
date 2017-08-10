@@ -15,7 +15,6 @@ namespace SS14.Client.GameObjects
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
-            Register<ColliderComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
 

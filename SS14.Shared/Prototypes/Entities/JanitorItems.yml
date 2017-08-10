@@ -3,7 +3,6 @@
   name: Mop
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: WearableAnimatedSprite
     sprite: player_toolbox
@@ -12,5 +11,6 @@
   - type: Icon
     icon: mop
 
+  - type: BoundingBox
   - type: Physics
   - type: Clickable

@@ -3,7 +3,6 @@
   name: Worktop
   components:
   - type: Transform
-  - type: Direction
   - type: Clickable
   - type: Sprite
     sprites:
@@ -13,7 +12,6 @@
   - type: Icon
     icon: worktop_single
 
-  - type: BasicMover
   - type: BoundingBox
     sizeX: 64
     sizeY: 47

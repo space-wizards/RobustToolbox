@@ -3,7 +3,6 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -24,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 

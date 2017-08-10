@@ -1,9 +1,8 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
 
-namespace SS14.Client.Interfaces.Collision
+namespace SS14.Shared.Interfaces.Physics
 {
     public interface ICollisionManager
     {

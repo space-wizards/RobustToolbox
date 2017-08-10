@@ -141,6 +141,7 @@
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IColliderComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
@@ -156,6 +157,9 @@
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
+    <Compile Include="Interfaces\Physics\ICollidable.cs" />
+    <Compile Include="Interfaces\Physics\ICollider.cs" />
+    <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
@@ -200,6 +204,10 @@
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
     <Compile Include="Network\StringTable.cs" />
+    <Compile Include="Physics\CollidableAABB.cs" />
+    <Compile Include="Physics\CollidableBucket.cs" />
+    <Compile Include="Physics\CollidablePoint.cs" />
+    <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />

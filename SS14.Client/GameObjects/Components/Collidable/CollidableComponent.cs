@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
@@ -12,6 +11,7 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Physics;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects

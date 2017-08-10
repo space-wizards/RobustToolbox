@@ -1,6 +1,6 @@
 using SFML.Graphics;
 
-namespace SS14.Client.Interfaces.Collision
+namespace SS14.Shared.Interfaces.Physics
 {
     public interface ICollider
     {

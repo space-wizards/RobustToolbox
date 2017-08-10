@@ -243,7 +243,6 @@
     <Compile Include="ResourceManagement\SpriteResource.cs" />
     <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="Utility\Rand.cs" />
-    <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
@@ -255,9 +254,6 @@
     <Compile Include="Helpers\StarScroller.cs" />
     <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Input\KeyBindingManager.cs" />
-    <Compile Include="Interfaces\Collision\ICollidable.cs" />
-    <Compile Include="Interfaces\Collision\ICollider.cs" />
-    <Compile Include="Interfaces\Collision\ICollisionManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />

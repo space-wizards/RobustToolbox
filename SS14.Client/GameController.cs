@@ -83,6 +83,9 @@ namespace SS14.Client
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameClient>("Client");
 
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
             CleanupSplashScreen();

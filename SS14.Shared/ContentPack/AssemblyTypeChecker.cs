@@ -52,7 +52,9 @@ namespace SS14.Shared.ContentPack
             "System.Array",
 
             // Primitives
+            "System.Boolean",
             "System.String",
+            "System.Char",
             "System.Byte",
             "System.SByte",
             "System.UInt16",
@@ -61,10 +63,55 @@ namespace SS14.Shared.ContentPack
             "System.Int32",
             "System.UInt64",
             "System.Int64",
+            "System.Single",
+            "System.Double",
+            "System.Decimal",
+            "System.Void",
+            "System.Enum",
 
             // Common System things.
             "System.Collections.Generic",
             "System.Console",
+            "System.Math",
+            "System.ArgumentNullException",
+            "System.Attribute",
+            "System.AttributeUsageAttribute",
+            "System.Convert",
+            "System.Delegate", // Pls be good.
+            "System.DivideByZeroException",
+            "System.EventArgs",
+            "System.Exception",
+            "System.FlagsAttribute",
+            "System.FormatException",
+            "System.IndexOutOfRangeException",
+            "System.InvalidCastException",
+            "System.NotSupportedException",
+            "System.NullReferenceException",
+            "System.SerializableAttribute",
+            "System.Tuple",
+            "System.ValueTuple",
+            "System.Action",
+            "System.Func",
+            "System.EventHandler",
+            "System.IDisposable",
+            "System.ICloneable",
+            "System.IComparable",
+            "System.IEquatable",
+
+            // SFML stuff.
+            "SFML.Graphics.Color",
+            "SFML.System.Vector2f",
+            "SFML.System.Vector2i",
+            "SFML.System.Vector2u",
+            "SFML.System.Vector3f",
+            "SFML.System.Vector3i",
+            "SFML.System.Vector3u",
+
+            // YamlDotNet representation (prototype parsing)
+            "YamlDotNet.RepresentationModel.YamlNode",
+            "YamlDotNet.RepresentationModel.YamlScalarNode",
+            "YamlDotNet.RepresentationModel.YamlMappingNode",
+            "YamlDotNet.RepresentationModel.YamlSequenceNode"
         };
 
         /// <summary>

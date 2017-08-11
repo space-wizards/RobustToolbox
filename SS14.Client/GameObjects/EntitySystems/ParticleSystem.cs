@@ -3,6 +3,8 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -10,8 +12,13 @@ namespace SS14.Client.GameObjects.EntitySystems
     {
         public ParticleSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(ParticleSystemComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                OneSet = new List<Type>()
+                {
+                    typeof(ParticleSystemComponent),
+                },
+            };
         }
 
         public void AddParticleSystem(IEntity ent, string systemName)

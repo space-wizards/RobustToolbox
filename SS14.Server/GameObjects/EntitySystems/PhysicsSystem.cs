@@ -3,6 +3,8 @@ using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -10,12 +12,20 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public PhysicsSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(IVelocityComponent));
-            EntityQuery.AllSet.Add(typeof(ITransformComponent));
-            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
-            EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                AllSet = new List<Type>()
+                {
+                    typeof(PhysicsComponent),
+                    typeof(ITransformComponent),
+                    typeof(IVelocityComponent),
+                },
+                ExclusionSet = new List<Type>()
+                {
+                    typeof(SlaveMoverComponent),
+                    typeof(PlayerInputMoverComponent),
+                },
+            };
         }
 
         public override void Update(float frametime)

@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -17,9 +18,17 @@ namespace SS14.Client.GameObjects.EntitySystems
     {
         public TransformSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(ITransformComponent));
-            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                AllSet = new List<Type>()
+                {
+                    typeof(ITransformComponent),
+                },
+                ExclusionSet = new List<Type>()
+                {
+                    typeof(SlaveMoverComponent),
+                },
+            };
         }
 
         private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, ITransformComponent transform)

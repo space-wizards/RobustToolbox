@@ -32,7 +32,7 @@ namespace SS14.Shared.GameObjects
 
         public bool Match(IEntity entity)
         {
-            Predicate<Type> hasComponent = (t => entity.HasComponent(t));
+            Func<Type, bool> hasComponent = (t => entity.HasComponent(t));
             if (ExclusionSet.Any(hasComponent))
             {
                 return false;
@@ -66,8 +66,8 @@ namespace SS14.Shared.GameObjects
     /// </summary>
     public class PredicateEntityQuery : IEntityQuery
     {
-        public readonly Predicate<IEntity> Predicate;
-        public PredicateEntityQuery(Predicate<IEntity> predicate)
+        public readonly Func<IEntity, bool> Predicate;
+        public PredicateEntityQuery(Func<IEntity, bool> predicate)
         {
             Predicate = predicate;
         }

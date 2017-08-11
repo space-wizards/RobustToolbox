@@ -15,7 +15,7 @@ namespace SS14.Shared.GameObjects
     public class ComponentEntityQuery : IEntityQuery
     {
         /// <summary>
-        /// A list of component reference types, all of which an entity must have to pas.
+        /// A list of component reference types, none of which an entity can have to pas.
         /// If this is empty, it's ignored.
         /// </summary>
         public IList<Type> AllSet { get; set; } = new List<Type>();

@@ -7,6 +7,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {

@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.State.States
 {

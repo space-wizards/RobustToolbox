@@ -36,6 +36,7 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Network;
 using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.State.States
 {

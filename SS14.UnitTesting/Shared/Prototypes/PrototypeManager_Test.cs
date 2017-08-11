@@ -10,6 +10,7 @@ using SS14.Shared.Maths;
 using System.IO;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.UnitTesting.SS14.Shared.Prototypes
 {

@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using System;
 
@@ -7,15 +7,15 @@ namespace SS14.Shared.Maths
     public static class SfmlExt
     {
         // Vector2i
-        public static int LengthSquared(this Vector2i vec) => vec.X * vec.X + vec.Y * vec.Y;
-        public static float Length(this Vector2i vec)      => (float)Math.Sqrt(LengthSquared(vec));
-        public static Vector2f ToFloat(this Vector2i vec)  => new Vector2f(vec.X, vec.Y);
+        public static int LengthSquared(this SFML.System.Vector2i vec) => vec.X * vec.X + vec.Y * vec.Y;
+        public static float Length(this SFML.System.Vector2i vec)      => (float)Math.Sqrt(LengthSquared(vec));
+        public static Vector2f ToFloat(this SFML.System.Vector2i vec)  => new Vector2f(vec.X, vec.Y);
 
 
         // Vector2f
         public static float LengthSquared(this Vector2f vec) => vec.X * vec.X + vec.Y * vec.Y;
         public static float Length(this Vector2f vec)        => (float)Math.Sqrt(LengthSquared(vec));
-        public static Vector2i Round(this Vector2f vec)      => new Vector2i((int)Math.Round(vec.X), (int)Math.Round(vec.Y));
+        public static SFML.System.Vector2i Round(this Vector2f vec)      => new SFML.System.Vector2i((int)Math.Round(vec.X), (int)Math.Round(vec.Y));
 
 
         // IntRect

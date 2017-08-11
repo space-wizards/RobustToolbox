@@ -13,6 +13,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {

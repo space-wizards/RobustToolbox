@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Shared.Physics
 {

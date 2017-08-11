@@ -26,6 +26,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Placement
 {

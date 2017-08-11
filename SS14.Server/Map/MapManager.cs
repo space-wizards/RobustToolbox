@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Server.Map
 {

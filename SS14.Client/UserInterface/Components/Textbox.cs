@@ -9,6 +9,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

@@ -231,6 +231,11 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
 
+            var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
+            clientConsole.Initialize();
+            var consoleManager = IoCManager.Resolve<IConsoleManager>();
+            consoleManager.Initialize();
+
             StartLobby();
             StartGame();
 

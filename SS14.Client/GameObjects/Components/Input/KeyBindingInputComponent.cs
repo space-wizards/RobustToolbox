@@ -10,7 +10,7 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class KeyBindingInputComponent : ClientComponent
+    public class KeyBindingInputComponent : Component
     {
         public override string Name => "KeyBindingInput";
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
-    public class ParticleSystemComponent : ClientComponent, IParticleSystemComponent, IRenderableComponent
+    public class ParticleSystemComponent : Component, IParticleSystemComponent, IRenderableComponent
     {
         public override string Name => "ParticleSystem";
         public override uint? NetID => NetIDs.PARTICLE_SYSTEM;

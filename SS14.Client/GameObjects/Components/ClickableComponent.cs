@@ -11,7 +11,7 @@ using System;
 namespace SS14.Client.GameObjects
 {
     // Notice: Most actual logic for clicking is done by the game screen.
-    public class ClickableComponent : ClientComponent, IClientClickableComponent
+    public class ClickableComponent : Component, IClientClickableComponent
     {
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;

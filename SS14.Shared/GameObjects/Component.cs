@@ -117,14 +117,6 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Handles a message that a client has just instantiated a component
-        /// </summary>
-        /// <param name="netConnection"></param>
-        public virtual void HandleInstantiationMessage(NetConnection netConnection)
-        {
-        }
-
-        /// <summary>
         /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
         /// If it isn't going to return a current value, it shouldn't return it at all.
         /// </summary>

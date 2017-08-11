@@ -43,7 +43,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         IEntity Owner { get; }
 
         /// <summary>
-        /// Class Type that deserializes this component. This is the type that GetComponentState returns, 
+        /// Class Type that deserializes this component. This is the type that GetComponentState returns,
         /// and is the type that is passed to HandleComponentState.
         /// </summary>
         Type StateType { get; }
@@ -100,11 +100,5 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="state"></param>
         void HandleComponentState(ComponentState state);
-
-        /// <summary>
-        /// Handles a message that a client has just instantiated a component
-        /// </summary>
-        /// <param name="netConnection"></param>
-        void HandleInstantiationMessage(NetConnection netConnection);
     }
 }

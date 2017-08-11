@@ -16,7 +16,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class CollidableComponent : ClientComponent, ICollidable
+    public class CollidableComponent : Component, ICollidable
     {
         public override string Name => "Collidable";
         public override uint? NetID => NetIDs.COLLIDABLE;

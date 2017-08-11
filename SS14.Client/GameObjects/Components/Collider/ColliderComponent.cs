@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class ColliderComponent : ClientComponent
+    public class ColliderComponent : Component
     {
         public override string Name => "Collider";
         public override uint? NetID => NetIDs.COLLIDER;

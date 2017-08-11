@@ -6,7 +6,7 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class VelocityComponent : ClientComponent, IVelocityComponent
+    public class VelocityComponent : Component, IVelocityComponent
     {
         public override string Name => "Velocity";
         public override uint? NetID => NetIDs.VELOCITY;

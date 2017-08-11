@@ -12,7 +12,7 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Mover component that responds to movement by an entity.
     /// </summary>
-    public class SlaveMoverComponent : ClientComponent, IMoverComponent
+    public class SlaveMoverComponent : Component, IMoverComponent
     {
         public override string Name => "SlaveMover";
         public override uint? NetID => NetIDs.SLAVE_MOVER;

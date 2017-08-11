@@ -4,7 +4,7 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    internal class PhysicsComponent : ClientComponent
+    internal class PhysicsComponent : Component
     {
         public override string Name => "Physics";
         public override uint? NetID => NetIDs.PHYSICS;

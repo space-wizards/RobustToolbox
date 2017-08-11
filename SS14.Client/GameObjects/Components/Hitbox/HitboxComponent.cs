@@ -6,7 +6,7 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class HitboxComponent : ClientComponent
+    public class HitboxComponent : Component
     {
         public override string Name => "Hitbox";
         public override uint? NetID => NetIDs.HITBOX;

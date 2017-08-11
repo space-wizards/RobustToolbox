@@ -19,7 +19,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class AnimatedSpriteComponent : ClientComponent, ISpriteRenderableComponent, IClickTargetComponent
+    public class AnimatedSpriteComponent : Component, ISpriteRenderableComponent, IClickTargetComponent
     {
         public override string Name => "AnimatedSprite";
         public override uint? NetID => NetIDs.ANIMATED_SPRITE;

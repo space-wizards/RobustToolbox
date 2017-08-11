@@ -9,7 +9,7 @@ using System;
 
 namespace SS14.Client.GameObjects
 {
-    public class DirectionComponent : ClientComponent, IDirectionComponent
+    public class DirectionComponent : Component, IDirectionComponent
     {
         public override string Name => "Direction";
         public override uint? NetID => NetIDs.DIRECTION;

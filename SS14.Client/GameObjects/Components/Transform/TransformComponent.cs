@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace SS14.Client.GameObjects
 {
-    public class TransformComponent : ClientComponent, IClientTransformComponent
+    public class TransformComponent : Component, IClientTransformComponent
     {
         public override string Name => "Transform";
         public override uint? NetID => NetIDs.TRANSFORM;

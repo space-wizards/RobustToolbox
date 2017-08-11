@@ -10,7 +10,7 @@ namespace SS14.Client.GameObjects
     /// <summary>
     /// Receives movement data from the server and updates the entity's position accordingly.
     /// </summary>
-    public class BasicMoverComponent : ClientComponent, IMoverComponent
+    public class BasicMoverComponent : Component, IMoverComponent
     {
         public override string Name => "BasicMover";
         public override uint? NetID => NetIDs.BASIC_MOVER;

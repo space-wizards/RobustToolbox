@@ -9,7 +9,7 @@ using SS14.Shared.IoC;
 namespace SS14.Client.GameObjects
 {
     //Moves an entity based on key binding input
-    public class PlayerInputMoverComponent : ClientComponent, IMoverComponent
+    public class PlayerInputMoverComponent : Component, IMoverComponent
     {
         public override string Name => "PlayerInputMover";
         public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;

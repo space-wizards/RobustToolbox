@@ -41,11 +41,6 @@ namespace SS14.Shared.GameObjects
             EntityManager = entityManager;
             EntityNetworkManager = networkManager;
             ComponentFactory = componentFactory;
-            var name = Assembly.GetEntryAssembly().GetName().Name;
-            if (name == "SS14.Client")
-            {
-                Initialize();
-            }
         }
 
         #region Initialization
@@ -59,7 +54,6 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public virtual void Initialize()
         {
-            SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
 
@@ -172,25 +166,7 @@ namespace SS14.Shared.GameObjects
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
                     break;
-                case EntityMessage.ComponentInstantiationMessage: //Server Only
-                    HandleComponentInstantiationMessage(message);
-                    break;
             }
-        }
-
-        /// <summary>
-        /// Server-side method to handle instantiation messages from client-side components
-        /// asking for initialization data
-        /// </summary>
-        /// <param name="message">Message from client</param>
-        protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
-        {
-            uint netID = (uint)message.Message;
-            if (!_netIDs.ContainsKey(netID))
-            {
-                return;
-            }
-            _netIDs[netID].HandleInstantiationMessage(message.Sender);
         }
 
         #endregion Network messaging

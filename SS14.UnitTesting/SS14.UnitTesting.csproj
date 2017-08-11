@@ -81,11 +81,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Client\Graphics\Shaders\TestShader_Test.cs" />
-    <Compile Include="Client\Graphics\Shaders\Lightblend_Test.cs" />
     <Compile Include="Client\Graphics\Sprite\CluwneSprite_Test.cs" />
     <Compile Include="Client\Services\Helpers\GaussianBlur_Test.cs" />
     <Compile Include="Client\Services\Helpers\StarScroller_Test.cs" />
-    <Compile Include="Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
     <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />

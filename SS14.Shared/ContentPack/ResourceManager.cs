@@ -22,7 +22,6 @@ namespace SS14.Shared.ContentPack
         public void Initialize()
         {
             _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVarFlags.ARCHIVE);
-            _config.RegisterCVar("resource.password", string.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
         }
 
         /// <inheritdoc />
@@ -31,7 +30,6 @@ namespace SS14.Shared.ContentPack
             //Assert server only
 
             var zipPath = _config.GetCVar<string>("resource.pack");
-            var password = _config.GetCVar<string>("resource.password");
 
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
@@ -40,11 +38,11 @@ namespace SS14.Shared.ContentPack
                 return;
             }
 
-            MountContentPack(zipPath, password);
+            MountContentPack(zipPath);
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack, string password = null)
+        public void MountContentPack(string pack)
         {
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
@@ -54,7 +52,7 @@ namespace SS14.Shared.ContentPack
                 throw new FileNotFoundException("Specified ContentPack does not exist: " + packInfo.FullName);
 
             //create new PackLoader
-            var loader = new PackLoader(packInfo, password);
+            var loader = new PackLoader(packInfo);
 
             if (loader.Mount())
                 _contentRoots.Add(loader);

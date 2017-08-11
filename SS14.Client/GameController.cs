@@ -75,13 +75,17 @@ namespace SS14.Client
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
             _resourceCache.LoadBaseResources();
-
+            // Load resources used by splash screen and main menu.
+            LoadSplashResources();
             ShowSplashScreen();
 
             _resourceCache.LoadLocalResources();
 
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameClient>("Client");
+
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
@@ -92,7 +96,7 @@ namespace SS14.Client
 
             _serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
             _networkManager.Initialize(false);
             _netGrapher.Initialize();
@@ -101,7 +105,7 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
 
             #region GameLoop
-            
+
             // maximum number of ticks to queue before the loop slows down.
             const int maxTicks = 5;
 
@@ -256,6 +260,18 @@ namespace SS14.Client
             CluwneLib.Screen.Display();
         }
 
+        private void LoadSplashResources()
+        {
+            var logoTexture = _resourceCache.LoadTextureFrom("ss14_logo", _resourceManager.ContentFileRead(@"Textures/Logo/logo.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo", logoTexture);
+
+            var backgroundTexture = _resourceCache.LoadTextureFrom("ss14_logo_background", _resourceManager.ContentFileRead(@"Textures/Logo/background.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo_background", backgroundTexture);
+
+            var nanotrasenTexture = _resourceCache.LoadTextureFrom("ss14_logo_nt", _resourceManager.ContentFileRead(@"Textures/Logo/nanotrasen.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo_nt", nanotrasenTexture);
+        }
+
         private void ShowSplashScreen()
         {
             // Do nothing when we're on DEBUG builds.
@@ -263,25 +279,19 @@ namespace SS14.Client
 #if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
-            // Size of the NT logo in the bottom left.
+            // Size of the NT logo in the bottom right.
             const float NT_SIZE_X = SIZE_X / 10f;
             const float NT_SIZE_Y = SIZE_Y / 10f;
             CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
 
-            var logoTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/logo.png"));
-            var logo = new SFML.Graphics.Sprite(logoTexture);
-            var logoSize = logoTexture.Size;
-            logo.Position = new Vector2f(SIZE_X / 2 - logoSize.X / 2, SIZE_Y / 2 - logoSize.Y / 2);
+            var logo = _resourceCache.GetSprite("ss14_logo");
+            logo.Position = new Vector2f(SIZE_X / 2 - logo.TextureRect.Width / 2, SIZE_Y / 2 - logo.TextureRect.Height / 2);
 
-            var backgroundTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/background.png"));
-            var background = new SFML.Graphics.Sprite(backgroundTexture);
-            var backgroundSize = backgroundTexture.Size;
-            background.Scale = new Vector2f((float)SIZE_X / backgroundSize.X, (float)SIZE_Y / backgroundSize.Y);
+            var background = _resourceCache.GetSprite("ss14_logo_background");
+            background.Scale = new Vector2f((float)SIZE_X / background.TextureRect.Width, (float)SIZE_Y / background.TextureRect.Height);
 
-            var nanotrasenTexture = new Texture(_resourceManager.ContentFileRead(@"Textures/Logo/nanotrasen.png"));
-            var nanotrasen = new SFML.Graphics.Sprite(nanotrasenTexture);
-            var nanotrasenSize = nanotrasenTexture.Size;
-            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasenSize.X, NT_SIZE_Y / nanotrasenSize.Y);
+            var nanotrasen = _resourceCache.GetSprite("ss14_logo_nt");
+            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasen.TextureRect.Width, NT_SIZE_Y / nanotrasen.TextureRect.Height);
             nanotrasen.Position = new Vector2f(SIZE_X - NT_SIZE_X - 5, SIZE_Y - NT_SIZE_Y - 5);
             nanotrasen.Color = new Color(255, 255, 255, 64);
 

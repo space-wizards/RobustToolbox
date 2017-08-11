@@ -34,7 +34,7 @@ namespace SS14.Client.Resources
         private readonly IResourceManager _resources;
 
         private readonly Dictionary<Type, Dictionary<string, BaseResource>> _cachedObjects = new Dictionary<Type, Dictionary<string, BaseResource>>();
-        
+
         #region OldCode
 
         private const int zipBufferSize = 4096;
@@ -75,6 +75,8 @@ namespace SS14.Client.Resources
 
             LoadResourceZip();
             LoadAnimatedSprites();
+            // Hack so content can load sprites until we refactor this all with Robust.
+            LoadExternalSprites();
         }
 
         /// <summary>
@@ -85,10 +87,8 @@ namespace SS14.Client.Resources
             var cfgMgr = _config;
 
             cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("res.password", String.Empty, CVarFlags.SERVER | CVarFlags.REPLICATED);
 
             string zipPath = path ?? _config.GetCVar<string>("res.pack");
-            string password = pw ?? _config.GetCVar<string>("res.password");
 
             if (AppDomain.CurrentDomain.GetAssemblyByName("SS14.UnitTesting") != null)
             {
@@ -103,8 +103,6 @@ namespace SS14.Client.Resources
 
             FileStream zipFileStream = File.OpenRead(zipPath);
             var zipFile = new ZipFile(zipFileStream);
-
-            if (!string.IsNullOrWhiteSpace(password)) zipFile.Password = password;
 
 #region Sort Resource pack
             var directories = zipFile.Cast<ZipEntry>()
@@ -174,21 +172,7 @@ namespace SS14.Client.Resources
                             }
                         }
                         break;
-#if _DELME
-                    case ("fonts/"):
-                        Logger.Log("Loading fonts...");
-                        foreach (ZipEntry font in current.Value)
-                        {
-                            if (Path.GetExtension(font.Name).ToLowerInvariant() == ".ttf")
-                            {
-                                Font loadedFont = LoadFontFrom(zipFile, font);
-                                if (loadedFont == null) continue;
-                                string ResourceName = Path.GetFileNameWithoutExtension(font.Name).ToLowerInvariant();
-                                _fonts.Add(ResourceName, loadedFont);
-                            }
-                        }
-                        break;
-#endif
+
                     case ("particlesystems/"):
                         Logger.Log("Loading particlesystems...");
                         foreach (ZipEntry particles in current.Value)
@@ -283,46 +267,22 @@ namespace SS14.Client.Resources
             string ResourceName = Path.GetFileNameWithoutExtension(imageEntry.Name).ToLowerInvariant();
 
             if (TextureCache.Textures.ContainsKey(ResourceName))
+            {
                 return TextureCache.Textures[ResourceName].Texture;
-
-            var byteBuffer = new byte[zipBufferSize];
+            }
 
             try
             {
-                Stream zipStream = zipFile.GetInputStream(imageEntry);
-                var memStream = new MemoryStream();
-
-                StreamUtils.Copy(zipStream, memStream, byteBuffer);
-                memStream.Position = 0;
-
-                Image img = new Image(memStream);
-                bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
-                for (int y = 0; y < img.Size.Y; y++)
+                using (Stream zipStream = zipFile.GetInputStream(imageEntry))
+                using (var memStream = new MemoryStream())
                 {
-                    for (int x = 0; x < img.Size.X; x++)
-                    {
-                        Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
-                        if (pColor.A > Limits.ClickthroughLimit)
-                        {
-                            opacityMap[x, y] = true;
-                        }
-                        else
-                        {
-                            opacityMap[x, y] = false;
-                        }
-                    }
+                    // Copy into memory stream because SFML hates us.
+                    var byteBuffer = new byte[zipBufferSize];
+                    StreamUtils.Copy(zipStream, memStream, byteBuffer);
+                    memStream.Position = 0;
+
+                    return LoadTextureFrom(ResourceName, memStream);
                 }
-
-                Texture loadedImg = new Texture(memStream);
-                TextureInfo tmp = new TextureInfo(loadedImg, img, opacityMap);
-                TextureCache.Add(ResourceName, tmp);
-                _textureToKey.Add(TextureCache.Textures[ResourceName].Texture, ResourceName);
-
-                memStream.Close();
-                zipStream.Close();
-                memStream.Dispose();
-                zipStream.Dispose();
-                return loadedImg;
             }
             catch (Exception I)
             {
@@ -330,6 +290,45 @@ namespace SS14.Client.Resources
             }
 
             return null;
+        }
+
+        // WARNING: SFML jumps around the stream position while loading the image.
+        // As such, streams that don't support seeking don't work (zip streams...)
+        public Texture LoadTextureFrom(string name, Stream stream)
+        {
+            if (!stream.CanSeek || !stream.CanRead)
+            {
+                throw new ArgumentException("Stream must be read and seekable.", nameof(stream));
+            }
+            if (TextureCache.Textures.ContainsKey(name))
+            {
+                return TextureCache.Textures[name].Texture;
+            }
+
+            Image img = new Image(stream);
+            bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
+            for (int y = 0; y < img.Size.Y; y++)
+            {
+                for (int x = 0; x < img.Size.X; x++)
+                {
+                    Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
+                    if (pColor.A > Limits.ClickthroughLimit)
+                    {
+                        opacityMap[x, y] = true;
+                    }
+                    else
+                    {
+                        opacityMap[x, y] = false;
+                    }
+                }
+            }
+
+            Texture texture = new Texture(img);
+            TextureInfo tmp = new TextureInfo(texture, img, opacityMap);
+            TextureCache.Add(name, tmp);
+            _textureToKey.Add(texture, name);
+
+            return texture;
         }
 
         /// <summary>
@@ -343,8 +342,6 @@ namespace SS14.Client.Resources
 
             Stream zipStream = zipFile.GetInputStream(shaderEntry);
             GLSLShader loadedShader;
-
-            //Will throw exception if missing or wrong password. Handle this.
 
             if (shaderEntry.Name.Contains(".frag"))
             {
@@ -379,31 +376,6 @@ namespace SS14.Client.Resources
         }
 
         /// <summary>
-        ///  <para>Loads Font from given Zip-File and Entry.</para>
-        /// </summary>
-        private Font LoadFontFrom(ZipFile zipFile, ZipEntry fontEntry)
-        {
-            var byteBuffer = new byte[zipBufferSize];
-
-            Stream zipStream = zipFile.GetInputStream(fontEntry);
-            //Will throw exception is missing or wrong password. Handle this.
-
-            var memStream = new MemoryStream();
-
-            StreamUtils.Copy(zipStream, memStream, byteBuffer);
-            memStream.Position = 0;
-
-            Font loadedFont = new Font(memStream);
-
-            // memStream.Close();
-            zipStream.Close();
-            // memStream.Dispose();
-            zipStream.Dispose();
-
-            return loadedFont;
-        }
-
-        /// <summary>
         /// Loads particle settings from given zipfile and entry.
         /// </summary>
         /// <param name="zipFile"></param>
@@ -412,7 +384,6 @@ namespace SS14.Client.Resources
         private ParticleSettings LoadParticlesFrom(ZipFile zipFile, ZipEntry entry)
         {
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ParticleSettings));
 
@@ -432,7 +403,6 @@ namespace SS14.Client.Resources
         private AnimationCollection LoadAnimationCollectionFrom(ZipFile zipFile, ZipEntry entry)
         {
             Stream zipStream = zipFile.GetInputStream(entry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             System.Xml.Serialization.XmlSerializer serializer =
                 new System.Xml.Serialization.XmlSerializer(typeof(AnimationCollection));
@@ -462,7 +432,6 @@ namespace SS14.Client.Resources
             var byteBuffer = new byte[zipBufferSize];
 
             Stream zipStream = zipFile.GetInputStream(taiEntry);
-            //Will throw exception is missing or wrong password. TODO: Handle this.
 
             var memStream = new MemoryStream();
 
@@ -540,7 +509,45 @@ namespace SS14.Client.Resources
 
             return loadedSprites;
         }
-#endregion Resource Loading & Disposal
+
+        private void LoadExternalSprites()
+        {
+            // Find all textures that haven't been loaded as texture or sprite yet, and load them as sprite.
+            // This is to prevent loading sprites already loaded in the old resource pack.
+            foreach (string filename in PathHelpers.GetFiles(Path.Combine("Resources", "Textures")))
+            {
+                var resourceName = Path.GetFileNameWithoutExtension(filename).ToLowerInvariant();
+
+                if (_textures.ContainsKey(resourceName) || _sprites.ContainsKey(resourceName))
+                {
+                    continue;
+                }
+
+                // New sprite.
+                var file = File.OpenRead(filename);
+                var texture = LoadTextureFrom(resourceName, file);
+
+                LoadSpriteFromTexture(resourceName, texture);
+            }
+        }
+
+        public Sprite LoadSpriteFromTexture(string name, Texture texture)
+        {
+            var info = new SpriteInfo()
+            {
+                Name = name,
+                Offsets = new Vector2f(0, 0),
+                Size = (Vector2f)texture.Size,
+            };
+
+            var sprite = new Sprite(texture);
+
+            _spriteInfos[name] = info;
+            _sprites[name] = sprite;
+            return sprite;
+        }
+
+        #endregion Resource Loading & Disposal
 
         #region Resource Retrieval
 
@@ -580,7 +587,7 @@ namespace SS14.Client.Resources
                 return _sprites[key];
             }
             else return GetSpriteFromImage(key);
-            
+
         }
 
         public object GetAnimatedSprite(string key)
@@ -637,7 +644,7 @@ namespace SS14.Client.Resources
             if (_particles.ContainsKey(key)) return _particles[key];
             else return null;
         }
-        
+
         /// <summary>
         ///  Retrieves the Texture with the given key from the Resource List. Returns error Image if not found.
         /// </summary>
@@ -677,7 +684,7 @@ namespace SS14.Client.Resources
         /// <param name="path"></param>
         /// <param name="resource"></param>
         /// <returns></returns>
-        public bool TryGetResource<T>(string path, out T resource) 
+        public bool TryGetResource<T>(string path, out T resource)
             where T : BaseResource, new()
         {
             // make sure path map exists for this type...
@@ -705,7 +712,7 @@ namespace SS14.Client.Resources
 
             // ok, can't find it, lets try the fallback
             var tempRes = new T();
-            
+
             // stop this, we failed
             if (tempRes.Fallback != null && tempRes.Fallback != path)
             {
@@ -717,7 +724,7 @@ namespace SS14.Client.Resources
             resource = default(T);
             return false;
         }
-        
+
         /// <summary>
         /// Is the resource cached? Will not cache the resource if false.
         /// </summary>

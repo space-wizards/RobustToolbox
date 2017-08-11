@@ -1,7 +1,9 @@
 ﻿using NetSerializer;
 using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,26 +15,40 @@ namespace SS14.Shared.Serialization
 {
     public class SS14Serializer : ISS14Serializer
     {
+        [Dependency]
+        private readonly IReflectionManager reflectionManager;
+        private Serializer Serializer;
+
         public void Initialize()
         {
-            Serializer.Initialize(
-                (from asm in AppDomain.CurrentDomain.GetAssemblies()
-                    from type in asm.GetTypes()
-                    where typeof(INetSerializableType).IsAssignableFrom(type)
-                    select type
-                ), new[] { new SfmlTypeSerializer() });
+            var types = reflectionManager.GetAllChildren<INetSerializableType>();
+            var settings = new Settings()
+            {
+                CustomTypeSerializers = new ITypeSerializer[] { new SfmlTypeSerializer() }
+            };
+            Serializer = new Serializer(types, settings);
         }
 
-        public void Serialize(Stream stream, object obj)
+        public void Serialize(Stream stream, object toSerialize)
         {
-            Serializer.Serialize(stream, obj);
+            Serializer.Serialize(stream, toSerialize);
+        }
+
+        public T Deserialize<T>(Stream stream)
+        {
+            return (T)Deserialize(stream);
+        }
+
+        public object Deserialize(Stream stream)
+        {
+            return Serializer.Deserialize(stream);
         }
     }
 
     // Do all the dang work ourselves because they can't be bothered to put [Serializable] on their structs.
-    public class SfmlTypeSerializer : IStaticTypeSerializer
+    public class SfmlTypeSerializer : IStaticTypeSerializer, ITypeSerializer
     {
-        private static Type[] handledTypes =
+        private static HashSet<Type> handledTypes = new HashSet<Type>
         {
             typeof(Vector2f),
             typeof(Vector2i),
@@ -45,13 +61,16 @@ namespace SS14.Shared.Serialization
         };
 
         public bool Handles(Type type) => handledTypes.Contains(type);
-
         public IEnumerable<Type> GetSubtypes(Type type) => Enumerable.Empty<Type>();
 
-        public void GetStaticMethods(Type type, out MethodInfo writer, out MethodInfo reader)
+        public MethodInfo GetStaticWriter(Type type)
         {
-            writer = typeof(SfmlTypeSerializer).GetMethod("Write", new Type[] { typeof(Stream), type });
-            reader = typeof(SfmlTypeSerializer).GetMethod("Read", new Type[] { typeof(Stream), type.MakeByRefType() });
+            return typeof(SfmlTypeSerializer).GetMethod("Write", new Type[] { typeof(Stream), type });
+        }
+
+        public MethodInfo GetStaticReader(Type type)
+        {
+            return typeof(SfmlTypeSerializer).GetMethod("Read", new Type[] { typeof(Stream), type.MakeByRefType() });
         }
 
         #region Vector2f
@@ -73,7 +92,7 @@ namespace SS14.Shared.Serialization
             value = new Vector2f(x, y);
         }
 
-        #endregion
+        #endregion Vector2f
 
         #region Vector2i
 
@@ -94,7 +113,7 @@ namespace SS14.Shared.Serialization
             value = new Vector2i(x, y);
         }
 
-        #endregion
+        #endregion Vector2i
 
         #region Vector2u
 
@@ -115,7 +134,7 @@ namespace SS14.Shared.Serialization
             value = new Vector2u(x, y);
         }
 
-        #endregion
+        #endregion Vector2u
 
         #region Vector3f
 
@@ -139,7 +158,7 @@ namespace SS14.Shared.Serialization
             value = new Vector3f(x, y, z);
         }
 
-        #endregion
+        #endregion Vector3f
 
         #region IntRect
 
@@ -166,7 +185,7 @@ namespace SS14.Shared.Serialization
             value = new IntRect(left, top, width, height);
         }
 
-        #endregion
+        #endregion IntRect
 
         #region FloatRect
 
@@ -193,7 +212,7 @@ namespace SS14.Shared.Serialization
             value = new FloatRect(left, top, width, height);
         }
 
-        #endregion
+        #endregion FloatRect
 
         #region Color
 
@@ -214,7 +233,7 @@ namespace SS14.Shared.Serialization
             value = new Color(r, g, b, a);
         }
 
-        #endregion
+        #endregion Color
 
         #region Box2
 

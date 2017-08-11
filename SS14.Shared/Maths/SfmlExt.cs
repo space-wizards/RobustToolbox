@@ -109,7 +109,8 @@ namespace SS14.Shared.Maths
             // Add 22.5° to offset the angles since 0° is inside one.
             angle += 22.5f;
 
-            return AngleDirections[(int)Math.Floor(angle/45f)];
+            int dirindex = FloatMath.Clamp((int)Math.Floor(angle / 45f), 0, 8);
+            return AngleDirections[dirindex];
         }
 
         /// <summary>

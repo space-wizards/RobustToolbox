@@ -22,6 +22,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <TargetFrameworkProfile />
     <NoWarn>0649</NoWarn>
+    <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <BaseAddress>285212672</BaseAddress>
@@ -51,6 +52,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BsDiffLib">
@@ -66,9 +68,8 @@
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
-    <Reference Include="NetSerializer">
-      <Name>NetSerializer</Name>
-      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
     </Reference>
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
@@ -283,45 +284,73 @@
     <Compile Include="Reflection\ReflectionManager.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
-    <Content Include="Prototypes\Entities\Clothing.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Containers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Doors.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\JanitorItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Lights.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Mobs.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Tables.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Entities\Wallmounted.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Compile Include="GameObjects\Components\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="OpenTK.dll.config">
+    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
+    <Resources Include="..\Resources\Fonts\**\*.*" >
+      <ResourceRoot>Fonts</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\ParticleSystems\**\*.*" >
+      <ResourceRoot>ParticleSystems</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Shaders\**\*.*" >
+      <ResourceRoot>Shaders</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Unatlased\**\*.*" >
+      <ResourceRoot>Textures\Unatlased</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\UserInterface\**\*.*" >
+      <ResourceRoot>Textures\UserInterface</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Decals\**\*.*" >
+      <ResourceRoot>Textures\Decals</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Effects\**\*.*" >
+      <ResourceRoot>Textures\Effects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Items\**\*.*" >
+      <ResourceRoot>Textures\Items</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Objects\**\*.*" >
+      <ResourceRoot>Textures\Objects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Tiles\**\*.*" >
+      <ResourceRoot>Textures\Tiles</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Prototypes\**\*.*" >
+      <ResourceRoot>Prototypes\Engine</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <RemoveDir Directories="$(OutputPath)Resources" />
+    <Copy SourceFiles="@(Resources)" DestinationFiles="$(OutputPath)Resources\%(ResourceRoot)\%(RecursiveDir)%(Filename)%(Extension)" />
+  </Target>
 </Project>

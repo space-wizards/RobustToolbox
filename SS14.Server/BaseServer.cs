@@ -222,14 +222,14 @@ namespace SS14.Server
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameServer>("Server");
 
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
-
-            // Call Init in game assemblies.
-            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             StartLobby();
             StartGame();

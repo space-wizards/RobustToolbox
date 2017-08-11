@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using System;
 using System.Diagnostics;
@@ -233,10 +233,9 @@ namespace SS14.Client.Graphics.Render
             CluwneLib.ResetRenderTarget();
         }
 
+        #endregion
 
-#endregion
-
-#region Drawing Methods
+        #region Drawing Methods
 
         /// <summary>
         /// Draws the RenderImage Texture to the screen
@@ -385,7 +384,7 @@ namespace SS14.Client.Graphics.Render
         //    _blit.Draw(destination);
         // }
 
-#endregion
+        #endregion
 
 
     }

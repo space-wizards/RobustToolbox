@@ -49,11 +49,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
                 Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
                 Assert.That(prototype.ID, Is.EqualTo(id));
                 Assert.That(prototype.Components, Contains.Key("Transform"));
-                Assert.That(prototype.Components, Contains.Key("Velocity"));
-                Assert.That(prototype.Components, Contains.Key("Direction"));
                 Assert.That(prototype.Components, Contains.Key("Clickable"));
                 Assert.That(prototype.Components, Contains.Key("Sprite"));
-                Assert.That(prototype.Components, Contains.Key("BasicMover"));
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
@@ -117,11 +114,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
   name: Wall Light
   components:
   - type: Transform
-  - type: Velocity
-  - type: Direction
   - type: Clickable
   - type: Sprite
-  - type: BasicMover
   - type: PointLight
     startState: Off
 

@@ -32,23 +32,6 @@ namespace SS14.Server.ServerConsole
         public ConsoleManager()
         {
             InitializeCommands();
-            var cfgMan = IoCManager.Resolve<IConfigurationManager>();
-
-            cfgMan.RegisterCVar("console.width", 120, CVarFlags.ARCHIVE);
-            cfgMan.RegisterCVar("console.height", 60, CVarFlags.ARCHIVE);
-
-            var consoleWidth = cfgMan.GetCVar<int>("console.width");
-            var consoleHeight = cfgMan.GetCVar<int>("console.height");
-
-            try
-            {
-                Con.SetWindowSize(consoleWidth, consoleHeight);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Con.WriteLine("Resizing Failure:");
-                Con.WriteLine(e.Message);
-            }
 
             Con.CancelKeyPress += CancelKeyHandler;
         }

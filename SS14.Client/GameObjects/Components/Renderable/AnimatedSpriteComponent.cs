@@ -123,35 +123,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.Dropped:
                     UnsetMaster();
                     break;
-                case ComponentMessageType.MoveDirection:
-                    switch ((Direction)list[0])
-                    {
-                        case Direction.North:
-                            sprite.Direction = Direction.North;
-                            break;
-                        case Direction.South:
-                            sprite.Direction = Direction.South;
-                            break;
-                        case Direction.East:
-                            sprite.Direction = Direction.East;
-                            break;
-                        case Direction.West:
-                            sprite.Direction = Direction.West;
-                            break;
-                        case Direction.NorthEast:
-                            sprite.Direction = Direction.NorthEast;
-                            break;
-                        case Direction.NorthWest:
-                            sprite.Direction = Direction.NorthWest;
-                            break;
-                        case Direction.SouthEast:
-                            sprite.Direction = Direction.SouthEast;
-                            break;
-                        case Direction.SouthWest:
-                            sprite.Direction = Direction.SouthWest;
-                            break;
-                    }
-                    break;
                 case ComponentMessageType.EntitySaidSomething:
                     ChatChannel channel;
                     if (Enum.TryParse(list[0].ToString(), true, out channel))
@@ -289,13 +260,16 @@ namespace SS14.Client.GameObjects
                                    new Vector2f(), aabb);
         }
 
+        /// <inheritdoc />
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if (sprite != null && !IsSlaved())
-            {
-                sprite.Update(frameTime);
-            }
+
+            if (sprite == null || IsSlaved())
+                return;
+
+            sprite.Direction = Owner.GetComponent<TransformComponent>().Rotation.GetDir();
+            sprite.Update(frameTime);
         }
 
         public virtual void UpdateSlaves()

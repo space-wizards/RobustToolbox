@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Shared.Physics
@@ -183,7 +184,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void AddPoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates);
+            var b = GetBucket(point.Coordinates.Convert());
             b.AddPoint(point);
         }
 
@@ -193,7 +194,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void RemovePoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates);
+            var b = GetBucket(point.Coordinates.Convert());
             b.RemovePoint(point);
         }
 

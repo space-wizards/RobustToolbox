@@ -1,4 +1,4 @@
-﻿using SFML.System;
+﻿using OpenTK;
 
 namespace SS14.Shared.Physics
 {
@@ -11,15 +11,15 @@ namespace SS14.Shared.Physics
     }
 
     /// <summary>
-    /// This represents a point of a collision AABB
+    ///     This represents a point of a collision AABB
     /// </summary>
     internal struct CollidablePoint
     {
-        public Vector2f Coordinates;
+        public Vector2 Coordinates;
         public CollidablePointIndex Index;
         public CollidableAABB ParentAABB;
 
-        public CollidablePoint(CollidablePointIndex index, Vector2f coordinates, CollidableAABB parentAABB)
+        public CollidablePoint(CollidablePointIndex index, Vector2 coordinates, CollidableAABB parentAABB)
         {
             Index = index;
             Coordinates = coordinates;

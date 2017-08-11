@@ -294,7 +294,7 @@ namespace SS14.Client.Resources
 
         // WARNING: SFML jumps around the stream position while loading the image.
         // As such, streams that don't support seeking don't work (zip streams...)
-        private Texture LoadTextureFrom(string name, Stream stream)
+        public Texture LoadTextureFrom(string name, Stream stream)
         {
             if (!stream.CanSeek || !stream.CanRead)
             {
@@ -526,16 +526,25 @@ namespace SS14.Client.Resources
                 // New sprite.
                 var file = File.OpenRead(filename);
                 var texture = LoadTextureFrom(resourceName, file);
-                var info = new SpriteInfo()
-                {
-                    Name = resourceName,
-                    Offsets = new Vector2f(0, 0),
-                    Size = (Vector2f)texture.Size,
-                };
 
-                _spriteInfos[resourceName] = info;
-                _sprites[resourceName] = new Sprite(texture);
+                LoadSpriteFromTexture(resourceName, texture);
             }
+        }
+
+        public Sprite LoadSpriteFromTexture(string name, Texture texture)
+        {
+            var info = new SpriteInfo()
+            {
+                Name = name,
+                Offsets = new Vector2f(0, 0),
+                Size = (Vector2f)texture.Size,
+            };
+
+            var sprite = new Sprite(texture);
+
+            _spriteInfos[name] = info;
+            _sprites[name] = sprite;
+            return sprite;
         }
 
         #endregion Resource Loading & Disposal

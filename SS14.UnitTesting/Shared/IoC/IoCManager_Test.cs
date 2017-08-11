@@ -75,14 +75,34 @@ namespace SS14.UnitTesting.SS14.Shared.IoC
     {
     }
 
-    public class TestFieldInjection
+    public class TestFieldInjectionParent
     {
         [Dependency]
         private readonly TestFieldInjection myself;
 
-        public void Test()
+        [Dependency]
+        public TestFieldInjection myotherself;
+
+        public virtual void Test()
         {
             Assert.That(myself, Is.EqualTo(this));
+            Assert.That(myotherself, Is.EqualTo(this));
+        }
+    }
+
+    public class TestFieldInjection : TestFieldInjectionParent
+    {
+        [Dependency]
+        private readonly TestFieldInjection myuniqueself;
+
+        [Dependency]
+        public TestFieldInjection mydifferentself;
+
+        public override void Test()
+        {
+            base.Test();
+            Assert.That(myuniqueself, Is.EqualTo(this));
+            Assert.That(mydifferentself, Is.EqualTo(this));
         }
     }
 }

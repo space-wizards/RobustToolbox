@@ -16,7 +16,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class CollidableComponent : ClientComponent, ICollidableComponent
+    public class CollidableComponent : Component, ICollidableComponent
     {
         public override string Name => "Collidable";
         public override uint? NetID => NetIDs.COLLIDABLE;
@@ -57,7 +57,7 @@ namespace SS14.Client.GameObjects
                 }
             }
         }
-        
+
         public FloatRect AABB => OffsetAABB;
 
         public FloatRect WorldAABB

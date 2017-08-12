@@ -13,7 +13,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class PointLightComponent : ClientComponent
+    public class PointLightComponent : Component
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;

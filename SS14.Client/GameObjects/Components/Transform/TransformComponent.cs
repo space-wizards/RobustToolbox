@@ -12,7 +12,7 @@ namespace SS14.Client.GameObjects
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    public class TransformComponent : ClientComponent, ITransformComponent
+    public class TransformComponent : Component, ITransformComponent
     {
         public Vector2 Position { get; private set; }
         public Angle Rotation { get; private set; }

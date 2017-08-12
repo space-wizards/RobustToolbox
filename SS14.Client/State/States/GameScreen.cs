@@ -34,7 +34,9 @@ using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Network;
+using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.State.States
 {
@@ -347,7 +349,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -456,7 +458,7 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _componentManager.GetComponents<ColliderComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
@@ -482,7 +484,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
                 Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -650,7 +652,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position,
+                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert(),
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -1194,7 +1196,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert());
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position

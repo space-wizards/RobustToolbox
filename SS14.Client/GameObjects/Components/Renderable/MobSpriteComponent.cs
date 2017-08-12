@@ -8,6 +8,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -150,7 +151,7 @@ namespace SS14.Client.GameObjects
             base.Render(topLeft, bottomRight);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(position.Convert()),
                                    new Vector2f(), currentBaseSprite);
         }
 

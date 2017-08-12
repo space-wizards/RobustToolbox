@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -12,6 +12,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

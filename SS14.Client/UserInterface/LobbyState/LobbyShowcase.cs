@@ -1,10 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

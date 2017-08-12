@@ -60,7 +60,7 @@ namespace SS14.Client.Player
                 ControlledEntity.RemoveComponent<IMoverComponent>();
             }
             ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
-            ControlledEntity.AddComponent(factory.GetComponent<ColliderComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
 
             ControlledEntity.GetComponent<ITransformComponent>().OnMove += PlayerEntityMoved;
         }
@@ -79,7 +79,7 @@ namespace SS14.Client.Player
             {
                 ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
-                ControlledEntity.RemoveComponent<ColliderComponent>();
+                ControlledEntity.RemoveComponent<CollidableComponent>();
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {

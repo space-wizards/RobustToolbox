@@ -33,9 +33,6 @@ namespace SS14.Server.ServerConsole
 
         public void PostInject()
         {
-            configurationManager.RegisterCVar("console.width", 120, CVarFlags.ARCHIVE);
-            configurationManager.RegisterCVar("console.height", 60, CVarFlags.ARCHIVE);
-
             Con.CancelKeyPress += CancelKeyHandler;
         }
 
@@ -43,19 +40,6 @@ namespace SS14.Server.ServerConsole
 
         public void Initialize()
         {
-            var consoleWidth = configurationManager.GetCVar<int>("console.width");
-            var consoleHeight = configurationManager.GetCVar<int>("console.height");
-
-            try
-            {
-                Con.SetWindowSize(consoleWidth, consoleHeight);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Con.WriteLine("Resizing Failure:");
-                Con.WriteLine(e.Message);
-            }
-
             var manager = IoCManager.Resolve<IReflectionManager>();
             foreach (var type in manager.GetAllChildren<IConsoleCommand>())
             {

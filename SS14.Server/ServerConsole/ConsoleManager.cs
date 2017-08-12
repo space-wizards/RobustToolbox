@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Interfaces;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -11,37 +12,46 @@ using Con = System.Console;
 
 namespace SS14.Server.ServerConsole
 {
-    public class ConsoleManager : IConsoleManager
+    public class ConsoleManager : IConsoleManager, IPostInjectInit, IDisposable
     {
-        private IDictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();
+        [Dependency]
+        private readonly IConfigurationManager configurationManager;
+        private Dictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";
         private int historyIndex;
         private int internalCursor;
-        private string tabCompleteBuffer = "";
         private List<string> tabCompleteList = new List<string>();
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
+        public IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => availableCommands;
 
-        public IDictionary<string, IConsoleCommand> AvailableCommands
+        public void Dispose()
         {
-            get { return availableCommands; }
-            protected set { availableCommands = value; }
+            Con.CancelKeyPress -= CancelKeyHandler;
         }
 
-        public ConsoleManager()
+        public void PostInject()
         {
-            InitializeCommands();
-
             Con.CancelKeyPress += CancelKeyHandler;
         }
 
         #region IConsoleManager Members
 
+        public void Initialize()
+        {
+            var manager = IoCManager.Resolve<IReflectionManager>();
+            foreach (var type in manager.GetAllChildren<IConsoleCommand>())
+            {
+                var instance = Activator.CreateInstance(type) as IConsoleCommand;
+                RegisterCommand(instance);
+            }
+        }
+
         public void Update()
         {
-            //Process keyboard input
-            if (Con.KeyAvailable)
+            // Process keyboard input
+            while (Con.KeyAvailable)
             {
                 ConsoleKeyInfo key = Con.ReadKey(true);
                 Con.SetCursorPosition(0, Con.CursorTop);
@@ -69,7 +79,6 @@ namespace SS14.Server.ServerConsole
                             if (currentBuffer.Length > 0)
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor - 1, 1);
-                                //currentBuffer = currentBuffer.Substring(0, currentBuffer.Length - 1);
                                 internalCursor--;
                             }
                             break;
@@ -78,7 +87,6 @@ namespace SS14.Server.ServerConsole
                             if (currentBuffer.Length > 0 && internalCursor < currentBuffer.Length)
                             {
                                 currentBuffer = currentBuffer.Remove(internalCursor, 1);
-                                //internalCursor--;
                             }
                             break;
 
@@ -122,7 +130,6 @@ namespace SS14.Server.ServerConsole
                             if (lastKeyPressed != ConsoleKey.Tab)
                             {
                                 tabCompleteList.Clear();
-                                tabCompleteBuffer = currentBuffer;
                             }
                             string tabCompleteResult = TabComplete();
                             if (tabCompleteResult != String.Empty)
@@ -186,23 +193,10 @@ namespace SS14.Server.ServerConsole
             Console.SetCursorPosition(0, currentLineCursor);
         }
 
-        private void InitializeCommands()
-        {
-            var CommandTypes = new List<Type>();
-            CommandTypes.AddRange(
-                Assembly.GetCallingAssembly().GetTypes()
-                    .Where(t => typeof(IConsoleCommand).IsAssignableFrom(t) && t != typeof(IConsoleCommand)));
-            foreach (Type t in CommandTypes)
-            {
-                var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
-                RegisterCommand(instance);
-            }
-        }
-
         private void RegisterCommand(IConsoleCommand commandObj)
         {
-            if (!AvailableCommands.ContainsKey(commandObj.Command.ToLower()))
-                AvailableCommands.Add(commandObj.Command.ToLower(), commandObj);
+            if (!availableCommands.ContainsKey(commandObj.Command.ToLower()))
+                availableCommands.Add(commandObj.Command.ToLower(), commandObj);
         }
 
         private string TabComplete()
@@ -214,7 +208,7 @@ namespace SS14.Server.ServerConsole
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = availableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;

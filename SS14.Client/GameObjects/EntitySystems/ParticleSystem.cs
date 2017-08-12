@@ -1,10 +1,12 @@
-﻿using SS14.Shared.GameObjects;
+﻿using SS14.Client.Interfaces.Resource;
+using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Server.GameObjects.EntitySystems
+namespace SS14.Client.GameObjects.EntitySystems
 {
     public class ParticleSystem : EntitySystem
     {
@@ -19,14 +21,24 @@ namespace SS14.Server.GameObjects.EntitySystems
             };
         }
 
+        public void AddParticleSystem(IEntity ent, string systemName)
+        {
+            ParticleSettings settings = IoCManager.Resolve<IResourceCache>().GetParticles(systemName);
+            if (settings != null)
+            {
+                //Add it.
+            }
+        }
+
         public override void RegisterMessageTypes()
         {
             //EntitySystemManager.RegisterMessageType<>();
             base.RegisterMessageTypes();
         }
 
-        public override void Update(float frametime)
+        public override void HandleNetMessage(EntitySystemMessage sysMsg)
         {
+            base.HandleNetMessage(sysMsg);
         }
     }
 }

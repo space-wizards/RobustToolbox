@@ -2,6 +2,8 @@
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.IoC;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -9,8 +11,13 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public InputSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(KeyBindingInputComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                OneSet = new List<Type>()
+                {
+                    typeof(KeyBindingInputComponent),
+                },
+            };
         }
 
         public override void Update(float frametime)

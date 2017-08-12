@@ -70,11 +70,12 @@ namespace SS14.Client.Helpers
 
         public void Render(float xTopleft, float yTopleft)
         {
+            var delta = CluwneLib.Time.FrameTime.TotalSeconds;
             CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
-            DrawStars(3, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
-            DrawStars(2, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
+            DrawStars(3, (float)delta / 2000);
+            DrawStars(2, (float)delta / 2000);
             for (int layer = 1; layer >= 0; layer--)
-                DrawStars(layer, (float) CluwneLib.FrameStats.FrameDrawTime/2000);
+                DrawStars(layer, (float)delta / 2000);
         }
 
         #region Nested type: Star

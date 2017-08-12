@@ -1,0 +1,9 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <OS Condition="'$(OS)' == ''">Windows_NT</OS>
+    <ActualOS Condition="'$(OS)' == 'Windows_NT'">Windows</ActualOS>
+    <!-- TODO: MacOS detection. -->
+    <ActualOS Condition="'$(OS)' == 'Unix'">Linux</ActualOS>
+    <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
+  </PropertyGroup>
+</Project>

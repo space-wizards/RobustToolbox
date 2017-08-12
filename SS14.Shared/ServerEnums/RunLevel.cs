@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared.ServerEnums
+namespace SS14.Shared.ServerEnums
 {
     public enum RunLevel
     {

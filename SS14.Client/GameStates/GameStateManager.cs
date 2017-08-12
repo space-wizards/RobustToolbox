@@ -1,4 +1,4 @@
-﻿using SS14.Client.Interfaces.GameStates;
+using SS14.Client.Interfaces.GameStates;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;

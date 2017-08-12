@@ -1,4 +1,4 @@
-﻿using SS14.Shared.Serialization;
+using SS14.Shared.Serialization;
 using System;
 
 namespace SS14.Shared

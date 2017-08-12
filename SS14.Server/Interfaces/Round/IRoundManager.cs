@@ -4,7 +4,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Interfaces.Round
 {
-    public interface IRoundManager : IIoCInterface
+    public interface IRoundManager
     {
         IGameMode CurrentGameMode { get; }
 

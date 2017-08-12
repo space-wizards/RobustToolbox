@@ -1,3 +1,4 @@
+﻿using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Runtime.Serialization;
+using SS14.Shared.ContentPack;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.Prototypes
@@ -15,7 +17,7 @@ namespace SS14.Shared.Prototypes
     /// <summary>
     /// Handle storage and loading of YAML prototypes.
     /// </summary>
-    public interface IPrototypeManager : IIoCInterface
+    public interface IPrototypeManager
     {
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
@@ -23,7 +25,7 @@ namespace SS14.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        IEnumerable<T> EnumeratePrototypes<T>() where T: class, IPrototype;
+        IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype;
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
         /// </summary>
@@ -37,7 +39,7 @@ namespace SS14.Shared.Prototypes
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the type of prototype is not registered.
         /// </exception>
-        T Index<T>(string id) where T: class, IIndexedPrototype;
+        T Index<T>(string id) where T : class, IIndexedPrototype;
         /// <summary>
         /// Index for a <see cref="IIndexedPrototype"/> by ID.
         /// </summary>
@@ -75,16 +77,17 @@ namespace SS14.Shared.Prototypes
         }
     }
 
-    [IoCTarget]
-    public class PrototypeManager : IPrototypeManager
+    public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
+        [Dependency]
+        private readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         #region IPrototypeManager members
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
 
-        public IEnumerable<T> EnumeratePrototypes<T>() where T: class, IPrototype
+        public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
             return prototypes[typeof(T)].Select((IPrototype p) => p as T);
         }
@@ -94,7 +97,7 @@ namespace SS14.Shared.Prototypes
             return prototypes[type];
         }
 
-        public T Index<T>(string id) where T: class, IIndexedPrototype
+        public T Index<T>(string id) where T : class, IIndexedPrototype
         {
             try
             {
@@ -198,16 +201,16 @@ namespace SS14.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
-        public PrototypeManager()
+        public void PostInject()
         {
-            IoCManager.AssemblyAdded += ReloadPrototypeTypes;
+            ReflectionManager.OnAssemblyAdded += (_, __) => ReloadPrototypeTypes();
             ReloadPrototypeTypes();
         }
 
         private void ReloadPrototypeTypes()
         {
             Clear();
-            foreach (var type in IoCManager.ResolveEnumerable<IPrototype>())
+            foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
                 var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
                 if (attribute == null)
@@ -261,11 +264,19 @@ namespace SS14.Shared.Prototypes
     [Serializable]
     public class PrototypeLoadException : Exception
     {
-        public PrototypeLoadException() {}
-        public PrototypeLoadException(string message) : base(message) {}
-        public PrototypeLoadException(string message, Exception inner) : base(message, inner) {}
+        public PrototypeLoadException()
+        {
+        }
+        public PrototypeLoadException(string message) : base(message)
+        {
+        }
+        public PrototypeLoadException(string message, Exception inner) : base(message, inner)
+        {
+        }
 
-        public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context) {}
+        public PrototypeLoadException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {

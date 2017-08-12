@@ -1,8 +1,8 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.GOC;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Player.PostProcessing;
@@ -10,14 +10,16 @@ using SS14.Client.State.States;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Player
 {
-    [IoCTarget]
     public class PlayerManager : IPlayerManager
     {
         /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
@@ -25,20 +27,16 @@ namespace SS14.Client.Player
          * This class also communicates with the server to let the server control what entity it is attached to. */
 
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
-        private readonly INetworkManager _networkManager;
+        [Dependency]
+        private readonly IClientNetManager _networkManager;
         private SessionStatus status = SessionStatus.Zombie;
-
-        public PlayerManager(INetworkManager networkManager)
-        {
-            _networkManager = networkManager;
-        }
 
         #region IPlayerManager Members
 
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
         public event EventHandler<VectorEventArgs> OnPlayerMove;
 
-        public Entity ControlledEntity { get; private set; }
+        public IEntity ControlledEntity { get; private set; }
 
         public void Update(float frameTime)
         {
@@ -48,23 +46,23 @@ namespace SS14.Client.Player
             }
         }
 
-        public void Attach(Entity newEntity)
+        public void Attach(IEntity newEntity)
         {
-
             // Detach and cleanup first
             Detach();
 
+            var factory = IoCManager.Resolve<IComponentFactory>();
+
             ControlledEntity = newEntity;
-            ControlledEntity.AddComponent(ComponentFamily.Input,
-                                          IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent<KeyBindingInputComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Mover,
-                                          IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent<PlayerInputMoverComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Collider,
-                                          IoCManager.Resolve<IEntityManagerContainer>().EntityManager.ComponentFactory.
-                                              GetComponent<ColliderComponent>());
-            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
+            ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            if (ControlledEntity.HasComponent<IMoverComponent>())
+            {
+                ControlledEntity.RemoveComponent<IMoverComponent>();
+            }
+            ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<ColliderComponent>());
+
+            ControlledEntity.GetComponent<ITransformComponent>().OnMove += PlayerEntityMoved;
         }
 
         public void ApplyEffects(RenderImage image)
@@ -79,12 +77,14 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                ControlledEntity.RemoveComponent(ComponentFamily.Input);
-                ControlledEntity.RemoveComponent(ComponentFamily.Mover);
-                ControlledEntity.RemoveComponent(ComponentFamily.Collider);
-                var transform = ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform);
-                if(transform != null)
+                ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
+                ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
+                ControlledEntity.RemoveComponent<ColliderComponent>();
+                var transform = ControlledEntity.GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
                     transform.OnMove -= PlayerEntityMoved;
+                }
             }
             ControlledEntity = null;
         }
@@ -99,26 +99,26 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-            PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.UniqueId);
+            PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.Peer.UniqueIdentifier);
             if (myState == null)
                 return;
             if (myState.ControlledEntity != null &&
                 (ControlledEntity == null ||
                  (ControlledEntity != null && myState.ControlledEntity != ControlledEntity.Uid)))
                 Attach(
-                    IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity((int) myState.ControlledEntity));
+                    IoCManager.Resolve<IEntityManager>().GetEntity((int)myState.ControlledEntity));
 
             if (status != myState.Status)
                 SwitchState(myState.Status);
         }
 
-        #endregion
+        #endregion IPlayerManager Members
 
         #region netcode
 
         public void HandleNetworkMessage(NetIncomingMessage message)
         {
-            var messageType = (PlayerSessionMessage) message.ReadByte();
+            var messageType = (PlayerSessionMessage)message.ReadByte();
             switch (messageType)
             {
                 case PlayerSessionMessage.AttachToEntity:
@@ -132,7 +132,7 @@ namespace SS14.Client.Player
                     }*/
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
-                    var effectType = (PostProcessingEffectType) message.ReadInt32();
+                    var effectType = (PostProcessingEffectType)message.ReadInt32();
                     float duration = message.ReadFloat();
                     AddEffect(effectType, duration);
                     break;
@@ -148,20 +148,20 @@ namespace SS14.Client.Player
         public void SendVerb(string verb, int uid)
         {
             NetOutgoingMessage message = _networkManager.CreateMessage();
-            message.Write((byte) NetMessage.PlayerSessionMessage);
-            message.Write((byte) PlayerSessionMessage.Verb);
+            message.Write((byte)NetMessages.PlayerSessionMessage);
+            message.Write((byte)PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            _networkManager.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
         private void HandleAttachToEntity(NetIncomingMessage message)
         {
             int uid = message.ReadInt32();
-            Attach(IoCManager.Resolve<IEntityManagerContainer>().EntityManager.GetEntity(uid));
+            Attach(IoCManager.Resolve<IEntityManager>().GetEntity(uid));
         }
 
-        #endregion
+        #endregion netcode
 
         public void AddEffect(PostProcessingEffectType type, float duration)
         {
@@ -178,11 +178,11 @@ namespace SS14.Client.Player
                     e.OnExpired += EffectExpired;
                     _effects.Add(e);
                     break;
-                //case PostProcessingEffectType.Acid:
-                //    e = new AcidPostProcessingEffect(duration);
-                //    e.OnExpired += EffectExpired;
-                //    _effects.Add(e);
-                //    break;
+                    //case PostProcessingEffectType.Acid:
+                    //    e = new AcidPostProcessingEffect(duration);
+                    //    e.OnExpired += EffectExpired;
+                    //    _effects.Add(e);
+                    //    break;
             }
         }
 
@@ -204,7 +204,7 @@ namespace SS14.Client.Player
             status = newStatus;
             if (status == SessionStatus.InLobby && RequestedStateSwitch != null)
             {
-                RequestedStateSwitch(this, new TypeEventArgs(typeof (Lobby)));
+                RequestedStateSwitch(this, new TypeEventArgs(typeof(Lobby)));
                 Detach();
             }
         }

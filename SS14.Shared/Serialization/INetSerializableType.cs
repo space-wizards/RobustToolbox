@@ -1,4 +1,4 @@
-﻿namespace SS14.Shared.Serialization
+namespace SS14.Shared.Serialization
 {
     public interface INetSerializableType
     {

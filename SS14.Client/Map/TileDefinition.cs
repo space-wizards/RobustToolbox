@@ -1,7 +1,8 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System.Diagnostics;
 
@@ -67,6 +68,11 @@ namespace SS14.Client.Map
 
         public void RenderTop(float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
+        }
+
+        public virtual void InitializeResources(IResourceCache resourceCache)
+        {
+
         }
     }
 }

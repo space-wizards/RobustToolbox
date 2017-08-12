@@ -1,0 +1,25 @@
+- type: entity
+  id: WallLight
+  name: Wall Light
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Direction
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - wall_light
+
+  - type: Icon
+    icon: wall_light
+
+  - type: BasicMover
+  - type: PointLight
+    lightoffsetx: 0
+    lightoffsety: 0
+    lightradius: 1024
+    lightColorR: 220
+    lightColorG: 220
+    lightColorB: 198
+    mask: whitemask
+    startState: On

@@ -1,5 +1,0 @@
-..\..\Downloads\gource-0.35.win32\gource -1280x720 -a 1 -s 4 -c 2 --key --camera-mode overview --title SS13 --hidemouse,filenames --logo ..\..\Downloads\gource-0.35.win32\forumbuttonbg.png --max-user-speed 300
-
-capture using fraps, recode using ffmpeg:
-ffmpeg -i "c:\path-to-input-moive.avi" "C:\path-to-output-movie.webm"
-

@@ -2,8 +2,9 @@
 
 namespace SS14.Client.Interfaces.Network
 {
-    public interface INetworkGrapher : IIoCInterface
+    public interface INetworkGrapher
     {
+        void Initialize();
         void Update();
         void Toggle();
     }

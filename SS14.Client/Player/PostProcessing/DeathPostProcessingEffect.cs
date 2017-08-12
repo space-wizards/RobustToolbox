@@ -1,4 +1,4 @@
-﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
@@ -14,7 +14,7 @@ namespace SS14.Client.Player.PostProcessing
 
         public DeathPostProcessingEffect(float duration): base(duration)
         {
-            _shader = IoCManager.Resolve<IResourceManager>().GetShader("deathshader");
+            _shader = IoCManager.Resolve<IResourceCache>().GetShader("deathshader");
         }
 
         public override void ProcessImage(RenderImage image)

@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -10,20 +10,20 @@ namespace SS14.Client.UserInterface.Components
 {
     public class SimpleImage : GuiComponent
     {
-        private readonly IResourceManager _resourceManager; //TODO Make simpleimagebutton and other ui classes use this.
+        private readonly IResourceCache _resourceCache; //TODO Make simpleimagebutton and other ui classes use this.
 
         private Sprite drawingSprite;
 
         public SimpleImage()
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
             Update(0);
         }
 
         public string Sprite
         {
             //get { return drawingSprite != null ? drawingSprite.Key : null; }
-            set { drawingSprite = _resourceManager.GetSprite(value); Update(0); }
+            set { drawingSprite = _resourceCache.GetSprite(value); Update(0); }
         }
 
         public Color Color

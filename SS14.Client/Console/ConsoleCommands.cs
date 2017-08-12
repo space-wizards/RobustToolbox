@@ -9,7 +9,6 @@ using System;
 
 namespace SS14.Client.Console
 {
-    [IoCTarget]
     class ClearCommand : IConsoleCommand
     {
         public string Command => "cls";
@@ -23,7 +22,6 @@ namespace SS14.Client.Console
         }
     }
 
-    [IoCTarget]
     class FillCommand : IConsoleCommand
     {
         public string Command => "fill";

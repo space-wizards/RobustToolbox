@@ -11,8 +11,8 @@
   <SavedEntity X="8" Y="8" template="WallLight" name="WallLight" />
   <SavedEntity X="12" Y="12" template="WallLight" name="WallLight" />
   <SavedEntity X="16" Y="16" template="WallLight" name="WallLight" />
-   <SavedEntity X="20" Y="20" template="WallLight" name="WallLight" />
-    <SavedEntity X="24" Y="24" template="WallLight" name="WallLight" />
+  <SavedEntity X="20" Y="20" template="WallLight" name="WallLight" />
+  <SavedEntity X="24" Y="24" template="WallLight" name="WallLight" />
   <SavedEntity X="18.8455581665039" Y="4.91581058502197" template="Worktop" name="Worktop" />
   <SavedEntity X="13.4997520446778" Y="9.26746177673341" template="Mop" name="Mop" />
   <SavedEntity X="8.91437053680419" Y="2.87823295593262" template="Extinguisher" name="Extinguisher" />

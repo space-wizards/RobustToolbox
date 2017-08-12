@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -11,7 +11,7 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class FloatingDecoration : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly UserInterfaceManager _uiMgr;
         public bool BounceRotate = false; //Rotation inverts after hitting a certain angle?
         public float BounceRotateAngle = 0; //Angle at which to change rotation direction.
@@ -35,10 +35,10 @@ namespace SS14.Client.UserInterface.Components
 
         private float spriteRotation;
 
-        public FloatingDecoration(IResourceManager resourceManager, string spriteName)
+        public FloatingDecoration(IResourceCache resourceCache, string spriteName)
         {
-            _resourceManager = resourceManager;
-            DrawSprite = _resourceManager.GetSprite(spriteName);
+            _resourceCache = resourceCache;
+            DrawSprite = _resourceCache.GetSprite(spriteName);
 //DrawSprite.Smoothing = Smoothing.Smooth;
 
             _uiMgr = (UserInterfaceManager) IoCManager.Resolve<IUserInterfaceManager>();

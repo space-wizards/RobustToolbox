@@ -4,7 +4,7 @@ using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Collision;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
@@ -14,22 +14,29 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.ResourceManagement;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Placement
 {
-    [IoCTarget]
     public class PlacementManager : IPlacementManager
     {
+        [Dependency]
         public readonly ICollisionManager CollisionManager;
-        public readonly INetworkManager NetworkManager;
+        [Dependency]
+        public readonly IClientNetManager NetworkManager;
+        [Dependency]
         public readonly IPlayerManager PlayerManager;
-        public readonly IResourceManager ResourceManager;
+        [Dependency]
+        public readonly IResourceCache ResourceCache;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
@@ -40,15 +47,9 @@ namespace SS14.Client.Placement
         public Direction Direction = Direction.South;
         public bool ValidPosition;
 
-        public PlacementManager(IResourceManager resourceManager, INetworkManager networkManager,
-                                ICollisionManager collisionManager, IPlayerManager playerManager)
+        public PlacementManager()
         {
-            ResourceManager = resourceManager;
-            NetworkManager = networkManager;
-            CollisionManager = collisionManager;
-            PlayerManager = playerManager;
-
-            Type type = typeof (PlacementMode);
+            Type type = typeof(PlacementMode);
             List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
             List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
 
@@ -61,14 +62,14 @@ namespace SS14.Client.Placement
 
         #region IPlacementManager Members
 
-        public Boolean IsActive { get; private set; }
-        public Boolean Eraser { get; private set; }
+        public bool IsActive { get; private set; }
+        public bool Eraser { get; private set; }
 
         public event EventHandler PlacementCanceled;
 
         public void HandleNetMessage(NetIncomingMessage msg)
         {
-            var messageType = (PlacementManagerMessage) msg.ReadByte();
+            var messageType = (PlacementManagerMessage)msg.ReadByte();
 
             switch (messageType)
             {
@@ -120,14 +121,14 @@ namespace SS14.Client.Placement
                 RequestPlacement();
         }
 
-        public void HandleDeletion(Entity entity)
+        public void HandleDeletion(IEntity entity)
         {
             if (!IsActive || !Eraser) return;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessage.RequestEntityDeletion);
+            message.Write((byte)NetMessages.RequestEntityDeletion);
             message.Write(entity.Uid);
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public void ToggleEraser()
@@ -155,7 +156,7 @@ namespace SS14.Client.Placement
             }
 
             Type modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
+            CurrentMode = (PlacementMode)Activator.CreateInstance(modeType, this);
 
             if (info.IsTile)
                 PreparePlacementTile((Tile)info.TileType);
@@ -177,8 +178,8 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-                CluwneLib.drawCircle(                    pos.X,
+                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
+                CluwneLib.drawCircle(pos.X,
                     pos.Y,
                     CurrentPermission.Range,
                     Color.White,
@@ -186,15 +187,15 @@ namespace SS14.Client.Placement
             }
         }
 
-        #endregion
+        #endregion IPlacementManager Members
 
         private void HandleStartPlacement(NetIncomingMessage msg)
         {
             CurrentPermission = new PlacementInformation
-                                    {
-                                        Range = msg.ReadInt32(),
-                                        IsTile = msg.ReadBoolean()
-                                    };
+            {
+                Range = msg.ReadInt32(),
+                IsTile = msg.ReadBoolean()
+            };
 
             if (CurrentPermission.IsTile) CurrentPermission.TileType = msg.ReadUInt16();
             else CurrentPermission.EntityType = msg.ReadString();
@@ -212,8 +213,8 @@ namespace SS14.Client.Placement
             //Will break if states not ordered correctly.
             //if (spriteParam == null) return;
 
-            var spriteName = spriteParam == null?"":spriteParam.GetValue<string>();
-            Sprite sprite = ResourceManager.GetSprite(spriteName);
+            var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
+            Sprite sprite = ResourceCache.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;
@@ -226,12 +227,12 @@ namespace SS14.Client.Placement
         {
             if (tileType.TileDef.IsWall)
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("wall");
+                CurrentBaseSprite = ResourceCache.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";
             }
             else
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+                CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
                 CurrentBaseSpriteKey = "tilebuildoverlay";
             }
 
@@ -242,11 +243,11 @@ namespace SS14.Client.Placement
         {
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
-            
+
             NetOutgoingMessage message = NetworkManager.CreateMessage();
 
-            message.Write((byte) NetMessage.PlacementManagerMessage);
-            message.Write((byte) PlacementManagerMessage.RequestPlacement);
+            message.Write((byte)NetMessages.PlacementManagerMessage);
+            message.Write((byte)PlacementManagerMessage.RequestPlacement);
             message.Write(CurrentMode.ModeName);
 
             message.Write(CurrentPermission.IsTile);
@@ -257,9 +258,9 @@ namespace SS14.Client.Placement
             message.Write(CurrentMode.mouseWorld.X);
             message.Write(CurrentMode.mouseWorld.Y);
 
-            message.Write((byte) Direction);
+            message.Write((byte)Direction);
 
-            NetworkManager.SendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
         public Sprite GetDirectionalSprite()
@@ -268,9 +269,10 @@ namespace SS14.Client.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSpriteKey + "_" + Direction.ToString()).ToLowerInvariant();
-            if (ResourceManager.SpriteExists(dirName))
-                spriteToUse = ResourceManager.GetSprite(dirName);
+            string dirName = (CurrentBaseSpriteKey + "_" + Direction).ToLowerInvariant();
+
+            if (ResourceCache.TryGetResource(dirName, out SpriteResource spriteRes))
+                spriteToUse = spriteRes.Sprite;
 
             return spriteToUse;
         }

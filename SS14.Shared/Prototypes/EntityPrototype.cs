@@ -1,7 +1,9 @@
 ﻿using SFML.System;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
-using SS14.Shared.ContentLoader;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Reflection;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
@@ -13,8 +15,10 @@ using SS14.Shared.Log;
 
 namespace SS14.Shared.GameObjects
 {
+    /// <summary>
+    /// Prototype that represents game entities.
+    /// </summary>
     [Prototype("entity")]
-    [IoCTarget]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
         /// <summary>
@@ -81,25 +85,27 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        private Dictionary<string, Dictionary<string, YamlNode>> components = new Dictionary<string, Dictionary<string, YamlNode>>();
-        public Dictionary<string, Dictionary<string, YamlNode>> Components => components;
+        public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
+
+        /// <summary>
+        /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
+        /// </summary>
+        public YamlMappingNode DataNode;
 
         public void LoadFrom(YamlMappingNode mapping)
         {
-            YamlScalarNode idNode = (YamlScalarNode)mapping[new YamlScalarNode("id")];
-            ID = idNode.Value;
+            ID = mapping.GetNode("id").AsString();
 
             YamlNode node;
-
-            if (mapping.Children.TryGetValue(new YamlScalarNode("name"), out node))
+            if (mapping.TryGetNode("name", out node))
             {
                 Name = node.AsString();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("class"), out node))
+            if (mapping.TryGetNode("class", out node))
             {
-                var manager = IoCManager.Resolve<IContentLoader>();
-                ClassType = manager.GetType(((YamlScalarNode)node).Value);
+                var manager = IoCManager.Resolve<IReflectionManager>();
+                ClassType = manager.GetType(node.AsString());
                 // TODO: logging of when the ClassType doesn't exist: Safety for typos.
             }
             else
@@ -107,52 +113,53 @@ namespace SS14.Shared.GameObjects
                 ClassType = typeof(Entity);
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("parent"), out node))
+            if (mapping.TryGetNode("parent", out node))
             {
-                parentTemp = ((YamlScalarNode)node).Value;
+                parentTemp = node.AsString();
             }
 
             // COMPONENTS
-            if (mapping.Children.TryGetValue(new YamlScalarNode("components"), out node))
+            if (mapping.TryGetNode<YamlSequenceNode>("components", out var sequence))
             {
-                var sequence = (YamlSequenceNode)node;
-                foreach (var componentMapping in sequence.Select((YamlNode n) => (YamlMappingNode)n))
+                foreach (var componentMapping in sequence.Cast<YamlMappingNode>())
                 {
                     ReadComponent(componentMapping);
                 }
             }
 
+            // DATA FIELD
+            if (mapping.TryGetNode<YamlMappingNode>("data", out var dataMapping))
+            {
+                DataNode = dataMapping;
+            }
+
             // PLACEMENT
             // TODO: move to a component or something. Shouldn't be a root part of prototypes IMO.
-            if (mapping.Children.TryGetValue(new YamlScalarNode("placement"), out node))
+            if (mapping.TryGetNode<YamlMappingNode>("placement", out var placementMapping))
             {
-                ReadPlacementProperties((YamlMappingNode)node);
+                ReadPlacementProperties(placementMapping);
             }
         }
 
         private void ReadPlacementProperties(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.Children.TryGetValue(new YamlScalarNode("mode"), out node))
+            if (mapping.TryGetNode("mode", out node))
             {
                 PlacementMode = node.AsString();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("offset"), out node))
+            if (mapping.TryGetNode("offset", out node))
             {
                 PlacementOffset = node.AsVector2i();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("nodes"), out node))
+            if (mapping.TryGetNode<YamlSequenceNode>("nodes", out var sequence))
             {
-                MountingPoints = new List<int>();
-                foreach (YamlScalarNode point in ((YamlSequenceNode)node).Cast<YamlScalarNode>())
-                {
-                    MountingPoints.Add(point.AsInt());
-                }
+                MountingPoints = sequence.Select(p => p.AsInt()).ToList();
             }
 
-            if (mapping.Children.TryGetValue(new YamlScalarNode("range"), out node))
+            if (mapping.TryGetNode("range", out node))
             {
                 PlacementRange = node.AsInt();
             }
@@ -199,24 +206,23 @@ namespace SS14.Shared.GameObjects
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            foreach (KeyValuePair<string, Dictionary<string, YamlNode>> component in source.Components)
+            foreach (KeyValuePair<string, YamlMappingNode> component in source.Components)
             {
-                Dictionary<string, YamlNode> targetComponent;
-                if (target.Components.TryGetValue(component.Key, out targetComponent))
+                if (target.Components.TryGetValue(component.Key, out YamlMappingNode targetComponent))
                 {
                     // Copy over values the target component does not have.
-                    foreach (string key in component.Value.Keys)
+                    foreach (YamlNode key in component.Value.Children.Keys)
                     {
-                        if (!targetComponent.ContainsKey(key))
+                        if (!targetComponent.Children.ContainsKey(key))
                         {
-                            targetComponent[key] = component.Value[key];
+                            targetComponent.Children[key] = component.Value[key];
                         }
                     }
                 }
                 else
                 {
                     // Copy component into the target, since it doesn't have it yet.
-                    target.Components[component.Key] = new Dictionary<string, YamlNode>(component.Value);
+                    target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
             }
 
@@ -241,32 +247,24 @@ namespace SS14.Shared.GameObjects
         /// Creates an entity from this template
         /// </summary>
         /// <returns></returns>
-        public Entity CreateEntity(EntityManager manager)
+        public IEntity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (Entity)Activator.CreateInstance(ClassType, manager);
-
-            foreach (KeyValuePair<string, Dictionary<string, YamlNode>> componentData in components)
-            {
-                IComponent component;
-                try
-                {
-                    component = manager.ComponentFactory.GetComponent(componentData.Key);
-                }
-                catch (UnknowComponentException)
-                {
-                    // Ignore nonexistant ones.
-                    // This is kind of inefficient but we'll do the sanity on prototype creation
-                    // Once the dependency injection stack is fixed.
-                    LogManager.Log(string.Format("Unable to load prototype component. UnknowComponentException occured for componentKey `{0}`", componentData.Key));
-                    continue;
-                }
-                component.LoadParameters(componentData.Value);
-
-                entity.AddComponent(component.Family, component);
-            }
+            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager, componentFactory);
 
             entity.Name = Name;
             entity.Prototype = this;
+
+            foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
+            {
+                IComponent component = componentFactory.GetComponent(componentData.Key);
+
+                component.LoadParameters(componentData.Value);
+
+                entity.AddComponent(component);
+            }
+
+            entity.LoadData(DataNode);
+
             return entity;
         }
 
@@ -274,11 +272,9 @@ namespace SS14.Shared.GameObjects
         public IEnumerable<ComponentParameter> GetBaseSpriteParamaters()
         {
             // Emotional programming.
-            Dictionary<string, YamlNode> ಠ_ಠ;
-            if (components.TryGetValue("Icon", out ಠ_ಠ))
+            if (Components.TryGetValue("Icon", out YamlMappingNode ಠ_ಠ))
             {
-                YamlNode ಥ_ಥ;
-                if (ಠ_ಠ.TryGetValue("icon", out ಥ_ಥ) && ಥ_ಥ is YamlScalarNode)
+                if (ಠ_ಠ.TryGetNode("icon", out YamlNode ಥ_ಥ))
                 {
                     return new ComponentParameter[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
                 }
@@ -288,18 +284,33 @@ namespace SS14.Shared.GameObjects
 
         private void ReadComponent(YamlMappingNode mapping)
         {
-            // TODO: nonexistant component types are not checked here.
-            var type = ((YamlScalarNode)mapping[new YamlScalarNode("type")]).Value;
-            Dictionary<string, YamlNode> dict = YamlHelpers.YamlMappingToDict(mapping);
-            dict.Remove("type");
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            string type = mapping.GetNode("type").AsString();
+            // See if type exists to detect errors.
+            switch (factory.GetComponentAvailability(type))
+            {
+                case ComponentAvailability.Available:
+                    break;
 
-            components[type] = dict;
+                case ComponentAvailability.Ignore:
+                    return;
+
+                case ComponentAvailability.Unknown:
+                    Log.Logger.Error($"Unknown component '{type}' in prototype {ID}!");
+                    return;
+            }
+
+            var copy = new YamlMappingNode(mapping.AsEnumerable());
             // TODO: figure out a better way to exclude the type node.
+            // Also maybe deep copy this? Right now it's pretty error prone.
+            copy.Children.Remove(new YamlScalarNode("type"));
+
+            Components[type] = copy;
         }
 
         public override string ToString()
         {
-            return string.Format("EntityPrototype({0})", ID);
+            return $"EntityPrototype({ID})";
         }
     }
 }

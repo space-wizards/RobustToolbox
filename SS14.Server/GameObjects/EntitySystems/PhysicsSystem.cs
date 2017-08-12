@@ -1,31 +1,32 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
     internal class PhysicsSystem : EntitySystem
     {
-        public PhysicsSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public PhysicsSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.AllSet.Add(typeof(PhysicsComponent));
-            EntityQuery.AllSet.Add(typeof(VelocityComponent));
-            EntityQuery.AllSet.Add(typeof(TransformComponent));
-            EntityQuery.Exclusionset.Add(typeof(SlaveMoverComponent));
-            EntityQuery.Exclusionset.Add(typeof(PlayerInputMoverComponent));
+            EntityQuery.AllSet.Add(typeof(IVelocityComponent));
+            EntityQuery.AllSet.Add(typeof(ITransformComponent));
+            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
+            EntityQuery.ExclusionSet.Add(typeof(PlayerInputMoverComponent));
         }
 
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
-            foreach(var entity in entities)
+            foreach (var entity in entities)
             {
                 //GasEffect(entity, frametime);
 
-                var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
-                var velocity = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
+                var transform = entity.GetComponent<ITransformComponent>();
+                var velocity = entity.GetComponent<IVelocityComponent>();
 
                 if (velocity.Velocity.LengthSquared() < 0.00001f)
                     continue;

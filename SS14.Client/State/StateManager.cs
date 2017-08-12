@@ -1,9 +1,7 @@
 ﻿using SFML.Window;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
-using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -11,51 +9,56 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.State
 {
-    [IoCTarget]
-    public class StateManager : IStateManager
+    public class StateManager : IStateManager, IPostInjectInit
     {
-        private readonly Dictionary<Type, IState> _loadedStates;
-        private readonly Dictionary<Type, object> _managers;
+        [Dependency]
+        private readonly IConfigurationManager configurationManager;
+        [Dependency]
+        private readonly IClientNetManager networkManager;
+        [Dependency]
+        private readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        private readonly IResourceCache resourceCache;
+        [Dependency]
+        private readonly IMapManager mapManager;
+        [Dependency]
+        private readonly IPlayerManager playerManager;
+        [Dependency]
+        private readonly IPlacementManager placementManager;
+        [Dependency]
+        private readonly IKeyBindingManager keyBindingManager;
+
+        private readonly Dictionary<Type, IState> _loadedStates = new Dictionary<Type, IState>();
+        private readonly Dictionary<Type, object> _managers = new Dictionary<Type, object>();
 
         #region IStateManager Members
 
-        public IState CurrentState { get; private set; }
+        public IState CurrentState { get; private set; } = null;
 
         #endregion
 
-        #region Constructor
-
-        public StateManager(IPlayerConfigurationManager configurationManager, INetworkManager networkManager,
-                            IUserInterfaceManager userInterfaceManager,
-                            IResourceManager resourceManager, IMapManager mapManager, IPlayerManager playerManager,
-                            IPlacementManager placementManager, IKeyBindingManager keyBindingManager)
+        public void PostInject()
         {
-            _managers = new Dictionary<Type, object>
-                            {
-                                {typeof (INetworkManager), networkManager},
-                                {typeof (IUserInterfaceManager), userInterfaceManager},
-                                {typeof (IResourceManager), resourceManager},
-                                {typeof (IMapManager), mapManager},
-                                {typeof (IPlayerManager), playerManager},
-                                {typeof (IPlayerConfigurationManager), configurationManager},
-                                {typeof (IPlacementManager), placementManager},
-                                {typeof (IKeyBindingManager), keyBindingManager},
-                                {typeof (IStateManager), this}
-                            };
-
-            _loadedStates = new Dictionary<Type, IState>();
-            CurrentState = null;
+            _managers[typeof(IClientNetManager)] = networkManager;
+            _managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
+            _managers[typeof(IResourceCache)] = resourceCache;
+            _managers[typeof(IMapManager)] = mapManager;
+            _managers[typeof(IPlayerManager)] = playerManager;
+            _managers[typeof(IPlacementManager)] = placementManager;
+            _managers[typeof(IKeyBindingManager)] = keyBindingManager;
+            _managers[typeof(IConfigurationManager)] = configurationManager;
+            _managers[typeof(IStateManager)] = this;
 
             playerManager.RequestedStateSwitch += HandleStateChange;
         }
-
-        #endregion
 
         #region Input
 
@@ -119,10 +122,12 @@ namespace SS14.Client.State
 
         public void Update(FrameEventArgs e)
         {
-            if (CurrentState == null) return;
+            CurrentState?.Update(e);
+        }
 
-            CurrentState.Update(e);
-            CurrentState.Render(e);
+        public void Render(FrameEventArgs e)
+        {
+            CurrentState?.Render(e);
         }
 
         public void RequestStateChange<T>() where T : IState

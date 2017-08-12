@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces.Configuration;
+﻿using SS14.Shared.Interfaces.Configuration;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Shared.IoC;
 
@@ -12,7 +12,7 @@ namespace SS14.Server.ServerConsole.Commands
 
         public void Execute(params string[] args)
         {
-            IoCManager.Resolve<IServerConfigurationManager>().Save();
+            IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
     }
 }

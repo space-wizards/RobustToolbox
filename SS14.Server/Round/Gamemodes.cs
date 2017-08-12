@@ -1,4 +1,4 @@
-﻿using SS14.Server.Interfaces;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameMode;
 using SS14.Server.Interfaces.Player;
@@ -9,11 +9,11 @@ namespace SS14.Server.Round
 {
     public class Gamemode : IGameMode
     {
-        private ISS14Server _server;
+        private IBaseServer _server;
         private string description = "";
         private string name = "";
 
-        public Gamemode(ISS14Server server)
+        public Gamemode(IBaseServer server)
         {
             _server = server;
             Name = "Gamemode";

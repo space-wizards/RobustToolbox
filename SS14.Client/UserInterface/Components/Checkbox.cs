@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -14,7 +14,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
 
         private Sprite checkbox;
         private Sprite checkboxCheck;
@@ -22,11 +22,11 @@ namespace SS14.Client.UserInterface.Components
         private bool value;
 
 
-        public Checkbox(IResourceManager resourceManager)
+        public Checkbox(IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            checkbox = _resourceManager.GetSprite("checkbox0");
-            checkboxCheck = _resourceManager.GetSprite("checkbox1");
+            _resourceCache = resourceCache;
+            checkbox = _resourceCache.GetSprite("checkbox0");
+            checkboxCheck = _resourceCache.GetSprite("checkbox1");
 
             ClientArea = new IntRect(Position, 
                 new SFML.System.Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));

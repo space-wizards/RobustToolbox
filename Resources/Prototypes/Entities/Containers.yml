@@ -1,0 +1,18 @@
+- type: entity
+  id: Toolbox
+  name: Toolbox
+  components:
+  - type: Transform
+  - type: Velocity
+  - type: Clickable
+  - type: Direction
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+    notWornSprite: toolbox_r
+
+  - type: Icon
+    icon: toolbox_r
+
+  - type: BasicMover
+  - type: Physics
+    mass: 5

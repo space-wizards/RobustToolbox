@@ -1,12 +1,12 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
     public class ParticleSystem : EntitySystem
     {
-        public ParticleSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public ParticleSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof(ParticleSystemComponent));

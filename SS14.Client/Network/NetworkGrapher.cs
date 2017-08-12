@@ -7,29 +7,33 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using SS14.Client.ResourceManagement;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Network
 {
-    [IoCTarget]
     public class NetworkGrapher : INetworkGrapher
     {
         private const int MaxDataPoints = 200;
-        private readonly List<NetworkStatisticsDataPoint> _dataPoints;
-        private readonly INetworkManager _networkManager;
-        private readonly IResourceManager _resourceManager;
+        private readonly List<NetworkStatisticsDataPoint> _dataPoints = new List<NetworkStatisticsDataPoint>();
+        [Dependency]
+        private readonly IClientNetManager _networkManager;
+        [Dependency]
+        private readonly IResourceCache _resourceCache;
         private TextSprite _textSprite;
         private bool _enabled;
         private DateTime _lastDataPointTime;
-        private int _lastRecievedBytes;
+        private int _lastReceivedBytes;
         private int _lastSentBytes;
 
-        public NetworkGrapher(IResourceManager resourceManager, INetworkManager networkManager)
+        public NetworkGrapher()
         {
-            _resourceManager = resourceManager;
-            _networkManager = networkManager;
-            _dataPoints = new List<NetworkStatisticsDataPoint>();
             _lastDataPointTime = DateTime.Now;
-            _textSprite = new TextSprite("NetGraphText", "", _resourceManager.GetFont("base_font"));
+        }
+
+        public void Initialize()
+        {
+            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
         }
 
         #region INetworkGrapher Members
@@ -41,8 +45,8 @@ namespace SS14.Client.Network
 
             _dataPoints.Clear();
             _lastDataPointTime = DateTime.Now;
-            _lastRecievedBytes = _networkManager.CurrentStatistics.ReceivedBytes;
-            _lastSentBytes = _networkManager.CurrentStatistics.SentBytes;
+            _lastReceivedBytes = _networkManager.Statistics.ReceivedBytes;
+            _lastSentBytes = _networkManager.Statistics.SentBytes;
         }
 
         public void Update()
@@ -55,7 +59,7 @@ namespace SS14.Client.Network
             DrawGraph();
         }
 
-        #endregion
+        #endregion INetworkGrapher Members
 
         private void DrawGraph()
         {
@@ -68,31 +72,31 @@ namespace SS14.Client.Network
                 if (_dataPoints.Count <= i) continue;
 
                 totalMilliseconds += _dataPoints[i].ElapsedMilliseconds;
-                totalRecBytes += _dataPoints[i].RecievedBytes;
+                totalRecBytes += _dataPoints[i].ReceivedBytes;
                 totalSentBytes += _dataPoints[i].SentBytes;
 
                 CluwneLib.ResetRenderTarget();
 
                 //Draw recieved line
                 CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * (MaxDataPoints - i)),
-                                        (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].RecievedBytes * 0.1f),
+                                        (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].ReceivedBytes * 0.1f),
                                         2,
-                                        (int)(_dataPoints[i].RecievedBytes * 0.1f),
+                                        (int)(_dataPoints[i].ReceivedBytes * 0.1f),
                                         SFML.Graphics.Color.Red.WithAlpha(180));
 
-                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4*(MaxDataPoints - i)) + 2,
+                CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * (MaxDataPoints - i)) + 2,
                                         (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
                                         2,
-                                        (int)(_dataPoints[i].SentBytes*0.1f),
+                                        (int)(_dataPoints[i].SentBytes * 0.1f),
                                         new SFML.Graphics.Color(0, 128, 0).WithAlpha(180));
             }
 
-            _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
+            _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes / totalMilliseconds, 6));
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
             _textSprite.Draw();
 
-            _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes/totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4*MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
+            _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes / totalMilliseconds, 6));
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
             _textSprite.Draw();
         }
 
@@ -103,26 +107,26 @@ namespace SS14.Client.Network
 
             _dataPoints.Add(new NetworkStatisticsDataPoint
                                 (
-                                _networkManager.CurrentStatistics.ReceivedBytes - _lastRecievedBytes,
-                                _networkManager.CurrentStatistics.SentBytes - _lastSentBytes,
+                                _networkManager.Statistics.ReceivedBytes - _lastReceivedBytes,
+                                _networkManager.Statistics.SentBytes - _lastSentBytes,
                                 (DateTime.Now - _lastDataPointTime).TotalMilliseconds)
                 );
 
             _lastDataPointTime = DateTime.Now;
-            _lastRecievedBytes = _networkManager.CurrentStatistics.ReceivedBytes;
-            _lastSentBytes = _networkManager.CurrentStatistics.SentBytes;
+            _lastReceivedBytes = _networkManager.Statistics.ReceivedBytes;
+            _lastSentBytes = _networkManager.Statistics.SentBytes;
         }
     }
 
     public struct NetworkStatisticsDataPoint
     {
         public double ElapsedMilliseconds;
-        public int RecievedBytes;
+        public int ReceivedBytes;
         public int SentBytes;
 
         public NetworkStatisticsDataPoint(int rec, int sent, double elapsed)
         {
-            RecievedBytes = rec;
+            ReceivedBytes = rec;
             SentBytes = sent;
             ElapsedMilliseconds = elapsed;
         }

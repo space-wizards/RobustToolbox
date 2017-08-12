@@ -1,10 +1,8 @@
-﻿using SFML.Graphics;
-using SS14.Client.Interfaces.GOC;
+using SFML.Graphics;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Helpers;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.UserInterface
@@ -13,7 +11,7 @@ namespace SS14.Client.UserInterface
     {
         #region IDragDropInfo Members
 
-        public Entity DragEntity { get; private set; }
+        public IEntity DragEntity { get; private set; }
         public Sprite DragSprite { get; private set; }
         public bool IsEntity { get; private set; }
 
@@ -29,7 +27,7 @@ namespace SS14.Client.UserInterface
             IsEntity = true;
         }
 
-        public void StartDrag(Entity entity)
+        public void StartDrag(IEntity entity)
         {
             Reset();
 
@@ -40,7 +38,7 @@ namespace SS14.Client.UserInterface
             IsEntity = true;
         }
 
-        #endregion
+        #endregion IDragDropInfo Members
 
         public bool Active()
         {

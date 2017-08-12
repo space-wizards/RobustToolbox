@@ -11,7 +11,6 @@ using System.Reflection;
 
 namespace SS14.Client.Lighting
 {
-    [IoCTarget]
     public class LightManager : ILightManager
     {
         private readonly List<Type> LightModes = new List<Type>();

@@ -79,7 +79,7 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public Chatbox(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
             scrollbarH.SetVisible(false);
 
@@ -87,7 +87,7 @@ namespace SS14.Client.UserInterface.Components
 
             // ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
 
-            input = new Textbox(Size.X, resourceManager)
+            input = new Textbox(Size.X, resourceCache)
             {
                 drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
                 textColor = new SFML.Graphics.Color(255, 250, 240)
@@ -182,7 +182,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "CALABRI", _resourceManager)
+                var label = new Label(content, "CALIBRI", _resourceCache)
                 {
                     Position = new Vector2i(5, last_y),
                     Text =

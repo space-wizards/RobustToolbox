@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Interfaces.Resource;
@@ -75,9 +75,9 @@ namespace SS14.Client.Graphics.Sprite
         /// <summary>
         /// Dictionary of animation names to directional sprite set
         /// </summary>
-        private Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
+        private readonly Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
 
-        private Dictionary<string, Dictionary<Direction, FloatRect>> _averageAABBs = new Dictionary<string, Dictionary<Direction, FloatRect>>();
+        private readonly Dictionary<string, Dictionary<Direction, FloatRect>> _averageAABBs = new Dictionary<string, Dictionary<Direction, FloatRect>>();
         private SFML.Graphics.Sprite _currentSprite;
 
         private Direction _direction = Direction.South;
@@ -87,7 +87,7 @@ namespace SS14.Client.Graphics.Sprite
         #region Methods
 
         //Todo encapsulate this further down as components -- AnimatedSpriteState, AnimatedSpriteStateDirection
-        public void LoadSprites(AnimationCollection collection, IResourceManager resourceManager)
+        public void LoadSprites(AnimationCollection collection, IResourceCache resourceCache)
         {
             float x = 0, y = 0, h = 0, w = 0;
             int t = 0;
@@ -109,7 +109,7 @@ namespace SS14.Client.Graphics.Sprite
                     {
                         var spritename = collection.Name.ToLowerInvariant() + "_" + info.Name.ToLowerInvariant() + "_"
                                          + DirectionToUriComponent(dir) + "_" + i;
-                        thisDirSprites[i] = resourceManager.GetSprite(spritename);
+                        thisDirSprites[i] = resourceCache.GetSprite(spritename);
                         var bounds = thisDirSprites[i].GetLocalBounds();
                         x += bounds.Left;
                         y += bounds.Top;
@@ -225,17 +225,17 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Constructor
 
-        public AnimatedSprite(string name, AnimationCollection collection, IResourceManager resourceManager)
+        public AnimatedSprite(string name, AnimationCollection collection, IResourceCache resourceCache)
         {
             AnimationStates = new Dictionary<string, AnimationState>();
             Name = name;
-            LoadSprites(collection, resourceManager);
+            LoadSprites(collection, resourceCache);
             if (AnimationStates.ContainsKey("idle"))
                 SetAnimationState("idle");
             SetLoop(true);
             SetCurrentSprite();
 
-            //IoCManager.Resolve<IResourceManager>().
+            //IoCManager.Resolve<IResourceCache>().
         }
 
         #endregion

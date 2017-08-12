@@ -1,4 +1,4 @@
-﻿namespace SS14.Server.Interfaces.Map
+namespace SS14.Server.Interfaces.Map
 {
     [System.Diagnostics.DebuggerDisplay("TileRef: {X},{Y}")]
     public struct TileRef

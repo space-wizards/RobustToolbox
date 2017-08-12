@@ -2,7 +2,7 @@
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -17,36 +17,34 @@
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
     <TargetFrameworkProfile />
+    <NoWarn>0649</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\UnitTesting\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\UnitTesting\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nunit.framework">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NUnit.3.6.1\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\NUnit.3.6.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
-    <!--<Reference Include="NUnit3.TestAdapter">
-      <HintPath>..\packages\NUnit3TestAdapter.3.7.0\tools\NUnit3.TestAdapter.dll</HintPath>
-      <Private>False</Private>
-    </Reference>-->
-    <Reference Include="sfmlnet-audio-2">
-      <HintPath>..\Third-Party\sfmlnet-audio-2.dll</HintPath>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -61,13 +59,16 @@
       <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
     </Reference>
     <Reference Include="YamlDotNet">
-      <HintPath>..\packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Choose>
@@ -79,14 +80,18 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="SS14.Client\Graphics\Shaders\TestShader_Test.cs" />
-    <Compile Include="SS14.Client\Graphics\Shaders\Lightblend_Test.cs" />
-    <Compile Include="SS14.Client\Graphics\Sprite\CluwneSprite_Test.cs" />
-    <Compile Include="SS14.Client\Services\Helpers\GaussianBlur_Test.cs" />
-    <Compile Include="SS14.Client\Services\Helpers\StarScroller_Test.cs" />
-    <Compile Include="SS14.Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
-    <Compile Include="SS14.Shared\IoC\IoCManager_Test.cs" />
-    <Compile Include="SS14.Shared\Prototypes\PrototypeManager_Test.cs" />
+    <Compile Include="Client\Graphics\Shaders\TestShader_Test.cs" />
+    <Compile Include="Client\Graphics\Shaders\Lightblend_Test.cs" />
+    <Compile Include="Client\Graphics\Sprite\CluwneSprite_Test.cs" />
+    <Compile Include="Client\Services\Helpers\GaussianBlur_Test.cs" />
+    <Compile Include="Client\Services\Helpers\StarScroller_Test.cs" />
+    <Compile Include="Client\Services\Player\PostProcessing\DeathPostProcessingEffect_Test.cs" />
+    <Compile Include="Shared\IoC\IoCManager_Test.cs" />
+    <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />
+    <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
+    <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
+    <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
+    <Compile Include="Shared\Math\SfmlExt_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -101,11 +106,11 @@
     </ProjectReference>
     <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
       <Project>{0c31dfdf-0000-0000-0000-000000000000}</Project>
-      <Name>SpaceStation14</Name>
+      <Name>SS14.Client</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Server\SS14.Server.csproj">
       <Project>{b04aae71-0000-0000-0000-000000000000}</Project>
-      <Name>SpaceStation14_Server</Name>
+      <Name>SS14.Server</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
@@ -113,17 +118,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="SS14.Server\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="CSFML\csfml-audio-2.dll" />
-    <Content Include="CSFML\csfml-graphics-2.dll" />
-    <Content Include="CSFML\csfml-network-2.dll" />
-    <Content Include="CSFML\csfml-system-2.dll" />
-    <Content Include="CSFML\csfml-window-2.dll" />
+    <Folder Include="Server\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>
@@ -146,14 +147,9 @@
   </Choose>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>
     <DefineConstants Condition="'$(HEADLESS)'!=''">$(DefineConstants);HEADLESS</DefineConstants>
   </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
 </Project>

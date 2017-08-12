@@ -1,12 +1,13 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.IoC;
+
 namespace SS14.Client.GameObjects.EntitySystems
 {
     public class InputSystem : EntitySystem
     {
-        public InputSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public InputSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof(KeyBindingInputComponent));
@@ -17,25 +18,23 @@ namespace SS14.Client.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach (var entity in entities)
             {
-                var inputs = entity.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input);
+                var inputs = entity.GetComponent<KeyBindingInputComponent>();
 
                 //Animation setting
-                if (entity.GetComponent(ComponentFamily.Renderable) is AnimatedSpriteComponent)
+                if (entity.TryGetComponent<AnimatedSpriteComponent>(out var component))
                 {
-                    var animation = entity.GetComponent<AnimatedSpriteComponent>(ComponentFamily.Renderable);
-
                     //Char is moving
                     if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveLeft) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveUp))
                     {
-                        animation.SetAnimationState(inputs.GetKeyState(BoundKeyFunctions.Run) ? "run" : "walk");
+                        component.SetAnimationState(inputs.GetKeyState(BoundKeyFunctions.Run) ? "run" : "walk");
                     }
-                        //Char is not moving
+                    //Char is not moving
                     else
                     {
-                        animation.SetAnimationState("idle");
+                        component.SetAnimationState("idle");
                     }
                 }
             }

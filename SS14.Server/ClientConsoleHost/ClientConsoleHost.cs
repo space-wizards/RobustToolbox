@@ -1,59 +1,69 @@
-﻿using Lidgren.Network;
-using SFML.System;
+﻿using SFML.System;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
-using SS14.Server.Interfaces.GOC;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Network;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
 using System.Reflection;
 using System;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.ClientConsoleHost
 {
-    [IoCTarget]
-    class ClientConsoleHost : IClientConsoleHost
+    public class ClientConsoleHost : IClientConsoleHost
     {
-        private Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
+        [Dependency]
+        private readonly IReflectionManager reflectionManager;
+        private readonly Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
         public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
 
-        public void HandleRegistrationRequest(NetConnection senderConnection)
+        public void HandleRegistrationRequest(INetChannel senderConnection)
         {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
-            var message = netMgr.CreateMessage();
-            message.Write((byte)NetMessage.ConsoleCommandRegister);
-            message.Write((UInt16)AvailableCommands.Count);
+            var netMgr = IoCManager.Resolve<IServerNetManager>();
+            var message = netMgr.CreateNetMessage<MsgConCmdReg>();
+
+            var counter = 0;
+            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count];
             foreach (var command in AvailableCommands.Values)
             {
-                message.Write(command.Command);
-                message.Write(command.Description);
-                message.Write(command.Help);
+                message.Commands[counter++] = new MsgConCmdReg.Command()
+                {
+                    Name = command.Command,
+                    Description = command.Description,
+                    Help = command.Help
+                };
             }
 
-            netMgr.SendMessage(message, senderConnection);
+            netMgr.ServerSendMessage(message, senderConnection);
         }
 
-        public ClientConsoleHost()
+        public void Initialize()
         {
-            foreach(Type type in IoCManager.ResolveEnumerable<IClientCommand>())
+            foreach (Type type in reflectionManager.GetAllChildren<IClientCommand>())
             {
                 var instance = Activator.CreateInstance(type, null) as IClientCommand;
-                if (AvailableCommands.ContainsKey(instance.Command))
+                if (AvailableCommands.TryGetValue(instance.Command, out IClientCommand duplicate))
                 {
-                    throw new Exception("Command name already registered: " + instance.Command);
+                    throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand), $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
                 }
 
                 AvailableCommands[instance.Command] = instance;
             }
         }
 
-        public void ProcessCommand(string text, NetConnection sender)
+        public void ProcessCommand(MsgConCmd message)
         {
+            string text = message.Text;
+            INetChannel sender = message.MsgChannel;
             var args = new List<string>();
 
             CommandParsing.ParseArguments(text, args);
@@ -68,8 +78,7 @@ namespace SS14.Server.ClientConsoleHost
             {
                 IClientCommand command = AvailableCommands[cmd];
                 args.RemoveAt(0);
-                var client = IoCManager.Resolve<ISS14Server>().GetClient(sender);
-                command.Execute(this, client, args.ToArray());
+                command.Execute(this, sender, args.ToArray());
             }
             catch (KeyNotFoundException)
             {
@@ -81,13 +90,12 @@ namespace SS14.Server.ClientConsoleHost
             }
         }
 
-        public void SendConsoleReply(string text, NetConnection target)
+        public void SendConsoleReply(string text, INetChannel target)
         {
-            var netMgr = IoCManager.Resolve<ISS14NetServer>();
-            NetOutgoingMessage replyMsg = netMgr.CreateMessage();
-            replyMsg.Write((byte)NetMessage.ConsoleCommandReply);
-            replyMsg.Write(text);
-            netMgr.SendMessage(replyMsg, target, NetDeliveryMethod.ReliableUnordered);
+            var netMgr = IoCManager.Resolve<IServerNetManager>();
+            var replyMsg = netMgr.CreateNetMessage<MsgConCmdAck>();
+            replyMsg.Text = text;
+            netMgr.ServerSendMessage(replyMsg, target);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
@@ -10,15 +10,15 @@ namespace SS14.Client.UserInterface.Components
         public string tabName = "";
         public Sprite tabSprite = null;
 
-        public TabContainer(string uniqueName, Vector2i size, IResourceManager resourceManager)
-            : base(uniqueName, size, resourceManager)
+        public TabContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
+            : base(uniqueName, size, resourceCache)
         {
             DrawBorder = false;
         }
 
         public string tabSpriteName
         {
-            set { tabSprite = _resourceManager.GetSprite(value); }
+            set { tabSprite = _resourceCache.GetSprite(value); }
         }
 
         public virtual void Activated() //Called when tab is selected.

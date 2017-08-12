@@ -4,20 +4,18 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
-using SS14.Client.Interfaces.Configuration;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GOC;
-using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Configuration;
 
 namespace SS14.Client.UserInterface
 {
@@ -25,16 +23,17 @@ namespace SS14.Client.UserInterface
     /// <summary>
     ///  Manages UI Components. This includes input, rendering, updates and net messages.
     /// </summary>
-    [IoCTarget]
-    public class UserInterfaceManager : IUserInterfaceManager
+    public class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit
     {
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
-        private readonly List<IGuiComponent> _components;
+        private readonly List<IGuiComponent> _components = new List<IGuiComponent>();
 
-        private readonly IPlayerConfigurationManager _config;
-        private readonly IResourceManager _resourceManager;
+        [Dependency]
+        private readonly IConfigurationManager _config;
+        [Dependency]
+        private readonly IResourceCache _resourceCache;
         private IGuiComponent _currentFocus;
         private Sprite _cursorSprite;
         private DebugConsole _console;
@@ -44,17 +43,14 @@ namespace SS14.Client.UserInterface
         private IGuiComponent movingComp;
         private bool showCursor = true;
 
-        /// <summary>
-        ///  Currently targeting action.
-        /// </summary>
-
-        public UserInterfaceManager(IResourceManager resourceManager)
+        public void PostInject()
         {
-            _resourceManager = resourceManager;
-            DragInfo = new DragDropInfo();
-            _components = new List<IGuiComponent>();
-            _config = IoCManager.Resolve<IPlayerConfigurationManager>();
-            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), resourceManager);
+            _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
+        }
+
+        public void Initialize()
+        {
+            _console = new DebugConsole("dbgConsole", new Vector2i((int)CluwneLib.Screen.Size.X, 400), _resourceCache);
             _console.SetVisible(false);
         }
 
@@ -62,7 +58,7 @@ namespace SS14.Client.UserInterface
 
         #region IUserInterfaceManager Members
 
-        public IDragDropInfo DragInfo { get; private set; }
+        public IDragDropInfo DragInfo { get; private set; } = new DragDropInfo();
 
         public IDebugConsole Console => _console;
 
@@ -227,7 +223,7 @@ namespace SS14.Client.UserInterface
             else
             {
                 IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                              where comp.RecieveInput
+                                                              where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
                                                               //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -262,7 +258,7 @@ namespace SS14.Client.UserInterface
             else
             {
                 IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                              where comp.RecieveInput
+                                                              where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
                                                               //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -294,7 +290,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           select comp;
 
@@ -313,7 +309,7 @@ namespace SS14.Client.UserInterface
             }
 
             IGuiComponent inputTo = (from IGuiComponent comp in _components
-                                     where comp.RecieveInput
+                                     where comp.ReceiveInput
                                      where comp.Focus
                                      select comp).FirstOrDefault();
 
@@ -341,7 +337,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == _config.GetConsoleKey())
+            if (e.Code == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
                 _console.ToggleVisible();
                 return true;
@@ -353,7 +349,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
                                                           // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -371,7 +367,7 @@ namespace SS14.Client.UserInterface
             }
 
             IOrderedEnumerable<IGuiComponent> inputList = from IGuiComponent comp in _components
-                                                          where comp.RecieveInput
+                                                          where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
                                                           // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
@@ -436,7 +432,6 @@ namespace SS14.Client.UserInterface
             var uiType = (CreateUiType)msg.ReadByte();
             switch (uiType)
             {
-
             }
             */
         }
@@ -504,7 +499,7 @@ namespace SS14.Client.UserInterface
             {
                 _cursorSprite = DragInfo.DragSprite != null && DragInfo.IsActive
                                     ? DragInfo.DragSprite
-                                    : _resourceManager.GetSprite("cursor");
+                                    : _resourceCache.GetSprite("cursor");
 
                 _cursorSprite.Position = MousePos.ToFloat();
                 _cursorSprite.Draw();

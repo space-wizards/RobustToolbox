@@ -1,8 +1,6 @@
-﻿using Lidgren.Network;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Server.Interfaces.Map;
-using SS14.Server.Interfaces.Network;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -14,11 +12,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Map
 {
-    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();
@@ -30,6 +29,10 @@ namespace SS14.Server.Map
         public MapManager()
         {
             tileIndexer = new TileCollection(this);
+        }
+
+        public void Initialize()
+        {
             NewMap();
         }
 
@@ -126,7 +129,7 @@ namespace SS14.Server.Map
             }
         }
 
-        #endregion
+        #endregion Tile Enumerators
 
         #region Indexers
 
@@ -212,56 +215,69 @@ namespace SS14.Server.Map
                         mm.TileChanged(tileRef, oldTile);
 
                     if (!mm.suppressNetworkUpdatesOnTileChanged)
-                        mm.NetworkUpdateTile(tileRef);
+                        NetworkUpdateTile(tileRef);
                 }
             }
         }
 
-        #endregion
+        #endregion Indexers
 
         #region Networking
 
-        public NetOutgoingMessage CreateMapMessage(MapMessage messageType)
+        public void SendMap(INetChannel connection)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
-            message.Write((byte)messageType);
-            return message;
-        }
+            Logger.Log($"[MAP] {connection.RemoteAddress}: Sending map");
 
-        public void SendMap(NetConnection connection)
-        {
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map");
-            NetOutgoingMessage mapMessage = CreateMapMessage(MapMessage.SendTileMap);
+            var net = IoCManager.Resolve<IServerNetManager>();
+            var message = net.CreateNetMessage<MsgMap>();
 
-            mapMessage.Write((int)1); // Format version.  Who knows, it could come in handy.
+            message.MessageType = MapMessage.SendTileMap;
+            message.Version = 1; // Format version.  Who knows, it could come in handy.
 
             // Tile definition mapping
             var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-            mapMessage.Write((int)tileDefManager.Count);
-            for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
-                mapMessage.Write((string)tileDefManager[tileId].Name);
 
-            // Map chunks
-            mapMessage.Write((int)chunks.Count);
-            foreach (var chunk in chunks)
+            // tile defs
+            message.TileDefs = new MsgMap.TileDef[tileDefManager.Count];
+            for (var tileId = 0; tileId < tileDefManager.Count; ++tileId)
             {
-                mapMessage.Write((int)chunk.Key.X);
-                mapMessage.Write((int)chunk.Key.Y);
-
-                foreach (var tile in chunk.Value.Tiles)
-                    mapMessage.Write((uint)tile);
+                message.TileDefs[tileId] = new MsgMap.TileDef
+                {
+                    Name = tileDefManager[tileId].Name
+                };
             }
 
-            IoCManager.Resolve<ISS14NetServer>().SendMessage(mapMessage, connection, NetDeliveryMethod.ReliableOrdered);
-            LogManager.Log(connection.RemoteEndPoint.Address + ": Sending map finished with message size: " +
-                           mapMessage.LengthBytes + " bytes");
+            var counter = 0;
+            message.ChunkDefs = new MsgMap.ChunkDef[chunks.Count];
+
+            foreach (var chunk in chunks)
+            {
+                var chk = new MsgMap.ChunkDef
+                {
+                    X = chunk.Key.X,
+                    Y = chunk.Key.Y,
+                    Defs = new MsgMap.TileDef[chunk.Value.Tiles.Length]
+                };
+
+                var tileIndex = 0;
+                foreach (var tile in chunk.Value.Tiles)
+                {
+                    chk.Defs[tileIndex++] = new MsgMap.TileDef
+                    {
+                        Tile = (uint)tile
+                    };
+                }
+
+                message.ChunkDefs[counter++] = chk;
+            }
+
+            net.ServerSendMessage(message, connection);
+            Logger.Log($"[MAP] {connection.RemoteAddress}: Finished sending map");
         }
 
-        public void HandleNetworkMessage(NetIncomingMessage message)
+        public void HandleNetworkMessage(MsgMap message)
         {
-            var messageType = (MapMessage)message.ReadByte();
-            switch (messageType)
+            switch (message.MessageType)
             {
                 case MapMessage.TurfClick:
                     //HandleTurfClick(message);
@@ -300,20 +316,24 @@ namespace SS14.Server.Map
                 }
             }
         }*/ // TODO HOOK ME BACK UP WITH ENTITY SYSTEM
-
-        public void NetworkUpdateTile(TileRef tile)
+        
+        private static void NetworkUpdateTile(TileRef tile)
         {
-            NetOutgoingMessage message = IoCManager.Resolve<ISS14NetServer>().CreateMessage();
-            message.Write((byte)NetMessage.MapMessage);
-            message.Write((byte)MapMessage.TurfUpdate);
+            var net = IoCManager.Resolve<IServerNetManager>();
+            var message = net.CreateNetMessage<MsgMap>();
 
-            message.Write((int)tile.X);
-            message.Write((int)tile.Y);
-            message.Write((uint)tile.Tile);
-            IoCManager.Resolve<ISS14NetServer>().SendToAll(message);
+            message.MessageType = MapMessage.TurfUpdate;
+            message.SingleTurf = new MsgMap.Turf
+            {
+                X = tile.X,
+                Y = tile.Y,
+                Tile = (uint)tile.Tile
+            };
+
+            net.ServerSendToAll(message);
         }
 
-        #endregion
+        #endregion Networking
 
         #region File Operations
 
@@ -323,7 +343,7 @@ namespace SS14.Server.Map
             DateTime date = DateTime.Now;
             mapName = string.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
 
-            LogManager.Log(string.Format("We are attempting to save map with name {0}", mapName));
+            Logger.Log(string.Format("We are attempting to save map with name {0}", mapName));
 
             var badChars = Path.GetInvalidFileNameChars();
             if (mapName.Any(c => badChars.Contains(c)))
@@ -334,12 +354,11 @@ namespace SS14.Server.Map
 
             string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
 
-
             using (var fs = new FileStream(fileName, FileMode.Create))
             {
                 var sw = new StreamWriter(fs);
                 var bw = new BinaryWriter(fs);
-                LogManager.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
+                Logger.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
 
                 sw.Write("SS14 Map File Version ");
                 sw.Write((int)1); // Format version.  Who knows, it could come in handy.
@@ -370,7 +389,7 @@ namespace SS14.Server.Map
                 bw.Flush();
             }
 
-            LogManager.Log("Done saving map.");
+            Logger.Log("Done saving map.");
         }
 
         public bool LoadMap(string mapName)
@@ -391,7 +410,7 @@ namespace SS14.Server.Map
                 {
                     var sr = new StreamReader(fs);
                     var br = new BinaryReader(fs);
-                    LogManager.Log(string.Format("Loading map: \"{0}\"", mapName));
+                    Logger.Log(string.Format("Loading map: \"{0}\"", mapName));
 
                     var versionString = sr.ReadLine();
                     if (!versionString.StartsWith("SS14 Map File Version "))
@@ -435,7 +454,7 @@ namespace SS14.Server.Map
                     Debug.Assert(ending == "End of Map");
                 }
 
-                LogManager.Log("Done loading map.");
+                Logger.Log("Done loading map.");
                 return true;
             }
             finally
@@ -449,7 +468,7 @@ namespace SS14.Server.Map
             suppressNetworkUpdatesOnTileChanged = true;
             try
             {
-                LogManager.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
+                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
                 ushort floor = IoCManager.Resolve<ITileDefinitionManager>()["Floor"].TileId;
                 ushort wall = IoCManager.Resolve<ITileDefinitionManager>()["Wall"].TileId;
 
@@ -469,7 +488,7 @@ namespace SS14.Server.Map
             }
         }
 
-        #endregion
+        #endregion File Operations
 
         // An actual modulus implementation, because apparently % is not modulus.  Srsly
         // Should probably stick this in some static class.
@@ -478,6 +497,5 @@ namespace SS14.Server.Map
         {
             return (int)(n - (int)Math.Floor(n / d) * d);
         }
-
     }
 }

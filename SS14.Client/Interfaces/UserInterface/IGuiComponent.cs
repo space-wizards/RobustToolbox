@@ -1,4 +1,4 @@
-﻿using Lidgren.Network;
+using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -11,14 +11,14 @@ namespace SS14.Client.Interfaces.UserInterface
     {
         /// <summary>
         ///  <para>Defines the type of UI component.</para>
-        ///  <para>This needs to be set if you want the component to recieve network input as it is used for routing the messages to the correct components.</para>
+        ///  <para>This needs to be set if you want the component to receive network input as it is used for routing the messages to the correct components.</para>
         /// </summary>
         GuiComponentType ComponentClass { get; }
 
         Vector2i Position { get; set; }
 
         IntRect ClientArea { get; set; }
-        bool RecieveInput { get; set; }
+        bool ReceiveInput { get; set; }
 
         bool Focus { get; set; }
 

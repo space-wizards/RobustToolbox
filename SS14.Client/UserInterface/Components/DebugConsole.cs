@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using SFML.System;
 using SFML.Window;
-using SS14.Client.Interfaces.GOC;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -9,13 +9,17 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using SFML.Graphics;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -28,16 +32,16 @@ namespace SS14.Client.UserInterface.Components
 
         public IDictionary<string, IConsoleCommand> Commands => commands;
 
-        public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
-            input = new Textbox(size.X, resourceManager)
+            input = new Textbox(size.X, resourceCache)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new Color(128, 128, 128, 100),
+                drawColor = new Color(64, 64, 64, 100),
                 textColor = new Color(255, 250, 240)
             };
             input.OnSubmit += input_OnSubmit;
-            this.BackgroundColor = new Color(128, 128, 128, 200);
+            this.BackgroundColor = new Color(64, 64, 64, 200);
             this.DrawBackground = true;
             this.DrawBorder = true;
             // Update(0);
@@ -54,7 +58,7 @@ namespace SS14.Client.UserInterface.Components
         public void AddLine(string text, Color color)
         {
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI", this._resourceManager)
+            Label newLabel = new Label(text, "CALIBRI", this._resourceCache)
             {
                 Position = new Vector2i(5, last_y),
                 TextColor = color
@@ -82,7 +86,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void ToggleVisible()
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             // var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             base.ToggleVisible();
             if (IsVisible())
@@ -105,27 +109,27 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        private void NetMgr_MessageArrived(object sender, IncomingNetworkMessageArgs e)
+        private void NetMgr_MessageArrived(object sender, NetMessageArgs e)
         {
-            //Make sure we reset the position - we might recieve this message after the gamestates.
-            if (e.Message.Position > 0)
-                e.Message.Position = 0;
+            //Make sure we reset the position - we might receive this message after the gamestates.
+            if (e.RawMessage.Position > 0)
+                e.RawMessage.Position = 0;
 
-            if (e.Message.MessageType != NetIncomingMessageType.Data)
+            if (e.RawMessage.MessageType != NetIncomingMessageType.Data)
                 return;
 
-            switch ((NetMessage)e.Message.PeekByte())
+            switch ((NetMessages)e.RawMessage.PeekByte())
             {
-                case NetMessage.ConsoleCommandReply:
-                    e.Message.ReadByte();
-                    AddLine("< " + e.Message.ReadString(), new Color(65, 105, 225));
+                case NetMessages.ConsoleCommandReply:
+                    e.RawMessage.ReadByte();
+                    AddLine("< " + e.RawMessage.ReadString(), new Color(65, 105, 225));
                     break;
 
-                case NetMessage.ConsoleCommandRegister:
-                    e.Message.ReadByte();
-                    for (ushort amount = e.Message.ReadUInt16(); amount > 0; amount--)
+                case NetMessages.ConsoleCommandRegister:
+                    e.RawMessage.ReadByte();
+                    for (ushort amount = e.RawMessage.ReadUInt16(); amount > 0; amount--)
                     {
-                        string commandName = e.Message.ReadString();
+                        string commandName = e.RawMessage.ReadString();
                         // Do not do duplicate commands.
                         if (commands.ContainsKey(commandName))
                         {
@@ -133,8 +137,8 @@ namespace SS14.Client.UserInterface.Components
                             continue;
                         }
 
-                        string description = e.Message.ReadString();
-                        string help = e.Message.ReadString();
+                        string description = e.RawMessage.ReadString();
+                        string help = e.RawMessage.ReadString();
 
                         var command = new ServerDummyCommand(commandName, help, description);
                         commands[commandName] = command;
@@ -143,7 +147,7 @@ namespace SS14.Client.UserInterface.Components
             }
 
             //Again, make sure we reset the position - we might get it before the gamestate and then that would break.
-            e.Message.Position = 0;
+            e.RawMessage.Position = 0;
         }
 
         public override void Render()
@@ -214,7 +218,7 @@ namespace SS14.Client.UserInterface.Components
             //var entMgr = IoCManager.Resolve<IEntityManager>();
             //var plrMgr = IoCManager.Resolve<IPlayerManager>();
             //player = plrMgr.ControlledEntity;
-            //IoCManager.Resolve<INetworkManager>().
+            //IoCManager.Resolve<INetClientManager>().
 
             bool forward = true;
             if (commands.ContainsKey(commandname))
@@ -223,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
-            else if (!IoCManager.Resolve<INetworkManager>().IsConnected)
+            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
                 AddLine("Unknown command: " + commandname, Color.Red);
                 return;
@@ -237,7 +241,8 @@ namespace SS14.Client.UserInterface.Components
 
         private void InitializeCommands()
         {
-            foreach (Type t in IoCManager.ResolveEnumerable<IConsoleCommand>())
+            var manager = IoCManager.Resolve<IReflectionManager>();
+            foreach (Type t in manager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
                 if (commands.ContainsKey(instance.Command))
@@ -249,25 +254,25 @@ namespace SS14.Client.UserInterface.Components
 
         private void SendServerConsoleCommand(string text)
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (netMgr != null && netMgr.IsConnected)
             {
                 NetOutgoingMessage outMsg = netMgr.CreateMessage();
-                outMsg.Write((byte)NetMessage.ConsoleCommand);
+                outMsg.Write((byte)NetMessages.ConsoleCommand);
                 outMsg.Write(text);
-                netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
         }
 
         private void SendServerCommandRequest()
         {
-            var netMgr = IoCManager.Resolve<INetworkManager>();
+            var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (!netMgr.IsConnected)
                 return;
 
             NetOutgoingMessage outMsg = netMgr.CreateMessage();
-            outMsg.Write((byte)NetMessage.ConsoleCommandRegister);
-            netMgr.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            outMsg.Write((byte)NetMessages.ConsoleCommandRegister);
+            netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             sentCommandRequestToServer = true;
         }
 
@@ -283,7 +288,7 @@ namespace SS14.Client.UserInterface.Components
     /// <summary>
     /// These dummies are made purely so list and help can list server-side commands.
     /// </summary>
-    [IoCTarget(Disabled=true)]
+    [Reflect(false)]
     class ServerDummyCommand : IConsoleCommand
     {
         readonly string command;

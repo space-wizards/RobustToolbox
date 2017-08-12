@@ -11,11 +11,11 @@ before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
 
 before_script:
-- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
 - "nuget restore SpaceStation14.sln"
 
 script:
-- "xbuild /p:Configuration=Release /p:HEADLESS=1 SpaceStation14.sln"
+- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
+- "msbuild /p:Configuration=Release /p:HEADLESS=1 SpaceStation14.sln"
 - "cd packages/NUnit.ConsoleRunner.3.6.1/tools"
-- "mono --debug nunit3-console.exe ../../../SS14.UnitTesting/bin/Release/SS14.UnitTesting.dll"
+- "mono --debug nunit3-console.exe ../../../bin/UnitTesting/SS14.UnitTesting.dll"
 

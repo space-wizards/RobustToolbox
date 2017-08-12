@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
+using SS14.Client.ResourceManagement;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -17,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
 
         private Sprite _buttonLeft;
         private Sprite _buttonMain;
@@ -30,14 +31,14 @@ namespace SS14.Client.UserInterface.Components
         private Color drawColor = Color.White;
         public Color mouseOverColor = Color.White;
 
-        public Button(string buttonText, IResourceManager resourceManager)
+        public Button(string buttonText, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            _buttonLeft = _resourceManager.GetSprite("button_left");
-            _buttonMain = _resourceManager.GetSprite("button_middle");
-            _buttonRight = _resourceManager.GetSprite("button_right");
+            _resourceCache = resourceCache;
+            _buttonLeft = _resourceCache.GetSprite("button_left");
+            _buttonMain = _resourceCache.GetSprite("button_middle");
+            _buttonRight = _resourceCache.GetSprite("button_right");
 
-            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceManager.GetFont("CALIBRI"))
+            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
                         {
                             Color = Color.Black
                         };

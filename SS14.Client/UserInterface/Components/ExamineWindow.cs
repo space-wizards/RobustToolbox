@@ -1,7 +1,9 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 
 namespace SS14.Client.UserInterface.Components
@@ -11,27 +13,26 @@ namespace SS14.Client.UserInterface.Components
         private readonly Label _entityDescription;
         private Sprite _entitySprite;
 
-        public ExamineWindow(Vector2i size, Entity entity, IResourceManager resourceManager)
-            : base(entity.Name, size, resourceManager)
+        public ExamineWindow(Vector2i size, IEntity entity, IResourceCache resourceCache)
+            : base(entity.Name, size, resourceCache)
         {
-            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceManager);
+            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceCache);
 
             components.Add(_entityDescription);
 
-            ComponentReplyMessage reply = entity.SendMessage(entity, ComponentFamily.Renderable,
-                                                             ComponentMessageType.GetSprite);
-
             SetVisible(true);
 
-            if (reply.MessageType == ComponentMessageType.CurrentSprite)
+            if (entity.TryGetComponent<ISpriteRenderableComponent>(out var component))
             {
-                _entitySprite = (Sprite) reply.ParamsList[0];
+                _entitySprite = component.GetCurrentSprite();
                 _entityDescription.Position = new Vector2i(10,
-                                                        (int)_entitySprite.GetLocalBounds().Height +
-                                                        _entityDescription.ClientArea.Height + 10);
+                                        (int)_entitySprite.GetLocalBounds().Height +
+                                        _entityDescription.ClientArea.Height + 10);
             }
             else
+            {
                 _entityDescription.Position = new Vector2i(10, 10);
+            }
         }
 
         public override void Render()

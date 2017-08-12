@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +21,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
                 case "addparticles":
                     if (args.Count >= 3)
                     {
-                        var _serverMain = IoCManager.Resolve<ISS14Server>();
+                        var _serverMain = IoCManager.Resolve<IBaseServer>();
                         Entity target = null;
                         if (args[1].ToLowerInvariant() == "player")
                             target = player;
@@ -51,7 +51,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
                 case "removeparticles":
                     if (args.Count >= 3)
                     {
-                        var _serverMain = IoCManager.Resolve<ISS14Server>();
+                        var _serverMain = IoCManager.Resolve<IBaseServer>();
                         Entity target = null;
                         if (args[1].ToLowerInvariant() == "player")
                             target = player;

@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Helpers;
@@ -9,7 +9,7 @@ namespace SS14.Client.Player.PostProcessing
 {
     public class BlurPostProcessingEffect : PostProcessingEffect
     {
-        private readonly GaussianBlur _gaussianBlur = new GaussianBlur(IoCManager.Resolve<IResourceManager>());
+        private readonly GaussianBlur _gaussianBlur = new GaussianBlur(IoCManager.Resolve<IResourceCache>());
 
         public BlurPostProcessingEffect(float duration)
             : base(duration)

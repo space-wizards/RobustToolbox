@@ -4,8 +4,9 @@ using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Map
 {
-    public interface ITileDefinitionManager : IEnumerable<ITileDefinition>, IIoCInterface
+    public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
+        void InitializeResources();
         ushort Register(ITileDefinition tileDef);
         void RegisterServerTileMapping(NetIncomingMessage message);
 

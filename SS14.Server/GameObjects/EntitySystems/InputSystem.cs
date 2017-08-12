@@ -1,29 +1,28 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
     public class InputSystem : EntitySystem
     {
-        public InputSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public InputSystem()
         {
             EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof (KeyBindingInputComponent));
+            EntityQuery.OneSet.Add(typeof(KeyBindingInputComponent));
         }
 
         public override void Update(float frametime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
-            foreach(var entity in entities)
+            foreach (var entity in entities)
             {
-                var inputs = entity.GetComponent<KeyBindingInputComponent>(ComponentFamily.Input);
+                var inputs = entity.GetComponent<KeyBindingInputComponent>();
 
                 //Animation setting
-                if(entity.GetComponent(ComponentFamily.Renderable) is AnimatedSpriteComponent)
+                if (entity.TryGetComponent<AnimatedSpriteComponent>(out var animation))
                 {
-                    var animation = entity.GetComponent<AnimatedSpriteComponent>(ComponentFamily.Renderable);
                     if (inputs.GetKeyState(BoundKeyFunctions.MoveRight) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveDown) ||
                         inputs.GetKeyState(BoundKeyFunctions.MoveLeft) ||

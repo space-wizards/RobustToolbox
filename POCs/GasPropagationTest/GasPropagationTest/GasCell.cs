@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,10 +29,10 @@ namespace GasPropagationTest
         bool calculated = true;
         public Vector2 GasVel;
         public Vector2 NextGasVel;
-        
+
         //Constants
         double SourceDamping = .5;
-        double RecieverDamping = .75;
+        double ReceiverDamping = .75;
         public const double quarterpi = Math.PI / 4;
         int circleDiameter = 15;
         private float FlowConstant = .1f;
@@ -124,7 +124,7 @@ namespace GasPropagationTest
                 return;
             double DAmount;
             double Flow = 0;
-            
+
 
             GasCell neighbor;
             Random rand = new Random();
@@ -192,7 +192,7 @@ namespace GasPropagationTest
                     {
                         Vector2 addvel = new Vector2(i, j);
                         addvel.Magnitude = Math.Abs(Flow); // Damping coefficient of .5
-                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * RecieverDamping;
+                        neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * ReceiverDamping;
                         NextGasVel = NextGasVel + addvel * chaos * SourceDamping;
                     }
                     if (Flow < 0) // Flow is from neighbor
@@ -200,7 +200,7 @@ namespace GasPropagationTest
                         Vector2 addvel = new Vector2(-1 * i, -1 * j);
                         addvel.Magnitude = Math.Abs(Flow);
                         neighbor.NextGasVel = neighbor.NextGasVel + addvel * chaos * SourceDamping;
-                        NextGasVel = NextGasVel + addvel * chaos * RecieverDamping;
+                        NextGasVel = NextGasVel + addvel * chaos * ReceiverDamping;
 
                     }
 

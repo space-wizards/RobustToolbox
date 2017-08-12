@@ -1,4 +1,4 @@
-﻿#region Imports
+#region Imports
 
 using SS14.Shared.Serialization;
 using System;
@@ -24,7 +24,7 @@ using System.Xml.Serialization;
 /// IFormattable interface (ToString(format, format provider) implemented
 /// Mixed product function implemented
 /// </Changes>
-/// 
+///
 
 namespace SS14.Shared
 {
@@ -60,7 +60,7 @@ namespace SS14.Shared
         /// <param name="z">The new z value for the Vector2</param>
         /// <implementation>
         /// Uses the mutator properties for the Vector2 components to allow verification of input (if implemented)
-        /// This results in the need for pre-initialisation initialisation of the Vector2 components to 0 
+        /// This results in the need for pre-initialisation initialisation of the Vector2 components to 0
         /// Due to the necessity for struct's variables to be set in the constructor before moving control
         /// </implementation>
         public Vector2(float x, float y)
@@ -81,7 +81,7 @@ namespace SS14.Shared
         /// </summary>
         /// <param name="xyz">Array representing the new values for the Vector2</param>
         /// <implementation>
-        /// Uses the VectorArray property to avoid validation code duplication 
+        /// Uses the VectorArray property to avoid validation code duplication
         /// </implementation>
         public Vector2(float[] xyz)
         {
@@ -99,7 +99,7 @@ namespace SS14.Shared
         /// </summary>
         /// <param name="v1">Vector2 representing the new values for the Vector2</param>
         /// <implementation>
-        /// Copies values from Vector2 v1 to this vector, does not hold a reference to object v1 
+        /// Copies values from Vector2 v1 to this vector, does not hold a reference to object v1
         /// </implementation>
         public Vector2(Vector2 v1)
         {
@@ -165,8 +165,8 @@ namespace SS14.Shared
         /// Property for the Vector2 as an array
         /// </summary>
         /// <exception cref="System.ArgumentException">
-        /// Thrown if the array argument does not contain exactly three components 
-        /// </exception> 
+        /// Thrown if the array argument does not contain exactly three components
+        /// </exception>
         [XmlIgnore]
         public float[] Array
         {
@@ -186,12 +186,12 @@ namespace SS14.Shared
         }
 
         /// <summary>
-        /// An index accessor 
+        /// An index accessor
         /// Mapping index [0] -> X, [1] -> Y and [2] -> Z.
         /// </summary>
         /// <param name="index">The array index referring to a component within the vector (i.e. x, y, z)</param>
         /// <exception cref="System.ArgumentException">
-        /// Thrown if the array argument does not contain exactly three components 
+        /// Thrown if the array argument does not contain exactly three components
         /// </exception>
         public float this[int index]
         {
@@ -465,7 +465,7 @@ namespace SS14.Shared
         /// <param name="v1">The vector to be normalized</param>
         /// <returns>The normalized Vector2</returns>
         /// <implementation>
-        /// Uses the Magnitude function to avoid code duplication 
+        /// Uses the Magnitude function to avoid code duplication
         /// </implementation>
         /// <exception cref="System.DivideByZeroException">
         /// Thrown when the normalisation of a zero magnitude vector is attempted
@@ -501,7 +501,7 @@ namespace SS14.Shared
         /// </summary>
         /// <returns>The normalized Vector2</returns>
         /// <implementation>
-        /// Uses the Magnitude and Normalize function to avoid code duplication 
+        /// Uses the Magnitude and Normalize function to avoid code duplication
         /// </implementation>
         /// <exception cref="System.DivideByZeroException">
         /// Thrown when the normalisation of a zero magnitude vector is attempted
@@ -1107,7 +1107,7 @@ namespace SS14.Shared
         /// <param name="other">The other object (which should be a vector) to compare to</param>
         /// <returns>Truth if two vectors are equal within a tolerence</returns>
         /// <implementation>
-        /// Checks if the object argument is a Vector2 object 
+        /// Checks if the object argument is a Vector2 object
         /// Uses the equality operator function to avoid code duplication
         /// Required in order to implement comparator operations (i.e. ==, !=)
         /// </implementation>
@@ -1142,7 +1142,7 @@ namespace SS14.Shared
         /// </param>
         /// <returns>Truth if the vector is a unit vector</returns>
         /// <implementation>
-        /// <see cref="Magnitude"/>	
+        /// <see cref="Magnitude"/>
         /// Uses the Magnitude property in the check to avoid code duplication
         /// Within a tolerence
         /// </implementation>
@@ -1153,12 +1153,12 @@ namespace SS14.Shared
 
         /// <summary>
         /// Checks if the vector a unit vector
-        /// Checks if the Vector2 has been normalized 
+        /// Checks if the Vector2 has been normalized
         /// Checks if the vector has a magnitude of 1
         /// </summary>
         /// <returns>Truth if this vector is a unit vector</returns>
         /// <implementation>
-        /// <see cref="IsUnitVector(Vector2)"/>	
+        /// <see cref="IsUnitVector(Vector2)"/>
         /// Uses the isUnitVector(Vector2) property in the check to avoid code duplication
         /// Within a tolerence
         /// </implementation>
@@ -1194,56 +1194,56 @@ namespace SS14.Shared
         #region Messages
 
         /// <summary>
-        /// Exception message descriptive text 
-        /// Used for a failure for an array argument to have three components when three are needed 
+        /// Exception message descriptive text
+        /// Used for a failure for an array argument to have three components when three are needed
         /// </summary>
         private const string THREE_COMPONENTS = "Array must contain exactly three components , (x,y,z)";
 
         /// <summary>
-        /// Exception message descriptive text 
-        /// Used for a divide by zero event caused by the normalization of a vector with magnitude 0 
+        /// Exception message descriptive text
+        /// Used for a divide by zero event caused by the normalization of a vector with magnitude 0
         /// </summary>
         private const string NORMALIZE_0 = "Can not normalize a vector when it's magnitude is zero";
 
         /// <summary>
-        /// Exception message descriptive text 
-        /// Used when interpolation is attempted with a control parameter not between 0 and 1 
+        /// Exception message descriptive text
+        /// Used when interpolation is attempted with a control parameter not between 0 and 1
         /// </summary>
         private const string INTERPOLATION_RANGE = "Control parameter must be a value between 0 & 1";
 
         /// <summary>
-        /// Exception message descriptive text 
-        /// Used when attempting to compare a Vector2 to an object which is not a type of Vector2 
+        /// Exception message descriptive text
+        /// Used when attempting to compare a Vector2 to an object which is not a type of Vector2
         /// </summary>
         private const string NON_VECTOR_COMPARISON = "Cannot compare a Vector2 to a non-Vector2";
 
         /// <summary>
-        /// Exception message additional information text 
-        /// Used when adding type information of the given argument into an error message 
+        /// Exception message additional information text
+        /// Used when adding type information of the given argument into an error message
         /// </summary>
         private const string ARGUMENT_TYPE = "The argument provided is a type of ";
 
         /// <summary>
-        /// Exception message additional information text 
-        /// Used when adding value information of the given argument into an error message 
+        /// Exception message additional information text
+        /// Used when adding value information of the given argument into an error message
         /// </summary>
         private const string ARGUMENT_VALUE = "The argument provided has a value of ";
 
         /// <summary>
-        /// Exception message additional information text 
-        /// Used when adding length (number of components in an array) information of the given argument into an error message 
+        /// Exception message additional information text
+        /// Used when adding length (number of components in an array) information of the given argument into an error message
         /// </summary>
         private const string ARGUMENT_LENGTH = "The argument provided has a length of ";
 
         /// <summary>
-        /// Exception message descriptive text 
-        /// Used when attempting to set a Vectors magnitude to a negative value 
+        /// Exception message descriptive text
+        /// Used when attempting to set a Vectors magnitude to a negative value
         /// </summary>
         private const string NEGATIVE_MAGNITUDE =
             "The magnitude of a Vector2 must be a positive value, (i.e. greater than 0)";
 
         /// <summary>
-        /// Exception message descriptive text 
+        /// Exception message descriptive text
         /// Used when attempting to set a Vectors magnitude where the Vector2 represents the origin
         /// </summary>
         private const string ORAGIN_VECTOR_MAGNITUDE = "Cannot change the magnitude of Vector2(0,0,0)";
@@ -1263,7 +1263,7 @@ namespace SS14.Shared
         #region Constants
 
         /// <summary>
-        /// The tolerence used when determining the equality of two vectors 
+        /// The tolerence used when determining the equality of two vectors
         /// </summary>
         public const float EqualityTolerence = float.Epsilon;
 

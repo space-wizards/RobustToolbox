@@ -1,4 +1,4 @@
-﻿// Old code from the ClientConsoleHost.cs file before refactoring to modularized commands.
+// Old code from the ClientConsoleHost.cs file before refactoring to modularized commands.
 // Here so they're not forgotten about but I'm not gonna implement them RIGHT NOW.
 
 //case "addgas":

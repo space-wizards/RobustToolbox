@@ -5,8 +5,7 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Round
 {
-    [IoCTarget]
-    internal class RoundManager : IRoundManager
+    public class RoundManager : IRoundManager
     {
         private bool _ready;
 
@@ -27,6 +26,6 @@ namespace SS14.Server.Round
             CurrentGameMode.PlayerJoined(player);
         }
 
-        #endregion
+        #endregion IRoundManager Members
     }
 }

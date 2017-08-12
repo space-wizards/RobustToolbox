@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Map;
 
@@ -34,19 +34,19 @@ namespace SS14.Client.Placement
 
         public Sprite GetSprite(string key)
         {
-            if (key == null || !pManager.ResourceManager.SpriteExists(key))
+            if (key == null || !pManager.ResourceCache.SpriteExists(key))
             {
-                return pManager.ResourceManager.GetNoSprite();
+                return pManager.ResourceCache.DefaultSprite();
             }
             else
             {
-                return pManager.ResourceManager.GetSprite(key);
+                return pManager.ResourceCache.GetSprite(key);
             }
         }
 
         public Sprite GetDirectionalSprite(string baseSprite)
         {
-            if (baseSprite == null) pManager.ResourceManager.GetNoSprite();
+            if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
 
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
         }

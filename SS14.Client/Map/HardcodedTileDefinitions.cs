@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
@@ -11,8 +11,10 @@ namespace SS14.Client.Map
     [System.Diagnostics.DebuggerDisplay("TileDef: {Name}")]
     public sealed class SpaceTileDefinition : ITileDefinition
     {
-        public static readonly ITileDefinition Instance = new SpaceTileDefinition();
-        private SpaceTileDefinition() { }
+        public void InitializeResources(IResourceCache resourceCache)
+        {
+            tileSprite = resourceCache.GetSprite("space_texture");
+        }
 
         public ushort TileId { get { return 0; } }
         public void InvalidateTileId() { }
@@ -32,9 +34,6 @@ namespace SS14.Client.Map
 
         public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
-            if (tileSprite == null)
-                tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("space_texture");
-
             tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
@@ -73,8 +72,11 @@ namespace SS14.Client.Map
             IsGasVolume = true;
             IsVentedIntoSpace = false;
             IsWall = false;
+        }
 
-            tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("floor_texture");
+        public override void InitializeResources(IResourceCache resourceCache)
+        {
+            tileSprite = resourceCache.GetSprite("floor_texture");
         }
     }
 
@@ -92,11 +94,6 @@ namespace SS14.Client.Map
             IsGasVolume = false;
             IsVentedIntoSpace = false;
             IsWall = true;
-
-            tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite("wall_texture");
-
-            var bounds = tileSprite.GetLocalBounds();
-            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
         }
         
         public override void RenderPos(float x, float y)
@@ -104,6 +101,13 @@ namespace SS14.Client.Map
             shape.FillColor = Color.Black;
             shape.Position = new SFML.System.Vector2f(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
+        }
+
+        public override void InitializeResources(IResourceCache resourceCache)
+        {
+            tileSprite = resourceCache.GetSprite("wall_texture");
+            var bounds = tileSprite.GetLocalBounds();
+            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
         }
     }
 }

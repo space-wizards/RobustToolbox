@@ -1,11 +1,11 @@
 ﻿using SFML.Graphics;
 using SFML.System;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.Interfaces.Collision
 {
-    public interface ICollisionManager : IIoCInterface
+    public interface ICollisionManager
     {
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the colliders under management.
@@ -15,8 +15,8 @@ namespace SS14.Client.Interfaces.Collision
         /// <returns>true if collides, false if not</returns>
         bool IsColliding(FloatRect collider);
 
-        bool TryCollide(Entity collider);
-        bool TryCollide(Entity collider, Vector2f offset, bool bump = true);
+        bool TryCollide(IEntity collider);
+        bool TryCollide(IEntity collider, Vector2f offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

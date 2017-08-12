@@ -1,11 +1,11 @@
-﻿root = true
+root = true
 
 [*]
 insert_final_newline = true
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
-charset = utf-8
+charset = utf-8-bom
 
-[*.{csproj,xml,yml,dll.config}]
+[*.{csproj,xml,yml,dll.config,targets}]
 indent_size = 2

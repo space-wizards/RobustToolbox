@@ -1,4 +1,4 @@
-﻿namespace SS14.Server.Interfaces.Map
+namespace SS14.Server.Interfaces.Map
 {
     public class Chunk
     {

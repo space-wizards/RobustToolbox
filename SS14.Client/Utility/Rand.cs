@@ -4,7 +4,6 @@ using System;
 
 namespace SS14.Client.Utility
 {
-    [IoCTarget]
     public class Rand : IRand
     {
         private readonly Random rand;

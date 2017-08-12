@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
@@ -11,7 +11,7 @@ namespace SS14.Client.Helpers
 {
     public class GaussianBlur
     {
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly string targetName;
         private RenderImage _intermediateTarget;
         private uint lastWidth;
@@ -26,9 +26,9 @@ namespace SS14.Client.Helpers
         /// its GaussianBlur.fx effect file to perform the two pass Gaussian
         /// blur operation.
         /// </summary>
-        public GaussianBlur(IResourceManager resourceManager)
+        public GaussianBlur(IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             targetName = "gaussTarget" + IoCManager.Resolve<IRand>().Next(0, 1000000000);
 
@@ -138,7 +138,7 @@ namespace SS14.Client.Helpers
         {
             if (!done)
             {
-                GaussianBlurTechnique = _resourceManager.GetTechnique(("GaussianBlur" + Radius));
+                GaussianBlurTechnique = _resourceCache.GetTechnique(("GaussianBlur" + Radius));
                 done = true;
             }            
         }

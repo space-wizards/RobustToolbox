@@ -1,4 +1,4 @@
-﻿using SFML.System;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -13,20 +13,20 @@ namespace SS14.Client.UserInterface.Components
     {
         private readonly Button _mainMenuButton;
         private readonly Label _message;
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly IStateManager _stateManager;
         private readonly IUserInterfaceManager _userInterfaceManager;
 
         public DisconnectedScreenBlocker(IStateManager stateManager, IUserInterfaceManager userInterfaceManager,
-                                         IResourceManager resourceManager, string message = "Connection closed.")
+                                         IResourceCache resourceCache, string message = "Connection closed.")
         {
             _stateManager = stateManager;
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
             _userInterfaceManager = userInterfaceManager;
             _userInterfaceManager.DisposeAllComponents();
 
-            _message = new Label(message, "CALIBRI", _resourceManager);
-            _mainMenuButton = new Button("Main Menu", _resourceManager);
+            _message = new Label(message, "CALIBRI", _resourceCache);
+            _mainMenuButton = new Button("Main Menu", _resourceCache);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
             _mainMenuButton.Label.Color = new SFML.Graphics.Color(245, 245, 245);
             _message.Text.Color = new SFML.Graphics.Color(245, 245, 245);

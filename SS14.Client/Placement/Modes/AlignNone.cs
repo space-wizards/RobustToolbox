@@ -1,9 +1,10 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Placement.Modes
@@ -40,7 +41,7 @@ namespace SS14.Client.Placement.Modes
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform)
+                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld).LengthSquared() > rangeSquared) return false;
 
             currentTile = currentMap.GetTileRef(mouseWorld);

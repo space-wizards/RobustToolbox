@@ -52,6 +52,7 @@ _ReSharper*/
 /Resources/textures/*_UserInterface.png
 /Resources/textures/*.TAI
 /Resources/SpriteRenderer/Ogre.log
+/Resources/Spriterenderer/output
 /Media
 /setenv.bat
 
@@ -73,3 +74,5 @@ project.lock.json
 
 # Created by NUnit.
 TestResult.xml
+
+NetSerializerDebug.dll

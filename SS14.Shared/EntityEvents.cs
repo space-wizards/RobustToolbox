@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SS14.Shared
 {
@@ -13,12 +13,12 @@ namespace SS14.Shared
     }
 
     //MAKE SURE YOU SET UP YOUR SHIT LIKE THIS SO WE DONT END UP WITH A HUGE MESS.
-    public delegate void TestCEventDelegate(TestCEvent ev);
-    public class TestCEvent : EntityEventArgs
+    public delegate void TestCEventDelegate(TestCEventArgs ev);
+    public class TestCEventArgs : EntityEventArgs
     {
-        public string testStr = "thisisatest";
+        public string testStr;
 
-        public TestCEvent(string str)
+        public TestCEventArgs(string str)
         {
             testStr = str;
         }

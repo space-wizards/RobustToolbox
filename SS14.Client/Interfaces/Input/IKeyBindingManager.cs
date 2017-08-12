@@ -4,7 +4,7 @@ using System;
 
 namespace SS14.Client.Interfaces.Input
 {
-    public interface IKeyBindingManager : IIoCInterface
+    public interface IKeyBindingManager
     {
         bool Enabled { get; set; }
 

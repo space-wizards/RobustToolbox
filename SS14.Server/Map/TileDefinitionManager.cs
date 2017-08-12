@@ -5,7 +5,6 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.Map
 {
-    [IoCTarget]
     public sealed class TileDefinitionManager : ITileDefinitionManager
     {
         List<ITileDefinition> tileDefs = new List<ITileDefinition>();

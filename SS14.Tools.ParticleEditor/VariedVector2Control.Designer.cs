@@ -1,4 +1,4 @@
-﻿namespace SS14.Tools.ParticleEditor
+namespace SS14.Tools.ParticleEditor
 {
     partial class VariedVector2Control
     {

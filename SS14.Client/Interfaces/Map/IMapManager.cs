@@ -8,7 +8,7 @@ namespace SS14.Client.Interfaces.Map
 {
     public delegate void TileChangedEventHandler(TileRef tileRef, Tile oldTile);
 
-    public interface IMapManager : IIoCInterface
+    public interface IMapManager
     {
         event TileChangedEventHandler TileChanged;
 

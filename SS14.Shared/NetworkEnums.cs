@@ -1,35 +1,44 @@
 ﻿namespace SS14.Shared
 {
-    public enum NetMessage
+    //TODO: This will be removed once the Client gets migrated to the new network system.
+    /// <summary>
+    /// Contains all NetMessage IDs.
+    /// </summary>
+    public enum NetMessages
     {
-        GameType = 0,
-        LobbyChat,
-        ServerName,
-        ClientName,
-        WelcomeMessage,
-        MaxPlayers,
-        PlayerCount,
-        PlayerList,
-        RequestMap,
-        MapMessage,
-        ItemMessage, // It's something the item system needs to handle
-        MobMessage,
-        ChatMessage,
-        PlacementManagerMessage,
-        PlayerSessionMessage,
-        PlayerUiMessage,
-        JoinGame,
-        ForceRestart,
-        AtmosDisplayUpdate,
-        EntityMessage,
-        EntityManagerMessage,
-        RequestEntityDeletion, //Client asks to delete entity. Used for editing. Requires admin.
-        StateUpdate,
-        StateAck,
-        FullState,
-        ConsoleCommand,
-        ConsoleCommandReply,
-        ConsoleCommandRegister
+        // Base engine messages
+        Error = 0,
+        ClientName,             // C>S Sends the server its client info.
+        WelcomeMessageReq,      // C>S Requests the server info.
+        WelcomeMessage,         // S>C Server info.
+        PlayerListReq,          // C>S Requests a full list of players.
+        PlayerList,             // S>C A full list of players.
+        StringTableEntry,       // S>C An entry into the string table.
+
+        // Console Commands
+        LobbyChat,              // C>S Does nothing atm, Obsolete?
+        ChatMessage,            // C<>S Contains all of the chat messages.
+        PlayerSessionMessage,   // C>S Tells (lol.) the server about state changes.
+        ConsoleCommand,         // C>S Sends the server a console command.
+        ConsoleCommandReply,    // S>C Acknowledges a received console command.
+        ConsoleCommandRegister, // S>C Registers all console commands.
+
+        // Map Messages
+        RequestMap,             // C>S Requests a full copy of the map.
+        MapMessage,             // S>C Sends a full copy of the map.
+
+        // misc stuff that will prob be removed
+        PlacementManagerMessage,// S<>C Contains all placement messages.
+        PlayerUiMessage,        // S>C Sends a user interface message.
+        JoinGame,               // S>C Tells the client to join the game.
+        ForceRestart,           // C>S Tells (lol.) the server to restart.
+
+        // entity stuff
+        EntityMessage,          // S<>C Contains all entity messages.
+        RequestEntityDeletion,  // C>S Client asks to delete entity.
+        StateUpdate,            // S>C Delta state update.
+        StateAck,               // C>S Acknowledges a state update.
+        FullState,              // S>C Full state of the game.
     }
 
     public enum ItemMessage
@@ -190,8 +199,6 @@
         Null,
         SetDirection,
         NameUpdate,
-        SetSVar,
-        GetSVars,
         SetCVar,
         GetCVars
     }

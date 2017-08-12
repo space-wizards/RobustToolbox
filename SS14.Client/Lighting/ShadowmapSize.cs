@@ -1,4 +1,4 @@
-﻿namespace SS14.Client.Lighting
+namespace SS14.Client.Lighting
 {
     public enum ShadowmapSize
     {

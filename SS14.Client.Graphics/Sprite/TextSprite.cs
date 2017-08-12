@@ -137,7 +137,17 @@ namespace SS14.Client.Graphics.Sprite
 
         public Vector2i Position;
 
-        public int Width => (int)_textSprite.GetLocalBounds().Width;
+        public int Width
+        {
+            get
+            {
+                var a = _textSprite;
+                var b = a.GetLocalBounds();
+                var c = b.Width;
+                var d = (int)c;
+                return d;
+            }
+        }
         // FIXME take into account newlines.
         public int Height => (int)_textSprite.CharacterSize;
         #endregion Accessors

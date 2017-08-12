@@ -1,22 +1,22 @@
 ﻿using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
     public class ParticleSystem : EntitySystem
     {
-        public ParticleSystem(EntityManager em, EntitySystemManager esm)
-            : base(em, esm)
+        public ParticleSystem()
         {
             EntityQuery = new EntityQuery();
             EntityQuery.OneSet.Add(typeof(ParticleSystemComponent));
         }
 
-        public void AddParticleSystem(Entity ent, string systemName)
+        public void AddParticleSystem(IEntity ent, string systemName)
         {
-            ParticleSettings settings = IoCManager.Resolve<IResourceManager>().GetParticles(systemName);
+            ParticleSettings settings = IoCManager.Resolve<IResourceCache>().GetParticles(systemName);
             if (settings != null)
             {
                 //Add it.
@@ -27,10 +27,6 @@ namespace SS14.Client.GameObjects.EntitySystems
         {
             //EntitySystemManager.RegisterMessageType<>();
             base.RegisterMessageTypes();
-        }
-
-        public override void Update(float frametime)
-        {
         }
 
         public override void HandleNetMessage(EntitySystemMessage sysMsg)

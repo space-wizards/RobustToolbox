@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
@@ -15,7 +15,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private Sprite _buttonClick;
         private Sprite _buttonHover;
         private Sprite _buttonNormal;
@@ -24,7 +24,7 @@ namespace SS14.Client.UserInterface.Components
 
         public ImageButton()
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
             Color = Color.White;
             Update(0);
         }
@@ -33,17 +33,17 @@ namespace SS14.Client.UserInterface.Components
 
         public string ImageNormal
         {
-            set { _buttonNormal = _resourceManager.GetSprite(value); }
+            set { _buttonNormal = _resourceCache.GetSprite(value); }
         }
 
         public string ImageHover
         {
-            set { _buttonHover = _resourceManager.GetSprite(value); }
+            set { _buttonHover = _resourceCache.GetSprite(value); }
         }
 
         public string ImageClick
         {
-            set { _buttonClick = _resourceManager.GetSprite(value); }
+            set { _buttonClick = _resourceCache.GetSprite(value); }
         }
 
         public event ImageButtonPressHandler Clicked;

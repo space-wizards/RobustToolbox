@@ -1,5 +1,5 @@
 ﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
@@ -8,35 +8,22 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public interface IEntityManager : IIoCInterface
-    {
-        ComponentFactory ComponentFactory { get; }
-        ComponentManager ComponentManager { get; }
-        IEntityNetworkManager EntityNetworkManager { get; set; }
-        EngineType EngineType { get; set; }
-        float Clock { get; }
-
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="eid">entity id</param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        Entity GetEntity(int eid);
-
-        List<Entity> GetEntities(EntityQuery query);
-
-        /// <summary>
-        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
-        /// </summary>
-        /// <param name="e">Entity to remove</param>
-        void DeleteEntity(Entity e);
-
-        bool EntityExists(int eid);
-    }
-
     public class EntityManager : IEntityManager
     {
-        protected readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
+        #region Dependencies
+        [Dependency]
+        protected readonly IEntityNetworkManager EntityNetworkManager;
+        [Dependency]
+        protected readonly IPrototypeManager PrototypeManager;
+        [Dependency]
+        protected readonly IEntitySystemManager EntitySystemManager;
+        [Dependency]
+        protected readonly IComponentFactory ComponentFactory;
+        [Dependency]
+        protected readonly IComponentManager ComponentManager;
+        # endregion Dependencies
+
+        protected readonly Dictionary<int, IEntity> _entities = new Dictionary<int, IEntity>();
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
 
@@ -48,62 +35,16 @@ namespace SS14.Shared.GameObjects
         private Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
-        public readonly List<ComponentFamily> SynchedComponentTypes = new List<ComponentFamily>
-                                                                  {
-                                                                      ComponentFamily.Mover
-                                                                  };
-
-        public EntityManager(EngineType engineType, IEntityNetworkManager entityNetworkManager)
-        {
-            EngineType = engineType;
-            EntitySystemManager = new EntitySystemManager(this);
-            ComponentFactory = new ComponentFactory(this);
-            EntityNetworkManager = entityNetworkManager;
-            ComponentManager = new ComponentManager();
-            PrototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            EntityFactory = new EntityFactory(PrototypeManager, this);
-            Clock = 0f;
-            Initialize();
-        }
-
-        protected EntityFactory EntityFactory { get; private set; }
-        public IPrototypeManager PrototypeManager { get; private set; }
-        public EntitySystemManager EntitySystemManager { get; private set; }
         public bool Initialized { get; protected set; }
-        public float Clock { get; private set; }
 
         #region IEntityManager Members
 
-        public ComponentFactory ComponentFactory { get; private set; }
-        public ComponentManager ComponentManager { get; private set; }
-        public IEntityNetworkManager EntityNetworkManager { get; set; }
-
-        //This is a crude method to tell if we're running on the server or on the client. Fuck me.
-        public EngineType EngineType { get; set; }
-
-        #endregion
-
-        public void Initialize()
-        {
-            switch (EngineType)
-            {
-                case EngineType.Client:
-                    break;
-                case EngineType.Server:
-                    LoadEntities();
-                    EntitySystemManager.Initialize();
-                    Initialized = true;
-                    InitializeEntities();
-                    break;
-            }
-        }
-
         public virtual void InitializeEntities()
         {
-            foreach (Entity e in _entities.Values.Where(e => !e.Initialized))
+            foreach (IEntity e in _entities.Values.Where(e => !e.Initialized))
+            {
                 e.Initialize();
-            if (EngineType == EngineType.Client)
-                Initialized = true;
+            }
         }
 
         public virtual void LoadEntities()
@@ -113,26 +54,128 @@ namespace SS14.Shared.GameObjects
         public virtual void Shutdown()
         {
             FlushEntities();
-            EntityNetworkManager = null;
             EntitySystemManager.Shutdown();
-            EntitySystemManager = null;
             Initialized = false;
         }
 
         public virtual void Update(float frameTime)
         {
-            Clock += frameTime;
             EntitySystemManager.Update(frameTime);
             ProcessEventQueue();
         }
 
+        /// <summary>
+        /// Retrieves template with given name from prototypemanager.
+        /// </summary>
+        /// <param name="prototypeName">name of the template</param>
+        /// <returns>Template</returns>
+        public EntityPrototype GetTemplate(string prototypeName)
+        {
+            return PrototypeManager.Index<EntityPrototype>(prototypeName);
+        }
+
+        #region Entity Management
+
+        /// <summary>
+        /// Returns an entity by id
+        /// </summary>
+        /// <param name="eid">entity id</param>
+        /// <returns>Entity or null if entity id doesn't exist</returns>
+        public IEntity GetEntity(int eid)
+        {
+            return _entities.ContainsKey(eid) ? _entities[eid] : null;
+        }
+
+        /// <summary>
+        /// Attempt to get an entity, returning whether or not an entity was gotten.
+        /// </summary>
+        /// <param name="eid">The entity ID to look up.</param>
+        /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
+        /// <returns>True if a value was returned, false otherwise.</returns>
+        public bool TryGetEntity(int eid, out IEntity entity)
+        {
+            entity = GetEntity(eid);
+
+            return entity != null;
+        }
+
+        public IEnumerable<IEntity> GetEntities(IEntityQuery query)
+        {
+            return _entities.Values.Where(e => e.Match(query));
+        }
+
+        /// <summary>
+        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// </summary>
+        /// <param name="e">Entity to remove</param>
+        public void DeleteEntity(IEntity e)
+        {
+            e.Shutdown();
+            _entities.Remove(e.Uid);
+        }
+
+        public void DeleteEntity(int entityUid)
+        {
+            if (EntityExists(entityUid))
+            {
+                DeleteEntity(GetEntity(entityUid));
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("No entity with ID {0} exists.", entityUid));
+            }
+        }
+
+        public bool EntityExists(int eid)
+        {
+            return _entities.ContainsKey(eid);
+        }
+
+        /// <summary>
+        /// Disposes all entities and clears all lists.
+        /// </summary>
+        public void FlushEntities()
+        {
+            foreach (IEntity e in _entities.Values)
+            {
+                e.Shutdown();
+            }
+            _entities.Clear();
+        }
+
+        /// <summary>
+        /// Creates an entity and adds it to the entity dictionary
+        /// </summary>
+        /// <param name="prototypeName">name of entity template to execute</param>
+        /// <returns>spawned entity</returns>
+        public IEntity SpawnEntity(string prototypeName, int uid = -1)
+        {
+            if (uid == -1)
+            {
+                uid = NextUid++;
+            }
+
+            EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+            IEntity e = prototype.CreateEntity(this, EntityNetworkManager, ComponentFactory);
+
+            e.Uid = uid;
+            _entities.Add(e.Uid, e);
+            if (!Initialized)
+            {
+                e.Initialize();
+            }
+            return e;
+        }
+
+        #endregion Entity Management
+
         #region ComponentEvents
 
-        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T:EntityEventArgs
+        public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T : EntityEventArgs
         {
-            Type eventType = typeof (T);
+            Type eventType = typeof(T);
             //var evh = (ComponentEventHandler<ComponentEventArgs>)Convert.ChangeType(eventHandler, typeof(ComponentEventHandler<ComponentEventArgs>));
-            if(!_eventSubscriptions.ContainsKey(eventType))
+            if (!_eventSubscriptions.ContainsKey(eventType))
             {
                 _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });
             }
@@ -151,7 +194,6 @@ namespace SS14.Shared.GameObjects
             {
                 _inverseEventSubscriptions[s].Add(eventType, eventHandler);
             }
-
         }
 
         public void UnsubscribeEvent<T>(IEntityEventSubscriber s) where T : EntityEventArgs
@@ -181,6 +223,57 @@ namespace SS14.Shared.GameObjects
             _eventQueue.Enqueue(new Tuple<object, EntityEventArgs>(sender, toRaise));
         }
 
+        public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
+        {
+            if (_inverseEventSubscriptions.ContainsKey(subscriber))
+            {
+                foreach (KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
+                {
+                    UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
+                }
+            }
+        }
+
+        #endregion ComponentEvents
+
+        #region State stuff
+
+        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
+        {
+            var entityKeys = new List<int>();
+            foreach (EntityState es in entityStates)
+            {
+                //Todo defer component state result processing until all entities are loaded and initialized...
+                es.ReceivedTime = serverTime;
+                entityKeys.Add(es.StateData.Uid);
+                //Known entities
+                if (_entities.ContainsKey(es.StateData.Uid))
+                {
+                    _entities[es.StateData.Uid].HandleEntityState(es);
+                }
+                else //Unknown entities
+                {
+                    IEntity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
+                    e.Name = es.StateData.Name;
+                    e.HandleEntityState(es);
+                }
+            }
+
+            //Delete entities that exist here but don't exist in the entity states
+            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            foreach (int k in toDelete)
+                DeleteEntity(k);
+
+            if (!Initialized)
+                InitializeEntities();
+        }
+
+        #endregion State stuff
+
+        #endregion IEntityManager Members
+
+        #region ComponentEvents
+
         private void ProcessEventQueue()
         {
             while (_eventQueue.Any())
@@ -204,90 +297,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public void RemoveSubscribedEvents(IEntityEventSubscriber subscriber)
-        {
-            if(_inverseEventSubscriptions.ContainsKey(subscriber))
-            {
-                foreach(KeyValuePair<Type, Delegate> keyValuePair in _inverseEventSubscriptions[subscriber])
-                {
-                    UnsubscribeEvent(keyValuePair.Key, keyValuePair.Value, subscriber);
-                }
-            }
-        }
-        #endregion
-
-        #region Entity Management
-
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="eid">entity id</param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        public Entity GetEntity(int eid)
-        {
-            return _entities.ContainsKey(eid) ? _entities[eid] : null;
-        }
-
-
-        public List<Entity> GetEntities(EntityQuery query)
-        {
-            return _entities.Values.Where(e => e.Match(query)).ToList();
-        }
-
-        /// <summary>
-        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
-        /// </summary>
-        /// <param name="e">Entity to remove</param>
-        public void DeleteEntity(Entity e)
-        {
-            e.Shutdown();
-            _entities.Remove(e.Uid);
-        }
-
-        public bool EntityExists(int eid)
-        {
-            return _entities.ContainsKey(eid);
-        }
-
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        public void FlushEntities()
-        {
-            foreach (Entity e in _entities.Values)
-                e.Shutdown();
-            _entities.Clear();
-        }
-
-        protected void DeleteEntity(int entityUid)
-        {
-            if (EntityExists(entityUid))
-                DeleteEntity(GetEntity(entityUid));
-        }
-
-        /// <summary>
-        /// Creates an entity and adds it to the entity dictionary
-        /// </summary>
-        /// <param name="EntityType">name of entity template to execute</param>
-        /// <returns>spawned entity</returns>
-        public Entity SpawnEntity(string EntityType, int uid = -1)
-        {
-            if (uid == -1)
-                uid = NextUid++;
-            Entity e = EntityFactory.CreateEntity(EntityType);
-            if (e != null)
-            {
-                e.Uid = uid;
-                _entities.Add(e.Uid, e);
-                if (!Initialized)
-                    e.Initialize();
-                if (!e.HasComponent(ComponentFamily.SVars))
-                    e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVars"));
-            }
-            return e;
-        }
-
-        #endregion
+        #endregion ComponentEvents
 
         #region message processing
 
@@ -348,40 +358,6 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        #endregion
-
-        #region State stuff
-
-        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
-        {
-            var entityKeys = new List<int>();
-            foreach (EntityState es in entityStates)
-            {
-                //Todo defer component state result processing until all entities are loaded and initialized...
-                es.ReceivedTime = serverTime;
-                entityKeys.Add(es.StateData.Uid);
-                //Known entities
-                if (_entities.ContainsKey(es.StateData.Uid))
-                {
-                    _entities[es.StateData.Uid].HandleEntityState(es);
-                }
-                else //Unknown entities
-                {
-                    Entity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
-                    e.Name = es.StateData.Name;
-                    e.HandleEntityState(es);
-                }
-            }
-
-            //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (int k in toDelete)
-                DeleteEntity(k);
-
-            if (!Initialized)
-                InitializeEntities();
-        }
-
-        #endregion
+        #endregion message processing
     }
 }

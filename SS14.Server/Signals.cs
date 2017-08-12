@@ -24,7 +24,7 @@ namespace SS14.Server
             {
                 // Reflection is fun.
                 var assembly = FindMonoPosix();
-                LogManager.Log("Successfully loaded Mono.Posix. Registering signal handlers...", LogLevel.Debug);
+                Logger.Log("Successfully loaded Mono.Posix. Registering signal handlers...", LogLevel.Debug);
 
                 Type signalType = assembly.GetType("Mono.Unix.UnixSignal");
                 // Mono.Unix.UnixSignal[]
@@ -60,7 +60,7 @@ namespace SS14.Server
                         // String it is.
                         if (signum == "SIGINT" || signum == "SIGTERM")
                         {
-                            IoCManager.Resolve<ISS14Server>().Shutdown(string.Format("{0} received", signum));
+                            IoCManager.Resolve<IBaseServer>().Shutdown(string.Format("{0} received", signum));
                         }
                     }
                 });
@@ -72,7 +72,7 @@ namespace SS14.Server
             }
             catch (Exception e)
             {
-                LogManager.Log(string.Format("Running on mono but couldn't register signal handlers: {0}", e), LogLevel.Error);
+                Logger.Log(string.Format("Running on mono but couldn't register signal handlers: {0}", e), LogLevel.Error);
             }
         }
 
@@ -107,7 +107,7 @@ SignalThread = new Thread(() =>
         {
             case Signum.SIGTERM:
             case Signum.SIGINT:
-                IoCManager.Resolve<ISS14Server>().Shutdown(string.Format("{0} received", signum.ToString()));
+                IoCManager.Resolve<IBaseServer>().Shutdown(string.Format("{0} received", signum.ToString()));
                 break;
         }
     }

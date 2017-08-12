@@ -1,4 +1,4 @@
-﻿using Cyotek.Windows.Forms;
+using Cyotek.Windows.Forms;
 using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;

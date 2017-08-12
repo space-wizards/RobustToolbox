@@ -11,7 +11,6 @@ using System.Linq;
 
 namespace SS14.Client.Map
 {
-    [IoCTarget]
     public class MapManager : IMapManager
     {
         private Dictionary<Vector2i, Chunk> chunks = new Dictionary<Vector2i, Chunk>();

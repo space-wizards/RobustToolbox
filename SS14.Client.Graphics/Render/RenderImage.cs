@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using System;
 using System.Diagnostics;
@@ -231,15 +231,6 @@ namespace SS14.Client.Graphics.Render
         public void ResetCurrentRenderTarget()
         {
             CluwneLib.ResetRenderTarget();
-        }
-
-
-        /// <summary>
-        /// Deconstructs and disposes this instance
-        /// </summary>
-        protected override void Destroy(bool disposing)
-        {
-            GC.Collect();
         }
 
         #endregion

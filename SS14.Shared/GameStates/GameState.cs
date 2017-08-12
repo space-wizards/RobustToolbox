@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
-using NetSerializer;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
@@ -83,7 +84,8 @@ namespace SS14.Shared.GameStates
             if (_serialized)
                 return;
             _serializedData = new MemoryStream();
-            new SS14Serializer().Serialize(_serializedData, this);
+            var serializer = IoCManager.Resolve<ISS14Serializer>();
+            serializer.Serialize(_serializedData, this);
             _serialized = true;
         }
 
@@ -122,7 +124,11 @@ namespace SS14.Shared.GameStates
         /// <returns></returns>
         public static GameState Deserialize(byte[] data)
         {
-            return (GameState) Serializer.Deserialize(new MemoryStream(data));
+            var serializer = IoCManager.Resolve<ISS14Serializer>();
+            using (var stream = new MemoryStream(data))
+            {
+                return serializer.Deserialize<GameState>(new MemoryStream(data));
+            }
         }
 
         /// <summary>
@@ -131,7 +137,7 @@ namespace SS14.Shared.GameStates
         /// <param name="message">NetOutgoingMessage to write to</param>
         public int WriteStateMessage(NetOutgoingMessage message)
         {
-            message.Write((byte) NetMessage.FullState);
+            message.Write((byte)NetMessages.FullState);
             byte[] stateData = Compress(GetSerializedDataBuffer());
             message.Write(Sequence);
             message.Write(stateData.Length);
@@ -150,7 +156,10 @@ namespace SS14.Shared.GameStates
             int length = message.ReadInt32();
             byte[] stateData = Decompress(message.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))
-                return (GameState) Serializer.Deserialize(stateStream);
+            {
+                var serializer = IoCManager.Resolve<ISS14Serializer>();
+                return serializer.Deserialize<GameState>(stateStream);
+            }
         }
 
         /// <summary>
@@ -160,12 +169,14 @@ namespace SS14.Shared.GameStates
         /// <returns></returns>
         private static byte[] Compress(byte[] stateData)
         {
-            var compressedDataStream = new MemoryStream();
-            using (var gzip = new GZipStream(compressedDataStream, CompressionMode.Compress, true))
+            using (var compressedDataStream = new MemoryStream())
             {
-                gzip.Write(stateData, 0, stateData.Length);
+                using (var gzip = new GZipStream(compressedDataStream, CompressionMode.Compress, true))
+                {
+                    gzip.Write(stateData, 0, stateData.Length);
+                }
+                return compressedDataStream.ToArray();
             }
-            return compressedDataStream.ToArray();
         }
 
         /// <summary>
@@ -177,7 +188,8 @@ namespace SS14.Shared.GameStates
         {
             // Create a GZIP stream with decompression mode.
             // ... Then create a buffer and write into while reading from the GZIP stream.
-            using (var stream = new GZipStream(new MemoryStream(compressedStateData), CompressionMode.Decompress))
+            using (var compressedStream = new MemoryStream(compressedStateData))
+            using (var stream = new GZipStream(compressedStream, CompressionMode.Decompress))
             {
                 const int size = 2048;
                 var buffer = new byte[size];

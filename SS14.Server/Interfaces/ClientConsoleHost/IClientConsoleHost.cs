@@ -1,14 +1,15 @@
-﻿using Lidgren.Network;
-using System.Collections.Generic;
-using SS14.Shared.IoC;
+﻿using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.ClientConsoleHost
 {
-    public interface IClientConsoleHost : IIoCInterface
+    public interface IClientConsoleHost
     {
+        void Initialize();
         IDictionary<string, IClientCommand> AvailableCommands { get; }
-        void ProcessCommand(string text, NetConnection sender);
-        void SendConsoleReply(string text, NetConnection target);
-        void HandleRegistrationRequest(NetConnection senderConnection);
+        void ProcessCommand(MsgConCmd message);
+        void SendConsoleReply(string text, INetChannel target);
+        void HandleRegistrationRequest(INetChannel senderConnection);
     }
 }

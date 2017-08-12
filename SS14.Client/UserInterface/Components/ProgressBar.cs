@@ -4,13 +4,14 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.ResourceManagement;
 using System;
 
 namespace SS14.Client.UserInterface.Components
 {
     internal class Progress_Bar : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         protected Vector2i Size;
 
         public SFML.Graphics.Color backgroundColor = new SFML.Graphics.Color(70, 130, 180);
@@ -23,10 +24,10 @@ namespace SS14.Client.UserInterface.Components
         protected float percent = 0;
         protected float val = 0;
 
-        public Progress_Bar(Vector2i size, IResourceManager resourceManager)
+        public Progress_Bar(Vector2i size, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
-            Text = new TextSprite("ProgressBarText", "", _resourceManager.GetFont("CALIBRI"));
+            _resourceCache = resourceCache;
+            Text = new TextSprite("ProgressBarText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             Text.Color = Color.Black;
             Text.ShadowColor = new SFML.Graphics.Color(105, 105, 105);
             Text.ShadowOffset = new Vector2f(1, 1);

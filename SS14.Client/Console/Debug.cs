@@ -22,7 +22,7 @@ namespace SS14.Client.Console
         {
             var entitymanager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (IEntity e in entitymanager.GetEntities(new EntityQuery()))
+            foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
                 console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", Color.White);
             }

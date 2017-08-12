@@ -1,6 +1,8 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -11,8 +13,13 @@ namespace SS14.Client.GameObjects.EntitySystems
         /// </summary>
         public InputSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(KeyBindingInputComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                OneSet = new List<Type>()
+                {
+                    typeof(KeyBindingInputComponent),
+                },
+            };
         }
 
         /// <inheritdoc />

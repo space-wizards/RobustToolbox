@@ -1,5 +1,7 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -7,8 +9,13 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public PhysicsSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(PhysicsComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                AllSet = new List<Type>()
+                {
+                    typeof(PhysicsComponent),
+                },
+            };
         }
 
         public override void Update(float frametime)

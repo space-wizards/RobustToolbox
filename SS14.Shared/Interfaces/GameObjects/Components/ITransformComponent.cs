@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components
 {
@@ -16,7 +17,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        Vector2 Rotation { get; }
+        Angle Rotation { get; }
 
         /// <summary>
         ///     Event that gets invoked every time the position gets modified through properties such as <see cref="Rotation" />.

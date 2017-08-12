@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.GameObjects
 {
@@ -14,7 +15,7 @@ namespace SS14.Client.GameObjects
     public class TransformComponent : ClientComponent, ITransformComponent
     {
         public Vector2 Position { get; private set; }
-        public Vector2 Rotation { get; private set; }
+        public Angle Rotation { get; private set; }
         public IEntity Parent { get; private set; }
 
         //TODO: Make parenting actually work.

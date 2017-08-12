@@ -4,6 +4,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -12,7 +13,6 @@ namespace SS14.Server.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
-
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
@@ -23,7 +23,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        public Vector2 Rotation { get; set; }
+        public Angle Rotation { get; set; }
 
         /// <inheritdoc />
         public override string Name => "Transform";

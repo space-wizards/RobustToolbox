@@ -67,9 +67,8 @@ namespace SS14.Server.GameObjects
             var transform = Owner.GetComponent<TransformComponent>();
             var physics = Owner.GetComponent<PhysicsComponent>();
 
-            var vel = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
-            physics.Velocity = vel;
-            transform.Rotation = _moveDir.LengthSquared > 0.001 ? _moveDir : Direction.South.ToVec();
+            physics.Velocity = _moveDir * (_run ? FastMoveSpeed : BaseMoveSpeed);
+            transform.Rotation = (float)(_moveDir.LengthSquared > 0.001 ? _moveDir.GetDir() : Direction.South).ToAngle();
 
             base.Update(frameTime);
         }

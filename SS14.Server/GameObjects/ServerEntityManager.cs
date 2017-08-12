@@ -99,7 +99,7 @@ namespace SS14.Server.GameObjects
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
             ent.GetComponent<TransformComponent>().Position = new Vector2(X, Y);
-            ent.GetComponent<TransformComponent>().Rotation = dir.ToVec();
+            ent.GetComponent<TransformComponent>().Rotation = (float) dir.ToAngle();
         }
 
         private XElement ToXML(IEntity e)

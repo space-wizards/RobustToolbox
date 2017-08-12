@@ -30,7 +30,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public static Direction GetDir(this Vector2 vec)
         {
-            var ang = ToAngle(vec);
+            var ang = vec.ToAngle();
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
                 ang += 2 * (float)Math.PI;
@@ -43,7 +43,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="dir"></param>
         /// <returns></returns>
-        public static double ToAngle(this Direction dir)
+        public static Angle ToAngle(this Direction dir)
         {
             var ang = Segment * (int)dir;
 
@@ -60,7 +60,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public static Vector2 ToVec(this Direction dir)
         {
-            return ToVec(ToAngle(dir));
+            return dir.ToAngle().ToVec();
         }
 
         /// <summary>
@@ -68,16 +68,9 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="vec">Vector to get the angle from.</param>
         /// <returns>Angle of the vector.</returns>
-        public static double ToAngle(this Vector2 vec)
+        public static Angle ToAngle(this Vector2 vec)
         {
             return Math.Atan2(vec.Y, vec.X);
-        }
-
-        private static Vector2 ToVec(double rads)
-        {
-            var x = Math.Cos(rads);
-            var y = Math.Sin(rads);
-            return new Vector2((float)x, (float)y);
         }
     }
 }

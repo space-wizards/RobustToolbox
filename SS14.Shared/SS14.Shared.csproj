@@ -173,6 +173,7 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Maths\Angle.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Vector2i.cs" />
@@ -304,47 +305,47 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
-    <Resources Include="..\Resources\Fonts\**\*.*" >
+    <Resources Include="..\Resources\Fonts\**\*.*">
       <ResourceRoot>Fonts</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\ParticleSystems\**\*.*" >
+    <Resources Include="..\Resources\ParticleSystems\**\*.*">
       <ResourceRoot>ParticleSystems</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Shaders\**\*.*" >
+    <Resources Include="..\Resources\Shaders\**\*.*">
       <ResourceRoot>Shaders</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Unatlased\**\*.*" >
+    <Resources Include="..\Resources\Textures\Unatlased\**\*.*">
       <ResourceRoot>Textures\Unatlased</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\UserInterface\**\*.*" >
+    <Resources Include="..\Resources\Textures\UserInterface\**\*.*">
       <ResourceRoot>Textures\UserInterface</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Decals\**\*.*" >
+    <Resources Include="..\Resources\Textures\Decals\**\*.*">
       <ResourceRoot>Textures\Decals</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Effects\**\*.*" >
+    <Resources Include="..\Resources\Textures\Effects\**\*.*">
       <ResourceRoot>Textures\Effects</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Items\**\*.*" >
+    <Resources Include="..\Resources\Textures\Items\**\*.*">
       <ResourceRoot>Textures\Items</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Objects\**\*.*" >
+    <Resources Include="..\Resources\Textures\Objects\**\*.*">
       <ResourceRoot>Textures\Objects</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Tiles\**\*.*" >
+    <Resources Include="..\Resources\Textures\Tiles\**\*.*">
       <ResourceRoot>Textures\Tiles</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Prototypes\**\*.*" >
+    <Resources Include="..\Resources\Prototypes\**\*.*">
       <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>

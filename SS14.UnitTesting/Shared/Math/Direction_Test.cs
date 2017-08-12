@@ -8,7 +8,7 @@ namespace SS14.UnitTesting.Shared.Math
     [TestFixture]
     internal class Direction_Test
     {
-        private const double Epsilon = 1.0e8;
+        private const double Epsilon = 1.0e-8;
 
         private static IEnumerable<(float, float, Direction, double)> sources => new(float, float, Direction, double)[]
         {

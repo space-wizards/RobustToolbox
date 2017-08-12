@@ -14,8 +14,9 @@ namespace SS14.Shared.Utility
         /// <param name="hue">The hue of the color.</param>
         /// <param name="saturation">The saturation of the color.</param>
         /// <param name="luminance">The luminance of the color.</param>
+        /// <param name="alpha">The alpha of the resulting color.</param>
         /// <returns>An SFML color with the RGB values set.</returns>
-        public static Color HSLToRGB(double hue, double saturation, double luminance)
+        public static Color HSLToRGB(double hue, double saturation, double luminance, byte alpha=255)
         {
             // default to gray
             var r = luminance;
@@ -77,6 +78,7 @@ namespace SS14.Shared.Utility
                 R = Convert.ToByte(r * 255.0f),
                 G = Convert.ToByte(g * 255.0f),
                 B = Convert.ToByte(b * 255.0f),
+                A = alpha,
             };
             return rgb;
         }

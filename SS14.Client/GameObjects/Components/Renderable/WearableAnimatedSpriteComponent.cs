@@ -92,7 +92,7 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToRender.GetLocalBounds();
 
             Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().Position);
+                    Owner.GetComponent<ITransformComponent>().Position.Convert());
             spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));
 

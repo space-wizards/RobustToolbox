@@ -1,10 +1,8 @@
-- type: entity
+﻿- type: entity
   id: Worktop
   name: Worktop
   components:
   - type: Transform
-  - type: Velocity
-  - type: Direction
   - type: Clickable
   - type: Sprite
     sprites:
@@ -14,8 +12,7 @@
   - type: Icon
     icon: worktop_single
 
-  - type: BasicMover
-  - type: Hitbox
+  - type: BoundingBox
     sizeX: 64
     sizeY: 47
     offsetY: 8

@@ -18,6 +18,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Player
 {
@@ -199,7 +200,7 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared() < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position.Convert()).LengthSquared() < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

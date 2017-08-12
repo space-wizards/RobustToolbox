@@ -329,7 +329,7 @@ namespace SS14.Server
                     // only run the sim if unpaused, but still use up the accumulated time
                     if(!_time.Paused)
                     {
-                        Update((float)_time.CurTime.TotalSeconds);
+                        Update((float)_time.FrameTime.TotalSeconds);
                         _time.CurTick++;
                     }
                 }

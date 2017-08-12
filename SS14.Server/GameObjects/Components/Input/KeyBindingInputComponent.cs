@@ -19,11 +19,12 @@ namespace SS14.Server.GameObjects
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 
+            var boolState = keyState == BoundKeyState.Down;
+            SetKeyState(keyFunction, boolState);
+
             Owner.SendMessage(this, ComponentMessageType.BoundKeyChange, keyFunction, keyState);
             Owner.RaiseEvent(new BoundKeyChangeEventArgs{KeyFunction = keyFunction, KeyState = keyState, Actor = Owner});
-            var boolState = keyState == BoundKeyState.Down;
 
-            SetKeyState(keyFunction, boolState);
         }
 
         private readonly Dictionary<BoundKeyFunctions, bool> _keyStates = new Dictionary<BoundKeyFunctions, bool>();

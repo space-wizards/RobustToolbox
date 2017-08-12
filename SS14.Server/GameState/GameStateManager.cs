@@ -42,7 +42,8 @@ namespace SS14.Server.GameStates
             if (!ackedStates.ContainsKey(client.ConnectionId))
                 return toState - new SS14.Shared.GameStates.GameState(0); //The client has no state!
 
-            SS14.Shared.GameStates.GameState fromState = this[ackedStates[client.ConnectionId]];
+            var ackack = ackedStates[client.ConnectionId];
+            SS14.Shared.GameStates.GameState fromState = this[ackack];
             return toState - fromState;
         }
 
@@ -63,11 +64,12 @@ namespace SS14.Server.GameStates
             return ackedStates[client.ConnectionId];
         }
 
-        #endregion IGameStateManager Members
-
         public void CullAll()
         {
+            ackedStates.Clear();
             Clear();
         }
+
+        #endregion IGameStateManager Members
     }
 }

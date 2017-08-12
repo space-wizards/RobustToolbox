@@ -30,6 +30,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         void RemoveComponent(IComponent component);
 
         /// <summary>
+        /// Clear the master component list
+        /// </summary>
+        void Cull();
+
+        /// <summary>
         /// Big update method -- loops through all components in order of family and calls Update() on them.
         /// </summary>
         /// <param name="frameTime">Time since the last frame was rendered.</param>

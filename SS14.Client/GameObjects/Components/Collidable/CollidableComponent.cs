@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
 using SFML.Graphics;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
 using SS14.Shared;
@@ -12,11 +11,12 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Interfaces.Physics;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class CollidableComponent : ClientComponent, ICollidable
+    public class CollidableComponent : ClientComponent, ICollidableComponent
     {
         public override string Name => "Collidable";
         public override uint? NetID => NetIDs.COLLIDABLE;
@@ -57,12 +57,22 @@ namespace SS14.Client.GameObjects
                 }
             }
         }
+        
+        public FloatRect AABB => OffsetAABB;
 
-        #region ICollidable Members
-
-        public FloatRect AABB
+        public FloatRect WorldAABB
         {
-            get { return OffsetAABB; }
+            get
+            {
+                var trans = Owner.GetComponent<ITransformComponent>();
+                if (trans == null)
+                    return AABB;
+                return new FloatRect(
+                    AABB.Left + trans.Position.X,
+                    AABB.Top + trans.Position.Y,
+                    AABB.Width,
+                    AABB.Height);
+            }
         }
 
         /// <summary>
@@ -81,8 +91,6 @@ namespace SS14.Client.GameObjects
         {
             get { return isHardCollidable; }
         }
-
-        #endregion ICollidable Members
 
         public event EventHandler OnBump;
 

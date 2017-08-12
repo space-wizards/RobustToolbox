@@ -1,8 +1,9 @@
 ﻿using SFML.Graphics;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using System.Collections.Generic;
-using SS14.Client.ResourceManagement;
+using System.IO;
 
 namespace SS14.Client.Interfaces.Resource
 {
@@ -17,10 +18,18 @@ namespace SS14.Client.Interfaces.Resource
         object GetAnimatedSprite(string key);
         void LoadLocalResources();
         void LoadBaseResources();
+        /// <summary>
+        /// Load a texture from the stream and register it under the specified name.
+        /// </summary>
+        /// <param name="name">The name to register the texture under.</param>
+        /// <param name="stream">The stream to read from. Note that this stream must support seeking!</param>
+        /// <returns>The loaded texture.</returns>
+        Texture LoadTextureFrom(string name, Stream stream);
+        Sprite LoadSpriteFromTexture(string name, Texture texture);
 
 
         Sprite DefaultSprite();
-        
+
         T GetResource<T>(string path)
             where T : BaseResource, new();
 

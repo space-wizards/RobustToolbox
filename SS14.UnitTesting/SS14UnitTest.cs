@@ -2,13 +2,11 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client;
-using SS14.Client.Collision;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
@@ -65,8 +63,10 @@ using SS14.Client.Resources;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
+using SS14.Shared.Physics;
 using SS14.Shared.Timing;
 
 namespace SS14.UnitTesting

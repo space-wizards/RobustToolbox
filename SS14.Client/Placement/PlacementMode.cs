@@ -1,6 +1,7 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Map;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Placement
 {

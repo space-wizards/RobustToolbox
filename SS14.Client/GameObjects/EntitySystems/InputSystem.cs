@@ -1,7 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
-using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 
@@ -9,6 +8,9 @@ namespace SS14.Client.GameObjects.EntitySystems
 {
     public class InputSystem : EntitySystem
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
         public InputSystem()
         {
             EntityQuery = new ComponentEntityQuery()
@@ -20,7 +22,8 @@ namespace SS14.Client.GameObjects.EntitySystems
             };
         }
 
-        public override void Update(float frametime)
+        /// <inheritdoc />
+        public override void Update(float frameTime)
         {
             var entities = EntityManager.GetEntities(EntityQuery);
             foreach (var entity in entities)

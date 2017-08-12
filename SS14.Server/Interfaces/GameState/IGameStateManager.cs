@@ -13,5 +13,6 @@ namespace SS14.Server.Interfaces.GameState
         GameStateDelta GetDelta(INetChannel client, uint state);
         SS14.Shared.GameStates.GameState GetFullState(uint state);
         uint GetLastStateAcked(INetChannel client);
+        void CullAll();
     }
 }

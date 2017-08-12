@@ -11,6 +11,7 @@ using System;
 using System.Reflection;
 using SS14.Shared.Network;
 using SS14.Shared.Timing;
+using Vector2i = SFML.System.Vector2i;
 
 
 namespace SS14.Client.Graphics

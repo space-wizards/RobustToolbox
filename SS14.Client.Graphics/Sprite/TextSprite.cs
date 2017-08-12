@@ -1,6 +1,7 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Interface;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Graphics.Sprite
 {

@@ -141,9 +141,8 @@
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IVelocityComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IDirectionComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\ICollidableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
@@ -159,6 +158,9 @@
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
+    <Compile Include="Interfaces\Physics\ICollidable.cs" />
+    <Compile Include="Interfaces\Physics\ICollider.cs" />
+    <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
@@ -171,11 +173,13 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Maths\Angle.cs" />
     <Compile Include="Maths\FloatMath.cs" />
+    <Compile Include="Maths\Direction.cs" />
+    <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
     <Compile Include="EntityBaseClass.cs" />
-    <Compile Include="GlobalConstants.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
@@ -203,6 +207,10 @@
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
     <Compile Include="Network\StringTable.cs" />
+    <Compile Include="Physics\CollidableAABB.cs" />
+    <Compile Include="Physics\CollidableBucket.cs" />
+    <Compile Include="Physics\CollidablePoint.cs" />
+    <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
@@ -252,10 +260,8 @@
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Components\Direction\DirectionComponentState.cs" />
-    <Compile Include="GameObjects\Components\Hitbox\HitboxComponentState.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
-    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponentState.cs" />
     <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
@@ -263,7 +269,6 @@
     <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
-    <Compile Include="GameObjects\Components\Velocity\VelocityComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
@@ -300,47 +305,47 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
-    <Resources Include="..\Resources\Fonts\**\*.*" >
+    <Resources Include="..\Resources\Fonts\**\*.*">
       <ResourceRoot>Fonts</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\ParticleSystems\**\*.*" >
+    <Resources Include="..\Resources\ParticleSystems\**\*.*">
       <ResourceRoot>ParticleSystems</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Shaders\**\*.*" >
+    <Resources Include="..\Resources\Shaders\**\*.*">
       <ResourceRoot>Shaders</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Unatlased\**\*.*" >
+    <Resources Include="..\Resources\Textures\Unatlased\**\*.*">
       <ResourceRoot>Textures\Unatlased</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\UserInterface\**\*.*" >
+    <Resources Include="..\Resources\Textures\UserInterface\**\*.*">
       <ResourceRoot>Textures\UserInterface</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Decals\**\*.*" >
+    <Resources Include="..\Resources\Textures\Decals\**\*.*">
       <ResourceRoot>Textures\Decals</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Effects\**\*.*" >
+    <Resources Include="..\Resources\Textures\Effects\**\*.*">
       <ResourceRoot>Textures\Effects</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Items\**\*.*" >
+    <Resources Include="..\Resources\Textures\Items\**\*.*">
       <ResourceRoot>Textures\Items</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Objects\**\*.*" >
+    <Resources Include="..\Resources\Textures\Objects\**\*.*">
       <ResourceRoot>Textures\Objects</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Textures\Tiles\**\*.*" >
+    <Resources Include="..\Resources\Textures\Tiles\**\*.*">
       <ResourceRoot>Textures\Tiles</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\Prototypes\**\*.*" >
+    <Resources Include="..\Resources\Prototypes\**\*.*">
       <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>

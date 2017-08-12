@@ -82,5 +82,11 @@ namespace SS14.Shared.GameObjects
                 component.Update(frameTime);
             }
         }
+
+        public void Cull()
+        {
+            allComponents.Clear();
+            components.Clear();
+        }
     }
 }

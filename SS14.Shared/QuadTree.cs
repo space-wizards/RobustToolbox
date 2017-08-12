@@ -1,4 +1,4 @@
-// From http://csharpquadtree.codeplex.com/
+﻿// From http://csharpquadtree.codeplex.com/
 
 using SFML.Graphics;
 using SFML.System;
@@ -6,6 +6,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Shared
 {

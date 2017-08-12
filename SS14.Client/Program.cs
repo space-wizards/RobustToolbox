@@ -1,8 +1,6 @@
-﻿using SS14.Client.Collision;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
@@ -43,7 +41,9 @@ using System.Reflection;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Network;
+using SS14.Shared.Physics;
 
 namespace SS14.Client
 {

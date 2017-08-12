@@ -1,5 +1,7 @@
 ﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Utility
 {
@@ -26,6 +28,26 @@ namespace SS14.Shared.Utility
         public static Vector2 Convert(this Vector2f vec)
         {
             return new Vector2(vec.X, vec.Y);
+        }
+
+        /// <summary>
+        /// Converts a OpenTK Box2 to a SFML FloatRect.
+        /// </summary>
+        /// <param name="box">OpenTK Box2.</param>
+        /// <returns>SFML FloatRect.</returns>
+        public static FloatRect Convert(this Box2 box)
+        {
+            return new FloatRect(box.Left, box.Top, box.Width, box.Height);
+        }
+
+        /// <summary>
+        /// Converts a SFML FloatRect to a OpenTK Box2.
+        /// </summary>
+        /// <param name="rect">SFML FloatRect.</param>
+        /// <returns>OpenTK Box2.</returns>
+        public static Box2 Convert(this FloatRect rect)
+        {
+            return new Box2(rect.Left, rect.Top, rect.Right(), rect.Bottom());
         }
     }
 }

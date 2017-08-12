@@ -1,54 +1,57 @@
-﻿using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
+﻿using OpenTK;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Log;
 using SS14.Shared.Utility;
-using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects
 {
+    /// <summary>
+    ///     Contains physical properties of the entity. This component registers the entity
+    ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
+    ///     the BoundingBoxComponent behavior of making the entity static.
+    /// </summary>
     public class PhysicsComponent : Component
     {
+        /// <inheritdoc />
         public override string Name => "Physics";
+
+        /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
+
+        /// <summary>
+        ///     Current mass of the entity.
+        /// </summary>
         public float Mass { get; set; }
 
-        public override void Update(float frameTime)
-        {
-            /*if (Owner.GetComponent<SlaveMoverComponent>(ComponentFamily.Mover) != null)
-                // If we are being moved by something else right now (like being carried) dont be affected by physics
-                return;
+        /// <summary>
+        ///     Current velocity of the entity.
+        /// </summary>
+        public Vector2 Velocity { get; set; }
 
-            GasEffect();*/
+        /// <inheritdoc />
+        public override void OnAdd(IEntity owner)
+        {
+            // This component requires that the entity has an AABB.
+            if (!owner.HasComponent<BoundingBoxComponent>())
+                Logger.Error($"[ECS] {owner.Prototype.Name} - {nameof(PhysicsComponent)} requires {nameof(BoundingBoxComponent)}. ");
+
+            base.OnAdd(owner);
         }
 
-        //private void GasEffect()
-        //{
-        //    ITile t = IoCManager.Resolve<IMapManager>().GetFloorAt(Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
-        //    if (t == null)
-        //        return;
-        //    Vector2 gasVel = t.GasCell.GasVelocity;
-        //    if (gasVel.Abs() > Mass) // Stop tiny wobbles
-        //    {
-        //        Owner.SendMessage(this, ComponentMessageType.PhysicsMove,
-        //                          Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.X +
-        //                          gasVel.X,
-        //                          Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-        //                          gasVel.Y);
-        //    }
-        //}
-
+        /// <inheritdoc />
         public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
             if (mapping.TryGetNode("mass", out node))
-            {
                 Mass = node.AsFloat();
-            }
         }
 
+        /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(Mass);
+            return new PhysicsComponentState(Mass, Velocity);
         }
     }
 }

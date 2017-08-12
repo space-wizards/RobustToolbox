@@ -1,105 +1,85 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
-using System;
-using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
+    /// <summary>
+    ///     Base component for the ECS system.
+    /// </summary>
     [Reflect(false)]
     public abstract class Component : IComponent
     {
+        /// <inheritdoc />
         public abstract string Name { get; }
+
+        /// <inheritdoc />
         public virtual uint? NetID => null;
+
+        /// <inheritdoc />
         public virtual bool NetworkSynchronizeExistence => false;
 
+        /// <inheritdoc />
         public IEntity Owner { get; private set; }
+
+        /// <inheritdoc />
         public virtual Type StateType => typeof(ComponentState);
 
-        /// <summary>
-        /// Called when the component is removed from an entity.
-        /// Shuts down the component
-        /// This should be called AFTER any inheriting classes OnRemove code has run. This should be last.
-        /// </summary>
+        /// <inheritdoc />
         public virtual void OnRemove()
         {
             Shutdown();
+
             //Send us to the manager so it knows we're dead.
             IoCManager.Resolve<IComponentManager>().RemoveComponent(this);
             Owner = null;
         }
 
-        /// <summary>
-        /// Called when the component gets added to an entity.
-        /// </summary>
-        /// <param name="owner"></param>
+        /// <inheritdoc />
         public virtual void OnAdd(IEntity owner)
         {
             Owner = owner;
+
             //Send us to the manager so it knows we're active
             var manager = IoCManager.Resolve<IComponentManager>();
             manager.AddComponent(this);
         }
 
-        /// <summary>
-        /// Base method to shut down the component.
-        /// </summary>
+        /// <inheritdoc />
         public virtual void Shutdown()
         {
         }
 
-        /// <summary>
-        /// This allows setting of the component's parameters once it is instantiated.
-        /// This should basically be overridden by every inheriting component, as parameters will be different
-        /// across the board.
-        /// </summary>
+        /// <inheritdoc />
         public virtual void LoadParameters(YamlMappingNode mapping)
         {
         }
 
-        /// <summary>
-        /// Main method for updating the component. This is called from a big loop in Componentmanager.
-        /// </summary>
-        /// <param name="frameTime"></param>
+        /// <inheritdoc />
         public virtual void Update(float frameTime)
         {
         }
 
-        /// <summary>
-        /// Receive a message from another component within the owner entity
-        /// </summary>
-        /// <param name="sender">the component that sent the message</param>
-        /// <param name="type">the message type in CGO.MessageType</param>
-        /// <param name="list">parameters list</param>
-        public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                            params object[] list)
+        /// <inheritdoc />
+        public virtual ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type, params object[] list)
         {
-            ComponentReplyMessage reply = ComponentReplyMessage.Empty;
+            var reply = ComponentReplyMessage.Empty;
 
             if (sender == this) //Don't listen to our own messages!
                 return reply;
 
-            // Leaving this gap here in case anybody wants to add something later.
-
             return reply;
         }
 
-        public virtual void HandleComponentEvent<T>(T args)
-        {
-        }
-
-        /// <summary>
-        /// Get the component's state for synchronizing
-        /// </summary>
-        /// <returns>ComponentState object</returns>
+        /// <inheritdoc />
         public virtual ComponentState GetComponentState()
         {
             if (NetID == null)
-            {
                 throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
-            }
+
             return new ComponentState(NetID.Value);
         }
 
@@ -108,25 +88,9 @@ namespace SS14.Shared.GameObjects
         {
         }
 
-        /// <summary>
-        /// Empty method for handling incoming input messages from counterpart server/client components
-        /// </summary>
-        /// <param name="message">the message object</param>
+        /// <inheritdoc />
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
         }
-
-        /// <summary>
-        /// This gets a list of runtime-settable component parameters, with CURRENT VALUES
-        /// If it isn't going to return a current value, it shouldn't return it at all.
-        /// </summary>
-        /// <returns></returns>
-        public virtual IList<ComponentParameter> GetParameters()
-        {
-            return new List<ComponentParameter>();
-        }
-
-        protected virtual void SubscribeEvents()
-        { }
     }
 }

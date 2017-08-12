@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Interfaces.Resource;
@@ -6,6 +6,7 @@ using SS14.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Sprite
 {

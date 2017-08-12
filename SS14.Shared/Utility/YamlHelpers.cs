@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Graphics;
 using SS14.Shared.Maths;
 using System;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Shared.Utility
 {

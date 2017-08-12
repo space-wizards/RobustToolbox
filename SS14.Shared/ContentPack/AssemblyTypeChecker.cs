@@ -97,6 +97,7 @@ namespace SS14.Shared.ContentPack
             "System.ICloneable",
             "System.IComparable",
             "System.IEquatable",
+            "System.ParamArrayAttribute",
 
             // SFML stuff.
             "SFML.Graphics.Color",

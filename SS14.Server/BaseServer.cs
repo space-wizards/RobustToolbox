@@ -231,6 +231,11 @@ namespace SS14.Server
             prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
 
+            var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
+            clientConsole.Initialize();
+            var consoleManager = IoCManager.Resolve<IConsoleManager>();
+            consoleManager.Initialize();
+
             StartLobby();
             StartGame();
 
@@ -324,7 +329,7 @@ namespace SS14.Server
                     // only run the sim if unpaused, but still use up the accumulated time
                     if(!_time.Paused)
                     {
-                        Update((float)_time.CurTime.TotalSeconds);
+                        Update((float)_time.FrameTime.TotalSeconds);
                         _time.CurTick++;
                     }
                 }
@@ -495,7 +500,7 @@ namespace SS14.Server
             if (!connections.Any())
             {
                 //No clients -- don't send state
-                stateManager.Clear();
+                stateManager.CullAll();
             }
             else
             {

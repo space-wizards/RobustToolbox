@@ -421,7 +421,7 @@ namespace SS14.Shared.GameObjects
             }
             _components.Clear();
             _netIDs.Clear();
-            _componentReferences.Clear();
+//          _componentReferences.Clear();
         }
 
         public IEnumerable<IComponent> GetComponents()

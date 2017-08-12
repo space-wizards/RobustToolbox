@@ -174,7 +174,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameController.cs" />
-    <Compile Include="GameObjects\Components\ClientComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Program.cs" />

@@ -8,7 +8,7 @@ namespace SS14.Client.GameObjects
     ///     Holds an Axis Aligned Bounding Box (AABB) for the entity. Using this component adds the entity
     ///     to the physics system as a static (non-movable) entity.
     /// </summary>
-    public class BoundingBoxComponent : ClientComponent
+    public class BoundingBoxComponent : Component
     {
         /// <inheritdoc />
         public override string Name => "BoundingBox";

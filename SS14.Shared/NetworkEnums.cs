@@ -173,7 +173,6 @@
         ComponentMessage,
         SystemMessage,
         PositionMessage,
-        ComponentInstantiationMessage,
         Null,
         SetDirection,
         NameUpdate,

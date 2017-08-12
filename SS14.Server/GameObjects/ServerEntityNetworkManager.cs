@@ -263,14 +263,6 @@ namespace SS14.Server.GameObjects
                     uid = message.ReadInt32();
                     //TODO: Handle position messages!
                     break;
-                case EntityMessage.ComponentInstantiationMessage:
-                    uid = message.ReadInt32();
-                    incomingEntityMessage = new IncomingEntityMessage(uid,
-                                                                      EntityMessage.ComponentInstantiationMessage,
-                                                                      (uint)
-                                                                      UnPackParams(message).First(),
-                                                                      message.SenderConnection);
-                    break;
             }
 
             return incomingEntityMessage;

@@ -92,10 +92,5 @@ namespace SS14.Shared.GameObjects
         public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
         {
         }
-
-        /// <inheritdoc />
-        public virtual void HandleInstantiationMessage(NetConnection netConnection)
-        {
-        }
     }
 }

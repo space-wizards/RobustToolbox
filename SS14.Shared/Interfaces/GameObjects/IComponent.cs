@@ -106,11 +106,5 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="state"></param>
         void HandleComponentState(ComponentState state);
-
-        /// <summary>
-        ///     Handles a message that a client has just instantiated a component
-        /// </summary>
-        /// <param name="netConnection"></param>
-        void HandleInstantiationMessage(NetConnection netConnection);
     }
 }

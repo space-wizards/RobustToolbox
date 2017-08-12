@@ -20,7 +20,7 @@ using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.GameObjects
 {
-    public class SpriteComponent : ClientComponent, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
+    public class SpriteComponent : Component, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;

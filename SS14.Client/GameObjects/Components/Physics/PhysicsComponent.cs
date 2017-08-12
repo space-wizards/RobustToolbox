@@ -11,7 +11,7 @@ namespace SS14.Client.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    internal class PhysicsComponent : ClientComponent
+    internal class PhysicsComponent : Component
     {
         /// <inheritdoc />
         public override string Name => "Physics";

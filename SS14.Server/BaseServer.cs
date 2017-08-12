@@ -495,7 +495,7 @@ namespace SS14.Server
             if (!connections.Any())
             {
                 //No clients -- don't send state
-                stateManager.Clear();
+                stateManager.CullAll();
             }
             else
             {

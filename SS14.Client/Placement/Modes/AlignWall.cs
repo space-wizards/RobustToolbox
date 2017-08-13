@@ -17,7 +17,6 @@ namespace SS14.Client.Placement.Modes
     {
         public AlignWall(PlacementManager pMan) : base(pMan)
         {
-            validPlaceColor = new Color(34, 139, 34);
         }
 
         public override bool Update(Vector2i mouseS, IMapManager currentMap)

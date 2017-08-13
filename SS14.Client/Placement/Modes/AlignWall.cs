@@ -15,8 +15,7 @@ namespace SS14.Client.Placement.Modes
 {
     public class AlignWall : PlacementMode
     {
-        public AlignWall(PlacementManager pMan)
-            : base(pMan)
+        public AlignWall(PlacementManager pMan) : base(pMan)
         {
         }
 
@@ -78,20 +77,6 @@ namespace SS14.Client.Placement.Modes
                     return false;
 
             return true;
-        }
-
-        public override void Render()
-        {
-            if (spriteToDraw != null)
-            {
-                var bounds = spriteToDraw.GetLocalBounds();
-                spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
-                                                     mouseScreen.Y - (bounds.Height/2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
-            }
         }
     }
 }

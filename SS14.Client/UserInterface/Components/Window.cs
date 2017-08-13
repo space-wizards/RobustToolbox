@@ -1,9 +1,10 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics.VertexData;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -22,8 +23,8 @@ namespace SS14.Client.UserInterface.Components
         protected Label title;
         protected IntRect titleArea;
 
-        public Window(string windowTitle, Vector2i size, IResourceManager resourceManager)
-            : base(windowTitle, size, resourceManager)
+        public Window(string windowTitle, Vector2i size, IResourceCache resourceCache)
+            : base(windowTitle, size, resourceCache)
         {
             closeButton = new ImageButton
                               {
@@ -31,13 +32,13 @@ namespace SS14.Client.UserInterface.Components
                               };
 
             closeButton.Clicked += CloseButtonClicked;
-            title = new Label(windowTitle, "CALIBRI", _resourceManager);
+            title = new Label(windowTitle, "CALIBRI", _resourceCache);
             gradient = new GradientBox();
             DrawBackground = true;
             Update(0);
         }
 
-        private void CloseButtonClicked(ImageButton sender)
+        virtual protected void CloseButtonClicked(ImageButton sender)
         {
             Dispose();
         }

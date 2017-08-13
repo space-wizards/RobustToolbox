@@ -7,6 +7,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
@@ -17,6 +18,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Player
 {
@@ -91,11 +93,10 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession session)
         {
             //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.SpawnEntity("HumanMob");
-            entity.GetComponent<ITransformComponent>(ComponentFamily.Transform).TranslateTo(new Vector2f(0, 0));
+            IEntity entity = _entityManager.SpawnEntityAt("HumanMob", new Vector2f(0, 0));
             session.AttachToEntity(entity);
         }
-        
+
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             IEnumerable<PlayerSession> sessions =
@@ -199,7 +200,7 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>(ComponentFamily.Transform).Position).LengthSquared() < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position.Convert()).LengthSquared() < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

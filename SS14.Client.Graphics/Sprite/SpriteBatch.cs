@@ -11,7 +11,7 @@ namespace SS14.Client.Graphics.Sprite
     /// </summary>
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
     public class SpriteBatch : Drawable
-    {    
+    {
 
         private QueueItem activeItem;
         private List<QueueItem> QueuedTextures = new List<QueueItem>();
@@ -19,15 +19,14 @@ namespace SS14.Client.Graphics.Sprite
         private readonly uint Max;
         private int count;
         private bool Drawing;
-        private uint queueCount;
-        
+
         public int Count
         {
             get { return count; }
         }
 
         public BlendMode BlendingSettings;
-      
+
         public SpriteBatch(uint maxCapacity = 100000)
         {
             Max = maxCapacity * 4;
@@ -35,7 +34,7 @@ namespace SS14.Client.Graphics.Sprite
         }
 
         public void BeginDrawing()
-        {          
+        {
             count = 0;
             // we use these a lot, and the overall number of textures
             // remains stable, so recycle them to avoid excess calls into
@@ -52,13 +51,13 @@ namespace SS14.Client.Graphics.Sprite
         }
 
         public void EndDrawing()
-        {            
+        {
             Drawing = false;
         }
 
         private void Using(Texture texture)
         {
-            if (!Drawing) 
+            if (!Drawing)
                throw new Exception("Call Begin first.");
 
             if (activeItem == null || activeItem.Texture != texture)
@@ -71,7 +70,7 @@ namespace SS14.Client.Graphics.Sprite
                 else
                 {
                    activeItem = new QueueItem(texture);
-                }   
+                }
                 QueuedTextures.Add(activeItem);
             }
         }
@@ -117,7 +116,7 @@ namespace SS14.Client.Graphics.Sprite
             activeItem.Verticies.Append
                 (
                 new Vertex(
-                        new SFML.System.Vector2f(   
+                        new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color,
@@ -156,7 +155,7 @@ namespace SS14.Client.Graphics.Sprite
                 );
         }
 
-       
+
         /*
                 public unsafe void Draw(Texture texture, FloatRect rec, IntRect src, Color color)
                 {

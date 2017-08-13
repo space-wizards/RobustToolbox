@@ -13,7 +13,7 @@ namespace SS14.Client.Lighting
 {
     public class ShadowMapResolver : IDisposable
     {
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly int baseSize;
 
         private readonly int reductionChainCount;
@@ -32,9 +32,9 @@ namespace SS14.Client.Lighting
 
 
         public ShadowMapResolver(ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize,
-                                 IResourceManager resourceManager)
+                                 IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
 
             reductionChainCount = (int) maxShadowmapSize;
@@ -44,8 +44,8 @@ namespace SS14.Client.Lighting
 
         public void LoadContent()
         {
-            reductionEffectTechnique = _resourceManager.GetTechnique("reductionEffect");
-            resolveShadowsEffectTechnique = _resourceManager.GetTechnique("resolveShadowsEffect");
+            reductionEffectTechnique = _resourceCache.GetTechnique("reductionEffect");
+            resolveShadowsEffectTechnique = _resourceCache.GetTechnique("resolveShadowsEffect");
 
             //// BUFFER TYPES ARE VERY IMPORTANT HERE AND IT WILL BREAK IF YOU CHANGE THEM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HONK HONK
             //these work fine

@@ -1,0 +1,33 @@
+- type: entity
+  id: Janitor_Suit
+  name: Janitor Jumpsuit
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_jumpsuit_gray
+    notWornSprite: janitorsuit
+
+  - type: Icon
+    icon: janitorsuit
+
+  - type: BoundingBox
+  - type: Physics
+    mass: 5
+
+- type: entity
+  id: Shoes
+  name: Shoes
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: WearableAnimatedSprite
+    sprite: player_toolbox
+    notWornSprite: shoes
+
+  - type: Icon
+    icon: shoes
+
+  - type: BoundingBox
+  - type: Physics
+    mass: 5

@@ -6,8 +6,6 @@ namespace SS14.Shared.GameObjects
 {
     public interface IEntityNetworkManager
     {
-        void Initialize();
-
         NetOutgoingMessage CreateEntityMessage();
 
         /// <summary>
@@ -18,7 +16,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family,
+        void SendComponentNetworkMessage(IEntity sendingEntity, uint netID,
                                          NetDeliveryMethod method = NetDeliveryMethod.ReliableUnordered,
                                          params object[] messageParams);
 
@@ -29,7 +27,7 @@ namespace SS14.Shared.GameObjects
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
         /// <param name="sendingEntity">Entity sending the message</param>
-        /// <param name="targetSystem">Type of the System that should recieve the message. Also includes derived systems.</param>
+        /// <param name="targetSystem">Type of the System that should receive the message. Also includes derived systems.</param>
         /// <param name="message">Message that should be sent.</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="messageParams">Parameters of the message</param>
@@ -40,11 +38,10 @@ namespace SS14.Shared.GameObjects
         /// counterpart entities on all clients.
         /// </summary>
         /// <param name="sendingEntity">Entity sending the message (also entity to send to)</param>
-        /// <param name="family">Family of the component sending the message</param>
         /// <param name="method">Net delivery method -- if null, defaults to NetDeliveryMethod.ReliableUnordered</param>
         /// <param name="recipient">Intended recipient of the message</param>
         /// <param name="messageParams">Parameters of the message</param>
-        void SendDirectedComponentNetworkMessage(IEntity sendingEntity, ComponentFamily family, NetDeliveryMethod method,
+        void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID, NetDeliveryMethod method,
                                                  NetConnection recipient, params object[] messageParams);
 
         /// <summary>

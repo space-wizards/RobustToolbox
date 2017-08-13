@@ -1,13 +1,16 @@
 ﻿using SFML.System;
-using SS14.Client.Interfaces.GameTimer;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -15,15 +18,23 @@ namespace SS14.Client.GameObjects.EntitySystems
     {
         public TransformSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(TransformComponent));
-            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                AllSet = new List<Type>()
+                {
+                    typeof(ITransformComponent),
+                },
+                ExclusionSet = new List<Type>()
+                {
+                    typeof(SlaveMoverComponent),
+                },
+            };
         }
 
-        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, TransformComponent transform)
+        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, ITransformComponent transform)
         {
             //Check for collision
-            var collider = entity.GetComponent<ColliderComponent>(ComponentFamily.Collider);
+            var collider = entity.GetComponent<ColliderComponent>();
             bool collided = collider.TryCollision(newPosition - transform.Position, true);
             if (!collided)
             {
@@ -68,13 +79,13 @@ namespace SS14.Client.GameObjects.EntitySystems
             foreach (var entity in entities)
             {
                 //Get transform component
-                var transform = entity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                var transform = entity.GetComponent<IClientTransformComponent>();
                 //Check if the entity has a keyboard input mover component
-                bool isLocallyControlled = entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover) != null
+                bool isLocallyControlled = entity.HasComponent<PlayerInputMoverComponent>()
                     && IoCManager.Resolve<IPlayerManager>().ControlledEntity == entity;
 
                 //Pretend that the current point in time is actually 100 or more milliseconds in the past depending on the interp constant
-                var currentTime = IoCManager.Resolve<IGameTimer>().CurrentTime - interpolation;
+                var currentTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds - interpolation;
 
                 //Limit to how far a human can move
                 var humanMoveLimit = 6 * interpolation * PlayerInputMoverComponent.FastMoveSpeed;
@@ -87,14 +98,14 @@ namespace SS14.Client.GameObjects.EntitySystems
                     currentTime < transform.lerpStateFrom.ReceivedTime)
                 {
                     // Fall back to setting the position to the "To" state
-                    newPosition = new Vector2f(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    newPosition = transform.lerpStateTo.Position;
                 }
                 else //OTHERWISE
                 {
                     //Interpolate
 
-                    var p1 = new Vector2f(transform.lerpStateFrom.X, transform.lerpStateTo.Y);
-                    var p2 = new Vector2f(transform.lerpStateTo.X, transform.lerpStateTo.Y);
+                    var p1 = new Vector2f(transform.lerpStateFrom.Position.X, transform.lerpStateTo.Position.Y);
+                    var p2 = new Vector2f(transform.lerpStateTo.Position.X, transform.lerpStateTo.Position.Y);
                     var t1 = transform.lerpStateFrom.ReceivedTime;
                     var t2 = transform.lerpStateTo.ReceivedTime;
 
@@ -113,8 +124,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 if (isLocallyControlled)
                 {
                     //var playerPosition = transform.Position +
-                    var velocityComponent = entity.GetComponent<VelocityComponent>(ComponentFamily.Velocity);
-                    if (velocityComponent != null)
+                    if (entity.TryGetComponent<IVelocityComponent>(out var velocityComponent))
                     {
                         var movement = velocityComponent.Velocity * frametime;
                         var playerPosition = movement + transform.Position;
@@ -137,7 +147,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                     {
                         //Only for components with a keyboard input mover component, and a collider component
                         // Check for collision so we don't get shit stuck in objects
-                        if (entity.GetComponent<ColliderComponent>(ComponentFamily.Collider) != null)
+                        if (entity.HasComponent<ColliderComponent>())
                         {
                             Vector2f? _newPosition = calculateNewPosition(entity, newPosition, transform);
                             if (_newPosition != null)
@@ -153,9 +163,9 @@ namespace SS14.Client.GameObjects.EntitySystems
                     }
                     if (doTranslate)
                     {
-                        transform.TranslateTo(newPosition);
+                        transform.Position = newPosition;
                         if (isLocallyControlled)
-                            entity.GetComponent<PlayerInputMoverComponent>(ComponentFamily.Mover).SendPositionUpdate(newPosition);
+                            entity.GetComponent<PlayerInputMoverComponent>().SendPositionUpdate(newPosition);
                     }
                 }
             }

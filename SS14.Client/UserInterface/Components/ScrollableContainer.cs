@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -8,13 +8,14 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
     //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
-        protected readonly IResourceManager _resourceManager;
+        protected readonly IResourceCache _resourceCache;
 
         public SFML.Graphics.Color BackgroundColor = new SFML.Graphics.Color(169, 169, 169);
         public bool DrawBackground = false;
@@ -33,9 +34,9 @@ namespace SS14.Client.UserInterface.Components
         protected Scrollbar scrollbarH;
         protected Scrollbar scrollbarV;
 
-        public ScrollableContainer(string uniqueName, Vector2i size, IResourceManager resourceManager)
+        public ScrollableContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
             name = uniqueName;
             Size = size;
 
@@ -54,8 +55,8 @@ namespace SS14.Client.UserInterface.Components
             clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             clippingRI.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            scrollbarH = new Scrollbar(true, _resourceManager);
-            scrollbarV = new Scrollbar(false, _resourceManager);
+            scrollbarH = new Scrollbar(true, _resourceCache);
+            scrollbarV = new Scrollbar(false, _resourceCache);
             scrollbarV.size = Size.Y;
 
             scrollbarH.Update(0);

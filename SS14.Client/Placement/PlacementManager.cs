@@ -3,7 +3,6 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
@@ -15,13 +14,19 @@ using SS14.Shared.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.Placement
 {
@@ -34,7 +39,7 @@ namespace SS14.Client.Placement
         [Dependency]
         public readonly IPlayerManager PlayerManager;
         [Dependency]
-        public readonly IResourceManager ResourceManager;
+        public readonly IResourceCache ResourceCache;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
@@ -176,7 +181,7 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert());
                 CluwneLib.drawCircle(pos.X,
                     pos.Y,
                     CurrentPermission.Range,
@@ -212,7 +217,7 @@ namespace SS14.Client.Placement
             //if (spriteParam == null) return;
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
-            Sprite sprite = ResourceManager.GetSprite(spriteName);
+            Sprite sprite = ResourceCache.GetSprite(spriteName);
 
             CurrentBaseSprite = sprite;
             CurrentBaseSpriteKey = spriteName;
@@ -227,12 +232,12 @@ namespace SS14.Client.Placement
 
             if (tileDefs[tileType.TileId].IsWall)
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("wall");
+                CurrentBaseSprite = ResourceCache.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";
             }
             else
             {
-                CurrentBaseSprite = ResourceManager.GetSprite("tilebuildoverlay");
+                CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
                 CurrentBaseSpriteKey = "tilebuildoverlay";
             }
 
@@ -269,9 +274,10 @@ namespace SS14.Client.Placement
 
             if (CurrentBaseSprite == null) return null;
 
-            string dirName = (CurrentBaseSpriteKey + "_" + Direction.ToString()).ToLowerInvariant();
-            if (ResourceManager.SpriteExists(dirName))
-                spriteToUse = ResourceManager.GetSprite(dirName);
+            string dirName = (CurrentBaseSpriteKey + "_" + Direction).ToLowerInvariant();
+
+            if (ResourceCache.TryGetResource(dirName, out SpriteResource spriteRes))
+                spriteToUse = spriteRes.Sprite;
 
             return spriteToUse;
         }

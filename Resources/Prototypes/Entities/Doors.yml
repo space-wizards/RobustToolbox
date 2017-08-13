@@ -1,0 +1,17 @@
+- type: entity
+  id: Door
+  name: Door
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    drawdepth: FloorPlaceable
+    sprites:
+    - door_ew
+    - door_ewo
+
+  - type: Icon
+    icon: door_ew
+
+  - type: BoundingBox
+  - type: Collidable

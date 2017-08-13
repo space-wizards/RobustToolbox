@@ -3,8 +3,8 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Interfaces.Map;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 
@@ -57,7 +57,7 @@ namespace SS14.Client.Map
         /// <param name="batch">The SpriteBatch to queue into.</param>
         public static void RenderTile(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
-            var tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
+            var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
             tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
@@ -70,7 +70,7 @@ namespace SS14.Client.Map
         /// <param name="y">Y position in world coordinates.</param>
         public static void RenderPos(ITileDefinition def, float x, float y)
         {
-            var tileSprite = IoCManager.Resolve<IResourceManager>().GetSprite(def.SpriteName);
+            var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;

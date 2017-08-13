@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -7,6 +7,8 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 using System.Linq;
+using SS14.Client.ResourceManagement;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -19,7 +21,7 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly EntityPrototype associatedTemplate;
         private readonly string associatedTemplateName;
         private readonly Font font;
@@ -31,9 +33,9 @@ namespace SS14.Client.UserInterface.Components
         public bool selected = false;
 
         public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName,
-                                       IResourceManager resourceManager)
+                                       IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             var spriteNameParam = entityTemplate.GetBaseSpriteParamaters().FirstOrDefault();
             string SpriteName = "";
@@ -46,9 +48,9 @@ namespace SS14.Client.UserInterface.Components
             associatedTemplate = entityTemplate;
             associatedTemplateName = templateName;
 
-            objectSprite = _resourceManager.GetSprite(SpriteName);
+            objectSprite = _resourceCache.GetSprite(SpriteName);
 
-            font = _resourceManager.GetFont("CALIBRI");
+            font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
             name = new TextSprite("Label" + SpriteName, "Name", font);
             name.Color = Color.Black;
             name.Text = ObjectName;

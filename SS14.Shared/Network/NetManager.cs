@@ -118,7 +118,7 @@ namespace SS14.Shared.Network
             netConfig.ConnectionTimeout = 30000f;
 #endif
             _netPeer = new NetPeer(netConfig);
-            
+
             _netPeer.Start();
 
             _strings.Initialize(this);
@@ -292,7 +292,7 @@ namespace SS14.Shared.Network
                 message.ReadByte(); // status
                 reason = message.ReadString();
             }
-            catch (NetException e)
+            catch (NetException)
             {
                 reason = String.Empty;
             }
@@ -389,7 +389,7 @@ namespace SS14.Shared.Network
         }
 
         #endregion Packets
-        
+
         #region NetMessages
 
         /// <inheritdoc />

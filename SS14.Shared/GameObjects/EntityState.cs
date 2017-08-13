@@ -11,7 +11,7 @@ namespace SS14.Shared.GameObjects
         [NonSerialized]
         public float ReceivedTime;
 
-        public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes )
+        public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes )
         {
             SetStateData(new EntityStateData(uid, templateName, name, synchedComponentTypes));
             ComponentStates = componentStates;
@@ -31,9 +31,9 @@ namespace SS14.Shared.GameObjects
         public string Name;
         public string TemplateName;
         public int Uid;
-        public List<Tuple<ComponentFamily, string>> SynchedComponentTypes;
+        public List<Tuple<uint, string>> SynchedComponentTypes;
 
-        public EntityStateData(int uid, string templateName, string name, List<Tuple<ComponentFamily, string>> synchedComponentTypes )
+        public EntityStateData(int uid, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes)
         {
             Uid = uid;
             TemplateName = templateName;

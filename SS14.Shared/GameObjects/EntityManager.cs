@@ -35,13 +35,6 @@ namespace SS14.Shared.GameObjects
         private Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
-        public IList<ComponentFamily> SynchedComponentTypes => synchedComponentTypes;
-
-        private readonly IList<ComponentFamily> synchedComponentTypes = new List<ComponentFamily>
-        {
-            ComponentFamily.Mover
-        };
-
         public bool Initialized { get; protected set; }
 
         #region IEntityManager Members
@@ -170,10 +163,6 @@ namespace SS14.Shared.GameObjects
             if (!Initialized)
             {
                 e.Initialize();
-            }
-            if (!e.HasComponent(ComponentFamily.SVars))
-            {
-                e.AddComponent(ComponentFamily.SVars, ComponentFactory.GetComponent("SVars"));
             }
             return e;
         }

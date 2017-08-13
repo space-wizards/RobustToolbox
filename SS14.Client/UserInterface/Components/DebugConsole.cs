@@ -20,6 +20,7 @@ using System.Reflection;
 using SFML.Graphics;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -32,16 +33,16 @@ namespace SS14.Client.UserInterface.Components
 
         public IDictionary<string, IConsoleCommand> Commands => commands;
 
-        public DebugConsole(string uniqueName, Vector2i size, IResourceManager resourceManager) : base(uniqueName, size, resourceManager)
+        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
-            input = new Textbox(size.X, resourceManager)
+            input = new Textbox(size.X, resourceCache)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new Color(128, 128, 128, 100),
+                drawColor = new Color(64, 64, 64, 100),
                 textColor = new Color(255, 250, 240)
             };
             input.OnSubmit += input_OnSubmit;
-            this.BackgroundColor = new Color(128, 128, 128, 200);
+            this.BackgroundColor = new Color(64, 64, 64, 200);
             this.DrawBackground = true;
             this.DrawBorder = true;
             // Update(0);
@@ -58,7 +59,7 @@ namespace SS14.Client.UserInterface.Components
         public void AddLine(string text, Color color)
         {
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI", this._resourceManager)
+            Label newLabel = new Label(text, "CALIBRI", this._resourceCache)
             {
                 Position = new Vector2i(5, last_y),
                 TextColor = color
@@ -111,7 +112,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void NetMgr_MessageArrived(object sender, NetMessageArgs e)
         {
-            //Make sure we reset the position - we might recieve this message after the gamestates.
+            //Make sure we reset the position - we might receive this message after the gamestates.
             if (e.RawMessage.Position > 0)
                 e.RawMessage.Position = 0;
 

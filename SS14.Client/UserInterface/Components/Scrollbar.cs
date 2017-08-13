@@ -1,10 +1,11 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.ResourceManagement;
 using System;
 
 namespace SS14.Client.UserInterface.Components
@@ -24,7 +25,7 @@ namespace SS14.Client.UserInterface.Components
         #endregion Delegates
 
         private readonly TextSprite DEBUG;
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly Sprite scrollbarButton;
         private bool DRAW_DEBUG = false;
 
@@ -47,15 +48,15 @@ namespace SS14.Client.UserInterface.Components
 
         public int size = 300; //Graphical length of the bar.
 
-        public Scrollbar(bool horizontal, IResourceManager resourceManager)
+        public Scrollbar(bool horizontal, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             Horizontal = horizontal;
-            if (Horizontal) scrollbarButton = _resourceManager.GetSprite("scrollbutton_h");
-            else scrollbarButton = _resourceManager.GetSprite("scrollbutton_v");
+            if (Horizontal) scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
+            else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
 
-            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceManager.GetFont("CALIBRI"));
+            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             DEBUG.Color = new Color(255, 128, 0);
             DEBUG.ShadowColor = new Color(0, 0, 128);
             DEBUG.Shadowed = true;

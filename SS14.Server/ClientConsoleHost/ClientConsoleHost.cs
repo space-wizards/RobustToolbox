@@ -18,7 +18,7 @@ using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.ClientConsoleHost
 {
-    public class ClientConsoleHost : IClientConsoleHost, IPostInjectInit
+    public class ClientConsoleHost : IClientConsoleHost
     {
         [Dependency]
         private readonly IReflectionManager reflectionManager;
@@ -41,11 +41,11 @@ namespace SS14.Server.ClientConsoleHost
                     Help = command.Help
                 };
             }
-            
+
             netMgr.ServerSendMessage(message, senderConnection);
         }
 
-        public void PostInject()
+        public void Initialize()
         {
             foreach (Type type in reflectionManager.GetAllChildren<IClientCommand>())
             {

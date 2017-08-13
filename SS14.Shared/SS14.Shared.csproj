@@ -22,6 +22,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <TargetFrameworkProfile />
     <NoWarn>0649</NoWarn>
+    <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <BaseAddress>285212672</BaseAddress>
@@ -31,7 +32,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Shared\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
@@ -45,27 +46,36 @@
     <DefineConstants>TRACE</DefineConstants>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Shared\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BsDiffLib">
       <Name>BsDiffLib</Name>
       <HintPath>..\Third-Party\BsDiffLib.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
-    <Reference Include="NetSerializer">
-      <Name>NetSerializer</Name>
-      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
+    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
     </Reference>
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -98,7 +108,10 @@
       <Name>System.Xml.Linq</Name>
     </Reference>
     <Reference Include="YamlDotNet">
-      <HintPath>..\packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>$(SolutionDir)packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -113,11 +126,24 @@
     <Compile Include="ColorUtils.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVarFlags.cs" />
+    <Compile Include="ContentPack\AssemblyLoader.cs" />
+    <Compile Include="ContentPack\DirLoader.cs" />
+    <Compile Include="ContentPack\GameClient.cs" />
+    <Compile Include="ContentPack\GameServer.cs" />
+    <Compile Include="ContentPack\GameShared.cs" />
+    <Compile Include="ContentPack\IContentRoot.cs" />
+    <Compile Include="ContentPack\PackLoader.cs" />
+    <Compile Include="ContentPack\PathHelpers.cs" />
+    <Compile Include="ContentPack\ResourceManager.cs" />
+    <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\ICollidableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentManager.cs" />
@@ -126,11 +152,15 @@
     <Compile Include="Interfaces\GameObjects\IEntityQuery.cs" />
     <Compile Include="Interfaces\GameObjects\System\IEntitySystem.cs" />
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
+    <Compile Include="Interfaces\IResourceManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
     <Compile Include="Interfaces\Network\IServerNetManager.cs" />
+    <Compile Include="Interfaces\Physics\ICollidable.cs" />
+    <Compile Include="Interfaces\Physics\ICollider.cs" />
+    <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\Map\IMapChunk.cs" />
@@ -138,6 +168,7 @@
     <Compile Include="Interfaces\Map\IMapManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
@@ -147,6 +178,7 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Maths\Angle.cs" />
     <Compile Include="Map\Chunk.cs" />
     <Compile Include="Map\DefaultTileDefinitions.cs" />
     <Compile Include="Map\MapGrid.cs" />
@@ -157,10 +189,11 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Maths\FloatMath.cs" />
+    <Compile Include="Maths\Direction.cs" />
+    <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector4f.cs" />
     <Compile Include="Maths\SfmlExt.cs" />
     <Compile Include="EntityBaseClass.cs" />
-    <Compile Include="GlobalConstants.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
@@ -188,6 +221,10 @@
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
     <Compile Include="Network\StringTable.cs" />
+    <Compile Include="Physics\CollidableAABB.cs" />
+    <Compile Include="Physics\CollidableBucket.cs" />
+    <Compile Include="Physics\CollidablePoint.cs" />
+    <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
@@ -197,15 +234,21 @@
     <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
+    <Compile Include="Timing\GameTiming.cs" />
     <Compile Include="TypeEventArgs.cs" />
-    <!--<Compile Include="Utility\BitS>tream.cs" />-->
+    <!--
+    <Compile Include="Utility\BitS>tream.cs" />
+    <EmbeddedResource Include="Utility\BitStream.resx">
+      <DependentUpon>BitStream.cs</DependentUpon>
+    </EmbeddedResource>
+    -->
     <Compile Include="Utility\CommandParsing.cs" />
     <Compile Include="Utility\NetParamsPacker.cs" />
-    <Compile Include="Utility\PathHelpers.cs" />
     <Compile Include="Utility\PlatformDetector.cs" />
     <Compile Include="Utility\PlatformTools.cs" />
     <Compile Include="Utility\RandomString.cs" />
     <Compile Include="Utility\Range.cs" />
+    <Compile Include="Utility\SfmlCompatibility.cs" />
     <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
@@ -214,9 +257,6 @@
     <Compile Include="ChatConfig.cs" />
     <Compile Include="UIComponents.cs" />
     <Compile Include="VectorEventArgs.cs" />
-    <EmbeddedResource Include="Utility\BitStream.resx">
-      <DependentUpon>BitStream.cs</DependentUpon>
-    </EmbeddedResource>
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\IPostInjectInit.cs" />
     <Compile Include="IoC\DependencyAttribute.cs" />
@@ -233,29 +273,16 @@
     <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
     <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
-    <Compile Include="Utility\AppDomainHelpers.cs" />
-    <Compile Include="Utility\AssemblyHelpers.cs" />
-    <Compile Include="GameObjects\Component\Collidable\CollidableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Damageable\DamageableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Damageable\Health\HealthComponentState.cs" />
-    <Compile Include="GameObjects\Component\Direction\DirectionComponentState.cs" />
-    <Compile Include="GameObjects\Component\EntityStats\EntityStatsComponentState.cs" />
-    <Compile Include="GameObjects\Component\Equipment\EquipmentComponentState.cs" />
-    <Compile Include="GameObjects\Component\Equippable\EquippableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Hands\HandsComponentState.cs" />
-    <Compile Include="GameObjects\Component\Hitbox\HitboxComponentState.cs" />
-    <Compile Include="GameObjects\Component\Inventory\InventoryComponentState.cs" />
-    <Compile Include="GameObjects\Component\Item\ItemComponentState.cs" />
-    <Compile Include="GameObjects\Component\Light\LightComponentState.cs" />
-    <Compile Include="GameObjects\Component\Mover\MoverComponentState.cs" />
-    <Compile Include="GameObjects\Component\Particles\ParticleSystemComponentState.cs" />
-    <Compile Include="GameObjects\Component\Physics\PhysicsComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\RenderableComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\SpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Renderable\WearableAnimatedSpriteComponentState.cs" />
-    <Compile Include="GameObjects\Component\Transform\TransformComponentState.cs" />
-    <Compile Include="GameObjects\Component\Velocity\VelocityComponentState.cs" />
+    <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />
+    <Compile Include="GameObjects\Components\Light\PointLightComponentState.cs" />
+    <Compile Include="GameObjects\Components\Particles\ParticleSystemComponentState.cs" />
+    <Compile Include="GameObjects\Components\Physics\PhysicsComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\RenderableComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\SpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponentState.cs" />
+    <Compile Include="GameObjects\Components\Transform\TransformComponentState.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\EntitySystemMessage.cs" />
     <Compile Include="GameObjects\EntitySystemMessage\InventorySystemMessages.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
@@ -266,26 +293,79 @@
     <Compile Include="GameObjects\ComponentState.cs" />
     <Compile Include="GameObjects\EntityState.cs" />
     <Compile Include="GameObjects\ItemFlags.cs" />
-    <Compile Include="GameObjects\MarshalComponentParameter.cs" />
     <Compile Include="Prototypes\IPrototype.cs" />
     <Compile Include="Prototypes\PrototypeManager.cs" />
     <Compile Include="Prototypes\EntityPrototype.cs" />
     <Compile Include="Reflection\ReflectionManager.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredDependencyException.cs" />
     <Compile Include="IoC\Exceptions\UnregisteredTypeException.cs" />
+    <Compile Include="GameObjects\Components\NetIDs.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="GO\" />
-  </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
+    <None Include="app.config" />
+    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
+    <Resources Include="..\Resources\Fonts\**\*.*">
+      <ResourceRoot>Fonts</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\ParticleSystems\**\*.*">
+      <ResourceRoot>ParticleSystems</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Shaders\**\*.*">
+      <ResourceRoot>Shaders</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Unatlased\**\*.*">
+      <ResourceRoot>Textures\Unatlased</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\UserInterface\**\*.*">
+      <ResourceRoot>Textures\UserInterface</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Decals\**\*.*">
+      <ResourceRoot>Textures\Decals</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Effects\**\*.*">
+      <ResourceRoot>Textures\Effects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Items\**\*.*">
+      <ResourceRoot>Textures\Items</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Objects\**\*.*">
+      <ResourceRoot>Textures\Objects</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Textures\Tiles\**\*.*">
+      <ResourceRoot>Textures\Tiles</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\Prototypes\**\*.*">
+      <ResourceRoot>Prototypes\Engine</ResourceRoot>
+      <Visible>False</Visible>
+    </Resources>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <RemoveDir Directories="$(OutputPath)Resources" />
+    <Copy SourceFiles="@(Resources)" DestinationFiles="$(OutputPath)Resources\%(ResourceRoot)\%(RecursiveDir)%(Filename)%(Extension)" />
+  </Target>
 </Project>

@@ -17,15 +17,15 @@ namespace SS14.Client.UserInterface.Components
     {
         private readonly Vector2f _buttonSize = new Vector2f(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private IEntity _owningEntity;
 
-        public ContextMenu(IEntity entity, Vector2f creationPos, IResourceManager resourceManager,
+        public ContextMenu(IEntity entity, Vector2f creationPos, IResourceCache resourceCache,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
             _userInterfaceManager = userInterfaceManager;
 
             var entries = new List<ContextMenuEntry>();
@@ -44,23 +44,15 @@ namespace SS14.Client.UserInterface.Components
                     new ContextMenuButton(
                         new ContextMenuEntry
                         { ComponentMessage = "examine", EntryName = "Examine", IconName = "context_eye" }, _buttonSize,
-                        _resourceManager);
+                        _resourceCache);
                 examineButton.Selected += ContextSelected;
                 _buttons.Add(examineButton);
                 examineButton.Update(0);
             }
 
-            var sVarButton =
-                new ContextMenuButton(
-                    new ContextMenuEntry { ComponentMessage = "svars", EntryName = "SVars", IconName = "context_eye" },
-                    _buttonSize, _resourceManager);
-            sVarButton.Selected += ContextSelected;
-            _buttons.Add(sVarButton);
-            sVarButton.Update(0);
-
             foreach (ContextMenuEntry entry in entries)
             {
-                var newButton = new ContextMenuButton(entry, _buttonSize, _resourceManager);
+                var newButton = new ContextMenuButton(entry, _buttonSize, _resourceCache);
                 newButton.Selected += ContextSelected;
                 _buttons.Add(newButton);
                 newButton.Update(0);
@@ -80,21 +72,14 @@ namespace SS14.Client.UserInterface.Components
         {
             if ((string)sender.UserData == "examine")
             {
-                var newExamine = new ExamineWindow(new Vector2i(300, 200), _owningEntity, _resourceManager);
+                var newExamine = new ExamineWindow(new Vector2i(300, 200), _owningEntity, _resourceCache);
                 _userInterfaceManager.AddComponent(newExamine);
                 newExamine.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
             }
-            else if ((string)sender.UserData == "svars")
+            else
             {
-                var newSVars = new SVarEditWindow(new Vector2i(350, 400), _owningEntity);
-                _userInterfaceManager.AddComponent(newSVars);
-                newSVars.Position = new Vector2i(ClientArea.Left, ClientArea.Top);
-
-                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).GetSVarsCallback +=
-                    newSVars.GetSVarsCallback;
-                _owningEntity.GetComponent<ISVarsComponent>(ComponentFamily.SVars).DoGetSVars();
+                _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
             }
-            else _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
         }
 
         public override void Update(float frameTime)
@@ -166,22 +151,22 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion Delegates
 
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
         private readonly Label _textLabel;
 
         public Vector2f Size;
         private SFML.Graphics.Color _currentColor;
         private Sprite _iconSprite;
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2f size, IResourceManager resourceManager)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2f size, IResourceCache resourceCache)
         {
-            _resourceManager = resourceManager;
+            _resourceCache = resourceCache;
 
             UserData = entry.ComponentMessage;
             Size = size;
             _currentColor = new SFML.Graphics.Color(128, 128, 128);
-            _iconSprite = _resourceManager.GetSprite(entry.IconName);
-            _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceManager);
+            _iconSprite = _resourceCache.GetSprite(entry.IconName);
+            _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceCache);
             _textLabel.Update(0);
         }
 

@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -11,7 +11,7 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class TabbedMenu : GuiComponent
     {
-        private readonly IResourceManager _resourceManager;
+        private readonly IResourceCache _resourceCache;
 
         private readonly List<KeyValuePair<ImageButton, TabContainer>> _tabs =
             new List<KeyValuePair<ImageButton, TabContainer>>();
@@ -29,7 +29,7 @@ namespace SS14.Client.UserInterface.Components
 
         public TabbedMenu()
         {
-            _resourceManager = IoCManager.Resolve<IResourceManager>();
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
             Update(0);
         }
 

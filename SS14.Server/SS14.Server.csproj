@@ -28,6 +28,7 @@
     <TargetFrameworkProfile />
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NoWarn>0649</NoWarn>
+    <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
@@ -41,7 +42,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\bin\Server\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -62,7 +63,7 @@
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>..\bin\Server\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -70,16 +71,18 @@
     <NoStdLib>False</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSScriptLibrary">
-      <Name>CSScriptLibrary</Name>
-      <HintPath>..\Third-Party\CSScriptLibrary.dll</HintPath>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-system-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -114,19 +117,14 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="CommandLine">
-      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
-    </Reference>
-    <Reference Include="NetSerializer">
-      <Name>NetSerializer</Name>
-      <HintPath>..\Third-Party\NetSerializer.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>$(SolutionDir)packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceModel">
       <Name>System.ServiceModel</Name>
       <Private>False</Private>
     </Reference>
     <Reference Include="YamlDotNet">
-      <HintPath>..\packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -144,7 +142,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GameObjects\Component\SVars\SVarsComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Program.cs" />
@@ -152,26 +149,25 @@
     <Compile Include="Reflection\ServerReflectionManager.cs" />
     <Compile Include="BaseServer.cs" />
     <Compile Include="Signals.cs" />
-    <Compile Include="Timing\MainLoopTimer.cs" />
-    <Compile Include="Timing\TimerMainLoopTimer.cs" />
-    <Compile Include="Timing\TimerQueueTimer.cs" />
-    <None Include="server_config.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Timing\TimerQueueTimer_.cs">
-    </None>
-    <None Include="app.config">
-    </None>
-    <Content Include="atoms.ss13">
-      <SubType>Code</SubType>
+    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="server_config.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="app.config" />
     <Content Include="emotes.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SavedEntities.xml">
       <SubType>Code</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Resources\EngineContentPack.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Resources\ResourcePack.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
@@ -183,49 +179,27 @@
     <Compile Include="ClientConsoleHost\Commands\Atmospherics.cs" />
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\Particles.cs" />
+    <Compile Include="GameObjects\ServerComponentFactory.cs" />
     <Compile Include="GameObjects\ServerEntityManager.cs" />
     <Compile Include="GameObjects\ServerEntityNetworkManager.cs" />
     <Compile Include="GameObjects\MessageEnums.cs" />
-    <Compile Include="GameObjects\Component\ClickableComponent.cs" />
-    <Compile Include="GameObjects\Component\IInventoryContainer.cs" />
-    <Compile Include="GameObjects\Component\WallMountedComponent.cs" />
-    <Compile Include="GameObjects\Component\WorktopComponent.cs" />
-    <Compile Include="GameObjects\Component\Actor\BasicActorComponent.cs" />
-    <Compile Include="GameObjects\Component\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Component\Damageable\DamageableComponent.cs" />
-    <Compile Include="GameObjects\Component\Damageable\Health\HealthComponent.cs" />
-    <Compile Include="GameObjects\Component\Direction\DirectionComponent.cs" />
-    <Compile Include="GameObjects\Component\EntityStats\EntityStatsCompS.cs" />
-    <Compile Include="GameObjects\Component\Equipment\EquipmentComponent.cs" />
-    <Compile Include="GameObjects\Component\Equipment\HumanEquipmentComponent.cs" />
-    <Compile Include="GameObjects\Component\Equippable\EquippableComponent.cs" />
-    <Compile Include="GameObjects\Component\Hands\HumanHandsComponent.cs" />
-    <Compile Include="GameObjects\Component\Hitbox\HitboxComponent.cs" />
-    <Compile Include="GameObjects\Component\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="GameObjects\Component\Interactable\BasicInteractableComponent.cs" />
-    <Compile Include="GameObjects\Component\Inventory\InventoryComponent.cs" />
-    <Compile Include="GameObjects\Component\Item\BasicItemComponent.cs" />
-    <Compile Include="GameObjects\Component\Item\ItemCapability\ItemCapability.cs" />
-    <Compile Include="GameObjects\Component\LargeObject\BasicDoorComponent.cs" />
-    <Compile Include="GameObjects\Component\LargeObject\BasicLargeObjectComponent.cs" />
-    <Compile Include="GameObjects\Component\Light\LightComponent.cs" />
-    <Compile Include="GameObjects\Component\Mover\BasicMoverComponent.cs" />
-    <Compile Include="GameObjects\Component\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="GameObjects\Component\Mover\SlaveMoverComponent.cs" />
-    <Compile Include="GameObjects\Component\Particles\ParticleSystemComponent.cs" />
-    <Compile Include="GameObjects\Component\Physics\PhysicsComponent.cs" />
-    <Compile Include="GameObjects\Component\Renderable\AnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Component\Renderable\SpriteComponent.cs" />
-    <Compile Include="GameObjects\Component\Renderable\WearableAnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Component\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\Component\Velocity\VelocityComponent.cs" />
+    <Compile Include="GameObjects\Components\ClickableComponent.cs" />
+    <Compile Include="GameObjects\Components\Actor\BasicActorComponent.cs" />
+    <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
+    <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
+    <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
+    <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
+    <Compile Include="GameObjects\Components\Particles\ParticleSystemComponent.cs" />
+    <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
+    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
+    <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
+    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponent.cs" />
+    <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\InteractionSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\InventorySystem.cs" />
     <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="GameObjects\Events\InputEvents.cs" />
-    <Compile Include="GameObjects\Events\InventoryEvents.cs" />
     <Compile Include="GameObjects\Exceptions\MissingImplementationException.cs" />
     <Compile Include="GameObjects\Exceptions\NoPublicConstructorException.cs" />
     <Compile Include="GameState\GameStateManager.cs" />
@@ -237,25 +211,18 @@
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
     <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IDirectionComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
-    <Compile Include="Interfaces\GameObjects\IEquipmentComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IInventoryComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ITransformComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IWallMountedComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameState\IGameStateManager.cs" />
-    <Compile Include="Interfaces\MessageLogging\IMessageLogger.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />
     <Compile Include="Interfaces\Round\IRoundManager.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleCommand.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleManager.cs" />
-    <Compile Include="MessageLogging\MessageLogger.cs" />
-    <None Include="MessageLogging\MessageLoggerService.config" />
-    <Compile Include="MessageLogging\MessageLoggerService.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
@@ -269,55 +236,15 @@
     <Compile Include="ServerConsole\Commands\ServerManagement.cs" />
     <Compile Include="ServerConsole\Commands\TestCommand.cs" />
     <Compile Include="ServerConsole\Commands\ThrowException.cs" />
-    <Content Include="Prototypes\Clothing.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Containers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Doors.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\GlassWalls.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Internals.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\JanitorItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Lights.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Lockers.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\MedicalItems.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Misc.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Mobs.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Tables.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Wallmounted.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Prototypes\Weapons.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
 </Project>

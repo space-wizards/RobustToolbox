@@ -1,0 +1,54 @@
+- type: entity
+  id: Extinguisher
+  name: Extinguisher Cabinet
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - fire_extinguisher
+
+  placement:
+    mode: AlignWall
+    range: 200
+    modes:
+    - 18
+    - 26
+    - 32
+
+- type: entity
+  id: FireAlarm
+  name: Fire Alarm
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - fire_alarm_off
+
+  - type: Icon
+    icon: fire_alarm_off
+
+  placement:
+    mode: AlignWall
+    range: 180
+    nodes:
+    - 5
+    - 10
+    - 15
+
+- type: entity
+  id: MedCabinet
+  name: Medical Cabinet
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: Sprite
+    sprites:
+    - med_cabinet
+
+  - type: Icon
+    icon: med_cabinet
+
+  placement:
+    mode: AlignWall

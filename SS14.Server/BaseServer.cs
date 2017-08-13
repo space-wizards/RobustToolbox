@@ -16,22 +16,23 @@ using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Round;
-using SS14.Server.Timing;
 using SS14.Shared;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
 
 namespace SS14.Server
 {
@@ -54,6 +55,8 @@ namespace SS14.Server
     public class BaseServer : IBaseServer
     {
         [Dependency]
+        private readonly ICommandLineArgs _commandLine;
+        [Dependency]
         private readonly IConfigurationManager _config;
 
         [Dependency]
@@ -68,29 +71,22 @@ namespace SS14.Server
         [Dependency]
         private readonly ISS14Serializer Serializer;
 
+        [Dependency]
+        private readonly IGameTiming _time;
+
+        [Dependency]
+        private readonly IResourceManager _resources;
+
         private const int GAME_COUNTDOWN = 15;
-        private static readonly AutoResetEvent AutoResetEvent = new AutoResetEvent(true);
-        private readonly List<float> _frameTimes = new List<float>();
-        private readonly Stopwatch _stopWatch = new Stopwatch();
-        private bool _active;
-        private int _lastAnnounced;
-
-        private DateTime _lastBytesUpdate = DateTime.Now;
-        private int _lastReceivedBytes;
-        private int _lastSentBytes;
-        private uint _lastState;
-        private DateTime _lastStateTime = DateTime.Now;
-
-        private DateTime _lastUpdate;
-        private uint _oldestAckedState;
 
         private RunLevel _runLevel;
-        private float _serverClock;
-
-        private float _serverRate; // desired server frame (tick) time in milliseconds
+        private bool _active;
+        private int _lastAnnounced;
         private DateTime _startAt;
-        private float _tickRate; // desired server frames (ticks) per second
-        private DateTime _time;
+
+        private TimeSpan _lastTitleUpdate;
+        private int _lastReceivedBytes;
+        private int _lastSentBytes;
 
         private RunLevel Level
         {
@@ -118,15 +114,12 @@ namespace SS14.Server
         public event EventRunLevelChanged OnRunLevelChanged;
 
         /// <inheritdoc />
-        public event EventTick OnTick;
-
-        /// <inheritdoc />
         public void Restart()
         {
             //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
             Logger.Info("[SRV] Soft restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
-            SendGameStateUpdate(true, true);
+            SendGameStateUpdate(true);
             DisposeForRestart();
             StartLobby();
         }
@@ -152,7 +145,7 @@ namespace SS14.Server
         public bool Start()
         {
             //Sets up the configMgr
-            _config.LoadFromFile(PathHelpers.ExecutableRelativeFile("server_config.toml"));
+            _config.LoadFromFile(_commandLine.ConfigFile);
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
@@ -172,15 +165,9 @@ namespace SS14.Server
             _logman.CurrentLevel = _config.GetCVar<LogLevel>("log.level");
             _logman.LogPath = logPath;
 
-            _time = DateTime.Now;
-
             Level = RunLevel.Init;
 
             LoadSettings();
-
-            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
-            prototypeManager.Resync();
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
             netMan.Initialize(true);
@@ -217,6 +204,34 @@ namespace SS14.Server
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<IMapManager>().Initialize();
 
+            // Set up the VFS
+            _resources.Initialize();
+
+            _resources.MountContentDirectory(@"");
+
+            //mount the engine content pack
+            _resources.MountContentPack(@"EngineContentPack.zip");
+
+            //mount the default game ContentPack defined in config
+            _resources.MountDefaultContentPack();
+
+            LoadContentAssembly<GameShared>("Shared");
+            LoadContentAssembly<GameServer>("Server");
+
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
+
+            // because of 'reasons' this has to be called after the last assembly is loaded
+            // otherwise the prototypes will be cleared
+            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
+            prototypeManager.Resync();
+
+            var clientConsole = IoCManager.Resolve<IClientConsoleHost>();
+            clientConsole.Initialize();
+            var consoleManager = IoCManager.Resolve<IConsoleManager>();
+            consoleManager.Initialize();
+
             StartLobby();
             StartGame();
 
@@ -224,18 +239,119 @@ namespace SS14.Server
             return false;
         }
 
+        private void LoadContentAssembly<T>(string name) where T: GameShared
+        {
+            // get the assembly from the file system
+            if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            {
+                Logger.Debug($"[SRV] Loading {name} Content DLL");
+
+                // see if debug info is present
+                if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+            }
+        }
+
+        private TimeSpan _lastTick;
+        private TimeSpan _lastKeepUpAnnounce;
+
         /// <inheritdoc />
         public void MainLoop()
         {
-            var timerObject = new MainLoopTimer();
-            _stopWatch.Start();
-            timerObject.mainLoopTimer.CreateMainLoopTimer(RunLoop, 1);
+            // maximum number of ticks to queue before the loop slows down.
+            const int maxTicks = 5;
+
+            _time.ResetRealTime();
+            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
 
             while (_active)
             {
-                AutoResetEvent.WaitOne(-1);
+                var accumulator = _time.RealTime - _lastTick;
 
-                DoMainLoopStuff();
+                // If the game can't keep up, limit time.
+                if (accumulator > maxTime)
+                {
+                    // limit accumulator to max time.
+                    accumulator = maxTime;
+
+                    // pull lastTick up to the current realTime
+                    // This will slow down the simulation, but if we are behind from a
+                    // lag spike hopefully it will be able to catch up.
+                    _lastTick = _time.RealTime - maxTime;
+
+                    // announce we are falling behind
+                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
+                    {
+                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
+                        _lastKeepUpAnnounce = _time.RealTime;
+                    }
+                }
+
+                _time.InSimulation = true;
+
+                // run the simulation for every accumulated tick
+                while (accumulator >= _time.TickPeriod)
+                {
+                    accumulator -= _time.TickPeriod;
+                    _lastTick += _time.TickPeriod;
+                    _time.StartFrame();
+
+                    // only run the sim if unpaused, but still use up the accumulated time
+                    if(!_time.Paused)
+                    {
+                        Update((float)_time.FrameTime.TotalSeconds);
+                        _time.CurTick++;
+                    }
+                }
+
+                // if not paused, save how far between ticks we are so interpolation works
+                if (!_time.Paused)
+                    _time.TickRemainder = accumulator;
+
+                _time.InSimulation = false;
+
+                // every 1 second update stats in the console window title
+                if ((_time.RealTime - _lastTitleUpdate).TotalSeconds > 1.0)
+                {
+                    var netStats = UpdateBps();
+                    Console.Title = string.Format("FPS: {0:N2} SD:{1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
+                        Math.Round(_time.FramesPerSecondAvg, 2),
+                        _time.RealFrameTimeStdDev.TotalMilliseconds,
+                        netStats,
+                        Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
+                    _lastTitleUpdate = _time.RealTime;
+                }
+
+                // Set this to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
+                // Set this to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
+                // comment this out if you want to be 'that thread' and hog 100% cpu.
+                Thread.Sleep(1);
             }
 
             Cleanup();
@@ -256,14 +372,13 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("game.type", GameType.Game);
             cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
 
-            _tickRate = cfgMgr.GetCVar<int>("net.tickrate");
-            _serverRate = 1000.0f / _tickRate;
-
             _entities = IoCManager.Resolve<IServerEntityManager>();
             _components = IoCManager.Resolve<IComponentManager>();
 
+            _time.TickRate = _config.GetCVar<int>("net.tickrate");
+
             Logger.Info($"[SRV] Name: {ServerName}");
-            Logger.Info($"[SRV] TickRate: {_tickRate}({_serverRate}ms)");
+            Logger.Info($"[SRV] TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.Info($"[SRV] Map: {MapName}");
             Logger.Info($"[SRV] Max players: {MaxPlayers}");
             Logger.Info($"[SRV] Welcome message: {Motd}");
@@ -278,7 +393,9 @@ namespace SS14.Server
             if (runLevel == Level)
                 return;
 
+            var oldLevel = Level;
             Level = runLevel;
+            OnRunLevelChanged?.Invoke(oldLevel, Level);
             if (Level == RunLevel.Lobby)
             {
                 _startAt = DateTime.Now.AddSeconds(GAME_COUNTDOWN);
@@ -313,48 +430,6 @@ namespace SS14.Server
             GC.Collect();
         }
 
-        private static void RunLoop()
-        {
-            AutoResetEvent.Set();
-        }
-
-        private void DoMainLoopStuff()
-        {
-            var elapsedTime = _stopWatch.ElapsedTicks / (float) Stopwatch.Frequency;
-            var elapsedMilliseconds = elapsedTime * 1000;
-
-            if (elapsedMilliseconds < _serverRate && _serverRate - elapsedMilliseconds >= 0.5f)
-                return;
-            _stopWatch.Restart(); //Reset the stopwatch so we get elapsed time next time
-
-            //Elapsed time in seconds since the last tick
-            _serverClock += elapsedTime;
-
-            //Begin update time
-            _time = DateTime.Now;
-            if (_frameTimes.Count >= _tickRate)
-                _frameTimes.RemoveAt(0);
-            var rate = 1 / elapsedTime;
-            _frameTimes.Add(rate);
-
-            if ((DateTime.Now - _lastBytesUpdate).TotalMilliseconds > 1000)
-            {
-                var netStats = UpdateBps();
-                Console.Title = string.Format("FPS: {0:N2} | Net: ({1}) | Memory: {2:N0} KiB",
-                    Math.Round(FrameTimeAverage(), 2),
-                    netStats,
-                    Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
-                _lastBytesUpdate = DateTime.Now;
-            }
-
-            IoCManager.Resolve<IServerNetManager>().ProcessPackets();
-
-            //Update takes elapsed time in seconds.
-            Update(elapsedTime);
-
-            IoCManager.Resolve<IConsoleManager>().Update();
-        }
-
         private static void Cleanup()
         {
             Console.Title = "";
@@ -372,26 +447,18 @@ namespace SS14.Server
             return bps;
         }
 
-        private float FrameTimeAverage()
-        {
-            if (_frameTimes.Count == 0)
-                return 0;
-            return _frameTimes.Average(p => p);
-        }
-
         private void Update(float frameTime)
         {
+            IoCManager.Resolve<IServerNetManager>().ProcessPackets();
+
             switch (Level)
             {
                 case RunLevel.Game:
 
                     _components.Update(frameTime);
                     _entities.Update(frameTime);
-                    var start = _stopWatch.ElapsedTicks;
-                    var end = _stopWatch.ElapsedTicks;
-                    var atmosTime = (end - start) / (float) Stopwatch.Frequency * 1000;
+
                     IoCManager.Resolve<IRoundManager>().CurrentGameMode.Update();
-                    GC.KeepAlive(atmosTime);
 
                     break;
 
@@ -409,65 +476,58 @@ namespace SS14.Server
                         StartGame();
                     break;
             }
-            _lastUpdate = _time;
+
             SendGameStateUpdate();
+            IoCManager.Resolve<IConsoleManager>().Update();
         }
 
-        private void SendGameStateUpdate(bool force = false, bool forceFullState = false)
+        private void SendGameStateUpdate(bool forceFullState = false)
         {
-            //Obey the updates per second limit
-            var elapsed = _time - _lastStateTime;
-            if (force || elapsed.TotalMilliseconds > _serverRate)
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+
+            //Create a new GameState object
+            var stateManager = IoCManager.Resolve<IGameStateManager>();
+            var state = new GameState(_time.CurTick);
+            if (_entities != null)
+                state.EntityStates = _entities.GetEntityStates();
+            state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
+            stateManager.Add(state.Sequence, state);
+
+            //_log.Log("Update " + _lastState + " sent.");
+            var connections = netMan.Channels;
+            if (!connections.Any())
             {
-                var netMan = IoCManager.Resolve<IServerNetManager>();
-
-                //Save last state time
-                _lastStateTime = _time;
-                //Create a new GameState object
-                var stateManager = IoCManager.Resolve<IGameStateManager>();
-                var state = new GameState(++_lastState);
-                if (_entities != null)
-                    state.EntityStates = _entities.GetEntityStates();
-                state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
-                stateManager.Add(state.Sequence, state);
-
-                //_log.Log("Update " + _lastState + " sent.");
-                var connections = netMan.Channels;
-                if (!connections.Any())
-                {
-                    //No clients -- don't send state
-                    _oldestAckedState = _lastState;
-                    stateManager.Clear();
-                }
-                else
-                {
-                    foreach (var c in connections)
-                        if (c.Connection.Status == NetConnectionStatus.Connected)
-                        {
-                            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
-                            if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
-                                continue;
-                            var stateMessage = netMan.Peer.CreateMessage();
-                            var lastStateAcked = stateManager.GetLastStateAcked(c);
-
-                            if (lastStateAcked == 0) // || forceFullState)
-                            {
-                                state.WriteStateMessage(stateMessage);
-                                //_log.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
-                            }
-                            else
-                            {
-                                stateMessage.Write((byte) NetMessages.StateUpdate);
-                                var delta = stateManager.GetDelta(c, _lastState);
-                                delta.WriteDelta(stateMessage);
-                                //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
-                            }
-
-                            netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
-                        }
-                }
-                stateManager.Cull();
+                //No clients -- don't send state
+                stateManager.CullAll();
             }
+            else
+            {
+                foreach (var c in connections)
+                    if (c.Connection.Status == NetConnectionStatus.Connected)
+                    {
+                        var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
+                        if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
+                            continue;
+                        var stateMessage = netMan.Peer.CreateMessage();
+                        var lastStateAcked = stateManager.GetLastStateAcked(c);
+
+                        if (lastStateAcked == 0) // || forceFullState)
+                        {
+                            state.WriteStateMessage(stateMessage);
+                            //_log.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
+                        }
+                        else
+                        {
+                            stateMessage.Write((byte) NetMessages.StateUpdate);
+                            var delta = stateManager.GetDelta(c, _time.CurTick);
+                            delta.WriteDelta(stateMessage);
+                            //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
+                        }
+
+                        netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+                    }
+            }
+            stateManager.Cull();
         }
 
         #region MessageProcessing

@@ -1,10 +1,12 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using System;
-using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
 {
@@ -15,12 +17,13 @@ namespace SS14.Shared.GameObjects
         #region Members
 
         /// <summary>
-        /// Holds this entity's components
+        /// Holds this entity's components. Indexed by reference type. As such the values will contain duplicates.
         /// </summary>
-        private readonly Dictionary<ComponentFamily, IComponent> _components =
-            new Dictionary<ComponentFamily, IComponent>();
+        private readonly Dictionary<Type, IComponent> _componentReferences = new Dictionary<Type, IComponent>();
+        private readonly Dictionary<uint, IComponent> _netIDs = new Dictionary<uint, IComponent>();
+        private readonly List<IComponent> _components = new List<IComponent>();
 
-        protected List<Type> ComponentTypes = new List<Type>();
+        public IComponentFactory ComponentFactory { get; private set; }
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
         public IEntityManager EntityManager { get; private set; }
 
@@ -33,25 +36,24 @@ namespace SS14.Shared.GameObjects
 
         #endregion Members
 
-        public Entity(IEntityManager entityManager, IEntityNetworkManager networkManager)
+        public Entity(IEntityManager entityManager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
             EntityManager = entityManager;
             EntityNetworkManager = networkManager;
-            var name = Assembly.GetEntryAssembly().GetName().Name;
-            if (name == "SS14.Client")
-            {
-                Initialize();
-            }
+            ComponentFactory = componentFactory;
         }
 
         #region Initialization
+
+        public virtual void LoadData(YamlMappingNode parameters)
+        {
+        }
 
         /// <summary>
         /// Sets up variables and shite
         /// </summary>
         public virtual void Initialize()
         {
-            SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
 
@@ -63,11 +65,11 @@ namespace SS14.Shared.GameObjects
         {
             //LogComponentMessage(sender, type, args);
 
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents())
             {
-                if (_components.ContainsValue(component))
+                if (_components.Contains(component))
                     //Check to see if the component is still a part of this entity --- collection may change in process.
-                    component.RecieveMessage(sender, type, args);
+                    component.ReceiveMessage(sender, type, args);
             }
         }
 
@@ -82,39 +84,28 @@ namespace SS14.Shared.GameObjects
         {
             //LogComponentMessage(sender, type, args);
 
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents())
             {
                 //Check to see if the component is still a part of this entity --- collection may change in process.
-                if (_components.ContainsValue(component))
+                if (_components.Contains(component))
                 {
                     if (replies != null)
                     {
-                        ComponentReplyMessage reply = component.RecieveMessage(sender, type, args);
+                        ComponentReplyMessage reply = component.ReceiveMessage(sender, type, args);
                         if (reply.MessageType != ComponentMessageType.Empty)
                             replies.Add(reply);
                     }
                     else
-                        component.RecieveMessage(sender, type, args);
+                        component.ReceiveMessage(sender, type, args);
                 }
             }
         }
 
-        public ComponentReplyMessage SendMessage(object sender, ComponentFamily family, ComponentMessageType type,
-                                                 params object[] args)
-        {
-            //LogComponentMessage(sender, type, args);
-
-            if (HasComponent(family))
-                return GetComponent<Component>(family).RecieveMessage(sender, type, args);
-
-            return ComponentReplyMessage.Empty;
-        }
-
         protected void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            if (GetComponentFamilies().Contains(message.ComponentFamily))
+            if (_netIDs.TryGetValue(message.NetID, out IComponent component))
             {
-                GetComponent<Component>(message.ComponentFamily).HandleNetworkMessage(message, client);
+                component.HandleNetworkMessage(message, client);
             }
         }
 
@@ -128,10 +119,14 @@ namespace SS14.Shared.GameObjects
         /// <param name="component">Sending component</param>
         /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        public void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                 params object[] messageParams)
         {
-            EntityNetworkManager.SendComponentNetworkMessage(this, component.Family, NetDeliveryMethod.ReliableUnordered,
+            if (component.NetID == null)
+            {
+                throw new ArgumentException("Component has no Net ID and cannot be used across the network.");
+            }
+            EntityNetworkManager.SendComponentNetworkMessage(this, component.NetID.Value, NetDeliveryMethod.ReliableUnordered,
                                                              messageParams);
         }
 
@@ -142,12 +137,20 @@ namespace SS14.Shared.GameObjects
         /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendDirectedComponentNetworkMessage(Component component, NetDeliveryMethod method,
+        public void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
                                                         NetConnection recipient, params object[] messageParams)
         {
+            if (component.NetID == null)
+            {
+                throw new ArgumentException("Component has no Net ID and cannot be used across the network.");
+            }
+
             if (!Initialized)
+            {
                 return;
-            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.Family,
+            }
+
+            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.NetID.Value,
                                                                      method, recipient,
                                                                      messageParams);
         }
@@ -163,21 +166,7 @@ namespace SS14.Shared.GameObjects
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
                     break;
-                case EntityMessage.ComponentInstantiationMessage: //Server Only
-                    HandleComponentInstantiationMessage(message);
-                    break;
             }
-        }
-
-        /// <summary>
-        /// Server-side method to handle instantiation messages from client-side components
-        /// asking for initialization data
-        /// </summary>
-        /// <param name="message">Message from client</param>
-        protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
-        {
-            if (HasComponent((ComponentFamily)message.Message))
-                GetComponent<Component>((ComponentFamily)message.Message).HandleInstantiationMessage(message.Sender);
         }
 
         #endregion Network messaging
@@ -224,30 +213,9 @@ namespace SS14.Shared.GameObjects
 
         #region Entity Systems
 
-        /// <summary>
-        /// Match
-        ///
-        /// Allows us to fetch entities with a defined SET of components
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
         public bool Match(IEntityQuery query)
         {
-            // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
-            if (!(query.ExclusionSet.Any() || query.OneSet.Any() || query.AllSet.Any()))
-                return true;
-
-            //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            bool matched =
-                !(query.ExclusionSet.Any() && query.ExclusionSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)));
-
-            //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
-            if (matched && query.AllSet.Any() && query.AllSet.Any(t => !ComponentTypes.Any(t.IsAssignableFrom)))
-                matched = false;
-            //If the entity matches so far, and it matches the ONE set, it matches.
-            if (matched && query.OneSet.Any() && !query.OneSet.Any(t => ComponentTypes.Any(t.IsAssignableFrom)))
-                matched = false;
-            return matched;
+            return query.Match(this);
         }
 
         #endregion Entity Systems
@@ -260,13 +228,47 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="family">the family of component -- there can only be one at a time per family.</param>
         /// <param name="component">The component.</param>
-        public void AddComponent(ComponentFamily family, IComponent component)
+        public void AddComponent(IComponent component)
         {
-            if (_components.Keys.Contains(family))
-                RemoveComponent(family);
-            _components.Add(family, component);
+            AddComponent(component, overwrite: false);
+        }
+
+        private void AddComponent(IComponent component, bool overwrite)
+        {
+            if (component.Owner != null)
+            {
+                throw new ArgumentException("Component already has an owner");
+            }
+            IComponentRegistration reg = IoCManager.Resolve<IComponentFactory>().GetRegistration(component);
+
+            // Check that there are no overlapping references.
+            foreach (Type t in reg.References)
+            {
+                if (_componentReferences.TryGetValue(t, out var duplicate))
+                {
+                    if (!overwrite)
+                    {
+                        throw new InvalidOperationException($"Component reference type {t} already occupied by {duplicate}");
+                    }
+                    else
+                    {
+                        RemoveComponent(t);
+                    }
+                }
+            }
+
+            _components.Add(component);
+            foreach (Type t in reg.References)
+            {
+                _componentReferences[t] = component;
+            }
+
+            if (component.NetID != null)
+            {
+                _netIDs[component.NetID.Value] = component;
+            }
+
             component.OnAdd(this);
-            UpdateComponentTypes();
         }
 
         /// <summary>
@@ -275,65 +277,112 @@ namespace SS14.Shared.GameObjects
         /// from the component manager and shutting down the component.
         /// </summary>
         /// <param name="family"></param>
-        public void RemoveComponent(ComponentFamily family)
+        public void RemoveComponent(IComponent component)
         {
-            if (!_components.Keys.Contains(family)) return;
-            UpdateComponentTypes();
-            EntityManager.RemoveSubscribedEvents(_components[family]);
-            _components[family].OnRemove();
-            _components.Remove(family);
+            if (component.Owner != this)
+            {
+                throw new InvalidOperationException("Component is not owned by us");
+            }
+
+            IComponentRegistration reg = IoCManager.Resolve<IComponentFactory>().GetRegistration(component);
+
+            EntityManager.RemoveSubscribedEvents(component);
+            component.OnRemove();
+            _components.Remove(component);
+
+            foreach (Type t in reg.References)
+            {
+                _componentReferences.Remove(t);
+            }
+
+            if (component.NetID != null)
+            {
+                _netIDs.Remove(component.NetID.Value);
+            }
         }
 
-        /// <summary>
-        /// Checks to see if a component of a certain family exists
-        /// </summary>
-        /// <param name="family">componentfamily to check</param>
-        /// <returns>true if component exists, false otherwise</returns>
-        public bool HasComponent(ComponentFamily family)
+        private void RemoveComponent(Type type)
         {
-            return _components.ContainsKey(family);
+            RemoveComponent(GetComponent(type));
         }
 
-        public T GetComponent<T>(ComponentFamily family) where T : class
+        public void RemoveComponent<T>() where T : IComponent
         {
-            if (GetComponent(family) is T)
-                return (T)GetComponent(family);
-            return null;
+            RemoveComponent(GetComponent<T>());
         }
 
-        /// <summary>
-        /// Gets the component of the specified family, if it exists
-        /// </summary>
-        /// <param name="family">componentfamily to get</param>
-        /// <returns></returns>
-        public IComponent GetComponent(ComponentFamily family)
+        public bool HasComponent<T>() where T : IComponent
         {
-            return _components.ContainsKey(family) ? _components[family] : null;
+            return HasComponent(typeof(T));
+        }
+
+        public bool HasComponent(Type type)
+        {
+            return _componentReferences.ContainsKey(type);
+        }
+
+        public bool HasComponent(uint netID)
+        {
+            return _netIDs.ContainsKey(netID);
+        }
+
+        public T GetComponent<T>() where T : IComponent
+        {
+            return (T)_componentReferences[typeof(T)];
+        }
+
+        public IComponent GetComponent(Type type)
+        {
+            return _componentReferences[type];
+        }
+
+        public IComponent GetComponent(uint netID)
+        {
+            return _netIDs[netID];
+        }
+
+        public bool TryGetComponent<T>(out T component) where T : class, IComponent
+        {
+            if (!_componentReferences.ContainsKey(typeof(T)))
+            {
+                component = null;
+                return false;
+            }
+            component = (T)_componentReferences[typeof(T)];
+            return true;
+        }
+
+        public bool TryGetComponent(Type type, out IComponent component)
+        {
+            return _componentReferences.TryGetValue(type, out component);
+        }
+
+        public bool TryGetComponent(uint netID, out IComponent component)
+        {
+            return _netIDs.TryGetValue(netID, out component);
         }
 
         public virtual void Shutdown()
         {
-            foreach (IComponent component in _components.Values)
+            foreach (IComponent component in _components)
             {
                 component.Shutdown();
             }
             _components.Clear();
-            ComponentTypes.Clear();
+            _netIDs.Clear();
+            _componentReferences.Clear();
+            var componentmanager = IoCManager.Resolve<IComponentManager>();
+            componentmanager.Cull();
         }
 
-        public List<IComponent> GetComponents()
+        public IEnumerable<IComponent> GetComponents()
         {
-            return _components.Values.ToList();
+            return _components;
         }
 
-        public List<ComponentFamily> GetComponentFamilies()
+        public IEnumerable<T> GetComponents<T>() where T : IComponent
         {
-            return _components.Keys.ToList();
-        }
-
-        protected void UpdateComponentTypes()
-        {
-            ComponentTypes = _components.Values.Select(t => t.GetType()).ToList();
+            return _components.OfType<T>();
         }
 
         #endregion Components
@@ -346,33 +395,32 @@ namespace SS14.Shared.GameObjects
         /// <param name="state"></param>
         public void HandleEntityState(EntityState state)
         {
-            /*if(Position.X != state.StateData.Position.X || Position.Y != state.StateData.Position.Y)
-            {
-                Position = state.StateData.Position;
-                Moved();
-            }*/
             Name = state.StateData.Name;
             var synchedComponentTypes = state.StateData.SynchedComponentTypes;
             foreach (var t in synchedComponentTypes)
             {
                 if (HasComponent(t.Item1) && GetComponent(t.Item1).Name != t.Item2)
-                    RemoveComponent(t.Item1);
+                {
+                    RemoveComponent(GetComponent(t.Item1));
+                }
 
                 if (!HasComponent(t.Item1))
-                    AddComponent(t.Item1, IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2));
+                {
+                    AddComponent(IoCManager.Resolve<IComponentFactory>().GetComponent(t.Item2), overwrite: true);
+                }
             }
-            foreach (ComponentState compState in state.ComponentStates)
+
+            foreach (var compState in state.ComponentStates)
             {
                 compState.ReceivedTime = state.ReceivedTime;
-                if (HasComponent(compState.Family))
-                {
-                    IComponent comp = GetComponent(compState.Family);
-                    Type stateType = comp.StateType;
-                    if (compState.GetType() == stateType)
-                    {
-                        comp.HandleComponentState(compState);
-                    }
-                }
+
+                if (!TryGetComponent(compState.NetID, out var component))
+                    continue;
+
+                if (compState.GetType() != component.StateType)
+                    throw new InvalidOperationException($"Incorrect component state type: {component.StateType}, component: {component.GetType()}");
+
+                component.HandleComponentState(compState);
             }
         }
 
@@ -383,12 +431,10 @@ namespace SS14.Shared.GameObjects
         public EntityState GetEntityState()
         {
             List<ComponentState> compStates = GetComponentStates();
-
-            List<Tuple<ComponentFamily, string>> synchedComponentTypes = _components
-                .Where(t => EntityManager.SynchedComponentTypes.Contains(t.Key))
-                .Select(
-                    t => new Tuple<ComponentFamily, string>(t.Key, t.Value.Name)
-                ).ToList();
+            List<Tuple<uint, string>> synchedComponentTypes = _netIDs
+                .Where(t => t.Value.NetworkSynchronizeExistence)
+                .Select(t => new Tuple<uint, string>(t.Key, t.Value.Name))
+                .ToList();
 
             var es = new EntityState(
                 Uid,
@@ -406,7 +452,7 @@ namespace SS14.Shared.GameObjects
         private List<ComponentState> GetComponentStates()
         {
             var stateComps = new List<ComponentState>();
-            foreach (Component component in GetComponents())
+            foreach (IComponent component in GetComponents().Where(c => c.NetID != null))
             {
                 ComponentState componentState = component.GetComponentState();
                 stateComps.Add(componentState);

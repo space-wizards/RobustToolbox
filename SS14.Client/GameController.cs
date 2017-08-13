@@ -5,7 +5,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.MessageLogging;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -19,12 +18,15 @@ using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Utility;
 using SS14.Shared.Prototypes;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client
@@ -45,15 +47,15 @@ namespace SS14.Client
         [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
-        readonly private IResourceManager _resourceManager;
-        [Dependency]
-        readonly private IMessageLogger _messageLogger;
-        [Dependency]
-        readonly private IEntityNetworkManager _entityNetworkManager;
+        readonly private IResourceCache _resourceCache;
         [Dependency]
         readonly private ITileDefinitionManager _tileDefinitionManager;
         [Dependency]
         readonly private ISS14Serializer _serializer;
+        [Dependency]
+        private readonly IGameTiming _time;
+        [Dependency]
+        private readonly IResourceManager _resourceManager;
         [Dependency]
         private readonly IMapManager _mapManager;
 
@@ -62,29 +64,39 @@ namespace SS14.Client
         #region Methods
 
         #region Constructors
+
+        private TimeSpan _lastTick;
+        private TimeSpan _lastKeepUpAnnounce;
+
         public void Run()
         {
             Logger.Debug("Initializing GameController.");
 
-            ShowSplashScreen();
-
             _configurationManager.LoadFromFile(PathHelpers.ExecutableRelativeFile("client_config.toml"));
 
-            _resourceManager.LoadBaseResources();
-            _resourceManager.LoadLocalResources();
+            _resourceCache.LoadBaseResources();
+            // Load resources used by splash screen and main menu.
+            LoadSplashResources();
+            ShowSplashScreen();
+
+            _resourceCache.LoadLocalResources();
+
+            LoadContentAssembly<GameShared>("Shared");
+            LoadContentAssembly<GameClient>("Client");
+
+            // Call Init in game assemblies.
+            AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             //Setup Cluwne first, as the rest depends on it.
             SetupCluwne();
             CleanupSplashScreen();
 
             //Initialization of private members
-            _messageLogger.Initialize();
-            _entityNetworkManager.Initialize();
             _tileDefinitionManager.InitializeResources();
 
             _serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Prototypes"));
+            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
             prototypeManager.Resync();
             _networkManager.Initialize(false);
             _netGrapher.Initialize();
@@ -93,25 +105,172 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            FrameEventArgs _frameEvent;
-            // EventArgs _frameEventArgs;
-            var _clock = new Clock();
+            #region GameLoop
+
+            // maximum number of ticks to queue before the loop slows down.
+            const int maxTicks = 5;
+
+            _time.ResetRealTime();
+            var maxTime = TimeSpan.FromTicks(_time.TickPeriod.Ticks * maxTicks);
 
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = _clock.ElapsedTime.AsSeconds();
-                _clock.Restart();
-                _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
-                CluwneLib.Screen.DispatchEvents();
-                CluwneLib.RunIdle(this, _frameEvent);
-                CluwneLib.Screen.Display();
+                var accumulator = _time.RealTime - _lastTick;
+
+                // If the game can't keep up, limit time.
+                if (accumulator > maxTime)
+                {
+                    // limit accumulator to max time.
+                    accumulator = maxTime;
+
+                    // pull lastTick up to the current realTime
+                    // This will slow down the simulation, but if we are behind from a
+                    // lag spike hopefully it will be able to catch up.
+                    _lastTick = _time.RealTime - maxTime;
+
+                    // announce we are falling behind
+                    if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
+                    {
+                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
+                        _lastKeepUpAnnounce = _time.RealTime;
+                    }
+                }
+
+                _time.StartFrame();
+
+                var realFrameEvent = new FrameEventArgs((float)_time.RealFrameTime.TotalSeconds);
+
+                // process Net/KB/Mouse input
+                Process(realFrameEvent);
+
+                _time.InSimulation = true;
+                // run the simulation for every accumulated tick
+                while (accumulator >= _time.TickPeriod)
+                {
+                    accumulator -= _time.TickPeriod;
+                    _lastTick += _time.TickPeriod;
+
+                    // only run the sim if unpaused, but still use up the accumulated time
+                    if (!_time.Paused)
+                    {
+                        // update the simulation
+                        var simFrameEvent = new FrameEventArgs((float) _time.FrameTime.TotalSeconds);
+                        Update(simFrameEvent);
+                        _time.CurTick++;
+                    }
+                }
+
+                // if not paused, save how close to the next tick we are so interpolation works
+                if (!_time.Paused)
+                    _time.TickRemainder = accumulator;
+
+                _time.InSimulation = false;
+
+                // render the simulation
+                Render(realFrameEvent);
             }
+
+            #endregion
+
             _networkManager.ClientDisconnect("Client disconnected from game.");
             CluwneLib.Terminate();
             Logger.Info("GameController terminated.");
 
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
+        }
+
+        private void LoadContentAssembly<T>(string name) where T: GameShared
+        {
+            // get the assembly from the file system
+            if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            {
+                Logger.Debug($"[SRV] Loading {name} Content DLL");
+
+                // see if debug info is present
+                if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // load the assembly into the process, and bootstrap the GameServer entry point.
+                        AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+            }
+        }
+
+        /// <summary>
+        /// Processes all simulation I/O. Keyboard/Mouse/Network code gets called here.
+        /// </summary>
+        private void Process(FrameEventArgs e)
+        {
+            //TODO: Keyboard/Mouse input needs to be processed here.
+
+        }
+
+        /// <summary>
+        /// Runs a tick of the simulation.
+        /// </summary>
+        /// <param name="e">Current GameTiming.FrameTime</param>
+        private void Update(FrameEventArgs e)
+        {
+            _networkManager.ProcessPackets();
+            CluwneLib.RunIdle(this, e);
+            _stateManager.Update(e);
+        }
+
+        /// <summary>
+        /// Renders the view of the simulation.
+        /// </summary>
+        /// <param name="e">Current GameTiming.RealFrameTime</param>
+        private void Render(FrameEventArgs e)
+        {
+            CluwneLib.ClearCurrentRendertarget(Color.Black);
+            CluwneLib.Screen.DispatchEvents();
+
+            // draw everything
+            _stateManager.Render(e);
+
+            // interface runs in realtime, so it is updated here
+            _userInterfaceManager.Update(e);
+
+            _userInterfaceManager.Render(e);
+
+            _netGrapher.Update();
+
+            // swap buffers to show the screen
+            CluwneLib.Screen.Display();
+        }
+
+        private void LoadSplashResources()
+        {
+            var logoTexture = _resourceCache.LoadTextureFrom("ss14_logo", _resourceManager.ContentFileRead(@"Textures/Logo/logo.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo", logoTexture);
+
+            var backgroundTexture = _resourceCache.LoadTextureFrom("ss14_logo_background", _resourceManager.ContentFileRead(@"Textures/Logo/background.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo_background", backgroundTexture);
+
+            var nanotrasenTexture = _resourceCache.LoadTextureFrom("ss14_logo_nt", _resourceManager.ContentFileRead(@"Textures/Logo/nanotrasen.png"));
+            _resourceCache.LoadSpriteFromTexture("ss14_logo_nt", nanotrasenTexture);
         }
 
         private void ShowSplashScreen()
@@ -121,27 +280,19 @@ namespace SS14.Client
 #if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
-            // Size of the NT logo in the bottom left.
+            // Size of the NT logo in the bottom right.
             const float NT_SIZE_X = SIZE_X / 10f;
             const float NT_SIZE_Y = SIZE_Y / 10f;
             CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
 
-            var assembly = Assembly.GetExecutingAssembly();
+            var logo = _resourceCache.GetSprite("ss14_logo");
+            logo.Position = new Vector2f(SIZE_X / 2 - logo.TextureRect.Width / 2, SIZE_Y / 2 - logo.TextureRect.Height / 2);
 
-            var logoTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.logo.png"));
-            var logo = new SFML.Graphics.Sprite(logoTexture);
-            var logoSize = logoTexture.Size;
-            logo.Position = new Vector2f(SIZE_X / 2 - logoSize.X / 2, SIZE_Y / 2 - logoSize.Y / 2);
+            var background = _resourceCache.GetSprite("ss14_logo_background");
+            background.Scale = new Vector2f((float)SIZE_X / background.TextureRect.Width, (float)SIZE_Y / background.TextureRect.Height);
 
-            var backgroundTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.background.png"));
-            var background = new SFML.Graphics.Sprite(backgroundTexture);
-            var backgroundSize = backgroundTexture.Size;
-            background.Scale = new Vector2f((float)SIZE_X / backgroundSize.X, (float)SIZE_Y / backgroundSize.Y);
-
-            var nanotrasenTexture = new Texture(assembly.GetManifestResourceStream("SS14.Client._EmbeddedBaseResources.Logo.nanotrasen.png"));
-            var nanotrasen = new SFML.Graphics.Sprite(nanotrasenTexture);
-            var nanotrasenSize = nanotrasenTexture.Size;
-            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasenSize.X, NT_SIZE_Y / nanotrasenSize.Y);
+            var nanotrasen = _resourceCache.GetSprite("ss14_logo_nt");
+            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasen.TextureRect.Width, NT_SIZE_Y / nanotrasen.TextureRect.Height);
             nanotrasen.Position = new Vector2f(SIZE_X - NT_SIZE_X - 5, SIZE_Y - NT_SIZE_Y - 5);
             nanotrasen.Color = new Color(255, 255, 255, 64);
 
@@ -165,17 +316,6 @@ namespace SS14.Client
 
         #region EventHandlers
 
-        private void CluwneLibIdle(object sender, FrameEventArgs e)
-        {
-            _networkManager.ProcessPackets();
-            _stateManager.Update(e);
-
-            _userInterfaceManager.Update(e);
-            _userInterfaceManager.Render(e);
-
-            _netGrapher.Update();
-        }
-
         private void MainWindowLoad(object sender, EventArgs e)
         {
             _stateManager.RequestStateChange<MainScreen>();
@@ -195,7 +335,7 @@ namespace SS14.Client
             CluwneLib.Stop();
         }
 
-        #region Input Handling
+#region Input Handling
 
         /// <summary>
         /// Handles any keydown events.
@@ -300,11 +440,11 @@ namespace SS14.Client
                 _stateManager.TextEntered(e);
         }
 
-        #endregion Input Handling
+#endregion Input Handling
 
-        #endregion EventHandlers
+#endregion EventHandlers
 
-        #region Privates
+#region Privates
 
         bool onetime = true;
 
@@ -329,7 +469,6 @@ namespace SS14.Client
             {
                 //every time the video settings change we close the old screen and create a new one
                 //SetupCluwne Gets called to reset the event handlers to the new screen
-                CluwneLib.FrameEvent += CluwneLibIdle;
                 CluwneLib.RefreshVideoSettings += SetupCluwne;
                 onetime = false;
             }
@@ -351,8 +490,8 @@ namespace SS14.Client
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
 
-        #endregion Privates
+#endregion Privates
 
-        #endregion Methods
+#endregion Methods
     }
 }

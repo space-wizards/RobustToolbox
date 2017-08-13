@@ -34,7 +34,7 @@ namespace SS14.Shared.Map
             /*
             foreach (var item in tileDefs)
             {
-                item.InitializeResources(resourceManager);
+                item.InitializeResources(resourceCache);
             }
             */
         }

@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SFML.Window;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Network;
@@ -10,6 +11,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
@@ -52,11 +54,15 @@ namespace SS14.Client.Player
             var factory = IoCManager.Resolve<IComponentFactory>();
 
             ControlledEntity = newEntity;
-            ControlledEntity.AddComponent(ComponentFamily.Input, factory.GetComponent<KeyBindingInputComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Mover, factory.GetComponent<PlayerInputMoverComponent>());
-            ControlledEntity.AddComponent(ComponentFamily.Collider, factory.GetComponent<ColliderComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            if (ControlledEntity.HasComponent<IMoverComponent>())
+            {
+                ControlledEntity.RemoveComponent<IMoverComponent>();
+            }
+            ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
 
-            ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).OnMove += PlayerEntityMoved;
+            ControlledEntity.GetComponent<ITransformComponent>().OnMove += PlayerEntityMoved;
         }
 
         public void ApplyEffects(RenderImage image)
@@ -71,12 +77,14 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                ControlledEntity.RemoveComponent(ComponentFamily.Input);
-                ControlledEntity.RemoveComponent(ComponentFamily.Mover);
-                ControlledEntity.RemoveComponent(ComponentFamily.Collider);
-                var transform = ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform);
+                ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
+                ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
+                ControlledEntity.RemoveComponent<CollidableComponent>();
+                var transform = ControlledEntity.GetComponent<ITransformComponent>();
                 if (transform != null)
+                {
                     transform.OnMove -= PlayerEntityMoved;
+                }
             }
             ControlledEntity = null;
         }

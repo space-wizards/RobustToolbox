@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Import Project="..\MSBuild\SS14.Properties.targets" />
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{302B877E-0000-0000-0000-000000000000}</ProjectGuid>
@@ -21,6 +22,7 @@
     </FileUpgradeFlags>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <TargetFrameworkProfile />
+    <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,7 +33,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\Graphics\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
@@ -46,20 +48,20 @@
     <DefineConstants>TRACE</DefineConstants>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp">
       <Name>Microsoft.CSharp</Name>
     </Reference>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Third-Party\extlibs\OpenTK.dll</HintPath>
+    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="sfmlnet-graphics-2">
       <Name>sfmlnet-graphics-2</Name>
@@ -121,9 +123,6 @@
     <Compile Include="Sprite\TextSprite.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Timing\TimingData.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="VertexData\VertexEnums.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -147,19 +146,23 @@
       <Name>SS14.Shared</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetOS)' == 'Windows'">
+    <Content Include="..\Third-Party\extlibs\csfml-graphics-2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Third-Party\extlibs\csfml-system-2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Third-Party\extlibs\csfml-window-2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
-    <Content Include="csfml-graphics-2.dll">
+    <None Include="app.config" />
+    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="csfml-network-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="csfml-system-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="csfml-window-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

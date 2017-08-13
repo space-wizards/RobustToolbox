@@ -8,8 +8,8 @@ using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.GameTimer;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
@@ -18,13 +18,14 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Helpers;
 using SS14.Client.Lighting;
 using SS14.Client.UserInterface.Components;
-using SS14.Client.UserInterface.Inventory;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Maths;
 using SS14.Shared.Serialization;
 using System;
@@ -35,7 +36,9 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Client.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
+using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.State.States
 {
@@ -90,19 +93,13 @@ namespace SS14.Client.State.States
 
         private MenuWindow _menu;
         private Chatbox _gameChat;
-        private HandsGui _handsGui;
-        private HumanComboGui _combo;
-        private HealthPanel _healthPanel;
-        private ImageButton _inventoryButton;
-        private ImageButton _statusButton;
-        private ImageButton _menuButton;
         #endregion UI Variables
 
         #region Lighting
         private Sprite _lightTargetIntermediateSprite;
         private Sprite _lightTargetSprite;
 
-        private bool bPlayerVision = true;
+        private bool bPlayerVision = false;
         private bool bFullVision = false;
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
@@ -141,6 +138,11 @@ namespace SS14.Client.State.States
 
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
         {
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                // Disable lighting on non-Windows versions by default because the rendering is broken.
+                bFullVision = true;
+            }
         }
 
         #region IState Members
@@ -174,12 +176,12 @@ namespace SS14.Client.State.States
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
             var message1 = NetworkManager.Peer.CreateMessage();
-            message1.Write((byte) NetMessages.ClientName);
+            message1.Write((byte)NetMessages.ClientName);
             message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
             NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
-            _gaussianBlur = new GaussianBlur(ResourceManager);
+            _gaussianBlur = new GaussianBlur(ResourceCache);
 
             _realScreenWidthTiles = (float)CluwneLib.Screen.Size.X / MapManager.TileSize;
             _realScreenHeightTiles = (float)CluwneLib.Screen.Size.Y / MapManager.TileSize;
@@ -275,21 +277,6 @@ namespace SS14.Client.State.States
         private void UpdateGUIPosition()
         {
             _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
-
-            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
-
-            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
-
-            // 712 is width of hotbar background I think?
-            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
-                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
-
-            _healthPanel.Position = new Vector2i(712 - 1, hotbar_pos_y + 11);
-
-            _inventoryButton.Position = new Vector2i(172, hotbar_pos_y + 2);
-            _statusButton.Position = new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y);
-
-            _menuButton.Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y);
         }
 
         private void InitializeGUI()
@@ -300,62 +287,15 @@ namespace SS14.Client.State.States
             _menu.SetVisible(false);
 
             //Init GUI components
-            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceManager);
+            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             UserInterfaceManager.AddComponent(_gameChat);
-
-            //UserInterfaceManager.AddComponent(new StatPanelComponent(ConfigurationManager.GetPlayerName(), PlayerManager, NetClientManager, ResourceManager));
-
-            int hotbar_pos_y = (int)CluwneLib.Screen.Size.Y - 88;
-
-            _handsGui = new HandsGui();
-            _handsGui.Position = new Vector2i(5, hotbar_pos_y + 7);
-            UserInterfaceManager.AddComponent(_handsGui);
-
-            _combo = new HumanComboGui(PlayerManager, NetworkManager, ResourceManager, UserInterfaceManager);
-            _combo.Position = new Vector2i(712 - _combo.ClientArea.Width + 5,
-                                       hotbar_pos_y - _combo.ClientArea.Height - 5);
-            _combo.Update(0);
-            UserInterfaceManager.AddComponent(_combo);
-
-            _healthPanel = new HealthPanel();
-            _healthPanel.Position = new Vector2i(711, hotbar_pos_y + 11);
-            _healthPanel.Update(0);
-            UserInterfaceManager.AddComponent(_healthPanel);
-
-            _inventoryButton = new ImageButton
-            {
-                ImageNormal = "button_inv",
-                Position = new Vector2i(172, hotbar_pos_y + 2)
-            };
-            _inventoryButton.Update(0);
-            _inventoryButton.Clicked += inventoryButton_Clicked;
-            UserInterfaceManager.AddComponent(_inventoryButton);
-
-            _statusButton = new ImageButton
-            {
-                ImageNormal = "button_status",
-                Position =
-                    new Vector2i(_inventoryButton.ClientArea.Right(), _inventoryButton.Position.Y)
-            };
-            _statusButton.Update(0);
-            _statusButton.Clicked += statusButton_Clicked;
-            UserInterfaceManager.AddComponent(_statusButton);
-
-            _menuButton = new ImageButton
-            {
-                ImageNormal = "button_menu",
-                Position = new Vector2i(_statusButton.ClientArea.Right(), _statusButton.Position.Y)
-            };
-            _menuButton.Update(0);
-            _menuButton.Clicked += menuButton_Clicked;
-            UserInterfaceManager.AddComponent(_menuButton);
         }
 
         private void InitalizeLighting()
         {
             shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024,
-                                                      ResourceManager);
+                                                      ResourceCache);
             shadowMapResolver.LoadContent();
             lightArea128 = new LightArea(ShadowmapSize.Size128);
             lightArea256 = new LightArea(ShadowmapSize.Size256);
@@ -379,8 +319,8 @@ namespace SS14.Client.State.States
             _cleanupList.Add(playerOcclusionTarget);
             playerOcclusionTarget.UseDepthBuffer = false;
 
-            LightblendTechnique = IoCManager.Resolve<IResourceManager>().GetTechnique("lightblend");
-            Lightmap = IoCManager.Resolve<IResourceManager>().GetShader("lightmap");
+            LightblendTechnique = IoCManager.Resolve<IResourceCache>().GetTechnique("lightblend");
+            Lightmap = IoCManager.Resolve<IResourceCache>().GetShader("lightmap");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Blue);
@@ -404,7 +344,6 @@ namespace SS14.Client.State.States
 
             CluwneLib.TileSize = (int) MapManager.TileSize;
 
-            IoCManager.Resolve<IGameTimer>().UpdateTime(e.FrameDeltaTime);
             _componentManager.Update(e.FrameDeltaTime);
             _entityManager.Update(e.FrameDeltaTime);
             PlacementManager.Update(MousePosScreen, MapManager);
@@ -412,7 +351,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -521,14 +460,12 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _componentManager.GetComponents(ComponentFamily.Collider)
-                    .OfType<ColliderComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
                 var collidables =
-                    _componentManager.GetComponents(ComponentFamily.Collidable)
-                    .OfType<CollidableComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
@@ -549,7 +486,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position;
+                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
                 Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -654,13 +591,13 @@ namespace SS14.Client.State.States
             if (e.Code == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                      PlacementManager)); //Create a new one.
             }
             if (e.Code == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceManager,
+                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                        PlacementManager)); //Create a new one.
             }
 
@@ -717,7 +654,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position,
+                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert(),
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -725,52 +662,52 @@ namespace SS14.Client.State.States
             var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
-                var clickable = (ClickableComponent)entity.GetComponent(ComponentFamily.Click);
-                if (clickable == null) continue;
-                if (clickable.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                if (entity.TryGetComponent<IClientClickableComponent>(out var component)
+                 && component.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                {
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
+                }
             }
 
-            if (clickedEntities.Any())
+            if (!clickedEntities.Any())
             {
-                //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
-                //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
-                //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
-                //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
-                //                  select cd.Clicked).Last();
+                return;
+            }
+            //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
+            //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
+            //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
+            //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
+            //                  select cd.Clicked).Last();
 
-                IEntity entToClick = (from cd in clickedEntities
-                                      orderby cd.Drawdepth ascending,
-                                          cd.Clicked.GetComponent<TransformComponent>(ComponentFamily.Transform).Position
-                                          .Y ascending
-                                      select cd.Clicked).Last();
+            IEntity entToClick = (from cd in clickedEntities
+                                    orderby cd.Drawdepth ascending,
+                                        cd.Clicked.GetComponent<ITransformComponent>().Position
+                                        .Y ascending
+                                    select cd.Clicked).Last();
 
-                if (PlacementManager.Eraser && PlacementManager.IsActive)
-                {
-                    PlacementManager.HandleDeletion(entToClick);
+            if (PlacementManager.Eraser && PlacementManager.IsActive)
+            {
+                PlacementManager.HandleDeletion(entToClick);
+                return;
+            }
+
+            var clickable = entToClick.GetComponent<IClientClickableComponent>();
+            switch (e.Button)
+            {
+                case Mouse.Button.Left:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Left);
+                    break;
+                case Mouse.Button.Right:
+                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Right);
+                    break;
+                case Mouse.Button.Middle:
+                    UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
+                    UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
+                                                                            entToClick));
                     return;
-                }
-
-                ClickableComponent c;
-                switch (e.Button)
-                {
-                    case Mouse.Button.Left:
-                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Left);
-                        break;
-                    case Mouse.Button.Right:
-                        c = (ClickableComponent)entToClick.GetComponent(ComponentFamily.Click);
-                        c.DispatchClick(PlayerManager.ControlledEntity.Uid, MouseClickType.Right);
-                        break;
-                    case Mouse.Button.Middle:
-                        UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                        UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceManager,
-                                                                             entToClick));
-                        break;
-                }
             }
 
             #endregion Object clicking
@@ -896,7 +833,7 @@ namespace SS14.Client.State.States
                         string disconnectMessage = message.ReadString();
                         UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
                                                                                         UserInterfaceManager,
-                                                                                        ResourceManager,
+                                                                                        ResourceCache,
                                                                                         disconnectMessage));
                     }
                     break;
@@ -940,7 +877,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// HandleStateUpdate
         ///
-        /// Recieves a state update message and unpacks the delicious GameStateDelta hidden inside
+        /// Receives a state update message and unpacks the delicious GameStateDelta hidden inside
         /// Then it applies the gamestatedelta to a past state to form: a full game state!
         /// </summary>
         /// <param name="message">incoming state update message</param>
@@ -959,7 +896,7 @@ namespace SS14.Client.State.States
             GameState fromState = _lastStates[delta.FromSequence];
             //Apply the delta
             GameState newState = fromState + delta;
-            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
+            newState.GameTime = (float) IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
 
             // Go ahead and store it even if our current state is newer than this one, because
             // a newer state delta may later reference this one.
@@ -995,7 +932,7 @@ namespace SS14.Client.State.States
         private void HandleFullState(NetIncomingMessage message)
         {
             GameState newState = GameState.ReadStateMessage(message);
-            newState.GameTime = IoCManager.Resolve<IGameTimer>().CurrentTime;
+            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
             SendStateAck(newState.Sequence);
 
             //Store the new state
@@ -1014,7 +951,7 @@ namespace SS14.Client.State.States
         /// <summary>
         /// SendStateAck
         ///
-        /// Acknowledge a game state being recieved
+        /// Acknowledge a game state being received
         /// </summary>
         /// <param name="sequence">State sequence number</param>
         private void SendStateAck(uint sequence)
@@ -1128,7 +1065,7 @@ namespace SS14.Client.State.States
             int num_lights = 6;
             bool draw = false;
             bool fill = false;
-            Texture black = IoCManager.Resolve<IResourceManager>().GetSprite("black5x5").Texture;
+            Texture black = IoCManager.Resolve<IResourceCache>().GetSprite("black5x5").Texture;
             var r_img = new Texture[num_lights];
             var r_col = new Vector4f[num_lights];
             var r_pos = new Vector4f[num_lights];
@@ -1207,8 +1144,8 @@ namespace SS14.Client.State.States
                 screenShadows.EndDrawing();
             }
 
-            IResourceManager _resManager = IoCManager.Resolve<IResourceManager>();
-            Dictionary<Texture, string> tmp = _resManager.TextureToKey;
+            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
+            Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
             string textureKey = tmp[screenShadows.Texture];
             Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
@@ -1258,7 +1195,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<TransformComponent>(ComponentFamily.Transform).Position);
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert());
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
@@ -1287,7 +1224,7 @@ namespace SS14.Client.State.States
                     _occluderDebugTarget.EndDrawing();
                 }
 
-                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceManager>().GetSprite("whitemask").Texture); // Calc shadows
+                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceCache>().GetSprite("whitemask").Texture); // Calc shadows
 
                 if (debugPlayerShadowMap)
                 {
@@ -1360,8 +1297,9 @@ namespace SS14.Client.State.States
         /// <param name="frametime">time since the last frame was rendered.</param>
         private void RenderComponents(float frameTime, FloatRect viewPort)
         {
-            IEnumerable<IComponent> components = _componentManager.GetComponents(ComponentFamily.Renderable)
-                                          .Union(_componentManager.GetComponents(ComponentFamily.Particles));
+            IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
+                                          .Cast<IComponent>()
+                                          .Union(_componentManager.GetComponents<ParticleSystemComponent>());
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
@@ -1399,7 +1337,7 @@ namespace SS14.Client.State.States
             _composedSceneTarget.BeginDrawing();
             _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
-            Sprite outofview = IoCManager.Resolve<IResourceManager>().GetSprite("outofview");
+            Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
             float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
             float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4f(texratiox, texratioy, 0, 0);

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Network;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.State.States
 {
@@ -74,7 +75,7 @@ namespace SS14.Client.State.States
         public Lobby(IDictionary<Type, object> managers)
             : base(managers)
         {
-            _background = ResourceManager.GetSprite("mainbg");
+            _background = ResourceCache.GetSprite("mainbg");
             _background.Texture.Smooth = true;
 
             _imgMainBg = new SimpleImage
@@ -87,35 +88,35 @@ namespace SS14.Client.State.States
                 Sprite = "lobby_statusbar"
             };
 
-            _lblServer = new Label("SERVER:", "MICROGME", ResourceManager);
+            _lblServer = new Label("SERVER:", "MICROGME", ResourceCache);
             _lblServer.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblServer);
 
-            _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceManager);
+            _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceCache);
             _lblServerInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblServerInfo);
 
-            _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceManager);
+            _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceCache);
             _lblMode.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblMode);
 
-            _lblModeInfo = new Label("SECRET", "MICROGME", ResourceManager);
+            _lblModeInfo = new Label("SECRET", "MICROGME", ResourceCache);
             _lblModeInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblModeInfo);
 
-            _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceManager);
+            _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceCache);
             _lblPlayers.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblPlayers);
 
-            _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceManager);
+            _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceCache);
             _lblPlayersInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblPlayersInfo);
 
-            _lblPort = new Label("PORT:", "MICROGME", ResourceManager);
+            _lblPort = new Label("PORT:", "MICROGME", ResourceCache);
             _lblPort.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblPort);
 
-            _lblPortInfo = new Label("1212", "MICROGME", ResourceManager);
+            _lblPortInfo = new Label("1212", "MICROGME", ResourceCache);
             _lblPortInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblPortInfo);
 
@@ -128,26 +129,26 @@ namespace SS14.Client.State.States
                 ZDepth = 2
             };
 
-            _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceManager)
+            _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache)
             {
                 tabSpriteName = "lobby_tab_person"
             };
             _tabs.AddTab(_tabCharacter);
 
-            _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceManager)
+            _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache)
             {
                 tabSpriteName = "lobby_tab_eye"
             };
             _tabs.AddTab(_tabObserve);
 
-            _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceManager)
+            _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache)
             {
                 tabSpriteName = "lobby_tab_info"
             };
             _tabs.AddTab(_tabServer);
             _tabs.SelectTab(_tabServer);
 
-            _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceManager);
+            _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceCache);
             _lobbyChat.Update(0);
 
             _imgChatBg = new SimpleImage()
@@ -201,7 +202,7 @@ namespace SS14.Client.State.States
                         string disconnectMessage = message.ReadString();
                         UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
                                                                                         UserInterfaceManager,
-                                                                                        ResourceManager,
+                                                                                        ResourceCache,
                                                                                         disconnectMessage));
                     }
                     break;
@@ -264,7 +265,7 @@ namespace SS14.Client.State.States
                 var currStatus = (SessionStatus)message.ReadByte();
                 float currRoundtrip = message.ReadFloat();
 
-                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceManager);
+                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache);
                 newLabel.Position = new Vector2i(0, offY);
                 newLabel.TextColor = Color.Black;
                 newLabel.Update(0);

@@ -18,7 +18,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         private RenderImage renderimage;
 
         private FrameEventArgs _frameEvent;
-        private EventArgs _frameEventArgs;
         private Clock clock = new Clock();
 
         private StarScroller Stars;
@@ -40,7 +39,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)
                 renderimage.Clear();       //Clear
-                base.GetResourceManager.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
+                base.GetResourceCache.GetSprite("AAAA").Draw(); //Draw NoSpritelogo
 
                 renderimage.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 

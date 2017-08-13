@@ -95,7 +95,6 @@ namespace SS14.Shared.Network.Messages
                         newChunk.Tiles = tiles;
                         ChunkDefs[i] = newChunk;
                     }
-
                     break;
             }
         }

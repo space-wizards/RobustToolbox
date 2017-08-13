@@ -15,7 +15,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="family">The <see cref="ComponentFamily"/> to look up.</param>
         /// <returns>An <see cref="IEnumerable{IComponent}"/> over component with the specified family.</returns>
-        IEnumerable<IComponent> GetComponents(ComponentFamily family);
+        IEnumerable<T> GetComponents<T>() where T: IComponent;
 
         /// <summary>
         /// Add a component to the master component list.
@@ -28,6 +28,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="component"></param>
         void RemoveComponent(IComponent component);
+
+        /// <summary>
+        /// Clear the master component list
+        /// </summary>
+        void Cull();
 
         /// <summary>
         /// Big update method -- loops through all components in order of family and calls Update() on them.

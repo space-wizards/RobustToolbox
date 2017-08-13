@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -14,12 +14,13 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
         public override bool NeedsResourcePack => true;
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IResourceManager resources;
+        private IResourceCache resources;
         private RenderImage test;
 
-        public CluwneSprite_Test()
+        [OneTimeSetUp]
+        public void Setup()
         {
-            resources = base.GetResourceManager;
+            resources = base.GetResourceCache;
 
             base.InitializeCluwneLib();
 

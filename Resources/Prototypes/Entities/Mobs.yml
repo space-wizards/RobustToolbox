@@ -1,0 +1,20 @@
+﻿- type: entity
+  id: HumanMob
+  name: Urist McHuman
+  components:
+  - type: Transform
+  - type: Clickable
+  - type: AnimatedSprite
+    sprite: player
+
+  - type: Icon
+    icon: player
+
+  - type: BoundingBox
+    sizeX: 25
+    sizeY: 25
+    
+  - type: ParticleSystem
+  - type: Physics
+    mass: 5
+

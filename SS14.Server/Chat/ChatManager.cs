@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -15,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
+using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
@@ -23,8 +25,6 @@ namespace SS14.Server.Chat
 {
     public class ChatManager : IChatManager
     {
-        [Dependency]
-        private IBaseServer _serverMain;
         [Dependency]
         private readonly IReflectionManager reflectionManager;
         [Dependency]
@@ -207,7 +207,7 @@ namespace SS14.Server.Chat
                 return;
             List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>()
                 .GetPlayersInRange(entityManager.GetEntity((int) entityId)
-                .GetComponent<ITransformComponent>(ComponentFamily.Transform).Position, withinRange)
+                .GetComponent<ITransformComponent>().Position.Convert(), withinRange)
                 .Select(p => p.ConnectedClient).ToList();
 
             IoCManager.Resolve<IServerNetManager>().ServerSendToMany(message, recipients);
@@ -245,7 +245,7 @@ namespace SS14.Server.Chat
         /// </summary>
         /// <param name="text">Text content.</param>
         /// <param name="name">Player name that sent the chat text.</param>
-        /// <param name="channel">Channel message was recieved on.</param>
+        /// <param name="channel">Channel message was received on.</param>
         /// <param name="client">Client that sent the command.</param>
         private void ProcessCommand(string text, string name, ChatChannel channel, int? entityId, INetChannel client)
         {

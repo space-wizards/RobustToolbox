@@ -2,7 +2,6 @@
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared.Interfaces.Map;
-using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -27,7 +26,7 @@ namespace SS14.Client.State
         [Dependency]
         private readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
-        private readonly IResourceManager resourceManager;
+        private readonly IResourceCache resourceCache;
         [Dependency]
         private readonly IMapManager mapManager;
         [Dependency]
@@ -50,7 +49,7 @@ namespace SS14.Client.State
         {
             _managers[typeof(IClientNetManager)] = networkManager;
             _managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
-            _managers[typeof(IResourceManager)] = resourceManager;
+            _managers[typeof(IResourceCache)] = resourceCache;
             _managers[typeof(IMapManager)] = mapManager;
             _managers[typeof(IPlayerManager)] = playerManager;
             _managers[typeof(IPlacementManager)] = placementManager;
@@ -123,10 +122,12 @@ namespace SS14.Client.State
 
         public void Update(FrameEventArgs e)
         {
-            if (CurrentState == null) return;
+            CurrentState?.Update(e);
+        }
 
-            CurrentState.Update(e);
-            CurrentState.Render(e);
+        public void Render(FrameEventArgs e)
+        {
+            CurrentState?.Render(e);
         }
 
         public void RequestStateChange<T>() where T : IState

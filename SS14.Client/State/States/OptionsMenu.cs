@@ -59,38 +59,38 @@ namespace SS14.Client.State.States
 
         private void InitalizeGUI()
         {
-            _background = ResourceManager.GetSprite("mainbg");
-            _ticketBg = ResourceManager.GetSprite("ticketoverlay");
+            _background = ResourceCache.GetSprite("mainbg");
+            _ticketBg = ResourceCache.GetSprite("ticketoverlay");
 
-            _lblTitle = new Label("Options", "CALIBRI", 48, ResourceManager);
+            _lblTitle = new Label("Options", "CALIBRI", 48, ResourceCache);
             UserInterfaceManager.AddComponent(_lblTitle);
 
-            _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceManager);
+            _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceCache);
             UserInterfaceManager.AddComponent(_lblFullscreen);
 
-            _chkFullscreen = new Checkbox(ResourceManager);
+            _chkFullscreen = new Checkbox(ResourceCache);
             _chkFullscreen.ValueChanged += _chkfullscreen_ValueChanged;
             _chkfullscreen_ValueChanged(ConfigurationManager.GetCVar<bool>("display.fullscreen"), _chkFullscreen);
             UserInterfaceManager.AddComponent(_chkFullscreen);
 
-            _lblVsync = new Label("Vsync", "CALIBRI", ResourceManager);
+            _lblVsync = new Label("Vsync", "CALIBRI", ResourceCache);
             UserInterfaceManager.AddComponent(_lblVsync);
 
-            _chkVsync = new Checkbox(ResourceManager);
+            _chkVsync = new Checkbox(ResourceCache);
             _chkVsync.ValueChanged += _chkvsync_ValueChanged;
             _chkvsync_ValueChanged(ConfigurationManager.GetCVar<bool>("display.vsync"), _chkVsync);
             UserInterfaceManager.AddComponent(_chkVsync);
 
-            _lstResolution = new Listbox(250, 150, ResourceManager);
+            _lstResolution = new Listbox(250, 150, ResourceCache);
             _lstResolution.ItemSelected += _reslistbox_ItemSelected;
             PopulateAvailableVideoModes();
             UserInterfaceManager.AddComponent(_lstResolution);
 
-            _btnBack = new Button("Back", ResourceManager);
+            _btnBack = new Button("Back", ResourceCache);
             _btnBack.Clicked += _backBtn_Clicked;
             UserInterfaceManager.AddComponent(_btnBack);
 
-            _btnApply = new Button("Apply Settings", ResourceManager);
+            _btnApply = new Button("Apply Settings", ResourceCache);
             _btnApply.Clicked += _applybtt_Clicked;
             UserInterfaceManager.AddComponent(_btnApply);
 

@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SFML.Graphics;
 using NUnit.Framework;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using SS14.Shared.GameObjects;
@@ -9,6 +10,7 @@ using SS14.Shared.Maths;
 using System.IO;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.UnitTesting.SS14.Shared.Prototypes
 {
@@ -16,8 +18,12 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
     public class PrototypeManager_Test : SS14UnitTest
     {
         private IPrototypeManager manager;
-        public PrototypeManager_Test()
+        [OneTimeSetUp]
+        public void Setup()
         {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            factory.Register<TestBasicPrototypeComponent>();
+
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
             manager.Resync();
@@ -29,8 +35,8 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            Dictionary<string, YamlNode> node = prototype.Components["TestBasicPrototypeComponent"];
-            Assert.That(node["foo"], Is.EqualTo(new YamlScalarNode("bar!")));
+            var mapping = prototype.Components["TestBasicPrototypeComponent"];
+            Assert.That(mapping.GetNode("foo"), Is.EqualTo(new YamlScalarNode("bar!")));
         }
 
         [Test, Combinatorial]
@@ -43,19 +49,14 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
                 Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
                 Assert.That(prototype.ID, Is.EqualTo(id));
                 Assert.That(prototype.Components, Contains.Key("Transform"));
-                Assert.That(prototype.Components, Contains.Key("Velocity"));
-                Assert.That(prototype.Components, Contains.Key("Direction"));
                 Assert.That(prototype.Components, Contains.Key("Clickable"));
                 Assert.That(prototype.Components, Contains.Key("Sprite"));
-                Assert.That(prototype.Components, Contains.Key("BasicInteractable"));
-                Assert.That(prototype.Components, Contains.Key("BasicMover"));
-                Assert.That(prototype.Components, Contains.Key("WallMounted"));
-                Assert.That(prototype.Components, Contains.Key("Light"));
+                Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["Light"];
-            var expected = new Dictionary<string, YamlNode>();
-            expected["startState"] = new YamlScalarNode("Off");
+            var componentData = prototype.Components["PointLight"];
+            var expected = new YamlMappingNode();
+            expected.Children[new YamlScalarNode("startState")] = new YamlScalarNode("Off");
 
             Assert.That(componentData, Is.EquivalentTo(expected));
         }
@@ -113,14 +114,9 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
   name: Wall Light
   components:
   - type: Transform
-  - type: Velocity
-  - type: Direction
   - type: Clickable
   - type: Sprite
-  - type: BasicInteractable
-  - type: BasicMover
-  - type: WallMounted
-  - type: Light
+  - type: PointLight
     startState: Off
 
 - type: entity

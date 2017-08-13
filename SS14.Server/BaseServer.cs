@@ -114,9 +114,6 @@ namespace SS14.Server
         public event EventRunLevelChanged OnRunLevelChanged;
 
         /// <inheritdoc />
-        public event EventTick OnTick;
-
-        /// <inheritdoc />
         public void Restart()
         {
             //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
@@ -397,7 +394,9 @@ namespace SS14.Server
             if (runLevel == Level)
                 return;
 
+            var oldLevel = Level;
             Level = runLevel;
+            OnRunLevelChanged?.Invoke(oldLevel, Level);
             if (Level == RunLevel.Lobby)
             {
                 _startAt = DateTime.Now.AddSeconds(GAME_COUNTDOWN);

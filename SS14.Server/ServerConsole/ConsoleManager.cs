@@ -14,8 +14,6 @@ namespace SS14.Server.ServerConsole
 {
     public class ConsoleManager : IConsoleManager, IPostInjectInit, IDisposable
     {
-        [Dependency]
-        private readonly IConfigurationManager configurationManager;
         private Dictionary<string, IConsoleCommand> availableCommands = new Dictionary<string, IConsoleCommand>();
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";

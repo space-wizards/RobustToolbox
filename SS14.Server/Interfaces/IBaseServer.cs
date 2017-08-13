@@ -56,10 +56,5 @@
         /// The Run Level of the server has changed.
         /// </summary>
         event EventRunLevelChanged OnRunLevelChanged;
-
-        /// <summary>
-        /// The local clock has ticked.
-        /// </summary>
-        event EventTick OnTick;
     }
 }

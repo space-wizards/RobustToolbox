@@ -59,7 +59,6 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.SendTileMap:
                     //not dealing with this right now...
                     throw new NotImplementedException();
-                    break;
             }
         }
 

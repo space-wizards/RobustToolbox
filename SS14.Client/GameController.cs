@@ -49,8 +49,6 @@ namespace SS14.Client
         [Dependency]
         readonly private IResourceCache _resourceCache;
         [Dependency]
-        readonly private IEntityNetworkManager _entityNetworkManager;
-        [Dependency]
         readonly private ITileDefinitionManager _tileDefinitionManager;
         [Dependency]
         readonly private ISS14Serializer _serializer;

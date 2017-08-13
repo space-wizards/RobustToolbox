@@ -112,7 +112,11 @@ namespace SS14.Shared.ContentPack
             "YamlDotNet.RepresentationModel.YamlNode",
             "YamlDotNet.RepresentationModel.YamlScalarNode",
             "YamlDotNet.RepresentationModel.YamlMappingNode",
-            "YamlDotNet.RepresentationModel.YamlSequenceNode"
+            "YamlDotNet.RepresentationModel.YamlSequenceNode",
+
+            // OpenTK
+            "OpenTK.Graphics.Color4",
+            "OpenTK.Math.",
         };
 
         /// <summary>

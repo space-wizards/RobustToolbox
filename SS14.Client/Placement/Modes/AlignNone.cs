@@ -50,19 +50,5 @@ namespace SS14.Client.Placement.Modes
 
             return true;
         }
-
-        public override void Render()
-        {
-            if (spriteToDraw != null)
-            {
-                var bounds = spriteToDraw.GetLocalBounds();
-                spriteToDraw.Color = pManager.ValidPosition ? new Color(34, 34, 139) : new Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
-                                                     mouseScreen.Y - (bounds.Height/2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
-            }
-        }
     }
 }

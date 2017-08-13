@@ -21,8 +21,7 @@ namespace SS14.Client.Placement.Modes
     {
         private const uint snapToRange = 50;
 
-        public AlignSimilar(PlacementManager pMan)
-            : base(pMan)
+        public AlignSimilar(PlacementManager pMan) : base(pMan)
         {
         }
 
@@ -96,20 +95,6 @@ namespace SS14.Client.Placement.Modes
                                              spriteBounds.Width, spriteBounds.Height);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
             return true;
-        }
-
-        public override void Render()
-        {
-            if (spriteToDraw != null)
-            {
-                var spriteBounds = spriteToDraw.GetLocalBounds();
-                spriteToDraw.Color = pManager.ValidPosition ? new Color(0, 128, 0, 255) : new Color(128, 0, 0, 255);
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (spriteBounds.Width / 2f),
-                                                     mouseScreen.Y - (spriteBounds.Height / 2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
-            }
         }
     }
 }

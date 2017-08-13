@@ -13,9 +13,9 @@ namespace SS14.Client.Placement.Modes
 {
     public class AlignTileEmpty : PlacementMode
     {
-        public AlignTileEmpty(PlacementManager pMan)
-            : base(pMan)
+        public AlignTileEmpty(PlacementManager pMan) : base(pMan)
         {
+            validPlaceColor = new Color(34, 139, 34);
         }
 
         public override bool Update(Vector2i mouseS, IMapManager currentMap)
@@ -62,20 +62,6 @@ namespace SS14.Client.Placement.Modes
             }
 
             return true;
-        }
-
-        public override void Render()
-        {
-            if (spriteToDraw != null)
-            {
-                var bounds = spriteToDraw.GetLocalBounds();
-                spriteToDraw.Color = pManager.ValidPosition ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
-                                                    mouseScreen.Y - (bounds.Height/2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
-            }
         }
     }
 }

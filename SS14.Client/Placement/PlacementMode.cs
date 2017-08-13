@@ -1,5 +1,6 @@
 ﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
 using Vector2i = SFML.System.Vector2i;
 
@@ -13,6 +14,8 @@ namespace SS14.Client.Placement
         public Vector2i mouseScreen;
         public Vector2f mouseWorld;
         public Sprite spriteToDraw;
+        public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
+        public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -31,6 +34,15 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
+            if (spriteToDraw != null)
+            {
+                var bounds = spriteToDraw.GetLocalBounds();
+                spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                                                     mouseScreen.Y - (bounds.Height / 2f));
+                //Centering the sprite on the cursor.
+                spriteToDraw.Draw();
+            }
         }
 
         public Sprite GetSprite(string key)

@@ -26,8 +26,6 @@ namespace SS14.Server.Chat
     public class ChatManager : IChatManager
     {
         [Dependency]
-        private IBaseServer _serverMain;
-        [Dependency]
         private readonly IReflectionManager reflectionManager;
         [Dependency]
         private readonly IServerEntityManager entityManager;

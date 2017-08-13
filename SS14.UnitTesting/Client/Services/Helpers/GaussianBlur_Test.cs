@@ -27,7 +27,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         private RenderImage blur;
 
         private FrameEventArgs _frameEvent;
-        private EventArgs _frameEventArgs;
         private Clock clock;
 
         private Sprite sprite;

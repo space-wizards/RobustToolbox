@@ -18,7 +18,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         private RenderImage renderimage;
 
         private FrameEventArgs _frameEvent;
-        private EventArgs _frameEventArgs;
         private Clock clock = new Clock();
 
         private StarScroller Stars;

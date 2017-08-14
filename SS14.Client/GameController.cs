@@ -5,7 +5,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -13,6 +12,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
@@ -56,6 +56,8 @@ namespace SS14.Client
         private readonly IGameTiming _time;
         [Dependency]
         private readonly IResourceManager _resourceManager;
+        [Dependency]
+        private readonly IMapManager _mapManager;
 
         #endregion Fields
 
@@ -99,6 +101,7 @@ namespace SS14.Client
             _networkManager.Initialize(false);
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
+            _mapManager.Initialize();
 
             _stateManager.RequestStateChange<MainScreen>();
 

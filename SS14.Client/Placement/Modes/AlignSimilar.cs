@@ -4,7 +4,7 @@ using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -38,10 +38,10 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             //Align to similar if nearby found else free
-            if (currentTile.Tile.TileDef.IsWall)
+            if (currentTile.TileDef.IsWall)
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;

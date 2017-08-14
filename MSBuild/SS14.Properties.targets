@@ -2,7 +2,6 @@
   <!-- MSBuild hurts and I can't find a foolproof way to detect platform. -->
   <PropertyGroup>
     <OS Condition="'$(OS)' == ''">Windows_NT</OS>
-    <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
   </PropertyGroup>
   <Choose>
     <When Condition="'$(OS)' != 'Unix'">
@@ -22,4 +21,7 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+  <PropertyGroup>
+    <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
+  </PropertyGroup>
 </Project>

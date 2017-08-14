@@ -76,3 +76,6 @@ project.lock.json
 TestResult.xml
 
 NetSerializerDebug.dll
+
+# We're not gonna ship Mac extlibs with the repo due to size. (11 MB)
+Third-Party/extlibs/Mac/

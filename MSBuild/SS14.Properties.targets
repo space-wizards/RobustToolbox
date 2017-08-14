@@ -1,9 +1,25 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <!-- MSBuild hurts and I can't find a foolproof way to detect platform. -->
   <PropertyGroup>
     <OS Condition="'$(OS)' == ''">Windows_NT</OS>
-    <ActualOS Condition="'$(OS)' == 'Windows_NT'">Windows</ActualOS>
-    <!-- TODO: MacOS detection. -->
-    <ActualOS Condition="'$(OS)' == 'Unix'">Linux</ActualOS>
     <TargetOS Condition="'$(TargetOS)' == ''">$(ActualOS)</TargetOS>
   </PropertyGroup>
+  <Choose>
+    <When Condition="'$(OS)' != 'Unix'">
+      <PropertyGroup>
+        <ActualOS>Windows</ActualOS>
+      </PropertyGroup>
+    </When>
+    <!-- Folders that *probably* only exist on MacOS and not Linux. -->
+    <When Condition="Exists('/Volumes') And Exists('/System') And Exists('/Library')" >
+      <PropertyGroup>
+        <ActualOS>MacOS</ActualOS>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <ActualOS>Linux</ActualOS>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
 </Project>

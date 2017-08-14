@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Map;
@@ -169,8 +169,13 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (base.KeyDown(e)) return true;
-            return false;
+            if (e.Code != Keyboard.Key.Escape)
+            {
+                return false;
+            }
+
+            Dispose();
+            return true;
         }
     }
 }

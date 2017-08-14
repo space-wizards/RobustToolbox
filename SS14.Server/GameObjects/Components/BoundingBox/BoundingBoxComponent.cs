@@ -1,6 +1,6 @@
 ﻿using OpenTK;
 using SFML.Graphics;
-using SS14.Server.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;

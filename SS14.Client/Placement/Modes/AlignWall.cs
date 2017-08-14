@@ -2,7 +2,7 @@
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
@@ -34,9 +34,9 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
-            if (!currentTile.Tile.TileDef.IsWall)
+            if (!currentTile.TileDef.IsWall)
                 return false;
 
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;

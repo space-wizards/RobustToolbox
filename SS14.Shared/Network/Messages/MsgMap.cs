@@ -16,12 +16,14 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public MapMessage MessageType { get; set; }
-        public int Version { get; set; }
+        public int MapIndex { get; set; }
 
         public Turf SingleTurf { get; set; }
 
         public TileDef[] TileDefs { get; set; }
         public ChunkDef[] ChunkDefs { get; set; }
+
+        public ushort ChunkSize { get; set; }
 
         public class Turf
         {
@@ -35,12 +37,12 @@ namespace SS14.Shared.Network.Messages
             public string Name { get; set; }
             public uint Tile { get; set; }
         }
-
+    
         public class ChunkDef
         {
             public int X { get; set; }
             public int Y { get; set; }
-            public TileDef[] Defs { get; set; }
+            public uint[] Tiles { get; set; }
         }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
@@ -57,8 +59,43 @@ namespace SS14.Shared.Network.Messages
                     };
                     break;
                 case MapMessage.SendTileMap:
-                    //not dealing with this right now...
-                    throw new NotImplementedException();
+                    MapIndex = buffer.ReadInt32();
+
+                    //tile defs
+                    var numTileDefs = buffer.ReadInt32();
+                    var tileDefs = new TileDef[numTileDefs];
+                    for (var i = 0; i < numTileDefs; i++)
+                    {
+                        tileDefs[i] = new TileDef()
+                        {
+                            Name = buffer.ReadString()
+                        };
+                    }
+                    TileDefs = tileDefs;
+
+                    // map chunks
+                    ChunkSize = buffer.ReadUInt16();
+                    var numChunks = buffer.ReadInt32();
+                    ChunkDefs = new ChunkDef[numChunks];
+
+                    for (var i = 0; i < numChunks; i++)
+                    {
+                        var newChunk = new ChunkDef()
+                        {
+                            X = buffer.ReadInt32(),
+                            Y = buffer.ReadInt32()
+                        };
+
+                        var chunkCount = ChunkSize * ChunkSize;
+                        var tiles = new uint[chunkCount];
+                        for (var j = 0; j < chunkCount; j++)
+                        {
+                            tiles[j] = buffer.ReadUInt32();
+                        }
+                        newChunk.Tiles = tiles;
+                        ChunkDefs[i] = newChunk;
+                    }
+                    break;
             }
         }
 
@@ -73,14 +110,15 @@ namespace SS14.Shared.Network.Messages
                     buffer.Write(SingleTurf.Tile);
                     break;
                 case MapMessage.SendTileMap:
-                    buffer.Write(Version);
-                    buffer.Write(TileDefs.Length);
+                    buffer.Write(MapIndex);
 
                     // Tile defs, ordered list
+                    buffer.Write(TileDefs.Length);
                     foreach (TileDef tileId in TileDefs)
                         buffer.Write(tileId.Name);
 
                     // Map chunks
+                    buffer.Write(ChunkSize);
                     buffer.Write(ChunkDefs.Length);
                     foreach (var chunk in ChunkDefs)
                     {
@@ -88,8 +126,8 @@ namespace SS14.Shared.Network.Messages
                         buffer.Write(chunk.Y);
 
                         // ordered list
-                        foreach (var tile in chunk.Defs)
-                            buffer.Write(tile.Tile);
+                        foreach (var tile in chunk.Tiles)
+                            buffer.Write(tile);
                     }
 
                     break;

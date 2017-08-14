@@ -47,12 +47,26 @@ namespace SS14.Shared.Network
                 }
                 else
                 {
-                    if (!_strings.ContainsKey(id))
+                    if (TryFindStringId(str, out int oldId))
+                    {
+                        if(oldId == id)
+                            return;
+
+                        _strings.Remove(oldId);
                         _strings.Add(id, str);
+                    }
                     else
-                        _strings[id] = str;
+                    {
+                        _strings.Add(id, str);
+                    }
                 }
             });
+
+            // manually register the id on the client so it can bootstrap itself with incoming table entries
+            if (_network.IsClient && !TryFindStringId(MsgStringTableEntry.NAME, out int msgId))
+            {
+                _strings.Add((int)MsgStringTableEntry.ID, MsgStringTableEntry.NAME);
+            }
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
@@ -46,7 +46,7 @@ namespace SS14.Client.Placement.Modes
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld.Convert()).LengthSquared > rangeSquared) return false;
 
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             return true;
         }

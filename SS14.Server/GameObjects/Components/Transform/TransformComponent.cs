@@ -16,7 +16,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public IEntity Parent { get; set; }
+        public ITransformComponent Parent { get; private set; }
 
         private Vector2 _position;
 
@@ -37,7 +37,10 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public Vector2 Position
         {
-            get => _position;
+            get
+            {
+                return _position;
+            }
             set
             {
                 var oldPosition = _position;
@@ -51,6 +54,15 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             return new TransformComponentState(Position, Rotation, Parent);
+        }
+
+        public ITransformComponent GetMapTransform()
+        {
+            if(Parent != null) //If we are not the final transform, query up the chain of parents
+            {
+                return Parent.GetMapTransform();
+            }
+            return this;
         }
     }
 }

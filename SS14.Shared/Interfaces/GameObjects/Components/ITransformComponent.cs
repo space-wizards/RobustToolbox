@@ -23,5 +23,14 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         ///     Event that gets invoked every time the position gets modified through properties such as <see cref="Rotation" />.
         /// </summary>
         event EventHandler<VectorEventArgs> OnMove;
+
+        /// <summary>
+        ///     Reference to the transform of the container of this object if it exists, can be nested several times.
+        /// </summary>
+        ITransformComponent Parent { get; }
+        /// <summary>
+        ///     Finds the transform located on the map or in nullspace (TODO: Nullspace)
+        /// </summary>
+        ITransformComponent GetMapTransform();
     }
 }

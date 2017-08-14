@@ -347,6 +347,10 @@
     <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
     <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetOS)' == 'MacOS'">
+    <!-- HAVE to do a deep copy, because framework bundles are directories. -->
+    <MacNatives Include="..\Third-Party\extlibs\Mac\**\*.*" />
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
@@ -362,5 +366,10 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS'" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' == 'MacOS'">
+    <!-- Copy Mac natives -->
+    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="!Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
+    <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
+  </Target>
 </Project>

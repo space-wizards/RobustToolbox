@@ -1,6 +1,6 @@
-using SFML.System;
-using SS14.Shared.Interfaces.Map;
+﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {

@@ -28,7 +28,7 @@ namespace SS14.Client.Placement.Modes
 
             var bounds = spriteToDraw.GetLocalBounds();
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             if (!currentTile.TileDef.IsWall)
                 return false;

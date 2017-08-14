@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.Maths;
+using FloatRect = OpenTK.Box2;
+using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {
@@ -88,7 +87,7 @@ namespace SS14.Shared.Map
             var localPos = GridTileToLocal(gridTile);
             var worldPos = LocalToWorld(localPos);
 
-            if (AABBWorld.Contains(worldPos.X, worldPos.Y))
+            if (AABBWorld.Contains(worldPos))
                 return;
 
             // rect union
@@ -174,7 +173,7 @@ namespace SS14.Shared.Map
         {
             //TODO: needs world -> local -> tile translations.
             var gridTileLt = new Indices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Top));
-            var gridTileRb = new Indices((int)Math.Floor(worldArea.Right()), (int)Math.Floor(worldArea.Bottom()));
+            var gridTileRb = new Indices((int)Math.Floor(worldArea.Right), (int)Math.Floor(worldArea.Bottom));
 
             var tiles = new List<TileRef>();
 

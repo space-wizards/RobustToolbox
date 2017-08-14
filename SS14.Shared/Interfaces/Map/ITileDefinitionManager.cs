@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using Lidgren.Network;
-using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.Map
@@ -10,8 +8,6 @@ namespace SS14.Shared.Interfaces.Map
     /// </summary>
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
-        void InitializeResources();
-
         /// <summary>
         ///     Indexer to retrieve a tile definition by name.
         /// </summary>
@@ -30,6 +26,8 @@ namespace SS14.Shared.Interfaces.Map
         ///     The number of tile definitions contained inside of this manager.
         /// </summary>
         int Count { get; }
+
+        void InitializeResources();
 
         /// <summary>
         ///     Register a definition with this manager.

@@ -34,7 +34,7 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             if (!currentTile.TileDef.IsWall)
                 return false;

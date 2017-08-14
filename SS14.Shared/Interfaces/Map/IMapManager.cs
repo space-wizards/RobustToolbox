@@ -1,16 +1,13 @@
 ﻿using System.Collections.Generic;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.IoC;
 using SS14.Shared.Map;
-using SS14.Shared.Network;
-using SS14.Shared.Network.Messages;
+using FloatRect = OpenTK.Box2;
+using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
     /// <summary>
-    /// Event delegate for the OnTileChanged event.
+    ///     Event delegate for the OnTileChanged event.
     /// </summary>
     /// <param name="gridId">The ID of the grid being changed.</param>
     /// <param name="tileRef">A reference to the new tile being inserted.</param>
@@ -49,7 +46,7 @@ namespace SS14.Shared.Interfaces.Map
         void SaveMap(string mapName);
 
         /// <summary>
-        /// Starts up the map system.
+        ///     Starts up the map system.
         /// </summary>
         void Initialize();
 

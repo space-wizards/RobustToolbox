@@ -46,7 +46,7 @@ namespace SS14.Client.Placement.Modes
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
                          .Position - mouseWorld.Convert()).LengthSquared > rangeSquared) return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             return true;
         }

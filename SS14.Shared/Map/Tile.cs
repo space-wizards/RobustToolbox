@@ -1,6 +1,8 @@
+﻿using System;
 
 namespace SS14.Shared.Map
 {
+    [Serializable]
     public struct Tile
     {
         /// <summary>
@@ -63,6 +65,10 @@ namespace SS14.Shared.Map
             return !(a == b);
         }
 
+        /// <summary>
+        /// Generates String representation of this Tile.
+        /// </summary>
+        /// <returns>String representation of this Tile.</returns>
         public override string ToString()
         {
             return $"Tile {TileId}, {Data}";

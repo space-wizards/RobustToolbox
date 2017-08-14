@@ -20,6 +20,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Placement
 {
@@ -112,7 +113,7 @@ namespace SS14.Server.Placement
                 }
                 else
                 {
-                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos.Convert(), new Tile(tileType));
                 }
             }
             /*

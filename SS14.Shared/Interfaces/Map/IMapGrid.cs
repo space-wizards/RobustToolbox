@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Shared.Map;
+using FloatRect = OpenTK.Box2;
+using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {

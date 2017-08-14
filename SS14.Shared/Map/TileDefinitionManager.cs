@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
@@ -11,18 +9,18 @@ namespace SS14.Shared.Map
     {
         //[Dependency]
         //private readonly IResourceManager resourceManager;
-        private readonly List<ITileDefinition> tileDefs;
-        private readonly Dictionary<string, ITileDefinition> tileNames;
-        private readonly Dictionary<ITileDefinition, ushort> tileIds;
+        private readonly List<ITileDefinition> _tileDefs;
+        private readonly Dictionary<string, ITileDefinition> _tileNames;
+        private readonly Dictionary<ITileDefinition, ushort> _tileIds;
 
         /// <summary>
         /// Default Constructor.
         /// </summary>
         public TileDefinitionManager()
         {
-            tileDefs = new List<ITileDefinition>();
-            tileNames = new Dictionary<string, ITileDefinition>();
-            tileIds = new Dictionary<ITileDefinition, ushort>();
+            _tileDefs = new List<ITileDefinition>();
+            _tileNames = new Dictionary<string, ITileDefinition>();
+            _tileIds = new Dictionary<ITileDefinition, ushort>();
 
             Register(new SpaceTileDefinition());
             Register(new FloorTileDefinition());
@@ -42,47 +40,47 @@ namespace SS14.Shared.Map
         public ushort Register(ITileDefinition tileDef)
         {
             ushort id;
-            if (tileIds.TryGetValue(tileDef, out id))
+            if (_tileIds.TryGetValue(tileDef, out id))
                 return id;
 
             string name = tileDef.Name;
-            if (tileNames.ContainsKey(name))
+            if (_tileNames.ContainsKey(name))
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));
 
-            id = checked((ushort)tileDefs.Count);
-            tileDefs.Add(tileDef);
-            tileNames[name] = tileDef;
-            tileIds[tileDef] = id;
+            id = checked((ushort)_tileDefs.Count);
+            _tileDefs.Add(tileDef);
+            _tileNames[name] = tileDef;
+            _tileIds[tileDef] = id;
             return id;
         }
 
         public void RegisterServerTileMapping(MsgMap message)
         {
-            foreach (var tileDef in tileDefs)
+            foreach (var tileDef in _tileDefs)
                 tileDef.InvalidateTileId();
 
-            tileDefs.Clear();
-            tileIds.Clear();
+            _tileDefs.Clear();
+            _tileIds.Clear();
 
             for (var i = 0; i < message.TileDefs.Length; ++i)
             {
                 var tileName = message.TileDefs[i].Name;
                 var tileDef = this[tileName];
 
-                tileDefs.Add(tileDef);
-                tileIds[tileDef] = (ushort)i;
+                _tileDefs.Add(tileDef);
+                _tileIds[tileDef] = (ushort)i;
             }
         }
 
-        public ITileDefinition this[string name] => tileNames[name];
+        public ITileDefinition this[string name] => _tileNames[name];
 
-        public ITileDefinition this[int id] => tileDefs[id];
+        public ITileDefinition this[int id] => _tileDefs[id];
 
-        public int Count => tileDefs.Count;
+        public int Count => _tileDefs.Count;
 
         public IEnumerator<ITileDefinition> GetEnumerator()
         {
-            return tileDefs.GetEnumerator();
+            return _tileDefs.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()

@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
+using FloatRect = OpenTK.Box2;
+using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {
     public partial class MapManager : IMapManager
     {
-        private const int GRID_INDEX = 0;
-        private const ushort TILE_SIZE = 32;
+        private const int GridIndex = 0;
+        private const ushort DefaultTileSize = 32;
 
         /// <inheritdoc />
         public void Initialize()
         {
-                NetSetup();
+            NetSetup();
 
-               TileSize = TILE_SIZE;
+            TileSize = DefaultTileSize;
 
             //create default grid.
             CreateGrid(DefaultGridId, 16);
@@ -31,7 +32,7 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     If you are only going to have one giant global grid, this is your gridId.
         /// </summary>
-        public int DefaultGridId => GRID_INDEX;
+        public int DefaultGridId => GridIndex;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -59,8 +60,6 @@ namespace SS14.Shared.Map
         }
 
         #region Networking
-
-
 
         #endregion
 
@@ -150,8 +149,9 @@ namespace SS14.Shared.Map
         /// <returns>True if there is any grid at the location.</returns>
         public bool IsGridAt(float xWorld, float yWorld)
         {
+            var pos = new Vector2f(xWorld, yWorld);
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(xWorld, yWorld))
+                if (kvGrid.Value.AABBWorld.Contains(pos))
                     return true;
             return false;
         }
@@ -165,8 +165,8 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public bool IsGridAt(float xWorld, float yWorld, int gridId)
         {
-            MapGrid output;
-            return _grids.TryGetValue(gridId, out output) && output.AABBWorld.Contains(xWorld, yWorld);
+            var pos = new Vector2f(xWorld, yWorld);
+            return _grids.TryGetValue(gridId, out MapGrid output) && output.AABBWorld.Contains(pos);
         }
 
         /// <summary>
@@ -177,9 +177,10 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public IEnumerable<IMapGrid> FindGridsAt(float xWorld, float yWorld)
         {
+            var pos = new Vector2f(xWorld, yWorld);
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(xWorld, yWorld))
+                if (kvGrid.Value.AABBWorld.Contains(pos))
                     gridList.Add(kvGrid.Value);
             return gridList;
         }
@@ -193,7 +194,7 @@ namespace SS14.Shared.Map
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(worldPos.X, worldPos.Y))
+                if (kvGrid.Value.AABBWorld.Contains(worldPos))
                     gridList.Add(kvGrid.Value);
             return gridList;
         }

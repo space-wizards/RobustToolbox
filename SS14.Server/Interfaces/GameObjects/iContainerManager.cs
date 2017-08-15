@@ -8,12 +8,10 @@ using System.Threading.Tasks;
 
 namespace SS14.Server.Interfaces.GameObjects
 {
-    public interface IContainer
+    public interface IContainerManager : IComponent
     {
-        bool CanInsert(IEntity toinsert);
-        bool Insert(IEntity toinsert);
-        bool CanRemove(IEntity toremove);
-        bool Remove(IEntity toremove);
-        void Shutdown();
+        bool Remove(IEntity entity);
+        
+        Dictionary<Type, Container> EntityContainers { get; set; }
     }
 }

@@ -39,7 +39,14 @@ namespace SS14.Server.GameObjects
         {
             get
             {
-                return _position;
+                if(Parent != null)
+                {
+                    return GetMapTransform().Position; //Search up the tree for the true map position
+                }
+                else
+                {
+                    return _position;
+                }
             }
             set
             {
@@ -56,6 +63,9 @@ namespace SS14.Server.GameObjects
             return new TransformComponentState(Position, Rotation, Parent);
         }
 
+        /// <summary>
+        ///     Finds the transform of the entity located on the map itself
+        /// </summary>
         public ITransformComponent GetMapTransform()
         {
             if(Parent != null) //If we are not the final transform, query up the chain of parents
@@ -64,5 +74,21 @@ namespace SS14.Server.GameObjects
             }
             return this;
         }
-    }
+
+        /// <summary>
+        ///     Does this entity contain the entity in the argument
+        /// </summary>
+        public bool ContainsEntity(ITransformComponent entity)
+        {
+            if (entity.Parent != null) //Is the entity on the map
+                if (this == entity.Parent) //Is this the direct container of the entity
+                {
+                    return true;
+                }
+                else
+                {
+                    return ContainsEntity(entity.Parent); //Recursively search up the entitys containers for this object
+                }
+            return false;
+        }
 }

@@ -22,6 +22,10 @@ namespace SS14.Server.GameObjects.Components.Container
                 holder.Owner.AddComponent(factory.GetComponent<ContainerManagerComponent>());
             }
             Owner = holder.Owner;
+            if(containermanager.EntityContainers[holder.GetType()] != null)
+            {
+                throw new NotImplementedException(); //This system is designed to have singular containers per component, make a new component dummy.
+            }
             containermanager.EntityContainers[holder.GetType()] = this;
         }
 

@@ -7,6 +7,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.Components.Container
 {
@@ -17,8 +18,8 @@ namespace SS14.Server.GameObjects.Components.Container
             IContainerManager containermanager = holder.Owner.GetComponent<IContainerManager>();
             if (containermanager == null)
             {
-                containermanager = new ContainerManagerComponent();
-                holder.Owner.AddComponent(containermanager);
+                var factory = IoCManager.Resolve<IComponentFactory>();
+                holder.Owner.AddComponent(factory.GetComponent<ContainerManagerComponent>());
             }
             Owner = holder.Owner;
             containermanager.EntityContainers[holder.GetType()] = this;

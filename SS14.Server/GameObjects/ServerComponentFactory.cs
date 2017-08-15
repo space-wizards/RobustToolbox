@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces.GameObjects;
+﻿using SS14.Server.GameObjects.Components.Container;
+using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 
@@ -31,6 +32,8 @@ namespace SS14.Server.GameObjects
 
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
+
+            Register<ContainerManagerComponent>();
         }
     }
 }

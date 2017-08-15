@@ -269,7 +269,11 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (base.KeyDown(e)) return true;
+            if (e.Code == Keyboard.Key.Escape)
+            {
+                Dispose();
+                return true;
+            }
             return false;
         }
     }

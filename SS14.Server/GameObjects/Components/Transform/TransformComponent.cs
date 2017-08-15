@@ -39,7 +39,7 @@ namespace SS14.Server.GameObjects
         {
             get
             {
-                if(Parent != null)
+                if (Parent != null)
                 {
                     return GetMapTransform().Position; //Search up the tree for the true map position
                 }
@@ -68,7 +68,7 @@ namespace SS14.Server.GameObjects
         /// </summary>
         public ITransformComponent GetMapTransform()
         {
-            if(Parent != null) //If we are not the final transform, query up the chain of parents
+            if (Parent != null) //If we are not the final transform, query up the chain of parents
             {
                 return Parent.GetMapTransform();
             }
@@ -91,4 +91,5 @@ namespace SS14.Server.GameObjects
                 }
             return false;
         }
+    }
 }

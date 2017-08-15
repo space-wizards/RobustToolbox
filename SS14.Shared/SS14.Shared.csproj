@@ -136,6 +136,8 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\Components\Container\Container.cs" />
+    <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />
@@ -143,6 +145,8 @@
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ICollidableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\Icontainer.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\iContainerManager.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />

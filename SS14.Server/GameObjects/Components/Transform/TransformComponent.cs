@@ -16,7 +16,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public ITransformComponent Parent { get; private set; }
+        public ITransformComponent Parent { get; set; }
 
         private Vector2 _position;
 
@@ -61,6 +61,31 @@ namespace SS14.Server.GameObjects
         public override ComponentState GetComponentState()
         {
             return new TransformComponentState(Position, Rotation, Parent);
+        }
+
+        /// <summary>
+        /// Detaches this entity from its parent.
+        /// </summary>
+        public void DetachParent()
+        {
+            // nothing to do
+            if (Parent == null)
+                return;
+
+            Parent = null;
+        }
+
+        /// <summary>
+        /// Sets another entity as the parent entity.
+        /// </summary>
+        /// <param name="parent"></param>
+        public void AttachParent(ITransformComponent parent)
+        {
+            // nothing to attach to.
+            if (parent == null)
+                return;
+
+            Parent = parent;
         }
 
         /// <summary>

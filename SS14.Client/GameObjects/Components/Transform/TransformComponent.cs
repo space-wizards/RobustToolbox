@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects
     {
         public Vector2 Position { get; private set; }
         public Angle Rotation { get; private set; }
-        public ITransformComponent Parent { get; private set; }
+        public ITransformComponent Parent { get; set; }
 
         //TODO: Make parenting actually work.
 
@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        private void DetachParent()
+        public void DetachParent()
         {
             // nothing to do
             if (Parent == null)
@@ -67,7 +67,7 @@ namespace SS14.Client.GameObjects
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        private void AttachParent(ITransformComponent parent)
+        public void AttachParent(ITransformComponent parent)
         {
             // nothing to attach to.
             if (parent == null)

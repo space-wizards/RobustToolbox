@@ -27,7 +27,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
-        ITransformComponent Parent { get; }
+        ITransformComponent Parent { get; set; }
 
         /// <summary>
         ///     Finds the transform located on the map or in nullspace (TODO: Nullspace)
@@ -38,5 +38,9 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         ///     Returns whether the entity of this transform contains the entity argument
         /// </summary>
         bool ContainsEntity(ITransformComponent entity);
+
+        void DetachParent();
+        void AttachParent(ITransformComponent parent);
+
     }
 }

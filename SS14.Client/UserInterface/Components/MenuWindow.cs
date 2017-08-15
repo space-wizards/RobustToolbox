@@ -85,18 +85,15 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code != Keyboard.Key.Escape)
+            if (e.Code == Keyboard.Key.Escape)
             {
-                return false;
+                if (IsVisible())
+                {
+                    ToggleVisible();
+                    return true;
+                }
             }
-
-            if(IsVisible() == false)
-            {
-                return false;
-            }
-
-            ToggleVisible();
-            return true;
+            return false;
         }
     }
 }

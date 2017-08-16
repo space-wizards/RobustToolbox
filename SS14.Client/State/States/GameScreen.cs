@@ -369,10 +369,14 @@ namespace SS14.Client.State.States
                 CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 var vp = CluwneLib.WorldViewport;
 
-                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+                if (!bFullVision)
+                {
+                    ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
 
-                // Render the lightmap
-                RenderLightsIntoMap(lights);
+                    // Render the lightmap
+                    RenderLightsIntoMap(lights);
+                }
+
                 CalculateSceneBatches(vp);
 
                 //Draw all rendertargets to the scenetarget
@@ -1002,6 +1006,10 @@ namespace SS14.Client.State.States
 
         private void CalculateAllLights()
         {
+            if (bFullVision)
+            {
+                return;
+            }
             foreach
             (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.LightArea.Calculated == false))
             {
@@ -1262,10 +1270,12 @@ namespace SS14.Client.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
+
             Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
             var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
             var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
+
 
             foreach (TileRef t in tiles)
             {

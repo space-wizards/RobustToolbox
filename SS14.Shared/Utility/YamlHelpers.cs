@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Shared.Utility
 {

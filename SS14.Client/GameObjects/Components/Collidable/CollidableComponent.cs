@@ -1,6 +1,4 @@
-﻿using Lidgren.Network;
-using SFML.Graphics;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SFML.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -10,7 +8,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
-using System.Collections.Generic;
+using OpenTK;
 using SS14.Shared.Interfaces.Physics;
 using YamlDotNet.RepresentationModel;
 
@@ -18,15 +16,18 @@ namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
+        /// <inheritdoc />
         public override string Name => "Collidable";
+
+        /// <inheritdoc />
         public override uint? NetID => NetIDs.COLLIDABLE;
 
-        public SFML.Graphics.Color DebugColor { get; set; } = Color.Red;
+        public Color DebugColor { get; private set; } = Color.Red;
 
-        private bool collisionEnabled = true;
-        private FloatRect currentAABB;
-        protected bool isHardCollidable = true;
+        // no client side collision support for now
+        private bool collisionEnabled = false;
 
+        /// <inheritdoc />
         public override Type StateType => typeof(CollidableComponentState);
 
         /// <summary>
@@ -34,63 +35,24 @@ namespace SS14.Client.GameObjects
         /// </summary>
         private Vector4f TweakAABB { get; set; } = new Vector4f(0, 0, 0, 0);
 
-        private FloatRect OffsetAABB
-        {
-            get
-            {
-                if (Owner.TryGetComponent<ITransformComponent>(out var ownerTransform))
-                {
-                    return
-                        new FloatRect(
-                            currentAABB.Left +
-                            ownerTransform.Position.X -
-                            (currentAABB.Width / 2) + TweakAABB.W,
-                            currentAABB.Top +
-                            ownerTransform.Position.Y -
-                            (currentAABB.Height / 2) + TweakAABB.X,
-                            currentAABB.Width - (TweakAABB.W - TweakAABB.Y),
-                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z));
-                }
-                else
-                {
-                    return new FloatRect();
-                }
-            }
-        }
+        /// <inheritdoc />
+        FloatRect ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB.Convert();
 
-        public FloatRect AABB => OffsetAABB;
-
-        public FloatRect WorldAABB
-        {
-            get
-            {
-                var trans = Owner.GetComponent<ITransformComponent>();
-                if (trans == null)
-                    return AABB;
-                return new FloatRect(
-                    AABB.Left + trans.Position.X,
-                    AABB.Top + trans.Position.Y,
-                    AABB.Width,
-                    AABB.Height);
-            }
-        }
+        /// <inheritdoc />
+        FloatRect ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB.Convert();
 
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
         /// </summary>
-        public void Bump(IEntity ent)
+        void ICollidable.Bump(IEntity ent)
         {
             OnBump?.Invoke(this, new EventArgs());
 
             Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
-            Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped,
-                                              ent.Uid);
+            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped, ent.Uid);
         }
 
-        public bool IsHardCollidable
-        {
-            get { return isHardCollidable; }
-        }
+        public bool IsHardCollidable { get; } = true;
 
         public event EventHandler OnBump;
 
@@ -101,9 +63,12 @@ namespace SS14.Client.GameObjects
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);
-            GetAABB();
-            var cm = IoCManager.Resolve<ICollisionManager>();
-            cm.AddCollidable(this);
+
+            if (collisionEnabled)
+            {
+                var cm = IoCManager.Resolve<ICollisionManager>();
+                cm.AddCollidable(this);
+            }
         }
 
         /// <summary>
@@ -111,8 +76,11 @@ namespace SS14.Client.GameObjects
         /// </summary>
         public override void OnRemove()
         {
-            var cm = IoCManager.Resolve<ICollisionManager>();
-            cm.RemoveCollidable(this);
+            if(collisionEnabled)
+            {
+                var cm = IoCManager.Resolve<ICollisionManager>();
+                cm.RemoveCollidable(this);
+            }
 
             base.OnRemove();
         }
@@ -138,7 +106,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.SpriteChanged:
                     if (collisionEnabled)
                     {
-                        GetAABB();
                         var cm = IoCManager.Resolve<ICollisionManager>();
                         cm.UpdateCollidable(this);
                     }
@@ -208,25 +175,12 @@ namespace SS14.Client.GameObjects
             cm.RemoveCollidable(this);
         }
 
-        /// <summary>
-        /// Gets the current AABB from the sprite component.
-        /// </summary>
-        private void GetAABB()
-        {
-            var component = Owner.GetComponent<ISpriteRenderableComponent>();
-            var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-
-            currentAABB = new FloatRect(
-                component.AABB.Left / tileSize,
-                component.AABB.Top / tileSize,
-                component.AABB.Width / tileSize,
-                component.AABB.Height / tileSize);
-        }
-
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
             var newState = (CollidableComponentState) state;
+
+            // edge triggered
             if (newState.CollisionEnabled == collisionEnabled)
                 return;
 
@@ -234,6 +188,11 @@ namespace SS14.Client.GameObjects
                 EnableCollision();
             else
                 DisableCollision();
+        }
+
+        public bool TryCollision(Vector2 offset, bool bump = false)
+        {
+            return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
     }
 }

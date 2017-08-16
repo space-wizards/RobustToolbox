@@ -4,7 +4,6 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
@@ -31,12 +30,14 @@ using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Client.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Utility;
+using FrameEventArgs = SS14.Client.Graphics.Event.FrameEventArgs;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SFML.System.Vector2i;
 
@@ -459,23 +460,18 @@ namespace SS14.Client.State.States
 
             if (CluwneLib.Debug.DebugColliders)
             {
-                var colliders =
-                    _componentManager.GetComponents<CollidableComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
-
                 var collidables =
                     _componentManager.GetComponents<CollidableComponent>()
-                    .Select(c => new { Color = c.DebugColor, AABB = c.AABB })
-                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
+                    .Select(c => new { Color = c.DebugColor, AABB = c.Owner.GetComponent<BoundingBoxComponent>().WorldAABB })
+                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport.Convert()));
 
-                foreach (var hitbox in colliders.Concat(collidables))
+                foreach (var bounds in collidables)
                 {
-                    var box = CluwneLib.WorldToScreen(hitbox.AABB);
+                    var box = CluwneLib.WorldToScreen(bounds.AABB.Convert());
                     CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
-                        hitbox.Color.WithAlpha(64));
+                        bounds.Color.WithAlpha(64));
                     CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
-                        hitbox.Color.WithAlpha(128));
+                        bounds.Color.WithAlpha(128));
                 }
             }
             if (CluwneLib.Debug.DebugGridDisplay)
@@ -528,11 +524,11 @@ namespace SS14.Client.State.States
             GC.Collect();
         }
 
-        #endregion IState Members
+#endregion IState Members
 
-        #region Input
+#region Input
 
-        #region Keyboard
+#region Keyboard
         public void KeyPressed(KeyEventArgs e)
         {
         }
@@ -613,9 +609,9 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion Keyboard
+#endregion Keyboard
 
-        #region Mouse
+#region Mouse
         public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
@@ -646,7 +642,7 @@ namespace SS14.Client.State.States
                 }
             }
 
-            #region Object clicking
+#region Object clicking
 
             // Convert our click from screen -> world coordinates
             //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
@@ -710,7 +706,7 @@ namespace SS14.Client.State.States
                     return;
             }
 
-            #endregion Object clicking
+#endregion Object clicking
         }
 
         public void MouseMove(MouseMoveEventArgs e)
@@ -742,9 +738,9 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseLeft(e);
         }
-        #endregion Mouse
+#endregion Mouse
 
-        #region Chat
+#region Chat
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             var channel = (ChatChannel)msg.ReadByte();
@@ -791,13 +787,13 @@ namespace SS14.Client.State.States
             NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-        #endregion Chat
+#endregion Chat
 
-        #endregion Input
+#endregion Input
 
-        #region Event Handlers
+#region Event Handlers
 
-        #region Buttons
+#region Buttons
         private void menuButton_Clicked(ImageButton sender)
         {
             _menu.ToggleVisible();
@@ -813,9 +809,9 @@ namespace SS14.Client.State.States
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }
 
-        #endregion Buttons
+#endregion Buttons
 
-        #region Messages
+#region Messages
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
@@ -870,9 +866,9 @@ namespace SS14.Client.State.States
             }
         }
 
-        #endregion Messages
+#endregion Messages
 
-        #region State
+#region State
 
         /// <summary>
         /// HandleStateUpdate
@@ -973,7 +969,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        #endregion State
+#endregion State
 
         private void OnPlayerMove(object sender, VectorEventArgs args)
         {
@@ -988,9 +984,9 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        #endregion Event Handlers
+#endregion Event Handlers
 
-        #region Lighting in order of call
+#region Lighting in order of call
 
         /**
          *  Calculate lights In player view
@@ -1382,9 +1378,9 @@ namespace SS14.Client.State.States
             PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
-        #endregion Lighting in order of call
+#endregion Lighting in order of call
 
-        #region Helper methods
+#region Helper methods
 
         private void RenderList(Vector2f topleft, Vector2f bottomright, IEnumerable<IRenderableComponent> renderables)
         {
@@ -1478,9 +1474,9 @@ namespace SS14.Client.State.States
             debugWallOccluders = !debugWallOccluders;
         }
 
-        #endregion Helper methods
+#endregion Helper methods
 
-        #region Nested type: ClickData
+#region Nested type: ClickData
 
         private struct ClickData
         {
@@ -1494,6 +1490,6 @@ namespace SS14.Client.State.States
             }
         }
 
-        #endregion Nested type: ClickData
+#endregion Nested type: ClickData
     }
 }

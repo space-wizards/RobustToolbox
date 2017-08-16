@@ -10,6 +10,7 @@ namespace SS14.Client.GameObjects
         public ClientComponentFactory()
         {
             Register<CollidableComponent>();
+            RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
             Register<ContextMenuComponent>();
             Register<KeyBindingInputComponent>();

@@ -80,6 +80,7 @@ namespace SS14.Client
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<ICollisionManager, CollisionManager>();
 
             // Client stuff.
             IoCManager.Register<IRand, Rand>();
@@ -88,7 +89,6 @@ namespace SS14.Client
             IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientNetManager, NetManager>();

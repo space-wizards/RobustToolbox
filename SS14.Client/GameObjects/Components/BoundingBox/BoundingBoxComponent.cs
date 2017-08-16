@@ -1,6 +1,9 @@
 ﻿using System;
 using OpenTK;
+using SFML.Graphics;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -17,9 +20,27 @@ namespace SS14.Client.GameObjects
         public override uint? NetID => NetIDs.BOUNDING_BOX;
 
         /// <summary>
-        ///     Axis Aligned Bounding Box of the entity.
+        ///     Local Axis Aligned Bounding Box of the entity.
         /// </summary>
         public Box2 AABB { get; private set; }
+
+        /// <summary>
+        ///     World Axis Aligned Bounding Box of the entity.
+        /// </summary>
+        public Box2 WorldAABB
+        {
+            get
+            {
+                var trans = Owner.GetComponent<ITransformComponent>();
+                var bounds = AABB;
+
+                return new FloatRect(
+                    bounds.Left + trans.Position.X,
+                    bounds.Top + trans.Position.Y,
+                    bounds.Width,
+                    bounds.Height).Convert();
+            }
+        }
 
         /// <inheritdoc />
         public override Type StateType => typeof(BoundingBoxComponentState);

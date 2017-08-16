@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -60,12 +62,12 @@ namespace SS14.Shared.Physics
             var buckets = points.Select(GetBucket).Distinct().ToList();
 
             //Get all of the points
-            var cpoints = new List<CollidablePoint>();
+            var cPoints = new List<CollidablePoint>();
             foreach (var bucket in buckets)
-                cpoints.AddRange(bucket.GetPoints());
+                cPoints.AddRange(bucket.GetPoints());
 
             //Expand points to distinct AABBs
-            var aabBs = cpoints.Select(cp => cp.ParentAABB).Distinct().ToList();
+            var aabBs = cPoints.Select(cp => cp.ParentAABB).Distinct().ToList();
 
             //try all of the AABBs against the target rect.
             var collided = false;
@@ -73,9 +75,8 @@ namespace SS14.Shared.Physics
                 if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                     collided = true;
 
-            //TODO: Once map manager (Grids) are complete, re-enable this
-            //return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(collider, true).Any(t => t.Tile.TileDef.IsCollidable);
-            return collided;
+            //TODO: This needs multi-grid support.
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(collider.Convert()).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace SS14.Shared.Physics
         /// <returns></returns>
         public bool TryCollide(IEntity entity)
         {
-            return TryCollide(entity, new Vector2f());
+            return TryCollide(entity, new Vector2());
         }
 
         /// <summary>
@@ -93,38 +94,38 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity, Vector2f offset, bool bump = true)
+        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
         {
             var collider = entity.GetComponent<ICollidableComponent>();
             if (collider == null) return false;
 
-            var ColliderAABB = collider.WorldAABB;
-            if (offset.LengthSquared() > 0)
+            var colliderAABB = collider.WorldAABB;
+            if (offset.LengthSquared > 0)
             {
-                ColliderAABB.Left += offset.X;
-                ColliderAABB.Top += offset.Y;
+                colliderAABB.Left += offset.X;
+                colliderAABB.Top += offset.Y;
             }
 
             Vector2f[] points =
             {
-                new Vector2f(ColliderAABB.Left, ColliderAABB.Top),
-                new Vector2f(SfmlExt.Right((FloatRect) ColliderAABB), ColliderAABB.Top),
-                new Vector2f(SfmlExt.Right((FloatRect) ColliderAABB), SfmlExt.Bottom((FloatRect) ColliderAABB)),
-                new Vector2f(ColliderAABB.Left, SfmlExt.Bottom((FloatRect) ColliderAABB))
+                new Vector2f(colliderAABB.Left, colliderAABB.Top),
+                new Vector2f(colliderAABB.Right(), colliderAABB.Top),
+                new Vector2f(colliderAABB.Right(), colliderAABB.Bottom()),
+                new Vector2f(colliderAABB.Left, colliderAABB.Bottom())
             };
 
-            var aabbs =
+            var bounds = 
                 points
                     .Select(GetBucket) // Get the buckets that correspond to the collider's points.
                     .Distinct()
                     .SelectMany(b => b.GetPoints()) // Get all of the points
                     .Select(p => p.ParentAABB) // Expand points to distinct AABBs
                     .Distinct()
-                    .Where(aabb => aabb.Collidable.AABB.Intersects(ColliderAABB)); //try all of the AABBs against the target rect.
+                    .Where(aabb => aabb.Collidable.WorldAABB != collider.WorldAABB && aabb.Collidable.WorldAABB.Intersects(colliderAABB)); //try all of the AABBs against the target rect.
 
             //try all of the AABBs against the target rect.
             var collided = false;
-            foreach (var aabb in aabbs)
+            foreach (var aabb in bounds)
             {
                 if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
                     collided = true;
@@ -132,9 +133,8 @@ namespace SS14.Shared.Physics
                 if (bump) aabb.Collidable.Bump(entity);
             }
 
-            //TODO: Once map manager (Grids) are complete, re-enable this
-            //return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(ColliderAABB, true).Any(t => t.Tile.TileDef.IsCollidable);
-            return collided;
+            //TODO: This needs multi-grid support.
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(colliderAABB.Convert()).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -21,9 +22,27 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.BOUNDING_BOX;
 
         /// <summary>
-        /// Axis Aligned Bounding Box of the entity.
+        /// Local Axis Aligned Bounding Box of the entity.
         /// </summary>
-        public Box2 AABB { get; set; }
+        public Box2 AABB { get; set; } = new Box2(0, 0, 1, 1);
+
+        /// <summary>
+        /// World Axis Aligned Bounding Box of the entity.
+        /// </summary>
+        public Box2 WorldAABB
+        {
+            get
+            {
+                var trans = Owner.GetComponent<ITransformComponent>();
+                var bounds = AABB;
+
+                return new FloatRect(
+                    bounds.Left + trans.Position.X,
+                    bounds.Top + trans.Position.Y,
+                    bounds.Width,
+                    bounds.Height).Convert();
+            }
+        }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()

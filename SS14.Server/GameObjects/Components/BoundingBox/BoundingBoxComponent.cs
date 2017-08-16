@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using SFML.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -36,11 +35,7 @@ namespace SS14.Server.GameObjects
                 var trans = Owner.GetComponent<ITransformComponent>();
                 var bounds = AABB;
 
-                return new FloatRect(
-                    bounds.Left + trans.Position.X,
-                    bounds.Top + trans.Position.Y,
-                    bounds.Width,
-                    bounds.Height).Convert();
+                return bounds.Translated(trans.Position);
             }
         }
 

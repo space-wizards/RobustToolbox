@@ -14,6 +14,7 @@ namespace SS14.Server.Interfaces.GameObjects
         bool Insert(IEntity toinsert);
         bool CanRemove(IEntity toremove);
         bool Remove(IEntity toremove);
+        bool Contains(IEntity contained);
         void Shutdown();
     }
 }

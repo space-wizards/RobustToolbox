@@ -11,12 +11,13 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.Components.Container
 {
-    public class Container : List<IEntity>, IContainer
+    abstract class Container : IContainer
     {
+        private List<IEntity> ContainerList;
+
         public Container(IComponent holder)
         {
-            IContainerManager containermanager = holder.Owner.GetComponent<IContainerManager>();
-            if (containermanager == null)
+            if (!holder.Owner.TryGetComponent<IContainerManager>(out var containermanager))
             {
                 var factory = IoCManager.Resolve<IComponentFactory>();
                 holder.Owner.AddComponent(factory.GetComponent<ContainerManagerComponent>());
@@ -44,7 +45,7 @@ namespace SS14.Server.GameObjects.Components.Container
         {
             if (CanInsert(toinsert) && toinsert.GetComponent<ITransformComponent>().Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert)) //Verify we can insert and that the object got properly removed from its current location
             {
-                this.Add(toinsert);
+                ContainerList.Add(toinsert);
                 toinsert.GetComponent<ITransformComponent>().AttachParent(Owner.GetComponent<ITransformComponent>());
                 //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
@@ -54,18 +55,18 @@ namespace SS14.Server.GameObjects.Components.Container
 
         public virtual bool CanRemove(IEntity toremove)
         {
-            if(!this.Contains(toremove))
+            if(!ContainerList.Contains(toremove))
             {
                 return false;
             }
             return true;
         }
 
-        public new bool Remove(IEntity toremove)
+        public bool Remove(IEntity toremove)
         {
             if (CanRemove(toremove))
             {
-                base.Remove(toremove);
+                ContainerList.Remove(toremove);
                 toremove.GetComponent<ITransformComponent>().DetachParent();
                 //OnRemoval(toremove); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
@@ -73,10 +74,15 @@ namespace SS14.Server.GameObjects.Components.Container
             return false;
         }
 
+        public bool Contains(IEntity contained)
+        {
+            return ContainerList.Contains(contained);
+        }
+
         public void Shutdown()
         {
             Owner = null;
-            this.Clear();
+            ContainerList.Clear();
         }
     }
 }

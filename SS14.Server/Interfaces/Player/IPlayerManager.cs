@@ -1,5 +1,6 @@
 ﻿using System;
 using SFML.System;
+using OpenTK;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
 using Lidgren.Network;
@@ -24,7 +25,7 @@ namespace SS14.Server.Interfaces.Player
         IPlayerSession GetSessionByConnection(NetConnection senderConnection);
 
         IPlayerSession GetSessionById(int networkID);
-        
+
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
         void Initialize(BaseServer baseServer);
@@ -37,7 +38,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(Vector2f position, int range);
+        List<IPlayerSession> GetPlayersInRange(Vector2 position, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

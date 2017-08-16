@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Collection;
@@ -22,6 +23,8 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
+using SS14.Shared.Maths;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.Resources
 {
@@ -496,15 +499,15 @@ namespace SS14.Client.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2f((float)Math.Round(offsetX * atlasTex.Size.X, 1),
+                info.Offsets = new Vector2((float)Math.Round(offsetX * atlasTex.Size.X, 1),
                     (float)Math.Round(offsetY * atlasTex.Size.Y, 1));
-                info.Size = new Vector2f((float)Math.Round(sizeX * atlasTex.Size.X, 1),
+                info.Size = new Vector2((float)Math.Round(sizeX * atlasTex.Size.X, 1),
                     (float)Math.Round(sizeY * atlasTex.Size.Y, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
-                    new Sprite(atlasTex, new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
+                    new Sprite(atlasTex, Box2i.FromDimensions((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
             }
 
             return loadedSprites;
@@ -536,8 +539,8 @@ namespace SS14.Client.Resources
             var info = new SpriteInfo()
             {
                 Name = name,
-                Offsets = new Vector2f(0, 0),
-                Size = (Vector2f)texture.Size,
+                Offsets = new Vector2(0, 0),
+                Size = (Vector2)(Vector2u)texture.Size,
             };
 
             var sprite = new Sprite(texture);

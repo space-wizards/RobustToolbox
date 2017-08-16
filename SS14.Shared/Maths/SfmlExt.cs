@@ -12,7 +12,7 @@ namespace SS14.Shared.Maths
         public static Vector2f ToFloat(this SFML.System.Vector2i vec)  => new Vector2f(vec.X, vec.Y);
 
 
-        // Vector2f
+        // Vector2
         public static float LengthSquared(this Vector2f vec) => vec.X * vec.X + vec.Y * vec.Y;
         public static float Length(this Vector2f vec)        => (float)Math.Sqrt(LengthSquared(vec));
         public static SFML.System.Vector2i Round(this Vector2f vec)      => new SFML.System.Vector2i((int)Math.Round(vec.X), (int)Math.Round(vec.Y));

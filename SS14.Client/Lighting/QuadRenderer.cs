@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 
@@ -23,21 +24,21 @@ namespace SS14.Client.Lighting
             vertex[1] = new Vertex(new Vector2f(-1,-1), Color.Transparent, new Vector2f(0, 1));
             vertex[2] = new Vertex(new Vector2f(-1, 1),  Color.Transparent, new Vector2f(0, 0));
             vertex[3] = new Vertex(new Vector2f( 1, 1),   Color.Transparent, new Vector2f(1, 0));
-            
+
 
 
         }
 
-        public void Render(Vector2f v1, Vector2f v2)
+        public void Render(Vector2 v1, Vector2 v2)
         {
-       
+
 
 
             // What is the purpose of Quadrenderer? all it is doing is drawing transparent verts.
            // CluwneLib.CurrentRenderTarget.Draw(vertex);
-         
-           
-            
+
+
+
         }
     }
 }

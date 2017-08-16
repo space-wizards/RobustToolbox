@@ -1,7 +1,9 @@
 ﻿using SFML.Graphics;
 using SFML.System;
+using OpenTK;
 using SS14.Client.Graphics.Interface;
-using Vector2i = SFML.System.Vector2i;
+using SS14.Shared.Utility;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Graphics.Sprite
 {
@@ -72,7 +74,7 @@ namespace SS14.Client.Graphics.Sprite
 
             if (CluwneLib.Debug.DebugTextboxes)//CluwneLib.Debug()
             {
-                FloatRect fr = _textSprite.GetGlobalBounds();
+                var fr = _textSprite.GetGlobalBounds().Convert();
                 CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);
             }
         }
@@ -97,9 +99,9 @@ namespace SS14.Client.Graphics.Sprite
             return MeasureLine(Text);
         }
 
-        public Vector2f FindCharacterPos(uint index)
+        public Vector2 FindCharacterPos(uint index)
         {
-            return _textSprite.FindCharacterPos(index);
+            return _textSprite.FindCharacterPos(index).Convert();
         }
 
         #endregion Methods
@@ -110,7 +112,7 @@ namespace SS14.Client.Graphics.Sprite
 
         public Color Color;
 
-        public Vector2f ShadowOffset { get; set; }
+        public Vector2 ShadowOffset { get; set; }
 
         public bool Shadowed
         {

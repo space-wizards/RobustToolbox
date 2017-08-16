@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using OpenTK;
+using Lidgren.Network;
 using SFML.Graphics;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
@@ -24,7 +25,7 @@ namespace SS14.Client.GameObjects
         public SFML.Graphics.Color DebugColor { get; set; } = Color.Red;
 
         private bool collisionEnabled = true;
-        private FloatRect currentAABB;
+        private Box2 currentAABB;
         protected bool isHardCollidable = true;
 
         public override Type StateType => typeof(CollidableComponentState);
@@ -32,16 +33,16 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4f TweakAABB { get; set; } = new Vector4f(0, 0, 0, 0);
+        private Vector4 TweakAABB { get; set; } = Vector4.Zero;
 
-        private FloatRect OffsetAABB
+        private Box2 OffsetAABB
         {
             get
             {
                 if (Owner.TryGetComponent<ITransformComponent>(out var ownerTransform))
                 {
                     return
-                        new FloatRect(
+                        Box2.FromDimensions(
                             currentAABB.Left +
                             ownerTransform.Position.X -
                             (currentAABB.Width / 2) + TweakAABB.W,
@@ -49,29 +50,32 @@ namespace SS14.Client.GameObjects
                             ownerTransform.Position.Y -
                             (currentAABB.Height / 2) + TweakAABB.X,
                             currentAABB.Width - (TweakAABB.W - TweakAABB.Y),
-                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z));
+                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z)
+                        );
                 }
                 else
                 {
-                    return new FloatRect();
+                    return new Box2();
                 }
             }
         }
 
-        public FloatRect AABB => OffsetAABB;
+        public Box2 AABB => OffsetAABB;
 
-        public FloatRect WorldAABB
+        public Box2 WorldAABB
         {
             get
             {
                 var trans = Owner.GetComponent<ITransformComponent>();
                 if (trans == null)
                     return AABB;
-                return new FloatRect(
+
+                return Box2.FromDimensions(
                     AABB.Left + trans.Position.X,
                     AABB.Top + trans.Position.Y,
                     AABB.Width,
-                    AABB.Height);
+                    AABB.Height
+                );
             }
         }
 
@@ -159,27 +163,27 @@ namespace SS14.Client.GameObjects
             YamlNode node;
             if (mapping.TryGetNode("tweakAABB", out node))
             {
-                TweakAABB = node.AsVector4f() / mapManager.TileSize;
+                TweakAABB = node.AsVector4() / mapManager.TileSize;
             }
 
             if (mapping.TryGetNode("TweakAABBtop", out node))
             {
-                TweakAABB = new Vector4f(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
+                TweakAABB = new Vector4(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBright", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
+                TweakAABB = new Vector4(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBbottom", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
+                TweakAABB = new Vector4(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBleft", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
+                TweakAABB = new Vector4(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
             }
 
             if (mapping.TryGetNode("DebugColor", out node))
@@ -216,7 +220,7 @@ namespace SS14.Client.GameObjects
             var component = Owner.GetComponent<ISpriteRenderableComponent>();
             var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-            currentAABB = new FloatRect(
+            currentAABB = Box2.FromDimensions(
                 component.AABB.Left / tileSize,
                 component.AABB.Top / tileSize,
                 component.AABB.Width / tileSize,

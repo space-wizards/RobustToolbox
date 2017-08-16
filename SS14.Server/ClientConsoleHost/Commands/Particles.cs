@@ -8,7 +8,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
 {
     class Particles
     {/*
-            Vector2f position;
+            Vector2 position;
             Entity player;
 
             var playerMgr = IoCManager.Resolve<IPlayerManager>();

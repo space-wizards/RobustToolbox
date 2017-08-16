@@ -2,7 +2,9 @@ using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -28,8 +30,8 @@ namespace SS14.Client.UserInterface.Components
             checkbox = _resourceCache.GetSprite("checkbox0");
             checkboxCheck = _resourceCache.GetSprite("checkbox1");
 
-            ClientArea = new IntRect(Position, 
-                new SFML.System.Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));
+            ClientArea = Box2i.FromDimensions(Position,
+                new Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));
             Update(0);
 
         }
@@ -52,7 +54,7 @@ namespace SS14.Client.UserInterface.Components
         }
 
         public override void Render()
-        {           
+        {
             checkbox.Draw();
             if (Value) checkboxCheck.Draw();
         }
@@ -68,7 +70,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
             {
                 Value = !Value;
                 return true;

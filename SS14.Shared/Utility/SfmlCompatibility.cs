@@ -11,7 +11,7 @@ namespace SS14.Shared.Utility
     public static class SfmlCompatibility
     {
         /// <summary>
-        /// Converts a OpenTK Vector2 to a SFML Vector2f.
+        /// Converts a OpenTK Vector2 to a SFML Vector2.
         /// </summary>
         /// <param name="vec">OpenTK Vector2.</param>
         /// <returns>SFML Vector2.</returns>
@@ -21,9 +21,9 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        /// Converts a SFML Vector2f to a OpenTK Vector2.
+        /// Converts a SFML Vector2 to a OpenTK Vector2.
         /// </summary>
-        /// <param name="vec">SFML Vector2f.</param>
+        /// <param name="vec">SFML Vector2.</param>
         /// <returns>OpenTK Vector2.</returns>
         public static Vector2 Convert(this Vector2f vec)
         {

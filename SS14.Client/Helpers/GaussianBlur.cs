@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Render;
@@ -5,7 +6,9 @@ using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
+using System.Linq;
 
 namespace SS14.Client.Helpers
 {
@@ -18,7 +21,7 @@ namespace SS14.Client.Helpers
         private uint lastHeight;
         private TechniqueList GaussianBlurTechnique;
         private bool done = false;
-        
+
 
         /// <summary>
         /// Default constructor for the GaussianBlur class. This constructor
@@ -35,11 +38,11 @@ namespace SS14.Client.Helpers
             //Set Defaults
             Radius = 7;
             Amount = 2.5f;
-            Size = new Vector2f(256.0f, 256.0f);
+            Size = new Vector2(256.0f, 256.0f);
 
             LoadShaders();
             //ComputeOffsets(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-            
+
         }
 
         /// <summary>
@@ -71,15 +74,15 @@ namespace SS14.Client.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2f[] WeightsOffsetsX { get; private set; }
+        public Vector2[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2f[] WeightsOffsetsY { get; private set; }
+        public Vector2[] WeightsOffsetsY { get; private set; }
 
-        public Vector2f Size { get; private set; }
+        public Vector2 Size { get; private set; }
 
         public void Dispose()
         {
@@ -95,10 +98,10 @@ namespace SS14.Client.Helpers
 
         public void SetSize(float size)
         {
-            SetSize(new Vector2f(size, size));
+            SetSize(new Vector2(size, size));
         }
 
-        public void SetSize(Vector2f size)
+        public void SetSize(Vector2 size)
         {
             Size = size;
             ComputeOffsets();
@@ -131,7 +134,7 @@ namespace SS14.Client.Helpers
             }
             done = false;
             ComputeKernel();
-            LoadShaders();            
+            LoadShaders();
         }
 
         private void LoadShaders()
@@ -140,7 +143,7 @@ namespace SS14.Client.Helpers
             {
                 GaussianBlurTechnique = _resourceCache.GetTechnique(("GaussianBlur" + Radius));
                 done = true;
-            }            
+            }
         }
 
         /// <summary>
@@ -148,7 +151,7 @@ namespace SS14.Client.Helpers
         /// ported from the original Java code appearing in chapter 16 of
         /// "Filthy Rich Clients: Developing Animated and Graphical Effects for
         /// Desktop Java".
-        /// 
+        ///
         /// Honk Java Honk
         /// </summary>
         public void ComputeKernel()
@@ -191,8 +194,8 @@ namespace SS14.Client.Helpers
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector2f[Radius*2 + 1];
-            WeightsOffsetsY = new Vector2f[Radius*2 + 1];
+            WeightsOffsetsX = new Vector2[Radius*2 + 1];
+            WeightsOffsetsY = new Vector2[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -200,8 +203,8 @@ namespace SS14.Client.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector2f(Kernel[index], i*xOffset);
-                WeightsOffsetsY[index] = new Vector2f(Kernel[index], i*yOffset);
+                WeightsOffsetsX[index] = new Vector2(Kernel[index], i*xOffset);
+                WeightsOffsetsY[index] = new Vector2(Kernel[index], i*yOffset);
             }
         }
 
@@ -213,17 +216,17 @@ namespace SS14.Client.Helpers
             _intermediateTarget.BeginDrawing();
             _intermediateTarget.Clear(Color.Black);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];            
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX.Select(v => v.Convert()).ToArray());
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];
                 sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
             _intermediateTarget.EndDrawing();
             GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].ResetCurrentShader();
-           
-            
+
+
             //// blur the blur vertically
             sourceImage.BeginDrawing();
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY.Select(v => v.Convert()).ToArray());
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ; //.Techniques["GaussianBlurVertical"];
                 _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
             sourceImage.EndDrawing();

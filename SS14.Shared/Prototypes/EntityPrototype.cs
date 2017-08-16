@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Log;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Shared.GameObjects
 {

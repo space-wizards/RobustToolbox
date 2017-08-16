@@ -11,7 +11,6 @@ namespace SS14.Server.Interfaces.GameObjects
     public interface IContainerManager : IComponent
     {
         bool Remove(IEntity entity);
-        
-        Dictionary<Type, Container> EntityContainers { get; set; }
+        Dictionary<Type, Container> EntityContainers { get; }
     }
 }

@@ -22,16 +22,16 @@ namespace SS14.Server.GameObjects.Components.Container
                 holder.Owner.AddComponent(factory.GetComponent<ContainerManagerComponent>());
             }
             Owner = holder.Owner;
-            if(containermanager.EntityContainers[holder.GetType()] != null)
+            if(containermanager.EntityContainers.ContainsKey(holder.GetType()))
             {
-                throw new NotImplementedException(); //This system is designed to have singular containers per component, make a new component dummy.
+                throw new InvalidOperationException(); //This system is designed to have singular containers per component, make a new component dummy.
             }
             containermanager.EntityContainers[holder.GetType()] = this;
         }
 
         private IEntity Owner { get; set; }
 
-        public bool CanInsert(IEntity toinsert)
+        public virtual bool CanInsert(IEntity toinsert)
         {
             if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>())) //Crucial, prevent circular insertion
             {
@@ -52,7 +52,7 @@ namespace SS14.Server.GameObjects.Components.Container
             return false;
         }
 
-        public bool CanRemove(IEntity toremove)
+        public virtual bool CanRemove(IEntity toremove)
         {
             if(!this.Contains(toremove))
             {

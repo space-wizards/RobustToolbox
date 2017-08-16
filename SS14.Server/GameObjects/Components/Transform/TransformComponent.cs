@@ -100,19 +100,28 @@ namespace SS14.Server.GameObjects
             return this;
         }
 
+        public bool IsMapTransform(ITransformComponent transform)
+        {
+            if (transform.Parent != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
-        public bool ContainsEntity(ITransformComponent entity)
+        public bool ContainsEntity(ITransformComponent transform)
         {
-            if (entity.Parent != null) //Is the entity on the map
-                if (this == entity.Parent) //Is this the direct container of the entity
+            if (IsMapTransform(transform)) //Is the entity on the map
+                if (this == transform.Parent) //Is this the direct container of the entity
                 {
                     return true;
                 }
                 else
                 {
-                    return ContainsEntity(entity.Parent); //Recursively search up the entitys containers for this object
+                    return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
                 }
             return false;
         }

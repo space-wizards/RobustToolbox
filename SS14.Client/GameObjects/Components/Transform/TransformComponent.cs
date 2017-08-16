@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects
     {
         public Vector2 Position { get; private set; }
         public Angle Rotation { get; private set; }
-        public ITransformComponent Parent { get; set; }
+        public ITransformComponent Parent { get; private set; }
 
         //TODO: Make parenting actually work.
 
@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public void DetachParent()
+        private void DetachParent()
         {
             // nothing to do
             if (Parent == null)
@@ -67,7 +67,7 @@ namespace SS14.Client.GameObjects
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        public void AttachParent(ITransformComponent parent)
+        private void AttachParent(ITransformComponent parent)
         {
             // nothing to attach to.
             if (parent == null)
@@ -85,19 +85,28 @@ namespace SS14.Client.GameObjects
             return this;
         }
 
+        public bool IsMapTransform(ITransformComponent transform)
+        {
+            if (transform.Parent != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
-        public bool ContainsEntity(ITransformComponent entity)
+        public bool ContainsEntity(ITransformComponent transform)
         {
-            if(entity.Parent != null) //Is the entity on the map
-                if(this == entity.Parent) //Is this the direct container of the entity
+            if(IsMapTransform(transform)) //Is the entity on the map
+                if(this == transform.Parent) //Is this the direct container of the entity
                 {
                     return true;
                 }
                 else
                 {
-                    return ContainsEntity(entity.Parent); //Recursively search up the entitys containers for this object
+                    return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
                 }
             return false;
         }

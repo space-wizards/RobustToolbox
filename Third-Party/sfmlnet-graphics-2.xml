@@ -612,7 +612,7 @@
              <param name="index">Index of the point to get, in range [0 .. PointCount - 1]</param>
              <returns>index-th point of the shape</returns>
         </member>
-        <member name="M:SFML.Graphics.ConvexShape.SetPoint(System.UInt32,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.ConvexShape.SetPoint(System.UInt32,SFML.System.Vector2)">
              <summary>
              Set the position of a point.
             
@@ -1049,7 +1049,7 @@
             <param name="width">Width of the rectangle</param>
             <param name="height">Height of the rectangle</param>
         </member>
-        <member name="M:SFML.Graphics.FloatRect.#ctor(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.FloatRect.#ctor(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Construct the rectangle from position and size
             </summary>
@@ -1150,7 +1150,7 @@
             Default constructor
             </summary>
         </member>
-        <member name="M:SFML.Graphics.RectangleShape.#ctor(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.RectangleShape.#ctor(SFML.System.Vector2)">
             <summary>
             Construct the shape with an initial size
             </summary>
@@ -1308,7 +1308,7 @@
              <param name="view">The view to use for converting the point</param>
              <returns>The converted point, in "world" coordinates</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderTarget.MapCoordsToPixel(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.RenderTarget.MapCoordsToPixel(SFML.System.Vector2)">
              <summary>
              Convert a point from world coordinates to target
              coordinates, using the current view
@@ -1321,7 +1321,7 @@
              <param name="point">Point to convert</param>
              <returns>The converted point, in target coordinates (pixels)</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderTarget.MapCoordsToPixel(SFML.System.Vector2f,SFML.Graphics.View)">
+        <member name="M:SFML.Graphics.RenderTarget.MapCoordsToPixel(SFML.System.Vector2,SFML.Graphics.View)">
              <summary>
              Convert a point from world coordinates to target coordinates
             
@@ -1557,7 +1557,7 @@
              <param name="view">The view to use for converting the point</param>
              <returns>The converted point, in "world" coordinates</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderTexture.MapCoordsToPixel(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.RenderTexture.MapCoordsToPixel(SFML.System.Vector2)">
              <summary>
              Convert a point from world coordinates to target
              coordinates, using the current view
@@ -1570,7 +1570,7 @@
              <param name="point">Point to convert</param>
              <returns>The converted point, in target coordinates (pixels)</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderTexture.MapCoordsToPixel(SFML.System.Vector2f,SFML.Graphics.View)">
+        <member name="M:SFML.Graphics.RenderTexture.MapCoordsToPixel(SFML.System.Vector2,SFML.Graphics.View)">
              <summary>
              Convert a point from world coordinates to target coordinates
             
@@ -1919,7 +1919,7 @@
              <param name="view">The view to use for converting the point</param>
              <returns>The converted point, in "world" coordinates</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderWindow.MapCoordsToPixel(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.RenderWindow.MapCoordsToPixel(SFML.System.Vector2)">
              <summary>
              Convert a point from world coordinates to target
              coordinates, using the current view
@@ -1932,7 +1932,7 @@
              <param name="point">Point to convert</param>
              <returns>The converted point, in target coordinates (pixels)</returns>
         </member>
-        <member name="M:SFML.Graphics.RenderWindow.MapCoordsToPixel(SFML.System.Vector2f,SFML.Graphics.View)">
+        <member name="M:SFML.Graphics.RenderWindow.MapCoordsToPixel(SFML.System.Vector2,SFML.Graphics.View)">
              <summary>
              Convert a point from world coordinates to target coordinates
             
@@ -2268,7 +2268,7 @@
              <param name="z">Third component of the value to assign</param>
              <param name="w">Fourth component of the value to assign</param>
         </member>
-        <member name="M:SFML.Graphics.Shader.SetParameter(System.String,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Shader.SetParameter(System.String,SFML.System.Vector2)">
              <summary>
              Change a 2-components vector parameter of the shader
             
@@ -2806,7 +2806,7 @@
             <param name="y">Y coordinate of the point to transform</param>
             <returns>Transformed point</returns>
         </member>
-        <member name="M:SFML.Graphics.Transform.TransformPoint(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.TransformPoint(SFML.System.Vector2)">
             <summary>
             Transform a 2D point.
             </summary>
@@ -2843,7 +2843,7 @@
             <param name="x">Offset to apply on X axis</param>
             <param name="y">Offset to apply on Y axis</param>
         </member>
-        <member name="M:SFML.Graphics.Transform.Translate(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.Translate(SFML.System.Vector2)">
             <summary>
             Combine the current transform with a translation.
             </summary>
@@ -2868,7 +2868,7 @@
             <param name="centerX">X coordinate of the center of rotation</param>
             <param name="centerY">Y coordinate of the center of rotation</param>
         </member>
-        <member name="M:SFML.Graphics.Transform.Rotate(System.Single,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.Rotate(System.Single,SFML.System.Vector2)">
             <summary>
             Combine the current transform with a rotation.
             
@@ -2901,13 +2901,13 @@
             <param name="centerX">X coordinate of the center of scaling</param>
             <param name="centerY">Y coordinate of the center of scaling</param>
         </member>
-        <member name="M:SFML.Graphics.Transform.Scale(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.Scale(SFML.System.Vector2)">
             <summary>
             Combine the current transform with a scaling.
             </summary>
             <param name="factors">Scaling factors</param>
         </member>
-        <member name="M:SFML.Graphics.Transform.Scale(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.Scale(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Combine the current transform with a scaling.
             
@@ -2928,7 +2928,7 @@
             <param name="right">Right operand (the second transform)</param>
             <returns>New combined transform</returns>
         </member>
-        <member name="M:SFML.Graphics.Transform.op_Multiply(SFML.Graphics.Transform,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Transform.op_Multiply(SFML.Graphics.Transform,SFML.System.Vector2)">
             <summary>
             Overload of binary operator * to transform a point.
             This call is equivalent to calling left.TransformPoint(right).
@@ -2951,14 +2951,14 @@
             Define a point with color and texture coordinates
             </summary>
         </member>
-        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2)">
             <summary>
             Construct the vertex from its position
             The vertex color is white and texture coordinates are (0, 0).
             </summary>
             <param name="position">Vertex position</param>
         </member>
-        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2f,SFML.Graphics.Color)">
+        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2,SFML.Graphics.Color)">
             <summary>
             Construct the vertex from its position and color
             The texture coordinates are (0, 0).
@@ -2966,7 +2966,7 @@
             <param name="position">Vertex position</param>
             <param name="color">Vertex color</param>
         </member>
-        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Construct the vertex from its position and texture coordinates
             The vertex color is white.
@@ -2974,7 +2974,7 @@
             <param name="position">Vertex position</param>
             <param name="texCoords">Vertex texture coordinates</param>
         </member>
-        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2f,SFML.Graphics.Color,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.Vertex.#ctor(SFML.System.Vector2,SFML.Graphics.Color,SFML.System.Vector2)">
             <summary>
             Construct the vertex from its position, color and texture coordinates
             </summary>
@@ -3111,7 +3111,7 @@
             </summary>
             <param name="viewRect">Rectangle defining the position and size of the view</param>
         </member>
-        <member name="M:SFML.Graphics.View.#ctor(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.View.#ctor(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Construct the view from its center and size
             </summary>
@@ -3130,7 +3130,7 @@
             </summary>
             <param name="rectangle">Rectangle defining the position and size of the view</param>
         </member>
-        <member name="M:SFML.Graphics.View.Move(SFML.System.Vector2f)">
+        <member name="M:SFML.Graphics.View.Move(SFML.System.Vector2)">
             <summary>
             Move the view
             </summary>

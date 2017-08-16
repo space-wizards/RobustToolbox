@@ -1,6 +1,6 @@
-using SFML.System;
+using OpenTK;
 
 namespace SS14.Shared.GameObjects.Server
 {
-    public delegate void EntityMoveEvent(Vector2f toPosition, Vector2f fromPosition);
+    public delegate void EntityMoveEvent(Vector2 toPosition, Vector2 fromPosition);
 }

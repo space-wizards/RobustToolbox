@@ -1,5 +1,4 @@
-﻿using SFML.Graphics;
-using SFML.System;
+﻿using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Interfaces.Physics
@@ -12,10 +11,10 @@ namespace SS14.Shared.Interfaces.Physics
         /// </summary>
         /// <param name="collider">Collision rectangle to check</param>
         /// <returns>true if collides, false if not</returns>
-        bool IsColliding(FloatRect collider);
+        bool IsColliding(Box2 collider);
 
         bool TryCollide(IEntity collider);
-        bool TryCollide(IEntity collider, Vector2f offset, bool bump = true);
+        bool TryCollide(IEntity collider, Vector2 offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

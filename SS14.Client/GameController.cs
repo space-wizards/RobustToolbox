@@ -1,8 +1,8 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.Window;
 using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;

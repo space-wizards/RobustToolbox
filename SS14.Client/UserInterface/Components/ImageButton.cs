@@ -3,7 +3,9 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -57,7 +59,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 _drawSprite.Position = new Vector2f( Position.X,Position.Y);
                 var bounds = _drawSprite.GetLocalBounds();
-                ClientArea = new IntRect(Position,
+                ClientArea = Box2i.FromDimensions(Position,
                                            new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }
@@ -67,7 +69,7 @@ namespace SS14.Client.UserInterface.Components
             if (_drawSprite != null)
             {
                 _drawSprite.Color = Color;
-                _drawSprite.Position = new Vector2f (Position.X,Position.Y);
+                _drawSprite.Position = new Vector2f(Position.X,Position.Y);
                 _drawSprite.Texture.Smooth = true;
                 _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
                 _drawSprite.Color = Color;

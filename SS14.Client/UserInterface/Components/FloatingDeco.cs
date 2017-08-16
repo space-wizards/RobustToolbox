@@ -1,11 +1,15 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -21,16 +25,16 @@ namespace SS14.Client.UserInterface.Components
         public bool MouseParallax = true; //Move with mouse?
         public bool MouseParallaxHorizontal = true;
         public bool MouseParallaxVertical = true;
-        private Vector2f ParallaxOffset;
+        private Vector2 ParallaxOffset;
 
         public float ParallaxScale = 0.01f; //Mouse Parallax Rate Modifier.
         public float RotationSpeed = 0; //Speed and direction at which this rotates.
 
-        public Vector2f SpriteLocation;
+        public Vector2 SpriteLocation;
         //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2 unless i fix 235+ errors. Do this later.
 
         #pragma warning disable CS0649
-        public Vector2f Velocity; //Direction and speed this is moving in.
+        public Vector2 Velocity; //Direction and speed this is moving in.
         #pragma warning restore CS0649
 
         private float spriteRotation;
@@ -48,7 +52,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            SpriteLocation = new Vector2f(SpriteLocation.X + (Velocity.X*frameTime),
+            SpriteLocation = new Vector2(SpriteLocation.X + (Velocity.X*frameTime),
                                           SpriteLocation.Y + (Velocity.Y*frameTime));
             spriteRotation += RotationSpeed*frameTime;
 
@@ -57,19 +61,19 @@ namespace SS14.Client.UserInterface.Components
 
             var bounds = DrawSprite.GetLocalBounds();
 
-            ClientArea = new IntRect((int) SpriteLocation.X, (int) SpriteLocation.Y,
+            ClientArea = Box2i.FromDimensions((int) SpriteLocation.X, (int) SpriteLocation.Y,
                                        (int)bounds.Width, (int)bounds.Height);
 
             //Outside screen. Does not respect rotation. FIX.
             if (ClientArea.Left >CluwneLib.Screen.Size.X)
-                SpriteLocation = new Vector2f((0 - bounds.Width), SpriteLocation.Y);
+                SpriteLocation = new Vector2((0 - bounds.Width), SpriteLocation.Y);
             else if (ClientArea.Left < (0 - bounds.Width))
-                SpriteLocation = new Vector2f(CluwneLib.Screen.Size.X, SpriteLocation.Y);
+                SpriteLocation = new Vector2(CluwneLib.Screen.Size.X, SpriteLocation.Y);
 
             if (ClientArea.Top > CluwneLib.Screen.Size.Y)
-                SpriteLocation = new Vector2f(SpriteLocation.X, (0 - bounds.Height));
+                SpriteLocation = new Vector2(SpriteLocation.X, (0 - bounds.Height));
             else if (ClientArea.Top < (0 - bounds.Height))
-                SpriteLocation = new Vector2f(SpriteLocation.X, CluwneLib.Screen.Size.Y);
+                SpriteLocation = new Vector2(SpriteLocation.X, CluwneLib.Screen.Size.Y);
 
             if (MouseParallax)
             {
@@ -88,11 +92,11 @@ namespace SS14.Client.UserInterface.Components
                     ParY *= ParallaxScale;
                 }
 
-                ParallaxOffset = new Vector2f(ParX, ParY);
+                ParallaxOffset = new Vector2(ParX, ParY);
             }
             else
             {
-                ParallaxOffset = new Vector2f();
+                ParallaxOffset = new Vector2();
             }
 
             Position = new Vector2i((int) SpriteLocation.X, (int) SpriteLocation.Y);
@@ -101,7 +105,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             DrawSprite.Rotation = spriteRotation;
-            DrawSprite.Position = (SpriteLocation + ParallaxOffset);
+            DrawSprite.Position = (SpriteLocation + ParallaxOffset).Convert();
             DrawSprite.Draw();
         }
 

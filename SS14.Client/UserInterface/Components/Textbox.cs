@@ -9,7 +9,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -34,9 +34,9 @@ namespace SS14.Client.UserInterface.Components
         private float _caretPos;
         private float _caretWidth = 2;
 
-        private IntRect _clientAreaLeft;
-        private IntRect _clientAreaMain;
-        private IntRect _clientAreaRight;
+        private Box2i _clientAreaLeft;
+        private Box2i _clientAreaMain;
+        private Box2i _clientAreaRight;
 
         private int _displayIndex;
 
@@ -86,17 +86,17 @@ namespace SS14.Client.UserInterface.Components
             var boundsLeft = _textboxLeft.GetLocalBounds();
             var boundsMain = _textboxMain.GetLocalBounds();
             var boundsRight = _textboxRight.GetLocalBounds();
-            _clientAreaLeft = new IntRect(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
 
-            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
                                             Width, (int)boundsMain.Height);
-            _clientAreaRight = new IntRect(_clientAreaMain.Right(), Position.Y,
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y,
                                              (int)boundsRight.Width, (int)boundsRight.Height);
-            ClientArea = new IntRect(Position,
+            ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
-            Label.Position = new Vector2i(_clientAreaLeft.Right(),
+            Label.Position = new Vector2i(_clientAreaLeft.Right,
                                        Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
 
             if (Focus)
@@ -292,7 +292,7 @@ namespace SS14.Client.UserInterface.Components
 
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
-                _caretPos = 
+                _caretPos =
                             Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }

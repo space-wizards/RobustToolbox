@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -30,7 +31,7 @@ namespace SS14.Client.Map
                 }
                 else
                 {
-                    var point = CluwneLib.WorldToScreen(new Vector2f(tileReference.X, tileReference.Y));
+                    var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
                     RenderTile(tileType, point.X, point.Y, floorBatch);
                     RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
                 }
@@ -42,7 +43,7 @@ namespace SS14.Client.Map
             {
                 var td = tr.TileDef;
 
-                var point = CluwneLib.WorldToScreen(new Vector2f(tr.X, tr.Y));
+                var point = CluwneLib.WorldToScreen(new Vector2(tr.X, tr.Y));
                 RenderTile(td, point.X, point.Y, wallBatch);
                 RenderTop(td, point.X, point.Y, wallTopsBatch);
             }

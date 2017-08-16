@@ -1,5 +1,5 @@
-﻿using SFML.Window;
-using SS14.Client.Graphics.Event;
+﻿using OpenTK;
+using SFML.Window;
 using SS14.Shared.IoC;
 using System;
 

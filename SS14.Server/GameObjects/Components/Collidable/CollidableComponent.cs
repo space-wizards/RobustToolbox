@@ -1,5 +1,6 @@
 ﻿using System;
 using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -32,8 +33,8 @@ namespace SS14.Server.GameObjects
             return new CollidableComponentState(_collisionEnabled);
         }
 
-        public FloatRect WorldAABB { get; }
-        public FloatRect AABB { get; }
+        public Box2 WorldAABB { get; }
+        public Box2 AABB { get; }
         public bool IsHardCollidable { get; }
 
         public void Bump(IEntity ent)

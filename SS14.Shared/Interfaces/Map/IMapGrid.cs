@@ -1,8 +1,7 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using SS14.Shared.Map;
-using FloatRect = OpenTK.Box2;
-using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -14,7 +13,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
-        FloatRect AABBWorld { get; }
+        Box2 AABBWorld { get; }
 
         /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
@@ -24,7 +23,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     The origin of the grid in world coordinates. Make sure to set this!
         /// </summary>
-        Vector2f WorldPosition { get; set; }
+        Vector2 WorldPosition { get; set; }
 
         #region TileAccess
 
@@ -33,7 +32,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(Vector2f worldPos);
+        TileRef GetTile(Vector2 worldPos);
 
         /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
@@ -62,7 +61,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in global world coordinates.</param>
         /// <param name="tile">The new tile to insert.</param>
-        void SetTile(Vector2f worldPos, Tile tile);
+        void SetTile(Vector2 worldPos, Tile tile);
 
         /// <summary>
         ///     Replaces a single tile inside of the grid.
@@ -88,7 +87,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="ignoreEmpty">Will empty tiles be returned?</param>
         /// <param name="predicate">Optional predicate to filter the files.</param>
         /// <returns></returns>
-        IEnumerable<TileRef> GetTilesIntersecting(FloatRect worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
+        IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
 
         #endregion
 
@@ -131,14 +130,14 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="posWorld">The world-space coordinates with global origin.</param>
         /// <returns>The world-space coordinates with local origin.</returns>
-        Vector2f WorldToLocal(Vector2f posWorld);
+        Vector2 WorldToLocal(Vector2 posWorld);
 
         /// <summary>
         ///     Transforms world-space coordinates from the local grid origin to the global origin.
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
         /// <returns>The world-space coordinates with global origin.</returns>
-        Vector2f LocalToWorld(Vector2f posLocal);
+        Vector2 LocalToWorld(Vector2 posLocal);
 
 
         /// <summary>
@@ -146,14 +145,14 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridTile"></param>
         /// <returns></returns>
-        Vector2f GridTileToLocal(MapGrid.Indices gridTile);
+        Vector2 GridTileToLocal(MapGrid.Indices gridTile);
 
         /// <summary>
         ///     Transforms grid-space tile indices to world coordinates.
         /// </summary>
         /// <param name="gridTile">The Grid Tile indices.</param>
         /// <returns></returns>
-        Vector2f GridTileToWorld(MapGrid.Indices gridTile);
+        Vector2 GridTileToWorld(MapGrid.Indices gridTile);
 
         #endregion
     }

@@ -46,7 +46,7 @@ namespace SS14.Client.UserInterface.Components
             _message.Update(frameTime);
             _mainMenuButton.Position =
                 new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
-                          _message.ClientArea.Bottom() + 20);
+                          _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update(frameTime);
         }
 

@@ -233,27 +233,27 @@
             </summary>
             <returns>Integer description of the object</returns>
         </member>
-        <member name="T:SFML.System.Vector2f">
+        <member name="T:SFML.System.Vector2">
             <summary>
-            Vector2f is an utility class for manipulating 2 dimensional
+            Vector2 is an utility class for manipulating 2 dimensional
             vectors with float components
             </summary>
         </member>
-        <member name="M:SFML.System.Vector2f.#ctor(System.Single,System.Single)">
+        <member name="M:SFML.System.Vector2.#ctor(System.Single,System.Single)">
             <summary>
             Construct the vector from its coordinates
             </summary>
             <param name="x">X coordinate</param>
             <param name="y">Y coordinate</param>
         </member>
-        <member name="M:SFML.System.Vector2f.op_UnaryNegation(SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_UnaryNegation(SFML.System.Vector2)">
             <summary>
             Operator - overload ; returns the opposite of a vector
             </summary>
             <param name="v">Vector to negate</param>
             <returns>-v</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Subtraction(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_Subtraction(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Operator - overload ; subtracts two vectors
             </summary>
@@ -261,7 +261,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 - v2</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Addition(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_Addition(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Operator + overload ; add two vectors
             </summary>
@@ -269,7 +269,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 + v2</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Multiply(SFML.System.Vector2f,System.Single)">
+        <member name="M:SFML.System.Vector2.op_Multiply(SFML.System.Vector2,System.Single)">
             <summary>
             Operator * overload ; multiply a vector by a scalar value
             </summary>
@@ -277,7 +277,7 @@
             <param name="x">Scalar value</param>
             <returns>v * x</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Multiply(System.Single,SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_Multiply(System.Single,SFML.System.Vector2)">
             <summary>
             Operator * overload ; multiply a scalar value by a vector
             </summary>
@@ -285,7 +285,7 @@
             <param name="v">Vector</param>
             <returns>x * v</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Division(SFML.System.Vector2f,System.Single)">
+        <member name="M:SFML.System.Vector2.op_Division(SFML.System.Vector2,System.Single)">
             <summary>
             Operator / overload ; divide a vector by a scalar value
             </summary>
@@ -293,7 +293,7 @@
             <param name="x">Scalar value</param>
             <returns>v / x</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Equality(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_Equality(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Operator == overload ; check vector equality
             </summary>
@@ -301,7 +301,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 == v2</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Inequality(SFML.System.Vector2f,SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.op_Inequality(SFML.System.Vector2,SFML.System.Vector2)">
             <summary>
             Operator != overload ; check vector inequality
             </summary>
@@ -309,50 +309,50 @@
             <param name="v2">Second vector</param>
             <returns>v1 != v2</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.ToString">
+        <member name="M:SFML.System.Vector2.ToString">
             <summary>
             Provide a string describing the object
             </summary>
             <returns>String description of the object</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.Equals(System.Object)">
+        <member name="M:SFML.System.Vector2.Equals(System.Object)">
             <summary>
             Compare vector and object and checks if they are equal
             </summary>
             <param name="obj">Object to check</param>
             <returns>Object and vector are equal</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.Equals(SFML.System.Vector2f)">
+        <member name="M:SFML.System.Vector2.Equals(SFML.System.Vector2)">
             <summary>
             Compare two vectors and checks if they are equal
             </summary>
             <param name="other">Vector to check</param>
             <returns>Vectors are equal</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.GetHashCode">
+        <member name="M:SFML.System.Vector2.GetHashCode">
             <summary>
             Provide a integer describing the object
             </summary>
             <returns>Integer description of the object</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Explicit(SFML.System.Vector2f)~SFML.System.Vector2i">
+        <member name="M:SFML.System.Vector2.op_Explicit(SFML.System.Vector2)~SFML.System.Vector2i">
             <summary>
             Explicit casting to another vector type
             </summary>
             <param name="v">Vector being casted</param>
             <returns>Casting result</returns>
         </member>
-        <member name="M:SFML.System.Vector2f.op_Explicit(SFML.System.Vector2f)~SFML.System.Vector2u">
+        <member name="M:SFML.System.Vector2.op_Explicit(SFML.System.Vector2)~SFML.System.Vector2u">
             <summary>
             Explicit casting to another vector type
             </summary>
             <param name="v">Vector being casted</param>
             <returns>Casting result</returns>
         </member>
-        <member name="F:SFML.System.Vector2f.X">
+        <member name="F:SFML.System.Vector2.X">
             <summary>X (horizontal) component of the vector</summary>
         </member>
-        <member name="F:SFML.System.Vector2f.Y">
+        <member name="F:SFML.System.Vector2.Y">
             <summary>Y (vertical) component of the vector</summary>
         </member>
         <member name="T:SFML.System.Vector2i">
@@ -457,7 +457,7 @@
             </summary>
             <returns>Integer description of the object</returns>
         </member>
-        <member name="M:SFML.System.Vector2i.op_Explicit(SFML.System.Vector2i)~SFML.System.Vector2f">
+        <member name="M:SFML.System.Vector2i.op_Explicit(SFML.System.Vector2i)~SFML.System.Vector2">
             <summary>
             Explicit casting to another vector type
             </summary>
@@ -579,7 +579,7 @@
             <param name="v">Vector being casted</param>
             <returns>Casting result</returns>
         </member>
-        <member name="M:SFML.System.Vector2u.op_Explicit(SFML.System.Vector2u)~SFML.System.Vector2f">
+        <member name="M:SFML.System.Vector2u.op_Explicit(SFML.System.Vector2u)~SFML.System.Vector2">
             <summary>
             Explicit casting to another vector type
             </summary>
@@ -592,13 +592,13 @@
         <member name="F:SFML.System.Vector2u.Y">
             <summary>Y (vertical) component of the vector</summary>
         </member>
-        <member name="T:SFML.System.Vector3f">
+        <member name="T:SFML.System.Vector3">
             <summary>
-            Vector3f is an utility class for manipulating 3 dimensional
+            Vector3 is an utility class for manipulating 3 dimensional
             vectors with float components
             </summary>
         </member>
-        <member name="M:SFML.System.Vector3f.#ctor(System.Single,System.Single,System.Single)">
+        <member name="M:SFML.System.Vector3.#ctor(System.Single,System.Single,System.Single)">
             <summary>
             Construct the vector from its coordinates
             </summary>
@@ -606,14 +606,14 @@
             <param name="y">Y coordinate</param>
             <param name="z">Z coordinate</param>
         </member>
-        <member name="M:SFML.System.Vector3f.op_UnaryNegation(SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_UnaryNegation(SFML.System.Vector3)">
             <summary>
             Operator - overload ; returns the opposite of a vector
             </summary>
             <param name="v">Vector to negate</param>
             <returns>-v</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Subtraction(SFML.System.Vector3f,SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_Subtraction(SFML.System.Vector3,SFML.System.Vector3)">
             <summary>
             Operator - overload ; subtracts two vectors
             </summary>
@@ -621,7 +621,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 - v2</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Addition(SFML.System.Vector3f,SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_Addition(SFML.System.Vector3,SFML.System.Vector3)">
             <summary>
             Operator + overload ; add two vectors
             </summary>
@@ -629,7 +629,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 + v2</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Multiply(SFML.System.Vector3f,System.Single)">
+        <member name="M:SFML.System.Vector3.op_Multiply(SFML.System.Vector3,System.Single)">
             <summary>
             Operator * overload ; multiply a vector by a scalar value
             </summary>
@@ -637,7 +637,7 @@
             <param name="x">Scalar value</param>
             <returns>v * x</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Multiply(System.Single,SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_Multiply(System.Single,SFML.System.Vector3)">
             <summary>
             Operator * overload ; multiply a scalar value by a vector
             </summary>
@@ -645,7 +645,7 @@
             <param name="v">Vector</param>
             <returns>x * v</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Division(SFML.System.Vector3f,System.Single)">
+        <member name="M:SFML.System.Vector3.op_Division(SFML.System.Vector3,System.Single)">
             <summary>
             Operator / overload ; divide a vector by a scalar value
             </summary>
@@ -653,7 +653,7 @@
             <param name="x">Scalar value</param>
             <returns>v / x</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Equality(SFML.System.Vector3f,SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_Equality(SFML.System.Vector3,SFML.System.Vector3)">
             <summary>
             Operator == overload ; check vector equality
             </summary>
@@ -661,7 +661,7 @@
             <param name="v2">Second vector</param>
             <returns>v1 == v2</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.op_Inequality(SFML.System.Vector3f,SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.op_Inequality(SFML.System.Vector3,SFML.System.Vector3)">
             <summary>
             Operator != overload ; check vector inequality
             </summary>
@@ -669,39 +669,39 @@
             <param name="v2">Second vector</param>
             <returns>v1 != v2</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.ToString">
+        <member name="M:SFML.System.Vector3.ToString">
             <summary>
             Provide a string describing the object
             </summary>
             <returns>String description of the object</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.Equals(System.Object)">
+        <member name="M:SFML.System.Vector3.Equals(System.Object)">
             <summary>
             Compare vector and object and checks if they are equal
             </summary>
             <param name="obj">Object to check</param>
             <returns>Object and vector are equal</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.Equals(SFML.System.Vector3f)">
+        <member name="M:SFML.System.Vector3.Equals(SFML.System.Vector3)">
             <summary>
             Compare two vectors and checks if they are equal
             </summary>
             <param name="other">Vector to check</param>
             <returns>Vectors are equal</returns>
         </member>
-        <member name="M:SFML.System.Vector3f.GetHashCode">
+        <member name="M:SFML.System.Vector3.GetHashCode">
             <summary>
             Provide a integer describing the object
             </summary>
             <returns>Integer description of the object</returns>
         </member>
-        <member name="F:SFML.System.Vector3f.X">
+        <member name="F:SFML.System.Vector3.X">
             <summary>X (horizontal) component of the vector</summary>
         </member>
-        <member name="F:SFML.System.Vector3f.Y">
+        <member name="F:SFML.System.Vector3.Y">
             <summary>Y (vertical) component of the vector</summary>
         </member>
-        <member name="F:SFML.System.Vector3f.Z">
+        <member name="F:SFML.System.Vector3.Z">
             <summary>Z (depth) component of the vector</summary>
         </member>
     </members>

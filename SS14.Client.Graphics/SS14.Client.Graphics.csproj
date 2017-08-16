@@ -89,9 +89,6 @@
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Event\FrameEvent.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="Sprite\SpriteInfo.cs" />

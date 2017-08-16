@@ -75,7 +75,7 @@ namespace SS14.Server.Placement
 
             float a = (float)Math.Floor(xRcv);
             float b = (float)Math.Floor(yRcv);
-            Vector2f tilePos = new Vector2f(a, b);
+            Vector2 tilePos = new Vector2(a, b);
 
             if (permission != null || true)
             //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
@@ -102,7 +102,7 @@ namespace SS14.Server.Placement
                 if (!isTile)
                 {
                     var manager = IoCManager.Resolve<IServerEntityManager>();
-                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
+                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if (created != null)
                     {
                         created.GetComponent<TransformComponent>().Position =
@@ -113,7 +113,7 @@ namespace SS14.Server.Placement
                 }
                 else
                 {
-                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos.Convert(), new Tile(tileType));
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
                 }
             }
             /*

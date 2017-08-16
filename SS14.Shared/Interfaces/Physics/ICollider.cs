@@ -1,9 +1,9 @@
-using SFML.Graphics;
+using OpenTK;
 
 namespace SS14.Shared.Interfaces.Physics
 {
     public interface ICollider
     {
-        FloatRect AABB { get; }
+        Box2 AABB { get; }
     }
 }

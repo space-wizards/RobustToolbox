@@ -50,10 +50,10 @@ namespace SS14.Shared.Serialization
     {
         private static HashSet<Type> handledTypes = new HashSet<Type>
         {
-            typeof(Vector2f),
+            typeof(Vector2),
             typeof(Vector2i),
             typeof(Vector2u),
-            typeof(Vector3f),
+            typeof(Vector3),
             typeof(IntRect),
             typeof(FloatRect),
             typeof(Color),
@@ -73,14 +73,14 @@ namespace SS14.Shared.Serialization
             return typeof(SfmlTypeSerializer).GetMethod("Read", new Type[] { typeof(Stream), type.MakeByRefType() });
         }
 
-        #region Vector2f
+        #region Vector2
 
-        public static void Write(Stream stream, Vector2f value)
+        public static void Write(Stream stream, Vector2 value)
         {
             stream.Write(BitConverter.GetBytes(value.X), 0, sizeof(float));
             stream.Write(BitConverter.GetBytes(value.Y), 0, sizeof(float));
         }
-        public static void Read(Stream stream, out Vector2f value)
+        public static void Read(Stream stream, out Vector2 value)
         {
             var buffer = new byte[sizeof(float)];
 
@@ -89,10 +89,10 @@ namespace SS14.Shared.Serialization
             stream.Read(buffer, 0, buffer.Length);
             var y = BitConverter.ToSingle(buffer, 0);
 
-            value = new Vector2f(x, y);
+            value = new Vector2(x, y);
         }
 
-        #endregion Vector2f
+        #endregion Vector2
 
         #region Vector2i
 
@@ -136,15 +136,15 @@ namespace SS14.Shared.Serialization
 
         #endregion Vector2u
 
-        #region Vector3f
+        #region Vector3
 
-        public static void Write(Stream stream, Vector3f value)
+        public static void Write(Stream stream, Vector3 value)
         {
             stream.Write(BitConverter.GetBytes(value.X), 0, sizeof(float));
             stream.Write(BitConverter.GetBytes(value.Y), 0, sizeof(float));
             stream.Write(BitConverter.GetBytes(value.Z), 0, sizeof(float));
         }
-        public static void Read(Stream stream, out Vector3f value)
+        public static void Read(Stream stream, out Vector3 value)
         {
             var buffer = new byte[sizeof(float)];
 
@@ -155,10 +155,10 @@ namespace SS14.Shared.Serialization
             stream.Read(buffer, 0, buffer.Length);
             var z = BitConverter.ToSingle(buffer, 0);
 
-            value = new Vector3f(x, y, z);
+            value = new Vector3(x, y, z);
         }
 
-        #endregion Vector3f
+        #endregion Vector3
 
         #region IntRect
 

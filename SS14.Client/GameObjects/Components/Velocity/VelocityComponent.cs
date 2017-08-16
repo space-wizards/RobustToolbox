@@ -14,25 +14,25 @@ namespace SS14.Client.GameObjects
         private VelocityComponentState _lastState;
         private VelocityComponentState _previousState;
 
-        public Vector2f Velocity { get; set; }
+        public Vector2 Velocity { get; set; }
 
         public override Type StateType => typeof(VelocityComponentState);
 
         public float X
         {
             get => Velocity.X;
-            set => Velocity = new Vector2f(value, Velocity.Y);
+            set => Velocity = new Vector2(value, Velocity.Y);
         }
 
         public float Y
         {
             get => Velocity.Y;
-            set => Velocity = new Vector2f(Velocity.X, value);
+            set => Velocity = new Vector2(Velocity.X, value);
         }
 
         public override void Shutdown()
         {
-            Velocity = new Vector2f();
+            Velocity = new Vector2();
         }
 
         /// <inheritdoc />
@@ -46,7 +46,7 @@ namespace SS14.Client.GameObjects
                 _previousState = _lastState;
 
             _lastState = newState;
-            Velocity = new Vector2f(newState.VelocityX, newState.VelocityY);
+            Velocity = new Vector2(newState.VelocityX, newState.VelocityY);
         }
     }
 }

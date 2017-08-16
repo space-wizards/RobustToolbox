@@ -1,5 +1,6 @@
 ﻿using System;
 using SFML.System;
+using OpenTK;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -93,7 +94,7 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession session)
         {
             //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.SpawnEntityAt("HumanMob", new Vector2f(0, 0));
+            IEntity entity = _entityManager.SpawnEntityAt("HumanMob", new Vector2(0, 0));
             session.AttachToEntity(entity);
         }
 
@@ -194,13 +195,13 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(Vector2f position, int range)
+        public List<IPlayerSession> GetPlayersInRange(Vector2 position, int range)
         {
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position.Convert()).LengthSquared() < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

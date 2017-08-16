@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using OpenTK;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using FloatRect = OpenTK.Box2;
-using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {
@@ -149,7 +148,7 @@ namespace SS14.Shared.Map
         /// <returns>True if there is any grid at the location.</returns>
         public bool IsGridAt(float xWorld, float yWorld)
         {
-            var pos = new Vector2f(xWorld, yWorld);
+            var pos = new Vector2(xWorld, yWorld);
             foreach (var kvGrid in _grids)
                 if (kvGrid.Value.AABBWorld.Contains(pos))
                     return true;
@@ -165,7 +164,7 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public bool IsGridAt(float xWorld, float yWorld, int gridId)
         {
-            var pos = new Vector2f(xWorld, yWorld);
+            var pos = new Vector2(xWorld, yWorld);
             return _grids.TryGetValue(gridId, out MapGrid output) && output.AABBWorld.Contains(pos);
         }
 
@@ -177,7 +176,7 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public IEnumerable<IMapGrid> FindGridsAt(float xWorld, float yWorld)
         {
-            var pos = new Vector2f(xWorld, yWorld);
+            var pos = new Vector2(xWorld, yWorld);
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
                 if (kvGrid.Value.AABBWorld.Contains(pos))
@@ -190,7 +189,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsAt(Vector2f worldPos)
+        public IEnumerable<IMapGrid> FindGridsAt(Vector2 worldPos)
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
@@ -204,7 +203,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="worldArea">The are in world coordinates to search.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsIntersecting(FloatRect worldArea)
+        public IEnumerable<IMapGrid> FindGridsIntersecting(Box2 worldArea)
         {
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)

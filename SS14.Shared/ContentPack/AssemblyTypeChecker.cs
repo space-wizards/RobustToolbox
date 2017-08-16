@@ -101,10 +101,10 @@ namespace SS14.Shared.ContentPack
 
             // SFML stuff.
             "SFML.Graphics.Color",
-            "SFML.System.Vector2f",
+            "SFML.System.Vector2",
             "SFML.System.Vector2i",
             "SFML.System.Vector2u",
-            "SFML.System.Vector3f",
+            "SFML.System.Vector3",
             "SFML.System.Vector3i",
             "SFML.System.Vector3u",
 

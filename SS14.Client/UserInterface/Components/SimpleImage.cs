@@ -4,7 +4,10 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -37,7 +40,7 @@ namespace SS14.Client.UserInterface.Components
             if (drawingSprite != null)
             {
                 var bounds = drawingSprite.GetLocalBounds();
-                ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
+                ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }
 
@@ -53,10 +56,10 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override IntRect ClientArea {
+        public override Box2i ClientArea {
             get {
-                FloatRect fr = drawingSprite.GetLocalBounds();
-                return new IntRect((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
+                var fr = drawingSprite.GetLocalBounds().Convert();
+                return Box2i.FromDimensions((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
             }
         }
 
@@ -66,7 +69,7 @@ namespace SS14.Client.UserInterface.Components
                     return new Vector2i(0, 0);
                 return new Vector2i((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
             }
-            set { drawingSprite.Position = new Vector2f (value.X, value.Y); }
+            set { drawingSprite.Position = new Vector2f(value.X, value.Y); }
         }
 
 

@@ -1,6 +1,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -8,20 +9,22 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
     public class ContextMenu : GuiComponent
     {
-        private readonly Vector2f _buttonSize = new Vector2f(150, 20);
+        private readonly Vector2 _buttonSize = new Vector2(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
         private readonly IResourceCache _resourceCache;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private IEntity _owningEntity;
 
-        public ContextMenu(IEntity entity, Vector2f creationPos, IResourceCache resourceCache,
+        public ContextMenu(IEntity entity, Vector2 creationPos, IResourceCache resourceCache,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;
@@ -64,7 +67,7 @@ namespace SS14.Client.UserInterface.Components
                 button.Position = new Vector2i((int)creationPos.X, (int)currY);
                 currY += _buttonSize.Y;
             }
-            ClientArea = new IntRect((int)creationPos.X, (int)creationPos.Y, (int)_buttonSize.X,
+            ClientArea = Box2i.FromDimensions((int)creationPos.X, (int)creationPos.Y, (int)_buttonSize.X,
                                        _buttons.Count() * (int)_buttonSize.Y);
         }
 
@@ -154,11 +157,11 @@ namespace SS14.Client.UserInterface.Components
         private readonly IResourceCache _resourceCache;
         private readonly Label _textLabel;
 
-        public Vector2f Size;
+        public Vector2 Size;
         private SFML.Graphics.Color _currentColor;
         private Sprite _iconSprite;
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2f size, IResourceCache resourceCache)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
 
@@ -176,7 +179,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Update(frameTime);
             var bounds = _iconSprite.GetLocalBounds();
-            ClientArea = new IntRect(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
+            ClientArea = Box2i.FromDimensions(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textLabel.Position = new Vector2i(ClientArea.Left + (int)bounds.Width + 6,
                                             ClientArea.Top + (int)(ClientArea.Height / 2f) -
                                             (int)(_textLabel.ClientArea.Height / 2f));
@@ -187,7 +190,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Render();
             var bounds = _iconSprite.GetLocalBounds();
-            var iconRect = new IntRect(ClientArea.Left + 3,
+            var iconRect = Box2i.FromDimensions(ClientArea.Left + 3,
                                          ClientArea.Top + (int)(ClientArea.Height / 2f) - (int)(bounds.Height / 2f),
                                          (int)bounds.Width, (int)bounds.Height);
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, _currentColor);
@@ -206,14 +209,14 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
                 Selected?.Invoke(this);
             return true;
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(e.X, e.Y)
+            _currentColor = ClientArea.Contains(new Vector2i(e.X, e.Y))
                                 ? new SFML.Graphics.Color(211, 211, 211)
                                 : new SFML.Graphics.Color(128, 128, 128);
         }

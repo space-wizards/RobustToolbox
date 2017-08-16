@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
+using OpenTK;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using FloatRect = OpenTK.Box2;
-using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -127,14 +126,14 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IEnumerable<IMapGrid> FindGridsAt(Vector2f worldPos);
+        IEnumerable<IMapGrid> FindGridsAt(Vector2 worldPos);
 
         /// <summary>
         ///     Finds all grids that intersect the rectangle in the world.
         /// </summary>
         /// <param name="worldArea">The are in world coordinates to search.</param>
         /// <returns></returns>
-        IEnumerable<IMapGrid> FindGridsIntersecting(FloatRect worldArea);
+        IEnumerable<IMapGrid> FindGridsIntersecting(Box2 worldArea);
 
         #endregion
     }

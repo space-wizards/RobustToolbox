@@ -136,8 +136,6 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
-    <Compile Include="GameObjects\Components\Container\Container.cs" />
-    <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="ConsoleCommand.cs" />
     <Compile Include="EntityEvents.cs" />

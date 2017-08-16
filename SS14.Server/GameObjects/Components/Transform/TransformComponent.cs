@@ -5,13 +5,14 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
+using SS14.Server.Interfaces.GameObjects;
 
 namespace SS14.Server.GameObjects
 {
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    public class TransformComponent : Component, ITransformComponent
+    public class TransformComponent : Component, IServerTransformComponent
     {
         /// <summary>
         ///     Current parent entity of this entity.

@@ -1,5 +1,4 @@
-﻿using SS14.Server.GameObjects.Components.Container;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;

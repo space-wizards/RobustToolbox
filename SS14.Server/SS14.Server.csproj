@@ -142,6 +142,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameObjects\Components\Container\Container.cs" />
+    <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
     <Compile Include="Program.cs" />

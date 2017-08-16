@@ -36,7 +36,7 @@ namespace SS14.Server.GameObjects.Components.Container
         {
             if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>())) //Crucial, prevent circular insertion
             {
-                return false;
+                throw new InvalidOperationException();
             }
             return true;
         }
@@ -46,7 +46,7 @@ namespace SS14.Server.GameObjects.Components.Container
             if (CanInsert(toinsert) && toinsert.GetComponent<ITransformComponent>().Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert)) //Verify we can insert and that the object got properly removed from its current location
             {
                 ContainerList.Add(toinsert);
-                toinsert.GetComponent<ITransformComponent>().AttachParent(Owner.GetComponent<ITransformComponent>());
+                toinsert.GetComponent<IServerTransformComponent>().AttachParent(Owner.GetComponent<ITransformComponent>());
                 //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }
@@ -67,7 +67,7 @@ namespace SS14.Server.GameObjects.Components.Container
             if (CanRemove(toremove))
             {
                 ContainerList.Remove(toremove);
-                toremove.GetComponent<ITransformComponent>().DetachParent();
+                toremove.GetComponent<IServerTransformComponent>().DetachParent();
                 //OnRemoval(toremove); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }

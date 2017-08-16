@@ -176,6 +176,7 @@
     <Compile Include="GameController.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
+    <Compile Include="Map\MapRenderer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="ss14.ico" />
@@ -264,13 +265,6 @@
     <Compile Include="Interfaces\Lighting\ILightArea.cs" />
     <Compile Include="Interfaces\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Lighting\LightMode.cs" />
-    <Compile Include="Interfaces\Map\Chunk.cs" />
-    <Compile Include="Interfaces\Map\IMapManager.cs" />
-    <Compile Include="Interfaces\Map\ITileCollection.cs" />
-    <Compile Include="Interfaces\Map\ITileDefinition.cs" />
-    <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
-    <Compile Include="Interfaces\Map\Tile.cs" />
-    <Compile Include="Interfaces\Map\TileRef.cs" />
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
@@ -288,10 +282,6 @@
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Lighting\ShadowmapSize.cs" />
     <Compile Include="Lighting\LightModes\Flicker.cs" />
-    <Compile Include="Map\HardcodedTileDefinitions.cs" />
-    <Compile Include="Map\MapManager.cs" />
-    <Compile Include="Map\TileDefinition.cs" />
-    <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Network\NetworkGrapher.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />

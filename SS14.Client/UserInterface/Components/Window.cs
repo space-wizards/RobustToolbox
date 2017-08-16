@@ -27,9 +27,9 @@ namespace SS14.Client.UserInterface.Components
             : base(windowTitle, size, resourceCache)
         {
             closeButton = new ImageButton
-                              {
-                                  ImageNormal = "closewindow"
-                              };
+            {
+                ImageNormal = "closewindow"
+            };
 
             closeButton.Clicked += CloseButtonClicked;
             title = new Label(windowTitle, "CALIBRI", _resourceCache);
@@ -48,13 +48,13 @@ namespace SS14.Client.UserInterface.Components
             if (disposing || !IsVisible()) return;
             base.Update(frameTime);
             if (title == null || gradient == null) return;
-            int y_pos = ClientArea.Top - (2*titleBuffer) - title.ClientArea.Height + 1;
+            int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
             title.Position = new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
-            titleArea = new IntRect(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2*titleBuffer));
+            titleArea = new IntRect(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
             title.Update(frameTime);
             closeButton.Position = new Vector2i(titleArea.Right() - 5 - closeButton.ClientArea.Width,
-                                             titleArea.Top + (int) (titleArea.Height/2f) -
-                                             (int) (closeButton.ClientArea.Height/2f));
+                                             titleArea.Top + (int)(titleArea.Height / 2f) -
+                                             (int)(closeButton.ClientArea.Height / 2f));
             gradient.ClientArea = titleArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
@@ -66,9 +66,9 @@ namespace SS14.Client.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
             gradient.Render();
-            
+
             //TODO RenderTargetRectangle
-           // CluwneLib.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
+            // CluwneLib.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
             base.Render();
             title.Render();
             if (closeButtonVisible) closeButton.Render();
@@ -88,10 +88,10 @@ namespace SS14.Client.UserInterface.Components
 
             if (base.MouseDown(e)) return true;
 
-            if (titleArea.Contains((int) e.X, (int) e.Y))
+            if (titleArea.Contains((int)e.X, (int)e.Y))
             {
-                draggingOffset.X = (int) e.X - Position.X;
-                draggingOffset.Y = (int) e.Y - Position.Y;
+                draggingOffset.X = (int)e.X - Position.X;
+                draggingOffset.Y = (int)e.Y - Position.Y;
                 dragging = true;
                 return true;
             }
@@ -113,8 +113,8 @@ namespace SS14.Client.UserInterface.Components
             if (disposing || !IsVisible()) return;
             if (dragging)
             {
-                Position = new Vector2i((int) e.X - (int) draggingOffset.X,
-                                     (int) e.Y - (int) draggingOffset.Y);
+                Position = new Vector2i((int)e.X - (int)draggingOffset.X,
+                                     (int)e.Y - (int)draggingOffset.Y);
             }
             base.MouseMove(e);
 

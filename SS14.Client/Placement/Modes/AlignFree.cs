@@ -1,7 +1,7 @@
-﻿using SFML.Graphics;
-using SFML.System;
+﻿using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -19,7 +19,7 @@ namespace SS14.Client.Placement.Modes
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
 
             return true;
         }

@@ -2,7 +2,7 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;

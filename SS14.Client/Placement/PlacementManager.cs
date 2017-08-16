@@ -4,13 +4,13 @@ using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Map;
+using SS14.Shared.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -228,7 +228,9 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile(Tile tileType)
         {
-            if (tileType.TileDef.IsWall)
+            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
+
+            if (tileDefs[tileType.TileId].IsWall)
             {
                 CurrentBaseSprite = ResourceCache.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";

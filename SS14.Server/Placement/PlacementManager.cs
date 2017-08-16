@@ -2,16 +2,16 @@
 using SS14.Server.GameObjects;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
-using SS14.Server.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +20,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Placement
 {
@@ -54,7 +55,7 @@ namespace SS14.Server.Placement
         {
             var alignRcv = msg.Align;
             var isTile = msg.IsTile;
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+            var mapMgr = IoCManager.Resolve<IMapManager>();
 
             ushort tileType = 0;
             var entityTemplateName = "";
@@ -112,7 +113,7 @@ namespace SS14.Server.Placement
                 }
                 else
                 {
-                    mapMgr.Tiles[tilePos] = new Tile(tileType);
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos.Convert(), new Tile(tileType));
                 }
             }
             /*

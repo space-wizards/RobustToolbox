@@ -1,7 +1,7 @@
 ﻿using SFML.Window;
 using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;

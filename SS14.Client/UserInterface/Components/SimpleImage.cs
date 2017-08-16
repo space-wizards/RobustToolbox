@@ -5,6 +5,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -57,7 +58,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override Box2i ClientArea {
             get {
-                FloatRect fr = drawingSprite.GetLocalBounds();
+                var fr = drawingSprite.GetLocalBounds().Convert();
                 return Box2i.FromDimensions((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
             }
         }

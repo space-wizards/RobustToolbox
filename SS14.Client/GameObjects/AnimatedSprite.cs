@@ -1,4 +1,5 @@
 ﻿using SFML.Graphics;
+using OpenTK;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Interfaces.Resource;
@@ -43,13 +44,13 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        public FloatRect AverageAABB
+        public Box2 AverageAABB
         {
             get
             {
                 if (_currentSprite != null)
                     return _averageAABBs[_currentAnimationState.Name][Direction];
-                return new FloatRect();
+                return new Box2();
             }
         }
 
@@ -78,7 +79,7 @@ namespace SS14.Client.Graphics.Sprite
         /// </summary>
         private readonly Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
 
-        private readonly Dictionary<string, Dictionary<Direction, FloatRect>> _averageAABBs = new Dictionary<string, Dictionary<Direction, FloatRect>>();
+        private readonly Dictionary<string, Dictionary<Direction, Box2>> _averageAABBs = new Dictionary<string, Dictionary<Direction, Box2>>();
         private SFML.Graphics.Sprite _currentSprite;
 
         private Direction _direction = Direction.South;
@@ -97,7 +98,7 @@ namespace SS14.Client.Graphics.Sprite
                 _sprites.Add(info.Name, new Dictionary<Direction, SFML.Graphics.Sprite[]>());
 
                 //Because we have a shitload of frames, we're going to store the average size as the AABB for each direction and each animation
-                _averageAABBs.Add(info.Name, new Dictionary<Direction, FloatRect>());
+                _averageAABBs.Add(info.Name, new Dictionary<Direction, Box2>());
 
                 var sprites = _sprites[info.Name];
                 var averageAABBs = _averageAABBs[info.Name];
@@ -118,7 +119,7 @@ namespace SS14.Client.Graphics.Sprite
                         h += bounds.Height;
                         t++;
                     }
-                    averageAABBs.Add(dir, new FloatRect(x / t, y / t, w / t, h / t));
+                    averageAABBs.Add(dir, Box2.FromDimensions(x / t, y / t, w / t, h / t));
                     t = 0;
                     x = 0;
                     y = 0;

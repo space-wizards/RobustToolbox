@@ -53,14 +53,14 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public FloatRect AverageAABB => AABB;
+        public Box2 AverageAABB => AABB;
 
-        public FloatRect AABB
+        public Box2 AABB
         {
             get
             {
                 var bounds = GetActiveDirectionalSprite().GetLocalBounds();
-                return new FloatRect(0, 0, bounds.Width, bounds.Height);
+                return Box2.FromDimensions(0, 0, bounds.Width, bounds.Height);
             }
         }
 
@@ -227,10 +227,10 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new FloatRect(
+                Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
+            if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;

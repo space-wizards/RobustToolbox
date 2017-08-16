@@ -58,7 +58,7 @@ namespace SS14.Client.State.States
         private float _lastLblSpacing = 10;
         //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
 
-        private FloatRect _recStatus;
+        private Box2 _recStatus;
 
         private Chatbox _lobbyChat;
 
@@ -348,7 +348,7 @@ namespace SS14.Client.State.States
                 (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
             _imgMainBg.Update(0);
 
-            _recStatus = new FloatRect(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
+            _recStatus = Box2.FromDimensions(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
 
             _imgStatus.Position = new Vector2i((int)_recStatus.Left,
                                                (int)_recStatus.Top);

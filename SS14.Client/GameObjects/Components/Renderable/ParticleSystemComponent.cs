@@ -29,15 +29,10 @@ namespace SS14.Client.GameObjects
         #endregion Variables.
 
         #region Properties
-        public FloatRect AverageAABB
-        {
-            get { return AABB; }
-        }
+        public Box2 AverageAABB => AABB;
 
-        public FloatRect AABB
-        {
-            get { return new FloatRect(); }
-        }
+        public Box2 AABB => new Box2();
+
         #endregion Properties
 
 

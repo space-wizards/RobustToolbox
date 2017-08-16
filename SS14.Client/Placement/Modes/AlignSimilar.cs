@@ -71,7 +71,7 @@ namespace SS14.Client.Placement.Modes
                     var closestBounds = closestSprite.GetLocalBounds();
 
                     var closestRect =
-                        new FloatRect(
+                        Box2.FromDimensions(
                             closestEntity.GetComponent<ITransformComponent>().Position.X - closestBounds.Width / 2f,
                             closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
@@ -79,9 +79,9 @@ namespace SS14.Client.Placement.Modes
                     var sides = new Vector2[]
                     {
                         new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
-                        new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom() + closestBounds.Height / 2f),
+                        new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom + closestBounds.Height / 2f),
                         new Vector2(closestRect.Left - closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f)),
-                        new Vector2(closestRect.Right() + closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f))
+                        new Vector2(closestRect.Right + closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f))
                     };
 
                     Vector2 closestSide =

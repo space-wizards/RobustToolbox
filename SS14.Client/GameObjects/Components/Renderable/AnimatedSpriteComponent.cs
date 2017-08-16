@@ -46,13 +46,13 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public FloatRect AverageAABB
+        public Box2 AverageAABB
         {
             get
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
-                return new FloatRect(
+                return Box2.FromDimensions(
                     aaabb.Left / tileSize, aaabb.Top / tileSize,
                     aaabb.Width / tileSize, aaabb.Height / tileSize
                     );
@@ -61,13 +61,13 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public FloatRect AABB
+        public Box2 AABB
         {
             get
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-                return new FloatRect(0, 0, sprite.AABB.Width / tileSize,
+                return Box2.FromDimensions(0, 0, sprite.AABB.Width / tileSize,
                                       sprite.AABB.Height / tileSize);
             }
         }
@@ -161,12 +161,12 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new FloatRect(
+                Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().Position.X -
                     (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().Position.Y -
                     (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
+            if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;

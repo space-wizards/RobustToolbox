@@ -74,7 +74,7 @@ namespace SS14.Client.Graphics.Sprite
 
             if (CluwneLib.Debug.DebugTextboxes)//CluwneLib.Debug()
             {
-                FloatRect fr = _textSprite.GetGlobalBounds();
+                var fr = _textSprite.GetGlobalBounds().Convert();
                 CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);
             }
         }

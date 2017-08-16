@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using OpenTK;
 using SS14.Shared.Interfaces.Map;
-using FloatRect = OpenTK.Box2;
-using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
 {
@@ -67,7 +66,7 @@ namespace SS14.Shared.Map
         public void Dispose() { }
 
         /// <inheritdoc />
-        public FloatRect AABBWorld { get; private set; }
+        public Box2 AABBWorld { get; private set; }
 
         /// <inheritdoc />
         public ushort ChunkSize { get; }
@@ -75,7 +74,7 @@ namespace SS14.Shared.Map
         public int Index { get; }
 
         /// <inheritdoc />
-        public Vector2f WorldPosition { get; set; }
+        public Vector2 WorldPosition { get; set; }
 
         /// <summary>
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
@@ -99,14 +98,14 @@ namespace SS14.Shared.Map
 
             var y = Math.Min(a.Top, b.Y);
             var height = Math.Max(a.Top + a.Height, b.Y);
-            
-            AABBWorld = new FloatRect(x, y, width - x, height - y);
+
+            AABBWorld = new Box2(x, y, width - x, height - y);
         }
 
         #region  TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTile(Vector2f worldPos)
+        public TileRef GetTile(Vector2 worldPos)
         {
             var chunkIndices = WorldToChunk(worldPos);
             var gridTileIndices = WorldToTile(worldPos);
@@ -123,7 +122,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public TileRef GetTile(float xWorld, float yWorld)
         {
-            return GetTile(new Vector2f(xWorld, yWorld));
+            return GetTile(new Vector2(xWorld, yWorld));
         }
 
         /// <inheritdoc />
@@ -142,11 +141,11 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public void SetTile(float xWorld, float yWorld, Tile tile)
         {
-            SetTile(new Vector2f(xWorld, yWorld), tile);
+            SetTile(new Vector2(xWorld, yWorld), tile);
         }
 
         /// <inheritdoc />
-        public void SetTile(Vector2f worldPos, Tile tile)
+        public void SetTile(Vector2 worldPos, Tile tile)
         {
             var localTile = WorldToTile(worldPos);
             SetTile(localTile.X, localTile.Y, tile);
@@ -165,11 +164,11 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public void SetTile(float xWorld, float yWorld, ushort tileId, ushort tileData = 0)
         {
-            SetTile(new Vector2f(xWorld, yWorld), new Tile(tileId, tileData));
+            SetTile(new Vector2(xWorld, yWorld), new Tile(tileId, tileData));
         }
 
         /// <inheritdoc />
-        public IEnumerable<TileRef> GetTilesIntersecting(FloatRect worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
+        public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
         {
             //TODO: needs world -> local -> tile translations.
             var gridTileLt = new Indices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Top));
@@ -191,7 +190,7 @@ namespace SS14.Shared.Map
                         if(ignoreEmpty && tile.Tile.IsEmpty)
                             continue;
 
-                        
+
 
                         if (predicate == null || predicate(tile))
                         {
@@ -208,7 +207,7 @@ namespace SS14.Shared.Map
                         }
                     }
 
-                } 
+                }
             }
             return tiles;
         }
@@ -216,7 +215,7 @@ namespace SS14.Shared.Map
 #endregion
 
 #region ChunkAccess
-        
+
         /// <summary>
         /// The total number of allocated chunks in the grid.
         /// </summary>
@@ -252,13 +251,13 @@ namespace SS14.Shared.Map
 #region Transforms
 
         /// <inheritdoc />
-        public Vector2f WorldToLocal(Vector2f posWorld)
+        public Vector2 WorldToLocal(Vector2 posWorld)
         {
             return posWorld - WorldPosition;
         }
 
         /// <inheritdoc />
-        public Vector2f LocalToWorld(Vector2f posLocal)
+        public Vector2 LocalToWorld(Vector2 posLocal)
         {
             return posLocal + WorldPosition;
         }
@@ -267,7 +266,7 @@ namespace SS14.Shared.Map
         /// Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
         /// <returns></returns>
-        public Indices WorldToTile(Vector2f worldPos)
+        public Indices WorldToTile(Vector2 worldPos)
         {
             var local = WorldToLocal(worldPos);
             var x = (int)Math.Floor(local.X / _mapManager.TileSize);
@@ -280,7 +279,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="localPos">The position in the world.</param>
         /// <returns></returns>
-        public Indices WorldToChunk(Vector2f localPos)
+        public Indices WorldToChunk(Vector2 localPos)
         {
             var local = localPos - WorldPosition;
             var x = (int)Math.Floor(local.X / (_mapManager.TileSize * ChunkSize));
@@ -302,14 +301,14 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public Vector2f GridTileToLocal(Indices gridTile)
+        public Vector2 GridTileToLocal(Indices gridTile)
         {
             var tileSize = _mapManager.TileSize;
-            return new Vector2f(gridTile.X * tileSize + (tileSize/2), gridTile.Y * tileSize + (tileSize / 2));
+            return new Vector2(gridTile.X * tileSize + (tileSize/2), gridTile.Y * tileSize + (tileSize / 2));
         }
 
         /// <inheritdoc />
-        public Vector2f GridTileToWorld(Indices gridTile)
+        public Vector2 GridTileToWorld(Indices gridTile)
         {
             var local = GridTileToLocal(gridTile);
             return LocalToWorld(local);

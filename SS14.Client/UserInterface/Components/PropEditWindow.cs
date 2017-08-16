@@ -240,7 +240,7 @@ namespace SS14.Client.UserInterface.Components
                     GuiComponent edit = CreateEditField(fieldVal, field);
                     if (edit != null && newEntry.CanEdit)
                     {
-                        edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right() + 5,
+                        edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right + 5,
                                                   newEntry.LabelName.ClientArea.Top);
                         components.Add(edit);
                         edit.Update(0);

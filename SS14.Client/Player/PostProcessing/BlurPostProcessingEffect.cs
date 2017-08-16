@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
@@ -25,7 +26,7 @@ namespace SS14.Client.Player.PostProcessing
             else
                 _gaussianBlur.SetRadius(7);
 
-            _gaussianBlur.SetSize(new Vector2f(image.Height, image.Height));
+            _gaussianBlur.SetSize(new Vector2(image.Height, image.Height));
             _gaussianBlur.SetAmount(Math.Min(_duration/2, 3f));
             _gaussianBlur.PerformGaussianBlur(image);
         }

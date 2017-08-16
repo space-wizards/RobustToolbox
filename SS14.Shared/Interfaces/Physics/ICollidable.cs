@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Interfaces.Physics
@@ -8,12 +8,12 @@ namespace SS14.Shared.Interfaces.Physics
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        FloatRect WorldAABB { get; }
+        Box2 WorldAABB { get; }
 
         /// <summary>
         ///     AABB of this entity in local space.
         /// </summary>
-        FloatRect AABB { get; }
+        Box2 AABB { get; }
 
         /// <summary>
         ///     True if collisions should prevent movement, or just trigger bumps.

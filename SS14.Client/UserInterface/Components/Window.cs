@@ -1,10 +1,11 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics.VertexData;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -18,10 +19,10 @@ namespace SS14.Client.UserInterface.Components
         protected ImageButton closeButton;
         public bool closeButtonVisible = true;
         protected bool dragging = false;
-        protected Vector2f draggingOffset = new Vector2f();
+        protected Vector2 draggingOffset = new Vector2();
         protected GradientBox gradient;
         protected Label title;
-        protected IntRect titleArea;
+        protected Box2i titleArea;
 
         public Window(string windowTitle, Vector2i size, IResourceCache resourceCache)
             : base(windowTitle, size, resourceCache)
@@ -50,9 +51,9 @@ namespace SS14.Client.UserInterface.Components
             if (title == null || gradient == null) return;
             int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
             title.Position = new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
-            titleArea = new IntRect(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
+            titleArea = Box2i.FromDimensions(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
             title.Update(frameTime);
-            closeButton.Position = new Vector2i(titleArea.Right() - 5 - closeButton.ClientArea.Width,
+            closeButton.Position = new Vector2i(titleArea.Right - 5 - closeButton.ClientArea.Width,
                                              titleArea.Top + (int)(titleArea.Height / 2f) -
                                              (int)(closeButton.ClientArea.Height / 2f));
             gradient.ClientArea = titleArea;
@@ -152,21 +153,21 @@ namespace SS14.Client.UserInterface.Components
             box[0].TextureCoordinates.Y = 0.0f;
             box[0].Color = Color1;
 
-            box[1].Position.X = ClientArea.Right();
+            box[1].Position.X = ClientArea.Right;
             box[1].Position.Y = ClientArea.Top;
             box[1].TextureCoordinates.X = 0.0f;
             box[1].TextureCoordinates.Y = 0.0f;
             if (!Vertical) box[1].Color = Color2;
             else box[1].Color = Color1;
 
-            box[2].Position.X = ClientArea.Right();
-            box[2].Position.Y = ClientArea.Bottom();
+            box[2].Position.X = ClientArea.Right;
+            box[2].Position.Y = ClientArea.Bottom;
             box[2].TextureCoordinates.X = 0.0f;
             box[2].TextureCoordinates.Y = 0.0f;
             box[2].Color = Color2;
 
             box[3].Position.X = ClientArea.Left;
-            box[3].Position.Y = ClientArea.Bottom();
+            box[3].Position.Y = ClientArea.Bottom;
             box[3].TextureCoordinates.X = 0.0f;
             box[3].TextureCoordinates.Y = 0.0f;
             if (!Vertical) box[3].Color = Color1;
@@ -176,7 +177,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             //TODO Window Render
-            //CluwneLib.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White); 
+            //CluwneLib.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White);
            // CluwneLib.CurrentRenderTarget.Draw(box);
         }
     }

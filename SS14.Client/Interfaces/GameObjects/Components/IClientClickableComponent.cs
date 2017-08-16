@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.System;
 using SS14.Client.State.States;
 using SS14.Shared.GameObjects;
@@ -17,7 +18,7 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// Used by <see cref="GameScreen" /> to sort and pick the highest successful one when multiple overlapping entities passed.
         /// </param>
         /// <returns>True if the click worked, false otherwise.</returns>
-        bool CheckClick(Vector2f worldPos, out int drawdepth);
+        bool CheckClick(Vector2 worldPos, out int drawdepth);
 
         /// <summary>
         /// Sends the click to the sister component on the server and things subscribed to

@@ -45,10 +45,10 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        FloatRect ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB.Convert();
+        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
 
         /// <inheritdoc />
-        FloatRect ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB.Convert();
+        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <inheritdoc />
         public bool IsHardCollidable { get; } = true;

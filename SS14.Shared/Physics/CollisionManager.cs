@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -11,7 +9,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Shared.Physics
 {
@@ -48,14 +46,14 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool IsColliding(FloatRect collider)
+        public bool IsColliding(Box2 collider)
         {
-            Vector2f[] points =
+            Vector2[] points =
             {
-                new Vector2f(collider.Left, collider.Top),
-                new Vector2f(collider.Right(), collider.Top),
-                new Vector2f(collider.Right(), collider.Bottom()),
-                new Vector2f(collider.Left, collider.Bottom())
+                new Vector2(collider.Left, collider.Top),
+                new Vector2(collider.Right, collider.Top),
+                new Vector2(collider.Right, collider.Bottom),
+                new Vector2(collider.Left, collider.Bottom)
             };
 
             //Get the buckets that correspond to the collider's points.
@@ -76,7 +74,7 @@ namespace SS14.Shared.Physics
                     collided = true;
 
             //TODO: This needs multi-grid support.
-            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(collider.Convert()).Any(t => t.TileDef.IsCollidable);
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(collider).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>
@@ -106,12 +104,12 @@ namespace SS14.Shared.Physics
                 colliderAABB.Top += offset.Y;
             }
 
-            Vector2f[] points =
+            Vector2[] points =
             {
-                new Vector2f(colliderAABB.Left, colliderAABB.Top),
-                new Vector2f(colliderAABB.Right(), colliderAABB.Top),
-                new Vector2f(colliderAABB.Right(), colliderAABB.Bottom()),
-                new Vector2f(colliderAABB.Left, colliderAABB.Bottom())
+                new Vector2(colliderAABB.Left, colliderAABB.Top),
+                new Vector2(colliderAABB.Right, colliderAABB.Top),
+                new Vector2(colliderAABB.Right, colliderAABB.Bottom),
+                new Vector2(colliderAABB.Left, colliderAABB.Bottom)
             };
 
             var bounds = 
@@ -134,7 +132,7 @@ namespace SS14.Shared.Physics
             }
 
             //TODO: This needs multi-grid support.
-            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(colliderAABB.Convert()).Any(t => t.TileDef.IsCollidable);
+            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(colliderAABB).Any(t => t.TileDef.IsCollidable);
         }
 
         /// <summary>
@@ -184,7 +182,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void AddPoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates.Convert());
+            var b = GetBucket(point.Coordinates);
             b.AddPoint(point);
         }
 
@@ -194,7 +192,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void RemovePoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates.Convert());
+            var b = GetBucket(point.Coordinates);
             b.RemovePoint(point);
         }
 
@@ -203,7 +201,7 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="coordinate"></param>
         /// <returns></returns>
-        private CollidableBucket GetBucket(Vector2f coordinate)
+        private CollidableBucket GetBucket(Vector2 coordinate)
         {
             var key = GetBucketCoordinate(coordinate);
             return _bucketIndex.ContainsKey(key)
@@ -211,7 +209,7 @@ namespace SS14.Shared.Physics
                 : CreateBucket(key);
         }
 
-        private static Vector2i GetBucketCoordinate(Vector2f coordinate)
+        private static Vector2i GetBucketCoordinate(Vector2 coordinate)
         {
             var x = (int) Math.Floor(coordinate.X / BucketSize);
             var y = (int) Math.Floor(coordinate.Y / BucketSize);

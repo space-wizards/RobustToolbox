@@ -29,17 +29,12 @@ namespace SS14.Client.GameObjects
 
         /// <inheritdoc />
         public override Type StateType => typeof(CollidableComponentState);
-
-        /// <summary>
-        /// X - Top | Y - Right | Z - Bottom | W - Left
-        /// </summary>
-        private Vector4f TweakAABB { get; set; } = new Vector4f(0, 0, 0, 0);
+        
+        /// <inheritdoc />
+        Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
 
         /// <inheritdoc />
-        FloatRect ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB.Convert();
-
-        /// <inheritdoc />
-        FloatRect ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB.Convert();
+        Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <summary>
         /// Called when the collidable is bumped into by someone/something
@@ -113,46 +108,6 @@ namespace SS14.Client.GameObjects
             }
 
             return reply;
-        }
-
-        /// <summary>
-        /// Parameter Setting
-        /// Settable params:
-        /// TweakAABB - Vector4
-        /// </summary>
-        public override void LoadParameters(YamlMappingNode mapping)
-        {
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            YamlNode node;
-            if (mapping.TryGetNode("tweakAABB", out node))
-            {
-                TweakAABB = node.AsVector4f() / mapManager.TileSize;
-            }
-
-            if (mapping.TryGetNode("TweakAABBtop", out node))
-            {
-                TweakAABB = new Vector4f(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
-            }
-
-            if (mapping.TryGetNode("TweakAABBright", out node))
-            {
-                TweakAABB = new Vector4f(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
-            }
-
-            if (mapping.TryGetNode("TweakAABBbottom", out node))
-            {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
-            }
-
-            if (mapping.TryGetNode("TweakAABBleft", out node))
-            {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
-            }
-
-            if (mapping.TryGetNode("DebugColor", out node))
-            {
-                DebugColor = ColorUtils.FromHex(node.AsString(), Color.Red);
-            }
         }
 
         /// <summary>

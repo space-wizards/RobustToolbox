@@ -59,25 +59,25 @@ namespace SS14.Server.GameObjects
             if (mapping.TryGetNode("sizeX", out node))
             {
                 var width = node.AsFloat() / tileSize;
-                AABB = new FloatRect(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height).Convert();
+                AABB = Box2.FromDimensions(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
             }
 
             if (mapping.TryGetNode("sizeY", out node))
             {
                 var height = node.AsFloat() / tileSize;
-                AABB = new FloatRect(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height).Convert();
+                AABB = Box2.FromDimensions(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
             }
 
             if (mapping.TryGetNode("offsetX", out node))
             {
                 var x = node.AsFloat() / tileSize;
-                AABB = new FloatRect(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height).Convert();
+                AABB = Box2.FromDimensions(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
             }
 
             if (mapping.TryGetNode("offsetY", out node))
             {
                 var y = node.AsFloat() / tileSize;
-                AABB = new FloatRect(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height).Convert();
+                AABB = Box2.FromDimensions(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
             }
         }
     }

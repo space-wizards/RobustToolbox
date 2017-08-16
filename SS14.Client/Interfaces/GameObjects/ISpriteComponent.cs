@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ namespace SS14.Client.Interfaces.GameObjects
 {
     public interface ISpriteComponent : IComponent
     {
-        FloatRect AABB { get; }
+        Box2 AABB { get; }
         Sprite GetCurrentSprite();
         Sprite GetSprite(string spriteKey);
         List<Sprite> GetAllSprites();

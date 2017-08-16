@@ -16,5 +16,12 @@ namespace SS14.Shared.Maths
         {
             return Math.Abs(me.Width) < Epsilon && Math.Abs(me.Height) < Epsilon;
         }
+        public static bool Encloses(this Box2 outer, Box2 inner)
+        {
+            return outer.Left <= inner.Left
+                && inner.Right <= outer.Right
+                && outer.Top <= inner.Top
+                && inner.Bottom <= outer.Bottom;
+        }
     }
 }

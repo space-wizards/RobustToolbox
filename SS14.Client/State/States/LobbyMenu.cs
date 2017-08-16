@@ -1,9 +1,9 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -58,7 +58,7 @@ namespace SS14.Client.State.States
         private float _lastLblSpacing = 10;
         //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
 
-        private FloatRect _recStatus;
+        private Box2 _recStatus;
 
         private Chatbox _lobbyChat;
 
@@ -348,7 +348,7 @@ namespace SS14.Client.State.States
                 (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
             _imgMainBg.Update(0);
 
-            _recStatus = new FloatRect(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
+            _recStatus = Box2.FromDimensions(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
 
             _imgStatus.Position = new Vector2i((int)_recStatus.Left,
                                                (int)_recStatus.Top);
@@ -358,31 +358,31 @@ namespace SS14.Client.State.States
                                                (int)_recStatus.Top + 2);
             _lblServer.Update(0);
 
-            _lblServerInfo.Position = new Vector2i(_lblServer.ClientArea.Right(),
+            _lblServerInfo.Position = new Vector2i(_lblServer.ClientArea.Right,
                                                    _lblServer.ClientArea.Top);
             _lblServerInfo.Update(0);
 
-            _lblMode.Position = new Vector2i(_lblServerInfo.ClientArea.Right() + (int)_lastLblSpacing,
+            _lblMode.Position = new Vector2i(_lblServerInfo.ClientArea.Right + (int)_lastLblSpacing,
                                              _lblServerInfo.ClientArea.Top);
             _lblMode.Update(0);
 
-            _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right(),
+            _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right,
                                                  _lblMode.ClientArea.Top);
             _lblModeInfo.Update(0);
 
-            _lblPlayers.Position = new Vector2i(_lblModeInfo.ClientArea.Right() + (int)_lastLblSpacing,
+            _lblPlayers.Position = new Vector2i(_lblModeInfo.ClientArea.Right + (int)_lastLblSpacing,
                                                 _lblModeInfo.ClientArea.Top);
             _lblPlayers.Update(0);
 
-            _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right(),
+            _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right,
                                                     _lblPlayers.ClientArea.Top);
             _lblPlayersInfo.Update(0);
 
-            _lblPort.Position = new Vector2i(_lblPlayersInfo.ClientArea.Right() + (int)_lastLblSpacing,
+            _lblPort.Position = new Vector2i(_lblPlayersInfo.ClientArea.Right + (int)_lastLblSpacing,
                                              _lblPlayersInfo.ClientArea.Top);
             _lblPort.Update(0);
 
-            _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right(),
+            _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right,
                                                  _lblPort.ClientArea.Top);
             _lblPortInfo.Update(0);
 
@@ -390,19 +390,19 @@ namespace SS14.Client.State.States
             _tabs.Update(0);
 
             _lobbyChat.Position = new Vector2i(_imgMainBg.ClientArea.Left + 12,
-                                               _imgMainBg.ClientArea.Bottom() - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
+                                               _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
             _lobbyChat.Update(0);
 
             _imgChatBg.Position = new Vector2i(_lobbyChat.ClientArea.Left - 6,
                                                _lobbyChat.ClientArea.Top - 9);
             _imgChatBg.Update(0);
 
-            _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right() - _btnReady.ClientArea.Width - 5,
+            _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right - _btnReady.ClientArea.Width - 5,
                                               _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
             _btnReady.Update(0);
 
             _btnBack.Position = new Vector2i(_lobbyChat.ClientArea.Left - _btnBack.ClientArea.Width - 20,
-                                             _lobbyChat.ClientArea.Bottom() - _btnBack.ClientArea.Height);
+                                             _lobbyChat.ClientArea.Bottom - _btnBack.ClientArea.Height);
             _btnBack.Update(0);
         }
 

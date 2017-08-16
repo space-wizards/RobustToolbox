@@ -4,8 +4,10 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 using System;
 using SS14.Client.ResourceManagement;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -47,7 +49,7 @@ namespace SS14.Client.UserInterface.Components
             set => Text.FontSize = value;
         }
 
-        public Color TextColor 
+        public Color TextColor
         {
             get => Text.Color;
             set => Text.Color = value;
@@ -61,12 +63,12 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Position = Position;
-            ClientArea = new IntRect(Position,
+            ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(FixedWidth == -1 ? (int) Text.Width : FixedWidth,
                                                 FixedHeight == -1 ? (int) Text.Height : FixedHeight));
         }
 
-       
+
         public override void Render()
         {
             if (DrawBackground)

@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
@@ -7,7 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -28,7 +29,7 @@ namespace SS14.Client.Placement.Modes
 
             var bounds = spriteToDraw.GetLocalBounds();
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             //if (currentMap.IsSolidTile(mouseWorld)) validPosition = false;
 
@@ -36,22 +37,22 @@ namespace SS14.Client.Placement.Modes
             if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld.Convert()).LengthSquared > rangeSquared)
+                         .Position - mouseWorld).LengthSquared > rangeSquared)
                     return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new Vector2f(currentTile.X + 0.5f,
+                mouseWorld = new Vector2(currentTile.X + 0.5f,
                                          currentTile.Y + 0.5f);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
+                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
             }
             else
             {
-                mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
+                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
+                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
-                FloatRect spriteRectWorld = new FloatRect(mouseWorld.X - (bounds.Width/2f),
+                var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (bounds.Width/2f),
                                                  mouseWorld.Y - (bounds.Height/2f), bounds.Width,
                                                  bounds.Height);
                 if (pManager.CollisionManager.IsColliding(spriteRectWorld))

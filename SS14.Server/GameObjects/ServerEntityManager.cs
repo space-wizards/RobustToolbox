@@ -41,10 +41,10 @@ namespace SS14.Server.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public IEntity SpawnEntityAt(string EntityType, Vector2f position)
+        public IEntity SpawnEntityAt(string EntityType, Vector2 position)
         {
             IEntity e = SpawnEntity(EntityType);
-            e.GetComponent<TransformComponent>().Position = position.Convert();
+            e.GetComponent<TransformComponent>().Position = position;
             e.Initialize();
             return e;
         }

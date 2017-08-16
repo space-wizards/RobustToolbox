@@ -41,13 +41,13 @@ namespace SS14.Client.UserInterface.Components
 
             button_tile = new Button("Spawn Tiles", _resMgr);
             button_tile.Clicked += button_tile_Clicked;
-            button_tile.Position = new Vector2i(5, button_entity.ClientArea.Bottom() + 5);
+            button_tile.Position = new Vector2i(5, button_entity.ClientArea.Bottom + 5);
             button_tile.Update(0);
             components.Add(button_tile);
 
             button_quit = new Button("Quit", _resMgr);
             button_quit.Clicked += button_quit_Clicked;
-            button_quit.Position = new Vector2i(5, button_tile.ClientArea.Bottom() + 20);
+            button_quit.Position = new Vector2i(5, button_tile.ClientArea.Bottom + 20);
             button_quit.Update(0);
             components.Add(button_quit);
         }

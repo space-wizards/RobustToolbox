@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using OpenTK;
+using Lidgren.Network;
 using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -18,7 +19,7 @@ namespace SS14.Client.GameObjects
 
         public event EventHandler<ClickEventArgs> OnClick;
 
-        public bool CheckClick(Vector2f worldPos, out int drawdepth)
+        public bool CheckClick(Vector2 worldPos, out int drawdepth)
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 

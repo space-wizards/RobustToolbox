@@ -1,10 +1,10 @@
 ﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
+using OpenTK;
 using SS14.Client;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;

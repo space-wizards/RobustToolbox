@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -28,15 +29,10 @@ namespace SS14.Client.GameObjects
         #endregion Variables.
 
         #region Properties
-        public FloatRect AverageAABB
-        {
-            get { return AABB; }
-        }
+        public Box2 AverageAABB => AABB;
 
-        public FloatRect AABB
-        {
-            get { return new FloatRect(); }
-        }
+        public Box2 AABB => new Box2();
+
         #endregion Properties
 
 
@@ -44,8 +40,8 @@ namespace SS14.Client.GameObjects
 
         public void OnMove(object sender, VectorEventArgs args)
         {
-            var offset = new Vector2f(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2f(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
+                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
@@ -76,10 +72,10 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
-            Vector2f renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().Position.Convert());
+            Vector2 renderPos = CluwneLib.WorldToScreen(
+                    Owner.GetComponent<ITransformComponent>().Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
@@ -142,7 +138,7 @@ namespace SS14.Client.GameObjects
                 ParticleSettings toAdd = IoCManager.Resolve<IResourceCache>().GetParticles(name);
                 if (toAdd != null)
                 {
-                    _emitters.Add(name, new ParticleSystem(toAdd, new Vector2f()));
+                    _emitters.Add(name, new ParticleSystem(toAdd, new Vector2()));
                     _emitters[name].Emit = active;
                 }
             }

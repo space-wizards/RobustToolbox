@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using SFML.System;
+using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using System;
 

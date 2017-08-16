@@ -1,11 +1,14 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -22,7 +25,7 @@ namespace SS14.Client.UserInterface.Components
         private string midSprite;
 
         #pragma warning disable CS0649
-        public Vector2f size;
+        public Vector2 size;
         #pragma warning restore CS0649
 
         private string topSprite;
@@ -123,7 +126,7 @@ namespace SS14.Client.UserInterface.Components
             if (_activeTab != null)
                 _activeTab.Update(frameTime);
 
-            ClientArea = new IntRect(Position, new Vector2i((int) size.X, (int) size.Y));
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int) size.X, (int) size.Y));
         }
 
         public override void Render()

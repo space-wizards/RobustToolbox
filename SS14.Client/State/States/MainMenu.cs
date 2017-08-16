@@ -1,9 +1,9 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
@@ -104,19 +104,19 @@ namespace SS14.Client.State.States
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background.Scale = new Vector2((float)_Width/_background.TextureRect.Width, (float)_Height/_background.TextureRect.Height);
+            _background.Scale = new Vector2f((float)_Width/_background.TextureRect.Width, (float)_Height/_background.TextureRect.Height);
             _lblVersion.Position = new Vector2i(_Width -  _lblVersion.ClientArea.Width  - 3,
                                                 _Height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
             _imgTitle.Position = new Vector2i(_Width-550, 100);
             _imgTitle.Update(0);
-            _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom() + 50);
+            _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
             _txtConnect.Update(0);
-            _btnConnect.Position = new Vector2i(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom() + 20);
+            _btnConnect.Position = new Vector2i(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
             _btnConnect.Update(0);
-            _btnOptions.Position = new Vector2i(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom() + 20);
+            _btnOptions.Position = new Vector2i(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
             _btnOptions.Update(0);
-            _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom() + 20);
+            _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
             _btnExit.Update(0);
 
         }

@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -298,7 +299,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position.Convert());
+            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
@@ -308,7 +309,7 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
 
             //Render slaves above
@@ -337,7 +338,7 @@ namespace SS14.Client.GameObjects
         public void SetSpriteCenter(Sprite sprite, Vector2 center)
         {
             var bounds = GetActiveDirectionalSprite().GetLocalBounds();
-            sprite.Position = new SFML.System.Vector2(center.X - (bounds.Width / 2),
+            sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),
                                                        center.Y - (bounds.Height / 2));
         }
 

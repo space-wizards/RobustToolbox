@@ -1,11 +1,13 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

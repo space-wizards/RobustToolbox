@@ -113,7 +113,7 @@ namespace SS14.Server.Placement
                 }
                 else
                 {
-                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos.Convert(), new Tile(tileType));
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
                 }
             }
             /*

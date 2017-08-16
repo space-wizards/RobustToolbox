@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
@@ -9,7 +10,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -34,7 +35,7 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             if (!currentTile.TileDef.IsWall)
                 return false;
@@ -43,7 +44,7 @@ namespace SS14.Client.Placement.Modes
             if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld.Convert()).LengthSquared > rangeSquared)
+                         .Position - mouseWorld).LengthSquared > rangeSquared)
                     return false;
 
             var nodes = new List<Vector2>();
@@ -62,18 +63,18 @@ namespace SS14.Client.Placement.Modes
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - mouseWorld).LengthSquared() ascending
+                                    orderby (node - mouseWorld).LengthSquared ascending
                                     select node).First();
 
             mouseWorld = closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                     pManager.CurrentPrototype.PlacementOffset.Y);
-            mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
+            mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
             var range = pManager.CurrentPermission.Range;
             if (range > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld.Convert()).LengthSquared > range * range)
+                         .Position - mouseWorld).LengthSquared > range * range)
                     return false;
 
             return true;

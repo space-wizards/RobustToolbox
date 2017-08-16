@@ -1,5 +1,6 @@
 using SFML.Graphics;
 using SFML.System;
+using OpenTK;
 using SS14.Client.Graphics.Render;
 using SS14.Shared.Maths;
 

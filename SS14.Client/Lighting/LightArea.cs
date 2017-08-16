@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -70,12 +71,12 @@ namespace SS14.Client.Lighting
 
 
             Mask = IoCManager.Resolve<IResourceCache>().GetSprite("whitemask");
-         
+
         }
 
         #region ILightArea Members
 
-       
+
         public Vector2 ToRelativePosition(Vector2 worldPosition)
         {
             return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightAreaSize * 0.5f);
@@ -105,7 +106,7 @@ namespace SS14.Client.Lighting
             return new Vector4(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
         }
 
-           
-      
+
+
     }
 }

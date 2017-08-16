@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -5,6 +6,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
 using Color = SFML.Graphics.Color;
 
@@ -118,7 +120,7 @@ namespace SS14.Client.Lighting
 
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
 
-            resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize);
+            resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize.Convert());
             if (source != null)
                 resolveShadowsEffectTechnique[techniqueName].SetParameter("inputSampler", source);
             if (shadowMap != null)

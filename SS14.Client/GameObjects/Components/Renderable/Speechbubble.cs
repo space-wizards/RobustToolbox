@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -44,7 +45,7 @@ namespace SS14.Client.GameObjects
         private readonly IResourceCache _resourceCache;
 
         /// <summary>
-        /// StringBuilder to handle 
+        /// StringBuilder to handle
         /// </summary>
         private readonly StringBuilder _stringBuilder;
 
@@ -74,7 +75,7 @@ namespace SS14.Client.GameObjects
             _textSprite = new Text(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
             _textSprite.Color = Color.Black;
             // TODO Word wrap!
-            _textSprite.Position = new Vector2(5, 3);
+            _textSprite.Position = new Vector2f(5, 3);
             _stringBuilder = new StringBuilder();
 
             _bubbleRender = new RenderImage("bubble ",1, 1);
@@ -99,7 +100,7 @@ namespace SS14.Client.GameObjects
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2(x, y);
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 
@@ -112,7 +113,7 @@ namespace SS14.Client.GameObjects
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2(x, y);
+            _bubbleSprite.Position = new Vector2f(x, y);
             _bubbleSprite.Draw();
         }
 

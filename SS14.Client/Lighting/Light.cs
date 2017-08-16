@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;

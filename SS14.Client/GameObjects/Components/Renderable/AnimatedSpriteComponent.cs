@@ -258,7 +258,7 @@ namespace SS14.Client.GameObjects
             //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position.Convert()),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
                                    new Vector2(), aabb);
         }
 

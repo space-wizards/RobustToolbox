@@ -78,8 +78,8 @@ namespace SS14.Client.UserInterface.Components
 
             if (inner_focus != null && !components.Contains((GuiComponent)inner_focus)) ClearFocus();
 
-            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom() - scrollbarH.ClientArea.Height);
-            scrollbarV.Position = new Vector2i(ClientArea.Right() - scrollbarV.ClientArea.Width, ClientArea.Top);
+            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - scrollbarH.ClientArea.Height);
+            scrollbarV.Position = new Vector2i(ClientArea.Right - scrollbarV.ClientArea.Width, ClientArea.Top);
 
             if (scrollbarV.IsVisible()) scrollbarH.size = Size.X - scrollbarV.ClientArea.Width;
             else scrollbarH.size = Size.X;

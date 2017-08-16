@@ -1,8 +1,8 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
 using System;
@@ -30,7 +30,7 @@ namespace SS14.Client.State.States
         private Button _btnApply;
 
         private Listbox _lstResolution;
-    
+
         private Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
         private int _prevScreenHeight;
         private int _prevScreenWidth;

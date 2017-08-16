@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
@@ -37,7 +38,7 @@ namespace SS14.Client.Lighting
                 }
                 return;
             }
-            
+
             foreach (Type t in LightModes)
             {
                 var temp = (LightMode) Activator.CreateInstance(t);
@@ -74,20 +75,20 @@ namespace SS14.Client.Lighting
 
         public ILight[] lightsInRadius(Vector2 point, float radius)
         {
-            return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared()) <= radius * radius).ToArray();
+            return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared) <= radius * radius).ToArray();
         }
 
-        public ILight[] LightsIntersectingRect(FloatRect rect)
+        public ILight[] LightsIntersectingRect(Box2 rect)
         {
             return _lights
-                .FindAll(l => new FloatRect(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
+                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
                 .ToArray();
         }
 
         public ILight[] LightsIntersectingPoint(Vector2 point)
         {
             return _lights
-                .FindAll(l => new FloatRect(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point.X, point.Y))
+                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point))
                 .ToArray();
         }
 
@@ -113,7 +114,7 @@ namespace SS14.Client.Lighting
             }
         }
 
-        public void RecalculateLightsInView(FloatRect rect)
+        public void RecalculateLightsInView(Box2 rect)
         {
             ILight[] lights = LightsIntersectingRect(rect);
             foreach (ILight l in lights)

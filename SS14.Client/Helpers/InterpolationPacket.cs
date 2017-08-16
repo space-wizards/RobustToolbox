@@ -1,4 +1,5 @@
 using Lidgren.Network;
+using OpenTK;
 using SFML.System;
 
 namespace SS14.Client.Helpers

@@ -1,11 +1,13 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -139,7 +141,7 @@ namespace SS14.Client.UserInterface.Components
                 {
                     var bounds = currTabSprite.GetLocalBounds();
                     currTabSprite.Position =
-                        new Vector2(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
+                        new Vector2f(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
                                      curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - bounds.Height/2f));
                     currTabSprite.Draw();
                 }

@@ -71,5 +71,10 @@ namespace SS14.Shared.Maths
         {
             return new Vector2(vector.X, vector.Y);
         }
+
+        public static implicit operator Vector2u(SFML.System.Vector2u vector)
+        {
+            return new Vector2u(vector.X, vector.Y);
+        }
     }
 }

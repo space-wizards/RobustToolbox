@@ -1,5 +1,6 @@
 ﻿using System;
 using SFML.System;
+using OpenTK;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;
 using Lidgren.Network;
@@ -24,7 +25,7 @@ namespace SS14.Server.Interfaces.Player
         IPlayerSession GetSessionByConnection(NetConnection senderConnection);
 
         IPlayerSession GetSessionById(int networkID);
-        
+
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
         void Initialize(BaseServer baseServer);

@@ -5,6 +5,7 @@ using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Interfaces.Placement
 {

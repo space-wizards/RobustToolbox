@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.Interfaces.GameObjects;
@@ -9,7 +10,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Shared.Physics
 {
@@ -46,14 +47,14 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool IsColliding(FloatRect collider)
+        public bool IsColliding(Box2 collider)
         {
             Vector2[] points =
             {
                 new Vector2(collider.Left, collider.Top),
-                new Vector2(collider.Right(), collider.Top),
-                new Vector2(collider.Right(), collider.Bottom()),
-                new Vector2(collider.Left, collider.Bottom())
+                new Vector2(collider.Right, collider.Top),
+                new Vector2(collider.Right, collider.Bottom),
+                new Vector2(collider.Left, collider.Bottom)
             };
 
             //Get the buckets that correspond to the collider's points.
@@ -99,7 +100,7 @@ namespace SS14.Shared.Physics
             if (collider == null) return false;
 
             var ColliderAABB = collider.WorldAABB;
-            if (offset.LengthSquared() > 0)
+            if (offset.LengthSquared > 0)
             {
                 ColliderAABB.Left += offset.X;
                 ColliderAABB.Top += offset.Y;
@@ -108,9 +109,9 @@ namespace SS14.Shared.Physics
             Vector2[] points =
             {
                 new Vector2(ColliderAABB.Left, ColliderAABB.Top),
-                new Vector2(SfmlExt.Right((FloatRect) ColliderAABB), ColliderAABB.Top),
-                new Vector2(SfmlExt.Right((FloatRect) ColliderAABB), SfmlExt.Bottom((FloatRect) ColliderAABB)),
-                new Vector2(ColliderAABB.Left, SfmlExt.Bottom((FloatRect) ColliderAABB))
+                new Vector2(ColliderAABB.Right, ColliderAABB.Top),
+                new Vector2(ColliderAABB.Right, ColliderAABB.Bottom),
+                new Vector2(ColliderAABB.Left, ColliderAABB.Bottom)
             };
 
             var aabbs =
@@ -184,7 +185,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void AddPoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates.Convert());
+            var b = GetBucket(point.Coordinates);
             b.AddPoint(point);
         }
 
@@ -194,7 +195,7 @@ namespace SS14.Shared.Physics
         /// <param name="point"></param>
         private void RemovePoint(CollidablePoint point)
         {
-            var b = GetBucket(point.Coordinates.Convert());
+            var b = GetBucket(point.Coordinates);
             b.RemovePoint(point);
         }
 

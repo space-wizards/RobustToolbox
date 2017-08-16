@@ -15,9 +15,9 @@ namespace SS14.Shared.Utility
         /// </summary>
         /// <param name="vec">OpenTK Vector2.</param>
         /// <returns>SFML Vector2.</returns>
-        public static Vector2 Convert(this Vector2 vec)
+        public static Vector2f Convert(this Vector2 vec)
         {
-            return new Vector2(vec.X, vec.Y);
+            return new Vector2f(vec.X, vec.Y);
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace SS14.Shared.Utility
         /// </summary>
         /// <param name="vec">SFML Vector2.</param>
         /// <returns>OpenTK Vector2.</returns>
-        public static Vector2 Convert(this Vector2 vec)
+        public static Vector2 Convert(this Vector2f vec)
         {
             return new Vector2(vec.X, vec.Y);
         }

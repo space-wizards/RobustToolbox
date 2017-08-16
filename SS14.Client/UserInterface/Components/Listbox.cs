@@ -26,9 +26,9 @@ namespace SS14.Client.UserInterface.Components
         private readonly List<string> _contentStrings = new List<string>();
         private readonly IResourceCache _resourceCache;
         private readonly int _width;
-        private IntRect _clientAreaLeft;
-        private IntRect _clientAreaMain;
-        private IntRect _clientAreaRight;
+        private Box2i _clientAreaLeft;
+        private Box2i _clientAreaMain;
+        private Box2i _clientAreaRight;
         private ScrollableContainer _dropDown;
 
         private Sprite _listboxLeft;
@@ -144,19 +144,19 @@ namespace SS14.Client.UserInterface.Components
             var listboxMainBounds = _listboxMain.GetLocalBounds();
             var listboxRightBounds = _listboxRight.GetLocalBounds();
             _clientAreaLeft = new IntRect(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
-            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+            _clientAreaMain = new IntRect(_clientAreaLeft.Right, Position.Y,
                                           _width, (int)listboxMainBounds.Height);
-            _clientAreaRight = new IntRect(new Vector2i(_clientAreaMain.Right(), Position.Y),
+            _clientAreaRight = new IntRect(new Vector2i(_clientAreaMain.Right, Position.Y),
                                              new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
             ClientArea = new IntRect(Position,
                                        new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
-            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right(),
+            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right,
                                                 Position.Y + (int) (ClientArea.Height/2f) -
                                                 (int) (_selectedLabel.Height/2f));
             _dropDown.Position = new Vector2i(ClientArea.Left + (int) ((ClientArea.Width - _dropDown.ClientArea.Width)/2f),
-                                           ClientArea.Bottom());
+                                           ClientArea.Bottom);
             _dropDown.Update(frameTime);
         }
 

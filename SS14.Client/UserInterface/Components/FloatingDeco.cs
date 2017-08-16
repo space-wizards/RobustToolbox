@@ -1,10 +1,12 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
+using SS14.Shared.Utility;
 using System;
 
 namespace SS14.Client.UserInterface.Components
@@ -101,7 +103,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             DrawSprite.Rotation = spriteRotation;
-            DrawSprite.Position = (SpriteLocation + ParallaxOffset);
+            DrawSprite.Position = (SpriteLocation + ParallaxOffset).Convert();
             DrawSprite.Draw();
         }
 

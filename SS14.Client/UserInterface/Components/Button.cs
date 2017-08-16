@@ -7,7 +7,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
 using SS14.Client.ResourceManagement;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -73,7 +73,7 @@ namespace SS14.Client.UserInterface.Components
             _buttonLeft.Color = drawColor;
             _buttonMain.Color = drawColor;
             _buttonRight.Color = drawColor;
-            
+
             _buttonLeft.SetTransformToRect(_clientAreaLeft);
             _buttonMain.SetTransformToRect(_clientAreaMain);
             _buttonRight.SetTransformToRect(_clientAreaRight);
@@ -102,7 +102,7 @@ namespace SS14.Client.UserInterface.Components
         public override void MouseMove(MouseMoveEventArgs e)
         {
             if (mouseOverColor != Color.White)
-                if (ClientArea.Contains(e.X, e.Y))
+                if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
                     drawColor = mouseOverColor;
                 else
                     drawColor = Color.White;
@@ -110,7 +110,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
             {
                 if (Clicked != null) Clicked(this);
                 return true;

@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
@@ -26,7 +27,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement
 {
@@ -181,7 +182,7 @@ namespace SS14.Client.Placement
 
             if (CurrentPermission != null && CurrentPermission.Range > 0)
             {
-                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert());
+                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
                 CluwneLib.drawCircle(pos.X,
                     pos.Y,
                     CurrentPermission.Range,

@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SFML.Graphics;
 using NUnit.Framework;
+using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
@@ -10,7 +11,7 @@ using SS14.Shared.Maths;
 using System.IO;
 using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.UnitTesting.SS14.Shared.Prototypes
 {

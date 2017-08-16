@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
@@ -13,7 +14,7 @@ using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -38,7 +39,7 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld.Convert());
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             //Align to similar if nearby found else free
             if (currentTile.TileDef.IsWall)
@@ -48,7 +49,7 @@ namespace SS14.Client.Placement.Modes
             if (rangeSquared > 0)
                 if (
                     (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld.Convert()).LengthSquared > rangeSquared) return false;
+                         .Position - mouseWorld).LengthSquared > rangeSquared) return false;
 
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
@@ -57,7 +58,7 @@ namespace SS14.Client.Placement.Modes
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).Position - mouseWorld.Convert()).LengthSquared
+                        ).Position - mouseWorld).LengthSquared
                     ascending
                 select entity;
 
@@ -75,7 +76,7 @@ namespace SS14.Client.Placement.Modes
                             closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
-                    var sides = new List<Vector2>
+                    var sides = new Vector2[]
                     {
                         new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
                         new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom() + closestBounds.Height / 2f),
@@ -84,14 +85,14 @@ namespace SS14.Client.Placement.Modes
                     };
 
                     Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared() ascending select side).First();
+                        (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
+                    mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
                 }
             }
 
-            FloatRect spriteRectWorld = new FloatRect(mouseWorld.X - (spriteBounds.Width / 2f), mouseWorld.Y - (spriteBounds.Height / 2f),
+            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteBounds.Width / 2f), mouseWorld.Y - (spriteBounds.Height / 2f),
                                              spriteBounds.Width, spriteBounds.Height);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
             return true;

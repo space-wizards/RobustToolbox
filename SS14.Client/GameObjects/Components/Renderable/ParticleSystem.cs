@@ -787,7 +787,7 @@ namespace SS14.Client.GameObjects
                 ParticleSprite.Color = ToColor(particle.Color);
                 ParticleSprite.Position = particle.Position.Convert();
                 ParticleSprite.Rotation = (float)(180f / Math.PI) * particle.Spin;
-                ParticleSprite.Scale = new Vector2(particle.Size, particle.Size);
+                ParticleSprite.Scale = new Vector2f(particle.Size, particle.Size);
                 //_batch.AddClone(ParticleSprite);
                 ParticleSprite.Draw();
             }

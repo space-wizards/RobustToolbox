@@ -1,4 +1,4 @@
-using SFML.System;
+using OpenTK;
 
 namespace SS14.Shared.GameObjects.Server
 {

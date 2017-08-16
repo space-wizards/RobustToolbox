@@ -1,4 +1,4 @@
-using SFML.System;
+using OpenTK;
 
 namespace SS14.Client.Graphics.Sprite
 {
@@ -10,7 +10,7 @@ namespace SS14.Client.Graphics.Sprite
     public struct SpriteInfo
     {
         public string Name;
-        public Vector2f Offsets;
-        public Vector2f Size;
+        public Vector2 Offsets;
+        public Vector2 Size;
     }
 }

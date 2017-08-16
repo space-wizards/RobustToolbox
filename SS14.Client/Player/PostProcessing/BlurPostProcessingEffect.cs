@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;

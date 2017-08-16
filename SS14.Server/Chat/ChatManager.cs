@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces;
+﻿using OpenTK;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -207,7 +208,7 @@ namespace SS14.Server.Chat
                 return;
             List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>()
                 .GetPlayersInRange(entityManager.GetEntity((int) entityId)
-                .GetComponent<ITransformComponent>().Position.Convert(), withinRange)
+                .GetComponent<ITransformComponent>().Position, withinRange)
                 .Select(p => p.ConnectedClient).ToList();
 
             IoCManager.Resolve<IServerNetManager>().ServerSendToMany(message, recipients);

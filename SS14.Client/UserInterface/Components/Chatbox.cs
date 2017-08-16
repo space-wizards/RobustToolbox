@@ -138,7 +138,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (!stringChunks.Any()) break;
 
-                if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength) 
+                if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
                 {
                     lineList[i] += stringChunks.First() + " ";
                     stringChunks.RemoveAt(0);
@@ -193,7 +193,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                 };
                 label.Update(0);
-                last_y = label.ClientArea.Bottom();
+                last_y = label.ClientArea.Bottom;
                 components.Add(label);
 
                 // If the message had newlines adjust the bottom to fix the extra lines
@@ -336,7 +336,7 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
             if (input != null)
             {
-                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
+                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom);
                 input.Update(frameTime);
             }
         }

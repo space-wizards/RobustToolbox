@@ -5,7 +5,6 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
@@ -39,7 +38,8 @@ using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.State.States
 {
@@ -345,14 +345,14 @@ namespace SS14.Client.State.States
 
             CluwneLib.TileSize = (int) MapManager.TileSize;
 
-            _componentManager.Update(e.FrameDeltaTime);
-            _entityManager.Update(e.FrameDeltaTime);
+            _componentManager.Update((float)e.Time);
+            _entityManager.Update((float)e.Time);
             PlacementManager.Update(MousePosScreen, MapManager);
-            PlayerManager.Update(e.FrameDeltaTime);
+            PlayerManager.Update((float)e.Time);
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
+                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -383,7 +383,7 @@ namespace SS14.Client.State.States
                 RenderTiles();
 
                 //ComponentManager.Singleton.Render(0, CluwneLib.ScreenViewport);
-                RenderComponents(e.FrameDeltaTime, vp);
+                RenderComponents((float)e.Time, vp);
 
                 RenderOverlay();
 
@@ -453,7 +453,7 @@ namespace SS14.Client.State.States
             _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
-        private void RenderDebug(FloatRect viewport)
+        private void RenderDebug(Box2 viewport)
         {
             if (debugWallOccluders || debugPlayerShadowMap)
                 _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, Color.White, BlitterSizeMode.Scale);
@@ -487,7 +487,7 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert();
+                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
@@ -655,7 +655,7 @@ namespace SS14.Client.State.States
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
                 _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert(),
+                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position,
                     checkDistance);
 
             // See which one our click AABB intersected with
@@ -984,7 +984,7 @@ namespace SS14.Client.State.States
 
         public void OnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
         {
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new FloatRect(tileRef.X, tileRef.Y, 1, 1));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
             RecalculateScene();
         }
@@ -1154,7 +1154,7 @@ namespace SS14.Client.State.States
             screenShadows.Texture.Update(texunflipx);
         }
 
-        private void CalculateSceneBatches(FloatRect vision)
+        private void CalculateSceneBatches(Box2 vision)
         {
             if (!_recalculateScene)
                 return;
@@ -1196,12 +1196,12 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.Convert());
+                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                TileRef TileReference = MapManager.GetDefaultGrid().GetTile(playerVision.Position.Convert());
+                TileRef TileReference = MapManager.GetDefaultGrid().GetTile(playerVision.Position);
 
                 if (TileReference.TileDef.IsOpaque)
                 {
@@ -1263,9 +1263,9 @@ namespace SS14.Client.State.States
         private void DrawWallsRelativeToLight(ILightArea area)
         {
             Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
-            var lightArea = new FloatRect(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
-            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea.Convert(), true, tRef => tRef.TileDef.IsWall);
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
 
             foreach (TileRef t in tiles)
             {
@@ -1285,9 +1285,9 @@ namespace SS14.Client.State.States
         /// <summary>
         /// Copys all tile sprites into batches.
         /// </summary>
-        private void DrawTiles(FloatRect vision)
+        private void DrawTiles(Box2 vision)
         {
-            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision.Convert(), false);
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision, false);
 
             MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch, _wallBatch, _wallTopsBatch);
         }
@@ -1296,7 +1296,7 @@ namespace SS14.Client.State.States
         /// Render the renderables
         /// </summary>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        private void RenderComponents(float frameTime, FloatRect viewPort)
+        private void RenderComponents(float frameTime, Box2 viewPort)
         {
             IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
                                           .Cast<IComponent>()
@@ -1307,7 +1307,7 @@ namespace SS14.Client.State.States
                                                                  where c.DrawDepth < DrawDepth.MobBase
                                                                  select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
@@ -1316,7 +1316,7 @@ namespace SS14.Client.State.States
                                                                        c.DrawDepth < DrawDepth.WallTops
                                                                  select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
@@ -1324,7 +1324,7 @@ namespace SS14.Client.State.States
                                                                    where c.DrawDepth >= DrawDepth.WallTops
                                                                    select c;
 
-            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        ceilingRenderables);
         }
 
@@ -1408,7 +1408,7 @@ namespace SS14.Client.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = light.Position; //mousePosWorld; // Set the light position
-            TileRef t = MapManager.GetDefaultGrid().GetTile(light.Position.Convert());
+            TileRef t = MapManager.GetDefaultGrid().GetTile(light.Position);
             if (t.Tile.IsEmpty)
                 return;
             if (t.TileDef.IsOpaque)

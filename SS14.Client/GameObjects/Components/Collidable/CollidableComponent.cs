@@ -25,7 +25,7 @@ namespace SS14.Client.GameObjects
         public SFML.Graphics.Color DebugColor { get; set; } = Color.Red;
 
         private bool collisionEnabled = true;
-        private FloatRect currentAABB;
+        private Box2 currentAABB;
         protected bool isHardCollidable = true;
 
         public override Type StateType => typeof(CollidableComponentState);
@@ -35,14 +35,14 @@ namespace SS14.Client.GameObjects
         /// </summary>
         private Vector4 TweakAABB { get; set; } = Vector4.Zero;
 
-        private FloatRect OffsetAABB
+        private Box2 OffsetAABB
         {
             get
             {
                 if (Owner.TryGetComponent<ITransformComponent>(out var ownerTransform))
                 {
                     return
-                        new FloatRect(
+                        Box2.FromDimensions(
                             currentAABB.Left +
                             ownerTransform.Position.X -
                             (currentAABB.Width / 2) + TweakAABB.W,
@@ -50,29 +50,32 @@ namespace SS14.Client.GameObjects
                             ownerTransform.Position.Y -
                             (currentAABB.Height / 2) + TweakAABB.X,
                             currentAABB.Width - (TweakAABB.W - TweakAABB.Y),
-                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z));
+                            currentAABB.Height - (TweakAABB.X - TweakAABB.Z)
+                        );
                 }
                 else
                 {
-                    return new FloatRect();
+                    return new Box2();
                 }
             }
         }
 
-        public FloatRect AABB => OffsetAABB;
+        public Box2 AABB => OffsetAABB;
 
-        public FloatRect WorldAABB
+        public Box2 WorldAABB
         {
             get
             {
                 var trans = Owner.GetComponent<ITransformComponent>();
                 if (trans == null)
                     return AABB;
-                return new FloatRect(
+
+                return Box2.FromDimensions(
                     AABB.Left + trans.Position.X,
                     AABB.Top + trans.Position.Y,
                     AABB.Width,
-                    AABB.Height);
+                    AABB.Height
+                );
             }
         }
 
@@ -217,7 +220,7 @@ namespace SS14.Client.GameObjects
             var component = Owner.GetComponent<ISpriteRenderableComponent>();
             var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-            currentAABB = new FloatRect(
+            currentAABB = Box2.FromDimensions(
                 component.AABB.Left / tileSize,
                 component.AABB.Top / tileSize,
                 component.AABB.Width / tileSize,

@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
+using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Helpers;
@@ -69,7 +69,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
                 //preblur.Clear();       //Clear
                 sprite = _resourceCache.GetSprite("flashlight_mask");
-                sprite.Position = new Vector2();
+                sprite.Position = new Vector2f();
                 sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 

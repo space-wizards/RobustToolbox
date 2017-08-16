@@ -1,6 +1,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -206,14 +207,14 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
                 Selected?.Invoke(this);
             return true;
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            _currentColor = ClientArea.Contains(e.X, e.Y)
+            _currentColor = ClientArea.Contains(new Vector2i(e.X, e.Y))
                                 ? new SFML.Graphics.Color(211, 211, 211)
                                 : new SFML.Graphics.Color(128, 128, 128);
         }

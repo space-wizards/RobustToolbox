@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -79,7 +80,7 @@ namespace SS14.Client.GameObjects
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             Vector2 renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().Position.Convert());
+                    Owner.GetComponent<ITransformComponent>().Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {

@@ -1,6 +1,6 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Window;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;

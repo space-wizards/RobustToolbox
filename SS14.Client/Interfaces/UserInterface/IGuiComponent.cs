@@ -3,7 +3,9 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Shared;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -17,7 +19,7 @@ namespace SS14.Client.Interfaces.UserInterface
 
         Vector2i Position { get; set; }
 
-        IntRect ClientArea { get; set; }
+        Box2i ClientArea { get; set; }
         bool ReceiveInput { get; set; }
 
         bool Focus { get; set; }

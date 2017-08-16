@@ -32,18 +32,18 @@ namespace SS14.Client.Graphics
         public static Vector2 WorldCenter { get; set; }
         public static Vector2u ScreenViewportSize { get; set; }
         public static int TileSize { get; set; }
-        public static FloatRect WorldViewport
+        public static Box2 WorldViewport
         {
             get
             {
                 return ScreenToWorld(ScreenViewport);
             }
         }
-        public static IntRect ScreenViewport
+        public static Box2i ScreenViewport
         {
             get
             {
-                return new IntRect(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
+                return Box2i.FromDimensions(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
             }
         }
 

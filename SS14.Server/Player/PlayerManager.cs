@@ -1,5 +1,6 @@
 ﻿using System;
 using SFML.System;
+using OpenTK;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -200,7 +201,7 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position.Convert()).LengthSquared() < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

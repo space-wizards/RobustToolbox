@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Collection;
@@ -22,6 +23,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.Resources
 {
@@ -537,7 +539,7 @@ namespace SS14.Client.Resources
             {
                 Name = name,
                 Offsets = new Vector2(0, 0),
-                Size = (Vector2)texture.Size,
+                Size = (Vector2)(Vector2u)texture.Size,
             };
 
             var sprite = new Sprite(texture);

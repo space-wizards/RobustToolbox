@@ -1,9 +1,11 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
-using Vector2i = SFML.System.Vector2i;
+using SS14.Shared.Utility;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement
 {
@@ -37,9 +39,9 @@ namespace SS14.Client.Placement
         {
             if (spriteToDraw != null)
             {
-                var bounds = spriteToDraw.GetLocalBounds();
+                var bounds = spriteToDraw.GetLocalBounds().Convert();
                 spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width / 2f),
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
                                                      mouseScreen.Y - (bounds.Height / 2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

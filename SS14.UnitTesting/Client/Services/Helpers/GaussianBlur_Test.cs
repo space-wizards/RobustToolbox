@@ -53,7 +53,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -69,7 +69,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
                 //preblur.Clear();       //Clear
                 sprite = _resourceCache.GetSprite("flashlight_mask");
-                sprite.Position = new Vector2f();
+                sprite.Position = new Vector2();
                 sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
@@ -97,7 +97,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(9);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -139,7 +139,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(7);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -181,7 +181,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(5);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -223,7 +223,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(3);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 

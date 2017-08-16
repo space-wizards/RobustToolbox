@@ -15,7 +15,7 @@ namespace SS14.Shared.Interfaces.Physics
         bool IsColliding(FloatRect collider);
 
         bool TryCollide(IEntity collider);
-        bool TryCollide(IEntity collider, Vector2f offset, bool bump = true);
+        bool TryCollide(IEntity collider, Vector2 offset, bool bump = true);
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);

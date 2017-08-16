@@ -27,7 +27,7 @@ namespace SS14.Client.Placement.Modes
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
             var bounds = spriteToDraw.GetLocalBounds();
-            var spriteSize = CluwneLib.PixelToTile(new Vector2f(bounds.Width, bounds.Height));
+            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
             var spriteRectWorld = new FloatRect(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);

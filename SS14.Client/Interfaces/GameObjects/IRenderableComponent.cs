@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
@@ -9,7 +10,7 @@ namespace SS14.Client.Interfaces.GameObjects
     {
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
-        void Render(Vector2f topLeft, Vector2f bottomRight);
+        void Render(Vector2 topLeft, Vector2 bottomRight);
         FloatRect AABB { get; }
         FloatRect AverageAABB { get; }
         bool IsSlaved();

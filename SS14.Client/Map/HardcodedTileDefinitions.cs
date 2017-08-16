@@ -34,7 +34,7 @@ namespace SS14.Client.Map
 
         public void Render(float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
-            tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
+            tileSprite.Position = new SFML.System.Vector2(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
 
@@ -43,7 +43,7 @@ namespace SS14.Client.Map
 
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 
@@ -99,7 +99,7 @@ namespace SS14.Client.Map
         public override void RenderPos(float x, float y)
         {
             shape.FillColor = Color.Black;
-            shape.Position = new SFML.System.Vector2f(x, y);
+            shape.Position = new SFML.System.Vector2(x, y);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 
@@ -107,7 +107,7 @@ namespace SS14.Client.Map
         {
             tileSprite = resourceCache.GetSprite("wall_texture");
             var bounds = tileSprite.GetLocalBounds();
-            shape = new RectangleShape(new SFML.System.Vector2f(bounds.Width, bounds.Height));
+            shape = new RectangleShape(new SFML.System.Vector2(bounds.Width, bounds.Height));
         }
     }
 }

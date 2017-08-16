@@ -186,7 +186,7 @@ namespace SS14.Client.Placement
                     pos.Y,
                     CurrentPermission.Range,
                     Color.White,
-                    new Vector2f(2, 2));
+                    new Vector2(2, 2));
             }
         }
 

@@ -58,7 +58,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override void Render(Vector2f topLeft, Vector2f bottomRight)
+        public override void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             if (IsCurrentlyWorn && currentSprite == baseSprite)
             {
@@ -91,9 +91,9 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = NotWornSprite;
             var bounds = spriteToRender.GetLocalBounds();
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(
+            Vector2 renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<ITransformComponent>().Position.Convert());
-            spriteToRender.Position = new SFML.System.Vector2f(renderPos.X - (bounds.Width / 2),
+            spriteToRender.Position = new SFML.System.Vector2(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));
 
             if (Owner.GetComponent<ITransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
@@ -102,7 +102,7 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Scale = new SFML.System.Vector2(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
 
             //Render slaves above

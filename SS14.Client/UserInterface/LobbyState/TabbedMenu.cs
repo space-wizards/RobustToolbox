@@ -22,7 +22,7 @@ namespace SS14.Client.UserInterface.Components
         private string midSprite;
 
         #pragma warning disable CS0649
-        public Vector2f size;
+        public Vector2 size;
         #pragma warning restore CS0649
 
         private string topSprite;
@@ -139,7 +139,7 @@ namespace SS14.Client.UserInterface.Components
                 {
                     var bounds = currTabSprite.GetLocalBounds();
                     currTabSprite.Position =
-                        new Vector2f(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
+                        new Vector2(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
                                      curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - bounds.Height/2f));
                     currTabSprite.Draw();
                 }

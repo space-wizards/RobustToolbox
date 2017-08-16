@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using OpenTK;
+using Lidgren.Network;
 using SFML.Graphics;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Map;
@@ -32,7 +33,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// X - Top | Y - Right | Z - Bottom | W - Left
         /// </summary>
-        private Vector4f TweakAABB { get; set; } = new Vector4f(0, 0, 0, 0);
+        private Vector4 TweakAABB { get; set; } = Vector4.Zero;
 
         private FloatRect OffsetAABB
         {
@@ -159,27 +160,27 @@ namespace SS14.Client.GameObjects
             YamlNode node;
             if (mapping.TryGetNode("tweakAABB", out node))
             {
-                TweakAABB = node.AsVector4f() / mapManager.TileSize;
+                TweakAABB = node.AsVector4() / mapManager.TileSize;
             }
 
             if (mapping.TryGetNode("TweakAABBtop", out node))
             {
-                TweakAABB = new Vector4f(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
+                TweakAABB = new Vector4(node.AsFloat() / mapManager.TileSize, TweakAABB.Y, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBright", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
+                TweakAABB = new Vector4(TweakAABB.X, node.AsFloat() / mapManager.TileSize, TweakAABB.Z, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBbottom", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
+                TweakAABB = new Vector4(TweakAABB.X, TweakAABB.Y, node.AsFloat() / mapManager.TileSize, TweakAABB.W);
             }
 
             if (mapping.TryGetNode("TweakAABBleft", out node))
             {
-                TweakAABB = new Vector4f(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
+                TweakAABB = new Vector4(TweakAABB.X, TweakAABB.Y, TweakAABB.Z, node.AsFloat() / mapManager.TileSize);
             }
 
             if (mapping.TryGetNode("DebugColor", out node))

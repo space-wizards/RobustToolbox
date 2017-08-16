@@ -8,15 +8,15 @@ namespace SS14.Client.Interfaces.Lighting
     public interface ILightArea
     {
         RenderImage RenderTarget { get; }
-        Vector2f LightPosition { get; set; }
-        Vector2f LightAreaSize { get; set; }
+        Vector2 LightPosition { get; set; }
+        Vector2 LightAreaSize { get; set; }
         bool Calculated { get; set; }
         Sprite Mask { get; set; }
         bool MaskFlipX { get; set; }
         bool MaskFlipY { get; set; }
         bool Rot90 { get; set; }
-        Vector4f MaskProps { get; }
-        Vector2f ToRelativePosition(Vector2f worldPosition);
+        Vector4 MaskProps { get; }
+        Vector2 ToRelativePosition(Vector2 worldPosition);
         void BeginDrawingShadowCasters();
         void EndDrawingShadowCasters();
 

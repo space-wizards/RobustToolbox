@@ -121,7 +121,7 @@ namespace SS14.Client.Map
 
         #region Indexers
 
-        public TileRef GetTileRef(Vector2f pos)
+        public TileRef GetTileRef(Vector2 pos)
         {
             return GetTileRef((int)Math.Floor(pos.X), (int)Math.Floor(pos.Y));
         }
@@ -151,7 +151,7 @@ namespace SS14.Client.Map
                 this.mm = mm;
             }
 
-            public Tile this[Vector2f pos]
+            public Tile this[Vector2 pos]
             {
                 get
                 {

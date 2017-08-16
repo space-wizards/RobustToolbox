@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.System;
 using SS14.Client.Graphics.Render;
 using SS14.Shared.Maths;
@@ -60,7 +61,7 @@ namespace SS14.Client.Graphics.Shader
 
         }
 
-        public void SetParameter(string Parameter, Vector4f vec4)
+        public void SetParameter(string Parameter, Vector4 vec4)
         {
             base.SetParameter(Parameter, vec4.X, vec4.Y, vec4.Z, vec4.W);
         }
@@ -82,15 +83,12 @@ namespace SS14.Client.Graphics.Shader
             }
         }
 
-        public void SetParameter(string Parameter, Vector4f[] vec4array)
+        public void SetParameter(string Parameter, Vector4[] vec4array)
         {
             for (int i = 0; i < vec4array.Length; i++)
             {
                 this.SetParameter(Parameter + i, vec4array[i]);
             }
-
         }
-
     }
 }
- 

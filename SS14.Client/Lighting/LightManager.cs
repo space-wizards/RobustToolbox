@@ -72,7 +72,7 @@ namespace SS14.Client.Lighting
             return _lights.ToArray();
         }
 
-        public ILight[] lightsInRadius(Vector2f point, float radius)
+        public ILight[] lightsInRadius(Vector2 point, float radius)
         {
             return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared()) <= radius * radius).ToArray();
         }
@@ -84,7 +84,7 @@ namespace SS14.Client.Lighting
                 .ToArray();
         }
 
-        public ILight[] LightsIntersectingPoint(Vector2f point)
+        public ILight[] LightsIntersectingPoint(Vector2 point)
         {
             return _lights
                 .FindAll(l => new FloatRect(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point.X, point.Y))
@@ -104,7 +104,7 @@ namespace SS14.Client.Lighting
             }
         }
 
-        public void RecalculateLightsInView(Vector2f point)
+        public void RecalculateLightsInView(Vector2 point)
         {
             ILight[] lights = LightsIntersectingPoint(point);
             foreach (ILight l in lights)

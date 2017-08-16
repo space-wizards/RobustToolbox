@@ -74,7 +74,7 @@ namespace SS14.Client.GameObjects
             _textSprite = new Text(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
             _textSprite.Color = Color.Black;
             // TODO Word wrap!
-            _textSprite.Position = new Vector2f(5, 3);
+            _textSprite.Position = new Vector2(5, 3);
             _stringBuilder = new StringBuilder();
 
             _bubbleRender = new RenderImage("bubble ",1, 1);
@@ -89,7 +89,7 @@ namespace SS14.Client.GameObjects
 
         #region Publics
 
-        public void Draw(Vector2f position, Vector2f windowOrigin, Sprite spriteToDrawAbove)
+        public void Draw(Vector2 position, Vector2 windowOrigin, Sprite spriteToDrawAbove)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -99,11 +99,11 @@ namespace SS14.Client.GameObjects
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2f(x, y);
+            _bubbleSprite.Position = new Vector2(x, y);
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2f position, Vector2f windowOrigin, FloatRect boundingBox)
+        public void Draw(Vector2 position, Vector2 windowOrigin, FloatRect boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -112,7 +112,7 @@ namespace SS14.Client.GameObjects
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2f(x, y);
+            _bubbleSprite.Position = new Vector2(x, y);
             _bubbleSprite.Draw();
         }
 

@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared;
@@ -9,11 +10,11 @@ namespace SS14.Client.Interfaces.Lighting
     {
         int Radius { get; }
         Color Color { get; }
-        Vector2f Position { get; }
+        Vector2 Position { get; }
         LightState LightState { get; }
         ILightArea LightArea { get; }
         LightMode LightMode { get; set; }
-        void Move(Vector2f toPosition);
+        void Move(Vector2 toPosition);
         void SetRadius(int Radius);
         void SetColor(int a, int r, int g, int b);
         void SetColor(Color color);
@@ -21,7 +22,7 @@ namespace SS14.Client.Interfaces.Lighting
         void Update(float frametime);
 
         void SetMask(string _mask);
-        Vector4f GetColorVec();
+        Vector4 GetColorVec();
         void SetState(LightState state);
     }
 }

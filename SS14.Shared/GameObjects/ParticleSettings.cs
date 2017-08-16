@@ -10,23 +10,23 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class ParticleSettings : INotifyPropertyChanged
     {
-        private Vector2f _emitterPosition = new Vector2f(0, 0);
-        private Vector2f _emissionOffset = new Vector2f(0, 0);
+        private Vector2 _emitterPosition = new Vector2(0, 0);
+        private Vector2 _emissionOffset = new Vector2(0, 0);
         private int _emitRate = 1;
         private int _maximumParticleCount = 200;
-        private Vector2f _emissionRadiusRange = new Vector2f(0, 0);
-        private Vector2f _velocity = new Vector2f(0, 0);
+        private Vector2 _emissionRadiusRange = new Vector2(0, 0);
+        private Vector2 _velocity = new Vector2(0, 0);
         private float _velocityVariance = 0;
-        private Vector2f _acceleration = new Vector2f(0, 0);
+        private Vector2 _acceleration = new Vector2(0, 0);
         private float _accelerationVariance = 0;
         private float _radialVelocity = 0;
         private float _radialVelocityVariance = 0;
         private float _radialAcceleration = 0;
         private float _colorVariance = 0;
         private float _sizeVariance = 0;
-        private Vector2f _sizeRange = new Vector2f(1, 1);
+        private Vector2 _sizeRange = new Vector2(1, 1);
         private float _spinVelocityVariance = 0;
-        private Vector2f _spinVelocity = new Vector2f(0, 0);
+        private Vector2 _spinVelocity = new Vector2(0, 0);
         private float _lifetimeVariance = 0;
         private float _lifetime = 1;
         private float _tangentialAccelerationVariance = 0;
@@ -89,7 +89,7 @@ namespace SS14.Shared.GameObjects
         /// Emitter Position;
         /// This is the logical position of the emitter object
         /// </summary>
-        public Vector2f EmitterPosition
+        public Vector2 EmitterPosition
         {
             get { return _emitterPosition; }
             set
@@ -103,7 +103,7 @@ namespace SS14.Shared.GameObjects
         /// Emission Offset;
         /// This is where the particles should be emitted relative to the emitter position.
         /// </summary>
-        public Vector2f EmissionOffset
+        public Vector2 EmissionOffset
         {
             get { return _emissionOffset; }
             set
@@ -147,7 +147,7 @@ namespace SS14.Shared.GameObjects
         /// This controls the range in radius from the emission position where the particles
         /// will start. If the radius is 0, they will all be emitted at the EmitPosition.
         /// </summary>
-        public Vector2f EmissionRadiusRange
+        public Vector2 EmissionRadiusRange
         {
             get { return _emissionRadiusRange; }
             set
@@ -161,7 +161,7 @@ namespace SS14.Shared.GameObjects
         /// Velocity Range
         /// This controls the particle's initial velocity
         /// </summary>
-        public Vector2f Velocity
+        public Vector2 Velocity
         {
             get { return _velocity; }
             set
@@ -189,7 +189,7 @@ namespace SS14.Shared.GameObjects
         /// Acceleration Range
         /// This controls the particle's initial acceleration
         /// </summary>
-        public Vector2f Acceleration
+        public Vector2 Acceleration
         {
             get { return _acceleration; }
             set
@@ -357,7 +357,7 @@ namespace SS14.Shared.GameObjects
         /// Spin Velocity
         /// This controls the initial spin velocity over the life of the particle
         /// </summary>
-        public Vector2f SpinVelocity
+        public Vector2 SpinVelocity
         {
             get { return _spinVelocity; }
             set
@@ -385,7 +385,7 @@ namespace SS14.Shared.GameObjects
         /// Size Range
         /// This controls the range in size of the particle over the course of its lifetime
         /// </summary>
-        public Vector2f SizeRange
+        public Vector2 SizeRange
         {
             get { return _sizeRange; }
             set

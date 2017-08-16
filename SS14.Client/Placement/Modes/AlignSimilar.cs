@@ -75,16 +75,16 @@ namespace SS14.Client.Placement.Modes
                             closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
-                    var sides = new List<Vector2f>
+                    var sides = new List<Vector2>
                     {
-                        new Vector2f(closestRect.Left + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
-                        new Vector2f(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom() + closestBounds.Height / 2f),
-                        new Vector2f(closestRect.Left - closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f)),
-                        new Vector2f(closestRect.Right() + closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f))
+                        new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Top - closestBounds.Height / 2f),
+                        new Vector2(closestRect.Left + (closestRect.Width / 2f), closestRect.Bottom() + closestBounds.Height / 2f),
+                        new Vector2(closestRect.Left - closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f)),
+                        new Vector2(closestRect.Right() + closestBounds.Width / 2f, closestRect.Top + (closestRect.Height / 2f))
                     };
 
-                    Vector2f closestSide =
-                        (from Vector2f side in sides orderby (side - mouseWorld).LengthSquared() ascending select side).First();
+                    Vector2 closestSide =
+                        (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared() ascending select side).First();
 
                     mouseWorld = closestSide;
                     mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();

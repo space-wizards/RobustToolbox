@@ -496,9 +496,9 @@ namespace SS14.Client.Resources
                     sizeY = float.Parse(splitLine[7], CultureInfo.InvariantCulture);
                 }
 
-                info.Offsets = new Vector2f((float)Math.Round(offsetX * atlasTex.Size.X, 1),
+                info.Offsets = new Vector2((float)Math.Round(offsetX * atlasTex.Size.X, 1),
                     (float)Math.Round(offsetY * atlasTex.Size.Y, 1));
-                info.Size = new Vector2f((float)Math.Round(sizeX * atlasTex.Size.X, 1),
+                info.Size = new Vector2((float)Math.Round(sizeX * atlasTex.Size.X, 1),
                     (float)Math.Round(sizeY * atlasTex.Size.Y, 1));
 
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
@@ -536,8 +536,8 @@ namespace SS14.Client.Resources
             var info = new SpriteInfo()
             {
                 Name = name,
-                Offsets = new Vector2f(0, 0),
-                Size = (Vector2f)texture.Size,
+                Offsets = new Vector2(0, 0),
+                Size = (Vector2)texture.Size,
             };
 
             var sprite = new Sprite(texture);

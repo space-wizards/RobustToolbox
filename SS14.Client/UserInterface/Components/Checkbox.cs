@@ -48,7 +48,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            checkbox.Position = new SFML.System.Vector2(Position.X, Position.Y);
         }
 
         public override void Render()

@@ -30,7 +30,7 @@ namespace SS14.Client.UserInterface.Components
             Text = new TextSprite("ProgressBarText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             Text.Color = Color.Black;
             Text.ShadowColor = new SFML.Graphics.Color(105, 105, 105);
-            Text.ShadowOffset = new Vector2f(1, 1);
+            Text.ShadowOffset = new Vector2(1, 1);
             Text.Shadowed = true;
 
             Size = size;

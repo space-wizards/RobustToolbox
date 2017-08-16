@@ -21,7 +21,7 @@ namespace SS14.Client.Interfaces.Map
         IEnumerable<TileRef> GetWallsIntersecting(FloatRect area);
         IEnumerable<TileRef> GetAllTiles();
 
-        TileRef GetTileRef(Vector2f pos);
+        TileRef GetTileRef(Vector2 pos);
         TileRef GetTileRef(int x, int y);
         ITileCollection Tiles { get; }
     }

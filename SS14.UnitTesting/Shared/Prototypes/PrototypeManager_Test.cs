@@ -75,10 +75,10 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             Assert.That(componentData["float2"].AsFloat(), Is.EqualTo(10.5f));
             Assert.That(componentData["boolt"].AsBool(), Is.EqualTo(true));
             Assert.That(componentData["boolf"].AsBool(), Is.EqualTo(false));
-            Assert.That(componentData["vec2"].AsVector2f(), Is.EqualTo(new Vector2f(1.5f, 1.5f)));
+            Assert.That(componentData["vec2"].AsVector2(), Is.EqualTo(new Vector2(1.5f, 1.5f)));
             Assert.That(componentData["vec2i"].AsVector2i(), Is.EqualTo(new Vector2i(1, 1)));
-            Assert.That(componentData["vec3"].AsVector3f(), Is.EqualTo(new Vector3f(1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData["vec4"].AsVector4f(), Is.EqualTo(new Vector4f(1.5f, 1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData["vec3"].AsVector3(), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData["vec4"].AsVector4(), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
             Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC)));
             Assert.That(componentData["enumf"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Foo));
             Assert.That(componentData["enumb"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Bar));

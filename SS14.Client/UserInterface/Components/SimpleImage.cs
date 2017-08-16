@@ -66,7 +66,7 @@ namespace SS14.Client.UserInterface.Components
                     return new Vector2i(0, 0);
                 return new Vector2i((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
             }
-            set { drawingSprite.Position = new Vector2f (value.X, value.Y); }
+            set { drawingSprite.Position = new Vector2 (value.X, value.Y); }
         }
 
 

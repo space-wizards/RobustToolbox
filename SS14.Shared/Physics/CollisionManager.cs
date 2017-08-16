@@ -48,12 +48,12 @@ namespace SS14.Shared.Physics
         /// <returns></returns>
         public bool IsColliding(FloatRect collider)
         {
-            Vector2f[] points =
+            Vector2[] points =
             {
-                new Vector2f(collider.Left, collider.Top),
-                new Vector2f(collider.Right(), collider.Top),
-                new Vector2f(collider.Right(), collider.Bottom()),
-                new Vector2f(collider.Left, collider.Bottom())
+                new Vector2(collider.Left, collider.Top),
+                new Vector2(collider.Right(), collider.Top),
+                new Vector2(collider.Right(), collider.Bottom()),
+                new Vector2(collider.Left, collider.Bottom())
             };
 
             //Get the buckets that correspond to the collider's points.
@@ -85,7 +85,7 @@ namespace SS14.Shared.Physics
         /// <returns></returns>
         public bool TryCollide(IEntity entity)
         {
-            return TryCollide(entity, new Vector2f());
+            return TryCollide(entity, new Vector2());
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity, Vector2f offset, bool bump = true)
+        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
         {
             var collider = entity.GetComponent<ICollidableComponent>();
             if (collider == null) return false;
@@ -105,12 +105,12 @@ namespace SS14.Shared.Physics
                 ColliderAABB.Top += offset.Y;
             }
 
-            Vector2f[] points =
+            Vector2[] points =
             {
-                new Vector2f(ColliderAABB.Left, ColliderAABB.Top),
-                new Vector2f(SfmlExt.Right((FloatRect) ColliderAABB), ColliderAABB.Top),
-                new Vector2f(SfmlExt.Right((FloatRect) ColliderAABB), SfmlExt.Bottom((FloatRect) ColliderAABB)),
-                new Vector2f(ColliderAABB.Left, SfmlExt.Bottom((FloatRect) ColliderAABB))
+                new Vector2(ColliderAABB.Left, ColliderAABB.Top),
+                new Vector2(SfmlExt.Right((FloatRect) ColliderAABB), ColliderAABB.Top),
+                new Vector2(SfmlExt.Right((FloatRect) ColliderAABB), SfmlExt.Bottom((FloatRect) ColliderAABB)),
+                new Vector2(ColliderAABB.Left, SfmlExt.Bottom((FloatRect) ColliderAABB))
             };
 
             var aabbs =
@@ -203,7 +203,7 @@ namespace SS14.Shared.Physics
         /// </summary>
         /// <param name="coordinate"></param>
         /// <returns></returns>
-        private CollidableBucket GetBucket(Vector2f coordinate)
+        private CollidableBucket GetBucket(Vector2 coordinate)
         {
             var key = GetBucketCoordinate(coordinate);
             return _bucketIndex.ContainsKey(key)
@@ -211,7 +211,7 @@ namespace SS14.Shared.Physics
                 : CreateBucket(key);
         }
 
-        private static Vector2i GetBucketCoordinate(Vector2f coordinate)
+        private static Vector2i GetBucketCoordinate(Vector2 coordinate)
         {
             var x = (int) Math.Floor(coordinate.X / BucketSize);
             var y = (int) Math.Floor(coordinate.Y / BucketSize);

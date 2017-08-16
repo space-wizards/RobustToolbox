@@ -35,7 +35,7 @@ namespace SS14.Client.Helpers
             //Set Defaults
             Radius = 7;
             Amount = 2.5f;
-            Size = new Vector2f(256.0f, 256.0f);
+            Size = new Vector2(256.0f, 256.0f);
 
             LoadShaders();
             //ComputeOffsets(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
@@ -71,15 +71,15 @@ namespace SS14.Client.Helpers
         /// Returns the weights and texture offsets used for the horizontal Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2f[] WeightsOffsetsX { get; private set; }
+        public Vector2[] WeightsOffsetsX { get; private set; }
 
         /// <summary>
         /// Returns the weights and texture offsets used for the vertical Gaussian blur
         /// pass.
         /// </summary>
-        public Vector2f[] WeightsOffsetsY { get; private set; }
+        public Vector2[] WeightsOffsetsY { get; private set; }
 
-        public Vector2f Size { get; private set; }
+        public Vector2 Size { get; private set; }
 
         public void Dispose()
         {
@@ -95,10 +95,10 @@ namespace SS14.Client.Helpers
 
         public void SetSize(float size)
         {
-            SetSize(new Vector2f(size, size));
+            SetSize(new Vector2(size, size));
         }
 
-        public void SetSize(Vector2f size)
+        public void SetSize(Vector2 size)
         {
             Size = size;
             ComputeOffsets();
@@ -191,8 +191,8 @@ namespace SS14.Client.Helpers
 
             WeightsOffsetsX = null;
             WeightsOffsetsY = null;
-            WeightsOffsetsX = new Vector2f[Radius*2 + 1];
-            WeightsOffsetsY = new Vector2f[Radius*2 + 1];
+            WeightsOffsetsX = new Vector2[Radius*2 + 1];
+            WeightsOffsetsY = new Vector2[Radius*2 + 1];
 
             float xOffset = 1.0f/textureWidth;
             float yOffset = 1.0f/textureHeight;
@@ -200,8 +200,8 @@ namespace SS14.Client.Helpers
             for (int i = -Radius; i <= Radius; ++i)
             {
                 int index = i + Radius;
-                WeightsOffsetsX[index] = new Vector2f(Kernel[index], i*xOffset);
-                WeightsOffsetsY[index] = new Vector2f(Kernel[index], i*yOffset);
+                WeightsOffsetsX[index] = new Vector2(Kernel[index], i*xOffset);
+                WeightsOffsetsY[index] = new Vector2(Kernel[index], i*yOffset);
             }
         }
 

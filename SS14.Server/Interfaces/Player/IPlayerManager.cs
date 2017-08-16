@@ -37,7 +37,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(Vector2f position, int range);
+        List<IPlayerSession> GetPlayersInRange(Vector2 position, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

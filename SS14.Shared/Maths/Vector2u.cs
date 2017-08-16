@@ -1,4 +1,4 @@
-﻿using OpenTK;
+using OpenTK;
 using System;
 using System.Runtime.InteropServices;
 
@@ -6,24 +6,24 @@ namespace SS14.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Vector2i : IEquatable<Vector2i>
+    public struct Vector2u : IEquatable<Vector2u>
     {
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>
-        public readonly int X;
+        public readonly uint X;
 
         /// <summary>
         /// The Y component of the Vector2i.
         /// </summary>
-        public readonly int Y;
+        public readonly uint Y;
 
         /// <summary>
         /// Construct a vector from its coordinates.
         /// </summary>
         /// <param name="x">X coordinate</param>
         /// <param name="y">Y coordinate</param>
-        public Vector2i(int x, int y)
+        public Vector2u(uint x, uint y)
         {
             X = x;
             Y = y;
@@ -34,7 +34,7 @@ namespace SS14.Shared.Maths
         /// </summary>
         /// <param name="other">Other vector to check.</param>
         /// <returns>True if the two vectors are equal.</returns>
-        public bool Equals(Vector2i other)
+        public bool Equals(Vector2u other)
         {
             return X == other.X && Y == other.Y;
         }
@@ -47,7 +47,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Vector2i && Equals((Vector2i) obj);
+            return obj is Vector2u vec && Equals(vec);
         }
 
         /// <summary>
@@ -58,11 +58,16 @@ namespace SS14.Shared.Maths
         {
             unchecked
             {
-                return (X * 397) ^ Y;
+                return ((int)X * 397) ^ (int)Y;
             }
         }
 
-        public static implicit operator Vector2(Vector2i vector)
+        public static Vector2u operator / (Vector2u vector, uint divider)
+        {
+            return new Vector2u(vector.X / divider, vector.Y / divider);
+        }
+
+        public static implicit operator Vector2(Vector2u vector)
         {
             return new Vector2(vector.X, vector.Y);
         }

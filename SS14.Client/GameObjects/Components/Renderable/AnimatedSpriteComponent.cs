@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
@@ -152,7 +153,7 @@ namespace SS14.Client.GameObjects
             return sprite.GetCurrentSprite();
         }
 
-        public virtual bool WasClicked(Vector2f worldPos)
+        public virtual bool WasClicked(Vector2 worldPos)
         {
             if (sprite == null || !visible) return false;
 
@@ -205,7 +206,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             UpdateSlaves();
 
@@ -227,7 +228,7 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos.Convert());
+            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
             var bounds = sprite.AABB;
 
@@ -258,7 +259,7 @@ namespace SS14.Client.GameObjects
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position.Convert()),
-                                   new Vector2f(), aabb);
+                                   new Vector2(), aabb);
         }
 
         /// <inheritdoc />
@@ -292,7 +293,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SetSpriteCenter(Vector2f center)
+        public void SetSpriteCenter(Vector2 center)
         {
             sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
                                center.Y - (sprite.AABB.Height / 2));

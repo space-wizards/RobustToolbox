@@ -104,7 +104,7 @@ namespace SS14.Client.State.States
         {
             _Width = (int) CluwneLib.Screen.Size.X;
             _Height = (int) CluwneLib.Screen.Size.Y;
-            _background.Scale = new Vector2f((float)_Width/_background.TextureRect.Width, (float)_Height/_background.TextureRect.Height);
+            _background.Scale = new Vector2((float)_Width/_background.TextureRect.Width, (float)_Height/_background.TextureRect.Height);
             _lblVersion.Position = new Vector2i(_Width -  _lblVersion.ClientArea.Width  - 3,
                                                 _Height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);

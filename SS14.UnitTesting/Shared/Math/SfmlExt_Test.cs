@@ -11,11 +11,11 @@ namespace SS14.UnitTesting.Shared.Math
     public class SfmlExt_Test : SS14UnitTest
     {
         [Test, Sequential]
-        public void TestVector2fToDirection([ValueSource(nameof(sources))] (float, float, Direction) test)
+        public void TestVector2ToDirection([ValueSource(nameof(sources))] (float, float, Direction) test)
         {
             // x1 and y1 are always 0.
-            Vector2f origin = new Vector2f(0, 0);
-            Vector2f target = new Vector2f(test.Item1, test.Item2);
+            Vector2 origin = new Vector2(0, 0);
+            Vector2 target = new Vector2(test.Item1, test.Item2);
 
             Assert.That(origin.DirectionTo(target), Is.EqualTo(test.Item3));
         }

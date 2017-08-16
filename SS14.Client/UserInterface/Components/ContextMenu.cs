@@ -15,13 +15,13 @@ namespace SS14.Client.UserInterface.Components
 {
     public class ContextMenu : GuiComponent
     {
-        private readonly Vector2f _buttonSize = new Vector2f(150, 20);
+        private readonly Vector2 _buttonSize = new Vector2(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
         private readonly IResourceCache _resourceCache;
         private readonly IUserInterfaceManager _userInterfaceManager;
         private IEntity _owningEntity;
 
-        public ContextMenu(IEntity entity, Vector2f creationPos, IResourceCache resourceCache,
+        public ContextMenu(IEntity entity, Vector2 creationPos, IResourceCache resourceCache,
                            IUserInterfaceManager userInterfaceManager, bool showExamine = true)
         {
             _owningEntity = entity;
@@ -154,11 +154,11 @@ namespace SS14.Client.UserInterface.Components
         private readonly IResourceCache _resourceCache;
         private readonly Label _textLabel;
 
-        public Vector2f Size;
+        public Vector2 Size;
         private SFML.Graphics.Color _currentColor;
         private Sprite _iconSprite;
 
-        public ContextMenuButton(ContextMenuEntry entry, Vector2f size, IResourceCache resourceCache)
+        public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
 

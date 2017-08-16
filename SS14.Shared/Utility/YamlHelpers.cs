@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK;
+using SFML.System;
 using SFML.Graphics;
 using SS14.Shared.Maths;
 using System;
@@ -34,16 +35,16 @@ namespace SS14.Shared.Utility
             return bool.Parse(((YamlScalarNode)node).Value);
         }
 
-        public static Vector2f AsVector2f(this YamlNode node)
+        public static Vector2 AsVector2(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
             if (args.Length != 2)
             {
-                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector2f), raw));
+                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector2), raw));
             }
 
-            return new Vector2f(float.Parse(args[0], CultureInfo.InvariantCulture),
+            return new Vector2(float.Parse(args[0], CultureInfo.InvariantCulture),
                                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
@@ -53,37 +54,37 @@ namespace SS14.Shared.Utility
             string[] args = raw.Split(',');
             if (args.Length != 2)
             {
-                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector2f), raw));
+                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector2), raw));
             }
 
             return new Vector2i(int.Parse(args[0], CultureInfo.InvariantCulture),
                                 int.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
-        public static Vector3f AsVector3f(this YamlNode node)
+        public static Vector3 AsVector3(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
             if (args.Length != 3)
             {
-                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector3f), raw));
+                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector3), raw));
             }
 
-            return new Vector3f(float.Parse(args[0], CultureInfo.InvariantCulture),
+            return new Vector3(float.Parse(args[0], CultureInfo.InvariantCulture),
                                 float.Parse(args[1], CultureInfo.InvariantCulture),
                                 float.Parse(args[2], CultureInfo.InvariantCulture));
         }
 
-        public static Vector4f AsVector4f(this YamlNode node)
+        public static Vector4 AsVector4(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
             if (args.Length != 4)
             {
-                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector4f), raw));
+                throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Vector4), raw));
             }
 
-            return new Vector4f(float.Parse(args[0], CultureInfo.InvariantCulture),
+            return new Vector4(float.Parse(args[0], CultureInfo.InvariantCulture),
                                 float.Parse(args[1], CultureInfo.InvariantCulture),
                                 float.Parse(args[2], CultureInfo.InvariantCulture),
                                 float.Parse(args[3], CultureInfo.InvariantCulture));

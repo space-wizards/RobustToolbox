@@ -1,8 +1,8 @@
-﻿using OpenTK.Graphics;
+﻿using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
@@ -11,8 +11,9 @@ using System;
 using System.Reflection;
 using SS14.Shared.Network;
 using SS14.Shared.Timing;
-using Vector2i = SFML.System.Vector2i;
-
+using SS14.Shared.Maths;
+using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.Graphics
 {
@@ -21,14 +22,14 @@ namespace SS14.Client.Graphics
         private static RenderTarget[] renderTargetArray;
 
         public static GameTiming Time { get; private set; }
-        public static event FrameEventHandler FrameEvent;
+        public static event EventHandler<FrameEventArgs> FrameEvent;
         public static Viewport CurrentClippingViewport;
 
         public delegate void EventHandler();
         public static event EventHandler RefreshVideoSettings;
 
         #region Accessors
-        public static Vector2f WorldCenter { get; set; }
+        public static Vector2 WorldCenter { get; set; }
         public static Vector2u ScreenViewportSize { get; set; }
         public static int TileSize { get; set; }
         public static FloatRect WorldViewport
@@ -95,7 +96,7 @@ namespace SS14.Client.Graphics
             {
                 Initialize();
             }
-            
+
             if ((Screen != null) && (renderTargetArray == null))
                 throw new InvalidOperationException("Something has gone terribly wrong!");
 
@@ -148,7 +149,7 @@ namespace SS14.Client.Graphics
             Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
             Screen.SetVerticalSyncEnabled(true);
             Screen.SetFramerateLimit(300);
-            
+
             renderTargetArray = new RenderTarget[5];
             CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
             IsInitialized = true;
@@ -342,7 +343,7 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Cirle </param>
         /// <param name="color"> Fill Color </param>
         /// <param name="vector2"></param>
-        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2f vector2)
+        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2 vector2)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2f(posX, posY);
@@ -439,81 +440,70 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static Vector2f WorldToScreen(Vector2f point)
+        public static Vector2 WorldToScreen(Vector2 point)
         {
             var center = WorldCenter;
-            return new Vector2f(
-               (point.X - center.X) * TileSize + ScreenViewportSize.X / 2,
-               (point.Y - center.Y) * TileSize + ScreenViewportSize.Y / 2
-               );
+            return (point - center) * TileSize + ScreenViewportSize / 2;
         }
 
         /// <summary>
         /// Transforms a rectangle from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static FloatRect WorldToScreen(FloatRect rect)
+        public static Box2 WorldToScreen(Box2 rect)
         {
             var center = WorldCenter;
-            return new FloatRect(
-                (rect.Left - center.X) * TileSize + ScreenViewportSize.X / 2,
-                (rect.Top - center.Y) * TileSize + ScreenViewportSize.Y / 2,
-                rect.Width * TileSize,
-                rect.Height * TileSize
-                );
+            var topLeft = new Vector2(rect.Left, rect.Top);
+            var bottomRight = new Vector2(rect.Right, rect.Bottom);
+            return new Box2(
+                WorldToScreen(topLeft),
+                WorldToScreen(bottomRight)
+            );
         }
 
-        public static Vector2f WorldToTile(Vector2f point)
+        public static Vector2 WorldToTile(Vector2 point)
         {
-            return new Vector2f(
+            return new Vector2(
                 (float)Math.Floor(point.X),
                 (float)Math.Floor(point.Y)
-                );
+            );
         }
 
-        public static Vector2f TileToWorld(Vector2f point)
+        public static Vector2 TileToWorld(Vector2 point)
         {
-            return new Vector2f(
+            return new Vector2(
                 point.X + 0.5f,
                 point.Y + 0.5f
-                );
+            );
         }
 
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static Vector2f ScreenToWorld(Vector2i point)
+        public static Vector2 ScreenToWorld(Vector2i point)
         {
-            return new Vector2f(
-                ((float)point.X - ScreenViewportSize.X / 2 ) / TileSize + WorldCenter.X,
-                ((float)point.Y - ScreenViewportSize.Y / 2 ) / TileSize + WorldCenter.Y
-                );
+            return ((Vector2)point - ScreenViewportSize / 2) / TileSize + WorldCenter;
         }
 
         /// <summary>
         /// Transforms a rectangle from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static FloatRect ScreenToWorld(IntRect rect)
-       {
-           var center = WorldCenter;
-           return new FloatRect(
-               ((float)rect.Left - ScreenViewportSize.X / 2) / TileSize + center.X,
-               ((float)rect.Top  - ScreenViewportSize.Y / 2) / TileSize + center.Y,
-               rect.Width / TileSize,
-               rect.Height / TileSize
-               );
-       }
+        public static Box2 ScreenToWorld(Box2i rect)
+        {
+            var center = WorldCenter;
+            return new Box2(
+                ((Vector2)rect.TopLeft - ScreenViewportSize / 2) / TileSize + center,
+                ((Vector2)rect.BottomRight - ScreenViewportSize / 2) / TileSize + center
+            );
+        }
 
         /// <summary>
         /// Scales a vector from pixel coordinates to tile coordinates.
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        public static Vector2f PixelToTile(Vector2f vec)
+        public static Vector2 PixelToTile(Vector2 vec)
         {
-            return new Vector2f(
-                vec.X / TileSize,
-                vec.Y / TileSize
-                );
+            return vec / TileSize;
         }
 
         /// <summary>
@@ -521,25 +511,25 @@ namespace SS14.Client.Graphics
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        public static FloatRect PixelToTile(FloatRect rect)
-       {
-           return new FloatRect(
-               rect.Left / TileSize,
-               rect.Top / TileSize,
-               rect.Width / TileSize,
-               rect.Height / TileSize
-               );
-       }
+        public static Box2 PixelToTile(Box2 rect)
+        {
+            return new Box2(
+                rect.Left / TileSize,
+                rect.Top / TileSize,
+                rect.Right / TileSize,
+                rect.Bottom / TileSize
+            );
+        }
 
         /// <summary>
         /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
         /// </summary>
-        public static Vector2f GetNearestPixel(Vector2f worldPoint)
+        public static Vector2 GetNearestPixel(Vector2 worldPoint)
         {
-            return new Vector2f(
+            return new Vector2(
                 (float)Math.Round(worldPoint.X * TileSize) / TileSize,
                 (float)Math.Round(worldPoint.Y * TileSize) / TileSize
-                );
+            );
         }
 
         #endregion

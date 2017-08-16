@@ -44,8 +44,8 @@ namespace SS14.Client.GameObjects
 
         public void OnMove(object sender, VectorEventArgs args)
         {
-            var offset = new Vector2f(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2f(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
+                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
@@ -76,9 +76,9 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
-            Vector2f renderPos = CluwneLib.WorldToScreen(
+            Vector2 renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<ITransformComponent>().Position.Convert());
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
@@ -142,7 +142,7 @@ namespace SS14.Client.GameObjects
                 ParticleSettings toAdd = IoCManager.Resolve<IResourceCache>().GetParticles(name);
                 if (toAdd != null)
                 {
-                    _emitters.Add(name, new ParticleSystem(toAdd, new Vector2f()));
+                    _emitters.Add(name, new ParticleSystem(toAdd, new Vector2()));
                     _emitters[name].Emit = active;
                 }
             }

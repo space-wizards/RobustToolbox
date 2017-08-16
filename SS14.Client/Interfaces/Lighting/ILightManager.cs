@@ -10,11 +10,11 @@ namespace SS14.Client.Interfaces.Lighting
         ILight CreateLight();
         void AddLight(ILight light);
         void RemoveLight(ILight light);
-        ILight[] lightsInRadius(Vector2f point, float radius);
+        ILight[] lightsInRadius(Vector2 point, float radius);
         void RecalculateLights();
-        void RecalculateLightsInView(Vector2f point);
+        void RecalculateLightsInView(Vector2 point);
         void RecalculateLightsInView(FloatRect rect);
-        ILight[] LightsIntersectingPoint(Vector2f point);
+        ILight[] LightsIntersectingPoint(Vector2 point);
         ILight[] LightsIntersectingRect(FloatRect rect);
         ILight[] GetLights();
         void SetLightMode(LightModeClass? mode, ILight light);

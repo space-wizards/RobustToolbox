@@ -1,3 +1,4 @@
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -6,6 +7,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,22 +23,22 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Particle position relative to the emit position
             /// </summary>
-            public Vector2f Position;
+            public Vector2 Position;
 
             /// <summary>
             /// Where the emitter was when the particle was first emitted
             /// </summary>
-            public Vector2f EmitterPosition;
+            public Vector2 EmitterPosition;
 
             /// <summary>
             /// Particle's x/y velocity
             /// </summary>
-            public Vector2f Velocity;
+            public Vector2 Velocity;
 
             /// <summary>
             /// Particle's x/y acceleration
             /// </summary>
-            public Vector2f Acceleration;
+            public Vector2 Acceleration;
 
             /// <summary>
             /// Particle's radial velocity - relative to EmitterPosition
@@ -91,12 +93,12 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Particle's current color
             /// </summary>
-            public Vector4f Color;
+            public Vector4 Color;
 
             /// <summary>
             /// Rate of change of particle's color
             /// </summary>
-            public Vector4f ColorDelta;
+            public Vector4 ColorDelta;
 
             /// <summary>
             /// Whether or not the particle is currently being drawn
@@ -136,15 +138,15 @@ namespace SS14.Client.GameObjects
                 //Calculate delta p due to radial velocity
                 var positionRelativeToEmitter = Position - EmitterPosition;
                 var deltaRadial = RadialVelocity * frameTime;
-                var deltaPosition = positionRelativeToEmitter*(deltaRadial/positionRelativeToEmitter.Length());
+                var deltaPosition = positionRelativeToEmitter*(deltaRadial/positionRelativeToEmitter.Length);
 
                 //Calculate delta p due to tangential velocity
-                var radius = positionRelativeToEmitter.Length();
+                var radius = positionRelativeToEmitter.Length;
                 if (radius > 0)
                 {
                     var theta = (float)Math.Atan2(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
                     theta += TangentialVelocity*frameTime;
-                    deltaPosition += new Vector2f(radius * (float)Math.Cos(theta), radius*(float)Math.Sin(theta))
+                    deltaPosition += new Vector2(radius * (float)Math.Cos(theta), radius*(float)Math.Sin(theta))
                                      - positionRelativeToEmitter;
                 }
                 //Calculate delta p due to Velocity
@@ -161,22 +163,22 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Particle position relative to the emit position
             /// </summary>
-            public static Vector2f Position = new Vector2f(0,0);
+            public static Vector2 Position = new Vector2(0,0);
 
             /// <summary>
             /// Where the emitter was when the particle was first emitted
             /// </summary>
-            public static Vector2f EmitterPosition = new Vector2f(0,0);
+            public static Vector2 EmitterPosition = new Vector2(0,0);
 
             /// <summary>
             /// Particle's x/y velocity
             /// </summary>
-            public static Vector2f Velocity = new Vector2f(0,0);
+            public static Vector2 Velocity = new Vector2(0,0);
 
             /// <summary>
             /// Particle's x/y acceleration
             /// </summary>
-            public static Vector2f Acceleration = new Vector2f(0,0);
+            public static Vector2 Acceleration = new Vector2(0,0);
 
             /// <summary>
             /// Particle's radial velocity - relative to EmitterPosition
@@ -231,12 +233,12 @@ namespace SS14.Client.GameObjects
             /// <summary>
             /// Particle's current color
             /// </summary>
-            public static Vector4f Color = new Vector4f(1,0,0,0);
+            public static Vector4 Color = new Vector4(1,0,0,0);
 
             /// <summary>
             /// Rate of change of particle's color
             /// </summary>
-            public static Vector4f ColorDelta = new Vector4f(-1, 0, 0, 0);
+            public static Vector4 ColorDelta = new Vector4(-1, 0, 0, 0);
 
             /// <summary>
             /// Whether or not the particle is currently being drawn
@@ -260,19 +262,19 @@ namespace SS14.Client.GameObjects
         /// Emitter Position;
         /// This is the logical position of the emitter object
         /// </summary>
-        public Vector2f EmitterPosition { get; set; }
+        public Vector2 EmitterPosition { get; set; }
 
         /// <summary>
         /// Emission Offset;
         /// This is where the particles should be emitted relative to the emitter position.
         /// </summary>
-        public Vector2f EmissionOffset { get; set; }
+        public Vector2 EmissionOffset { get; set; }
 
         /// <summary>
         /// Emit Position
         /// This is where the particles will be emitted.
         /// </summary>
-        public Vector2f EmitPosition { get { return EmitterPosition + EmissionOffset; } }
+        public Vector2 EmitPosition { get { return EmitterPosition + EmissionOffset; } }
 
         /// <summary>
         /// Emit
@@ -324,7 +326,7 @@ namespace SS14.Client.GameObjects
         /// Velocity Range
         /// This controls the particle's initial velocity
         /// </summary>
-        public Vector2f Velocity { get; set; }
+        public Vector2 Velocity { get; set; }
 
         /// <summary>
         /// Velocity Variance
@@ -336,7 +338,7 @@ namespace SS14.Client.GameObjects
         /// Acceleration Range
         /// This controls the particle's initial acceleration
         /// </summary>
-        public Vector2f Acceleration { get; set; }
+        public Vector2 Acceleration { get; set; }
 
         /// <summary>
         /// Acceleration Variance
@@ -430,7 +432,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// This controls the color range of the particle over the course of its lifetime
         /// </summary>
-        public SS14.Shared.Utility.Range<Vector4f> ColorRange { get; set; }
+        public SS14.Shared.Utility.Range<Vector4> ColorRange { get; set; }
 
         /// <summary>
         /// This controls how much particle color will vary between particles
@@ -486,26 +488,26 @@ namespace SS14.Client.GameObjects
             return (RandomFloat()*(end - start)) + start;
         }
 
-        private Vector2f RandomRangeVector2(SS14.Shared.Utility.Range<Vector2f> randomRange)
+        private Vector2 RandomRangeVector2(SS14.Shared.Utility.Range<Vector2> randomRange)
         {
-            return new Vector2f(
+            return new Vector2(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
                 RandomRangeFloat(randomRange.Start.Y, randomRange.End.Y)
                 );
         }
 
-        private Vector3f RandomRangeVector3(SS14.Shared.Utility.Range<Vector3f> randomRange)
+        private Vector3 RandomRangeVector3(SS14.Shared.Utility.Range<Vector3> randomRange)
         {
-            return new Vector3f(
+            return new Vector3(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
                 RandomRangeFloat(randomRange.Start.Y, randomRange.End.Y),
                 RandomRangeFloat(randomRange.Start.Z, randomRange.End.Z)
                 );
         }
 
-        private Vector4f RandomRangeVector4(SS14.Shared.Utility.Range<Vector4f> randomRange)
+        private Vector4 RandomRangeVector4(SS14.Shared.Utility.Range<Vector4> randomRange)
         {
-            return new Vector4f(
+            return new Vector4(
                 RandomRangeFloat(randomRange.Start.X, randomRange.End.X),
                 RandomRangeFloat(randomRange.Start.Y, randomRange.End.Y),
                 RandomRangeFloat(randomRange.Start.Z, randomRange.End.Z),
@@ -524,43 +526,43 @@ namespace SS14.Client.GameObjects
             return Math.Max(val, 0);
         }
 
-        private Vector2f VariedVector2(Vector2f value, float variance)
+        private Vector2 VariedVector2(Vector2 value, float variance)
         {
-            return new Vector2f(
+            return new Vector2(
                 VariedFloat(value.X, variance),
                 VariedFloat(value.Y, variance)
                 );
         }
 
-        private Vector2f VariedPositiveVector2(Vector2f value, float variance)
+        private Vector2 VariedPositiveVector2(Vector2 value, float variance)
         {
-            return new Vector2f(
+            return new Vector2(
                 VariedPositiveFloat(value.X, variance),
                 VariedPositiveFloat(value.Y, variance)
                 );
         }
 
-        private Vector3f VariedVector3(Vector3f value, float variance)
+        private Vector3 VariedVector3(Vector3 value, float variance)
         {
-            return new Vector3f(
+            return new Vector3(
                 VariedFloat(value.X, variance),
                 VariedFloat(value.Y, variance),
                 VariedFloat(value.Z, variance)
                 );
         }
 
-        private Vector3f VariedPositiveVector3(Vector3f value, float variance)
+        private Vector3 VariedPositiveVector3(Vector3 value, float variance)
         {
-            return new Vector3f(
+            return new Vector3(
                 VariedPositiveFloat(value.X, variance),
                 VariedPositiveFloat(value.Y, variance),
                 VariedPositiveFloat(value.Z, variance)
                 );
         }
 
-        private Vector4f VariedVector4(Vector4f value, float variance)
+        private Vector4 VariedVector4(Vector4 value, float variance)
         {
-            return new Vector4f(
+            return new Vector4(
                 VariedFloat(value.X, variance),
                 VariedFloat(value.Y, variance),
                 VariedFloat(value.Z, variance),
@@ -568,9 +570,9 @@ namespace SS14.Client.GameObjects
                 );
         }
 
-        private Vector4f VariedPositiveVector4(Vector4f value, float variance)
+        private Vector4 VariedPositiveVector4(Vector4 value, float variance)
         {
-            return new Vector4f(
+            return new Vector4(
                 VariedPositiveFloat(value.X, variance),
                 VariedPositiveFloat(value.Y, variance),
                 VariedPositiveFloat(value.Z, variance),
@@ -578,7 +580,7 @@ namespace SS14.Client.GameObjects
                 );
         }
 
-        private Vector4f Limit(Vector4f color)
+        private Vector4 Limit(Vector4 color)
         {
             if (Math.Max(color.X, Math.Max(color.Y, Math.Max(color.Z, color.W))) <= 255)
                 return color;
@@ -598,10 +600,10 @@ namespace SS14.Client.GameObjects
             }
             if (x > 255)
                 x = 255;
-            return new Vector4f(x, y, z, w);
+            return new Vector4(x, y, z, w);
         }
 
-        private SFML.Graphics.Color ToColor(Vector4f color)
+        private SFML.Graphics.Color ToColor(Vector4 color)
         {
             color = Limit(color);
 
@@ -628,7 +630,7 @@ namespace SS14.Client.GameObjects
             var emitRadius = RandomRangeFloat(EmissionRadiusRange);
             emitRadius = emitRadius > 0.01f ? emitRadius : 0.1f;
             var emitAngle = RandomFloat()*2*Math.PI;
-            p.Position = EmitPosition + new Vector2f(
+            p.Position = EmitPosition + new Vector2(
                                             emitRadius*(float)Math.Sin(emitAngle),
                                             emitRadius*(float)Math.Cos(emitAngle)
                                             );
@@ -660,9 +662,9 @@ namespace SS14.Client.GameObjects
             this.AccelerationVariance = settings.AccelerationVariance;
 
             //I hope this is correct.
-            this.ColorRange = new SS14.Shared.Utility.Range<Vector4f>(
-                new Vector4f(settings.ColorRange.Start.A, settings.ColorRange.Start.R, settings.ColorRange.Start.G, settings.ColorRange.Start.B),
-                new Vector4f(settings.ColorRange.End.A, settings.ColorRange.End.R, settings.ColorRange.End.G, settings.ColorRange.End.B));
+            this.ColorRange = new SS14.Shared.Utility.Range<Vector4>(
+                new Vector4(settings.ColorRange.Start.A, settings.ColorRange.Start.R, settings.ColorRange.Start.G, settings.ColorRange.Start.B),
+                new Vector4(settings.ColorRange.End.A, settings.ColorRange.End.R, settings.ColorRange.End.G, settings.ColorRange.End.B));
 
             this.ColorVariance = settings.ColorVariance;
             this.EmissionOffset = settings.EmissionOffset;
@@ -696,7 +698,7 @@ namespace SS14.Client.GameObjects
         /// This moves the emitter's position
         /// </remarks>
         /// <param name="toPosition"></param>
-        public void MoveEmitter(Vector2f toPosition)
+        public void MoveEmitter(Vector2 toPosition)
         {
             EmitterPosition = toPosition;
         }
@@ -708,7 +710,7 @@ namespace SS14.Client.GameObjects
         /// This moves the particles, but not the emitter. This changes the particles positions relative to the emitter.
         /// </remarks>
         /// <param name="toPosition"></param>
-        public void MoveParticles(Vector2f toPosition)
+        public void MoveParticles(Vector2 toPosition)
         {
             var offset = toPosition - EmitterPosition;
             MoveParticlesOffset(offset);
@@ -721,7 +723,7 @@ namespace SS14.Client.GameObjects
         /// This moves the particles, but not the emitter. This changes the particles positions relative to the emitter.
         /// </remarks>
         /// <param name="offset"></param>
-        public void MoveParticlesOffset(Vector2f offset)
+        public void MoveParticlesOffset(Vector2 offset)
         {
             Parallel.ForEach(LiveParticles, particle =>
             {
@@ -738,7 +740,7 @@ namespace SS14.Client.GameObjects
         /// emitter, they "move" as well.
         /// </remarks>
         /// <param name="toPosition"></param>
-        public void Move(Vector2f toPosition)
+        public void Move(Vector2 toPosition)
         {
             MoveParticles(toPosition);
             EmitterPosition = toPosition;
@@ -783,9 +785,9 @@ namespace SS14.Client.GameObjects
             foreach (var particle in LiveParticles)
             {
                 ParticleSprite.Color = ToColor(particle.Color);
-                ParticleSprite.Position = particle.Position;
+                ParticleSprite.Position = particle.Position.Convert();
                 ParticleSprite.Rotation = (float)(180f / Math.PI) * particle.Spin;
-                ParticleSprite.Scale = new SFML.System.Vector2f(particle.Size, particle.Size);
+                ParticleSprite.Scale = new Vector2(particle.Size, particle.Size);
                 //_batch.AddClone(ParticleSprite);
                 ParticleSprite.Draw();
             }
@@ -794,15 +796,15 @@ namespace SS14.Client.GameObjects
         #endregion
 
         #region Constructor/Destructors
-        public ParticleSystem(Sprite particleSprite, Vector2f position)
+        public ParticleSystem(Sprite particleSprite, Vector2 position)
         {
             MaximumParticleCount = 200;
             //TODO start with sane defaults
-            Acceleration = new Vector2f();
+            Acceleration = new Vector2();
             AccelerationVariance = 0f;
-            ColorRange = new SS14.Shared.Utility.Range<Vector4f>(Vector4f.UnitX * 255, Vector4f.Zero);
+            ColorRange = new SS14.Shared.Utility.Range<Vector4>(Vector4.UnitX * 255, Vector4.Zero);
             ColorVariance = 0f;
-            EmissionOffset = new Vector2f();
+            EmissionOffset = new Vector2();
             EmissionRadiusRange = new SS14.Shared.Utility.Range<float>(0f, 0f);
             Emit = false;
             EmitRate = 1;
@@ -822,10 +824,10 @@ namespace SS14.Client.GameObjects
             TangentialAccelerationVariance = 0;
             TangentialVelocity = 0;
             TangentialVelocityVariance = 0;
-            Velocity = new Vector2f();
+            Velocity = new Vector2();
             VelocityVariance = 0;
         }
-        public ParticleSystem(ParticleSettings settings, Vector2f position)
+        public ParticleSystem(ParticleSettings settings, Vector2 position)
         {
             LoadParticleSettings(settings);
             EmitterPosition = position;

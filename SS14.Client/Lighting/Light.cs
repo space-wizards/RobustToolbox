@@ -16,14 +16,14 @@ namespace SS14.Client.Lighting
 
         #region ILight Members
 
-        public Vector2f Position { get; private set; }
+        public Vector2 Position { get; private set; }
         public Color Color { get; private set; }
         public int Radius { get; private set; }
         public ILightArea LightArea { get; private set; }
         public LightState LightState { get; private set; }
         public LightMode LightMode { get; set; }
 
-        public void Move(Vector2f toPosition)
+        public void Move(Vector2 toPosition)
         {
             Position = toPosition;
             LightArea.Calculated = false;
@@ -48,9 +48,9 @@ namespace SS14.Client.Lighting
             Color = color;
         }
 
-        public Vector4f GetColorVec()
+        public Vector4 GetColorVec()
         {
-            return new Vector4f((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
+            return new Vector4((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
         }
 
         public void SetMask(string mask)

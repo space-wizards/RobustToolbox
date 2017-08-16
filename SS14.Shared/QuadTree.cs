@@ -13,7 +13,7 @@ namespace SS14.Shared
     public class QuadTree<T> where T : class, IQuadObject
     {
         private readonly bool sort;
-        private readonly Vector2f minLeafSizeF;
+        private readonly Vector2 minLeafSizeF;
         private readonly int maxObjectsPerLeaf;
         private QuadNode root = null;
         private Dictionary<T, QuadNode> objectToNodeLookup = new Dictionary<T, QuadNode>();
@@ -22,7 +22,7 @@ namespace SS14.Shared
         private object syncLock = new object();
         private int objectSortId = 0;
 
-        public QuadTree(Vector2f minLeafSizeF, int maxObjectsPerLeaf)
+        public QuadTree(Vector2 minLeafSizeF, int maxObjectsPerLeaf)
         {
             this.minLeafSizeF = minLeafSizeF;
             this.maxObjectsPerLeaf = maxObjectsPerLeaf;
@@ -47,7 +47,7 @@ namespace SS14.Shared
         /// <param name="minLeafSizeF">The smallest SizeF a leaf will split into</param>
         /// <param name="maxObjectsPerLeaf">Maximum number of objects per leaf before it forces a split into sub quadrants</param>
         /// <param name="sort">Whether or not queries will return objects in the order in which they were added</param>
-        public QuadTree(Vector2f minLeafSizeF, int maxObjectsPerLeaf, bool sort)
+        public QuadTree(Vector2 minLeafSizeF, int maxObjectsPerLeaf, bool sort)
             : this(minLeafSizeF, maxObjectsPerLeaf)
         {
             this.sort = sort;
@@ -65,10 +65,10 @@ namespace SS14.Shared
                 var bounds = quadObject.Bounds;
                 if (root == null)
                 {
-                    var rootSizeF = new Vector2f((float)Math.Ceiling(bounds.Width / minLeafSizeF.X),
+                    var rootSizeF = new Vector2((float)Math.Ceiling(bounds.Width / minLeafSizeF.X),
                                             (float)Math.Ceiling(bounds.Height / minLeafSizeF.Y));
                     double multiplier = Math.Max(rootSizeF.X, rootSizeF.Y);
-                    rootSizeF = new Vector2f((float)(minLeafSizeF.X * multiplier), (float)(minLeafSizeF.Y * multiplier));
+                    rootSizeF = new Vector2((float)(minLeafSizeF.X * multiplier), (float)(minLeafSizeF.Y * multiplier));
                     var center = new Vector2i((int)(bounds.Left + bounds.Width / 2), (int)(bounds.Top + bounds.Height / 2));
                     var rootOrigin = new Vector2i((int)(center.X - rootSizeF.X / 2), (int)(center.Y - rootSizeF.Y / 2));
                     root = new QuadNode(new FloatRect(rootOrigin.ToFloat(), rootSizeF));

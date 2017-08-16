@@ -12,7 +12,7 @@ namespace SS14.Client.Placement
 
         public TileRef currentTile;
         public Vector2i mouseScreen;
-        public Vector2f mouseWorld;
+        public Vector2 mouseWorld;
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
@@ -38,7 +38,7 @@ namespace SS14.Client.Placement
             {
                 var bounds = spriteToDraw.GetLocalBounds();
                 spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width / 2f),
                                                      mouseScreen.Y - (bounds.Height / 2f));
                 //Centering the sprite on the cursor.
                 spriteToDraw.Draw();

@@ -55,7 +55,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (_drawSprite != null)
             {
-                _drawSprite.Position = new Vector2f( Position.X,Position.Y);
+                _drawSprite.Position = new Vector2( Position.X,Position.Y);
                 var bounds = _drawSprite.GetLocalBounds();
                 ClientArea = new IntRect(Position,
                                            new Vector2i((int)bounds.Width, (int)bounds.Height));
@@ -67,7 +67,7 @@ namespace SS14.Client.UserInterface.Components
             if (_drawSprite != null)
             {
                 _drawSprite.Color = Color;
-                _drawSprite.Position = new Vector2f (Position.X,Position.Y);
+                _drawSprite.Position = new Vector2 (Position.X,Position.Y);
                 _drawSprite.Texture.Smooth = true;
                 _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
                 _drawSprite.Color = Color;

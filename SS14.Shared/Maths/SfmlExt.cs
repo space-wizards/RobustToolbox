@@ -9,13 +9,13 @@ namespace SS14.Shared.Maths
         // Vector2i
         public static int LengthSquared(this SFML.System.Vector2i vec) => vec.X * vec.X + vec.Y * vec.Y;
         public static float Length(this SFML.System.Vector2i vec)      => (float)Math.Sqrt(LengthSquared(vec));
-        public static Vector2f ToFloat(this SFML.System.Vector2i vec)  => new Vector2f(vec.X, vec.Y);
+        public static Vector2 ToFloat(this SFML.System.Vector2i vec)  => new Vector2(vec.X, vec.Y);
 
 
-        // Vector2f
-        public static float LengthSquared(this Vector2f vec) => vec.X * vec.X + vec.Y * vec.Y;
-        public static float Length(this Vector2f vec)        => (float)Math.Sqrt(LengthSquared(vec));
-        public static SFML.System.Vector2i Round(this Vector2f vec)      => new SFML.System.Vector2i((int)Math.Round(vec.X), (int)Math.Round(vec.Y));
+        // Vector2
+        public static float LengthSquared(this Vector2 vec) => vec.X * vec.X + vec.Y * vec.Y;
+        public static float Length(this Vector2 vec)        => (float)Math.Sqrt(LengthSquared(vec));
+        public static SFML.System.Vector2i Round(this Vector2 vec)      => new SFML.System.Vector2i((int)Math.Round(vec.X), (int)Math.Round(vec.Y));
 
 
         // IntRect
@@ -81,7 +81,7 @@ namespace SS14.Shared.Maths
         /// <param name="origin">The origin vector.</param>
         /// <param name="target">The target vector.</param>
         /// <param name="fallback">The direction used if no direction could be calculated (difference between vectors too small).</param>
-        public static Direction DirectionTo(this Vector2f origin, Vector2f target, Direction fallback=Direction.South)
+        public static Direction DirectionTo(this Vector2 origin, Vector2 target, Direction fallback=Direction.South)
         {
             var mag1 = origin.Magnitude();
             var mag2 = target.Magnitude();
@@ -117,7 +117,7 @@ namespace SS14.Shared.Maths
         /// Returns the dot product of two vectors
         /// </summary>
         /// <returns>The dot product of the two vectors.</returns>
-        public static float DotProduct(this Vector2f v1, Vector2f v2)
+        public static float DotProduct(this Vector2 v1, Vector2 v2)
         {
             return v1.X*v2.X + v1.Y*v2.Y;
         }
@@ -125,7 +125,7 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Return the magnitude (aka. length or absolute value) of a vector.
         /// </summary>
-        public static float Magnitude(this Vector2f vector)
+        public static float Magnitude(this Vector2 vector)
         {
             return (float)Math.Sqrt(vector.X*vector.X + vector.Y+vector.Y);
         }
@@ -133,12 +133,12 @@ namespace SS14.Shared.Maths
         /// <summary>
         /// Get the normalized vector (scale it so its magnitude is 1).
         /// </summary>
-        public static Vector2f Normalize(this Vector2f vector)
+        public static Vector2 Normalize(this Vector2 vector)
         {
             try
             {
                 var inverse = 1 / vector.Magnitude();
-                return new Vector2f(vector.X*inverse, vector.Y*inverse);
+                return new Vector2(vector.X*inverse, vector.Y*inverse);
             }
             catch (DivideByZeroException e)
             {

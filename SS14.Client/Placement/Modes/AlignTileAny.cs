@@ -41,13 +41,13 @@ namespace SS14.Client.Placement.Modes
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new Vector2f(currentTile.X + 0.5f,
+                mouseWorld = new Vector2(currentTile.X + 0.5f,
                                          currentTile.Y + 0.5f);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
             }
             else
             {
-                mouseWorld = new Vector2f(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
+                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = CluwneLib.WorldToScreen(mouseWorld).Round();
 

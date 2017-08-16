@@ -18,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
         protected ImageButton closeButton;
         public bool closeButtonVisible = true;
         protected bool dragging = false;
-        protected Vector2f draggingOffset = new Vector2f();
+        protected Vector2 draggingOffset = new Vector2();
         protected GradientBox gradient;
         protected Label title;
         protected IntRect titleArea;

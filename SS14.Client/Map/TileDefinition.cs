@@ -45,7 +45,7 @@ namespace SS14.Client.Map
         {
             if (tileSprite != null)
             {
-                tileSprite.Position = new SFML.System.Vector2f(xTopLeft, yTopLeft);
+                tileSprite.Position = new SFML.System.Vector2(xTopLeft, yTopLeft);
                 batch.Draw(tileSprite);
             }
         }
@@ -54,7 +54,7 @@ namespace SS14.Client.Map
         {
         }
 
-        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2f lightPosition)
+        public void RenderPosOffset(float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 

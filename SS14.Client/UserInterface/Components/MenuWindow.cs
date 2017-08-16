@@ -64,7 +64,8 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
-            Dispose();
+            ToggleVisible();
+            _userInterfaceManager.RemoveFocus(this);
         }
 
         private void button_entity_Clicked(Button sender)
@@ -72,7 +73,9 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
-            Dispose();
+            ToggleVisible();
+            _userInterfaceManager.RemoveFocus(this);
+
         }
 
         override protected void CloseButtonClicked(ImageButton sender)
@@ -82,13 +85,15 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code != Keyboard.Key.Escape)
+            if (e.Code == Keyboard.Key.Escape)
             {
-                return false;
+                if (IsVisible())
+                {
+                    ToggleVisible();
+                    return true;
+                }
             }
-            
-            ToggleVisible();
-            return true;
+            return false;
         }
     }
 }

@@ -23,6 +23,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
+using SS14.Shared.Maths;
 using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.Resources
@@ -506,7 +507,7 @@ namespace SS14.Client.Resources
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
-                    new Sprite(atlasTex, new IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
+                    new Sprite(atlasTex, Box2i.FromDimensions((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
             }
 
             return loadedSprites;

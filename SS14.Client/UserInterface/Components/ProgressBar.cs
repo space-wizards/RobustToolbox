@@ -6,6 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Maths;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -53,7 +54,7 @@ namespace SS14.Client.UserInterface.Components
             Text.Text = Math.Round(percent*100).ToString() + "%";
             Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
                                          Position.Y + (int)(Size.Y/2f - Text.Height/2f));
-            ClientArea = new IntRect(Position, Size);
+            ClientArea = Box2i.FromDimensions(Position, Size);
             Value++;
         }
 

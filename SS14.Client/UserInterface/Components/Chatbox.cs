@@ -86,8 +86,6 @@ namespace SS14.Client.UserInterface.Components
 
             Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
-            // ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
-
             input = new Textbox(Size.X, resourceCache)
             {
                 drawColor = new SFML.Graphics.Color(128, 128, 128, 100),

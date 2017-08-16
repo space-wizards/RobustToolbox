@@ -22,7 +22,7 @@ namespace SS14.Client.UserInterface.Components
         protected Vector2 draggingOffset = new Vector2();
         protected GradientBox gradient;
         protected Label title;
-        protected IntRect titleArea;
+        protected Box2i titleArea;
 
         public Window(string windowTitle, Vector2i size, IResourceCache resourceCache)
             : base(windowTitle, size, resourceCache)
@@ -51,9 +51,9 @@ namespace SS14.Client.UserInterface.Components
             if (title == null || gradient == null) return;
             int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
             title.Position = new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
-            titleArea = new IntRect(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
+            titleArea = Box2i.FromDimensions(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
             title.Update(frameTime);
-            closeButton.Position = new Vector2i(titleArea.Right() - 5 - closeButton.ClientArea.Width,
+            closeButton.Position = new Vector2i(titleArea.Right - 5 - closeButton.ClientArea.Width,
                                              titleArea.Top + (int)(titleArea.Height / 2f) -
                                              (int)(closeButton.ClientArea.Height / 2f));
             gradient.ClientArea = titleArea;

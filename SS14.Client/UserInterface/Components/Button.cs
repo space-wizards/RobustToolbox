@@ -25,9 +25,9 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _buttonMain;
         private Sprite _buttonRight;
 
-        private IntRect _clientAreaLeft;
-        private IntRect _clientAreaMain;
-        private IntRect _clientAreaRight;
+        private Box2i _clientAreaLeft;
+        private Box2i _clientAreaMain;
+        private Box2i _clientAreaRight;
 
         private Color drawColor = Color.White;
         public Color mouseOverColor = Color.White;
@@ -56,15 +56,15 @@ namespace SS14.Client.UserInterface.Components
             var boundsLeft = _buttonLeft.GetLocalBounds();
             var boundsMain = _buttonMain.GetLocalBounds();
             var boundsRight = _buttonRight.GetLocalBounds();
-            _clientAreaLeft = new IntRect(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = new IntRect(_clientAreaLeft.Right(), Position.Y,
+            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
                                             (int) Label.Width, (int)boundsMain.Height);
-            _clientAreaRight = new IntRect(_clientAreaMain.Right(), Position.Y,
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y,
                                              (int)boundsRight.Width, (int)boundsRight.Height);
-            ClientArea = new IntRect(Position,
+            ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
-            Label.Position = new Vector2i(_clientAreaLeft.Right(),
+            Label.Position = new Vector2i(_clientAreaLeft.Right,
                                        Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
         }
 

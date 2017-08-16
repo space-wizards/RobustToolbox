@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.ResourceManagement;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -143,12 +143,12 @@ namespace SS14.Client.UserInterface.Components
             var listboxLeftBounds = _listboxLeft.GetLocalBounds();
             var listboxMainBounds = _listboxMain.GetLocalBounds();
             var listboxRightBounds = _listboxRight.GetLocalBounds();
-            _clientAreaLeft = new IntRect(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
-            _clientAreaMain = new IntRect(_clientAreaLeft.Right, Position.Y,
+            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
                                           _width, (int)listboxMainBounds.Height);
-            _clientAreaRight = new IntRect(new Vector2i(_clientAreaMain.Right, Position.Y),
+            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, Position.Y),
                                              new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
-            ClientArea = new IntRect(Position,
+            ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
@@ -227,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Position = Position;
-            ClientArea = new IntRect(Position, new Vector2i(_width, (int) Text.Height));
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i(_width, (int) Text.Height));
             BackgroundColor = Selected ? new Color(47, 79, 79) : new Color(128, 128, 128);
         }
     }

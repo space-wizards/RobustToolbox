@@ -5,11 +5,13 @@ using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.UserInterface.Components.Label;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {
@@ -35,7 +37,7 @@ namespace SS14.Client.State.States
         private int _prevScreenHeight;
         private int _prevScreenWidth;
 
-        private IntRect _boundingArea = new IntRect();
+        private Box2i _boundingArea = new Box2i();
 
         #endregion
 
@@ -51,10 +53,8 @@ namespace SS14.Client.State.States
 
         private void UpdateBounds()
         {
-            _boundingArea.Height = 600;
-            _boundingArea.Width = 1000;
-            _boundingArea.Left = 0;
-            _boundingArea.Top = (int)(CluwneLib.Screen.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
+            var top = (int)(CluwneLib.Screen.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
+            _boundingArea = Box2i.FromDimensions(0, top, 1000, 600);
         }
 
         private void InitalizeGUI()
@@ -213,7 +213,7 @@ namespace SS14.Client.State.States
 
         public void Render(FrameEventArgs e)
         {
-            _background.SetTransformToRect(new IntRect(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
             _background.Draw();
 
             _ticketBg.SetTransformToRect(_boundingArea);

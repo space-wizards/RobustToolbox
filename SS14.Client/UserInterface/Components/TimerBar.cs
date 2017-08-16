@@ -2,8 +2,10 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 using System;
 using System.Diagnostics;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -40,7 +42,7 @@ namespace SS14.Client.UserInterface.Components
 
             Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
                                          Position.Y + (int)(Size.Y/2f - Text.Height/2f));
-            ClientArea = new IntRect(Position, Size);
+            ClientArea = Box2i.FromDimensions(Position, Size);
         }
 
         public override void Dispose()

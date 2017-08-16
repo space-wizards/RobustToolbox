@@ -7,7 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -133,7 +133,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new IntRect(Position, Size);
+            ClientArea = Box2i.FromDimensions(Position, Size);
 
             _buttonLeft.Position = new Vector2i(ClientArea.Left,
                                              ClientArea.Top +

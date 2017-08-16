@@ -9,8 +9,10 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -65,7 +67,7 @@ namespace SS14.Client.UserInterface.Components
                 button.Position = new Vector2i((int)creationPos.X, (int)currY);
                 currY += _buttonSize.Y;
             }
-            ClientArea = new IntRect((int)creationPos.X, (int)creationPos.Y, (int)_buttonSize.X,
+            ClientArea = Box2i.FromDimensions((int)creationPos.X, (int)creationPos.Y, (int)_buttonSize.X,
                                        _buttons.Count() * (int)_buttonSize.Y);
         }
 
@@ -177,7 +179,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Update(frameTime);
             var bounds = _iconSprite.GetLocalBounds();
-            ClientArea = new IntRect(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
+            ClientArea = Box2i.FromDimensions(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textLabel.Position = new Vector2i(ClientArea.Left + (int)bounds.Width + 6,
                                             ClientArea.Top + (int)(ClientArea.Height / 2f) -
                                             (int)(_textLabel.ClientArea.Height / 2f));
@@ -188,7 +190,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Render();
             var bounds = _iconSprite.GetLocalBounds();
-            var iconRect = new IntRect(ClientArea.Left + 3,
+            var iconRect = Box2i.FromDimensions(ClientArea.Left + 3,
                                          ClientArea.Top + (int)(ClientArea.Height / 2f) - (int)(bounds.Height / 2f),
                                          (int)bounds.Width, (int)bounds.Height);
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, _currentColor);

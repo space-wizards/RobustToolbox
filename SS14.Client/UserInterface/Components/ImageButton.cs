@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 _drawSprite.Position = new Vector2f( Position.X,Position.Y);
                 var bounds = _drawSprite.GetLocalBounds();
-                ClientArea = new IntRect(Position,
+                ClientArea = Box2i.FromDimensions(Position,
                                            new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }

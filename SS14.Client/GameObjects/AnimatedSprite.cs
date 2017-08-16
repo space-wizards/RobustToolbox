@@ -56,13 +56,13 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Sprite passthrough methods
 
-        public IntRect AABB
+        public Box2i AABB
         {
             get
             {
                 if (_currentSprite != null)
                     return _currentSprite.TextureRect;
-                return new IntRect();
+                return new Box2i();
             }
         }
 

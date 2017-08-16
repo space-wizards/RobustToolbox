@@ -7,7 +7,9 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -59,7 +61,7 @@ namespace SS14.Client.UserInterface.Components
 
             var bounds = DrawSprite.GetLocalBounds();
 
-            ClientArea = new IntRect((int) SpriteLocation.X, (int) SpriteLocation.Y,
+            ClientArea = Box2i.FromDimensions((int) SpriteLocation.X, (int) SpriteLocation.Y,
                                        (int)bounds.Width, (int)bounds.Height);
 
             //Outside screen. Does not respect rotation. FIX.

@@ -79,7 +79,7 @@ namespace SS14.Client.UserInterface.Components
             objectSprite.Position = new Vector2f(Position.X + 5, Position.Y + 5);
             var bounds = objectSprite.GetLocalBounds();
             name.Position = new Vector2i((int)(objectSprite.Position.X + bounds.Width + 5), (int)objectSprite.Position.Y);
-            ClientArea = new IntRect(Position,
+            ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(
                                            fixed_width != -1
                                                ? fixed_width

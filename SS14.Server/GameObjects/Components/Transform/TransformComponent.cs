@@ -116,6 +116,7 @@ namespace SS14.Server.GameObjects
         public bool ContainsEntity(ITransformComponent transform)
         {
             if (IsMapTransform(transform)) //Is the entity on the map
+            {
                 if (this == transform.Parent) //Is this the direct container of the entity
                 {
                     return true;
@@ -124,6 +125,7 @@ namespace SS14.Server.GameObjects
                 {
                     return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
                 }
+            }
             return false;
         }
     }

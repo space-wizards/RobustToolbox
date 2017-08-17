@@ -14,8 +14,7 @@ namespace SS14.Server.GameObjects.Components.Container
     {
         public override string Name => "ContainerContainer";
 
-        public Dictionary<Type, IContainer> EntityContainers = new Dictionary<Type, IContainer>();
-        Dictionary<Type, IContainer> IContainerManager.EntityContainers => EntityContainers;
+        public Dictionary<Type, IContainer> EntityContainers { get; } = new Dictionary<Type, IContainer>();
 
         public bool Remove(IEntity entity)
         {

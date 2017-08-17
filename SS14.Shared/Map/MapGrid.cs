@@ -283,7 +283,7 @@ namespace SS14.Shared.Map
         {
             var local = localPos - WorldPosition;
             var x = (int)Math.Floor(local.X / (_mapManager.TileSize * ChunkSize));
-            var y = (int)Math.Floor(local.X / (_mapManager.TileSize * ChunkSize));
+            var y = (int)Math.Floor(local.Y / (_mapManager.TileSize * ChunkSize));
             return new Indices(x,y);
         }
 

@@ -45,7 +45,6 @@ namespace SS14.Client.UserInterface.Components
             this.BackgroundColor = new Color(64, 64, 64, 200);
             this.DrawBackground = true;
             this.DrawBorder = true;
-            // Update(0);
 
             InitializeCommands();
         }
@@ -88,12 +87,10 @@ namespace SS14.Client.UserInterface.Components
         public override void ToggleVisible()
         {
             var netMgr = IoCManager.Resolve<IClientNetManager>();
-            // var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             base.ToggleVisible();
             if (IsVisible())
             {
                 // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-                // uiMgr.SetFocus(input);
                 // Though TextBox does like focus for the caret and passing KeyDown.
                 input.Focus = true;
                 netMgr.MessageArrived += NetMgr_MessageArrived;
@@ -104,7 +101,6 @@ namespace SS14.Client.UserInterface.Components
             }
             else
             {
-                // uiMgr.RemoveFocus(input);
                 input.Focus = false;
                 netMgr.MessageArrived -= NetMgr_MessageArrived;
             }
@@ -169,7 +165,6 @@ namespace SS14.Client.UserInterface.Components
                 if (input.MouseDown(e))
                 {
                     // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-                    // IoCManager.Resolve<IUserInterfaceManager>().SetFocus(input);
                     return true;
                 }
             return false;
@@ -214,12 +209,6 @@ namespace SS14.Client.UserInterface.Components
             CommandParsing.ParseArguments(text, args);
 
             string commandname = args[0];
-
-            //Entity player;
-            //var entMgr = IoCManager.Resolve<IEntityManager>();
-            //var plrMgr = IoCManager.Resolve<IPlayerManager>();
-            //player = plrMgr.ControlledEntity;
-            //IoCManager.Resolve<INetClientManager>().
 
             bool forward = true;
             if (commands.ContainsKey(commandname))
@@ -281,7 +270,6 @@ namespace SS14.Client.UserInterface.Components
         {
             components.Clear();
             last_y = 0;
-            //this.scrollbarH.Value = 0;
             scrollbarV.Value = 0;
         }
     }

@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using System;
 using System.Diagnostics;
@@ -354,26 +354,7 @@ namespace SS14.Client.Graphics.Render
 
         }
 
-        /// <summary>
-        /// Scale & optionally crop
-        /// </summary>
-        /// <param name="destination">The exact rectangle you wish to fill - scales to this size</param>
-        /// <param name="optionalcrop">To take a subset of the original texture instead of the whole texture</param>
-        /// <param name="color">Color.</param>
-        // public void Blit(IntRect destination, IntRect optionalcrop, Color color)
-        // {
-        //    CluwneSprite _blit;
-        //    Display();
-        //    if (optionalcrop == null)
-        //        _blit = new CluwneSprite("_blit" + key, this);
-        //    else
-        //        _blit = new CluwneSprite("_blit" + key, base.Texture, optionalcrop);
-        //    _blit.Color = color.ToSFMLColor();
-        //    _blit.Draw(destination);
-        // }
-
         #endregion
-
-
+        
     }
 }

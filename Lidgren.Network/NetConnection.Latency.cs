@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Lidgren.Network
 {
@@ -130,8 +130,6 @@ namespace Lidgren.Network
 				if (rchan != null)
 					rchan.m_resendDelay = resendDelay;
 			}
-
-			// m_peer.LogVerbose("Timeout deadline pushed to  " + m_timeoutDeadline);
 
 			// notify the application that average rtt changed
 			if (m_peer.m_configuration.IsMessageTypeEnabled(NetIncomingMessageType.ConnectionLatencyUpdated))

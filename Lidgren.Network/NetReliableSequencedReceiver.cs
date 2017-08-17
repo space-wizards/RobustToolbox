@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Lidgren.Network
 {
@@ -29,12 +29,6 @@ namespace Lidgren.Network
 
 			if (relate == 0)
 			{
-				// Log("Received message #" + message.SequenceNumber + " right on time");
-
-				//
-				// excellent, right on time
-				//
-
 				AdvanceWindow();
 				m_peer.ReleaseMessage(message);
 				return;

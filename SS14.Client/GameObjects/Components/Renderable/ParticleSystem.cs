@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -752,7 +752,6 @@ namespace SS14.Client.GameObjects
             {
                 particle.Update(frameTime);
             }
-            //Parallel.ForEach(LiveParticles, particle => particle.Update(frameTime));
 
             if (!Emit)
                 return;
@@ -781,17 +780,14 @@ namespace SS14.Client.GameObjects
 
         public void Render()
         {
-            //_batch.Clear();
             foreach (var particle in LiveParticles)
             {
                 ParticleSprite.Color = ToColor(particle.Color);
                 ParticleSprite.Position = particle.Position.Convert();
                 ParticleSprite.Rotation = (float)(180f / Math.PI) * particle.Spin;
                 ParticleSprite.Scale = new Vector2f(particle.Size, particle.Size);
-                //_batch.AddClone(ParticleSprite);
                 ParticleSprite.Draw();
             }
-            //_batch.Draw();
         }
         #endregion
 

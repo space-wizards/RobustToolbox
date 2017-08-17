@@ -39,8 +39,6 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                 return false;
 
-            //if (currentMap.IsSolidTile(mouseWorld)) return false;
-
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()

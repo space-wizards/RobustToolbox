@@ -46,7 +46,6 @@ namespace SS14.Client.GameObjects
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
             }
-            //_emitter.MoveEmitter(_emitter.EmitterPosition + offset);
         }
 
         public override void OnAdd(IEntity owner)
@@ -89,8 +88,6 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Owner.GetComponent<ITransformComponent>().Position.Y;
-                //return Owner.GetComponent<TransformComponent>(ComponentFamily.Transform).Position.Y +
-                //       (_particleSprite.Height / 2);
             }
         }
 

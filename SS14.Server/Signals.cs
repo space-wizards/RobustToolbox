@@ -1,4 +1,4 @@
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.ServerEnums;
@@ -84,36 +84,3 @@ namespace SS14.Server
         }
     }
 }
-
-// Reference for the code when including Mono.Posix directly.
-// Obviously not possible anymore since we load the DLL manually.
-/*
-
-//using Mono.Unix;
-//using Mono.Unix.Native;
-
-UnixSignal[] signals = new UnixSignal[] {
-    new UnixSignal (Mono.Unix.Native.Signum.SIGTERM),
-    new UnixSignal (Mono.Unix.Native.Signum.SIGINT)
-};
-
-SignalThread = new Thread(() =>
-{
-    while (true)
-    {
-        int index = UnixSignal.WaitAny(signals, -1);
-        Signum signum = signals[index].Signum;
-        switch (signum)
-        {
-            case Signum.SIGTERM:
-            case Signum.SIGINT:
-                IoCManager.Resolve<IBaseServer>().Shutdown(string.Format("{0} received", signum.ToString()));
-                break;
-        }
-    }
-});
-
-SignalThread.IsBackground = true;
-SignalThread.Name = "signal handler";
-SignalThread.Start();
-    */

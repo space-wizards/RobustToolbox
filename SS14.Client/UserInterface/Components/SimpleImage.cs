@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -25,7 +25,6 @@ namespace SS14.Client.UserInterface.Components
 
         public string Sprite
         {
-            //get { return drawingSprite != null ? drawingSprite.Key : null; }
             set { drawingSprite = _resourceCache.GetSprite(value); Update(0); }
         }
 

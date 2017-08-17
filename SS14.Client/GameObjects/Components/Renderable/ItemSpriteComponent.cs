@@ -137,7 +137,6 @@ namespace SS14.Client.GameObjects
             switch ((ComponentMessageType)message.MessageParameters[0])
             {
                 case ComponentMessageType.SetBaseName:
-                    //basename = (string) message.MessageParameters[1];
                     break;
             }
         }

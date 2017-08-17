@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
@@ -255,7 +255,6 @@ namespace Lidgren.Network
 		public UInt32 ReadUInt32(int numberOfBits)
 		{
 			NetException.Assert(numberOfBits > 0 && numberOfBits <= 32, "ReadUInt32(bits) can only read between 1 and 32 bits");
-			//NetException.Assert(m_bitLength - m_readBitPtr >= numberOfBits, "tried to read past buffer size");
 
 			UInt32 retval = NetBitWriter.ReadUInt32(m_data, numberOfBits, m_readPosition);
 			m_readPosition += numberOfBits;
@@ -470,9 +469,6 @@ namespace Lidgren.Network
 			int num2 = 0;
 			while (true)
 			{
-				//if (num2 == 0x23)
-				//	throw new FormatException("Bad 7-bit encoded integer");
-
 				byte num3 = this.ReadByte();
 				num1 |= ((UInt64)num3 & 0x7f) << num2;
 				num2 += 7;

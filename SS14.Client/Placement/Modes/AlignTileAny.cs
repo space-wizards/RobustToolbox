@@ -31,8 +31,6 @@ namespace SS14.Client.Placement.Modes
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            //if (currentMap.IsSolidTile(mouseWorld)) validPosition = false;
-
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if (

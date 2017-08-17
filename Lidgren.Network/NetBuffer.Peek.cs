@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -181,7 +181,6 @@ namespace Lidgren.Network
 		public UInt32 PeekUInt32(int numberOfBits)
 		{
 			NetException.Assert((numberOfBits > 0 && numberOfBits <= 32), "ReadUInt() can only read between 1 and 32 bits");
-			//NetException.Assert(m_bitLength - m_readBitPtr >= numberOfBits, "tried to read past buffer size");
 
 			UInt32 retval = NetBitWriter.ReadUInt32(m_data, numberOfBits, m_readPosition);
 			return retval;

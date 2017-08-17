@@ -129,8 +129,7 @@ namespace SS14.Client.State.States
         private RenderImage screenShadows;
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
-
-        //private QuadRenderer quadRenderer;
+        
         private ShadowMapResolver shadowMapResolver;
 
         #endregion Lighting
@@ -209,11 +208,6 @@ namespace SS14.Client.State.States
             _overlayTarget = new RenderImage("OverlayTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
             _cleanupList.Add(_overlayTarget);
 
-            //_overlayTarget.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            //_overlayTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            //_overlayTarget.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            //_overlayTarget.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
-
             _overlayTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _overlayTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _overlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -240,30 +234,18 @@ namespace SS14.Client.State.States
         private void InitializeSpriteBatches()
         {
             _gasBatch = new SpriteBatch();
-            //_gasBatch.SourceBlend                   = AlphaBlendOperation.SourceAlpha;
-            //_gasBatch.DestinationBlend              = AlphaBlendOperation.InverseSourceAlpha;
-            //_gasBatch.SourceBlendAlpha              = AlphaBlendOperation.SourceAlpha;
-            //_gasBatch.DestinationBlendAlpha         = AlphaBlendOperation.InverseSourceAlpha;
             _gasBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _gasBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
             _gasBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _gasBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
             _wallTopsBatch = new SpriteBatch();
-            //_wallTopsBatch.SourceBlend                   = AlphaBlendOperation.SourceAlpha;
-            //_wallTopsBatch.DestinationBlend              = AlphaBlendOperation.InverseSourceAlpha;
-            //_wallTopsBatch.SourceBlendAlpha              = AlphaBlendOperation.SourceAlpha;
-            //_wallTopsBatch.DestinationBlendAlpha         = AlphaBlendOperation.InverseSourceAlpha;
             _wallTopsBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _wallTopsBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
             _wallTopsBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _wallTopsBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
             _decalBatch = new SpriteBatch();
-            //_decalBatch.SourceBlend                   = AlphaBlendOperation.SourceAlpha;
-            //_decalBatch.DestinationBlend              = AlphaBlendOperation.InverseSourceAlpha;
-            //_decalBatch.SourceBlendAlpha              = AlphaBlendOperation.SourceAlpha;
-            //_decalBatch.DestinationBlendAlpha         = AlphaBlendOperation.InverseSourceAlpha;
             _decalBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _decalBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
             _decalBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -385,8 +367,7 @@ namespace SS14.Client.State.States
 
                 //PreOcclusion
                 RenderTiles();
-
-                //ComponentManager.Singleton.Render(0, CluwneLib.ScreenViewport);
+                
                 RenderComponents((float)e.Time, vp);
 
                 RenderOverlay();
@@ -654,7 +635,6 @@ namespace SS14.Client.State.States
             #region Object clicking
 
             // Convert our click from screen -> world coordinates
-            //Vector2 worldPosition = new Vector2(e.Position.X + xTopLeft, e.Position.Y + yTopLeft);
             float checkDistance = 1.5f;
             // Find all the entities near us we could have clicked
             IEnumerable<IEntity> entities =
@@ -678,14 +658,6 @@ namespace SS14.Client.State.States
             {
                 return;
             }
-            //var entToClick = (from cd in clickedEntities                       //Treat mobs and their clothes as on the same level as ground placeables (windows, doors)
-            //                  orderby (cd.Drawdepth == (int)DrawDepth.MobBase ||//This is a workaround to make both windows etc. and objects that rely on layers (objects on tables) work.
-            //                            cd.Drawdepth == (int)DrawDepth.MobOverAccessoryLayer ||
-            //                            cd.Drawdepth == (int)DrawDepth.MobOverClothingLayer ||
-            //                            cd.Drawdepth == (int)DrawDepth.MobUnderAccessoryLayer ||
-            //                            cd.Drawdepth == (int)DrawDepth.MobUnderClothingLayer
-            //                   ? (int)DrawDepth.FloorPlaceable : cd.Drawdepth) ascending, cd.Clicked.Position.Y ascending
-            //                  select cd.Clicked).Last();
 
             IEntity entToClick = (from cd in clickedEntities
                                     orderby cd.Drawdepth ascending,
@@ -758,12 +730,6 @@ namespace SS14.Client.State.States
             string message;
             switch (channel)
             {
-                /*case ChatChannel.Emote:
-                message = _entityManager.GetEntity(entityId).Name + " " + text;
-                break;
-            case ChatChannel.Damage:
-                message = text;
-                break; //Formatting is handled by the server. */
                 case ChatChannel.Ingame:
                 case ChatChannel.Server:
                 case ChatChannel.OOC:
@@ -846,9 +812,6 @@ namespace SS14.Client.State.States
                     var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        //case NetMessages.AtmosDisplayUpdate:
-                        //    MapManager.HandleAtmosDisplayUpdate(message);
-                        //    break;
                         case NetMessages.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
@@ -1244,22 +1207,16 @@ namespace SS14.Client.State.States
                 }
 
                 playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
-
-                //area.renderTarget.SourceBlend = AlphaBlendOperation.One;
-                //area.renderTarget.DestinationBlend = AlphaBlendOperation.Zero;
+                
                 area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
 
                 area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
-
-                //area.renderTarget.SourceBlend = AlphaBlendOperation.SourceAlpha; //reset blend mode
-                //area.renderTarget.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha; //reset blend mode
+                
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
                 playerOcclusionTarget.EndDrawing();
-
-                //Debug.DebugRendertarget(playerOcclusionTarget);
             }
             else
             {
@@ -1366,18 +1323,12 @@ namespace SS14.Client.State.States
             LightblendTechnique["FinalLightBlend"].ResetCurrentShader();
             _composedSceneTarget.EndDrawing();
 
-            //  Debug.DebugRendertarget(_composedSceneTarget);
-
             playerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
             playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again
             PlayerPostProcess();
 
             //redraw composed scene
             _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Screen.Size.X, (uint)CluwneLib.Screen.Size.Y, Color.White, BlitterSizeMode.Crop);
-
-            //old
-            //   screenShadows.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
-            //   playerOcclusionTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
         private void BlurShadowMap()

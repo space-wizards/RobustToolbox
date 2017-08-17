@@ -137,61 +137,7 @@ namespace SS14.Client.GameObjects
 
         private void DrawBubbleSprite()
         {
-            // TODO unfuck this
-            /*RenderTarget originalTarget = CluwneLib.CurrentRenderTarget;
-            Sprite cornerSprite = _resourceCache.GetSprite("corners");
-
-            //Set up dimensions
-            _bubbleRender.SetDimensions((int) _textSprite.Size.X + 10, (int) _textSprite.Size.Y + 10);
-            _bubbleSprite.SetSize(_textSprite.Size.X + 10, _textSprite.Size.Y + 10);
-
-            //BEGIN RENDERING
-            CluwneLib.CurrentRenderTarget = _bubbleRender;
-            _bubbleRender.Clear(Color.Transparent);
-
-            //Draw black triangle at the bottom.
-            var pointOneBlack = new Vector2((_bubbleRender.Width/2) - 10, _bubbleRender.Height - 10);
-            var pointTwoBlack = new Vector2((_bubbleRender.Width/2) + 10, _bubbleRender.Height - 10);
-            var pointThreeBlack = new Vector2((_bubbleRender.Width/2), _bubbleRender.Height);
-            _bubbleRender.FilledTriangle(pointOneBlack, pointTwoBlack, pointThreeBlack, Color.Black);
-
-            //Draw the side lines
-            _bubbleRender.Line(10, 0, _bubbleRender.Width - 20, 1, Color.Black);
-            _bubbleRender.Line(_bubbleRender.Width - 1, 10, 1, _bubbleRender.Height - 26, Color.Black);
-            _bubbleRender.Line(10, _bubbleRender.Height - 7, _bubbleRender.Width - 20, 1, Color.Black);
-            _bubbleRender.Line(0, 10, 1, _bubbleRender.Height - 26, Color.Black);
-
-            //Fill in the middle without polluting the corners.
-            _bubbleRender.FilledRectangle(3, 1, _bubbleRender.Width - 6, _bubbleRender.Height - 8, Color.White);
-            _bubbleRender.FilledRectangle(1, 3, _bubbleRender.Width - 2, _bubbleRender.Height - 12, Color.White);
-
-            //Draw the white triangle at the bottom.
-            Vector2 pointOneWhite = pointOneBlack + new Vector2(1, 0);
-            Vector2 pointTwoWhite = pointTwoBlack - new Vector2(1, 0);
-            Vector2 pointThreeWhite = pointThreeBlack - new Vector2(0, 1);
-            _bubbleRender.FilledTriangle(pointOneWhite, pointTwoWhite, pointThreeWhite, Color.White);
-
-            //Draw the corners.
-            cornerSprite.SourceBlend = AlphaBlendOperation.One;
-            cornerSprite.DestinationBlend = AlphaBlendOperation.Zero;
-            cornerSprite.VerticalFlip = true;
-            cornerSprite.SetPosition(0, 0);
-            cornerSprite.Draw();
-            cornerSprite.HorizontalFlip = true;
-            cornerSprite.SetPosition(_bubbleRender.Width - 16, 0);
-            cornerSprite.Draw();
-            cornerSprite.VerticalFlip = false;
-            cornerSprite.SetPosition(_bubbleRender.Width - 16, _bubbleRender.Height - 22);
-            cornerSprite.Draw();
-            cornerSprite.HorizontalFlip = false;
-            cornerSprite.SetPosition(0, _bubbleRender.Height - 22);
-            cornerSprite.Draw();
-
-            _textSprite.Draw();
-
-            CluwneLib.CurrentRenderTarget = originalTarget;
-
-            _buildTime = DateTime.Now;*/
+            // TODO implement this
         }
 
         #endregion

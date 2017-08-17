@@ -37,7 +37,7 @@ namespace SS14.Client.Console
                             return false;
                         }
                         // TODO: Maybe have a server side help?
-                        return false; // return true;
+                        return false;
                     }
                     IConsoleCommand command = console.Commands[commandname];
                     console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), Color.White);

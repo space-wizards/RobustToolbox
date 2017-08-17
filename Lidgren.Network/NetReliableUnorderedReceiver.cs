@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Lidgren.Network
 {
@@ -30,13 +30,6 @@ namespace Lidgren.Network
 
 			if (relate == 0)
 			{
-				// Log("Received message #" + message.SequenceNumber + " right on time");
-
-				//
-				// excellent, right on time
-				//
-				//m_peer.LogVerbose("Received RIGHT-ON-TIME " + message);
-
 				AdvanceWindow();
 				m_peer.ReleaseMessage(message);
 
@@ -45,16 +38,6 @@ namespace Lidgren.Network
 
 				while (m_earlyReceived[nextSeqNr % m_windowSize])
 				{
-					//message = m_withheldMessages[nextSeqNr % m_windowSize];
-					//NetException.Assert(message != null);
-
-					// remove it from withheld messages
-					//m_withheldMessages[nextSeqNr % m_windowSize] = null;
-
-					//m_peer.LogVerbose("Releasing withheld message #" + message);
-
-					//m_peer.ReleaseMessage(message);
-
 					AdvanceWindow();
 					nextSeqNr++;
 				}
@@ -78,8 +61,6 @@ namespace Lidgren.Network
 			}
 
 			m_earlyReceived.Set(message.m_sequenceNumber % m_windowSize, true);
-			//m_peer.LogVerbose("Received " + message + " WITHHOLDING, waiting for " + m_windowStart);
-			//m_withheldMessages[message.m_sequenceNumber % m_windowSize] = message;
 
 			m_peer.ReleaseMessage(message);
 		}

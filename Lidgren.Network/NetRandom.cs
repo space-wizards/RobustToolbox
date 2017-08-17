@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Lidgren.Network
 {
@@ -80,8 +80,6 @@ namespace Lidgren.Network
 			// mix some semi-random properties
 			int seed = (int)Environment.TickCount;
 			seed ^= forObject.GetHashCode();
-			//seed ^= (int)(Stopwatch.GetTimestamp());
-			//seed ^= (int)(Environment.WorkingSet); // will return 0 on mono
 
 			int extraSeed = System.Threading.Interlocked.Increment(ref s_extraSeed);
 
@@ -264,44 +262,6 @@ namespace Lidgren.Network
 			}
 			this.x = x; this.y = y; this.z = z; this.w = w;
 		}
-
-
-		//		/// <summary>
-		//		/// A version of NextBytes that uses a pointer to set 4 bytes of the byte buffer in one operation
-		//		/// thus providing a nice speedup. The loop is also partially unrolled to allow out-of-order-execution,
-		//		/// this results in about a x2 speedup on an AMD Athlon. Thus performance may vary wildly on different CPUs
-		//		/// depending on the number of execution units available.
-		//		/// 
-		//		/// Another significant speedup is obtained by setting the 4 bytes by indexing pDWord (e.g. pDWord[i++]=w)
-		//		/// instead of adjusting it dereferencing it (e.g. *pDWord++=w).
-		//		/// 
-		//		/// Note that this routine requires the unsafe compilation flag to be specified and so is commented out by default.
-		//		/// </summary>
-		//		/// <param name="buffer"></param>
-		//		public unsafe void NextBytesUnsafe(byte[] buffer)
-		//		{
-		//			if(buffer.Length % 8 != 0)
-		//				throw new ArgumentException("Buffer length must be divisible by 8", "buffer");
-		//
-		//			uint x=this.x, y=this.y, z=this.z, w=this.w;
-		//			
-		//			fixed(byte* pByte0 = buffer)
-		//			{
-		//				uint* pDWord = (uint*)pByte0;
-		//				for(int i=0, len=buffer.Length>>2; i < len; i+=2) 
-		//				{
-		//					uint t=(x^(x<<11));
-		//					x=y; y=z; z=w;
-		//					pDWord[i] = w = (w^(w>>19))^(t^(t>>8));
-		//
-		//					t=(x^(x<<11));
-		//					x=y; y=z; z=w;
-		//					pDWord[i+1] = w = (w^(w>>19))^(t^(t>>8));
-		//				}
-		//			}
-		//
-		//			this.x=x; this.y=y; this.z=z; this.w=w;
-		//		}
 
 		#endregion
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Lidgren.Network
 {
@@ -74,13 +74,11 @@ namespace Lidgren.Network
 			{
 				// we've never encountered failure; expand by 25% each time
 				tryMTU = (int)((float)m_currentMTU * 1.25f);
-				//m_peer.LogDebug("Trying MTU " + tryMTU);
 			}
 			else
 			{
 				// we HAVE encountered failure; so try in between
 				tryMTU = (int)(((float)m_smallestFailedMTU + (float)m_largestSuccessfulMTU) / 2.0f);
-				//m_peer.LogDebug("Trying MTU " + m_smallestFailedMTU + " <-> " + m_largestSuccessfulMTU + " = " + tryMTU);
 			}
 
 			if (tryMTU > c_protocolMaxMTU)
@@ -88,7 +86,6 @@ namespace Lidgren.Network
 
 			if (tryMTU == m_largestSuccessfulMTU)
 			{
-				//m_peer.LogDebug("Found optimal MTU - exiting");
 				FinalizeMTU(m_largestSuccessfulMTU);
 				return;
 			}
@@ -107,8 +104,6 @@ namespace Lidgren.Network
 			bool ok = m_peer.SendMTUPacket(len, m_remoteEndPoint);
 			if (ok == false)
 			{
-				//m_peer.LogDebug("Send MTU failed for size " + size);
-
 				// failure
 				if (m_smallestFailedMTU == -1 || size < m_smallestFailedMTU)
 				{
@@ -149,9 +144,7 @@ namespace Lidgren.Network
 			int len = om.Encode(m_peer.m_sendBuffer, 0, 0);
 			bool connectionReset;
 			m_peer.SendPacket(len, m_remoteEndPoint, 1, out connectionReset);
-
-			// m_peer.LogDebug("Received MTU expand request for " + size + " bytes");
-
+			
 			m_statistics.PacketSent(len, 1);
 		}
 
@@ -162,11 +155,9 @@ namespace Lidgren.Network
 
 			if (size < m_currentMTU)
 			{
-				//m_peer.LogDebug("Received low MTU expand success (size " + size + "); current mtu is " + m_currentMTU);
 				return;
 			}
 
-			//m_peer.LogDebug("Expanding MTU to " + size);
 			m_currentMTU = size;
 
 			ExpandMTU(now, true);

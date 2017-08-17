@@ -1,4 +1,4 @@
-#if !__ANDROID__ && !IOS
+﻿#if !__ANDROID__ && !IOS
 #define IS_MAC_AVAILABLE
 #endif
 
@@ -370,9 +370,6 @@ namespace Lidgren.Network
 			if (!m_socket.Poll(1000, SelectMode.SelectRead)) // wait up to 1 ms for data to arrive
 				return;
 
-			//if (m_socket == null || m_socket.Available < 1)
-			//	return;
-
 			do
 			{
 				int bytesReceived = 0;
@@ -397,8 +394,6 @@ namespace Lidgren.Network
 
 				if (bytesReceived < NetConstants.HeaderByteSize)
 					return;
-
-				//LogVerbose("Received " + bytesReceived + " bytes");
 
 				IPEndPoint ipsender = (IPEndPoint)m_senderRemote;
 
@@ -648,7 +643,6 @@ namespace Lidgren.Network
 
 		internal void AcceptConnection(NetConnection conn)
 		{
-			// LogDebug("Accepted connection " + conn);
 			conn.InitExpandMTU(NetTime.Now);
 
 			if (m_handshakes.Remove(conn.m_remoteEndPoint) == false)

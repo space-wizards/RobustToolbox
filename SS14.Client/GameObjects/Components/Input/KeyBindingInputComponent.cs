@@ -139,11 +139,6 @@ namespace SS14.Client.GameObjects
 
         public virtual void UpdateKeys(float frameTime)
         {
-            //Rate limit
-            /*TimeSpan timeSinceLastUpdate = entityManager.now - lastKeyUpdate;
-            if (timeSinceLastUpdate.TotalMilliseconds < 1000 / keyUpdateRateLimit)
-                return;*/
-
             // So basically we check for active keys with handlers and execute them. This is a linq query.
             // Get all of the active keys' handlers
             var activeKeyHandlers =
@@ -168,7 +163,6 @@ namespace SS14.Client.GameObjects
                 else
                     Owner.SendMessage(this, ComponentMessageType.BoundKeyRepeat, state.Key, BoundKeyState.Repeat);
             }
-            //lastKeyUpdate = entityManager.now;
         }
     }
 }

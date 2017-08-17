@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using System;
 using System.Collections.Generic;
@@ -87,7 +87,6 @@ namespace SS14.Client.Graphics.Sprite
             Using(S.Texture);
             Vector2f Scale = new Vector2f(S.Scale.X, S.Scale.Y);
             float sin = 0, cos = 1;
-            //FloatMath.SinCos(rotation, out sin, out cos);
 
             S.Rotation = S.Rotation / 180 * (float)Math.PI;
             sin = (float)Math.Sin(S.Rotation);
@@ -155,65 +154,6 @@ namespace SS14.Client.Graphics.Sprite
                 );
         }
 
-
-        /*
-                public unsafe void Draw(Texture texture, FloatRect rec, IntRect src, Color color)
-                {
-                    var index = Create(texture);
-
-                    fixed (Vertex* fptr = vertices)
-                    {
-                        var ptr = fptr + index;
-
-                        ptr->Position.X = rec.Left;
-                        ptr->Position.Y = rec.Top;
-                        ptr->TexCoords.X = src.Left;
-                        ptr->TexCoords.Y = src.Top;
-                        ptr->Color = color;
-                        ptr++;
-
-                        ptr->Position.X = rec.Left + rec.Width;
-                        ptr->Position.Y = rec.Top;
-                        ptr->TexCoords.X = src.Left + src.Width;
-                        ptr->TexCoords.Y = src.Top;
-                        ptr->Color = color;
-                        ptr++;
-
-                        ptr->Position.X = rec.Left + rec.Width;
-                        ptr->Position.Y = rec.Top + rec.Height;
-                        ptr->TexCoords.X = src.Left + src.Width;
-                        ptr->TexCoords.Y = src.Top + src.Height;
-                        ptr->Color = color;
-                        ptr++;
-
-                        ptr->Position.X = rec.Left;
-                        ptr->Position.Y = rec.Top + rec.Height;
-                        ptr->TexCoords.X = src.Left;
-                        ptr->TexCoords.Y = src.Top + src.Height;
-                        ptr->Color = color;
-                    }
-                }
-
-                public void Draw(Texture texture, FloatRect rec, Color color)
-                {
-                    int width = 1, height = 1;
-                    if (texture != null)
-                    {
-                        width = (int)texture.Size.X;
-                        height = (int)texture.Size.Y;
-                    }
-                    Draw(texture, rec, new IntRect(0, 0, width, height), color);
-                }
-
-                public void Draw(Texture texture, Vector2f pos, Color color)
-                {
-                    if (texture == null) throw new ArgumentNullException();
-                    var width = (int)texture.Size.X;
-                    var height = (int)texture.Size.Y;
-                    Draw(texture, new FloatRect(pos.X, pos.Y, width, height), new IntRect(0, 0, width, height), color);
-                }
-
-        */
         public void Draw(RenderTarget target, RenderStates Renderstates)
         {
             if (Drawing) throw new Exception("Call End first.");

@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared
 {
     public interface IEntityEventSubscriber
     { }
-
-    //public delegate void ComponentEventHandler(object sender, IComponentEventArgs ev);
+    
     public delegate void EntityEventHandler<in T>(object sender, T ev) where T : EntityEventArgs;
 
     public class EntityEventArgs : EventArgs

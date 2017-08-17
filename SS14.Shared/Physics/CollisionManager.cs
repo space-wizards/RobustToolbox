@@ -75,7 +75,6 @@ namespace SS14.Shared.Physics
                     collided = true;
 
             //TODO: Once map manager (Grids) are complete, re-enable this
-            //return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(collider, true).Any(t => t.Tile.TileDef.IsCollidable);
             return collided;
         }
 
@@ -134,7 +133,6 @@ namespace SS14.Shared.Physics
             }
 
             //TODO: Once map manager (Grids) are complete, re-enable this
-            //return collided || IoCManager.Resolve<IMapManager>().GetTilesIntersecting(ColliderAABB, true).Any(t => t.Tile.TileDef.IsCollidable);
             return collided;
         }
 

@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -73,12 +73,9 @@ namespace SS14.Client.Lighting
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
-
-            //Debug.DebugRendertarget(Area.RenderTarget);
+            
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
-            //Debug.DebugRendertarget(distancesRT);
             ExecuteTechnique(distancesRT, distortRT, "Distort");
-            //Debug.DebugRendertarget(distortRT);
 
             // Working now
             ApplyHorizontalReduction(distortRT, shadowMap);
@@ -90,9 +87,7 @@ namespace SS14.Client.Lighting
 
             var maskSize = MaskTexture.Size;
             RenderImage MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
-            //Debug.DebugRendertarget(shadowMap, "ShadowMap");
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
-            //Debug.DebugRendertarget(Result, "DrawShadowsResult");
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
         }
@@ -144,26 +139,21 @@ namespace SS14.Client.Lighting
             // Disabled GLTexture stuff for now just to get the pipeline working.
             // The only side effect is that floating point precision will be low,
             // making light borders and shit have jaggy edges.
-            //GLTexture GLHorizontalReduction = new GLTexture("desto", (int)source.Width, (int)source.Height, ImageBufferFormats.BufferGR1616F);
-            //Debug.DebugRendertarget(source);
             while (step >= 0)
             {
                 HorizontalReduction = reductionRT[step]; // next step
 
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
-
-                //reductionEffectTechnique["HorizontalReduction"].SetParameter("secondTexture", src);
+                
                 reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",1.0f/src.Width);
 
                 // Sourcetexture not needed... just blit!
                 src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR
                                                                                                               //fix
-                                                                                                              //GLHorizontalReduction.Blit(src.Texture, CluwneLib.CurrentShader);
 
                 HorizontalReduction.EndDrawing();
                 src = HorizontalReduction; // hr becomes new src
-                //Debug.DebugRendertarget(HorizontalReduction);
                 step--;
             }
 
@@ -174,9 +164,7 @@ namespace SS14.Client.Lighting
             destination.Clear(Color.White);
 
             HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
-                //GLHorizontalReduction.Blit(HorizontalReduction.Texture, CluwneLib.CurrentShader);
             destination.EndDrawing();
-            //Debug.DebugRendertarget(destination);
             CluwneLib.ResetRenderTarget();
         }
 

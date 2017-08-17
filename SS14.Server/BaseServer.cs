@@ -483,48 +483,73 @@ namespace SS14.Server
 
         private void SendGameStateUpdate(bool forceFullState = false)
         {
-            var netMan = IoCManager.Resolve<IServerNetManager>();
-
             //Create a new GameState object
             var stateManager = IoCManager.Resolve<IGameStateManager>();
-            var state = new GameState(_time.CurTick);
-            if (_entities != null)
-                state.EntityStates = _entities.GetEntityStates();
-            state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
+            var state = CreateGameState();
             stateManager.Add(state.Sequence, state);
-            
+
+            var netMan = IoCManager.Resolve<IServerNetManager>();
             var connections = netMan.Channels;
             if (!connections.Any())
             {
                 //No clients -- don't send state
                 stateManager.CullAll();
+                return;
+            }
+
+            foreach (var c in connections)
+            {
+                SendConnectionGameStateUpdate(c, state);
+            }
+
+            stateManager.Cull();
+        }
+
+        private void SendConnectionGameStateUpdate(INetChannel c, GameState state)
+        {
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+            if (c.Connection.Status != NetConnectionStatus.Connected)
+            {
+                return;
+            }
+
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
+            if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
+            {
+                return;
+            }
+
+            var stateMessage = generateStateMessage(c, state);
+            netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+        }
+
+        private GameState CreateGameState()
+        {
+            var state = new GameState(_time.CurTick);
+            if (_entities != null)
+                state.EntityStates = _entities.GetEntityStates();
+            state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
+            return state;
+        }
+
+        private NetOutgoingMessage generateStateMessage(INetChannel c, GameState state)
+        {
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+            var stateManager = IoCManager.Resolve<IGameStateManager>();
+            var stateMessage = netMan.Peer.CreateMessage();
+            var lastStateAcked = stateManager.GetLastStateAcked(c);
+
+            if (lastStateAcked == 0) // || forceFullState)
+            {
+                state.WriteStateMessage(stateMessage);
             }
             else
             {
-                foreach (var c in connections)
-                    if (c.Connection.Status == NetConnectionStatus.Connected)
-                    {
-                        var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
-                        if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
-                            continue;
-                        var stateMessage = netMan.Peer.CreateMessage();
-                        var lastStateAcked = stateManager.GetLastStateAcked(c);
-
-                        if (lastStateAcked == 0) // || forceFullState)
-                        {
-                            state.WriteStateMessage(stateMessage);
-                        }
-                        else
-                        {
-                            stateMessage.Write((byte) NetMessages.StateUpdate);
-                            var delta = stateManager.GetDelta(c, _time.CurTick);
-                            delta.WriteDelta(stateMessage);
-                        }
-
-                        netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
-                    }
+                stateMessage.Write((byte)NetMessages.StateUpdate);
+                var delta = stateManager.GetDelta(c, _time.CurTick);
+                delta.WriteDelta(stateMessage);
             }
-            stateManager.Cull();
+            return stateMessage;
         }
 
         #region MessageProcessing

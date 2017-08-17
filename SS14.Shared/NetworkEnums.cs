@@ -131,28 +131,6 @@
         Broken
     }
 
-    public enum Direction
-    {
-        North = 0,
-        NorthEast,
-        East,
-        SouthEast,
-        South,
-        SouthWest,
-        West,
-        NorthWest
-    }
-
-    [System.Flags]
-    public enum DirectionFlags
-    {
-        None = 0,
-        North = 1,
-        East = 2,
-        South = 4,
-        West = 8
-    }
-
     public enum TileState
     {
         Healthy = 0,
@@ -195,7 +173,6 @@
         ComponentMessage,
         SystemMessage,
         PositionMessage,
-        ComponentInstantiationMessage,
         Null,
         SetDirection,
         NameUpdate,

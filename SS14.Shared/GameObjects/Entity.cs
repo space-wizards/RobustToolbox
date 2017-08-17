@@ -41,11 +41,6 @@ namespace SS14.Shared.GameObjects
             EntityManager = entityManager;
             EntityNetworkManager = networkManager;
             ComponentFactory = componentFactory;
-            var name = Assembly.GetEntryAssembly().GetName().Name;
-            if (name == "SS14.Client")
-            {
-                Initialize();
-            }
         }
 
         #region Initialization
@@ -59,7 +54,6 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public virtual void Initialize()
         {
-            SendMessage(this, ComponentMessageType.Initialize);
             Initialized = true;
         }
 
@@ -172,25 +166,7 @@ namespace SS14.Shared.GameObjects
                 case EntityMessage.ComponentMessage:
                     HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
                     break;
-                case EntityMessage.ComponentInstantiationMessage: //Server Only
-                    HandleComponentInstantiationMessage(message);
-                    break;
             }
-        }
-
-        /// <summary>
-        /// Server-side method to handle instantiation messages from client-side components
-        /// asking for initialization data
-        /// </summary>
-        /// <param name="message">Message from client</param>
-        protected void HandleComponentInstantiationMessage(IncomingEntityMessage message)
-        {
-            uint netID = (uint)message.Message;
-            if (!_netIDs.ContainsKey(netID))
-            {
-                return;
-            }
-            _netIDs[netID].HandleInstantiationMessage(message.Sender);
         }
 
         #endregion Network messaging
@@ -237,36 +213,9 @@ namespace SS14.Shared.GameObjects
 
         #region Entity Systems
 
-        /// <summary>
-        /// Match
-        ///
-        /// Allows us to fetch entities with a defined SET of components
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
         public bool Match(IEntityQuery query)
         {
-            // Empty queries always result in a match - equivalent to SELECT * FROM ENTITIES
-            if (!(query.ExclusionSet.Any() || query.OneSet.Any() || query.AllSet.Any()))
-            {
-                return true;
-            }
-
-            //If there is an EXCLUDE set, and the entity contains any component types in that set, or subtypes of them, the entity is excluded.
-            bool matched =
-                !(query.ExclusionSet.Any() && query.ExclusionSet.Any(t => _componentReferences.ContainsKey(t)));
-
-            //If there are no matching exclusions, and the entity matches the ALL set, the entity is included
-            if (matched && query.AllSet.Any() && query.AllSet.Any(t => !_componentReferences.ContainsKey(t)))
-            {
-                return false;
-            }
-            //If the entity matches so far, and it matches the ONE set, it matches.
-            if (matched && query.OneSet.Any() && !query.OneSet.Any(t => _componentReferences.ContainsKey(t)))
-            {
-                return false;
-            }
-            return matched;
+            return query.Match(this);
         }
 
         #endregion Entity Systems

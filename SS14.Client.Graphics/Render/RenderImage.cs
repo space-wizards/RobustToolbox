@@ -79,18 +79,6 @@ namespace SS14.Client.Graphics.Render
             get { return base.Texture; }
         }
 
-        public IntRect Crop
-        {
-            get;
-            set;
-        }
-
-        public Vector2f Scale
-        {
-            get;
-            set;
-        }
-
         public bool UseDepthBuffer
         {
             get;

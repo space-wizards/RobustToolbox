@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
 using SFML.Graphics;
 using SFML.System;
+using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Helpers;
@@ -27,7 +27,6 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
         private RenderImage blur;
 
         private FrameEventArgs _frameEvent;
-        private EventArgs _frameEventArgs;
         private Clock clock;
 
         private Sprite sprite;
@@ -54,7 +53,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -98,7 +97,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(9);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -140,7 +139,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(7);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -182,7 +181,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(5);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 
@@ -224,7 +223,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
             _gaussianBlur.SetRadius(3);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(preblur.Width, preblur.Height));
+            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
 
 

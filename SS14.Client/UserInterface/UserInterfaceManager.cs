@@ -2,8 +2,8 @@
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -12,10 +12,12 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Configuration;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface
 {
@@ -456,13 +458,13 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Update(FrameEventArgs e)
         {
-            if (_console.IsVisible()) _console.Update(e.FrameDeltaTime);
+            if (_console.IsVisible()) _console.Update((float)e.Time);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = (MousePos - dragOffset);
 
             foreach (IGuiComponent component in _components)
-                component.Update(e.FrameDeltaTime);
+                component.Update((float)e.Time);
         }
 
         /// <summary>
@@ -501,7 +503,7 @@ namespace SS14.Client.UserInterface
                                     ? DragInfo.DragSprite
                                     : _resourceCache.GetSprite("cursor");
 
-                _cursorSprite.Position = MousePos.ToFloat();
+                _cursorSprite.Position = ((Vector2)MousePos).Convert();
                 _cursorSprite.Draw();
             }
         }

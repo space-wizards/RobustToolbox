@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -14,11 +15,13 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.GameObjects
 {
-    public class SpriteComponent : ClientComponent, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
+    public class SpriteComponent : Component, ISpriteRenderableComponent, ISpriteComponent, IClickTargetComponent
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
@@ -50,14 +53,14 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public FloatRect AverageAABB => AABB;
+        public Box2 AverageAABB => AABB;
 
-        public FloatRect AABB
+        public Box2 AABB
         {
             get
             {
                 var bounds = GetActiveDirectionalSprite().GetLocalBounds();
-                return new FloatRect(0, 0, bounds.Width, bounds.Height);
+                return Box2.FromDimensions(0, 0, bounds.Width, bounds.Height);
             }
         }
 
@@ -207,7 +210,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 Owner.GetComponent<IDirectionComponent>().Direction.ToString()).
+                 Owner.GetComponent<TransformComponent>().Rotation.GetDir().ToString()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
@@ -216,7 +219,7 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
-        public virtual bool WasClicked(Vector2f worldPos)
+        public virtual bool WasClicked(Vector2 worldPos)
         {
             if (currentBaseSprite == null || !visible) return false;
 
@@ -224,10 +227,10 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new FloatRect(
+                Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
+            if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
@@ -276,7 +279,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             //Render slaves beneath
             IEnumerable<SpriteComponent> renderablesBeneath = from SpriteComponent c in slaves
@@ -296,7 +299,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
+            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
@@ -327,12 +330,12 @@ namespace SS14.Client.GameObjects
                 CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
         }
 
-        public void SetSpriteCenter(string sprite, Vector2f center)
+        public void SetSpriteCenter(string sprite, Vector2 center)
         {
             SetSpriteCenter(sprites[sprite], center);
         }
 
-        public void SetSpriteCenter(Sprite sprite, Vector2f center)
+        public void SetSpriteCenter(Sprite sprite, Vector2 center)
         {
             var bounds = GetActiveDirectionalSprite().GetLocalBounds();
             sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),

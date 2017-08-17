@@ -1,4 +1,4 @@
-﻿using SFML.System;
+﻿using OpenTK;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -11,7 +11,7 @@ namespace SS14.Server.Interfaces.GameObjects
         void Initialize();
         void SaveEntities();
         IEntity SpawnEntity(string template, int uid = -1);
-        IEntity SpawnEntityAt(string entityTemplateName, Vector2f vector2);
+        IEntity SpawnEntityAt(string entityTemplateName, Vector2 vector2);
         List<EntityState> GetEntityStates();
     }
 }

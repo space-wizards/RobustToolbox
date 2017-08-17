@@ -1,17 +1,17 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Map;
+using SS14.Shared.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -24,6 +24,10 @@ using System.Linq;
 using System.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement
 {
@@ -183,7 +187,7 @@ namespace SS14.Client.Placement
                     pos.Y,
                     CurrentPermission.Range,
                     Color.White,
-                    new Vector2f(2, 2));
+                    new Vector2(2, 2));
             }
         }
 
@@ -225,7 +229,9 @@ namespace SS14.Client.Placement
 
         private void PreparePlacementTile(Tile tileType)
         {
-            if (tileType.TileDef.IsWall)
+            var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
+
+            if (tileDefs[tileType.TileId].IsWall)
             {
                 CurrentBaseSprite = ResourceCache.GetSprite("wall");
                 CurrentBaseSpriteKey = "wall";

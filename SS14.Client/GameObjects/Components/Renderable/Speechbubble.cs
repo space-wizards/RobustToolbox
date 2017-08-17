@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
@@ -44,7 +45,7 @@ namespace SS14.Client.GameObjects
         private readonly IResourceCache _resourceCache;
 
         /// <summary>
-        /// StringBuilder to handle 
+        /// StringBuilder to handle
         /// </summary>
         private readonly StringBuilder _stringBuilder;
 
@@ -89,7 +90,7 @@ namespace SS14.Client.GameObjects
 
         #region Publics
 
-        public void Draw(Vector2f position, Vector2f windowOrigin, Sprite spriteToDrawAbove)
+        public void Draw(Vector2 position, Vector2 windowOrigin, Sprite spriteToDrawAbove)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
@@ -103,7 +104,7 @@ namespace SS14.Client.GameObjects
             _bubbleSprite.Draw();
         }
 
-        public void Draw(Vector2f position, Vector2f windowOrigin, FloatRect boundingBox)
+        public void Draw(Vector2 position, Vector2 windowOrigin, Box2 boundingBox)
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 

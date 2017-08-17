@@ -174,9 +174,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameController.cs" />
-    <Compile Include="GameObjects\Components\ClientComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
+    <Compile Include="Map\MapRenderer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="ss14.ico" />
@@ -210,18 +210,13 @@
     </Content>
     <None Include="packages.config" />
     <Compile Include="GameObjects\AnimatedSprite.cs" />
-    <Compile Include="GameObjects\Components\ClickableComponent.cs" />
+    <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Components\Collidable\TriggerableComponent.cs" />
-    <Compile Include="GameObjects\Components\Collider\ColliderComponent.cs" />
-    <Compile Include="GameObjects\Components\Direction\DirectionComponent.cs" />
-    <Compile Include="GameObjects\Components\Hitbox\HitboxComponent.cs" />
+    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
     <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
     <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\BasicMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\SlaveMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\ParticleSystem.cs" />
@@ -232,23 +227,18 @@
     <Compile Include="GameObjects\Components\Renderable\MobSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\Components\Velocity\VelocityComponent.cs" />
     <Compile Include="GameObjects\ContextMenuEntry.cs" />
-    <Compile Include="GameObjects\EntitySystems\ParticleSystem.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\EntitySystems\TransformSystem.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="GameObjects\EntitySystems\PhysicsSystem.cs" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />
     <Compile Include="ResourceManagement\BaseResource.cs" />
     <Compile Include="ResourceManagement\FontResource.cs" />
     <Compile Include="ResourceManagement\SpriteResource.cs" />
     <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="Utility\Rand.cs" />
-    <Compile Include="Collision\CollisionManager.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />
     <Compile Include="Console\ParticleCommands.cs" />
@@ -260,13 +250,9 @@
     <Compile Include="Helpers\StarScroller.cs" />
     <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Input\KeyBindingManager.cs" />
-    <Compile Include="Interfaces\Collision\ICollidable.cs" />
-    <Compile Include="Interfaces\Collision\ICollider.cs" />
-    <Compile Include="Interfaces\Collision\ICollisionManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IClientTransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
@@ -279,13 +265,6 @@
     <Compile Include="Interfaces\Lighting\ILightArea.cs" />
     <Compile Include="Interfaces\Lighting\ILightManager.cs" />
     <Compile Include="Interfaces\Lighting\LightMode.cs" />
-    <Compile Include="Interfaces\Map\Chunk.cs" />
-    <Compile Include="Interfaces\Map\IMapManager.cs" />
-    <Compile Include="Interfaces\Map\ITileCollection.cs" />
-    <Compile Include="Interfaces\Map\ITileDefinition.cs" />
-    <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
-    <Compile Include="Interfaces\Map\Tile.cs" />
-    <Compile Include="Interfaces\Map\TileRef.cs" />
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
@@ -303,10 +282,6 @@
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Lighting\ShadowmapSize.cs" />
     <Compile Include="Lighting\LightModes\Flicker.cs" />
-    <Compile Include="Map\HardcodedTileDefinitions.cs" />
-    <Compile Include="Map\MapManager.cs" />
-    <Compile Include="Map\TileDefinition.cs" />
-    <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Network\NetworkGrapher.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />
@@ -362,6 +337,10 @@
     <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
     <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetOS)' == 'MacOS'">
+    <!-- HAVE to do a deep copy, because framework bundles are directories. -->
+    <MacNatives Include="..\Third-Party\extlibs\Mac\**\*.*" />
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
@@ -377,5 +356,10 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS'" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' == 'MacOS'">
+    <!-- Copy Mac natives -->
+    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
+    <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
+  </Target>
 </Project>

@@ -12,7 +12,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using OpenTK;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Maths;
 
 namespace SS14.Server.GameObjects
 {
@@ -39,10 +41,10 @@ namespace SS14.Server.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public IEntity SpawnEntityAt(string EntityType, Vector2f position)
+        public IEntity SpawnEntityAt(string EntityType, Vector2 position)
         {
             IEntity e = SpawnEntity(EntityType);
-            e.GetComponent<ITransformComponent>().Position = position;
+            e.GetComponent<TransformComponent>().Position = position;
             e.Initialize();
             return e;
         }
@@ -96,8 +98,8 @@ namespace SS14.Server.GameObjects
             string name = e.Attribute("name").Value;
             IEntity ent = SpawnEntity(template);
             ent.Name = name;
-            ent.GetComponent<ITransformComponent>().Position = new Vector2f(X, Y);
-            ent.GetComponent<IDirectionComponent>().Direction = dir;
+            ent.GetComponent<TransformComponent>().Position = new Vector2(X, Y);
+            ent.GetComponent<TransformComponent>().Rotation = (float) dir.ToAngle();
         }
 
         private XElement ToXML(IEntity e)
@@ -112,7 +114,7 @@ namespace SS14.Server.GameObjects
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),
                                   new XAttribute("direction",
-                                                 e.GetComponent<IDirectionComponent>().Direction
+                                                 e.GetComponent<TransformComponent>().Rotation.GetDir()
                                                      .ToString()));
             return el;
         }

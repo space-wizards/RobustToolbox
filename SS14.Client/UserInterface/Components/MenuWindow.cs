@@ -11,6 +11,7 @@ using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -40,13 +41,13 @@ namespace SS14.Client.UserInterface.Components
 
             button_tile = new Button("Spawn Tiles", _resMgr);
             button_tile.Clicked += button_tile_Clicked;
-            button_tile.Position = new Vector2i(5, button_entity.ClientArea.Bottom() + 5);
+            button_tile.Position = new Vector2i(5, button_entity.ClientArea.Bottom + 5);
             button_tile.Update(0);
             components.Add(button_tile);
 
             button_quit = new Button("Quit", _resMgr);
             button_quit.Clicked += button_quit_Clicked;
-            button_quit.Position = new Vector2i(5, button_tile.ClientArea.Bottom() + 20);
+            button_quit.Position = new Vector2i(5, button_tile.ClientArea.Bottom + 20);
             button_quit.Update(0);
             components.Add(button_quit);
         }
@@ -63,7 +64,8 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
-            Dispose();
+            ToggleVisible();
+            _userInterfaceManager.RemoveFocus(this);
         }
 
         private void button_entity_Clicked(Button sender)
@@ -71,7 +73,9 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
             _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), _resMgr, _placeMgr));
             //Create a new one.
-            Dispose();
+            ToggleVisible();
+            _userInterfaceManager.RemoveFocus(this);
+
         }
 
         override protected void CloseButtonClicked(ImageButton sender)
@@ -81,13 +85,15 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code != Keyboard.Key.Escape)
+            if (e.Code == Keyboard.Key.Escape)
             {
-                return false;
+                if (IsVisible())
+                {
+                    ToggleVisible();
+                    return true;
+                }
             }
-            
-            ToggleVisible();
-            return true;
+            return false;
         }
     }
 }

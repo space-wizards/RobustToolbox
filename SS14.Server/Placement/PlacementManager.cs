@@ -2,22 +2,25 @@
 using SS14.Server.GameObjects;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
-using SS14.Server.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Map;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Utility;
 
 namespace SS14.Server.Placement
 {
@@ -52,7 +55,7 @@ namespace SS14.Server.Placement
         {
             var alignRcv = msg.Align;
             var isTile = msg.IsTile;
-            var mapMgr = (MapManager)IoCManager.Resolve<IMapManager>();
+            var mapMgr = IoCManager.Resolve<IMapManager>();
 
             ushort tileType = 0;
             var entityTemplateName = "";
@@ -72,7 +75,7 @@ namespace SS14.Server.Placement
 
             float a = (float)Math.Floor(xRcv);
             float b = (float)Math.Floor(yRcv);
-            Vector2f tilePos = new Vector2f(a, b);
+            Vector2 tilePos = new Vector2(a, b);
 
             if (permission != null || true)
             //isAdmin) Temporarily disable actual permission check / admin check. REENABLE LATER
@@ -99,18 +102,18 @@ namespace SS14.Server.Placement
                 if (!isTile)
                 {
                     var manager = IoCManager.Resolve<IServerEntityManager>();
-                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2f(xRcv, yRcv));
+                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
                     if (created != null)
                     {
-                        created.GetComponent<ITransformComponent>().Position =
-                            new Vector2f(xRcv, yRcv);
-                        if (created.TryGetComponent<IDirectionComponent>(out var component))
-                            component.Direction = dirRcv;
+                        created.GetComponent<TransformComponent>().Position =
+                            new Vector2(xRcv, yRcv);
+                        if (created.TryGetComponent<TransformComponent>(out var component))
+                            component.Rotation = dirRcv.ToAngle();
                     }
                 }
                 else
                 {
-                    mapMgr.Tiles[tilePos] = new Tile(tileType);
+                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
                 }
             }
             /*

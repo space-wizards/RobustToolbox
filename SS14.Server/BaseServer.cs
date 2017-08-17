@@ -11,7 +11,6 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
-using SS14.Server.Interfaces.Map;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
@@ -24,6 +23,7 @@ using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
@@ -114,9 +114,6 @@ namespace SS14.Server
         public event EventRunLevelChanged OnRunLevelChanged;
 
         /// <inheritdoc />
-        public event EventTick OnTick;
-
-        /// <inheritdoc />
         public void Restart()
         {
             //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
@@ -190,7 +187,6 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int) MsgMapReq.ID, message => SendMap(message.MsgChannel));
-            netMan.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int) MsgMap.ID, message => IoCManager.Resolve<IMapManager>().HandleNetworkMessage((MsgMap) message));
 
             netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) message));
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int) MsgUi.ID, HandleErrorMessage);
@@ -329,7 +325,7 @@ namespace SS14.Server
                     // only run the sim if unpaused, but still use up the accumulated time
                     if(!_time.Paused)
                     {
-                        Update((float)_time.CurTime.TotalSeconds);
+                        Update((float)_time.FrameTime.TotalSeconds);
                         _time.CurTick++;
                     }
                 }
@@ -397,7 +393,9 @@ namespace SS14.Server
             if (runLevel == Level)
                 return;
 
+            var oldLevel = Level;
             Level = runLevel;
+            OnRunLevelChanged?.Invoke(oldLevel, Level);
             if (Level == RunLevel.Lobby)
             {
                 _startAt = DateTime.Now.AddSeconds(GAME_COUNTDOWN);

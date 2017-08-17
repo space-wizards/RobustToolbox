@@ -20,6 +20,7 @@ using System.Reflection;
 using SFML.Graphics;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -65,7 +66,7 @@ namespace SS14.Client.UserInterface.Components
             };
 
             newLabel.Update(0);
-            last_y = newLabel.ClientArea.Bottom();
+            last_y = newLabel.ClientArea.Bottom;
             components.Add(newLabel);
             if (atBottom)
             {
@@ -79,7 +80,7 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
             if (input != null)
             {
-                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
+                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom);
                 input.Update(frameTime);
             }
         }

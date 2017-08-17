@@ -1,4 +1,5 @@
-﻿using SS14.Server.Interfaces;
+﻿using OpenTK;
+using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
@@ -25,8 +26,6 @@ namespace SS14.Server.Chat
 {
     public class ChatManager : IChatManager
     {
-        [Dependency]
-        private IBaseServer _serverMain;
         [Dependency]
         private readonly IReflectionManager reflectionManager;
         [Dependency]

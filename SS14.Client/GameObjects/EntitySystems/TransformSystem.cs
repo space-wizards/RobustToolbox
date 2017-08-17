@@ -10,6 +10,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.GameObjects.EntitySystems
 {
@@ -17,12 +18,20 @@ namespace SS14.Client.GameObjects.EntitySystems
     {
         public TransformSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.AllSet.Add(typeof(ITransformComponent));
-            EntityQuery.ExclusionSet.Add(typeof(SlaveMoverComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                AllSet = new List<Type>()
+                {
+                    typeof(ITransformComponent),
+                },
+                ExclusionSet = new List<Type>()
+                {
+                    typeof(SlaveMoverComponent),
+                },
+            };
         }
 
-        private Vector2f? calculateNewPosition(IEntity entity, Vector2f newPosition, ITransformComponent transform)
+        private Vector2? calculateNewPosition(IEntity entity, Vector2 newPosition, ITransformComponent transform)
         {
             //Check for collision
             var collider = entity.GetComponent<ColliderComponent>();
@@ -36,7 +45,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             // as the magnitude is too high for cardinal movements
             float diagonalMovementScale = 0.75f;
 
-            Vector2f newPositionX = newPosition;
+            Vector2 newPositionX = newPosition;
             newPositionX.X = transform.Position.X;
             bool collidedX = collider.TryCollision(newPositionX - transform.Position, true);
             if (!collidedX)
@@ -47,7 +56,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                 return newPositionX;
             }
 
-            Vector2f newPositionY = newPosition;
+            Vector2 newPositionY = newPosition;
             newPositionY.Y = transform.Position.Y;
             bool collidedY = collider.TryCollision(newPositionY - transform.Position, true);
             if (!collidedY)
@@ -66,7 +75,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             var entities = EntityManager.GetEntities(EntityQuery);
             //Interp constant -- determines how far back in time to interpolate from
             var interpolation = IoCManager.Resolve<IConfigurationManager>().GetCVar<float>("net.interpolation");
-            Vector2f newPosition;
+            Vector2 newPosition;
             foreach (var entity in entities)
             {
                 //Get transform component
@@ -95,8 +104,8 @@ namespace SS14.Client.GameObjects.EntitySystems
                 {
                     //Interpolate
 
-                    var p1 = new Vector2f(transform.lerpStateFrom.Position.X, transform.lerpStateTo.Position.Y);
-                    var p2 = new Vector2f(transform.lerpStateTo.Position.X, transform.lerpStateTo.Position.Y);
+                    var p1 = new Vector2(transform.lerpStateFrom.Position.X, transform.lerpStateTo.Position.Y);
+                    var p2 = new Vector2(transform.lerpStateTo.Position.X, transform.lerpStateTo.Position.Y);
                     var t1 = transform.lerpStateFrom.ReceivedTime;
                     var t2 = transform.lerpStateTo.ReceivedTime;
 
@@ -140,7 +149,7 @@ namespace SS14.Client.GameObjects.EntitySystems
                         // Check for collision so we don't get shit stuck in objects
                         if (entity.HasComponent<ColliderComponent>())
                         {
-                            Vector2f? _newPosition = calculateNewPosition(entity, newPosition, transform);
+                            Vector2? _newPosition = calculateNewPosition(entity, newPosition, transform);
                             if (_newPosition != null)
                             {
                                 newPosition = _newPosition.Value;
@@ -162,14 +171,14 @@ namespace SS14.Client.GameObjects.EntitySystems
             }
         }
 
-        private Vector2f EaseExponential(float time, Vector2f v1, Vector2f v2, float duration)
+        private Vector2 EaseExponential(float time, Vector2 v1, Vector2 v2, float duration)
         {
             var dx = (v2.X - v1.X);
             var x = EaseExponential(time, v1.X, dx, duration);
 
             var dy = (v2.Y - v1.Y);
             var y = EaseExponential(time, v1.Y, dy, duration);
-            return new Vector2f(x, y);
+            return new Vector2(x, y);
         }
 
         private float EaseExponential(float t, float b, float c, float d)
@@ -177,7 +186,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             return c * ((float)-Math.Pow(2, -10 * t / d) + 1) + b;
         }
 
-        private Vector2f Interpolate(Vector2f v1, Vector2f v2, float control, bool allowExtrapolation)
+        private Vector2 Interpolate(Vector2 v1, Vector2 v2, float control, bool allowExtrapolation)
         {
             if (!allowExtrapolation && (control > 1 || control < 0))
             {
@@ -193,7 +202,7 @@ namespace SS14.Client.GameObjects.EntitySystems
             {
                 return
                     (
-                        new Vector2f
+                        new Vector2
                             (
                             v1.X * (1 - control) + v2.X * control,
                             v1.Y * (1 - control) + v2.Y * control

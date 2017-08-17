@@ -1,11 +1,13 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -21,7 +23,7 @@ namespace SS14.Client.UserInterface.Components
 
         public GuiComponentType ComponentClass { get; protected set; }
         public virtual Vector2i Position { get; set; }
-        public virtual IntRect ClientArea { get; set; }
+        public virtual Box2i ClientArea { get; set; }
 
         public int ZDepth { get; set; }
 

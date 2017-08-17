@@ -1,6 +1,8 @@
 ﻿using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.IoC;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {
@@ -8,8 +10,13 @@ namespace SS14.Server.GameObjects.EntitySystems
     {
         public ParticleSystem()
         {
-            EntityQuery = new EntityQuery();
-            EntityQuery.OneSet.Add(typeof(ParticleSystemComponent));
+            EntityQuery = new ComponentEntityQuery()
+            {
+                OneSet = new List<Type>()
+                {
+                    typeof(ParticleSystemComponent),
+                },
+            };
         }
 
         public override void RegisterMessageTypes()

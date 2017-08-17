@@ -1,10 +1,11 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -15,11 +16,13 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.GameObjects
 {
-    public class AnimatedSpriteComponent : ClientComponent, ISpriteRenderableComponent, IClickTargetComponent
+    public class AnimatedSpriteComponent : Component, ISpriteRenderableComponent, IClickTargetComponent
     {
         public override string Name => "AnimatedSprite";
         public override uint? NetID => NetIDs.ANIMATED_SPRITE;
@@ -43,13 +46,13 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public FloatRect AverageAABB
+        public Box2 AverageAABB
         {
             get
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
-                return new FloatRect(
+                return Box2.FromDimensions(
                     aaabb.Left / tileSize, aaabb.Top / tileSize,
                     aaabb.Width / tileSize, aaabb.Height / tileSize
                     );
@@ -58,13 +61,13 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public FloatRect AABB
+        public Box2 AABB
         {
             get
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-                return new FloatRect(0, 0, sprite.AABB.Width / tileSize,
+                return Box2.FromDimensions(0, 0, sprite.AABB.Width / tileSize,
                                       sprite.AABB.Height / tileSize);
             }
         }
@@ -122,35 +125,6 @@ namespace SS14.Client.GameObjects
                 case ComponentMessageType.Dropped:
                     UnsetMaster();
                     break;
-                case ComponentMessageType.MoveDirection:
-                    switch ((Direction)list[0])
-                    {
-                        case Direction.North:
-                            sprite.Direction = Direction.North;
-                            break;
-                        case Direction.South:
-                            sprite.Direction = Direction.South;
-                            break;
-                        case Direction.East:
-                            sprite.Direction = Direction.East;
-                            break;
-                        case Direction.West:
-                            sprite.Direction = Direction.West;
-                            break;
-                        case Direction.NorthEast:
-                            sprite.Direction = Direction.NorthEast;
-                            break;
-                        case Direction.NorthWest:
-                            sprite.Direction = Direction.NorthWest;
-                            break;
-                        case Direction.SouthEast:
-                            sprite.Direction = Direction.SouthEast;
-                            break;
-                        case Direction.SouthWest:
-                            sprite.Direction = Direction.SouthWest;
-                            break;
-                    }
-                    break;
                 case ComponentMessageType.EntitySaidSomething:
                     ChatChannel channel;
                     if (Enum.TryParse(list[0].ToString(), true, out channel))
@@ -179,7 +153,7 @@ namespace SS14.Client.GameObjects
             return sprite.GetCurrentSprite();
         }
 
-        public virtual bool WasClicked(Vector2f worldPos)
+        public virtual bool WasClicked(Vector2 worldPos)
         {
             if (sprite == null || !visible) return false;
 
@@ -187,12 +161,12 @@ namespace SS14.Client.GameObjects
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
-                new FloatRect(
+                Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().Position.X -
                     (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().Position.Y -
                     (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(worldPos.X, worldPos.Y)) return false;
+            if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
@@ -232,7 +206,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public virtual void Render(Vector2f topLeft, Vector2f bottomRight)
+        public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             UpdateSlaves();
 
@@ -254,7 +228,7 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
 
-            Vector2f renderPos = CluwneLib.WorldToScreen(ownerPos);
+            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
             var bounds = sprite.AABB;
 
@@ -285,16 +259,19 @@ namespace SS14.Client.GameObjects
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
-                                   new Vector2f(), aabb);
+                                   new Vector2(), aabb);
         }
 
+        /// <inheritdoc />
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if (sprite != null && !IsSlaved())
-            {
-                sprite.Update(frameTime);
-            }
+
+            if (sprite == null || IsSlaved())
+                return;
+
+            sprite.Direction = Owner.GetComponent<TransformComponent>().Rotation.GetDir();
+            sprite.Update(frameTime);
         }
 
         public virtual void UpdateSlaves()
@@ -316,7 +293,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public void SetSpriteCenter(Vector2f center)
+        public void SetSpriteCenter(Vector2 center)
         {
             sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
                                center.Y - (sprite.AABB.Height / 2));

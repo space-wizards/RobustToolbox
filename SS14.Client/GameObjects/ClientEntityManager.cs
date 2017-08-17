@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK;
+using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -8,6 +9,7 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -16,15 +18,19 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(Vector2f position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(Vector2 position, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
-            return from e in _entities.Values
-                   where
-                       (position -
-                        e.GetComponent<ITransformComponent>().Position).
-                           LengthSquared() < Range
-                   select e;
+
+            foreach (var entity in _entities.Values)
+            {
+                var transform = entity.GetComponent<ITransformComponent>();
+                var relativePosition = position - transform.Position;
+                if (relativePosition.LengthSquared <= Range)
+                {
+                    yield return entity;
+                }
+            }
         }
 
         public override void InitializeEntities()

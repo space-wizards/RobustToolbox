@@ -1,12 +1,9 @@
-﻿using SS14.Client.Collision;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Collision;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Lighting;
-using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
@@ -15,7 +12,6 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
 using SS14.Client.Lighting;
-using SS14.Client.Map;
 using SS14.Client.Network;
 using SS14.Client.Placement;
 using SS14.Client.Player;
@@ -28,6 +24,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
@@ -43,7 +40,10 @@ using System.Reflection;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
+using SS14.Shared.Map;
 using SS14.Shared.Network;
+using SS14.Shared.Physics;
 
 namespace SS14.Client
 {

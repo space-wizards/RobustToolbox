@@ -1,7 +1,9 @@
-using SFML.Graphics;
-using SFML.System;
+﻿using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -19,23 +21,9 @@ namespace SS14.Client.Placement.Modes
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-            currentTile = currentMap.GetTileRef(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             return true;
-        }
-
-        public override void Render()
-        {
-            if (spriteToDraw != null)
-            {
-                var bounds = spriteToDraw.GetLocalBounds();
-                spriteToDraw.Color = pManager.ValidPosition ? new Color(34, 34, 139) : new Color(205, 92, 92);
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width/2f),
-                                                     mouseScreen.Y - (bounds.Height/2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-                spriteToDraw.Color = Color.White;
-            }
         }
     }
 }

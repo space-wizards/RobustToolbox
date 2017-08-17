@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -239,7 +240,7 @@ namespace SS14.Client.UserInterface.Components
                     GuiComponent edit = CreateEditField(fieldVal, field);
                     if (edit != null && newEntry.CanEdit)
                     {
-                        edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right() + 5,
+                        edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right + 5,
                                                   newEntry.LabelName.ClientArea.Top);
                         components.Add(edit);
                         edit.Update(0);

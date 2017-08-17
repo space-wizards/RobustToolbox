@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -85,8 +86,6 @@ namespace SS14.Client.UserInterface.Components
 
             Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
 
-            // ClientArea = new IntRect(Position.X, Position.Y, (int) Size.X, (int) Size.Y);
-
             input = new Textbox(Size.X, resourceCache)
             {
                 drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
@@ -137,7 +136,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (!stringChunks.Any()) break;
 
-                if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength) 
+                if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
                 {
                     lineList[i] += stringChunks.First() + " ";
                     stringChunks.RemoveAt(0);
@@ -192,7 +191,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                 };
                 label.Update(0);
-                last_y = label.ClientArea.Bottom();
+                last_y = label.ClientArea.Bottom;
                 components.Add(label);
 
                 // If the message had newlines adjust the bottom to fix the extra lines
@@ -335,7 +334,7 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
             if (input != null)
             {
-                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom());
+                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom);
                 input.Update(frameTime);
             }
         }

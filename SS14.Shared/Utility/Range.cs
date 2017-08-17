@@ -23,7 +23,7 @@ namespace SS14.Shared.Utility
         public T End { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Range&lt;T&gt;"/> struct.
+        /// Initializes a new instance of the <see cref="Range{T}"/> struct.
         /// </summary>
         /// <param name="start">The starting value.</param>
         /// <param name="end">The ending value.</param>
@@ -35,11 +35,11 @@ namespace SS14.Shared.Utility
 
         public Range()
         {
-            
+
         }
     }
 
-    
+
     public class RangeTypeConverter : ExpandableObjectConverter
     {
         private Type _genericInstanceType;
@@ -79,7 +79,7 @@ namespace SS14.Shared.Utility
             }
             return base.CanConvertTo(context, destinationType);
         }
-        
+
         public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
         {
             if (value is string)
@@ -101,7 +101,7 @@ namespace SS14.Shared.Utility
           MethodInfo castMethod = GetType().GetMethod("Cast").MakeGenericMethod(_genericInstanceType);
           dynamic val = castMethod.Invoke(null, new[] { value });
          return _innerTypeConverter.ConvertTo(val.Start, destinationType) + "-" + _innerTypeConverter.ConvertTo(val.End, destinationType);
-      }   
+      }
       return base.ConvertTo(context, culture, value, destinationType);
    }
 

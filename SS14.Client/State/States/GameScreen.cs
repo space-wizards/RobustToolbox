@@ -1,17 +1,17 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Event;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
@@ -33,8 +33,13 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
+using SS14.Client.Map;
+using SS14.Shared.Map;
 using SS14.Shared.Network;
+using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
+using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.State.States
 {
@@ -80,7 +85,7 @@ namespace SS14.Client.State.States
 
         #region Mouse/Camera stuff
         public Vector2i MousePosScreen = new Vector2i();
-        public Vector2f MousePosWorld = new Vector2f();
+        public Vector2 MousePosWorld = new Vector2();
         #endregion Mouse/Camera stuff
 
         #region UI Variables
@@ -161,7 +166,7 @@ namespace SS14.Client.State.States
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
-            IoCManager.Resolve<IMapManager>().TileChanged += OnTileChanged;
+            IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -321,7 +326,7 @@ namespace SS14.Client.State.States
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
             playerVision.SetColor(Color.Blue);
             playerVision.SetRadius(1024);
-            playerVision.Move(new Vector2f());
+            playerVision.Move(new Vector2());
 
             _occluderDebugTarget = new RenderImage("debug", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
         }
@@ -338,12 +343,12 @@ namespace SS14.Client.State.States
                 UpdateGUIPosition();
             }
 
-            CluwneLib.TileSize = MapManager.TileSize;
+            CluwneLib.TileSize = (int) MapManager.TileSize;
 
-            _componentManager.Update(e.FrameDeltaTime);
-            _entityManager.Update(e.FrameDeltaTime);
+            _componentManager.Update((float)e.Time);
+            _entityManager.Update((float)e.Time);
             PlacementManager.Update(MousePosScreen, MapManager);
-            PlayerManager.Update(e.FrameDeltaTime);
+            PlayerManager.Update((float)e.Time);
 
             if (PlayerManager.ControlledEntity != null)
             {
@@ -355,7 +360,7 @@ namespace SS14.Client.State.States
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);
-            CluwneLib.TileSize = MapManager.TileSize;
+            CluwneLib.TileSize = (int) MapManager.TileSize;
 
             CalculateAllLights();
 
@@ -364,10 +369,14 @@ namespace SS14.Client.State.States
                 CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 var vp = CluwneLib.WorldViewport;
 
-                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+                if (!bFullVision)
+                {
+                    ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
 
-                // Render the lightmap
-                RenderLightsIntoMap(lights);
+                    // Render the lightmap
+                    RenderLightsIntoMap(lights);
+                }
+
                 CalculateSceneBatches(vp);
 
                 //Draw all rendertargets to the scenetarget
@@ -378,7 +387,7 @@ namespace SS14.Client.State.States
                 RenderTiles();
 
                 //ComponentManager.Singleton.Render(0, CluwneLib.ScreenViewport);
-                RenderComponents(e.FrameDeltaTime, vp);
+                RenderComponents((float)e.Time, vp);
 
                 RenderOverlay();
 
@@ -448,7 +457,7 @@ namespace SS14.Client.State.States
             _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
-        private void RenderDebug(FloatRect viewport)
+        private void RenderDebug(Box2 viewport)
         {
             if (debugWallOccluders || debugPlayerShadowMap)
                 _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, Color.White, BlitterSizeMode.Scale);
@@ -456,7 +465,7 @@ namespace SS14.Client.State.States
             if (CluwneLib.Debug.DebugColliders)
             {
                 var colliders =
-                    _componentManager.GetComponents<ColliderComponent>()
+                    _componentManager.GetComponents<CollidableComponent>()
                     .Select(c => new { Color = c.DebugColor, AABB = c.WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
@@ -482,9 +491,9 @@ namespace SS14.Client.State.States
                         Color.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2f playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
-                Vector2f playerTile = CluwneLib.WorldToTile(playerWorldOffset);
-                Vector2f playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
+                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
+                Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
                 CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White);
                 CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White);
@@ -493,8 +502,8 @@ namespace SS14.Client.State.States
 
                 // Mouse position debug
                 Vector2i mouseScreenPos = MousePosScreen; // default to screen space
-                Vector2f mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
-                Vector2f mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
+                Vector2 mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
+                Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
                 CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White);
                 CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White);
                 CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White);
@@ -655,7 +664,7 @@ namespace SS14.Client.State.States
 
             // See which one our click AABB intersected with
             var clickedEntities = new List<ClickData>();
-            var clickedWorldPoint = new Vector2f(MousePosWorld.X, MousePosWorld.Y);
+            var clickedWorldPoint = new Vector2(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
@@ -837,9 +846,6 @@ namespace SS14.Client.State.States
                     var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessages.MapMessage:
-                            MapManager.HandleNetworkMessage(message);
-                            break;
                         //case NetMessages.AtmosDisplayUpdate:
                         //    MapManager.HandleAtmosDisplayUpdate(message);
                         //    break;
@@ -980,9 +986,9 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        public void OnTileChanged(TileRef tileRef, Tile oldTile)
+        public void OnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
         {
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(new FloatRect(tileRef.X, tileRef.Y, 1, 1));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
             RecalculateScene();
         }
@@ -1000,6 +1006,10 @@ namespace SS14.Client.State.States
 
         private void CalculateAllLights()
         {
+            if (bFullVision)
+            {
+                return;
+            }
             foreach
             (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.LightArea.Calculated == false))
             {
@@ -1035,8 +1045,8 @@ namespace SS14.Client.State.States
             Lightmap.setAsCurrentShader();
 
             var lightTextures = new List<Texture>();
-            var colors = new List<Vector4f>();
-            var positions = new List<Vector4f>();
+            var colors = new List<Vector4>();
+            var positions = new List<Vector4>();
 
             //Step 3 - Blend all the lights!
             foreach (ILight Light in lights)
@@ -1049,10 +1059,10 @@ namespace SS14.Client.State.States
                 var area = (LightArea)Light.LightArea;
 
                 //Set the drawing position.
-                Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
-                var LightPositionData = new Vector4f(blitPos.X / screenShadows.Width,
+                var LightPositionData = new Vector4(blitPos.X / screenShadows.Width,
                                                     blitPos.Y / screenShadows.Height,
                                                     (float)screenShadows.Width / area.RenderTarget.Width,
                                                     (float)screenShadows.Height / area.RenderTarget.Height);
@@ -1066,8 +1076,8 @@ namespace SS14.Client.State.States
             bool fill = false;
             Texture black = IoCManager.Resolve<IResourceCache>().GetSprite("black5x5").Texture;
             var r_img = new Texture[num_lights];
-            var r_col = new Vector4f[num_lights];
-            var r_pos = new Vector4f[num_lights];
+            var r_col = new Vector4[num_lights];
+            var r_pos = new Vector4[num_lights];
             do
             {
                 if (fill)
@@ -1075,8 +1085,8 @@ namespace SS14.Client.State.States
                     for (int j = i; j < num_lights; j++)
                     {
                         r_img[j] = black;
-                        r_col[j] = Vector4f.Zero;
-                        r_pos[j] = new Vector4f(0, 0, 1, 1);
+                        r_col[j] = Vector4.Zero;
+                        r_pos[j] = new Vector4(0, 0, 1, 1);
                     }
                     i = num_lights;
                     draw = true;
@@ -1110,8 +1120,8 @@ namespace SS14.Client.State.States
                     draw = false;
                     fill = false;
                     r_img = new Texture[num_lights];
-                    r_col = new Vector4f[num_lights];
-                    r_pos = new Vector4f[num_lights];
+                    r_col = new Vector4[num_lights];
+                    r_pos = new Vector4[num_lights];
                 }
                 if (lightTextures.Count > 0)
                 {
@@ -1152,7 +1162,7 @@ namespace SS14.Client.State.States
             screenShadows.Texture.Update(texunflipx);
         }
 
-        private void CalculateSceneBatches(FloatRect vision)
+        private void CalculateSceneBatches(Box2 vision)
         {
             if (!_recalculateScene)
                 return;
@@ -1199,20 +1209,20 @@ namespace SS14.Client.State.States
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position
 
-                TileRef TileReference = MapManager.GetTileRef(playerVision.Position);
+                TileRef TileReference = MapManager.GetDefaultGrid().GetTile(playerVision.Position);
 
-                if (TileReference.Tile.TileDef.IsOpaque)
+                if (TileReference.TileDef.IsOpaque)
                 {
-                    area.LightPosition = new Vector2f(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
+                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
                 }
 
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
                 DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                Vector2f blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
                 var tmpBlitPos = CluwneLib.WorldToScreen(area.LightPosition) -
-                                 new Vector2f(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
+                                 new Vector2(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
 
                 if (debugWallOccluders)
                 {
@@ -1260,15 +1270,17 @@ namespace SS14.Client.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-            Vector2f lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
-            var lightArea = new FloatRect(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
-            var tiles = MapManager.GetWallsIntersecting(lightArea);
+            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
+            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
+
 
             foreach (TileRef t in tiles)
             {
-                Vector2f pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2f(t.X, t.Y)));
-                t.Tile.TileDef.RenderPos(pos.X, pos.Y);
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2(t.X, t.Y)));
+                MapRenderer.RenderPos(t.TileDef, pos.X, pos.Y);
             }
         }
 
@@ -1276,52 +1288,25 @@ namespace SS14.Client.State.States
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
+            _gaussianBlur.SetSize(new Vector2(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
             _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
         }
 
         /// <summary>
         /// Copys all tile sprites into batches.
         /// </summary>
-        private void DrawTiles(FloatRect vision)
+        private void DrawTiles(Box2 vision)
         {
-            var tiles = MapManager.GetTilesIntersecting(vision, false);
-            var walls = new List<TileRef>();
+            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision, false);
 
-            foreach (TileRef TileReference in tiles)
-            {
-                var Tile = TileReference.Tile;
-                var TileType = Tile.TileDef;
-
-                //t.RenderGas(WindowOrigin.X, WindowOrigin.Y, tilespacing, _gasBatch);
-                if (TileType.IsWall)
-                    walls.Add(TileReference);
-                else
-                {
-                    var point = CluwneLib.WorldToScreen(new Vector2f(TileReference.X, TileReference.Y));
-                    TileType.Render(point.X, point.Y, _floorBatch);
-                    TileType.RenderGas(point.X, point.Y, MapManager.TileSize, _gasBatch);
-                }
-            }
-
-            walls.Sort((t1, t2) => t1.Y - t2.Y);
-
-            foreach (TileRef tr in walls)
-            {
-                var t = tr.Tile;
-                var td = t.TileDef;
-
-                var point = CluwneLib.WorldToScreen(new Vector2f(tr.X, tr.Y));
-                td.Render(point.X, point.Y, _wallBatch);
-                td.RenderTop(point.X, point.Y, _wallTopsBatch);
-            }
+            MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch, _wallBatch, _wallTopsBatch);
         }
 
         /// <summary>
         /// Render the renderables
         /// </summary>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        private void RenderComponents(float frameTime, FloatRect viewPort)
+        private void RenderComponents(float frameTime, Box2 viewPort)
         {
             IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
                                           .Cast<IComponent>()
@@ -1332,7 +1317,7 @@ namespace SS14.Client.State.States
                                                                  where c.DrawDepth < DrawDepth.MobBase
                                                                  select c;
 
-            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        floorRenderables);
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
@@ -1341,7 +1326,7 @@ namespace SS14.Client.State.States
                                                                        c.DrawDepth < DrawDepth.WallTops
                                                                  select c;
 
-            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        largeRenderables);
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
@@ -1349,7 +1334,7 @@ namespace SS14.Client.State.States
                                                                    where c.DrawDepth >= DrawDepth.WallTops
                                                                    select c;
 
-            RenderList(new Vector2f(viewPort.Left, viewPort.Top), new Vector2f(viewPort.Right(), viewPort.Bottom()),
+            RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
                        ceilingRenderables);
         }
 
@@ -1366,14 +1351,14 @@ namespace SS14.Client.State.States
             Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
             float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
             float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
-            var maskProps = new Vector4f(texratiox, texratioy, 0, 0);
+            var maskProps = new Vector4(texratiox, texratioy, 0, 0);
 
             LightblendTechnique["FinalLightBlend"].SetParameter("PlayerViewTexture", playerOcclusionTarget);
             LightblendTechnique["FinalLightBlend"].SetParameter("OutOfViewTexture", outofview.Texture);
             LightblendTechnique["FinalLightBlend"].SetParameter("MaskProps", maskProps);
             LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", screenShadows);
             LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
-            LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4f(.05f, .05f, 0.05f, 1));
+            LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
 
             // Blit the shadow image on top of the screen
             screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
@@ -1399,7 +1384,7 @@ namespace SS14.Client.State.States
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2f(screenShadows.Width, screenShadows.Height));
+            _gaussianBlur.SetSize(new Vector2(screenShadows.Width, screenShadows.Height));
             _gaussianBlur.PerformGaussianBlur(screenShadows);
         }
 
@@ -1412,7 +1397,7 @@ namespace SS14.Client.State.States
 
         #region Helper methods
 
-        private void RenderList(Vector2f topleft, Vector2f bottomright, IEnumerable<IRenderableComponent> renderables)
+        private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
         {
             foreach (IRenderableComponent component in renderables)
             {
@@ -1433,12 +1418,12 @@ namespace SS14.Client.State.States
             if (area.Calculated)
                 return;
             area.LightPosition = light.Position; //mousePosWorld; // Set the light position
-            TileRef t = MapManager.GetTileRef(light.Position);
-            if (t.Tile.IsSpace)
+            TileRef t = MapManager.GetDefaultGrid().GetTile(light.Position);
+            if (t.Tile.IsEmpty)
                 return;
-            if (t.Tile.TileDef.IsOpaque)
+            if (t.TileDef.IsOpaque)
             {
-                area.LightPosition = new Vector2f(area.LightPosition.X,
+                area.LightPosition = new Vector2(area.LightPosition.X,
                                                   t.Y +
                                                   MapManager.TileSize + 1);
             }

@@ -1,4 +1,4 @@
-using SFML.System;
+﻿using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
 using SS14.Shared.Maths;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -45,7 +46,7 @@ namespace SS14.Client.UserInterface.Components
             _message.Update(frameTime);
             _mainMenuButton.Position =
                 new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
-                          _message.ClientArea.Bottom() + 20);
+                          _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update(frameTime);
         }
 

@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK;
+using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared;
@@ -8,6 +9,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -130,7 +132,7 @@ namespace SS14.Client.GameObjects
             SetSpriteByKey(_basename + "_front");
         }
 
-        public override void Render(Vector2f topLeft, Vector2f bottomRight)
+        public override void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             if (!visible)
             {
@@ -151,7 +153,7 @@ namespace SS14.Client.GameObjects
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(position),
-                                   new Vector2f(), currentBaseSprite);
+                                   new Vector2(), currentBaseSprite);
         }
 
         /// <inheritdoc />

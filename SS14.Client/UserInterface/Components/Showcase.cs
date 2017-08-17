@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -34,9 +35,9 @@ namespace SS14.Client.UserInterface.Components
         protected ImageButton _buttonRight;
         protected int Selected
         {
-            get { return _selected; }  
-            set 
-            { 
+            get { return _selected; }
+            set
+            {
                 _selected = value;
                 SelectionChanged(_items[_selected].Key, _items[_selected].Value);
             }
@@ -132,14 +133,14 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new IntRect(Position, Size);
+            ClientArea = Box2i.FromDimensions(Position, Size);
 
             _buttonLeft.Position = new Vector2i(ClientArea.Left,
                                              ClientArea.Top +
                                              (int) (ClientArea.Height/2f - _buttonLeft.ClientArea.Height/2f));
             _buttonLeft.Update(frameTime);
 
-            _buttonRight.Position = new Vector2i(ClientArea.Right() - _buttonRight.ClientArea.Width,
+            _buttonRight.Position = new Vector2i(ClientArea.Right - _buttonRight.ClientArea.Width,
                                               ClientArea.Top +
                                               (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
             _buttonRight.Update(frameTime);
@@ -179,7 +180,7 @@ namespace SS14.Client.UserInterface.Components
                     selected.Key.Render();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
-                    int lastPosRight = selected.Key.ClientArea.Right() + ItemSpacing;
+                    int lastPosRight = selected.Key.ClientArea.Right + ItemSpacing;
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
@@ -213,7 +214,7 @@ namespace SS14.Client.UserInterface.Components
                                                                    (int)
                                                                    (ClientArea.Height/2f -
                                                                     selectedRight.Key.ClientArea.Height/2f));
-                            lastPosRight = selectedRight.Key.ClientArea.Right() + ItemSpacing;
+                            lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (FadeItems)
                                 ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));

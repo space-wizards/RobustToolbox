@@ -1,4 +1,6 @@
-﻿using Lidgren.Network;
+﻿using OpenTK;
+using OpenTK.Graphics;
+using Lidgren.Network;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
@@ -13,14 +15,14 @@ using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
 {
-    public class PointLightComponent : ClientComponent
+    public class PointLightComponent : Component
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
         //Contains a standard light
         public ILight _light;
-        public Vector3f _lightColor = new Vector3f(190, 190, 190);
-        public Vector2f _lightOffset = new Vector2f(0, 0);
+        public Color4 _lightColor = new Color4(190, 190, 190, 255);
+        public Vector2 _lightOffset = Vector2.Zero;
         public int _lightRadius = 512;
         protected string _mask = "";
         public LightModeClass _mode = LightModeClass.Constant;
@@ -36,7 +38,7 @@ namespace SS14.Client.GameObjects
             IoCManager.Resolve<ILightManager>().AddLight(_light);
 
             _light.SetRadius(_lightRadius);
-            _light.SetColor(255, (int)_lightColor.X, (int)_lightColor.Y, (int)_lightColor.Z);
+            _light.SetColor(255, (int)_lightColor.R, (int)_lightColor.G, (int)_lightColor.B);
             _light.Move(Owner.GetComponent<ITransformComponent>().Position + _lightOffset);
             _light.SetMask(_mask);
             Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
@@ -62,17 +64,17 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("lightColorR", out node))
             {
-                _lightColor.X = node.AsInt();
+                _lightColor.R = node.AsFloat() / 255f;
             }
 
             if (mapping.TryGetNode("lightColorG", out node))
             {
-                _lightColor.Y = node.AsInt();
+                _lightColor.G = node.AsFloat() / 255f;
             }
 
             if (mapping.TryGetNode("lightColorB", out node))
             {
-                _lightColor.Z = node.AsInt();
+                _lightColor.B = node.AsFloat() / 255f;
             }
 
             if (mapping.TryGetNode("mask", out node))
@@ -95,7 +97,7 @@ namespace SS14.Client.GameObjects
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(Owner.GetComponent<ITransformComponent>().Position + _lightOffset);
+            _light.Move(args.VectorTo + _lightOffset);
         }
 
         public override void Update(float frameTime)
@@ -125,9 +127,9 @@ namespace SS14.Client.GameObjects
 
         protected void SetColor(int R, int G, int B)
         {
-            _lightColor.X = R;
-            _lightColor.Y = G;
-            _lightColor.Z = B;
+            _lightColor.R = R/255f;
+            _lightColor.G = G/255f;
+            _lightColor.B = B/255f;
             _light.SetColor(255, R, G, B);
         }
     }

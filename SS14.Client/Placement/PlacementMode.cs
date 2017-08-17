@@ -1,6 +1,11 @@
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Interfaces.Map;
+using SS14.Client.Graphics;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Map;
+using SS14.Shared.Utility;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement
 {
@@ -10,8 +15,10 @@ namespace SS14.Client.Placement
 
         public TileRef currentTile;
         public Vector2i mouseScreen;
-        public Vector2f mouseWorld;
+        public Vector2 mouseWorld;
         public Sprite spriteToDraw;
+        public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
+        public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -30,6 +37,15 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
+            if (spriteToDraw != null)
+            {
+                var bounds = spriteToDraw.GetLocalBounds().Convert();
+                spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
+                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                                                     mouseScreen.Y - (bounds.Height / 2f));
+                //Centering the sprite on the cursor.
+                spriteToDraw.Draw();
+            }
         }
 
         public Sprite GetSprite(string key)

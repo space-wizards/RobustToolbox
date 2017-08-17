@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using OpenTK;
+using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Resource;
@@ -8,6 +9,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -190,7 +192,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override bool WasClicked(Vector2f worldPos)
+        public override bool WasClicked(Vector2 worldPos)
         {
             return !IsInHand && base.WasClicked(worldPos);
         }

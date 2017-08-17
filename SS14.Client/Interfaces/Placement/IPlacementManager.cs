@@ -1,10 +1,11 @@
 ﻿using Lidgren.Network;
 using SFML.System;
-using SS14.Client.Interfaces.Map;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Interfaces.Placement
 {

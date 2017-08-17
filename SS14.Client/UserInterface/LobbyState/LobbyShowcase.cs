@@ -1,10 +1,11 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SFML.System.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -63,9 +64,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            ClientArea = new IntRect(Position, Size);
+            ClientArea = Box2i.FromDimensions(Position, Size);
 
-            _buttonRight.Position = new Vector2i(ClientArea.Right() - _buttonRight.ClientArea.Width, ClientArea.Top + (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
+            _buttonRight.Position = new Vector2i(ClientArea.Right - _buttonRight.ClientArea.Width, ClientArea.Top + (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
             _buttonRight.Update(frameTime);
 
             _buttonLeft.Position = new Vector2i(_buttonRight.ClientArea.Left - _buttonRight.ClientArea.Width - _buttonLeft.ClientArea.Width, _buttonRight.ClientArea.Top);
@@ -104,7 +105,7 @@ namespace SS14.Client.UserInterface.Components
                     middle.Key.Render();
 
                     int lastPosLeft = middle.Key.ClientArea.Left - ItemSpacing;
-                    int lastPosRight = middle.Key.ClientArea.Right() + ItemSpacing;
+                    int lastPosRight = middle.Key.ClientArea.Right + ItemSpacing;
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
@@ -135,7 +136,7 @@ namespace SS14.Client.UserInterface.Components
                         {
                             KeyValuePair<ImageButton, Object> currRight = _items[(ScrollOffset + i)];
                             currRight.Key.Position = new Vector2i(lastPosRight, ClientArea.Top + (int)(ClientArea.Height / 2f - currRight.Key.ClientArea.Height / 2f));
-                            lastPosRight = currRight.Key.ClientArea.Right() + ItemSpacing;
+                            lastPosRight = currRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset + i) == Selected)
                             {

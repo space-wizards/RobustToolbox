@@ -6,7 +6,9 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Maths;
 using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -35,7 +37,7 @@ namespace SS14.Client.UserInterface.Components
         private int actualSize; //Actual max value of bar.
 
         private float actualVal; //The actual value of the current button position.
-        private IntRect clientAreaButton;
+        private Box2i clientAreaButton;
         private int currentPos; //The current button position in relation to location of scrollbar.
         private bool dragging; //Currently dragging the button?
         public bool drawBackground = true;
@@ -135,15 +137,15 @@ namespace SS14.Client.UserInterface.Components
             var bounds = scrollbarButton.GetLocalBounds();
             if (Horizontal)
             {
-                ClientArea = new IntRect(Position, new Vector2i(size, (int)bounds.Height));
-                clientAreaButton = new IntRect(Position.X + currentPos, Position.Y,
+                ClientArea = Box2i.FromDimensions(Position, new Vector2i(size, (int)bounds.Height));
+                clientAreaButton = Box2i.FromDimensions(Position.X + currentPos, Position.Y,
                                                  (int)bounds.Width, (int)bounds.Height);
                 actualSize = size - (int)bounds.Width;
             }
             else
             {
-                ClientArea = new IntRect(Position, new Vector2i((int)bounds.Width, size));
-                clientAreaButton = new IntRect(Position.X, Position.Y + currentPos,
+                ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)bounds.Width, size));
+                clientAreaButton = Box2i.FromDimensions(Position.X, Position.Y + currentPos,
                                                  (int)bounds.Width, (int)bounds.Height);
                 actualSize = size - (int)bounds.Height;
             }

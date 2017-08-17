@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -8,6 +8,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -73,12 +74,12 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;
-            ClientArea = new IntRect(Position, new Vector2i((int)clippingRI.Width, (int)clippingRI.Height));
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)clippingRI.Width, (int)clippingRI.Height));
 
             if (inner_focus != null && !components.Contains((GuiComponent)inner_focus)) ClearFocus();
 
-            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom() - scrollbarH.ClientArea.Height);
-            scrollbarV.Position = new Vector2i(ClientArea.Right() - scrollbarV.ClientArea.Width, ClientArea.Top);
+            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - scrollbarH.ClientArea.Height);
+            scrollbarV.Position = new Vector2i(ClientArea.Right - scrollbarV.ClientArea.Width, ClientArea.Top);
 
             if (scrollbarV.IsVisible()) scrollbarH.size = Size.X - scrollbarV.ClientArea.Width;
             else scrollbarH.size = Size.X;

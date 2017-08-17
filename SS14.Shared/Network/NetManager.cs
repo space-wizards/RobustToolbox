@@ -118,7 +118,7 @@ namespace SS14.Shared.Network
             netConfig.ConnectionTimeout = 30000f;
 #endif
             _netPeer = new NetPeer(netConfig);
-            
+
             _netPeer.Start();
 
             _strings.Initialize(this);
@@ -292,7 +292,7 @@ namespace SS14.Shared.Network
                 message.ReadByte(); // status
                 reason = message.ReadString();
             }
-            catch (NetException e)
+            catch (NetException)
             {
                 reason = String.Empty;
             }
@@ -314,13 +314,6 @@ namespace SS14.Shared.Network
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            //TODO: Convert client code to the new net message system, then remove this.
-            if (!IsServer)
-            {
-                OnMessageArrived(msg);
-                return;
-            }
-
             string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
 
             if (msg.LengthBytes < 1)
@@ -330,12 +323,30 @@ namespace SS14.Shared.Network
 
             if (!_strings.TryGetString(id, out string name))
             {
+                //If the message was not registered, fallback to the old broadcast event on the client.
+                //TODO: Convert client code to the new net message system, then remove this.
+                if (IsClient)
+                {
+                    msg.Position = 0;
+                    OnMessageArrived(msg);
+                    return;
+                }
+
                 Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages) id}.");
                 return;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
+                //If the message was not registered, fallback to the old broadcast event on the client.
+                //TODO: Convert client code to the new net message system, then remove this.
+                if (IsClient)
+                {
+                    msg.Position = 0;
+                    OnMessageArrived(msg);
+                    return;
+                }
+
                 Logger.Warning($"[NET] {address}: No message with Name {name}.");
                 return;
             }
@@ -378,7 +389,7 @@ namespace SS14.Shared.Network
         }
 
         #endregion Packets
-        
+
         #region NetMessages
 
         /// <inheritdoc />

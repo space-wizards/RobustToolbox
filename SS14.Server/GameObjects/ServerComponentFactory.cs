@@ -14,6 +14,7 @@ namespace SS14.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<CollidableComponent>();
+            RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<BoundingBoxComponent>();
             Register<KeyBindingInputComponent>();
             Register<PointLightComponent>();

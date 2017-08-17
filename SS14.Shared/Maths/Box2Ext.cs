@@ -1,19 +1,21 @@
-﻿using OpenTK;
+﻿using System;
+using OpenTK;
 
 namespace SS14.Shared.Maths
 {
     public static class Box2Ext
     {
+        private const float Epsilon = 1.0e-8f;
+
         public static bool Intersects(this Box2 me, Box2 other)
         {
             return !(me.Bottom < other.Top || me.Top > other.Bottom || me.Left > other.Right || me.Right < other.Left);
         }
 
-        public static bool IsEmpty(this Box2 rect)
+        public static bool IsEmpty(this Box2 me)
         {
-            return rect.Left == 0 && rect.Top == 0 && rect.Width == 0 && rect.Height == 0;
+            return Math.Abs(me.Width) < Epsilon && Math.Abs(me.Height) < Epsilon;
         }
-
         public static bool Encloses(this Box2 outer, Box2 inner)
         {
             return outer.Left <= inner.Left

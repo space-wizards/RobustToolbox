@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -93,8 +93,6 @@ namespace Lidgren.Network
 		internal void ExecuteDisconnect(string reason, bool sendByeMessage)
 		{
 			m_peer.VerifyNetworkThread();
-
-			//m_peer.LogDebug("Executing disconnect");
 
 			// clear send queues
 			for (int i = 0; i < m_sendChannels.Length; i++)

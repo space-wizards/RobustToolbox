@@ -430,12 +430,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void HandleElementCreation(NetIncomingMessage msg) //I've opted for hardcoding these in for the moment.
         {
-            /*
-            var uiType = (CreateUiType)msg.ReadByte();
-            switch (uiType)
-            {
-            }
-            */
+            // TODO: Either implement this or remove it
         }
 
         /// <summary>
@@ -481,18 +476,6 @@ namespace SS14.Client.UserInterface
             foreach (IGuiComponent component in renderList)
             {
                 component.Render();
-
-                if (moveMode)
-                { /*
-                    CluwneLib.Screen.BlendingMode = BlendingModes.Modulated;
-                   CluwneLib.Screen.FilledRectangle(component.ClientArea.X, component.ClientArea.Y,
-                                                  component.ClientArea.Width, component.ClientArea.Height,
-                                                  Color.FromArgb(100, Color.Green));
-                    CluwneLib.Screen.Rectangle(component.ClientArea.X, component.ClientArea.Y, component.ClientArea.Width,
-                                            component.ClientArea.Height, Color.LightGreen);
-                   CluwneLib.Screen.BlendingMode = BlendingModes.None;
-                */
-                }
             }
 
             if (_console.IsVisible()) _console.Render();

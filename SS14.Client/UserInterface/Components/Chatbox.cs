@@ -24,8 +24,6 @@ namespace SS14.Client.UserInterface.Components
 
         #endregion Delegates
 
-        // private const int MaxHistory = 20;
-        // private const int MaxLines = 10;
         private const int MaxLinePixelLength = 500;
 
         private readonly Dictionary<ChatChannel, SFML.Graphics.Color> _chatColors;
@@ -305,13 +303,6 @@ namespace SS14.Client.UserInterface.Components
             {
                 TextSubmitted(this, text);
                 _inputHistory.Insert(0, text);
-
-                /*
-                while (_inputHistory.Count() > MaxHistory)
-                {
-                    _inputHistory.RemoveAt(MaxHistory);
-                }
-                */
             }
 
             _inputIndex = -1;

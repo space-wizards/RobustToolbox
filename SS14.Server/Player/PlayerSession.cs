@@ -65,7 +65,7 @@ namespace SS14.Server.Player
         public void AttachToEntity(IEntity a)
         {
             DetachFromEntity();
-            //a.attachedClient = connectedClient;
+
             //Add input component.
             var factory = IoCManager.Resolve<IComponentFactory>();
             a.AddComponent(factory.GetComponent<KeyBindingInputComponent>());

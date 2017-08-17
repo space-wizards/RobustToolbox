@@ -68,30 +68,5 @@ namespace SS14.Server.GameObjects
             if (emitters.ContainsKey(name))
                 emitters[name] = active;
         }
-
-        public override void LoadParameters(YamlMappingNode mapping)
-        {
-            /*
-            TODO: reimplement
-            foreach (XElement param in extendedParameters.DescendantNodes())
-            {
-                if(param.Name == "ParticleSystem")
-                    if (param.Attribute("name") != null)
-                    {
-                        if (!emitters.ContainsKey(param.Attribute("name").Value))
-                        {
-                            if (param.Attribute("active") != null)
-                            {
-                                emitters.Add(param.Attribute("name").Value, bool.Parse(param.Attribute("active").Value));
-                            }
-                            else
-                            {
-                                emitters.Add(param.Attribute("name").Value, true);
-                            }
-                        }
-                    }
-            }
-            */
-        }
     }
 }

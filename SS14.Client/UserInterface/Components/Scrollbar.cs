@@ -62,7 +62,6 @@ namespace SS14.Client.UserInterface.Components
             DEBUG.Color = new Color(255, 128, 0);
             DEBUG.ShadowColor = new Color(0, 0, 128);
             DEBUG.Shadowed = true;
-            //  DEBUG.ShadowOffset = new Vector2(1, 1);
             Update(0);
         }
 

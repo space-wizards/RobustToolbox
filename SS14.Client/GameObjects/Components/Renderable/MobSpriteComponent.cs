@@ -114,7 +114,6 @@ namespace SS14.Client.GameObjects
 
         protected override Sprite GetBaseSprite()
         {
-            //return sprites[basename + "_front"];
             return currentBaseSprite;
         }
 

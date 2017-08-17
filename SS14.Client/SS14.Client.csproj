@@ -241,7 +241,6 @@
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />
-    <Compile Include="Console\ParticleCommands.cs" />
     <Compile Include="Console\QuitCommand.cs" />
     <Compile Include="Console\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />

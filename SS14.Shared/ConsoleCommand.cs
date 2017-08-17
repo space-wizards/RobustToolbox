@@ -1,4 +1,4 @@
-// Basic abstract to handle console commands.
+﻿// Basic abstract to handle console commands.
 // Note that there is no Execute() function, this is due to chat & client commands needing a client,
 // While client-side and server console commands don't.
 namespace SS14.Shared.Command
@@ -28,13 +28,5 @@ namespace SS14.Shared.Command
         /// String printed as summary when "help Command" is used.
         /// </value>
         string Help { get; }
-
-        /*
-        /// <summary>
-        /// Runs the command.
-        /// </summary>
-        /// <param name="args">Additional arguments to pass to the command.</param>
-        void Execute(params string[] args);
-        */
     }
 }

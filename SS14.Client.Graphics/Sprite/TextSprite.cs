@@ -45,19 +45,6 @@ namespace SS14.Client.Graphics.Sprite
         }
 
         /// <summary>
-        /// Creates a TextSprite
-        /// </summary>
-        /// <param name="Label"> ID of the TextSprite</param>
-        /// <param name="x"> position X of TextSprite </param>
-        /// <param name="y"> Position Y of TextSprite </param>
-        /// <param name="width"> Width of TextSprite </param>
-        /// <param name="height"> Height of TextSprite </param>
-        //        public TextSprite(string Label, int x, int y, int width, int height)
-        //        {
-        //            this.Position = new Vector2(x, y);
-        //        }
-
-        /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
         /// </summary>
         ///
@@ -68,11 +55,11 @@ namespace SS14.Client.Graphics.Sprite
 
         public void Draw()
         {
-            _textSprite.Position = new Vector2f(Position.X, Position.Y); // -(_textSprite.GetLocalBounds().Height/2f));
+            _textSprite.Position = new Vector2f(Position.X, Position.Y);
             _textSprite.Color = Color;
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
-            if (CluwneLib.Debug.DebugTextboxes)//CluwneLib.Debug()
+            if (CluwneLib.Debug.DebugTextboxes)
             {
                 var fr = _textSprite.GetGlobalBounds().Convert();
                 CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);

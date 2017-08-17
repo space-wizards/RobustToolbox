@@ -24,11 +24,9 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public override uint? NetID => null;
-        //public override uint? NetID => NetIDs.PLAYER_INPUT_MOVER;
 
         /// <inheritdoc />
         public override bool NetworkSynchronizeExistence => false;
-        //public override bool NetworkSynchronizeExistence => true;
 
         /// <inheritdoc />
         public override void OnAdd(IEntity owner)

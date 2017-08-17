@@ -40,16 +40,7 @@ namespace SS14.Client.UserInterface.Components
             name = uniqueName;
             Size = size;
 
-            //if (RenderTargetCache.Targets.Contains(uniqueName))
-            //    //Now this is an ugly hack to work around duplicate RenderImages. Have to fix this later.
-            //    uniqueName = uniqueName + Guid.NewGuid();
-
             clippingRI = new RenderImage(uniqueName, (uint)Size.X, (uint)Size.Y);
-
-            //clippingRI.SourceBlend = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlend = AlphaBlendOperation.InverseSourceAlpha;
-            //clippingRI.SourceBlendAlpha = AlphaBlendOperation.SourceAlpha;
-            //clippingRI.DestinationBlendAlpha = AlphaBlendOperation.InverseSourceAlpha;
             clippingRI.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             clippingRI.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;

@@ -63,8 +63,6 @@ namespace SS14.Shared.GameObjects
 
         public void SendMessage(object sender, ComponentMessageType type, params object[] args)
         {
-            //LogComponentMessage(sender, type, args);
-
             foreach (IComponent component in GetComponents())
             {
                 if (_components.Contains(component))
@@ -82,8 +80,6 @@ namespace SS14.Shared.GameObjects
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
                                 params object[] args)
         {
-            //LogComponentMessage(sender, type, args);
-
             foreach (IComponent component in GetComponents())
             {
                 //Check to see if the component is still a part of this entity --- collection may change in process.

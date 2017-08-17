@@ -492,8 +492,7 @@ namespace SS14.Server
                 state.EntityStates = _entities.GetEntityStates();
             state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
             stateManager.Add(state.Sequence, state);
-
-            //_log.Log("Update " + _lastState + " sent.");
+            
             var connections = netMan.Channels;
             if (!connections.Any())
             {
@@ -514,14 +513,12 @@ namespace SS14.Server
                         if (lastStateAcked == 0) // || forceFullState)
                         {
                             state.WriteStateMessage(stateMessage);
-                            //_log.Log("Full state of size " + length + " sent to " + c.RemoteUniqueIdentifier);
                         }
                         else
                         {
                             stateMessage.Write((byte) NetMessages.StateUpdate);
                             var delta = stateManager.GetDelta(c, _time.CurTick);
                             delta.WriteDelta(stateMessage);
-                            //_log.Log("Delta of size " + delta.Size + " sent to " + c.RemoteUniqueIdentifier);
                         }
 
                         netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
@@ -603,7 +600,6 @@ namespace SS14.Server
         private static void HandleStateAck(MsgStateAck msg)
         {
             IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
-            //_log.Log("State Acked: " + sequence + " by client " + msg.SenderConnection.RemoteUniqueIdentifier + ".");
         }
 
         // The size of the map being sent is almost exactly 1 byte per tile.
@@ -613,11 +609,9 @@ namespace SS14.Server
             // Send Tiles
             IoCManager.Resolve<IMapManager>().SendMap(client);
 
-            // Lets also send them all the items and mobs.
-            //_entities.SendEntities(client);
+            // TODO: Lets also send them all the items and mobs.
 
-            // Send atmos state to player
-            //IoCManager.Resolve<IAtmosManager>().SendAtmosStateTo(client);
+            // TODO: Send atmos state to player
 
             // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(

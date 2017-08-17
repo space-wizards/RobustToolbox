@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 
 namespace Lidgren.Network
@@ -85,8 +85,7 @@ namespace Lidgren.Network
 							startSlot = m_windowSize - 1;
 						seqNr--;
 					}
-
-					//m_connection.m_peer.LogVerbose("Resending due to delay #" + seqNr + " " + om.ToString());
+					
 					m_connection.m_statistics.MessageResent(MessageResendReason.Delay);
 
 					m_connection.QueueSendMessage(om, seqNr);
@@ -156,15 +155,10 @@ namespace Lidgren.Network
 			int relate = NetUtility.RelativeSequenceNumber(seqNr, m_windowStart);
 
 			if (relate < 0)
-			{
-				//m_connection.m_peer.LogDebug("Received late/dupe ack for #" + seqNr);
 				return; // late/duplicate ack
-			}
 
 			if (relate == 0)
 			{
-				//m_connection.m_peer.LogDebug("Received right-on-time ack for #" + seqNr);
-
 				// ack arrived right on time
 				NetException.Assert(seqNr == m_windowStart);
 
@@ -175,13 +169,11 @@ namespace Lidgren.Network
 				// advance window if we already have early acks
 				while (m_receivedAcks.Get(m_windowStart))
 				{
-					//m_connection.m_peer.LogDebug("Using early ack for #" + m_windowStart + "...");
 					m_receivedAcks[m_windowStart] = false;
 					DestoreMessage(m_windowStart % m_windowSize);
 
 					NetException.Assert(m_storedMessages[m_windowStart % m_windowSize].Message == null); // should already be destored
 					m_windowStart = (m_windowStart + 1) % NetConstants.NumSequenceNumbers;
-					//m_connection.m_peer.LogDebug("Advancing window to #" + m_windowStart);
 				}
 
 				return;
@@ -193,8 +185,6 @@ namespace Lidgren.Network
 			// If it has been sent either the m_windowStart message was lost
 			// ... or the ack for that message was lost
 			//
-
-			//m_connection.m_peer.LogDebug("Received early ack for #" + seqNr);
 
 			int sendRelate = NetUtility.RelativeSequenceNumber(seqNr, m_sendStart);
 			if (sendRelate <= 0)
@@ -223,12 +213,8 @@ namespace Lidgren.Network
 				rnr--;
 				if (rnr < 0)
 					rnr = NetConstants.NumSequenceNumbers - 1;
-
-				if (m_receivedAcks[rnr])
-				{
-					// m_connection.m_peer.LogDebug("Not resending #" + rnr + " (since we got ack)");
-				}
-				else
+				
+				if (!m_receivedAcks[rnr])
 				{
 					int slot = rnr % m_windowSize;
 					NetException.Assert(m_storedMessages[slot].Message != null);
@@ -236,7 +222,6 @@ namespace Lidgren.Network
 					{
 						// just sent once; resend immediately since we found gap in ack sequence
 						NetOutgoingMessage rmsg = m_storedMessages[slot].Message;
-						//m_connection.m_peer.LogVerbose("Resending #" + rnr + " (" + rmsg + ")");
 
 						if (now - m_storedMessages[slot].LastSent < (m_resendDelay * 0.35f))
 						{

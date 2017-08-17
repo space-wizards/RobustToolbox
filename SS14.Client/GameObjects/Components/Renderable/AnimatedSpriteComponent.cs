@@ -101,11 +101,6 @@ namespace SS14.Client.GameObjects
         {
             sprite.SetAnimationState(state);
             sprite.SetLoop(loop);
-
-            /*foreach(AnimatedSpriteComponent s in slaves)
-            {
-                s.SetAnimationState(state, loop);
-            }*/
         }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
@@ -255,7 +250,6 @@ namespace SS14.Client.GameObjects
 
             //Draw AABB
             var aabb = AABB;
-            //CluwneLib.CurrentRenderTarget.Rectangle(renderPos.X - aabb.Width/2, renderPos.Y - aabb.Height / 2, aabb.Width, aabb.Height, Color.Lime);
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),

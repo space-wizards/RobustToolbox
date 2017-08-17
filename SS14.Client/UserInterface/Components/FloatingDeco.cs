@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using OpenTK;
@@ -43,7 +43,6 @@ namespace SS14.Client.UserInterface.Components
         {
             _resourceCache = resourceCache;
             DrawSprite = _resourceCache.GetSprite(spriteName);
-//DrawSprite.Smoothing = Smoothing.Smooth;
 
             _uiMgr = (UserInterfaceManager) IoCManager.Resolve<IUserInterfaceManager>();
 

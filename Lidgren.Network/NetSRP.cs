@@ -1,4 +1,4 @@
-#define USE_SHA256
+﻿#define USE_SHA256
 
 using System;
 using System.Security.Cryptography;
@@ -75,8 +75,7 @@ namespace Lidgren.Network
 			byte[] total = new byte[innerHash.Length + salt.Length];
 			Buffer.BlockCopy(salt, 0, total, 0, salt.Length);
 			Buffer.BlockCopy(innerHash, 0, total, salt.Length, innerHash.Length);
-
-			// x   ie. H(salt || H(username || ":" || password))
+			
 			return new NetBigInteger(NetUtility.ToHexString(sha.ComputeHash(total)), 16).ToByteArrayUnsigned();
 		}
 
@@ -139,7 +138,7 @@ namespace Lidgren.Network
 			string one = NetUtility.ToHexString(clientPublicEphemeral);
 			string two = NetUtility.ToHexString(serverPublicEphemeral);
 
-			int len = 66; //  Math.Max(one.Length, two.Length);
+			int len = 66;
 			string ccstr = one.PadLeft(len, '0') + two.PadLeft(len, '0');
 
 			byte[] cc = NetUtility.ToByteArray(ccstr);

@@ -12,7 +12,5 @@ namespace SS14.Server.Interfaces.ClientConsoleHost
     public interface IClientCommand : ICommand
     {
         void Execute(IClientConsoleHost host, INetChannel client, params string[] args);
-
-        //void Register(Dictionary<string, IClientCommand> commands);
     }
 }

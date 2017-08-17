@@ -69,7 +69,6 @@ namespace SS14.Client.UserInterface.Components
             gradient.Render();
 
             //TODO RenderTargetRectangle
-            // CluwneLib.CurrentRenderTarget.Rectangle(titleArea.X, titleArea.Y, titleArea.Width, titleArea.Height, Color.Black);
             base.Render();
             title.Render();
             if (closeButtonVisible) closeButton.Render();
@@ -177,8 +176,6 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             //TODO Window Render
-            //CluwneLib.CurrentRenderTarget.FilledRectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, Color.White);
-           // CluwneLib.CurrentRenderTarget.Draw(box);
         }
     }
 }

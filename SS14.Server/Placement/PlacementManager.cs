@@ -116,20 +116,6 @@ namespace SS14.Server.Placement
                     mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
                 }
             }
-            /*
-            else //They are not allowed to request this. Send 'PlacementFailed'. TBA
-            {
-                Logger.Log("Invalid placement request: "
-                               + IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).name +
-                               " - " +
-                               IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
-                                   attachedEntity.Uid.ToString() +
-                               " - " + alignRcv.ToString());
-
-                SendPlacementCancel(
-                    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).attachedEntity);
-            }
-            */
         }
 
         /// <summary>

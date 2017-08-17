@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -63,7 +63,6 @@ namespace Lidgren.Network
 			if (m == 0.0f && r == 0.0f)
 			{
 				// no latency simulation
-				// LogVerbose("Sending packet " + numBytes + " bytes");
 				bool wasSent = ActuallySendPacket(m_sendBuffer, numBytes, target, out connectionReset);
 				// TODO: handle wasSent == false?
 				return;
@@ -87,8 +86,6 @@ namespace Lidgren.Network
 
 				m_delayedPackets.Add(p);
 			}
-
-			// LogVerbose("Sending packet " + numBytes + " bytes - delayed " + NetTime.ToReadable(delay));
 		}
 
 		private void SendDelayedPackets()
@@ -142,8 +139,6 @@ namespace Lidgren.Network
 				int bytesSent = m_socket.SendTo(data, 0, numBytes, SocketFlags.None, target);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
-
-				// LogDebug("Sent " + numBytes + " bytes");
 			}
 			catch (SocketException sx)
 			{

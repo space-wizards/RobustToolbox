@@ -117,10 +117,6 @@ namespace SS14.Client.GameObjects
             {
                 component.Render(topLeft, bottomRight);
             }
-
-            //Draw AABB
-            var aabb = AABB;
-            CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), (int)aabb.Width, (int)aabb.Height, new SFML.Graphics.Color(0, 0, 255));
         }
     }
 }

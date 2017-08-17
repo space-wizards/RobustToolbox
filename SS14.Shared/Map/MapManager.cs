@@ -12,7 +12,7 @@ namespace SS14.Shared.Map
     public partial class MapManager : IMapManager
     {
         private const int GridIndex = 0;
-        private const ushort DefaultTileSize = 32;
+        private const ushort DefaultTileSize = 1;
 
         /// <inheritdoc />
         public void Initialize()

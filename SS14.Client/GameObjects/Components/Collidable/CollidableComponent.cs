@@ -1,35 +1,30 @@
-﻿using SFML.Graphics;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared;
+﻿using System;
+using OpenTK;
+using SFML.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using System;
-using OpenTK;
 using SS14.Shared.Interfaces.Physics;
-using YamlDotNet.RepresentationModel;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
+        // no client side collision support for now
+        private bool collisionEnabled;
+
+        public Color DebugColor { get; } = Color.Red;
+
         /// <inheritdoc />
         public override string Name => "Collidable";
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.COLLIDABLE;
 
-        public Color DebugColor { get; private set; } = Color.Red;
-
-        // no client side collision support for now
-        private bool collisionEnabled = false;
-
         /// <inheritdoc />
         public override Type StateType => typeof(CollidableComponentState);
-        
+
         /// <inheritdoc />
         Box2 ICollidable.WorldAABB => Owner.GetComponent<BoundingBoxComponent>().WorldAABB;
 
@@ -37,22 +32,20 @@ namespace SS14.Client.GameObjects
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <summary>
-        /// Called when the collidable is bumped into by someone/something
+        ///     Called when the collidable is bumped into by someone/something
         /// </summary>
         void ICollidable.Bump(IEntity ent)
         {
             OnBump?.Invoke(this, new EventArgs());
 
             Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
-            //Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, ComponentMessageType.Bumped, ent.Uid);
         }
 
+        /// <inheritdoc />
         public bool IsHardCollidable { get; } = true;
 
-        public event EventHandler OnBump;
-
         /// <summary>
-        /// OnAdd override -- gets the AABB from the sprite component and sends it to the collision manager.
+        ///     gets the AABB from the sprite component and sends it to the CollisionManager.
         /// </summary>
         /// <param name="owner"></param>
         public override void OnAdd(IEntity owner)
@@ -67,11 +60,11 @@ namespace SS14.Client.GameObjects
         }
 
         /// <summary>
-        /// OnRemove override -- removes the AABB from the collisionmanager.
+        ///     removes the AABB from the CollisionManager.
         /// </summary>
         public override void OnRemove()
         {
-            if(collisionEnabled)
+            if (collisionEnabled)
             {
                 var cm = IoCManager.Resolve<ICollisionManager>();
                 cm.RemoveCollidable(this);
@@ -81,17 +74,16 @@ namespace SS14.Client.GameObjects
         }
 
         /// <summary>
-        /// Message handler --
-        /// SpriteChanged means the spritecomponent changed the current sprite.
+        ///     SpriteChanged means the spritecomponent changed the current sprite.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="type"></param>
         /// <param name="reply"></param>
         /// <param name="list"></param>
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
+            params object[] list)
         {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
+            var reply = base.ReceiveMessage(sender, type, list);
 
             if (sender == this) //Don't listen to our own messages!
                 return ComponentReplyMessage.Empty;
@@ -108,26 +100,6 @@ namespace SS14.Client.GameObjects
             }
 
             return reply;
-        }
-
-        /// <summary>
-        /// Enables collidable
-        /// </summary>
-        private void EnableCollision()
-        {
-            collisionEnabled = true;
-            var cm = IoCManager.Resolve<ICollisionManager>();
-            cm.AddCollidable(this);
-        }
-
-        /// <summary>
-        /// Disables Collidable
-        /// </summary>
-        private void DisableCollision()
-        {
-            collisionEnabled = false;
-            var cm = IoCManager.Resolve<ICollisionManager>();
-            cm.RemoveCollidable(this);
         }
 
         /// <inheritdoc />
@@ -148,6 +120,28 @@ namespace SS14.Client.GameObjects
         public bool TryCollision(Vector2 offset, bool bump = false)
         {
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
+        }
+
+        public event EventHandler OnBump;
+
+        /// <summary>
+        ///     Enables collidable
+        /// </summary>
+        private void EnableCollision()
+        {
+            collisionEnabled = true;
+            var cm = IoCManager.Resolve<ICollisionManager>();
+            cm.AddCollidable(this);
+        }
+
+        /// <summary>
+        ///     Disables Collidable
+        /// </summary>
+        private void DisableCollision()
+        {
+            collisionEnabled = false;
+            var cm = IoCManager.Resolve<ICollisionManager>();
+            cm.RemoveCollidable(this);
         }
     }
 }

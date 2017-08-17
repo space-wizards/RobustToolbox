@@ -129,9 +129,12 @@ namespace SS14.Shared.Map
             var message = _netManager.CreateNetMessage<MsgMap>();
 
             message.MessageType = MapMessage.TurfUpdate;
-            message.SingleTurf.X = tileRef.X;
-            message.SingleTurf.Y = tileRef.Y;
-            message.SingleTurf.Tile = (uint) tileRef.Tile;
+            message.SingleTurf = new MsgMap.Turf
+            {
+                X = tileRef.X,
+                Y = tileRef.Y,
+                Tile = (uint) tileRef.Tile
+            };
 
             _netManager.ServerSendToAll(message);
         }

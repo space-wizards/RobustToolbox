@@ -215,7 +215,6 @@ namespace SS14.Client.Placement
 
             ComponentParameter spriteParam = prototype.GetBaseSpriteParamaters().FirstOrDefault();
             //Will break if states not ordered correctly.
-            //if (spriteParam == null) return;
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();
             Sprite sprite = ResourceCache.GetSprite(spriteName);

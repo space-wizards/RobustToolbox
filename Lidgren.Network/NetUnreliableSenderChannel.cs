@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 
 namespace Lidgren.Network
@@ -94,15 +94,10 @@ namespace Lidgren.Network
 			int relate = NetUtility.RelativeSequenceNumber(seqNr, m_windowStart);
 
 			if (relate < 0)
-			{
-				//m_connection.m_peer.LogDebug("Received late/dupe ack for #" + seqNr);
 				return; // late/duplicate ack
-			}
 
 			if (relate == 0)
 			{
-				//m_connection.m_peer.LogDebug("Received right-on-time ack for #" + seqNr);
-
 				// ack arrived right on time
 				NetException.Assert(seqNr == m_windowStart);
 

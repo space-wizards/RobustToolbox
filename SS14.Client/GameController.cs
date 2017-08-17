@@ -37,7 +37,6 @@ namespace SS14.Client
 
         [Dependency]
         readonly private IConfigurationManager _configurationManager;
-        //  private Input _input;
         [Dependency]
         readonly private INetworkGrapher _netGrapher;
         [Dependency]

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -107,7 +107,6 @@ namespace Lidgren.Network
 					{
 						if (ex.SocketErrorCode == SocketError.HostNotFound)
 						{
-							//LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
 							callback(null);
 							return;
 						}
@@ -140,7 +139,6 @@ namespace Lidgren.Network
 			{
 				if (ex.SocketErrorCode == SocketError.HostNotFound)
 				{
-					//LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
 					callback(null);
 				}
 				else
@@ -189,7 +187,6 @@ namespace Lidgren.Network
 			{
 				if (ex.SocketErrorCode == SocketError.HostNotFound)
 				{
-					//LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
 					return null;
 				}
 				else
@@ -486,12 +483,6 @@ namespace Lidgren.Network
 		internal static int RelativeSequenceNumber(int nr, int expected)
 		{
 			return (nr - expected + NetConstants.NumSequenceNumbers + (NetConstants.NumSequenceNumbers / 2)) % NetConstants.NumSequenceNumbers - (NetConstants.NumSequenceNumbers / 2);
-
-			// old impl:
-			//int retval = ((nr + NetConstants.NumSequenceNumbers) - expected) % NetConstants.NumSequenceNumbers;
-			//if (retval > (NetConstants.NumSequenceNumbers / 2))
-			//	retval -= NetConstants.NumSequenceNumbers;
-			//return retval;
 		}
 
 		/// <summary>

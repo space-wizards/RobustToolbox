@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Render;
@@ -41,7 +41,6 @@ namespace SS14.Client.Helpers
             Size = new Vector2(256.0f, 256.0f);
 
             LoadShaders();
-            //ComputeOffsets(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
 
         }
 
@@ -217,7 +216,7 @@ namespace SS14.Client.Helpers
             _intermediateTarget.Clear(Color.Black);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX.Select(v => v.Convert()).ToArray());
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader(); //.Techniques["GaussianBlurHorizontal"];
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader();
                 sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
             _intermediateTarget.EndDrawing();
             GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].ResetCurrentShader();
@@ -227,7 +226,7 @@ namespace SS14.Client.Helpers
             sourceImage.BeginDrawing();
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY.Select(v => v.Convert()).ToArray());
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ; //.Techniques["GaussianBlurVertical"];
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ;
                 _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
             sourceImage.EndDrawing();
             GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].ResetCurrentShader();

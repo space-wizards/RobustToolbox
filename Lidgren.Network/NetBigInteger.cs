@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Collections;
 using System.Diagnostics;
@@ -70,7 +70,6 @@ namespace Lidgren.Network
 
 				if (i == mag.Length)
 				{
-					//					sign = 0;
 					m_magnitude = ZeroMagnitude;
 				}
 				else
@@ -241,17 +240,6 @@ namespace Lidgren.Network
 				}
 			}
 
-			// Note: This is the previous (slower) algorithm
-			//			while (index < value.Length)
-			//            {
-			//				char c = value[index];
-			//				string s = c.ToString();
-			//				int i = Int32.Parse(s, style);
-			//
-			//                b = b.Multiply(r).Add(ValueOf(i));
-			//                index++;
-			//            }
-
 			m_magnitude = b.m_magnitude;
 		}
 
@@ -390,7 +378,6 @@ namespace Lidgren.Network
 
 			if (sign == 0)
 			{
-				//sign = 0;
 				m_magnitude = ZeroMagnitude;
 			}
 			else
@@ -727,7 +714,6 @@ namespace Lidgren.Network
 				int cBitLength = yBitLength;
 				if (shift > 0)
 				{
-					//					iCount = ShiftLeft(One.magnitude, shift);
 					iCount = new int[(shift >> 5) + 1];
 					iCount[0] = 1 << (shift % 32);
 
@@ -758,8 +744,7 @@ namespace Lidgren.Network
 							if (++xStart == x.Length)
 								return count;
 						}
-
-						//xBitLength = calcBitLength(xStart, x);
+						
 						xBitLength = 32 * (x.Length - xStart - 1) + BitLen(x[xStart]);
 
 						if (xBitLength <= yBitLength)
@@ -797,8 +782,7 @@ namespace Lidgren.Network
 						cBitLength -= shift;
 						iCount = ShiftRightInPlace(iCountStart, iCount, shift);
 					}
-
-					//cStart = c.Length - ((cBitLength + 31) / 32);
+					
 					while (c[cStart] == 0)
 					{
 						++cStart;
@@ -1000,7 +984,6 @@ namespace Lidgren.Network
 			if (x.m_sign < 0)
 			{
 				x.m_sign = 1;
-				//x = m.Subtract(x);
 				x.m_magnitude = doSubBigLil(m.m_magnitude, x.m_magnitude);
 			}
 
@@ -1105,7 +1088,6 @@ namespace Lidgren.Network
 			{
 				if (m_magnitude.Length <= m.m_magnitude.Length)
 				{
-					//zAccum = new int[m.magnitude.Length * 2];
 					zVal = new int[m.m_magnitude.Length];
 					m_magnitude.CopyTo(zVal, zVal.Length - m_magnitude.Length);
 				}
@@ -1115,8 +1097,7 @@ namespace Lidgren.Network
 					// in normal practice we'll never see ..
 					//
 					NetBigInteger tmp = Remainder(m);
-
-					//zAccum = new int[m.magnitude.Length * 2];
+					
 					zVal = new int[m.m_magnitude.Length];
 					tmp.m_magnitude.CopyTo(zVal, zVal.Length - tmp.m_magnitude.Length);
 				}
@@ -1225,10 +1206,6 @@ namespace Lidgren.Network
 			int[] w,
 			int[] x)
 		{
-			// Note: this method allows w to be only (2 * x.Length - 1) words if result will fit
-			//			if (w.Length != 2 * x.Length)
-			//				throw new ArgumentException("no I don't think so...");
-
 			ulong u1, u2, c;
 
 			int wBase = w.Length - 1;
@@ -1649,8 +1626,7 @@ namespace Lidgren.Network
 							if (++xStart == x.Length)
 								return x;
 						}
-
-						//xBitLength = calcBitLength(xStart, x);
+						
 						xBitLength = 32 * (x.Length - xStart - 1) + BitLen(x[xStart]);
 
 						if (xBitLength <= yBitLength)
@@ -1686,8 +1662,7 @@ namespace Lidgren.Network
 						c = ShiftRightInPlace(cStart, c, shift);
 						cBitLength -= shift;
 					}
-
-					//cStart = c.Length - ((cBitLength + 31) / 32);
+					
 					while (c[cStart] == 0)
 					{
 						++cStart;
@@ -1919,12 +1894,6 @@ namespace Lidgren.Network
 			if (n >= BitLength)
 				return (m_sign < 0 ? One.Negate() : Zero);
 
-			//			int[] res = (int[]) magnitude.Clone();
-			//
-			//			res = ShiftRightInPlace(0, res, n);
-			//
-			//			return new BigInteger(sign, res, true);
-
 			int resultLength = (BitLength - n + 31) >> 5;
 			int[] res = new int[resultLength];
 
@@ -1980,8 +1949,7 @@ namespace Lidgren.Network
 			{
 				m = (x[--iT] & IMASK) - (y[--iV] & IMASK) + borrow;
 				x[iT] = (int)m;
-
-				//				borrow = (m < 0) ? -1 : 0;
+				
 				borrow = (int)(m >> 63);
 			}
 			while (iV > yStart);

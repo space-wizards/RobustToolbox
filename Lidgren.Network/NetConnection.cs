@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Threading;
 using System.Diagnostics;
@@ -204,8 +204,6 @@ namespace Lidgren.Network
 						NetTuple<NetMessageType, int> tuple;
 						m_queuedOutgoingAcks.TryDequeue(out tuple);
 
-						//m_peer.LogVerbose("Sending ack for " + tuple.Item1 + "#" + tuple.Item2);
-
 						sendBuffer[m_sendBufferWritePtr++] = (byte)tuple.Item1;
 						sendBuffer[m_sendBufferWritePtr++] = (byte)tuple.Item2;
 						sendBuffer[m_sendBufferWritePtr++] = (byte)(tuple.Item2 >> 8);
@@ -228,7 +226,6 @@ namespace Lidgren.Network
 				NetTuple<NetMessageType, int> incAck;
 				while (m_queuedIncomingAcks.TryDequeue(out incAck))
 				{
-					//m_peer.LogVerbose("Received ack for " + acktp + "#" + seqNr);
 					NetSenderChannelBase chan = m_sendChannels[(int)incAck.Item1 - 1];
 					if (chan == null)
 						chan = CreateSenderChannel(incAck.Item1);

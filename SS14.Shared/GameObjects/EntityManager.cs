@@ -174,7 +174,6 @@ namespace SS14.Shared.GameObjects
         public void SubscribeEvent<T>(Delegate eventHandler, IEntityEventSubscriber s) where T : EntityEventArgs
         {
             Type eventType = typeof(T);
-            //var evh = (ComponentEventHandler<ComponentEventArgs>)Convert.ChangeType(eventHandler, typeof(ComponentEventHandler<ComponentEventArgs>));
             if (!_eventSubscriptions.ContainsKey(eventType))
             {
                 _eventSubscriptions.Add(eventType, new List<Delegate> { eventHandler });

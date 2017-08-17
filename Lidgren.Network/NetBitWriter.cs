@@ -1,4 +1,4 @@
-//#define UNSAFE
+﻿//#define UNSAFE
 //#define BIGENDIAN
 /* Copyright (c) 2010 Michael Lidgren
 
@@ -39,7 +39,7 @@ namespace Lidgren.Network
 			NetException.Assert(((numberOfBits > 0) && (numberOfBits < 9)), "Read() can only read between 1 and 8 bits");
 
 			int bytePtr = readBitOffset >> 3;
-			int startReadAtIndex = readBitOffset - (bytePtr * 8); // (readBitOffset % 8);
+			int startReadAtIndex = readBitOffset - (bytePtr * 8);
 
 			if (startReadAtIndex == 0 && numberOfBits == 8)
 				return fromBuffer[bytePtr];
@@ -70,7 +70,7 @@ namespace Lidgren.Network
 		public static void ReadBytes(byte[] fromBuffer, int numberOfBytes, int readBitOffset, byte[] destination, int destinationByteOffset)
 		{
 			int readPtr = readBitOffset >> 3;
-			int startReadAtIndex = readBitOffset - (readPtr * 8); // (readBitOffset % 8);
+			int startReadAtIndex = readBitOffset - (readPtr * 8);
 
 			if (startReadAtIndex == 0)
 			{

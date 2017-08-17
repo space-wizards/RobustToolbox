@@ -230,8 +230,6 @@ namespace SS14.Client.UserInterface.Components
                 _buttonLeft.Render();
                 _buttonRight.Render();
             }
-
-            //Gorgon.CurrentRenderTarget.Rectangle(ClientArea.X, ClientArea.Y, ClientArea.Width, ClientArea.Height, System.Drawing.Color.DarkOrange);
         }
 
         public override void Dispose()

@@ -21,7 +21,6 @@ namespace SS14.Server.GameObjects.EntitySystems
 
         public override void RegisterMessageTypes()
         {
-            //EntitySystemManager.RegisterMessageType<>();
             base.RegisterMessageTypes();
         }
 

@@ -122,14 +122,8 @@ namespace SS14.Client.Player
             switch (messageType)
             {
                 case PlayerSessionMessage.AttachToEntity:
-                    //HandleAttachToEntity(message);
                     break;
                 case PlayerSessionMessage.JoinLobby:
-                    /*if (RequestedStateSwitch != null)
-                    {
-                        RequestedStateSwitch(this, new TypeEventArgs(typeof(LobbyScreen)));
-                        Detach();
-                    }*/
                     break;
                 case PlayerSessionMessage.AddPostProcessingEffect:
                     var effectType = (PostProcessingEffectType)message.ReadInt32();
@@ -178,11 +172,6 @@ namespace SS14.Client.Player
                     e.OnExpired += EffectExpired;
                     _effects.Add(e);
                     break;
-                    //case PostProcessingEffectType.Acid:
-                    //    e = new AcidPostProcessingEffect(duration);
-                    //    e.OnExpired += EffectExpired;
-                    //    _effects.Add(e);
-                    //    break;
             }
         }
 

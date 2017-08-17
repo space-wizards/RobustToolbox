@@ -11,8 +11,8 @@
     icon: player
 
   - type: BoundingBox
-    sizeX: 25
-    sizeY: 25
+    sizeX: 0.9
+    sizeY: 0.9
     
   - type: ParticleSystem
   - type: Physics

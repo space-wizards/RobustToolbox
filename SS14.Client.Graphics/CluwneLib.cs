@@ -31,7 +31,14 @@ namespace SS14.Client.Graphics
         #region Accessors
         public static Vector2 WorldCenter { get; set; }
         public static Vector2u ScreenViewportSize { get; set; }
-        public static int TileSize { get; set; }
+
+
+        /// <summary>
+        /// Viewport scaling 
+        /// </summary>
+        public static int TileSize { get; set; } = 32;
+
+
         public static Box2 WorldViewport
         {
             get

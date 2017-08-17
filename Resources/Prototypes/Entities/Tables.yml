@@ -13,9 +13,9 @@
     icon: worktop_single
 
   - type: BoundingBox
-    sizeX: 64
-    sizeY: 47
-    offsetY: 8
+    sizeX: 2
+    sizeY: 1.4
+    offsetY: 0.25
 
   - type: Collidable
     DebugColor: "#0000FF"

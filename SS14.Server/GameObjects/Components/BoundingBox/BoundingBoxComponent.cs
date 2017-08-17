@@ -23,7 +23,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Local Axis Aligned Bounding Box of the entity.
         /// </summary>
-        public Box2 AABB { get; set; } = new Box2(0, 0, 1, 1);
+        public Box2 AABB { get; set; } = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
 
         /// <summary>
         /// World Axis Aligned Bounding Box of the entity.

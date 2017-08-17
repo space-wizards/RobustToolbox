@@ -50,13 +50,6 @@ namespace SS14.Client.State.States
         public DateTime LastUpdate;
         public DateTime Now;
 
-        public int ScreenHeightTiles = 12;
-        public int ScreenWidthTiles = 15; // How many tiles around us do we draw?
-        public string SpawnType;
-
-        private float _realScreenHeightTiles;
-        private float _realScreenWidthTiles;
-
         private bool _recalculateScene = true;
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
@@ -184,9 +177,6 @@ namespace SS14.Client.State.States
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceCache);
-
-            _realScreenWidthTiles = (float)CluwneLib.Screen.Size.X / MapManager.TileSize;
-            _realScreenHeightTiles = (float)CluwneLib.Screen.Size.Y / MapManager.TileSize;
 
             InitializeRenderTargets();
             InitializeSpriteBatches();
@@ -344,8 +334,6 @@ namespace SS14.Client.State.States
                 UpdateGUIPosition();
             }
 
-            CluwneLib.TileSize = (int) MapManager.TileSize;
-
             _componentManager.Update((float)e.Time);
             _entityManager.Update((float)e.Time);
             PlacementManager.Update(MousePosScreen, MapManager);
@@ -361,7 +349,6 @@ namespace SS14.Client.State.States
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Screen.Clear(Color.Black);
-            CluwneLib.TileSize = (int) MapManager.TileSize;
 
             CalculateAllLights();
 

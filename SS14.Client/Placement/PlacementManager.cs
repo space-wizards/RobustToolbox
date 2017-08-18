@@ -178,16 +178,18 @@ namespace SS14.Client.Placement
         public void Render()
         {
             if (CurrentMode != null)
+            {
                 CurrentMode.Render();
 
-            if (CurrentPermission != null && CurrentPermission.Range > 0)
-            {
-                var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
-                CluwneLib.drawCircle(pos.X,
-                    pos.Y,
-                    CurrentPermission.Range,
-                    Color.White,
-                    new Vector2(2, 2));
+                if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.RangeRequired())
+                {
+                    var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
+                    CluwneLib.drawHollowCircle((int)Math.Floor(pos.X),
+                        (int)Math.Floor(pos.Y),
+                        CurrentPermission.Range * CluwneLib.TileSize,
+                        3f,
+                        Color.White);
+                }
             }
         }
 

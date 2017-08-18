@@ -333,7 +333,7 @@ namespace SS14.Client.Graphics
         public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness, Color OutlineColor)
         {
             CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2f(posX, posY);
+            Circle.Position = new Vector2f(posX-radius, posY-radius);
             Circle.Radius = radius;
             Circle.FillColor = Color.Transparent;
             Circle.OutlineThickness = OutlineThickness;

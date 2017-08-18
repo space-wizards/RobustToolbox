@@ -59,19 +59,17 @@ namespace SS14.Client.UserInterface.Components
 
             initOpts.AddRange(new[]
                                   {
-                                      "None",
-                                      "AlignNone",
                                       "AlignFree",
+                                      "AlignNearby",
                                       "AlignSimilar",
                                       "AlignTileAny",
                                       "AlignTileEmpty",
                                       "AlignTileNonSolid",
                                       "AlignTileSolid",
                                       "AlignWall",
-                                      "AlignWallTops"
                                   });
 
-            _lstOverride = new Listbox(150, 125, resourceCache, initOpts);
+            _lstOverride = new Listbox(120, 125, resourceCache, initOpts);
             _lstOverride.SelectItem("AlignFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
@@ -110,7 +108,7 @@ namespace SS14.Client.UserInterface.Components
                 {
                     PlacementOption = item.Text.Text,
                     EntityType = pMan.CurrentPermission.EntityType,
-                    Range = -1,
+                    Range = 2,
                     IsTile = pMan.CurrentPermission.IsTile
                 };
 
@@ -210,7 +208,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 PlacementOption = overrideMode.Length > 0 ? overrideMode : template.PlacementMode,
                 EntityType = templateName,
-                Range = -1,
+                Range = 2,
                 IsTile = false
             };
 

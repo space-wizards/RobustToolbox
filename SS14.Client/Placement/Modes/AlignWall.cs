@@ -24,13 +24,8 @@ namespace SS14.Client.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-
-            var bounds = spriteToDraw.GetLocalBounds();
-            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
@@ -40,12 +35,8 @@ namespace SS14.Client.Placement.Modes
             if (!currentTile.TileDef.IsWall)
                 return false;
 
-            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
-            if (rangeSquared > 0)
-                if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > rangeSquared)
-                    return false;
+            if (RangeRequired() && !RangeCheck())
+                return false;
 
             var nodes = new List<Vector2>();
 
@@ -69,13 +60,6 @@ namespace SS14.Client.Placement.Modes
             mouseWorld = closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                     pManager.CurrentPrototype.PlacementOffset.Y);
             mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
-
-            var range = pManager.CurrentPermission.Range;
-            if (range > 0)
-                if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > range * range)
-                    return false;
 
             return true;
         }

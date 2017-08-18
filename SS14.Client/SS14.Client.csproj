@@ -285,7 +285,7 @@
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />
     <Compile Include="Placement\Modes\AlignFree.cs" />
-    <Compile Include="Placement\Modes\AlignNone.cs" />
+    <Compile Include="Placement\Modes\AlignNearby.cs" />
     <Compile Include="Placement\Modes\AlignSimilar.cs" />
     <Compile Include="Placement\Modes\AlignTileAny.cs" />
     <Compile Include="Placement\Modes\AlignTileEmpty.cs" />

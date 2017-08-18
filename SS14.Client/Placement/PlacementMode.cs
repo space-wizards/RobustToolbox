@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Utility;
@@ -65,6 +66,34 @@ namespace SS14.Client.Placement
             if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
 
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
+        }
+
+        public virtual bool RangeRequired()
+        {
+            return false;
+        }
+
+        public bool RangeCheck()
+        {
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
+                if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
+                         .Position - mouseWorld).LengthSquared > rangeSquared)
+                    return false;
+            return true;
+        }
+
+        public bool CheckCollision()
+        {
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            var bounds = spriteToDraw.GetLocalBounds();
+            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
+            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
+            if (pManager.CollisionManager.IsColliding(spriteRectWorld))
+                return true;
+            return false;
         }
     }
 }

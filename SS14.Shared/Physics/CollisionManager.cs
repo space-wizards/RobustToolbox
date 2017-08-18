@@ -101,7 +101,9 @@ namespace SS14.Shared.Physics
             if (offset.LengthSquared > 0)
             {
                 colliderAABB.Left += offset.X;
+                colliderAABB.Right += offset.X;
                 colliderAABB.Top += offset.Y;
+                colliderAABB.Bottom += offset.Y;
             }
 
             Vector2[] points =
@@ -112,7 +114,7 @@ namespace SS14.Shared.Physics
                 new Vector2(colliderAABB.Left, colliderAABB.Bottom)
             };
 
-            var bounds = 
+            var bounds =
                 points
                     .Select(GetBucket) // Get the buckets that correspond to the collider's points.
                     .Distinct()

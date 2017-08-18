@@ -18,6 +18,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Helpers;
 using SS14.Client.Lighting;
 using SS14.Client.UserInterface.Components;
+using SS14.Client.ResourceManagement;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
@@ -31,7 +32,6 @@ using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Client.Map;
@@ -123,7 +123,7 @@ namespace SS14.Client.State.States
         private RenderImage screenShadows;
         private RenderImage shadowBlendIntermediate;
         private RenderImage shadowIntermediate;
-        
+
         private ShadowMapResolver shadowMapResolver;
 
         #endregion Lighting
@@ -355,7 +355,7 @@ namespace SS14.Client.State.States
 
                 //PreOcclusion
                 RenderTiles();
-                
+
                 RenderComponents((float)e.Time, vp);
 
                 RenderOverlay();
@@ -458,20 +458,21 @@ namespace SS14.Client.State.States
                 Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
-                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White);
-                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White);
-                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White);
-                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White);
-                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White);
+                var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
+                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White, font);
+                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White, font);
+                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White, font);
 
                 // Mouse position debug
                 Vector2i mouseScreenPos = MousePosScreen; // default to screen space
                 Vector2 mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
-                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White);
-                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White);
-                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White);
-                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White);
+                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White, font);
+                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
             }
         }
 
@@ -1190,12 +1191,12 @@ namespace SS14.Client.State.States
                 }
 
                 playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
-                
+
                 area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
 
                 area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
-                
+
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 

@@ -34,7 +34,7 @@ namespace SS14.Client.Graphics
 
 
         /// <summary>
-        /// Viewport scaling 
+        /// Viewport scaling
         /// </summary>
         public static int TileSize { get; set; } = 32;
 
@@ -429,9 +429,9 @@ namespace SS14.Client.Graphics
         /// <param name="text"> Text to render </param>
         /// <param name="size"> Size of the font </param>
         /// <param name="textColor"> Color of the text </param>
-        public static void drawText(float posX, float posY, string text, uint size, Color textColor)
+        public static void drawText(float posX, float posY, string text, uint size, Color textColor, Font font)
         {
-            Text _text = new Text(text, new Font(@"..\..\Resources\Fonts\bluehigh.ttf"));
+            Text _text = new Text(text, font);
             _text.Position = new SFML.System.Vector2f(posX, posY);
             _text.Color = textColor;
             _text.CharacterSize = size;

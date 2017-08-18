@@ -67,8 +67,8 @@ namespace SS14.Client.GameObjects
             {
                 var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
-                return Box2.FromDimensions(0, 0, sprite.AABB.Width / tileSize,
-                                      sprite.AABB.Height / tileSize);
+                return Box2.FromDimensions(0, 0, sprite.AABB.Width / (float)tileSize,
+                                                 sprite.AABB.Height / (float)tileSize);
             }
         }
 

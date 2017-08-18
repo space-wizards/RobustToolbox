@@ -112,14 +112,17 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Project>{46786269-57b9-48e7-aa4f-8f4d84609fe6}</Project>
+      <Name>sfml-graphics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
-      <Name>sfmlnet-system-2</Name>
+      <Project>{31d24303-f6a9-4d53-bb03-a73edcb3186d}</Project>
+      <Name>sfml-system</Name>
     </ProjectReference>
     <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
-      <Name>sfmlnet-window-2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
-      <Name>sfmlnet-graphics-2</Name>
+      <Project>{d17de83d-a592-461f-8af2-53f9e22e1d0f}</Project>
+      <Name>sfml-window</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

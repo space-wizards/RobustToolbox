@@ -99,21 +99,6 @@
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="sfmlnet-graphics-2">
-      <Name>sfmlnet-graphics-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="sfmlnet-system-2">
-      <Name>sfmlnet-system-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="sfmlnet-window-2">
-      <Name>sfmlnet-window-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
@@ -161,6 +146,18 @@
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Project>{46786269-57b9-48e7-aa4f-8f4d84609fe6}</Project>
+      <Name>sfml-graphics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Project>{31d24303-f6a9-4d53-bb03-a73edcb3186d}</Project>
+      <Name>sfml-system</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Project>{d17de83d-a592-461f-8af2-53f9e22e1d0f}</Project>
+      <Name>sfml-window</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
       <Project>{302b877e-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Client.Graphics</Name>
@@ -170,15 +167,6 @@
       <Project>{0529F740-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
-      <Name>sfmlnet-system-2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
-      <Name>sfmlnet-window-2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
-      <Name>sfmlnet-graphics-2</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

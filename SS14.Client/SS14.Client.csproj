@@ -364,10 +364,19 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS'" />
+  <!--
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS' And '$(targetOS)' != 'Windows'" />
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' == 'MacOS'">
-    <!-- Copy Mac natives -->
+    --><!-- Copy Mac natives --><!--
     <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
     <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
+  </Target> -->
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared">
+    <!-- Copy Windows natives -->
+    <Exec Command="python3 fetch_win_csfml.py" CustomErrorRegularExpression="^Error" Condition="!Exists('..\Third-Party\extlibs\Windows\csfml-system-2.dll')" />
+    <ItemGroup>
+      <WinNatives Include="..\Third-Party\extlibs\Windows\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WinNatives)" DestinationFolder="$(OutputPath)" />
   </Target>
 </Project>

@@ -63,18 +63,6 @@
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="sfmlnet-graphics-2">
-      <Name>sfmlnet-graphics-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
-    </Reference>
-    <Reference Include="sfmlnet-system-2">
-      <Name>sfmlnet-system-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
-    </Reference>
-    <Reference Include="sfmlnet-window-2">
-      <Name>sfmlnet-window-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -142,17 +130,15 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetOS)' == 'Windows'">
-    <Content Include="..\Third-Party\extlibs\csfml-graphics-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-system-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Third-Party\extlibs\csfml-window-2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Name>sfmlnet-system-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Name>sfmlnet-window-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Name>sfmlnet-graphics-2</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

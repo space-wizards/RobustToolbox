@@ -65,7 +65,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         /// Load all entities from SavedEntities.xml
         /// </summary>
-        public override void LoadEntities()
+        public void LoadEntities()
         {
             XElement tmp;
             try

@@ -9,8 +9,9 @@ namespace SS14.Server.Interfaces.GameObjects
     public interface IServerEntityManager : IEntityManager
     {
         void Initialize();
+        void LoadEntities();
         void SaveEntities();
-        IEntity SpawnEntity(string template, int uid = -1);
+        IEntity SpawnEntity(string template, int? uid = null);
         IEntity SpawnEntityAt(string entityTemplateName, Vector2 vector2);
         List<EntityState> GetEntityStates();
     }

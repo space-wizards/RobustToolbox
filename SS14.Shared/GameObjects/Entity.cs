@@ -23,11 +23,10 @@ namespace SS14.Shared.GameObjects
         private readonly Dictionary<uint, IComponent> _netIDs = new Dictionary<uint, IComponent>();
         private readonly List<IComponent> _components = new List<IComponent>();
 
-        public IComponentFactory ComponentFactory { get; private set; }
         public IEntityNetworkManager EntityNetworkManager { get; private set; }
         public IEntityManager EntityManager { get; private set; }
 
-        public int Uid { get; set; }
+        public int Uid { get; private set; }
         public EntityPrototype Prototype { get; set; }
         public string Name { get; set; }
 
@@ -36,14 +35,30 @@ namespace SS14.Shared.GameObjects
 
         #endregion Members
 
-        public Entity(IEntityManager entityManager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        #region Initialization
+
+        public void SetManagers(IEntityManager entityManager, IEntityNetworkManager networkManager)
         {
+            if (EntityManager != null)
+            {
+                throw new InvalidOperationException("Entity already has initialized managers.");
+            }
             EntityManager = entityManager;
             EntityNetworkManager = networkManager;
-            ComponentFactory = componentFactory;
         }
 
-        #region Initialization
+        public void SetUid(int uid)
+        {
+            if (Uid != 0)
+            {
+                throw new InvalidOperationException("Entity already has a UID.");
+            }
+            Uid = uid;
+        }
+
+        public virtual void PreInitialize()
+        {
+        }
 
         public virtual void LoadData(YamlMappingNode parameters)
         {
@@ -222,7 +237,6 @@ namespace SS14.Shared.GameObjects
         /// Public method to add a component to an entity.
         /// Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>
-        /// <param name="family">the family of component -- there can only be one at a time per family.</param>
         /// <param name="component">The component.</param>
         public void AddComponent(IComponent component)
         {
@@ -265,6 +279,13 @@ namespace SS14.Shared.GameObjects
             }
 
             component.OnAdd(this);
+
+            if (Initialized)
+            {
+                // If the component gets added AFTER primary entity initialization (prototype),
+                // we initialize it here!
+                component.Initialize();
+            }
         }
 
         /// <summary>

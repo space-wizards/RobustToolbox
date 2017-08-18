@@ -112,6 +112,15 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Name>sfmlnet-system-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Name>sfmlnet-window-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Name>sfmlnet-graphics-2</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BoundKeyEventArgs.cs" />

@@ -132,6 +132,15 @@
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Name>sfmlnet-system-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Name>sfmlnet-window-2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Name>sfmlnet-graphics-2</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameObjects\Components\Container\Container.cs" />

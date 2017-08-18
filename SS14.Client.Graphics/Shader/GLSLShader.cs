@@ -18,13 +18,13 @@ namespace SS14.Client.Graphics.Shader
 
 
         public GLSLShader(string vertexShaderFilename, string fragmentShaderFilename)
-            : base(vertexShaderFilename, fragmentShaderFilename)
+            : base(vertexShaderFilename, null, fragmentShaderFilename)
         {
 
         }
 
         public GLSLShader(Stream vertexShaderStream, Stream fragmentShaderStream)
-            : base(vertexShaderStream, fragmentShaderStream)
+            : base(vertexShaderStream, null, fragmentShaderStream)
         {
 
         }

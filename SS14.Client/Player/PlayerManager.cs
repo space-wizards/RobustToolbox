@@ -60,7 +60,10 @@ namespace SS14.Client.Player
                 ControlledEntity.RemoveComponent<IMoverComponent>();
             }
             ControlledEntity.AddComponent(factory.GetComponent<PlayerInputMoverComponent>());
-            ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
+            if (!ControlledEntity.HasComponent<CollidableComponent>())
+            {
+                ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
+            }
 
             ControlledEntity.GetComponent<ITransformComponent>().OnMove += PlayerEntityMoved;
         }

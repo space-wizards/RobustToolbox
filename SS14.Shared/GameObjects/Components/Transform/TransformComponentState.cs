@@ -2,6 +2,7 @@
 using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Shared.GameObjects
 {
@@ -14,7 +15,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public readonly IEntity Parent;
+        public readonly ITransformComponent Parent;
 
         /// <summary>
         ///     Current position offset of the entity.
@@ -31,8 +32,8 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="position">Current position offset of the entity.</param>
         /// <param name="rotation">Current direction offset of the entity.</param>
-        /// <param name="parent">Current parent entity of this entity.</param>
-        public TransformComponentState(Vector2 position, Angle rotation, IEntity parent)
+        /// <param name="parent">Current parent transform of this entity.</param>
+        public TransformComponentState(Vector2 position, Angle rotation, ITransformComponent parent)
             : base(NetIDs.TRANSFORM)
         {
             Position = position;

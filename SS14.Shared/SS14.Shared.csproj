@@ -144,6 +144,8 @@
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ICollidableComponent.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IContainer.cs" />
+    <Compile Include="Interfaces\GameObjects\Components\IContainerManager.cs" />
     <Compile Include="Interfaces\GameObjects\Components\ITransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IComponentFactory.cs" />

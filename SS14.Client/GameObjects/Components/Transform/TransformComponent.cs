@@ -16,7 +16,7 @@ namespace SS14.Client.GameObjects
     {
         public Vector2 Position { get; private set; }
         public Angle Rotation { get; private set; }
-        public IEntity Parent { get; private set; }
+        public ITransformComponent Parent { get; private set; }
 
         //TODO: Make parenting actually work.
 
@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (TransformComponentState) state;
+            var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
 
             if (Position != newState.Position)
@@ -57,7 +57,7 @@ namespace SS14.Client.GameObjects
         private void DetachParent()
         {
             // nothing to do
-            if(Parent == null)
+            if (Parent == null)
                 return;
 
             Parent = null;
@@ -67,13 +67,50 @@ namespace SS14.Client.GameObjects
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        private void AttachParent(IEntity parent)
+        private void AttachParent(ITransformComponent parent)
         {
             // nothing to attach to.
-            if(parent == null)
+            if (parent == null)
                 return;
 
             Parent = parent;
+        }
+
+        public ITransformComponent GetMapTransform()
+        {
+            if (Parent != null) //If we are not the final transform, query up the chain of parents
+            {
+                return Parent.GetMapTransform();
+            }
+            return this;
+        }
+
+        public bool IsMapTransform(ITransformComponent transform)
+        {
+            if (transform.Parent != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        ///     Does this entity contain the entity in the argument
+        /// </summary>
+        public bool ContainsEntity(ITransformComponent transform)
+        {
+            if (IsMapTransform(transform)) //Is the entity on the map
+            {
+                if (this == transform.Parent) //Is this the direct container of the entity
+                {
+                    return true;
+                }
+                else
+                {
+                    return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
+                }
+            }
+            return false;
         }
     }
 }

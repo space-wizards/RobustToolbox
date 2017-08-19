@@ -99,21 +99,6 @@
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="sfmlnet-graphics-2">
-      <Name>sfmlnet-graphics-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="sfmlnet-system-2">
-      <Name>sfmlnet-system-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="sfmlnet-window-2">
-      <Name>sfmlnet-window-2</Name>
-      <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
       <Private>False</Private>
@@ -160,6 +145,18 @@
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
       <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Project>{46786269-57b9-48e7-aa4f-8f4d84609fe6}</Project>
+      <Name>sfml-graphics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Project>{31d24303-f6a9-4d53-bb03-a73edcb3186d}</Project>
+      <Name>sfml-system</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Project>{d17de83d-a592-461f-8af2-53f9e22e1d0f}</Project>
+      <Name>sfml-window</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
       <Project>{302b877e-0000-0000-0000-000000000000}</Project>
@@ -355,10 +352,18 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS'" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' != 'MacOS' And '$(targetOS)' != 'Windows'" />
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' == 'MacOS'">
     <!-- Copy Mac natives -->
     <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
     <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
+  </Target>
+  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" Condition="'$(targetOS)' == 'Windows'">
+    <!-- Copy Windows natives -->
+    <Exec Command="$(Python) fetch_win_csfml.py" CustomErrorRegularExpression="^Error" Condition="!Exists('..\Third-Party\extlibs\Windows\csfml-system-2.dll')" />
+    <ItemGroup>
+      <WinNatives Include="..\Third-Party\extlibs\Windows\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WinNatives)" DestinationFolder="$(OutputPath)" />
   </Target>
 </Project>

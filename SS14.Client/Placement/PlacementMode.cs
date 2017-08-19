@@ -38,6 +38,7 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
+            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
             if (spriteToDraw != null)
             {
                 var bounds = spriteToDraw.GetLocalBounds().Convert();
@@ -92,8 +93,8 @@ namespace SS14.Client.Placement
                                                  mouseWorld.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
-                return true;
-            return false;
+                return false;
+            return true;
         }
     }
 }

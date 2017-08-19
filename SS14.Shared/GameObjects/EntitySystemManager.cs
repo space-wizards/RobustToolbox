@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +14,6 @@ namespace SS14.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
-        [Dependency]
-        private readonly ISS14Serializer serializer;
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
         /// <summary>
@@ -112,19 +111,11 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public void HandleSystemMessage(EntitySystemData sysMsg)
+        public void HandleSystemMessage(MsgEntity sysMsg)
         {
-            int messageLength = sysMsg.message.ReadInt32();
-            EntitySystemMessage deserialized;
-
-            using (var stream = new MemoryStream(sysMsg.message.ReadBytes(messageLength)))
+            foreach (var current in SystemMessageTypes.Where(x => x.Key == sysMsg.SystemMessage.GetType()))
             {
-                deserialized = serializer.Deserialize<EntitySystemMessage>(stream);
-            }
-
-            foreach (var current in SystemMessageTypes.Where(x => x.Key == deserialized.GetType()))
-            {
-                current.Value.HandleNetMessage((EntitySystemMessage)deserialized);
+                current.Value.HandleNetMessage(sysMsg.SystemMessage);
             }
         }
 
@@ -134,18 +125,6 @@ namespace SS14.Shared.GameObjects
             {
                 system.Update(frameTime);
             }
-        }
-    }
-
-    public struct EntitySystemData
-    {
-        public NetIncomingMessage message;
-        public NetConnection senderConnection;
-
-        public EntitySystemData(NetConnection senderConnection, NetIncomingMessage message)
-        {
-            this.senderConnection = senderConnection;
-            this.message = message;
         }
     }
 

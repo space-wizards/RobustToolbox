@@ -41,6 +41,7 @@ using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.State.States
 {
@@ -162,17 +163,18 @@ namespace SS14.Client.State.States
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
 
+            NetworkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entityManager.HandleEntityNetworkMessage((MsgEntity)message));
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
-            NetOutgoingMessage message = NetworkManager.Peer.CreateMessage();
-            message.Write((byte)NetMessages.RequestMap);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetOutgoingMessage message1 = NetworkManager.CreateMessage();
+            message1.Write((byte)NetMessages.RequestMap);
+            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableUnordered);
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message1 = NetworkManager.Peer.CreateMessage();
-            message1.Write((byte)NetMessages.ClientName);
-            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
-            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
+            var message2 = NetworkManager.CreateMessage();
+            message2.Write((byte)NetMessages.ClientName);
+            message2.Write(ConfigurationManager.GetCVar<string>("player.name"));
+            NetworkManager.ClientSendMessage(message2, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceCache);
@@ -807,9 +809,6 @@ namespace SS14.Client.State.States
                             break;
                         case NetMessages.ChatMessage:
                             HandleChatMessage(message);
-                            break;
-                        case NetMessages.EntityMessage:
-                            _entityManager.HandleEntityNetworkMessage(message);
                             break;
                         case NetMessages.StateUpdate:
                             HandleStateUpdate(message);

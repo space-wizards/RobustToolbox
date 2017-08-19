@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SS14.Shared.GameObjects;
 using YamlDotNet.RepresentationModel;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -226,7 +227,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
         void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
-                                                 NetConnection recipient, params object[] messageParams);
+                                                 INetChannel recipient, params object[] messageParams);
 
         /// <summary>
         ///     Called when the entity has all components initialized.

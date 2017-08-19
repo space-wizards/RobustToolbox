@@ -39,18 +39,6 @@ namespace SS14.Shared.GameObjects
 
         #region IEntityManager Members
 
-        public virtual void InitializeEntities()
-        {
-            foreach (IEntity e in _entities.Values.Where(e => !e.Initialized))
-            {
-                e.Initialize();
-            }
-        }
-
-        public virtual void LoadEntities()
-        {
-        }
-
         public virtual void Shutdown()
         {
             FlushEntities();
@@ -148,23 +136,54 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="prototypeName">name of entity template to execute</param>
         /// <returns>spawned entity</returns>
-        public IEntity SpawnEntity(string prototypeName, int uid = -1)
+        public IEntity SpawnEntity(string prototypeName, int? _uid = null)
         {
-            if (uid == -1)
+            int uid;
+            if (_uid == null)
             {
                 uid = NextUid++;
             }
+            else
+            {
+                uid = _uid.Value;
+            }
+            if (EntityExists(uid))
+            {
+                throw new InvalidOperationException($"UID already taken: {uid}");
+            }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            IEntity e = prototype.CreateEntity(this, EntityNetworkManager, ComponentFactory);
+            IEntity entity = prototype.CreateEntity(uid, this, EntityNetworkManager, ComponentFactory);
+            _entities[uid] = entity;
 
-            e.Uid = uid;
-            _entities.Add(e.Uid, e);
+            // We batch the first set of initializations together.
             if (!Initialized)
             {
-                e.Initialize();
+                InitializeEntity(entity);
             }
-            return e;
+
+            return entity;
+        }
+
+        private void InitializeEntity(IEntity entity)
+        {
+            entity.PreInitialize();
+            foreach (var component in entity.GetComponents())
+            {
+                component.Initialize();
+            }
+            entity.Initialize();
+        }
+
+        /// <summary>
+        /// Initializes all entities that haven't been initialized yet.
+        /// </summary>
+        protected void InitializeEntities()
+        {
+            foreach (var entity in _entities.Values.Where(e => !e.Initialized))
+            {
+                InitializeEntity(entity);
+            }
         }
 
         #endregion Entity Management
@@ -234,40 +253,6 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion ComponentEvents
-
-        #region State stuff
-
-        public void ApplyEntityStates(List<EntityState> entityStates, float serverTime)
-        {
-            var entityKeys = new List<int>();
-            foreach (EntityState es in entityStates)
-            {
-                //Todo defer component state result processing until all entities are loaded and initialized...
-                es.ReceivedTime = serverTime;
-                entityKeys.Add(es.StateData.Uid);
-                //Known entities
-                if (_entities.ContainsKey(es.StateData.Uid))
-                {
-                    _entities[es.StateData.Uid].HandleEntityState(es);
-                }
-                else //Unknown entities
-                {
-                    IEntity e = SpawnEntity(es.StateData.TemplateName, es.StateData.Uid);
-                    e.Name = es.StateData.Name;
-                    e.HandleEntityState(es);
-                }
-            }
-
-            //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
-            foreach (int k in toDelete)
-                DeleteEntity(k);
-
-            if (!Initialized)
-                InitializeEntities();
-        }
-
-        #endregion State stuff
 
         #endregion IEntityManager Members
 

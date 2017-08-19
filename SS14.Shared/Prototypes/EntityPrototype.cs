@@ -245,22 +245,23 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <summary>
-        /// Creates an entity from this template
+        /// Creates an entity from this prototype.
+        /// Do not call this directly, use the server entity manager instead.
         /// </summary>
         /// <returns></returns>
-        public IEntity CreateEntity(IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
+        public IEntity CreateEntity(int uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (IEntity)Activator.CreateInstance(ClassType, manager, networkManager, componentFactory);
+            var entity = (IEntity)Activator.CreateInstance(ClassType);
 
+            entity.SetManagers(manager, networkManager);
+            entity.SetUid(uid);
             entity.Name = Name;
             entity.Prototype = this;
 
             foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
             {
                 IComponent component = componentFactory.GetComponent(componentData.Key);
-
                 component.LoadParameters(componentData.Value);
-
                 entity.AddComponent(component);
             }
 

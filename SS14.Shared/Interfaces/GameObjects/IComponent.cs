@@ -62,6 +62,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         void OnAdd(IEntity owner);
 
         /// <summary>
+        ///     Called when all of the entity's other components have been added and are available,
+        ///     But are not necessarily initialized yet.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
         ///     Shuts down the component. The is called Automatically by OnRemove.
         /// </summary>
         void Shutdown();

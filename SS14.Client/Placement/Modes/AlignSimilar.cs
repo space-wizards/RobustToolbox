@@ -42,7 +42,7 @@ namespace SS14.Client.Placement.Modes
             if (currentTile.TileDef.IsWall)
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
-            if (RangeRequired() && !RangeCheck())
+            if (!RangeCheck())
                 return false;
 
             var manager = IoCManager.Resolve<IClientEntityManager>();

@@ -27,7 +27,7 @@ namespace SS14.Client.Placement.Modes
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            if (RangeRequired() && !RangeCheck())
+            if (!RangeCheck())
                 return false;
 
             if (pManager.CurrentPermission.IsTile)

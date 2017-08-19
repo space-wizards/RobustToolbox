@@ -35,7 +35,7 @@ namespace SS14.Client.Placement.Modes
             if (!currentTile.TileDef.IsWall)
                 return false;
 
-            if (RangeRequired() && !RangeCheck())
+            if (!RangeCheck())
                 return false;
 
             var nodes = new List<Vector2>();

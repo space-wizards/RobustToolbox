@@ -59,8 +59,8 @@ namespace SS14.Client.UserInterface.Components
 
             initOpts.AddRange(new[]
                                   {
-                                      "AlignFree",
-                                      "AlignNearby",
+                                      "PlaceFree",
+                                      "PlaceNearby",
                                       "AlignSimilar",
                                       "AlignTileAny",
                                       "AlignTileEmpty",
@@ -70,7 +70,7 @@ namespace SS14.Client.UserInterface.Components
                                   });
 
             _lstOverride = new Listbox(120, 125, resourceCache, initOpts);
-            _lstOverride.SelectItem("AlignFree");
+            _lstOverride.SelectItem("PlaceFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
             components.Add(_lstOverride);

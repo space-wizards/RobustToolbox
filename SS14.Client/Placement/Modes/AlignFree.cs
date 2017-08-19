@@ -7,9 +7,9 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
-    public class AlignFree : PlacementMode
+    public class PlaceFree : PlacementMode
     {
-        public AlignFree(PlacementManager pMan) : base(pMan)
+        public PlaceFree(PlacementManager pMan) : base(pMan)
         {
         }
 

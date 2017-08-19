@@ -20,6 +20,7 @@ namespace SS14.Client.Placement
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
+        public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -71,13 +72,10 @@ namespace SS14.Client.Placement
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
         }
 
-        public virtual bool RangeRequired()
-        {
-            return false;
-        }
-
         public bool RangeCheck()
         {
+            if (!rangerequired)
+                return true;
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()

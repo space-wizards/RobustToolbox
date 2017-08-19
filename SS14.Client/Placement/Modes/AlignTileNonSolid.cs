@@ -30,7 +30,7 @@ namespace SS14.Client.Placement.Modes
             if (currentTile.TileDef.IsWall)
                 return false;
 
-            if (RangeRequired() && !RangeCheck())
+            if (!RangeCheck())
                 return false;
 
             if (pManager.CurrentPermission.IsTile)
@@ -45,8 +45,8 @@ namespace SS14.Client.Placement.Modes
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
-                if (CheckCollision())
-                    return false;
+//                if (CheckCollision())
+//                    return false;
             }
 
             return true;

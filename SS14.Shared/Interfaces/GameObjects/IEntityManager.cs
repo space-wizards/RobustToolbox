@@ -9,8 +9,6 @@ namespace SS14.Shared.Interfaces.GameObjects
 {
     public interface IEntityManager
     {
-        void InitializeEntities();
-        void LoadEntities();
         void Shutdown();
         void Update(float frameTime);
         void HandleEntityNetworkMessage(NetIncomingMessage msg);
@@ -77,11 +75,5 @@ namespace SS14.Shared.Interfaces.GameObjects
         void RemoveSubscribedEvents(IEntityEventSubscriber subscriber);
 
         #endregion ComponentEvents
-
-        #region State stuff
-
-        void ApplyEntityStates(List<EntityState> entityStates, float serverTime);
-
-        #endregion State stuff
     }
 }

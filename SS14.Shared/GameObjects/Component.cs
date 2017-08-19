@@ -49,6 +49,12 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public virtual void Initialize()
+        {
+
+        }
+
+        /// <inheritdoc />
         public virtual void Shutdown()
         {
         }

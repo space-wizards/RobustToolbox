@@ -85,12 +85,12 @@ namespace SS14.Client.Graphics.Shader
 
         public void SetUniformArray(string Parameter, Vector2f[] vec2array)
         {
-            SetUniformArray(Parameter, vec2array.Select(v => new Vec2(v.X, v.Y)).ToArray());
+            SetUniformArray(Parameter, vec2array.Select(v => (Vec2)v).ToArray());
         }
 
         public void SetUniformArray(string Parameter, Vector3f[] vec3array)
         {
-            SetUniformArray(Parameter, vec3array.Select(v => new Vec3(v.X, v.Y, v.Z)).ToArray());
+            SetUniformArray(Parameter, vec3array.Select(v => (Vec3)v).ToArray());
         }
 
         public void SetUniformArray(string Parameter, Vector4[] vec4array)

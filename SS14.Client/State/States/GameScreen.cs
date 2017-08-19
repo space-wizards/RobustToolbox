@@ -1100,11 +1100,7 @@ namespace SS14.Client.State.States
                 screenShadows.EndDrawing();
             }
 
-            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
-            Dictionary<Texture, string> tmp = resCache.TextureToKey;
-            if (!tmp.ContainsKey(screenShadows.Texture)) { return; } //if it doesn't exist, something's fucked
-            string textureKey = tmp[screenShadows.Texture];
-            Image texunflipx = Graphics.TexHelpers.TextureCache.Textures[textureKey].Image;
+            Image texunflipx = screenShadows.Texture.CopyToImage();
             texunflipx.FlipVertically();
             screenShadows.Texture.Update(texunflipx);
         }

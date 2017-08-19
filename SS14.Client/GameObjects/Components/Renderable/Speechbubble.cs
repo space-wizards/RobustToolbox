@@ -73,7 +73,7 @@ namespace SS14.Client.GameObjects
             _mobName = mobname;
             _buildTime = DateTime.Now;
             _textSprite = new Text(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
-            _textSprite.Color = Color.Black;
+            _textSprite.FillColor = Color.Black;
             // TODO Word wrap!
             _textSprite.Position = new Vector2f(5, 3);
             _stringBuilder = new StringBuilder();

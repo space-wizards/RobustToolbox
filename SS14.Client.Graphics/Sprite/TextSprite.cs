@@ -56,7 +56,7 @@ namespace SS14.Client.Graphics.Sprite
         public void Draw()
         {
             _textSprite.Position = new Vector2f(Position.X, Position.Y);
-            _textSprite.Color = Color;
+            _textSprite.FillColor = Color;
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
             if (CluwneLib.Debug.DebugTextboxes)

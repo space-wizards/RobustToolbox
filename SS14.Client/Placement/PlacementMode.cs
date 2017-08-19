@@ -39,15 +39,14 @@ namespace SS14.Client.Placement
         public virtual void Render()
         {
             spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
-            if (spriteToDraw != null)
-            {
-                var bounds = spriteToDraw.GetLocalBounds().Convert();
-                spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
-                                                     mouseScreen.Y - (bounds.Height / 2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
-            }
+            spriteToDraw = new Sprite(spriteToDraw);
+            
+            var bounds = spriteToDraw.GetLocalBounds().Convert();
+            spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
+            spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                                                    mouseScreen.Y - (bounds.Height / 2f));
+            //Centering the sprite on the cursor.
+            spriteToDraw.Draw();
         }
 
         public Sprite GetSprite(string key)

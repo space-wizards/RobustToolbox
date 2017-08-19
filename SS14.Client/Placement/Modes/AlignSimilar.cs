@@ -29,10 +29,7 @@ namespace SS14.Client.Placement.Modes
         public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
-
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-            var spriteBounds = spriteToDraw.GetLocalBounds();
-
+            
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
@@ -45,11 +42,8 @@ namespace SS14.Client.Placement.Modes
             if (currentTile.TileDef.IsWall)
                 return false; //HANDLE CURSOR OUTSIDE MAP
 
-            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
-            if (rangeSquared > 0)
-                if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > rangeSquared) return false;
+            if (!RangeCheck())
+                return false;
 
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
@@ -92,9 +86,8 @@ namespace SS14.Client.Placement.Modes
                 }
             }
 
-            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteBounds.Width / 2f), mouseWorld.Y - (spriteBounds.Height / 2f),
-                                             spriteBounds.Width, spriteBounds.Height);
-            if (pManager.CollisionManager.IsColliding(spriteRectWorld)) return false;
+            if (CheckCollision())
+                return false;
             return true;
         }
     }

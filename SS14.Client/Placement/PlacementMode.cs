@@ -38,8 +38,11 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
-            spriteToDraw = new Sprite(spriteToDraw);
+            if(spriteToDraw == null)
+            {
+                spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
+                spriteToDraw = new Sprite(spriteToDraw);
+            }
             
             var bounds = spriteToDraw.GetLocalBounds().Convert();
             spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
@@ -85,8 +88,8 @@ namespace SS14.Client.Placement
 
         public bool CheckCollision()
         {
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-            var bounds = spriteToDraw.GetLocalBounds();
+            var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
+            var bounds = drawsprite.GetLocalBounds();
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
             var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteSize.X / 2f),
                                                  mouseWorld.Y - (spriteSize.Y / 2f),

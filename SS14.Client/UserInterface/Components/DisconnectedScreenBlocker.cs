@@ -6,7 +6,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
 using SS14.Shared.Maths;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

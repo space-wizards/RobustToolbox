@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
@@ -31,7 +32,7 @@ namespace SS14.Client.UserInterface.Components
 
         public Vector2i Size = new Vector2i(300, 100);
         protected ImageButton _buttonLeft;
-        private SFML.Graphics.Color ctemp;
+        private Color4 ctemp;
         protected ImageButton _buttonRight;
         protected int Selected
         {
@@ -175,7 +176,7 @@ namespace SS14.Client.UserInterface.Components
                         new Vector2i(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
-                        ctemp = Color.White;
+                        ctemp = Color4.White;
                     selected.Key.Color = ctemp;
                     selected.Key.Render();
 
@@ -199,7 +200,7 @@ namespace SS14.Client.UserInterface.Components
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedLeft.Key.Color = ctemp;
 
                             selectedLeft.Key.Render();
@@ -217,7 +218,7 @@ namespace SS14.Client.UserInterface.Components
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color.White.WithAlpha((byte)(baseAlpha / alphaAdj));
+                                ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedRight.Key.Color = ctemp;
                             selectedRight.Key.Render();
                         }

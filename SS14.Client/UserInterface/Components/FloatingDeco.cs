@@ -3,6 +3,7 @@ using SFML.System;
 using SFML.Window;
 using OpenTK;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;

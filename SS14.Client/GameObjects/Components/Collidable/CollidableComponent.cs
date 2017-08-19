@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -14,7 +15,7 @@ namespace SS14.Client.GameObjects
         // no client side collision support for now
         private bool collisionEnabled;
 
-        public Color DebugColor { get; } = Color.Red;
+        public Color4 DebugColor { get; } = Color4.Red;
 
         /// <inheritdoc />
         public override string Name => "Collidable";

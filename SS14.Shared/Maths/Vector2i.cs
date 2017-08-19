@@ -67,6 +67,11 @@ namespace SS14.Shared.Maths
             return new Vector2i(a.X - b.X, a.Y - b.Y);
         }
 
+        public static Vector2i operator +(Vector2i a, Vector2i b)
+        {
+            return new Vector2i(a.X + b.X, a.Y + b.Y);
+        }
+
         public static implicit operator Vector2(Vector2i vector)
         {
             return new Vector2(vector.X, vector.Y);
@@ -75,16 +80,6 @@ namespace SS14.Shared.Maths
         public static explicit operator Vector2i(Vector2 vector)
         {
             return new Vector2i((int)vector.X, (int)vector.Y);
-        }
-
-        public static implicit operator Vector2i(SFML.System.Vector2i vector)
-        {
-            return new Vector2i(vector.X, vector.Y);
-        }
-
-        public static implicit operator SFML.System.Vector2i(Vector2i vector)
-        {
-            return new SFML.System.Vector2i(vector.X, vector.Y);
         }
     }
 }

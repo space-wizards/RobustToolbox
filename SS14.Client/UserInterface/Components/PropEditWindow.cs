@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -8,7 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -52,9 +53,9 @@ namespace SS14.Client.UserInterface.Components
             foreach (PropWindowStruct struc in ObjPropList)
             {
                 if (struc.VarName.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
-                    struc.LabelName.BackgroundColor = new SFML.Graphics.Color(255, 228, 196);
+                    struc.LabelName.BackgroundColor = new Color4(255, 228, 196, 255);
                 else
-                    struc.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                    struc.LabelName.BackgroundColor = Color4.Gray;
             }
         }
 
@@ -183,8 +184,8 @@ namespace SS14.Client.UserInterface.Components
 
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = new SFML.Graphics.Color(240, 255, 240);
-                    newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                    newEntry.LabelName.BorderColor = new Color4(240, 255, 240, 255);
+                    newEntry.LabelName.BackgroundColor = Color4.Gray;
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Update(0);
 
@@ -206,8 +207,8 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceCache);
                         newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
-                        newEntry.LabelName.BorderColor = new SFML.Graphics.Color(0, 191, 255);
-                        newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                        newEntry.LabelName.BorderColor = new Color4(0, 191, 255, 255);
+                        newEntry.LabelName.BackgroundColor = Color4.Gray;
                         newEntry.LabelName.DrawBackground = true;
                         newEntry.LabelName.Clicked += LabelName_Clicked;
                         newEntry.LabelName.Update(0);
@@ -231,8 +232,8 @@ namespace SS14.Client.UserInterface.Components
                                                    _resourceCache);
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
-                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? new SFML.Graphics.Color(127, 255, 0) : new SFML.Graphics.Color(205, 92, 92);
-                    newEntry.LabelName.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                    newEntry.LabelName.BorderColor = newEntry.CanEdit ? new Color4(127, 255, 0, 255) : new Color4(205, 92, 92, 255);
+                    newEntry.LabelName.BackgroundColor = Color4.Gray;
                     newEntry.LabelName.DrawBackground = true;
                     newEntry.LabelName.Clicked += LabelName_Clicked;
                     newEntry.LabelName.Update(0);

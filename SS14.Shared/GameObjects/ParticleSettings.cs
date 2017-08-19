@@ -1,6 +1,5 @@
 using OpenTK;
-using SFML.Graphics;
-using SFML.System;
+using OpenTK.Graphics;
 using SS14.Shared.Utility;
 using System;
 using System.ComponentModel;
@@ -35,7 +34,7 @@ namespace SS14.Shared.GameObjects
         private float _tangentialVelocityVariance = 0;
         private float _tangentialVelocity = 0;
         private float _radialAccelerationVariance = 0;
-        private Range<Color> _colorRange = new Range<Color>(Color.Black, new Color(0, 0, 0, 0));
+        private Range<Color4> _colorRange = new Range<Color4>(Color4.Black, new Color4(0, 0, 0, 0));
         private string _sprite = "star1";
 
         public ParticleSettings()
@@ -410,7 +409,7 @@ namespace SS14.Shared.GameObjects
         }
 
         [XmlElement(ElementName = "ColorRange")]
-        public Range<Color> ColorRange
+        public Range<Color4> ColorRange
         {
             get { return _colorRange; }
             set

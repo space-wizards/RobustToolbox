@@ -2,6 +2,7 @@
 using SFML.System;
 using SFML.Window;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Interfaces.Resource;
@@ -17,9 +18,9 @@ namespace SS14.Client.UserInterface.Components
         private readonly IResourceCache _resourceCache;
         protected Vector2i Size;
 
-        public SFML.Graphics.Color backgroundColor = new SFML.Graphics.Color(70, 130, 180);
-        public SFML.Graphics.Color barColor = new SFML.Graphics.Color(176, 196, 222);
-        public SFML.Graphics.Color borderColor = Color.Black;
+        public Color4 backgroundColor = new Color4(70, 130, 180, 255);
+        public Color4 barColor = new Color4(176, 196, 222, 255);
+        public Color4 borderColor = Color4.Black;
 
         protected float max = 1000;
         protected float min = 0;

@@ -11,7 +11,7 @@ using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

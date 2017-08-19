@@ -4,6 +4,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -16,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Network;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {

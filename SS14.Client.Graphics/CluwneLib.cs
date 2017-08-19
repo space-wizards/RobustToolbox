@@ -7,6 +7,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.View;
+using SS14.Client.Graphics.Utility;
 using System;
 using System.Reflection;
 using SS14.Shared.Network;
@@ -290,14 +291,14 @@ namespace SS14.Client.Graphics
         /// <param name="heightY"> Height Y of rectangle </param>
         /// <param name="OutlineThickness"> Outline Thickness of rectangle </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
+        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color4 OutlineColor)
         {
             RectangleShape HollowRect = new RectangleShape();
             HollowRect.FillColor = Color.Transparent;
             HollowRect.Position = new SFML.System.Vector2f(posX, posY);
             HollowRect.Size = new SFML.System.Vector2f(widthX, heightY);
             HollowRect.OutlineThickness = OutlineThickness;
-            HollowRect.OutlineColor = OutlineColor;
+            HollowRect.OutlineColor = OutlineColor.Convert();
 
             CurrentRenderTarget.Draw(HollowRect);
         }

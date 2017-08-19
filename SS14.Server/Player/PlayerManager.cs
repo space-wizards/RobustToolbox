@@ -1,5 +1,4 @@
 ﻿using System;
-using SFML.System;
 using OpenTK;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;

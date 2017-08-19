@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {
@@ -36,41 +36,36 @@ namespace SS14.Client.State.States
         private int _Width;
         private int _Height;
 
-        #endregion
-
-        #region Properties
-
-        #endregion
+        #endregion Fields
 
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
-            _Width = (int) CluwneLib.Screen.Size.X;
-            _Height = (int) CluwneLib.Screen.Size.Y;
+            _Width = (int)CluwneLib.Screen.Size.X;
+            _Height = (int)CluwneLib.Screen.Size.Y;
             _background = ResourceCache.GetSprite("ss14_logo_background");
 
-
             _btnConnect = new ImageButton
-                               {
-                                   ImageNormal = "connect_norm",
-                                   ImageHover = "connect_hover"
-                               };
+            {
+                ImageNormal = "connect_norm",
+                ImageHover = "connect_hover"
+            };
             _btnConnect.Clicked += _buttConnect_Clicked;
 
             _btnOptions = new ImageButton
-                               {
-                                   ImageNormal = "options_norm",
-                                   ImageHover = "options_hover"
-                               };
+            {
+                ImageNormal = "options_norm",
+                ImageHover = "options_hover"
+            };
             _btnOptions.Clicked += _buttOptions_Clicked;
 
             _btnExit = new ImageButton
-                            {
-                                ImageNormal = "exit_norm",
-                                ImageHover = "exit_hover"
-                            };
+            {
+                ImageNormal = "exit_norm",
+                ImageHover = "exit_hover"
+            };
             _btnExit.Clicked += _buttExit_Clicked;
 
-            _txtConnect = new Textbox(100, ResourceCache) {Text = ConfigurationManager.GetCVar<string>("net.server")};
+            _txtConnect = new Textbox(100, ResourceCache) { Text = ConfigurationManager.GetCVar<string>("net.server") };
             _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
             _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
 
@@ -80,9 +75,8 @@ namespace SS14.Client.State.States
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
             _lblVersion.Text.Color = new SFML.Graphics.Color(245, 245, 245);
 
-            _lblVersion.Position = new Vector2i(_Width -  _lblVersion.ClientArea.Width  - 3,
+            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                              _Height - _lblVersion.ClientArea.Height - 3);
-
 
             _imgTitle = new SimpleImage
             {
@@ -90,7 +84,6 @@ namespace SS14.Client.State.States
             };
 
             FormResize();
-
         }
 
         #region IState Members
@@ -102,13 +95,13 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
-            _Width = (int) CluwneLib.Screen.Size.X;
-            _Height = (int) CluwneLib.Screen.Size.Y;
-            _background.Scale = new Vector2f((float)_Width/_background.TextureRect.Width, (float)_Height/_background.TextureRect.Height);
-            _lblVersion.Position = new Vector2i(_Width -  _lblVersion.ClientArea.Width  - 3,
+            _Width = (int)CluwneLib.Screen.Size.X;
+            _Height = (int)CluwneLib.Screen.Size.Y;
+            _background.Scale = new Vector2f((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
+            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                                 _Height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
-            _imgTitle.Position = new Vector2i(_Width-550, 100);
+            _imgTitle.Position = new Vector2i(_Width - 550, 100);
             _imgTitle.Update(0);
             _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
             _txtConnect.Update(0);
@@ -118,44 +111,42 @@ namespace SS14.Client.State.States
             _btnOptions.Update(0);
             _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
             _btnExit.Update(0);
-
         }
-        #endregion
+        #endregion IState Members
 
         #region Input
-        public void KeyDown ( KeyEventArgs e )
+        public void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp ( KeyEventArgs e )
+        public void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp ( MouseButtonEventArgs e )
+        public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown ( MouseButtonEventArgs e )
+        public void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved ( MouseMoveEventArgs e )
+        public void MouseMoved(MouseMoveEventArgs e)
         {
-
         }
-        public void MousePressed ( MouseButtonEventArgs e )
+        public void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove ( MouseMoveEventArgs e )
+        public void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove ( MouseWheelEventArgs e )
+        public void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -173,7 +164,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion
+        #endregion Input
 
         private void _buttExit_Clicked(ImageButton sender)
         {
@@ -273,6 +264,6 @@ namespace SS14.Client.State.States
             NetworkManager.ClientConnect(address, 1212);
         }
 
-        #endregion
+        #endregion Startup, Shutdown, Update
     }
 }

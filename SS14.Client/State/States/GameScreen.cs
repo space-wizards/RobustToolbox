@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -8,6 +9,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
@@ -452,7 +454,7 @@ namespace SS14.Client.State.States
                 int startX = 10;
                 int startY = 10;
                 CluwneLib.drawRectangle(startX, startY, 200, 300,
-                        Color.Blue.WithAlpha(64));
+                        Color4.Blue.WithAlpha(64));
 
                 // Player position debug
                 Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;

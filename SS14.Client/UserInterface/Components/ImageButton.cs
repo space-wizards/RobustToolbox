@@ -1,6 +1,8 @@
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -27,11 +29,11 @@ namespace SS14.Client.UserInterface.Components
         public ImageButton()
         {
             _resourceCache = IoCManager.Resolve<IResourceCache>();
-            Color = Color.White;
+            Color = Color4.White;
             Update(0);
         }
 
-        public Color Color { get; set; }
+        public Color4 Color { get; set; }
 
         public string ImageNormal
         {
@@ -68,11 +70,11 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_drawSprite != null)
             {
-                _drawSprite.Color = Color;
+                _drawSprite.Color = Color.Convert();
                 _drawSprite.Position = new Vector2f(Position.X,Position.Y);
                 _drawSprite.Texture.Smooth = true;
                 _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
-                _drawSprite.Color = Color;
+                _drawSprite.Color = Color.Convert();
             }
         }
 

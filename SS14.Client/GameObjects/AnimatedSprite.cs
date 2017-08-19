@@ -2,6 +2,7 @@
 using OpenTK;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using System;
@@ -61,7 +62,7 @@ namespace SS14.Client.Graphics.Sprite
             get
             {
                 if (_currentSprite != null)
-                    return _currentSprite.TextureRect;
+                    return _currentSprite.TextureRect.Convert();
                 return new Box2i();
             }
         }

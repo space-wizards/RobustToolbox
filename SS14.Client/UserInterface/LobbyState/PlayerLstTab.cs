@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -33,7 +34,7 @@ namespace SS14.Client.UserInterface.Components
             var netManager = IoCManager.Resolve<IClientNetManager>();
             NetOutgoingMessage playerListMsg = netManager.CreateMessage();
             playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            netManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);          
+            netManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
         public override void Update(float frameTime)

@@ -38,7 +38,7 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
+            spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
             if (spriteToDraw != null)
             {
                 var bounds = spriteToDraw.GetLocalBounds().Convert();

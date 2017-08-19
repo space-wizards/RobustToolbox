@@ -22,24 +22,16 @@ namespace SS14.Client.Placement.Modes
         {
             if (currentMap == null) return false;
 
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
-
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-
-            var bounds = spriteToDraw.GetLocalBounds();
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
             if (currentTile.Tile.TileId != 0)
                 return false;
 
-            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
-            if (rangeSquared > 0)
-                if (
-                    (pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > rangeSquared)
-                    return false;
+            if (!RangeCheck())
+                return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
@@ -53,12 +45,8 @@ namespace SS14.Client.Placement.Modes
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
-                var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (bounds.Width/2f),
-                                                 mouseWorld.Y - (bounds.Height/2f), bounds.Width,
-                                                 bounds.Height);
-                if (pManager.CollisionManager.IsColliding(spriteRectWorld))
+                if (CheckCollision())
                     return false;
-                //Since walls also have collisions, this means we can't place objects on walls with this mode.
             }
 
             return true;

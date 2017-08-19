@@ -284,8 +284,8 @@
     <Compile Include="Network\NetworkGrapher.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Placement\PlacementMode.cs" />
-    <Compile Include="Placement\Modes\AlignFree.cs" />
-    <Compile Include="Placement\Modes\AlignNone.cs" />
+    <Compile Include="Placement\Modes\PlaceFree.cs" />
+    <Compile Include="Placement\Modes\PlaceNearby.cs" />
     <Compile Include="Placement\Modes\AlignSimilar.cs" />
     <Compile Include="Placement\Modes\AlignTileAny.cs" />
     <Compile Include="Placement\Modes\AlignTileEmpty.cs" />

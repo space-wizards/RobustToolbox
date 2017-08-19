@@ -50,7 +50,7 @@ namespace SS14.Shared.GameObjects
             get { return placementMode; }
             protected set { placementMode = value; }
         }
-        private string placementMode = "AlignNone";
+        private string placementMode = "PlaceNearby";
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.

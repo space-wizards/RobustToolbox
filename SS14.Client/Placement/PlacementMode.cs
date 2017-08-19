@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Utility;
@@ -19,6 +20,7 @@ namespace SS14.Client.Placement
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
+        public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)
         {
@@ -37,15 +39,18 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            if (spriteToDraw != null)
+            if(spriteToDraw == null)
             {
-                var bounds = spriteToDraw.GetLocalBounds().Convert();
-                spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
-                                                     mouseScreen.Y - (bounds.Height / 2f));
-                //Centering the sprite on the cursor.
-                spriteToDraw.Draw();
+                spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
+                spriteToDraw = new Sprite(spriteToDraw);
             }
+            
+            var bounds = spriteToDraw.GetLocalBounds().Convert();
+            spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
+            spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                                                    mouseScreen.Y - (bounds.Height / 2f));
+            //Centering the sprite on the cursor.
+            spriteToDraw.Draw();
         }
 
         public Sprite GetSprite(string key)
@@ -65,6 +70,31 @@ namespace SS14.Client.Placement
             if (baseSprite == null) pManager.ResourceCache.DefaultSprite();
 
             return GetSprite((baseSprite + "_" + pManager.Direction.ToString()).ToLowerInvariant());
+        }
+
+        public bool RangeCheck()
+        {
+            if (!rangerequired)
+                return true;
+            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
+            if (rangeSquared > 0)
+                if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
+                         .Position - mouseWorld).LengthSquared > rangeSquared)
+                    return false;
+            return true;
+        }
+
+        public bool CheckCollision()
+        {
+            var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
+            var bounds = drawsprite.GetLocalBounds();
+            var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
+            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteSize.X / 2f),
+                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+                                                 spriteSize.X, spriteSize.Y);
+            if (pManager.CollisionManager.IsColliding(spriteRectWorld))
+                return false;
+            return true;
         }
     }
 }

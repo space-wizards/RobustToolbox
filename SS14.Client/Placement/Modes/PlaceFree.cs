@@ -7,17 +7,15 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
-    public class AlignFree : PlacementMode
+    public class PlaceFree : PlacementMode
     {
-        public AlignFree(PlacementManager pMan) : base(pMan)
+        public PlaceFree(PlacementManager pMan) : base(pMan)
         {
         }
 
         public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
             if (currentMap == null) return false;
-
-            spriteToDraw = GetDirectionalSprite(pManager.CurrentBaseSpriteKey);
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);

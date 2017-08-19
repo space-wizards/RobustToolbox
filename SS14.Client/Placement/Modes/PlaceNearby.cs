@@ -12,11 +12,13 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Placement.Modes
 {
-    public class AlignTileAny : PlacementMode
+    public class PlaceNearby : PlacementMode
     {
-        public AlignTileAny(PlacementManager pMan) : base(pMan)
+        public PlaceNearby(PlacementManager pMan) : base(pMan)
         {
         }
+
+        public override bool rangerequired => true;
 
         public override bool Update(Vector2i mouseS, IMapManager currentMap)
         {
@@ -24,24 +26,13 @@ namespace SS14.Client.Placement.Modes
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+
+            if (pManager.CurrentPermission.IsTile)
+                return false;
 
             if (!RangeCheck())
                 return false;
-
-            if (pManager.CurrentPermission.IsTile)
-            {
-                mouseWorld = new Vector2(currentTile.X + 0.5f,
-                                         currentTile.Y + 0.5f);
-                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
-            }
-            else
-            {
-                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
-                                         currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
-                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
-            }
 
             return true;
         }

@@ -27,8 +27,8 @@ namespace SS14.Client.Player.PostProcessing
 
             image.BeginDrawing();
                 _shader.setAsCurrentShader();
-                _shader.SetParameter("SceneTexture", OstafLikesTheCock);
-                _shader.setDuration((Math.Abs(_duration)));               
+                _shader.SetUniform("SceneTexture", OstafLikesTheCock);
+                _shader.setDuration((Math.Abs(_duration)));
                 OstafLikesTheCock.Blit(0, 0, image.Height, image.Height, SFML.Graphics.Color.White, BlitterSizeMode.Crop);
             image.EndDrawing();
 

@@ -73,7 +73,7 @@ namespace SS14.Client.Lighting
             Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
             Vector4 MaskProps = Vector4.Zero;
             Vector4 diffuseColor = Vector4.One;
-            
+
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
             ExecuteTechnique(distancesRT, distortRT, "Distort");
 
@@ -81,9 +81,9 @@ namespace SS14.Client.Lighting
             ApplyHorizontalReduction(distortRT, shadowMap);
 
             //only DrawShadows needs these vars
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("AttenuateShadows", attenuateShadows ? 0 : 1);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetParameter("DiffuseColor", diffuseColor);
+            resolveShadowsEffectTechnique["DrawShadows"].SetUniform("AttenuateShadows", attenuateShadows ? 0 : 1);
+            resolveShadowsEffectTechnique["DrawShadows"].SetUniform("MaskProps", MaskProps);
+            resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
 
             var maskSize = MaskTexture.Size;
             RenderImage MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
@@ -115,11 +115,11 @@ namespace SS14.Client.Lighting
 
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
 
-            resolveShadowsEffectTechnique[techniqueName].SetParameter("renderTargetSize", renderTargetSize.Convert());
+            resolveShadowsEffectTechnique[techniqueName].SetUniform("renderTargetSize", renderTargetSize);
             if (source != null)
-                resolveShadowsEffectTechnique[techniqueName].SetParameter("inputSampler", source);
+                resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
             if (shadowMap != null)
-                resolveShadowsEffectTechnique[techniqueName].SetParameter("shadowMapSampler", shadowMap);
+                resolveShadowsEffectTechnique[techniqueName].SetUniform("shadowMapSampler", shadowMap);
 
             // Blit and use normal sampler instead of doing that weird InputTexture bullshit
             // Use destination width/height otherwise you can see some cropping result erroneously.
@@ -145,8 +145,8 @@ namespace SS14.Client.Lighting
 
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
-                
-                reductionEffectTechnique["HorizontalReduction"].SetParameter("TextureDimensions",1.0f/src.Width);
+
+                reductionEffectTechnique["HorizontalReduction"].SetUniform("TextureDimensions",1.0f/src.Width);
 
                 // Sourcetexture not needed... just blit!
                 src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR

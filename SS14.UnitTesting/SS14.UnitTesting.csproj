@@ -46,18 +46,6 @@
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
-    <Reference Include="sfmlnet-graphics-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Third-Party\sfmlnet-graphics-2.dll</HintPath>
-    </Reference>
-    <Reference Include="sfmlnet-system-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Third-Party\sfmlnet-system-2.dll</HintPath>
-    </Reference>
-    <Reference Include="sfmlnet-window-2, Version=2.1.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Third-Party\sfmlnet-window-2.dll</HintPath>
-    </Reference>
     <Reference Include="YamlDotNet">
       <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
     </Reference>
@@ -115,6 +103,18 @@
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\System\sfml-system.csproj">
+      <Name>sfml-system</Name>
+      <Project>{31D24303-F6A9-4D53-BB03-A73EDCB3186D}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Window\sfml-window.csproj">
+      <Name>sfml-window</Name>
+      <Project>{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SFML\src\Graphics\sfml-graphics.csproj">
+      <Name>sfml-graphics</Name>
+      <Project>{46786269-57B9-48E7-AA4F-8F4D84609FE6}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

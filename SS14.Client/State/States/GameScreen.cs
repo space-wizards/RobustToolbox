@@ -1043,15 +1043,15 @@ namespace SS14.Client.State.States
                 {
                     desto.BeginDrawing();
 
-                    Lightmap.SetParameter("LightPosData", r_pos);
-                    Lightmap.SetParameter("Colors", r_col);
-                    Lightmap.SetParameter("light0", r_img[0]);
-                    Lightmap.SetParameter("light1", r_img[1]);
-                    Lightmap.SetParameter("light2", r_img[2]);
-                    Lightmap.SetParameter("light3", r_img[3]);
-                    Lightmap.SetParameter("light4", r_img[4]);
-                    Lightmap.SetParameter("light5", r_img[5]);
-                    Lightmap.SetParameter("sceneTexture", source);
+                    Lightmap.SetUniformArray("LightPosData", r_pos);
+                    Lightmap.SetUniformArray("Colors", r_col);
+                    Lightmap.SetUniform("light0", r_img[0]);
+                    Lightmap.SetUniform("light1", r_img[1]);
+                    Lightmap.SetUniform("light2", r_img[2]);
+                    Lightmap.SetUniform("light3", r_img[3]);
+                    Lightmap.SetUniform("light4", r_img[4]);
+                    Lightmap.SetUniform("light5", r_img[5]);
+                    Lightmap.SetUniform("sceneTexture", source);
 
                     // Blit the shadow image on top of the screen
                     source.Blit(0, 0, source.Width, source.Height, BlitterSizeMode.Crop);
@@ -1290,12 +1290,12 @@ namespace SS14.Client.State.States
             float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4(texratiox, texratioy, 0, 0);
 
-            LightblendTechnique["FinalLightBlend"].SetParameter("PlayerViewTexture", playerOcclusionTarget);
-            LightblendTechnique["FinalLightBlend"].SetParameter("OutOfViewTexture", outofview.Texture);
-            LightblendTechnique["FinalLightBlend"].SetParameter("MaskProps", maskProps);
-            LightblendTechnique["FinalLightBlend"].SetParameter("LightTexture", screenShadows);
-            LightblendTechnique["FinalLightBlend"].SetParameter("SceneTexture", _sceneTarget);
-            LightblendTechnique["FinalLightBlend"].SetParameter("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
+            LightblendTechnique["FinalLightBlend"].SetUniform("PlayerViewTexture", playerOcclusionTarget);
+            LightblendTechnique["FinalLightBlend"].SetUniform("OutOfViewTexture", outofview.Texture);
+            LightblendTechnique["FinalLightBlend"].SetUniform("MaskProps", maskProps);
+            LightblendTechnique["FinalLightBlend"].SetUniform("LightTexture", screenShadows);
+            LightblendTechnique["FinalLightBlend"].SetUniform("SceneTexture", _sceneTarget);
+            LightblendTechnique["FinalLightBlend"].SetUniform("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
 
             // Blit the shadow image on top of the screen
             screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);

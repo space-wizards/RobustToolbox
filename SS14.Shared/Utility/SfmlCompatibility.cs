@@ -31,6 +31,26 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
+        /// Converts a OpenTK Vector3 to a SFML Vector3.
+        /// </summary>
+        /// <param name="vec">OpenTK Vector3.</param>
+        /// <returns>SFML Vector3.</returns>
+        public static Vector3f Convert(this Vector3 vec)
+        {
+            return new Vector3f(vec.X, vec.Y, vec.Z);
+        }
+
+        /// <summary>
+        /// Converts a SFML Vector3 to a OpenTK Vector3.
+        /// </summary>
+        /// <param name="vec">SFML Vector3.</param>
+        /// <returns>OpenTK Vector3.</returns>
+        public static Vector3 Convert(this Vector3f vec)
+        {
+            return new Vector3(vec.X, vec.Y, vec.Z);
+        }
+
+        /// <summary>
         /// Converts a OpenTK Box2 to a SFML FloatRect.
         /// </summary>
         /// <param name="box">OpenTK Box2.</param>

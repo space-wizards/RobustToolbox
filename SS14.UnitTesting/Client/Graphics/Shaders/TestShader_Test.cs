@@ -42,7 +42,7 @@ namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
 
 
             GLSLShader currshader = resources.GetShader("RedShader");
-            currshader.SetParameter("TextureUnit0", testsprite.Texture);
+            currshader.SetUniform("TextureUnit0", testsprite.Texture);
             currshader.setAsCurrentShader();
             testsprite.Draw();
             testRenderImage.EndDrawing();

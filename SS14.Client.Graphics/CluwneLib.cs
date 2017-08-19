@@ -433,7 +433,7 @@ namespace SS14.Client.Graphics
         {
             Text _text = new Text(text, font);
             _text.Position = new SFML.System.Vector2f(posX, posY);
-            _text.Color = textColor;
+            _text.FillColor = textColor;
             _text.CharacterSize = size;
 
             CurrentRenderTarget.Draw(_text);

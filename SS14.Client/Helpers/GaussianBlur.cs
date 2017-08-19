@@ -214,18 +214,18 @@ namespace SS14.Client.Helpers
             SetUpIntermediateTarget(sourceImage.Width, sourceImage.Height);
             _intermediateTarget.BeginDrawing();
             _intermediateTarget.Clear(Color.Black);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetParameter("weights_offsets", WeightsOffsetsX.Select(v => v.Convert()).ToArray());
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetUniform("colorMapTexture", GLSLShader.CurrentTexture);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].SetUniformArray("weights_offsets", WeightsOffsetsX);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].setAsCurrentShader();
                 sourceImage.Blit(0, 0, sourceImage.Width, sourceImage.Height);
             _intermediateTarget.EndDrawing();
             GaussianBlurTechnique["GaussianBlur" + Radius + "Horizontal"].ResetCurrentShader();
 
 
-            //// blur the blur vertically
+            // blur the blur vertically
             sourceImage.BeginDrawing();
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("colorMapTexture", GLSLShader.CurrentTexture);
-                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetParameter("weights_offsets", WeightsOffsetsY.Select(v => v.Convert()).ToArray());
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetUniform("colorMapTexture", GLSLShader.CurrentTexture);
+                GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].SetUniformArray("weights_offsets", WeightsOffsetsY);
                 GaussianBlurTechnique["GaussianBlur" + Radius + "Vertical"].setAsCurrentShader() ;
                 _intermediateTarget.Blit(0, 0, _intermediateTarget.Width, _intermediateTarget.Height);
             sourceImage.EndDrawing();

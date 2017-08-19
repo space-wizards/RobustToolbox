@@ -2,7 +2,6 @@
 using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
-using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;

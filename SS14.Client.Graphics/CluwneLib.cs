@@ -6,13 +6,11 @@ using SFML.Window;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.View;
 using SS14.Client.Graphics.Utility;
-using System;
-using System.Reflection;
-using SS14.Shared.Network;
-using SS14.Shared.Timing;
+using SS14.Client.Graphics.View;
 using SS14.Shared.Maths;
+using SS14.Shared.Timing;
+using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
 
@@ -33,12 +31,10 @@ namespace SS14.Client.Graphics
         public static Vector2 WorldCenter { get; set; }
         public static Vector2u ScreenViewportSize { get; set; }
 
-
         /// <summary>
         /// Viewport scaling
         /// </summary>
         public static int TileSize { get; set; } = 32;
-
 
         public static Box2 WorldViewport
         {
@@ -84,7 +80,7 @@ namespace SS14.Client.Graphics
             }
         }
 
-        #endregion
+        #endregion Accessors
 
         static CluwneLib()
         {
@@ -99,7 +95,6 @@ namespace SS14.Client.Graphics
         /// Shamelessly taken from Gorgon.
         public static void Go()
         {
-
             if (!IsInitialized)
             {
                 Initialize();
@@ -120,7 +115,6 @@ namespace SS14.Client.Graphics
                         renderTargetArray[0] = Screen;
                     }
                 }
-
             }
 
             IsRunning = true;
@@ -163,7 +157,8 @@ namespace SS14.Client.Graphics
             IsInitialized = true;
 
             //Hook OpenTK into SFMLs Opengl
-            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions{
+            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions
+            {
                 // Non-Native backend doesn't have a default GetAddress method
                 Backend = OpenTK.PlatformBackend.PreferNative
             });
@@ -172,7 +167,7 @@ namespace SS14.Client.Graphics
 
         public static void RequestGC(Action action)
         {
-          action.Invoke();
+            action.Invoke();
         }
 
         public static void ClearCurrentRendertarget(Color color)
@@ -195,31 +190,27 @@ namespace SS14.Client.Graphics
         public static void Stop()
         {
             Console.WriteLine("CluwneLib: Stop() requested");
-            IsRunning=false;
+            IsRunning = false;
         }
-
 
         public static void UpdateVideoSettings()
         {
-           RefreshVideoSettings();
+            RefreshVideoSettings();
         }
 
-        #endregion
+        #endregion CluwneEngine
 
         #region RenderTarget Stuff
 
-
-
         public static void setAdditionalRenderTarget(int index, RenderTarget _target)
         {
-           renderTargetArray[index] = _target;
+            renderTargetArray[index] = _target;
         }
 
         public static RenderTarget getAdditionalRenderTarget(int index)
         {
             return renderTargetArray[index];
         }
-
 
         /// <summary>
         /// resets the Current Render Target back to the screen
@@ -237,9 +228,7 @@ namespace SS14.Client.Graphics
             CurrentShader = null;
         }
 
-
-
-        #endregion
+        #endregion RenderTarget Stuff
 
         #region Drawing Methods
 
@@ -281,7 +270,6 @@ namespace SS14.Client.Graphics
             CurrentRenderTarget.Draw(rectangle);
         }
 
-
         /// <summary>
         /// Draws a Hollow Rectangle to the Current RenderTarget
         /// </summary>
@@ -302,7 +290,7 @@ namespace SS14.Client.Graphics
 
             CurrentRenderTarget.Draw(HollowRect);
         }
-        #endregion
+        #endregion Rectangle
 
         #region Circle
         /// <summary>
@@ -320,8 +308,6 @@ namespace SS14.Client.Graphics
             Circle.FillColor = color;
 
             CurrentRenderTarget.Draw(Circle);
-
-
         }
         /// <summary>
         /// Draws a Hollow Circle to the CurrentRenderTarget
@@ -331,10 +317,10 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
         /// <param name="OutlineColor"> Circle outline Color </param>
-        public static void drawHollowCircle(int posX, int posY, int radius,float OutlineThickness, Color OutlineColor)
+        public static void drawHollowCircle(int posX, int posY, int radius, float OutlineThickness, Color OutlineColor)
         {
             CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2f(posX-radius, posY-radius);
+            Circle.Position = new Vector2f(posX - radius, posY - radius);
             Circle.Radius = radius;
             Circle.FillColor = Color.Transparent;
             Circle.OutlineThickness = OutlineThickness;
@@ -360,7 +346,7 @@ namespace SS14.Client.Graphics
 
             CurrentRenderTarget.Draw(Circle);
         }
-        #endregion
+        #endregion Circle
 
         #region Point
         /// <summary>
@@ -397,7 +383,7 @@ namespace SS14.Client.Graphics
             CurrentRenderTarget.Draw(hollowPoint);
         }
 
-        #endregion
+        #endregion Point
 
         #region Line
         /// <summary>
@@ -408,7 +394,7 @@ namespace SS14.Client.Graphics
         /// <param name="rotate"> Line Rotation </param>
         /// <param name="thickness"> Line Thickness </param>
         /// <param name="Color"> Line Color </param>
-        public static void drawLine(int posX, int posY, int rotate,float thickness, Color Color)
+        public static void drawLine(int posX, int posY, int rotate, float thickness, Color Color)
         {
             RectangleShape line = new RectangleShape();
             line.Position = new Vector2f(posX, posY);
@@ -419,7 +405,7 @@ namespace SS14.Client.Graphics
             CurrentRenderTarget.Draw(line);
         }
 
-        #endregion
+        #endregion Line
 
         #region Text
         /// <summary>
@@ -439,9 +425,9 @@ namespace SS14.Client.Graphics
 
             CurrentRenderTarget.Draw(_text);
         }
-        #endregion
+        #endregion Text
 
-        #endregion
+        #endregion Drawing Methods
 
         #region Client Window Data
 
@@ -540,6 +526,6 @@ namespace SS14.Client.Graphics
             );
         }
 
-        #endregion
+        #endregion Client Window Data
     }
 }

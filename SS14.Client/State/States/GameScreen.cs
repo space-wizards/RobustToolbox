@@ -2,7 +2,6 @@
 using OpenTK;
 using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
@@ -10,36 +9,34 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.Utility;
+using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Lighting;
-using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Helpers;
 using SS14.Client.Lighting;
-using SS14.Client.UserInterface.Components;
+using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared;
+using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
-using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Serialization;
+using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Configuration;
-using SS14.Shared.Interfaces.Configuration;
-using SS14.Client.Map;
-using SS14.Shared.Map;
-using SS14.Shared.Network;
-using SS14.Shared.Utility;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
@@ -500,11 +497,11 @@ namespace SS14.Client.State.States
             GC.Collect();
         }
 
-#endregion IState Members
+        #endregion IState Members
 
-#region Input
+        #region Input
 
-#region Keyboard
+        #region Keyboard
         public void KeyPressed(KeyEventArgs e)
         {
         }
@@ -585,9 +582,9 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-#endregion Keyboard
+        #endregion Keyboard
 
-#region Mouse
+        #region Mouse
         public void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
@@ -618,7 +615,7 @@ namespace SS14.Client.State.States
                 }
             }
 
-#region Object clicking
+            #region Object clicking
 
             // Convert our click from screen -> world coordinates
             float checkDistance = 1.5f;
@@ -646,10 +643,10 @@ namespace SS14.Client.State.States
             }
 
             IEntity entToClick = (from cd in clickedEntities
-                                    orderby cd.Drawdepth ascending,
-                                        cd.Clicked.GetComponent<ITransformComponent>().Position
-                                        .Y ascending
-                                    select cd.Clicked).Last();
+                                  orderby cd.Drawdepth ascending,
+                                      cd.Clicked.GetComponent<ITransformComponent>().Position
+                                      .Y ascending
+                                  select cd.Clicked).Last();
 
             if (PlacementManager.Eraser && PlacementManager.IsActive)
             {
@@ -673,7 +670,7 @@ namespace SS14.Client.State.States
                     return;
             }
 
-#endregion Object clicking
+            #endregion Object clicking
         }
 
         public void MouseMove(MouseMoveEventArgs e)
@@ -705,9 +702,9 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseLeft(e);
         }
-#endregion Mouse
+        #endregion Mouse
 
-#region Chat
+        #region Chat
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             var channel = (ChatChannel)msg.ReadByte();
@@ -748,13 +745,13 @@ namespace SS14.Client.State.States
             NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }
 
-#endregion Chat
+        #endregion Chat
 
-#endregion Input
+        #endregion Input
 
-#region Event Handlers
+        #region Event Handlers
 
-#region Buttons
+        #region Buttons
         private void menuButton_Clicked(ImageButton sender)
         {
             _menu.ToggleVisible();
@@ -770,9 +767,9 @@ namespace SS14.Client.State.States
             UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
         }
 
-#endregion Buttons
+        #endregion Buttons
 
-#region Messages
+        #region Messages
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
@@ -824,9 +821,9 @@ namespace SS14.Client.State.States
             }
         }
 
-#endregion Messages
+        #endregion Messages
 
-#region State
+        #region State
 
         /// <summary>
         /// HandleStateUpdate
@@ -850,7 +847,7 @@ namespace SS14.Client.State.States
             GameState fromState = _lastStates[delta.FromSequence];
             //Apply the delta
             GameState newState = fromState + delta;
-            newState.GameTime = (float) IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
+            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
 
             // Go ahead and store it even if our current state is newer than this one, because
             // a newer state delta may later reference this one.
@@ -927,7 +924,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-#endregion State
+        #endregion State
 
         private void OnPlayerMove(object sender, VectorEventArgs args)
         {
@@ -942,9 +939,9 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-#endregion Event Handlers
+        #endregion Event Handlers
 
-#region Lighting in order of call
+        #region Lighting in order of call
 
         /**
          *  Calculate lights In player view
@@ -1209,12 +1206,10 @@ namespace SS14.Client.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-
             Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
             var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
             var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
-
 
             foreach (TileRef t in tiles)
             {
@@ -1326,9 +1321,9 @@ namespace SS14.Client.State.States
             PlayerManager.ApplyEffects(_composedSceneTarget);
         }
 
-#endregion Lighting in order of call
+        #endregion Lighting in order of call
 
-#region Helper methods
+        #region Helper methods
 
         private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
         {
@@ -1422,9 +1417,9 @@ namespace SS14.Client.State.States
             debugWallOccluders = !debugWallOccluders;
         }
 
-#endregion Helper methods
+        #endregion Helper methods
 
-#region Nested type: ClickData
+        #region Nested type: ClickData
 
         private struct ClickData
         {
@@ -1438,6 +1433,6 @@ namespace SS14.Client.State.States
             }
         }
 
-#endregion Nested type: ClickData
+        #endregion Nested type: ClickData
     }
 }

@@ -48,9 +48,9 @@ namespace SS14.Client.GameObjects
         ///     gets the AABB from the sprite component and sends it to the CollisionManager.
         /// </summary>
         /// <param name="owner"></param>
-        public override void OnAdd(IEntity owner)
+        public override void Initialize()
         {
-            base.OnAdd(owner);
+            base.Initialize();
 
             if (collisionEnabled)
             {

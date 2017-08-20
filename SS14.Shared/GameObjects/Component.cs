@@ -29,7 +29,7 @@ namespace SS14.Shared.GameObjects
         public virtual Type StateType => typeof(ComponentState);
 
         /// <inheritdoc />
-        event Action<ComponentShutdownEventArgs> OnShutdown;
+        public event Action<ComponentShutdownEventArgs> OnShutdown;
 
         /// <inheritdoc />
         public virtual void OnRemove()

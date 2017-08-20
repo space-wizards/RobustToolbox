@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -12,7 +13,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -76,7 +77,7 @@ namespace SS14.Client.UserInterface.Components
             components.Add(_lstOverride);
 
             _clearLabel.Clicked += ClearLabelClicked;
-            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+            _clearLabel.BackgroundColor = Color4.Gray;
             components.Add(_clearLabel);
 
             _eraserButton = new ImageButton
@@ -124,7 +125,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+            _clearLabel.BackgroundColor = Color4.Gray;
             BuildEntityList();
         }
 
@@ -164,7 +165,7 @@ namespace SS14.Client.UserInterface.Components
                                    .Select(p => new KeyValuePair<string, EntityPrototype>(p.ID, p));
             }
 
-            if (searchStr != null) _clearLabel.BackgroundColor = new SFML.Graphics.Color(211, 211, 211);
+            if (searchStr != null) _clearLabel.BackgroundColor = new Color4(211, 211, 211, 255);
 
             foreach (
                 EntitySpawnSelectButton newButton in
@@ -226,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
             if (disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? new SFML.Graphics.Color(255, 99, 71) : SFML.Graphics.Color.White;
+            _eraserButton.Color = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
             base.Render();
         }
 

@@ -1,6 +1,8 @@
-﻿using SFML.System;
+﻿using OpenTK.Graphics;
+using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -82,21 +84,21 @@ namespace SS14.Client.Network
                                         (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].ReceivedBytes * 0.1f),
                                         2,
                                         (int)(_dataPoints[i].ReceivedBytes * 0.1f),
-                                        SFML.Graphics.Color.Red.WithAlpha(180));
+                                        new Color4(255, 0, 0, 180));
 
                 CluwneLib.drawRectangle((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * (MaxDataPoints - i)) + 2,
                                         (int)CluwneLib.CurrentRenderTarget.Size.Y - (int)(_dataPoints[i].SentBytes * 0.1f),
                                         2,
                                         (int)(_dataPoints[i].SentBytes * 0.1f),
-                                        new SFML.Graphics.Color(0, 128, 0).WithAlpha(180));
+                                        new Color4(0, 128, 0, 180));
             }
 
             _textSprite.Text = String.Format("Up: {0} kb/s.", Math.Round(totalSentBytes / totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30);
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 30).Convert();
             _textSprite.Draw();
 
             _textSprite.Text = String.Format("Down: {0} kb/s.", Math.Round(totalRecBytes / totalMilliseconds, 6));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60);
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - (4 * MaxDataPoints) - 100, (int)CluwneLib.CurrentRenderTarget.Size.Y - 60).Convert();
             _textSprite.Draw();
         }
 

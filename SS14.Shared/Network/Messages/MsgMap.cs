@@ -1,6 +1,5 @@
 ﻿using System;
 using Lidgren.Network;
-using SFML.System;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -37,7 +36,7 @@ namespace SS14.Shared.Network.Messages
             public string Name { get; set; }
             public uint Tile { get; set; }
         }
-    
+
         public class ChunkDef
         {
             public int X { get; set; }

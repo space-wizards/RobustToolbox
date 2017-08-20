@@ -20,7 +20,7 @@ using System.Reflection;
 using SFML.Graphics;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

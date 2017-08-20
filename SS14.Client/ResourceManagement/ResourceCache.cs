@@ -6,6 +6,7 @@ using SFML.System;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
@@ -507,7 +508,7 @@ namespace SS14.Client.Resources
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
-                    new Sprite(atlasTex, Box2i.FromDimensions((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
+                    new Sprite(atlasTex, new SFML.Graphics.IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
             }
 
             return loadedSprites;
@@ -540,7 +541,7 @@ namespace SS14.Client.Resources
             {
                 Name = name,
                 Offsets = new Vector2(0, 0),
-                Size = (Vector2)(Vector2u)texture.Size,
+                Size = texture.Size.Convertf(),
             };
 
             var sprite = new Sprite(texture);

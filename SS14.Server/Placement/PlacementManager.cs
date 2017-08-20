@@ -1,5 +1,4 @@
-﻿using SFML.System;
-using SS14.Server.GameObjects;
+﻿using SS14.Server.GameObjects;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;

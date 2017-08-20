@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -20,12 +21,12 @@ namespace SS14.Client.UserInterface.Components
         #endregion
 
         private readonly IResourceCache _resourceCache;
-        public Color BackgroundColor = new Color(128, 128, 128);
-        public Color BorderColor = Color.Black;
+        public Color4 BackgroundColor = Color4.Gray;
+        public Color4 BorderColor = Color4.Black;
         public float BorderWidth = 2f;
         public int FixedHeight = -1;
         public int FixedWidth = -1;
-        public Color HighlightColor = new Color(128, 128, 128);
+        public Color4 HighlightColor = Color4.Gray;
         public TextSprite Text;
 
 

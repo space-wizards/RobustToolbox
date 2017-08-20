@@ -1,5 +1,4 @@
 ﻿using System;
-using SFML.System;
 using OpenTK;
 using SS14.Shared.GameStates;
 using System.Collections.Generic;

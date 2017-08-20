@@ -1,5 +1,4 @@
-﻿using SFML.System;
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;

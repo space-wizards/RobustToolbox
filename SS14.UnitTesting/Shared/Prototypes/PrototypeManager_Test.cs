@@ -1,17 +1,14 @@
-﻿using SFML.System;
-using SFML.Graphics;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using OpenTK;
+using OpenTK.Graphics;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
-using SS14.Shared.Prototypes;
-using SS14.Shared.GameObjects;
-using SS14.Shared.Utility;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
+using SS14.Shared.Utility;
 using System.IO;
-using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.UnitTesting.SS14.Shared.Prototypes
 {
@@ -80,7 +77,7 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
             Assert.That(componentData["vec2i"].AsVector2i(), Is.EqualTo(new Vector2i(1, 1)));
             Assert.That(componentData["vec3"].AsVector3(), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
             Assert.That(componentData["vec4"].AsVector4(), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC)));
+            Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color4(0xAA, 0xBB, 0xCC, 0xFF)));
             Assert.That(componentData["enumf"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Foo));
             Assert.That(componentData["enumb"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Bar));
         }
@@ -90,7 +87,7 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
         {
             var prototype = manager.Index<EntityPrototype>("mounttester");
 
-            Assert.That(prototype.MountingPoints, Is.EquivalentTo(new int[] {1, 2, 3}));
+            Assert.That(prototype.MountingPoints, Is.EquivalentTo(new int[] { 1, 2, 3 }));
             Assert.That(prototype.PlacementMode, Is.EqualTo("AlignWall"));
             Assert.That(prototype.PlacementRange, Is.EqualTo(300));
             Assert.That(prototype.PlacementOffset, Is.EqualTo(new Vector2i(30, 45)));
@@ -160,4 +157,3 @@ namespace SS14.UnitTesting.SS14.Shared.Prototypes
         public override string Name => "TestBasicPrototypeComponent";
     }
 }
-

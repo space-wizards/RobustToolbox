@@ -1,7 +1,5 @@
 ﻿// From http://csharpquadtree.codeplex.com/
 
-using SFML.Graphics;
-using SFML.System;
 using OpenTK;
 using SS14.Shared.Maths;
 using System;

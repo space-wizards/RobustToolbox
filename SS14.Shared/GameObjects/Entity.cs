@@ -323,12 +323,12 @@ namespace SS14.Shared.GameObjects
             RemoveComponent(GetComponent(type));
         }
 
-        public void RemoveComponent<T>() where T : IComponent
+        public void RemoveComponent<T>()
         {
-            RemoveComponent(GetComponent<T>());
+            RemoveComponent((IComponent)GetComponent<T>());
         }
 
-        public bool HasComponent<T>() where T : IComponent
+        public bool HasComponent<T>()
         {
             return HasComponent(typeof(T));
         }
@@ -343,7 +343,7 @@ namespace SS14.Shared.GameObjects
             return _netIDs.ContainsKey(netID);
         }
 
-        public T GetComponent<T>() where T : IComponent
+        public T GetComponent<T>()
         {
             return (T)_componentReferences[typeof(T)];
         }
@@ -358,7 +358,7 @@ namespace SS14.Shared.GameObjects
             return _netIDs[netID];
         }
 
-        public bool TryGetComponent<T>(out T component) where T : class, IComponent
+        public bool TryGetComponent<T>(out T component) where T : class
         {
             if (!_componentReferences.ContainsKey(typeof(T)))
             {
@@ -397,7 +397,7 @@ namespace SS14.Shared.GameObjects
             return _components;
         }
 
-        public IEnumerable<T> GetComponents<T>() where T : IComponent
+        public IEnumerable<T> GetComponents<T>()
         {
             return _components.OfType<T>();
         }

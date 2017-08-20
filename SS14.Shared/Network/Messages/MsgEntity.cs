@@ -21,9 +21,6 @@ namespace SS14.Shared.Network.Messages
         { }
         #endregion
 
-        [Dependency]
-        private readonly ISS14Serializer serializer;
-
         public EntityMessage Type { get; set; }
 
         public EntitySystemMessage SystemMessage { get; set; }
@@ -41,6 +38,7 @@ namespace SS14.Shared.Network.Messages
             switch (Type)
             {
                 case EntityMessage.SystemMessage:
+                    ISS14Serializer serializer = IoCManager.Resolve<ISS14Serializer>();
                     int messageLength = buffer.ReadInt32();
                     using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
                     {
@@ -62,6 +60,7 @@ namespace SS14.Shared.Network.Messages
             switch (Type)
             {
                 case EntityMessage.SystemMessage:
+                    ISS14Serializer serializer = IoCManager.Resolve<ISS14Serializer>();
                     using (var stream = new MemoryStream())
                     {
                         serializer.Serialize(stream, SystemMessage);

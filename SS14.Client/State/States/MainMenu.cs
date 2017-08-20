@@ -19,6 +19,10 @@ namespace SS14.Client.State.States
     {
         #region Fields
 
+        /// <summary>
+        /// Default port that the client tries to connect to if no other port is specified.
+        /// </summary>
+        public const ushort DEFAULT_PORT = 1212;
         private const float ConnectTimeOut = 5000.0f;
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
@@ -263,14 +267,39 @@ namespace SS14.Client.State.States
 
         public void StartConnect(string address)
         {
-            if (_isConnecting) return;
+            if (_isConnecting)
+            {
+                return;
+            }
 
-            if (NetUtility.Resolve(address) == null)
+            // See if the IP includes a port.
+            var split = address.Split(':');
+            string ip = address;
+            ushort port = DEFAULT_PORT;
+            if (split.Length > 2)
+            {
+                // Multiple colons?
                 throw new InvalidOperationException("Not a valid Address.");
+            }
+
+            // IP:port format.
+            if (split.Length == 2)
+            {
+                ip = split[0];
+                if (!ushort.TryParse(split[1], out port))
+                {
+                    throw new InvalidOperationException("Not a valid port.");
+                }
+            }
+
+            if (NetUtility.Resolve(ip, port) == null)
+            {
+                throw new InvalidOperationException("Not a valid Address.");
+            }
 
             _connectTime = DateTime.Now;
             _isConnecting = true;
-            NetworkManager.ClientConnect(address, 1212);
+            NetworkManager.ClientConnect(ip, port);
         }
 
         #endregion

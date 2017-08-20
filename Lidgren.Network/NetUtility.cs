@@ -263,7 +263,7 @@ namespace Lidgren.Network
 			}
 			return new string(c);
 		}
-		
+
 		/// <summary>
 		/// Gets the local broadcast address
 		/// </summary>
@@ -275,7 +275,7 @@ namespace Lidgren.Network
 			if (wifi.IsWifiEnabled)
 			{
 				var dhcp = wifi.DhcpInfo;
-					
+
 				int broadcast = (dhcp.IpAddress & dhcp.Netmask) | ~dhcp.Netmask;
 	    		byte[] quads = new byte[4];
 	    		for (int k = 0; k < 4; k++)
@@ -289,7 +289,7 @@ namespace Lidgren.Network
 			{
 				return IPAddress.Broadcast;
 			}
-#endif		
+#endif
 #if IS_FULL_NET_AVAILABLE
 			try
 			{
@@ -298,7 +298,7 @@ namespace Lidgren.Network
 				{
 					return null;
 				}
-	
+
 				IPInterfaceProperties properties = ni.GetIPProperties();
 				foreach (UnicastIPAddressInformation unicastAddress in properties.UnicastAddresses)
 				{
@@ -307,24 +307,24 @@ namespace Lidgren.Network
 						var mask = unicastAddress.IPv4Mask;
 						byte[] ipAdressBytes = unicastAddress.Address.GetAddressBytes();
 				        byte[] subnetMaskBytes = mask.GetAddressBytes();
-				
+
 				        if (ipAdressBytes.Length != subnetMaskBytes.Length)
 				            throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
-				
+
 				        byte[] broadcastAddress = new byte[ipAdressBytes.Length];
 				        for (int i = 0; i < broadcastAddress.Length; i++)
 				        {
 				            broadcastAddress[i] = (byte)(ipAdressBytes[i] | (subnetMaskBytes[i] ^ 255));
 				        }
-				        return new IPAddress(broadcastAddress);				
+				        return new IPAddress(broadcastAddress);
 					}
 				}
 			}
-			catch // Catch any errors 
+			catch // Catch any errors
 			{
 			    return IPAddress.Broadcast;
 			}
-#endif		
+#endif
 			return IPAddress.Broadcast;
 		}
 
@@ -340,21 +340,21 @@ namespace Lidgren.Network
 				Android.Net.Wifi.WifiManager wifi = (Android.Net.Wifi.WifiManager)Android.App.Application.Context.GetSystemService(Android.App.Activity.WifiService);
 				if (!wifi.IsWifiEnabled) return null;
 				var dhcp = wifi.DhcpInfo;
-					
+
 				int addr = dhcp.IpAddress;
 	    		byte[] quads = new byte[4];
 	    		for (int k = 0; k < 4; k++)
 				{
 	      			quads[k] = (byte) ((addr >> k * 8) & 0xFF);
-				}			
+				}
 				return new IPAddress(quads);
 			}
 			catch // Catch Access Denied errors
 			{
 				return null;
 			}
-				
-#endif			
+
+#endif
 #if IS_FULL_NET_AVAILABLE
 			NetworkInterface ni = GetNetworkInterface();
 			if (ni == null)

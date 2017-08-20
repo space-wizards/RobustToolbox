@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
@@ -44,7 +45,7 @@ namespace SS14.Client.Placement
                 spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
                 spriteToDraw = new Sprite(spriteToDraw);
             }
-            
+
             var bounds = spriteToDraw.GetLocalBounds().Convert();
             spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
             spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),

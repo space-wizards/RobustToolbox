@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -228,7 +229,7 @@ namespace SS14.Client.UserInterface.Components
         {
             Text.Position = Position;
             ClientArea = Box2i.FromDimensions(Position, new Vector2i(_width, (int) Text.Height));
-            BackgroundColor = Selected ? new Color(47, 79, 79) : new Color(128, 128, 128);
+            BackgroundColor = Selected ? new Color4(47, 79, 79, 255) : Color4.Gray;
         }
     }
 }

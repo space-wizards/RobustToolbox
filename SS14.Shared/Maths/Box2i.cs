@@ -1,5 +1,4 @@
 using OpenTK;
-using SFML.Graphics;
 using SS14.Shared.Utility;
 using System;
 
@@ -91,16 +90,6 @@ namespace SS14.Shared.Maths
             code = (code * 929) ^ Top.GetHashCode();
             code = (code * 929) ^ Bottom.GetHashCode();
             return code;
-        }
-
-        public static implicit operator Box2i(IntRect rect)
-        {
-            return Box2i.FromDimensions(rect.Left, rect.Top, rect.Width, rect.Height);
-        }
-
-        public static implicit operator IntRect(Box2i box)
-        {
-            return new IntRect(box.Left, box.Top, box.Width, box.Height);
         }
     }
 }

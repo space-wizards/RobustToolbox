@@ -2,6 +2,7 @@ using OpenTK;
 using SFML.System;
 using SFML.Graphics.Glsl;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System.Diagnostics;

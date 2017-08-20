@@ -1,6 +1,7 @@
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics.Collection;
+using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using System;
 using System.Runtime.InteropServices;

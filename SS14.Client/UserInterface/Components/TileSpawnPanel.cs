@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
@@ -8,6 +9,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
 using System.Linq;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -42,7 +44,7 @@ namespace SS14.Client.UserInterface.Components
                               };
 
             _clearLabel.Clicked += ClearLabelClicked;
-            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+            _clearLabel.BackgroundColor = Color4.Gray;
             components.Add(_clearLabel);
 
             BuildTileList();
@@ -54,7 +56,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void ClearLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            _clearLabel.BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+            _clearLabel.BackgroundColor = Color4.Gray;
             BuildTileList();
         }
 
@@ -66,7 +68,7 @@ namespace SS14.Client.UserInterface.Components
         private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
             foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
-                ((Label) curr).BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                ((Label) curr).BackgroundColor = Color4.Gray;
         }
 
         private void BuildTileList(string searchStr = null)
@@ -82,7 +84,7 @@ namespace SS14.Client.UserInterface.Components
             if (!string.IsNullOrEmpty(searchStr))
             {
                 tileDefs = tileDefs.Where(s => s.IndexOf(searchStr, StringComparison.InvariantCultureIgnoreCase) >= 0);
-                _clearLabel.BackgroundColor = new SFML.Graphics.Color(211, 211, 211);
+                _clearLabel.BackgroundColor = new Color4(211, 211, 211, 255);
             }
 
             foreach (string entry in tileDefs)
@@ -105,7 +107,7 @@ namespace SS14.Client.UserInterface.Components
         private void TileLabelClicked(Label sender, MouseButtonEventArgs e)
         {
             foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
-                ((Label) curr).BackgroundColor = new SFML.Graphics.Color(128, 128, 128);
+                ((Label) curr).BackgroundColor = Color4.Gray;
 
             var newObjInfo = new PlacementInformation
                                  {
@@ -117,7 +119,7 @@ namespace SS14.Client.UserInterface.Components
 
             _placementManager.BeginPlacing(newObjInfo);
 
-            sender.BackgroundColor = new SFML.Graphics.Color(34, 139, 34);
+            sender.BackgroundColor = new Color4(34, 139, 34, 255);
         }
 
         public override void Update(float frameTime)

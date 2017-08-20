@@ -79,7 +79,6 @@
     <Compile Include="Shared\Reflection\ReflectionManager_Test.cs" />
     <Compile Include="Shared\Utility\CollectionExtensions_Test.cs" />
     <Compile Include="Shared\Utility\YamlHelpers_Test.cs" />
-    <Compile Include="Shared\Math\SfmlExt_Test.cs" />
     <Compile Include="SS14UnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

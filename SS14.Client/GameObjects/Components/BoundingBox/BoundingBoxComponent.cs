@@ -34,11 +34,11 @@ namespace SS14.Client.GameObjects
                 var trans = Owner.GetComponent<ITransformComponent>();
                 var bounds = AABB;
 
-                return new FloatRect(
+                return Box2.FromDimensions(
                     bounds.Left + trans.Position.X,
                     bounds.Top + trans.Position.Y,
                     bounds.Width,
-                    bounds.Height).Convert();
+                    bounds.Height);
             }
         }
 

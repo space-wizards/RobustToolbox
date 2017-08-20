@@ -8,7 +8,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Maths;
 using System.Linq;
 using SS14.Client.ResourceManagement;
-using Vector2i = SFML.System.Vector2i;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {

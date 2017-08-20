@@ -2,7 +2,7 @@
 using SFML.System;
 using System;
 
-namespace SS14.Shared.Maths
+namespace SS14.Client.Graphics.Utility
 {
     public static class SfmlExt
     {
@@ -59,59 +59,6 @@ namespace SS14.Shared.Maths
                 (byte)(color >> 0),
                 (byte)(color >> 24)));
 
-        /// <summary>
-        /// Values used internally by <see cref="DirectionTo" />
-        /// </summary>
-        private static Direction[] AngleDirections = new Direction[]
-        {
-            Direction.East,
-            Direction.NorthEast,
-            Direction.North,
-            Direction.NorthWest,
-            Direction.West,
-            Direction.SouthWest,
-            Direction.South,
-            Direction.SouthEast,
-            Direction.East
-        };
-
-        /// <summary>
-        /// Find the direction that <paramref name="target" /> is from <paramref name="origin" />.
-        /// </summary>
-        /// <param name="origin">The origin vector.</param>
-        /// <param name="target">The target vector.</param>
-        /// <param name="fallback">The direction used if no direction could be calculated (difference between vectors too small).</param>
-        public static Direction DirectionTo(this Vector2f origin, Vector2f target, Direction fallback=Direction.South)
-        {
-            var mag1 = origin.Magnitude();
-            var mag2 = target.Magnitude();
-            // Check whether the vectors are almost zero.
-            // Don't use == because equality checking on floats is dangerous and unreliable.
-            // If the range is too wide go ahead and make it smaller.
-            if (mag1 < 0.0001 && mag1 > -0.0001 && mag2 < 0.0001 && mag2 > -0.0001)
-            {
-                return fallback;
-            }
-
-            // Angle in degrees.
-            // Keep in mind: Cartesian plane so 0° is to the right.
-            var angle = FloatMath.ToDegrees((float)Math.Atan2(target.Y - origin.Y, target.X - origin.X));
-
-            // The directions are assumed to be perfect 45° surfaces.
-            // So 0° is between the east one, and 22.5° is the edge between east and north east.
-
-            // Wrap negative angles around so we're always dealing with positives.
-            if (angle < 0)
-            {
-                angle += 360;
-            }
-
-            // Add 22.5° to offset the angles since 0° is inside one.
-            angle += 22.5f;
-
-            int dirindex = FloatMath.Clamp((int)Math.Floor(angle / 45f), 0, 8);
-            return AngleDirections[dirindex];
-        }
 
         /// <summary>
         /// Returns the dot product of two vectors

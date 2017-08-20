@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -141,7 +142,7 @@ namespace SS14.Client.UserInterface.Components
             scrollbarV.Render();
 
             if (DrawBorder)
-                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderSize, Color.Black);
+                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderSize, Color4.Black);
             clippingRI.EndDrawing();
         }
 

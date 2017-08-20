@@ -1,7 +1,9 @@
 ﻿using SFML.Graphics;
 using SFML.System;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client.Graphics.Interface;
+using SS14.Client.Graphics.Utility;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -62,7 +64,7 @@ namespace SS14.Client.Graphics.Sprite
             if (CluwneLib.Debug.DebugTextboxes)
             {
                 var fr = _textSprite.GetGlobalBounds().Convert();
-                CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);
+                CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color4.Red);
             }
         }
 

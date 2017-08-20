@@ -72,9 +72,9 @@ namespace SS14.Shared.Maths
             return new Vector2(vector.X, vector.Y);
         }
 
-        public static implicit operator Vector2u(SFML.System.Vector2u vector)
+        public static explicit operator Vector2u(Vector2 vector)
         {
-            return new Vector2u(vector.X, vector.Y);
+            return new Vector2u((uint)vector.X, (uint)vector.Y);
         }
     }
 }

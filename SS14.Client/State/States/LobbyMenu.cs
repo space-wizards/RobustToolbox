@@ -116,7 +116,7 @@ namespace SS14.Client.State.States
             _lblPort.Text.Color = new SFML.Graphics.Color(245, 245, 245);
             _serverLabels.Add(_lblPort);
 
-            _lblPortInfo = new Label("1212", "MICROGME", ResourceCache);
+            _lblPortInfo = new Label(MainScreen.DEFAULT_PORT.ToString(), "MICROGME", ResourceCache);
             _lblPortInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
             _serverLabels.Add(_lblPortInfo);
 

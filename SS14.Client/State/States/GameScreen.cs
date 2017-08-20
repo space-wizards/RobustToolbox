@@ -162,19 +162,18 @@ namespace SS14.Client.State.States
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
-
-            NetworkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entityManager.HandleEntityNetworkMessage((MsgEntity)message));
+            
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
-            NetOutgoingMessage message1 = NetworkManager.CreateMessage();
-            message1.Write((byte)NetMessages.RequestMap);
-            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableUnordered);
+            NetOutgoingMessage message = NetworkManager.CreateMessage();
+            message.Write((byte)NetMessages.RequestMap);
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message2 = NetworkManager.CreateMessage();
-            message2.Write((byte)NetMessages.ClientName);
-            message2.Write(ConfigurationManager.GetCVar<string>("player.name"));
-            NetworkManager.ClientSendMessage(message2, NetDeliveryMethod.ReliableOrdered);
+            var message1 = NetworkManager.CreateMessage();
+            message1.Write((byte)NetMessages.ClientName);
+            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
+            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceCache);

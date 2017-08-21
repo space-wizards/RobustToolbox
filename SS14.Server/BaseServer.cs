@@ -193,7 +193,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int) MsgJoinGame.ID, HandleErrorMessage);
             netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int) MsgRestartReq.ID, message => Restart());
 
-            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int) MsgEntity.ID, message => _entities.HandleEntityNetworkMessage(((MsgEntity) message).Output));
+            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int) MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity) message));
             netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int) MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin) message));
             // Not converted yet: NetMessages.StateUpdate
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
@@ -520,7 +520,7 @@ namespace SS14.Server
             }
 
             var stateMessage = generateStateMessage(c, state);
-            netMan.Peer.SendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+            netMan.ServerSendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
         private GameState CreateGameState()
@@ -536,7 +536,7 @@ namespace SS14.Server
         {
             var netMan = IoCManager.Resolve<IServerNetManager>();
             var stateManager = IoCManager.Resolve<IGameStateManager>();
-            var stateMessage = netMan.Peer.CreateMessage();
+            var stateMessage = netMan.CreateMessage();
             var lastStateAcked = stateManager.GetLastStateAcked(c);
 
             if (lastStateAcked == 0) // || forceFullState)

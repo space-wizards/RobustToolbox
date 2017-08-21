@@ -1,13 +1,13 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.GameObjects
 {
     public interface IEntityNetworkManager
     {
-        NetOutgoingMessage CreateEntityMessage();
-
         /// <summary>
         /// Allows a component owned by this entity to send a message to a counterpart component on the
         /// counterpart entities on all clients.
@@ -42,21 +42,14 @@ namespace SS14.Shared.GameObjects
         /// <param name="recipient">Intended recipient of the message</param>
         /// <param name="messageParams">Parameters of the message</param>
         void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID, NetDeliveryMethod method,
-                                                 NetConnection recipient, params object[] messageParams);
+                                                 INetChannel recipient, params object[] messageParams);
 
         /// <summary>
         /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
         /// </summary>
         /// <param name="message">raw network message</param>
         /// <returns>An IncomingEntityMessage object</returns>
-        IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message);
-
-        /// <summary>
-        /// Handles an incoming entity component message
-        /// </summary>
-        /// <param name="message">Raw network message</param>
-        /// <returns>An IncomingEntityComponentMessage object</returns>
-        IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message);
+        IncomingEntityMessage HandleEntityNetworkMessage(MsgEntity message);
 
         /// <summary>
         /// Sends an arbitrary entity network message

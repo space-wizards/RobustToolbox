@@ -28,6 +28,8 @@ using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
+using SS14.Shared.Network.Messages;
+using SS14.Client.Interfaces.GameObjects;
 
 namespace SS14.Client
 {
@@ -101,6 +103,8 @@ namespace SS14.Client
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
             _mapManager.Initialize();
+
+            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _stateManager.RequestStateChange<MainScreen>();
 

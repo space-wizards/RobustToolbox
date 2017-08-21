@@ -1,6 +1,7 @@
 ﻿using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -59,7 +60,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <param name="sysMsg">The message to route.</param>
         /// <seealso cref="RegisterMessageType{T}(IEntitySystem)"/>
         /// <seealso cref="IEntitySystem.HandleNetMessage(EntitySystemMessage)"/>
-        void HandleSystemMessage(EntitySystemData sysMsg);
+        void HandleSystemMessage(MsgEntity sysMsg);
 
         /// <summary>
         /// Update all systems.

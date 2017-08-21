@@ -40,6 +40,7 @@ using System.Linq;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.State.States
 {
@@ -160,15 +161,15 @@ namespace SS14.Client.State.States
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
-
+            
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
-            NetOutgoingMessage message = NetworkManager.Peer.CreateMessage();
+            NetOutgoingMessage message = NetworkManager.CreateMessage();
             message.Write((byte)NetMessages.RequestMap);
             NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
 
             // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message1 = NetworkManager.Peer.CreateMessage();
+            var message1 = NetworkManager.CreateMessage();
             message1.Write((byte)NetMessages.ClientName);
             message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
             NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
@@ -806,9 +807,6 @@ namespace SS14.Client.State.States
                             break;
                         case NetMessages.ChatMessage:
                             HandleChatMessage(message);
-                            break;
-                        case NetMessages.EntityMessage:
-                            _entityManager.HandleEntityNetworkMessage(message);
                             break;
                         case NetMessages.StateUpdate:
                             HandleStateUpdate(message);

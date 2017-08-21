@@ -83,6 +83,12 @@ namespace SS14.Shared.Interfaces.GameObjects
         bool Match(IEntityQuery query);
 
         /// <summary>
+        /// A generic update method that gets called on the entity every frame.
+        /// </summary>
+        /// <param name="frameTime">The time since the last update, in seconds.</param>
+        void Update(float frameTime);
+
+        /// <summary>
         ///     Public method to add a component to an entity.
         ///     Calls the component's onAdd method, which also adds it to the component manager.
         /// </summary>

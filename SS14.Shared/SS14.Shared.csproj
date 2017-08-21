@@ -264,8 +264,7 @@
     <Compile Include="GameObjects\IEntityNetworkManager.cs" />
     <Compile Include="GameObjects\ParticleSettings.cs" />
     <Compile Include="GameObjects\StaticConstants.cs" />
-    <Compile Include="GameObjects\System\EntityEventHandlingSystem.cs" />
-    <Compile Include="GameObjects\System\EntityProcessingSystem.cs" />
+    <Compile Include="GameObjects\System\EntityUpdateSystem.cs" />
     <Compile Include="GameObjects\System\EntitySystem.cs" />
     <Compile Include="GameObjects\Components\Collidable\CollidableComponentState.cs" />
     <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponentState.cs" />

@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System;
@@ -149,7 +150,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
         public void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
-                                                        NetConnection recipient, params object[] messageParams)
+                                                        INetChannel recipient, params object[] messageParams)
         {
             if (component.NetID == null)
             {
@@ -172,10 +173,10 @@ namespace SS14.Shared.GameObjects
         /// <param name="message"></param>
         public virtual void HandleNetworkMessage(IncomingEntityMessage message)
         {
-            switch (message.MessageType)
+            switch (message.Message.Type)
             {
                 case EntityMessage.ComponentMessage:
-                    HandleComponentMessage((IncomingEntityComponentMessage)message.Message, message.Sender);
+                    HandleComponentMessage(new IncomingEntityComponentMessage(message.Message.NetId, message.Message.Parameters), message.Message.Sender);
                     break;
             }
         }

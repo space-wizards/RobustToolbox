@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +53,7 @@ namespace SS14.Client.GameObjects
         }
 
         public void SendDirectedComponentNetworkMessage(IEntity sendingEntity, uint netID,
-                                                        NetDeliveryMethod method, NetConnection recipient,
+                                                        NetDeliveryMethod method, INetChannel recipient,
                                                         params object[] messageParams)
         {
             throw new NotImplementedException();
@@ -187,92 +188,21 @@ namespace SS14.Client.GameObjects
         /// </summary>
         /// <param name="message">raw network message</param>
         /// <returns>An IncomingEntityMessage object</returns>
-        public IncomingEntityMessage HandleEntityNetworkMessage(NetIncomingMessage message)
+        public IncomingEntityMessage HandleEntityNetworkMessage(MsgEntity message)
         {
-            var messageType = (EntityMessage)message.ReadByte();
-            int uid;
-            IncomingEntityMessage result = IncomingEntityMessage.Null;
-
-            switch (messageType)
+            switch (message.Type)
             {
                 case EntityMessage.ComponentMessage:
-                    uid = message.ReadInt32();
-                    IncomingEntityComponentMessage messageContent = HandleEntityComponentNetworkMessage(message);
-                    result = new IncomingEntityMessage(uid, EntityMessage.ComponentMessage, messageContent,
-                                                       message.SenderConnection);
-
-                    break;
+                    return new IncomingEntityMessage(message);
                 case EntityMessage.SystemMessage: //TODO: Not happy with this resolving the entmgr everytime a message comes in.
                     var manager = IoCManager.Resolve<IEntitySystemManager>();
-                    manager.HandleSystemMessage(new EntitySystemData(message.SenderConnection, message));
+                    manager.HandleSystemMessage(message);
                     break;
                 case EntityMessage.PositionMessage:
-                    uid = message.ReadInt32();
                     //TODO: Handle position messages!
                     break;
             }
-            return result;
-        }
-
-        /// <summary>
-        /// Handles an incoming entity component message
-        /// </summary>
-        /// <param name="message">Raw network message</param>
-        /// <returns>An IncomingEntityComponentMessage object</returns>
-        public IncomingEntityComponentMessage HandleEntityComponentNetworkMessage(NetIncomingMessage message)
-        {
-            var netID = message.ReadUInt32();
-            var messageParams = new List<object>();
-            while (message.Position < message.LengthBits)
-            {
-                switch ((NetworkDataType)message.ReadByte())
-                {
-                    case NetworkDataType.d_enum:
-                        messageParams.Add(message.ReadInt32());
-                        break;
-                    case NetworkDataType.d_bool:
-                        messageParams.Add(message.ReadBoolean());
-                        break;
-                    case NetworkDataType.d_byte:
-                        messageParams.Add(message.ReadByte());
-                        break;
-                    case NetworkDataType.d_sbyte:
-                        messageParams.Add(message.ReadSByte());
-                        break;
-                    case NetworkDataType.d_ushort:
-                        messageParams.Add(message.ReadUInt16());
-                        break;
-                    case NetworkDataType.d_short:
-                        messageParams.Add(message.ReadInt16());
-                        break;
-                    case NetworkDataType.d_int:
-                        messageParams.Add(message.ReadInt32());
-                        break;
-                    case NetworkDataType.d_uint:
-                        messageParams.Add(message.ReadUInt32());
-                        break;
-                    case NetworkDataType.d_ulong:
-                        messageParams.Add(message.ReadUInt64());
-                        break;
-                    case NetworkDataType.d_long:
-                        messageParams.Add(message.ReadInt64());
-                        break;
-                    case NetworkDataType.d_float:
-                        messageParams.Add(message.ReadFloat());
-                        break;
-                    case NetworkDataType.d_double:
-                        messageParams.Add(message.ReadDouble());
-                        break;
-                    case NetworkDataType.d_string:
-                        messageParams.Add(message.ReadString());
-                        break;
-                    case NetworkDataType.d_byteArray:
-                        int length = message.ReadInt32();
-                        messageParams.Add(message.ReadBytes(length));
-                        break;
-                }
-            }
-            return new IncomingEntityComponentMessage(netID, messageParams);
+            return null;
         }
 
         #endregion Receiving

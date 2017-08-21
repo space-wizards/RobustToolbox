@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {
@@ -11,7 +12,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     {
         void Shutdown();
         void Update(float frameTime);
-        void HandleEntityNetworkMessage(NetIncomingMessage msg);
+        void HandleEntityNetworkMessage(MsgEntity msg);
 
         #region Entity Management
 

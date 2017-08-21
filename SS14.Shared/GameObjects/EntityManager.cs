@@ -1,6 +1,7 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
@@ -294,15 +295,15 @@ namespace SS14.Shared.GameObjects
 
             while (MessageBuffer.Any())
             {
-                IncomingEntityMessage entMsg = MessageBuffer.Dequeue();
-                if (!_entities.ContainsKey(entMsg.Uid))
+                IncomingEntityMessage incomingEntity = MessageBuffer.Dequeue();
+                if (!_entities.ContainsKey(incomingEntity.Message.EntityId))
                 {
-                    entMsg.LastProcessingAttempt = DateTime.Now;
-                    if ((entMsg.LastProcessingAttempt - entMsg.ReceivedTime).TotalSeconds > entMsg.Expires)
-                        misses.Add(entMsg);
+                    incomingEntity.LastProcessingAttempt = DateTime.Now;
+                    if ((incomingEntity.LastProcessingAttempt - incomingEntity.ReceivedTime).TotalSeconds > incomingEntity.Expires)
+                        misses.Add(incomingEntity);
                 }
                 else
-                    _entities[entMsg.Uid].HandleNetworkMessage(entMsg);
+                    _entities[incomingEntity.Message.EntityId].HandleNetworkMessage(incomingEntity);
             }
 
             foreach (IncomingEntityMessage miss in misses)
@@ -311,7 +312,7 @@ namespace SS14.Shared.GameObjects
             MessageBuffer.Clear(); //Should be empty at this point anyway.
         }
 
-        protected IncomingEntityMessage ProcessNetMessage(NetIncomingMessage msg)
+        protected IncomingEntityMessage ProcessNetMessage(MsgEntity msg)
         {
             return EntityNetworkManager.HandleEntityNetworkMessage(msg);
         }
@@ -321,24 +322,24 @@ namespace SS14.Shared.GameObjects
         /// and handling the parsed result.
         /// </summary>
         /// <param name="msg">Incoming raw network message</param>
-        public void HandleEntityNetworkMessage(NetIncomingMessage msg)
+        public void HandleEntityNetworkMessage(MsgEntity msg)
         {
             if (!Initialized)
             {
-                IncomingEntityMessage emsg = ProcessNetMessage(msg);
-                if (emsg.MessageType != EntityMessage.Null)
-                    MessageBuffer.Enqueue(emsg);
+                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                if (incomingEntity.Message.Type != EntityMessage.Null)
+                    MessageBuffer.Enqueue(incomingEntity);
             }
             else
             {
                 ProcessMsgBuffer();
-                IncomingEntityMessage emsg = ProcessNetMessage(msg);
-                if (!_entities.ContainsKey(emsg.Uid))
+                IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
+                if (!_entities.ContainsKey(incomingEntity.Message.EntityId))
                 {
-                    MessageBuffer.Enqueue(emsg);
+                    MessageBuffer.Enqueue(incomingEntity);
                 }
                 else
-                    _entities[emsg.Uid].HandleNetworkMessage(emsg);
+                    _entities[incomingEntity.Message.EntityId].HandleNetworkMessage(incomingEntity);
             }
         }
 

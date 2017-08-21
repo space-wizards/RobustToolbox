@@ -116,8 +116,7 @@ namespace SS14.Client.Lighting
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
 
             resolveShadowsEffectTechnique[techniqueName].SetUniform("renderTargetSize", renderTargetSize);
-            if (source != null)
-                resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
+            resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
             if (shadowMap != null)
                 resolveShadowsEffectTechnique[techniqueName].SetUniform("shadowMapSampler", shadowMap);
 

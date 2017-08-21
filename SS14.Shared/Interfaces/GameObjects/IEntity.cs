@@ -102,14 +102,14 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Without needing to have the component itself.
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
-        void RemoveComponent<T>() where T : IComponent;
+        void RemoveComponent<T>();
 
         /// <summary>
         ///     Checks to see if the entity has a component of the specified type.
         /// </summary>
         /// <typeparam name="T">The component reference type to check.</typeparam>
         /// <returns>True if the entity has a component of type <typeparamref name="T" />, false otherwise.</returns>
-        bool HasComponent<T>() where T : IComponent;
+        bool HasComponent<T>();
 
         /// <summary>
         ///     Checks to see ift he entity has a component of the specified type.
@@ -126,7 +126,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <exception cref="Shared.GameObjects.UnknownComponentException">
         ///     Thrown if there is no component with the specified type.
         /// </exception>
-        T GetComponent<T>() where T : IComponent;
+        T GetComponent<T>();
 
         /// <summary>
         ///     Retrieves the component of the specified type.
@@ -156,7 +156,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent<T>(out T component) where T : class, IComponent;
+        bool TryGetComponent<T>(out T component) where T : class;
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
@@ -194,7 +194,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">The type that components must implement.</typeparam>
         /// <returns>An enumerable over the found components.</returns>
-        IEnumerable<T> GetComponents<T>() where T : IComponent;
+        IEnumerable<T> GetComponents<T>();
         void SendMessage(object sender, ComponentMessageType type, params object[] args);
 
         /// <summary>

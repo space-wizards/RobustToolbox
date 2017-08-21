@@ -76,7 +76,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// Registers <typeparamref name="TTarget" /> to be referenced when
         /// <typeparamref name="TInterface"/> is used in methods like <see cref="IEntity.GetComponent{T}"/>
         /// </summary>
-        void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new() where TInterface : IComponent;
+        void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new();
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.

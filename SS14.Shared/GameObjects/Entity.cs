@@ -230,6 +230,10 @@ namespace SS14.Shared.GameObjects
             return query.Match(this);
         }
 
+        public virtual void Update(float frameTime)
+        {
+        }
+
         #endregion Entity Systems
 
         #region Components

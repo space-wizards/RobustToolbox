@@ -109,7 +109,7 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new() where TInterface : IComponent
+        public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new()
         {
             if (!types.ContainsKey(typeof(TTarget)))
             {

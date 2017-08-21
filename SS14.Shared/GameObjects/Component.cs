@@ -29,8 +29,13 @@ namespace SS14.Shared.GameObjects
         public virtual Type StateType => typeof(ComponentState);
 
         /// <inheritdoc />
+        public event Action<ComponentShutdownEventArgs> OnShutdown;
+
+        /// <inheritdoc />
         public virtual void OnRemove()
         {
+            OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
+            OnShutdown = null;
             Shutdown();
 
             //Send us to the manager so it knows we're dead.

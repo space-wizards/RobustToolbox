@@ -68,6 +68,13 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Initialize();
 
         /// <summary>
+        /// Invoked whenever the entity is shut down (removed from an entity or deleted).
+        /// </summary>
+        /// <seealso cref="OnRemove" />
+        /// <seealso cref="Shutdown" />
+        event Action<ComponentShutdownEventArgs> OnShutdown;
+
+        /// <summary>
         ///     Shuts down the component. The is called Automatically by OnRemove.
         /// </summary>
         void Shutdown();
@@ -112,5 +119,15 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="state"></param>
         void HandleComponentState(ComponentState state);
+    }
+
+    public class ComponentShutdownEventArgs : EventArgs
+    {
+        public readonly IComponent Component;
+
+        public ComponentShutdownEventArgs(IComponent component)
+        {
+            Component = component;
+        }
     }
 }

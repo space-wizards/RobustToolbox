@@ -108,10 +108,6 @@ namespace SS14.Shared.GameObjects
                 ClassType = manager.GetType(node.AsString());
                 // TODO: logging of when the ClassType doesn't exist: Safety for typos.
             }
-            else
-            {
-                ClassType = typeof(Entity);
-            }
 
             if (mapping.TryGetNode("parent", out node))
             {
@@ -231,6 +227,11 @@ namespace SS14.Shared.GameObjects
                 target.Name = source.Name;
             }
 
+            if (target.ClassType == null)
+            {
+                target.ClassType = source.ClassType;
+            }
+
             if (target.Children == null)
             {
                 return;
@@ -250,7 +251,7 @@ namespace SS14.Shared.GameObjects
         /// <returns></returns>
         public IEntity CreateEntity(int uid, IEntityManager manager, IEntityNetworkManager networkManager, IComponentFactory componentFactory)
         {
-            var entity = (IEntity)Activator.CreateInstance(ClassType);
+            var entity = (IEntity)Activator.CreateInstance(ClassType ?? typeof(Entity));
 
             entity.SetManagers(manager, networkManager);
             entity.SetUid(uid);

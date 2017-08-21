@@ -158,7 +158,7 @@ namespace SS14.Shared.GameObjects
             _entities[uid] = entity;
 
             // We batch the first set of initializations together.
-            if (!Initialized)
+            if (Initialized)
             {
                 InitializeEntity(entity);
             }

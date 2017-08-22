@@ -161,7 +161,7 @@ namespace SS14.Client.State.States
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
-            
+
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
@@ -297,9 +297,9 @@ namespace SS14.Client.State.States
             Lightmap = IoCManager.Resolve<IResourceCache>().GetShader("lightmap");
 
             playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
-            playerVision.SetColor(Color.Blue);
-            playerVision.SetRadius(1024);
-            playerVision.Move(new Vector2());
+            playerVision.Color = Color4.Blue;
+            playerVision.Radius = 1024;
+            playerVision.Position = new Vector2();
 
             _occluderDebugTarget = new RenderImage("debug", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
         }
@@ -1011,7 +1011,7 @@ namespace SS14.Client.State.States
                                                     (float)screenShadows.Width / area.RenderTarget.Width,
                                                     (float)screenShadows.Height / area.RenderTarget.Height);
                 lightTextures.Add(area.RenderTarget.Texture);
-                colors.Add(Light.GetColorVec());
+                colors.Add(Light.ColorVec);
                 positions.Add(LightPositionData);
             }
             int i = 0;
@@ -1144,7 +1144,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Move(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
+                playerVision.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
                 area.LightPosition = playerVision.Position; // Set the light position

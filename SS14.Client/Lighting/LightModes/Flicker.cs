@@ -1,4 +1,4 @@
-
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Utility;
@@ -11,7 +11,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
     public class LightFlicker : LightMode
     {
         private readonly Stopwatch timer = new Stopwatch();
-        private Color _lightColorOriginal;
+        private Color4 _lightColorOriginal;
         private int flickerCount;
         private bool flickering;
         private LightModeClass lightModeClass = LightModeClass.Flicker;
@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
 
         public void OnRemove(ILight owner)
         {
-            owner.SetColor(_lightColorOriginal);
+            owner.Color = _lightColorOriginal;
             owner.LightArea.Calculated = false;
         }
 
@@ -49,7 +49,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                     {
                         flickerCount++;
                         lightOn = true;
-                        owner.SetColor(_lightColorOriginal);
+                        owner.Color = _lightColorOriginal;
                         owner.LightArea.Calculated = false;
                         timer.Reset();
                         if (flickerCount >= 2 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
@@ -58,8 +58,8 @@ namespace SS14.Client.GameObjects.Light.LightModes
                 }
                 else if (timer.ElapsedMilliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                 {
-                    owner.SetColor((_lightColorOriginal.A/2), (_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
-                                   (_lightColorOriginal.B/2));
+                    owner.Color = new Color4((_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
+                                            (_lightColorOriginal.B/2), (_lightColorOriginal.A/2));
                     owner.LightArea.Calculated = false;
                     lightOn = false;
                     timer.Reset();
@@ -72,8 +72,8 @@ namespace SS14.Client.GameObjects.Light.LightModes
                     flickering = true;
                     flickerCount = 0;
                     lightOn = false;
-                    owner.SetColor((_lightColorOriginal.A/2), (_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
-                                   (_lightColorOriginal.B/2));
+                    owner.Color = new Color4((_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
+                                             (_lightColorOriginal.B/2), (_lightColorOriginal.A/2));
                     owner.LightArea.Calculated = false;
                     timer.Reset();
                 }

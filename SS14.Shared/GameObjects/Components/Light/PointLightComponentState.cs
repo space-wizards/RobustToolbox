@@ -1,24 +1,26 @@
-﻿using System;
+﻿using OpenTK;
+using OpenTK.Graphics;
+using System;
 
 namespace SS14.Shared.GameObjects
 {
     [Serializable]
     public class PointLightComponentState : ComponentState
     {
-        public readonly int ColorB;
-        public readonly int ColorG;
-        public readonly int ColorR;
+        public readonly Color4 Color;
         public readonly LightModeClass Mode;
         public readonly LightState State;
+        public int Radius;
+        public Vector2 Offset;
 
-        public PointLightComponentState(LightState state, int colorR, int colorG, int colorB, LightModeClass mode)
+        public PointLightComponentState(LightState state, Color4 color, LightModeClass mode, int radius, Vector2 offset)
             : base(NetIDs.POINT_LIGHT)
         {
             State = state;
-            ColorR = colorR;
-            ColorG = colorG;
-            ColorB = colorB;
+            Color = color;
             Mode = mode;
+            Radius = radius;
+            Offset = offset;
         }
     }
 }

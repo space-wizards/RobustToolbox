@@ -1,4 +1,5 @@
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Interfaces.Lighting;
@@ -12,47 +13,58 @@ namespace SS14.Client.Lighting
         public Light()
         {
             Radius = 256;
-            LightState = LightState.On;
         }
 
         #region ILight Members
 
-        public Vector2 Position { get; private set; }
-        public Color Color { get; private set; }
-        public int Radius { get; private set; }
-        public ILightArea LightArea { get; private set; }
-        public LightState LightState { get; private set; }
-        public LightMode LightMode { get; set; }
-
-        public void Move(Vector2 toPosition)
+        private Vector2 position;
+        public Vector2 Position
         {
-            Position = toPosition;
-            LightArea.Calculated = false;
-        }
-
-        public void SetRadius(int radius)
-        {
-            if (Radius != radius)
+            get => position;
+            set
             {
-                Radius = radius;
-                LightArea = new LightArea(RadiusToShadowMapSize(radius));
+                if (position != value)
+                {
+                    position = value;
+                    LightArea.Calculated = false;
+                }
             }
         }
 
-        public void SetColor(int a, int r, int g, int b)
+        public Color4 Color { get; set; }
+        public Vector4 ColorVec => new Vector4(Color.R, Color.G, Color.B, Color.A);
+
+        private int radius;
+        public int Radius
         {
-            Color = new Color((byte)r, (byte)g, (byte)b, (byte)a);
+            get => radius;
+            set
+            {
+                if (radius != value)
+                {
+                    radius = value;
+                    LightArea = new LightArea(RadiusToShadowMapSize(radius));
+                }
+            }
         }
 
-        public void SetColor(Color color)
+        public ILightArea LightArea { get; private set; }
+
+        private LightState lightState = LightState.On;
+        public LightState LightState
         {
-            Color = color;
+            get => lightState;
+            set
+            {
+                if (lightState != value)
+                {
+                    lightState = value;
+                    LightArea.Calculated = false;
+                }
+            }
         }
 
-        public Vector4 GetColorVec()
-        {
-            return new Vector4((float) Color.R/255, (float) Color.G/255, (float) Color.B/255, (float) Color.A/255);
-        }
+        public LightMode LightMode { get; set; }
 
         public void SetMask(string mask)
         {
@@ -61,32 +73,29 @@ namespace SS14.Client.Lighting
 
         public void Update(float frametime)
         {
-            if (LightMode != null) LightMode.Update(this, frametime);
-        }
-
-        public void SetState(LightState state)
-        {
-            LightState = state;
-            LightArea.Calculated = false;
+            LightMode?.Update(this, frametime);
         }
 
         #endregion
 
         public static ShadowmapSize RadiusToShadowMapSize(int Radius)
         {
-            switch (Radius)
+            if (Radius <= 128)
             {
-                case 128:
-                    return ShadowmapSize.Size128;
-                case 256:
-                    return ShadowmapSize.Size256;
-                case 512:
-                    return ShadowmapSize.Size512;
-                case 1024:
-                    return ShadowmapSize.Size1024;
-                default:
-                    return ShadowmapSize.Size1024;
+                return ShadowmapSize.Size128;
             }
+
+            if (Radius <= 256)
+            {
+                return ShadowmapSize.Size256;
+            }
+
+            if (Radius <= 512)
+            {
+                return ShadowmapSize.Size512;
+            }
+
+            return ShadowmapSize.Size1024;
         }
     }
 }

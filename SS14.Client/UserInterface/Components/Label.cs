@@ -4,6 +4,7 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
@@ -18,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceCache _resourceCache;
         public Color4 BackgroundColor = Color4.Gray;
@@ -29,18 +30,17 @@ namespace SS14.Client.UserInterface.Components
         public Color4 HighlightColor = Color4.Gray;
         public TextSprite Text;
 
-
         public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color.Black };
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color4.Black };
             Update(0);
         }
 
         public Label(string text, string font, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color.Black};
+            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) { Color = Color4.Black };
             Update(0);
         }
 
@@ -50,7 +50,7 @@ namespace SS14.Client.UserInterface.Components
             set => Text.FontSize = value;
         }
 
-        public Color TextColor
+        public Color4 TextColor
         {
             get => Text.Color;
             set => Text.Color = value;
@@ -65,19 +65,18 @@ namespace SS14.Client.UserInterface.Components
         {
             Text.Position = Position;
             ClientArea = Box2i.FromDimensions(Position,
-                                       new Vector2i(FixedWidth == -1 ? (int) Text.Width : FixedWidth,
-                                                FixedHeight == -1 ? (int) Text.Height : FixedHeight));
+                                       new Vector2i(FixedWidth == -1 ? (int)Text.Width : FixedWidth,
+                                                FixedHeight == -1 ? (int)Text.Height : FixedHeight));
         }
-
 
         public override void Render()
         {
             if (DrawBackground)
-              CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width,ClientArea.Height, BackgroundColor);
+                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle((int)(Text.Position.X + 3), (int)Text.Position.Y + 4, (int)Text.Width, (int)Text.Height - 9, BackgroundColor);
             if (DrawBorder)
-               CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
+                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
             Text.Draw();
         }
 

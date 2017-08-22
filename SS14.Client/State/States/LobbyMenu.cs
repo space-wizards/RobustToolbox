@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -90,35 +91,35 @@ namespace SS14.Client.State.States
             };
 
             _lblServer = new Label("SERVER:", "MICROGME", ResourceCache);
-            _lblServer.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _lblServer.Text.Color = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceCache);
-            _lblServerInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
+            _lblServerInfo.Text.Color = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblServerInfo);
 
             _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceCache);
-            _lblMode.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _lblMode.Text.Color = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME", ResourceCache);
-            _lblModeInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
+            _lblModeInfo.Text.Color = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblModeInfo);
 
             _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceCache);
-            _lblPlayers.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _lblPlayers.Text.Color = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceCache);
-            _lblPlayersInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
+            _lblPlayersInfo.Text.Color = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPlayersInfo);
 
             _lblPort = new Label("PORT:", "MICROGME", ResourceCache);
-            _lblPort.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _lblPort.Text.Color = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPort);
 
             _lblPortInfo = new Label(MainScreen.DEFAULT_PORT.ToString(), "MICROGME", ResourceCache);
-            _lblPortInfo.Text.Color = new SFML.Graphics.Color(139, 0, 0);
+            _lblPortInfo.Text.Color = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPortInfo);
 
             _tabs = new TabbedMenu
@@ -268,7 +269,7 @@ namespace SS14.Client.State.States
 
                 Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache);
                 newLabel.Position = new Vector2i(0, offY);
-                newLabel.TextColor = Color.Black;
+                newLabel.TextColor = Color4.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.components.Add(newLabel);

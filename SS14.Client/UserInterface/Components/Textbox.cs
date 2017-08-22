@@ -4,6 +4,7 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
@@ -47,8 +48,8 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _textboxMain;
         private Sprite _textboxRight;
 
-        public Color drawColor = Color.White;
-        public Color textColor = Color.Black;
+        public Color4 drawColor = Color4.White;
+        public Color4 textColor = Color4.Black;
 
         private float blinkCount;
 
@@ -65,7 +66,7 @@ namespace SS14.Client.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color.Black };
+            Label = new TextSprite("Textbox", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color4.Black };
 
             Update(0);
         }
@@ -109,11 +110,11 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Render()
         {
-            if (drawColor != Color.White)
+            if (drawColor != Color4.White)
             {
-                _textboxLeft.Color = drawColor;
-                _textboxMain.Color = drawColor;
-                _textboxRight.Color = drawColor;
+                _textboxLeft.Color = drawColor.Convert();
+                _textboxMain.Color = drawColor.Convert();
+                _textboxRight.Color = drawColor.Convert();
             }
 
             _textboxLeft.SetTransformToRect(_clientAreaLeft);
@@ -126,7 +127,7 @@ namespace SS14.Client.UserInterface.Components
             if (Focus && blinkCount <= 0.25f)
                 CluwneLib.drawRectangle(Label.Position.X + _caretPos - _caretWidth, Label.Position.Y + (Label.Height / 2f) - (_caretHeight / 2f), _caretWidth, _caretHeight, new Color4(255, 255, 250, 255));
 
-            if (drawColor != Color.White)
+            if (drawColor != Color4.White)
             {
                 _textboxLeft.Color = Color.White;
                 _textboxMain.Color = Color.White;

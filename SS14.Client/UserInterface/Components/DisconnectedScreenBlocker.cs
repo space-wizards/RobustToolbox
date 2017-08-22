@@ -30,8 +30,8 @@ namespace SS14.Client.UserInterface.Components
             _message = new Label(message, "CALIBRI", _resourceCache);
             _mainMenuButton = new Button("Main Menu", _resourceCache);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
-            _mainMenuButton.Label.Color = new SFML.Graphics.Color(245, 245, 245);
-            _message.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _mainMenuButton.Label.Color = new Color4(245, 245, 245, 255);
+            _message.Text.Color = new Color4(245, 245, 245, 255);
         }
 
         private void MainMenuButtonClicked(Button sender)

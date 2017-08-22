@@ -15,7 +15,7 @@ namespace SS14.Client.Graphics.Sprite
     public class TextSprite : ICluwneDrawable
     {
         private bool _shadowed;                                    // Is the Text Shadowed
-        private Color _shadowColor;                                // Shadow Color
+        private Color4 _shadowColor;                                // Shadow Color
         private Text _textSprite;
         private string Label;
 
@@ -58,7 +58,7 @@ namespace SS14.Client.Graphics.Sprite
         public void Draw()
         {
             _textSprite.Position = new Vector2f(Position.X, Position.Y);
-            _textSprite.FillColor = Color;
+            _textSprite.FillColor = Color.Convert();
             CluwneLib.CurrentRenderTarget.Draw(_textSprite);
 
             if (CluwneLib.Debug.DebugTextboxes)
@@ -99,7 +99,7 @@ namespace SS14.Client.Graphics.Sprite
 
         public Vector2i Size;
 
-        public Color Color;
+        public Color4 Color;
 
         public Vector2 ShadowOffset { get; set; }
 
@@ -115,7 +115,7 @@ namespace SS14.Client.Graphics.Sprite
             set => _textSprite.CharacterSize = value;
         }
 
-        public Color ShadowColor
+        public Color4 ShadowColor
         {
             get => _shadowColor;
             set => this._shadowColor = value;

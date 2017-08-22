@@ -53,7 +53,7 @@ namespace SS14.Client.UserInterface.Components
 
             font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
             name = new TextSprite("Label" + SpriteName, "Name", font);
-            name.Color = Color.Black;
+            name.Color = Color4.Black;
             name.Text = ObjectName;
         }
 

@@ -21,7 +21,7 @@ namespace SS14.Shared
 
         public static Color4 WithAlpha(this Color4 color, byte a)
         {
-            color.A = a;
+            color.A = a/255f;
             return color;
         }
 
@@ -79,6 +79,42 @@ namespace SS14.Shared
                 return fallback.Value;
             else
                 throw new ArgumentException("Invalid color code.", "hexColor");
+        }
+
+        /// <summary>
+        /// Gets the red part of a color as byte from 0-255.
+        /// </summary>
+        /// <param name="color">The color to get the red part from.</param>
+        public static byte RByte(this Color4 color)
+        {
+            return (byte)(color.R * Byte.MaxValue);
+        }
+
+        /// <summary>
+        /// Gets the green part of a color as byte from 0-255.
+        /// </summary>
+        /// <param name="color">The color to get the green part from.</param>
+        public static byte GByte(this Color4 color)
+        {
+            return (byte)(color.G * Byte.MaxValue);
+        }
+
+        /// <summary>
+        /// Gets the blue part of a color as byte from 0-255.
+        /// </summary>
+        /// <param name="color">The color to get the blue part from.</param>
+        public static byte BByte(this Color4 color)
+        {
+            return (byte)(color.B * Byte.MaxValue);
+        }
+
+        /// <summary>
+        /// Gets the alpha part of a color as byte from 0-255.
+        /// </summary>
+        /// <param name="color">The color to get the alpha part from.</param>
+        public static byte AByte(this Color4 color)
+        {
+            return (byte)(color.A * Byte.MaxValue);
         }
     }
 }

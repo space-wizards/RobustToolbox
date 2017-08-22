@@ -1,3 +1,4 @@
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Console;
@@ -24,7 +25,7 @@ namespace SS14.Client.Console
 
             foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", Color4.White);
             }
 
             return false;
@@ -47,7 +48,7 @@ namespace SS14.Client.Console
 
             foreach (var component in components)
             {
-                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color.White);
+                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color4.White);
             }
             return false;
         }
@@ -63,7 +64,7 @@ namespace SS14.Client.Console
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", Color.Red);
+                console.AddLine($"Not enough arguments.", Color4.Red);
                 return false;
             }
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -83,16 +84,16 @@ namespace SS14.Client.Console
                 }
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                console.AddLine(message.ToString(), Color.White);
+                console.AddLine(message.ToString(), Color4.White);
 
                 foreach (Type type in registration.References)
                 {
-                    console.AddLine($"  {type}", Color.White);
+                    console.AddLine($"  {type}", Color4.White);
                 }
             }
             catch (UnknownComponentException)
             {
-                console.AddLine($"No registration found for '{args[0]}'", Color.Red);
+                console.AddLine($"No registration found for '{args[0]}'", Color4.Red);
             }
 
             return false;

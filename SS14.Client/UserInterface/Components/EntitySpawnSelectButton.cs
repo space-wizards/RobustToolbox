@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -52,7 +53,7 @@ namespace SS14.Client.UserInterface.Components
 
             font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
             name = new TextSprite("Label" + SpriteName, "Name", font);
-            name.Color = Color.Black;
+            name.Color = Color4.Black;
             name.Text = ObjectName;
         }
 
@@ -92,7 +93,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Render()
         {
            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                       selected ? new SFML.Graphics.Color(34, 139, 34) : new SFML.Graphics.Color(255, 250, 240));
+                                                       selected ? new Color4(34, 139, 34, 255) : new Color4(255, 250, 240, 255));
 
             objectSprite.Draw();
             name.Draw();

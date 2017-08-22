@@ -1,8 +1,10 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
@@ -29,8 +31,8 @@ namespace SS14.Client.UserInterface.Components
         private Box2i _clientAreaMain;
         private Box2i _clientAreaRight;
 
-        private Color drawColor = Color.White;
-        public Color mouseOverColor = Color.White;
+        private Color4 drawColor = Color4.White;
+        public Color4 mouseOverColor = Color4.White;
 
         public Button(string buttonText, IResourceCache resourceCache)
         {
@@ -41,7 +43,7 @@ namespace SS14.Client.UserInterface.Components
 
             Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
                         {
-                            Color = Color.Black
+                            Color = Color4.Black
                         };
 
             Update(0);
@@ -70,9 +72,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Render()
         {
-            _buttonLeft.Color = drawColor;
-            _buttonMain.Color = drawColor;
-            _buttonRight.Color = drawColor;
+            _buttonLeft.Color = drawColor.Convert();
+            _buttonMain.Color = drawColor.Convert();
+            _buttonRight.Color = drawColor.Convert();
 
             _buttonLeft.SetTransformToRect(_clientAreaLeft);
             _buttonMain.SetTransformToRect(_clientAreaMain);
@@ -101,11 +103,11 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (mouseOverColor != Color.White)
+            if (mouseOverColor != Color4.White)
                 if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
                     drawColor = mouseOverColor;
                 else
-                    drawColor = Color.White;
+                    drawColor = Color4.White;
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)

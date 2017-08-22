@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using SFML.System;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using System;
@@ -34,7 +35,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 var lastFrameTime = clock.ElapsedTime.AsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Screen.DispatchEvents();
 
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)

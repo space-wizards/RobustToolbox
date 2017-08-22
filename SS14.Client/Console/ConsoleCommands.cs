@@ -2,6 +2,7 @@
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 
+using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
@@ -30,7 +31,7 @@ namespace SS14.Client.Console
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            SFML.Graphics.Color[] colors = { SFML.Graphics.Color.Green, SFML.Graphics.Color.Blue, SFML.Graphics.Color.Red };
+            Color4[] colors = { Color4.Green, Color4.Blue, Color4.Red };
             Random random = new Random();
             for (int x = 0; x < 50; x++)
             {

@@ -1,7 +1,9 @@
-﻿using SFML.Graphics;
+﻿using OpenTK.Graphics;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -26,7 +28,7 @@ namespace SS14.Client.UserInterface.Components
 
         private const int MaxLinePixelLength = 500;
 
-        private readonly Dictionary<ChatChannel, SFML.Graphics.Color> _chatColors;
+        private readonly Dictionary<ChatChannel, Color4> _chatColors;
 
         private readonly IList<String> _inputHistory = new List<String>();
 
@@ -86,26 +88,26 @@ namespace SS14.Client.UserInterface.Components
 
             input = new Textbox(Size.X, resourceCache)
             {
-                drawColor = new SFML.Graphics.Color(128, 128, 128, 100),
-                textColor = new SFML.Graphics.Color(255, 250, 240)
+                drawColor = new Color4(128, 128, 128, 100),
+                textColor = new Color4(255, 250, 240, 255)
             };
             input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
 
-            _chatColors = new Dictionary<ChatChannel, SFML.Graphics.Color>
+            _chatColors = new Dictionary<ChatChannel, Color4>
             {
-                [ChatChannel.Default] = new SFML.Graphics.Color(128, 128, 128),
-                [ChatChannel.Damage] = Color.Red,
-                [ChatChannel.Radio] = new SFML.Graphics.Color(0, 100, 0),
-                [ChatChannel.Server] = Color.Blue,
-                [ChatChannel.Player] = new SFML.Graphics.Color(0, 128, 0),
-                [ChatChannel.Lobby] = Color.White,
-                [ChatChannel.Ingame] = new SFML.Graphics.Color(0, 200, 0),
-                [ChatChannel.OOC] = Color.White,
-                [ChatChannel.Emote] = Color.Cyan,
-                [ChatChannel.Visual] = Color.Yellow,
+                [ChatChannel.Default] = Color4.Gray,
+                [ChatChannel.Damage] = Color4.Red,
+                [ChatChannel.Radio] = new Color4(0, 100, 0, 255),
+                [ChatChannel.Server] = Color4.Blue,
+                [ChatChannel.Player] = new Color4(0, 128, 0, 255),
+                [ChatChannel.Lobby] = Color4.White,
+                [ChatChannel.Ingame] = new Color4(0, 200, 0, 255),
+                [ChatChannel.OOC] = Color4.White,
+                [ChatChannel.Emote] = Color4.Cyan,
+                [ChatChannel.Visual] = Color4.Yellow,
             };
 
-            BackgroundColor = new SFML.Graphics.Color(128, 128, 128, 100);
+            BackgroundColor = new Color4(128, 128, 128, 100);
             DrawBackground = true;
             DrawBorder = true;
         }
@@ -334,8 +336,8 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_disposing || !IsVisible()) return;
             CluwneLib.BlendingMode = BlendingModes.Modulated;
-            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(0, 0, 0, 100));
-            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new SFML.Graphics.Color(211, 211, 211, 100));
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(0, 0, 0, 100));
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(211, 211, 211, 100));
             CluwneLib.BlendingMode = BlendingModes.None;
             base.Render();
             input.Render();

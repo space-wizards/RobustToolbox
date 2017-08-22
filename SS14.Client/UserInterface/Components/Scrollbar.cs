@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -59,8 +60,8 @@ namespace SS14.Client.UserInterface.Components
             else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
 
             DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            DEBUG.Color = new Color(255, 128, 0);
-            DEBUG.ShadowColor = new Color(0, 0, 128);
+            DEBUG.Color = new Color4(255, 128, 0, 255);
+            DEBUG.ShadowColor = new Color4(0, 0, 128, 255);
             DEBUG.Shadowed = true;
             Update(0);
         }
@@ -163,7 +164,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (!IsVisible()) return;
             if (drawBackground)
-                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color(47, 79, 79));
+                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(47, 79, 79, 255));
             scrollbarButton.SetTransformToRect(clientAreaButton);
             scrollbarButton.Draw();
             DEBUG.Position = new Vector2i(ClientArea.Left + 20, ClientArea.Top + 20);

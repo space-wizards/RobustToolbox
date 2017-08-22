@@ -2,6 +2,7 @@
 using SFML.Graphics;
 using SFML.System;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
@@ -305,7 +306,7 @@ namespace SS14.UnitTesting
                 var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
                 GetClock.Restart();
                 frameEvent = new FrameEventArgs(lastFrameTime);
-                CluwneLib.ClearCurrentRendertarget(Color.Black);
+                CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Screen.DispatchEvents();
                 InjectedMethod();
                 CluwneLib.Screen.Display();

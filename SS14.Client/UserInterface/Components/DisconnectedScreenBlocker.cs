@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿using OpenTK.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -52,7 +53,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Render()
         {
-            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, SFML.Graphics.Color.Black);
+            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color4.Black);
             _message.Render();
             _mainMenuButton.Render();
         }

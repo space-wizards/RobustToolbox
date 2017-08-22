@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.Window;
 using SFML.System;
@@ -247,7 +248,7 @@ namespace SS14.Client
         /// <param name="e">Current GameTiming.RealFrameTime</param>
         private void Render(FrameEventArgs e)
         {
-            CluwneLib.ClearCurrentRendertarget(Color.Black);
+            CluwneLib.ClearCurrentRendertarget(Color4.Black);
             CluwneLib.Screen.DispatchEvents();
 
             // draw everything

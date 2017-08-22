@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -163,7 +164,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (!IsVisible()) return;
             if (drawBackground)
-                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color(47, 79, 79));
+                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(47, 79, 79, 255));
             scrollbarButton.SetTransformToRect(clientAreaButton);
             scrollbarButton.Draw();
             DEBUG.Position = new Vector2i(ClientArea.Left + 20, ClientArea.Top + 20);

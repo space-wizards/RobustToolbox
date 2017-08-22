@@ -2,6 +2,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -99,7 +100,7 @@ namespace SS14.Client.UserInterface.Components
             foreach (ContextMenuButton button in _buttons)
                 button.Render();
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                   Color.Black);
+                                                   Color4.Black);
         }
 
         public override void Dispose()
@@ -158,7 +159,7 @@ namespace SS14.Client.UserInterface.Components
         private readonly Label _textLabel;
 
         public Vector2 Size;
-        private SFML.Graphics.Color _currentColor;
+        private Color4 _currentColor = Color4.Gray;
         private Sprite _iconSprite;
 
         public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceCache resourceCache)
@@ -167,7 +168,6 @@ namespace SS14.Client.UserInterface.Components
 
             UserData = entry.ComponentMessage;
             Size = size;
-            _currentColor = new SFML.Graphics.Color(128, 128, 128);
             _iconSprite = _resourceCache.GetSprite(entry.IconName);
             _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceCache);
             _textLabel.Update(0);
@@ -217,8 +217,8 @@ namespace SS14.Client.UserInterface.Components
         public override void MouseMove(MouseMoveEventArgs e)
         {
             _currentColor = ClientArea.Contains(new Vector2i(e.X, e.Y))
-                                ? new SFML.Graphics.Color(211, 211, 211)
-                                : new SFML.Graphics.Color(128, 128, 128);
+                                ? new Color4(211, 211, 211, 255)
+                                : Color4.Gray;
         }
     }
 }

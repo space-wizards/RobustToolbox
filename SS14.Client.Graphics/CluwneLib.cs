@@ -136,11 +136,6 @@ namespace SS14.Client.Graphics
             SplashScreen = null;
         }
 
-        public static void drawRectangle(int x, int y, int width, int height, object p)
-        {
-            throw new NotImplementedException();
-        }
-
         public static void Initialize()
         {
             if (IsInitialized)
@@ -170,9 +165,9 @@ namespace SS14.Client.Graphics
             action.Invoke();
         }
 
-        public static void ClearCurrentRendertarget(Color color)
+        public static void ClearCurrentRendertarget(Color4 color)
         {
-            CurrentRenderTarget.Clear(color);
+            CurrentRenderTarget.Clear(color.Convert());
         }
 
         public static void Terminate()
@@ -242,12 +237,12 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
+        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color4 Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
-            rectangle.FillColor = Color;
+            rectangle.FillColor = Color.Convert();
 
             CurrentRenderTarget.Draw(rectangle);
         }
@@ -260,12 +255,12 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, Color Color)
+        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, Color4 Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
-            rectangle.FillColor = Color;
+            rectangle.FillColor = Color.Convert();
 
             CurrentRenderTarget.Draw(rectangle);
         }
@@ -300,12 +295,12 @@ namespace SS14.Client.Graphics
         /// <param name="posY"> Pos Y of Circle </param>
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawCircle(int posX, int posY, int radius, Color color)
+        public static void drawCircle(int posX, int posY, int radius, Color4 color)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2f(posX, posY);
             Circle.Radius = radius;
-            Circle.FillColor = color;
+            Circle.FillColor = color.Convert();
 
             CurrentRenderTarget.Draw(Circle);
         }
@@ -317,35 +312,18 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
         /// <param name="OutlineColor"> Circle outline Color </param>
-        public static void drawHollowCircle(int posX, int posY, int radius, float OutlineThickness, Color OutlineColor)
+        public static void drawHollowCircle(int posX, int posY, int radius, float OutlineThickness, Color4 OutlineColor)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2f(posX - radius, posY - radius);
             Circle.Radius = radius;
             Circle.FillColor = Color.Transparent;
             Circle.OutlineThickness = OutlineThickness;
-            Circle.OutlineColor = OutlineColor;
+            Circle.OutlineColor = OutlineColor.Convert();
 
             CurrentRenderTarget.Draw(Circle);
         }
 
-        /// <summary>
-        /// Draws a Filled Circle to the CurrentRenderTarget
-        /// </summary>
-        /// <param name="posX"> Pos X of Circle </param>
-        /// <param name="posY"> Pos Y of Circle </param>
-        /// <param name="radius"> Radius of Cirle </param>
-        /// <param name="color"> Fill Color </param>
-        /// <param name="vector2"></param>
-        public static void drawCircle(float posX, float posY, int radius, Color color, Vector2 vector2)
-        {
-            CircleShape Circle = new CircleShape();
-            Circle.Position = new Vector2f(posX, posY);
-            Circle.Radius = radius;
-            Circle.FillColor = Color.Transparent;
-
-            CurrentRenderTarget.Draw(Circle);
-        }
         #endregion Circle
 
         #region Point
@@ -355,12 +333,12 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawPoint(int posX, int posY, Color color)
+        public static void drawPoint(int posX, int posY, Color4 color)
         {
             RectangleShape Point = new RectangleShape();
             Point.Position = new Vector2f(posX, posY);
             Point.Size = new Vector2f(1, 1);
-            Point.FillColor = color;
+            Point.FillColor = color.Convert();
 
             CurrentRenderTarget.Draw(Point);
         }
@@ -371,14 +349,14 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
+        public static void drawHollowPoint(int posX, int posY, Color4 OutlineColor)
         {
             RectangleShape hollowPoint = new RectangleShape();
             hollowPoint.Position = new Vector2f(posX, posY);
             hollowPoint.Size = new Vector2f(1, 1);
             hollowPoint.FillColor = Color.Transparent;
             hollowPoint.OutlineThickness = .6f;
-            hollowPoint.OutlineColor = OutlineColor;
+            hollowPoint.OutlineColor = OutlineColor.Convert();
 
             CurrentRenderTarget.Draw(hollowPoint);
         }
@@ -416,11 +394,11 @@ namespace SS14.Client.Graphics
         /// <param name="text"> Text to render </param>
         /// <param name="size"> Size of the font </param>
         /// <param name="textColor"> Color of the text </param>
-        public static void drawText(float posX, float posY, string text, uint size, Color textColor, Font font)
+        public static void drawText(float posX, float posY, string text, uint size, Color4 textColor, Font font)
         {
             Text _text = new Text(text, font);
             _text.Position = new SFML.System.Vector2f(posX, posY);
-            _text.FillColor = textColor;
+            _text.FillColor = textColor.Convert();
             _text.CharacterSize = size;
 
             CurrentRenderTarget.Draw(_text);

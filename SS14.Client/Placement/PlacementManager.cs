@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.GameObjects;
@@ -188,7 +189,7 @@ namespace SS14.Client.Placement
                         (int)Math.Floor(pos.Y),
                         CurrentPermission.Range * CluwneLib.TileSize,
                         3f,
-                        Color.White);
+                        Color4.White);
                 }
             }
         }

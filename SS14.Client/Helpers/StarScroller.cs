@@ -1,5 +1,6 @@
 ﻿using SFML.System;
 using OpenTK;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using System;
 
@@ -31,19 +32,19 @@ namespace SS14.Client.Helpers
                     switch (layer)
                     {
                         case 0:
-                            _stars[i, layer].Magnitude = SFML.Graphics.Color.White;
+                            _stars[i, layer].Magnitude = Color4.White;
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*100.0) + 55.0f;
                             break;
                         case 1:
-                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(192, 192, 192);
+                            _stars[i, layer].Magnitude = new Color4(192, 192, 192, 255);
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*50.0) + 27.5f;
                             break;
                         case 2:
-                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(128, 128, 128);
+                            _stars[i, layer].Magnitude = Color4.Gray;
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*25.0) + 13.5f;
                             break;
                         default:
-                            _stars[i, layer].Magnitude = new SFML.Graphics.Color(64, 64, 64);
+                            _stars[i, layer].Magnitude = new Color4(64, 64, 64, 255);
                             _stars[i, layer].VDelta = (float) (_random.NextDouble()*12.5) + 1.0f;
                             break;
                     }
@@ -72,7 +73,7 @@ namespace SS14.Client.Helpers
         public void Render(float xTopleft, float yTopleft)
         {
             var delta = CluwneLib.Time.FrameTime.TotalSeconds;
-            CluwneLib.ClearCurrentRendertarget(SFML.Graphics.Color.Black);
+            CluwneLib.ClearCurrentRendertarget(Color4.Black);
             DrawStars(3, (float)delta / 2000);
             DrawStars(2, (float)delta / 2000);
             for (int layer = 1; layer >= 0; layer--)
@@ -86,7 +87,7 @@ namespace SS14.Client.Helpers
             /// <summary>
             /// Magnitude of the star.
             /// </summary>
-            public SFML.Graphics.Color Magnitude;
+            public Color4 Magnitude;
 
             /// <summary>
             /// Position of the star.

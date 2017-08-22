@@ -1,4 +1,6 @@
-﻿using SS14.Server.Interfaces.Chat;
+﻿using OpenTK;
+using OpenTK.Graphics;
+using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
@@ -13,83 +15,45 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
-        private int _colorB = 200;
-        private int _colorG = 200;
-        private int _colorR = 200;
-        private LightModeClass _mode = LightModeClass.Constant;
-        private LightState _state = LightState.On;
+
+        public Color4 Color { get; set; } = new Color4(200, 200, 200, 255);
+        public LightModeClass Mode { get; set; } = LightModeClass.Constant;
+        public LightState State { get; set; } = LightState.On;
+        public int Radius { get; set; } = 512;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
             YamlNode node;
-            if (mapping.TryGetNode("startState", out node))
+            if (mapping.TryGetNode("offset", out node))
             {
-                _state = node.AsEnum<LightState>();
+                Offset = node.AsVector2();
             }
 
-            if (mapping.TryGetNode("lightColorR", out node))
+            if (mapping.TryGetNode("radius", out node))
             {
-                _colorR = node.AsInt();
+                Radius = node.AsInt();
             }
 
-            if (mapping.TryGetNode("lightColorG", out node))
+            if (mapping.TryGetNode("color", out node))
             {
-                _colorG = node.AsInt();
+                Color = node.AsHexColor();
             }
 
-            if (mapping.TryGetNode("lightColorB", out node))
+            if (mapping.TryGetNode("state", out node))
             {
-                _colorB = node.AsInt();
-            }
-        }
-
-        public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
-                                                             params object[] list)
-        {
-            ComponentReplyMessage reply = base.ReceiveMessage(sender, type, list);
-
-            if (sender == this)
-                return reply;
-
-            switch (type)
-            {
-                case ComponentMessageType.Die:
-                    SetState(LightState.Broken);
-                    break;
-                case ComponentMessageType.Activate:
-                    HandleClickedInHand();
-                    break;
+                State = node.AsEnum<LightState>();
             }
 
-            return reply;
-        }
-
-        private void HandleClickedInHand()
-        {
-            switch (_state)
+            if (mapping.TryGetNode("mode", out node))
             {
-                case LightState.On:
-                    SetState(LightState.Off);
-                    break;
-                case LightState.Off:
-                    SetState(LightState.On);
-                    break;
-                case LightState.Broken:
-                    IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Damage,
-                                                                       "You fiddle with it, but nothing happens. It must be broken.",
-                                                                       Owner.Name, Owner.Uid);
-                    break;
+                Mode = node.AsEnum<LightModeClass>();
             }
-        }
-
-        private void SetState(LightState state)
-        {
-            _state = state;
         }
 
         public override ComponentState GetComponentState()
         {
-            return new PointLightComponentState(_state, _colorR, _colorG, _colorB, _mode);
+            return new PointLightComponentState(State, Color, Mode, Radius, Offset);
         }
     }
 }

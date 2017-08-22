@@ -19,118 +19,159 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
-        //Contains a standard light
-        public ILight _light;
-        public Color4 _lightColor = new Color4(190, 190, 190, 255);
-        public Vector2 _lightOffset = Vector2.Zero;
-        public int _lightRadius = 512;
-        protected string _mask = "";
-        public LightModeClass _mode = LightModeClass.Constant;
-
         public override Type StateType => typeof(PointLightComponentState);
 
-        //When added, set up the light.
-        public override void OnAdd(IEntity owner)
+        public ILight Light { get; private set; }
+
+        public Color4 Color
         {
-            base.OnAdd(owner);
+            get => Light.Color;
+            set => Light.Color = value;
+        }
 
-            _light = IoCManager.Resolve<ILightManager>().CreateLight();
-            IoCManager.Resolve<ILightManager>().AddLight(_light);
+        private Vector2 offset = Vector2.Zero;
+        public Vector2 Offset
+        {
+            get => offset;
+            set
+            {
+                offset = value;
+                UpdateLightPosition();
+            }
+        }
 
-            _light.SetRadius(_lightRadius);
-            _light.SetColor(255, (int)_lightColor.R, (int)_lightColor.G, (int)_lightColor.B);
-            _light.Move(Owner.GetComponent<ITransformComponent>().Position + _lightOffset);
-            _light.SetMask(_mask);
+        public int Radius
+        {
+            get => Light.Radius;
+            set => Light.Radius = value;
+        }
+
+        private string mask;
+        protected string Mask
+        {
+            get => mask;
+            set
+            {
+                mask = value;
+                Light.SetMask(value);
+            }
+        }
+
+        public LightModeClass ModeClass
+        {
+            get => Light.LightMode.LightModeClass;
+            set => IoCManager.Resolve<ILightManager>().SetLightMode(value, Light);
+        }
+
+        public LightMode Mode => Light.LightMode;
+
+        public LightState State
+        {
+            get => Light.LightState;
+            set => Light.LightState = value;
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
+            UpdateLightPosition();
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            Light = mgr.CreateLight();
+            mgr.AddLight(Light);
+
             YamlNode node;
-            if (mapping.TryGetNode("lightoffsetx", out node))
+            if (mapping.TryGetNode("offset", out node))
             {
-                _lightOffset.X = node.AsFloat();
+                Offset = node.AsVector2();
             }
 
-            if (mapping.TryGetNode("lightoffsety", out node))
+            if (mapping.TryGetNode("radius", out node))
             {
-                _lightOffset.Y = node.AsFloat();
+                Radius = node.AsInt();
+            }
+            else
+            {
+                Radius = 512;
             }
 
-            if (mapping.TryGetNode("lightradius", out node))
+            if (mapping.TryGetNode("color", out node))
             {
-                _lightRadius = node.AsInt();
+                Color = node.AsHexColor();
             }
-
-            if (mapping.TryGetNode("lightColorR", out node))
+            else
             {
-                _lightColor.R = node.AsFloat() / 255f;
-            }
-
-            if (mapping.TryGetNode("lightColorG", out node))
-            {
-                _lightColor.G = node.AsFloat() / 255f;
-            }
-
-            if (mapping.TryGetNode("lightColorB", out node))
-            {
-                _lightColor.B = node.AsFloat() / 255f;
+                Color = new Color4(200, 200, 200, 255);
             }
 
             if (mapping.TryGetNode("mask", out node))
             {
-                _mask = node.AsString();
+                Mask = node.AsString();
             }
-        }
+            else
+            {
+                Mask = "whitemask";
+            }
 
-        protected void SetMode(LightModeClass mode)
-        {
-            IoCManager.Resolve<ILightManager>().SetLightMode(mode, _light);
+            if (mapping.TryGetNode("state", out node))
+            {
+                State = node.AsEnum<LightState>();
+            }
+            else
+            {
+                State = LightState.On;
+            }
+
+            if (mapping.TryGetNode("mode", out node))
+            {
+                ModeClass = node.AsEnum<LightModeClass>();
+            }
+            else
+            {
+                ModeClass = LightModeClass.Constant;
+            }
         }
 
         public override void OnRemove()
         {
             Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
-            IoCManager.Resolve<ILightManager>().RemoveLight(_light);
+            IoCManager.Resolve<ILightManager>().RemoveLight(Light);
             base.OnRemove();
         }
 
         private void OnMove(object sender, VectorEventArgs args)
         {
-            _light.Move(args.VectorTo + _lightOffset);
+            UpdateLightPosition(args.VectorTo);
+        }
+
+        protected void UpdateLightPosition(Vector2 NewPosition)
+        {
+            Light.Position = NewPosition + Offset;
+        }
+
+        protected void UpdateLightPosition()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            UpdateLightPosition(transform.Position);
         }
 
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            _light.Update(frameTime);
-        }
-
-        protected void SetMask(string mask)
-        {
-            _light.SetMask(mask);
+            Light.Update(frameTime);
         }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (PointLightComponentState) state;
-            if (_light.LightState != newState.State)
-                _light.SetState(newState.State);
-
-            if (_light.Color.R != newState.ColorR || _light.Color.G != newState.ColorG || _light.Color.B != newState.ColorB)
-                SetColor(newState.ColorR, newState.ColorG, newState.ColorB);
-
-            if (_mode != newState.Mode)
-                SetMode(newState.Mode);
-        }
-
-        protected void SetColor(int R, int G, int B)
-        {
-            _lightColor.R = R/255f;
-            _lightColor.G = G/255f;
-            _lightColor.B = B/255f;
-            _light.SetColor(255, R, G, B);
+            var newState = (PointLightComponentState)state;
+            State = newState.State;
+            Color = newState.Color;
+            ModeClass = newState.Mode;
         }
     }
 }

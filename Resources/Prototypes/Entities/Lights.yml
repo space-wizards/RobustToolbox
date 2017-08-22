@@ -12,11 +12,5 @@
     icon: wall_light
 
   - type: PointLight
-    lightoffsetx: 0
-    lightoffsety: 0
-    lightradius: 1024
-    lightColorR: 220
-    lightColorG: 220
-    lightColorB: 198
-    mask: whitemask
-    startState: On
+    radius: 1024
+    color: "#DCDCC6"

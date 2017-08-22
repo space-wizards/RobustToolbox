@@ -4,7 +4,6 @@ namespace SS14.Shared
     {
         On,
         Off,
-        Broken,
     }
 
     public enum LightModeClass

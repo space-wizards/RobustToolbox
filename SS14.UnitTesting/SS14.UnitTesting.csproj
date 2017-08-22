@@ -41,7 +41,7 @@
   <ItemGroup>
     <Reference Include="nunit.framework">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(SolutionDir)packages\NUnit.3.6.1\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>$(SolutionDir)packages\NUnit.3.7.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>

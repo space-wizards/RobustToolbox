@@ -161,7 +161,7 @@ namespace SS14.Client.State.States
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
             IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
-            
+
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             NetOutgoingMessage message = NetworkManager.CreateMessage();
@@ -459,20 +459,20 @@ namespace SS14.Client.State.States
                 Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
-                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White, font);
-                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White, font);
-                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color4.White, font);
+                CluwneLib.drawText(15, 30, "Character Pos", 14, Color4.White, font);
+                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color4.White, font);
+                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color4.White, font);
+                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color4.White, font);
 
                 // Mouse position debug
                 Vector2i mouseScreenPos = MousePosScreen; // default to screen space
                 Vector2 mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
-                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White, font);
-                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color4.White, font);
+                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color4.White, font);
+                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color4.White, font);
+                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color4.White, font);
             }
         }
 

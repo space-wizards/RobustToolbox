@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -327,7 +328,7 @@ namespace SS14.Client.GameObjects
             //Draw AABB
             var aabb = AABB;
             if (CluwneLib.Debug.DebugColliders)
-                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, new SFML.Graphics.Color(0, 255, 0));
+                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

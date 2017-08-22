@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -77,7 +78,7 @@ namespace SS14.Client.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            _lblVersion.Text.Color = new SFML.Graphics.Color(245, 245, 245);
+            _lblVersion.Text.Color = new Color4(245, 245, 245, 255);
 
             _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                              _Height - _lblVersion.ClientArea.Height - 3);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace SS14.Client.Console
             switch (args.Length)
             {
                 case 0:
-                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.", Color.White);
+                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.", Color4.White);
                     break;
 
                 case 1:
@@ -33,19 +34,19 @@ namespace SS14.Client.Console
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            console.AddLine("Unknown command: " + commandname, Color.Red);
+                            console.AddLine("Unknown command: " + commandname, Color4.Red);
                             return false;
                         }
                         // TODO: Maybe have a server side help?
                         return false;
                     }
                     IConsoleCommand command = console.Commands[commandname];
-                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), Color.White);
-                    console.AddLine(command.Help, Color.White);
+                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), Color4.White);
+                    console.AddLine(command.Help, Color4.White);
                     break;
 
                 default:
-                    console.AddLine("Invalid amount of arguments.", Color.Red);
+                    console.AddLine("Invalid amount of arguments.", Color4.Red);
                     break;
             }
             return false;
@@ -62,7 +63,7 @@ namespace SS14.Client.Console
         {
             foreach (IConsoleCommand command in console.Commands.Values)
             {
-                console.AddLine(command.Command + ": " + command.Description, Color.White);
+                console.AddLine(command.Command + ": " + command.Description, Color4.White);
             }
 
             return false;

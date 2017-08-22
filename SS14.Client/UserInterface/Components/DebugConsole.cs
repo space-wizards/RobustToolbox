@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using OpenTK.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.GameObjects;
@@ -38,11 +39,11 @@ namespace SS14.Client.UserInterface.Components
             input = new Textbox(size.X, resourceCache)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new Color(64, 64, 64, 100),
-                textColor = new Color(255, 250, 240)
+                drawColor = new Color4(64, 64, 64, 100),
+                textColor = new Color4(255, 250, 240, 255)
             };
             input.OnSubmit += input_OnSubmit;
-            this.BackgroundColor = new Color(64, 64, 64, 200);
+            this.BackgroundColor = new Color4(64, 64, 64, 200);
             this.DrawBackground = true;
             this.DrawBorder = true;
 
@@ -51,11 +52,11 @@ namespace SS14.Client.UserInterface.Components
 
         private void input_OnSubmit(string text, Textbox sender)
         {
-            AddLine("> " + text, new Color(255, 250, 240));
+            AddLine("> " + text, new Color4(255, 250, 240, 255));
             ProcessCommand(text);
         }
 
-        public void AddLine(string text, Color color)
+        public void AddLine(string text, Color4 color)
         {
             bool atBottom = scrollbarV.Value >= scrollbarV.max;
             Label newLabel = new Label(text, "CALIBRI", this._resourceCache)
@@ -119,7 +120,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 case NetMessages.ConsoleCommandReply:
                     e.RawMessage.ReadByte();
-                    AddLine("< " + e.RawMessage.ReadString(), new Color(65, 105, 225));
+                    AddLine("< " + e.RawMessage.ReadString(), new Color4(65, 105, 225, 255));
                     break;
 
                 case NetMessages.ConsoleCommandRegister:
@@ -130,7 +131,7 @@ namespace SS14.Client.UserInterface.Components
                         // Do not do duplicate commands.
                         if (commands.ContainsKey(commandName))
                         {
-                            AddLine("Server sent console command {0}, but we already have one with the same name. Ignoring." + commandName, Color.White);
+                            AddLine("Server sent console command {0}, but we already have one with the same name. Ignoring." + commandName, Color4.White);
                             continue;
                         }
 
@@ -219,7 +220,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
-                AddLine("Unknown command: " + commandname, Color.Red);
+                AddLine("Unknown command: " + commandname, Color4.Red);
                 return;
             }
 

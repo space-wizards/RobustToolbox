@@ -4,6 +4,7 @@ using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Maths;
@@ -18,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
     {
         protected readonly IResourceCache _resourceCache;
 
-        public SFML.Graphics.Color BackgroundColor = new SFML.Graphics.Color(169, 169, 169);
+        public Color4 BackgroundColor = new Color4(169, 169, 169, 255);
         public bool DrawBackground = false;
         public bool DrawBorder = true;
         public float BorderSize = 1.0f;
@@ -108,7 +109,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
+            clippingRI.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)

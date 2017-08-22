@@ -11,6 +11,13 @@ namespace SS14.Client.Reflection
     /// </summary>
     public sealed class ClientReflectionManager : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new[] {"", "SS14.Client.", "SS14.Shared."};
+        protected override IEnumerable<string> TypePrefixes => new[]
+        {
+            "",
+            "SS14.Client.",
+            "SS14.Shared.",
+            "Content.Shared.",
+            "Content.Client."
+        };
     }
 }

@@ -10,6 +10,7 @@ namespace SS14.Client.Interfaces.GameObjects
     public interface IClientEntityManager : IEntityManager
     {
         IEnumerable<IEntity> GetEntitiesInRange(Vector2 position, float Range);
+        IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position);
         void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime);
     }
 }

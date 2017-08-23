@@ -17,35 +17,16 @@ namespace SS14.Client.Map
     /// </summary>
     public static class MapRenderer
     {
-        public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch, SpriteBatch wallBatch, SpriteBatch wallTopsBatch)
+        public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
             var walls = new List<TileRef>();
 
             foreach (var tileReference in tileRefs)
             {
                 var tileType = tileReference.TileDef;
-
-                if (tileType.IsWall)
-                {
-                    walls.Add(tileReference);
-                }
-                else
-                {
-                    var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
-                    RenderTile(tileType, point.X, point.Y, floorBatch);
-                    RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
-                }
-            }
-
-            walls.Sort((t1, t2) => (int) t1.Y - (int) t2.Y);
-
-            foreach (var tr in walls)
-            {
-                var td = tr.TileDef;
-
-                var point = CluwneLib.WorldToScreen(new Vector2(tr.X, tr.Y));
-                RenderTile(td, point.X, point.Y, wallBatch);
-                RenderTop(td, point.X, point.Y, wallTopsBatch);
+                var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
+                RenderTile(tileType, point.X, point.Y, floorBatch);
+                RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
             }
         }
 

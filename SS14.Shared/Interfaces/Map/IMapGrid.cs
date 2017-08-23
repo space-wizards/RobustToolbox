@@ -159,7 +159,8 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridTile">The Grid Tile indices.</param>
         /// <returns></returns>
-        bool IndicesToTile(MapGrid.Indices indices, out TileRef tile)
+        bool IndicesToTile(MapGrid.Indices indices, out TileRef tile);
+
         #endregion
     }
 }

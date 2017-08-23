@@ -59,10 +59,18 @@ namespace SS14.Shared.Map
         {
             // array out of bounds
             if (xTile >= ChunkSize || yTile >= ChunkSize)
-                throw new ArgumentException("Tile indices out of bounds.");
+                throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
 
             var indices = ChunkTileToGridTile(new MapGrid.Indices(xTile, yTile));
             return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
+        }
+        public TileRef GetTile(MapGrid.Indices indices)
+        {
+            // array out of bounds
+            if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
+                throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
+            
+            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
         }
 
         /// <inheritdoc />

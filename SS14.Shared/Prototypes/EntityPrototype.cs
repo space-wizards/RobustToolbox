@@ -265,7 +265,10 @@ namespace SS14.Shared.GameObjects
                 entity.AddComponent(component);
             }
 
-            entity.LoadData(DataNode);
+            if (DataNode != null)
+            {
+                entity.LoadData(DataNode);
+            }
 
             return entity;
         }

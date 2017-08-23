@@ -314,6 +314,19 @@ namespace SS14.Shared.Map
             return LocalToWorld(local);
         }
 
+        /// <inheritdoc />
+        public bool IndicesToTile(MapGrid.Indices indices, out TileRef tile)
+        {
+            MapGrid.Indices chunkindices = new MapGrid.Indices(indices.X / ChunkSize, indices.Y / ChunkSize);
+            if (!_chunks.ContainsKey(chunkindices))
+            {
+                tile = new TileRef(); //Nothing should ever use or access this, bool check should occur first
+                return false;
+            }
+            Chunk chunk = _chunks[chunkindices];
+            tile = chunk.GetTile(new MapGrid.Indices(indices.X % ChunkSize, indices.Y % ChunkSize));
+            return true;
+        }
 
         #endregion
     }

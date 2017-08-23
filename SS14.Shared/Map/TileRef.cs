@@ -1,5 +1,6 @@
 ﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using Vector2f = OpenTK.Vector2;
 
 namespace SS14.Shared.Map
@@ -47,6 +48,44 @@ namespace SS14.Shared.Map
         public override string ToString()
         {
             return $"TileRef: {X},{Y}";
+        }
+
+        public bool GetStep(Direction dir, out TileRef steptile)
+        {
+            MapGrid.Indices currenttile = _gridTile;
+            MapGrid.Indices shift;
+            switch (dir)
+            {
+                case Direction.East:
+                    shift = new MapGrid.Indices(1, 0);
+                    break;
+                case Direction.West:
+                    shift = new MapGrid.Indices(-1, 0);
+                    break;
+                case Direction.North:
+                    shift = new MapGrid.Indices(0, 1);
+                    break;
+                case Direction.South:
+                    shift = new MapGrid.Indices(0, -1);
+                    break;
+                case Direction.NorthEast:
+                    shift = new MapGrid.Indices(1, 1);
+                    break;
+                case Direction.SouthEast:
+                    shift = new MapGrid.Indices(1, -1);
+                    break;
+                case Direction.NorthWest:
+                    shift = new MapGrid.Indices(-1, 1);
+                    break;
+                case Direction.SouthWest:
+                    shift = new MapGrid.Indices(-1, -1);
+                    break;
+                default:
+                    steptile = new TileRef();
+                    return false;
+            }
+            currenttile += shift;
+            return _manager.GetGrid(_gridIndex).IndicesToTile(currenttile, out steptile);
         }
     }
 }

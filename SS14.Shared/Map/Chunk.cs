@@ -64,6 +64,14 @@ namespace SS14.Shared.Map
             var indices = ChunkTileToGridTile(new MapGrid.Indices(xTile, yTile));
             return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
         }
+        public TileRef GetTile(MapGrid.Indices indices)
+        {
+            // array out of bounds
+            if (indices.X >= ChunkSize || indices.Y >= ChunkSize)
+                throw new ArgumentException("Tile indices out of bounds.");
+            
+            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
+        }
 
         /// <inheritdoc />
         [Obsolete("Enumerate over the chunk instead.")]

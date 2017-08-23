@@ -154,6 +154,12 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns></returns>
         Vector2 GridTileToWorld(MapGrid.Indices gridTile);
 
+        /// <summary>
+        ///     Transforms grid indices into an outvar tile, returns false if no tile is found
+        /// </summary>
+        /// <param name="gridTile">The Grid Tile indices.</param>
+        /// <returns></returns>
+        bool IndicesToTile(MapGrid.Indices indices, out TileRef tile)
         #endregion
     }
 }

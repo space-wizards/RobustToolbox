@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import List
 
 SOLUTION_PATH = Path("..") / "SpaceStation14Content.sln"
-CURRENT_HOOKS_VERSION = "1" # If this doesn't match the saved version we overwrite them all.
-QUIET = len(sys.argv) == 2 and sys.argv[1] == "--quiet"
+CURRENT_HOOKS_VERSION = "2" # If this doesn't match the saved version we overwrite them all.
+QUIET = "--quiet" in sys.argv
+NO_HOOKS = "--nohooks" in sys.argv
 
 def run_command(command: List[str], capture: bool = False) -> subprocess.CompletedProcess:
     """
@@ -95,5 +96,6 @@ def reset_solution():
         f.write(content)
 
 if __name__ == '__main__':
-    install_hooks()
+    if not NO_HOOKS:
+        install_hooks()
     update_submodules()

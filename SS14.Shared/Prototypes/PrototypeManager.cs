@@ -105,7 +105,7 @@ namespace SS14.Shared.Prototypes
             }
             catch (KeyNotFoundException)
             {
-                throw new UnknowPrototypeException(id);
+                throw new UnknownPrototypeException(id);
             }
         }
 
@@ -285,16 +285,16 @@ namespace SS14.Shared.Prototypes
     }
 
     [Serializable]
-    public class UnknowPrototypeException : Exception
+    public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;
         public readonly string Prototype;
-        public UnknowPrototypeException(string prototype)
+        public UnknownPrototypeException(string prototype)
         {
             Prototype = prototype;
         }
 
-        public UnknowPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
+        public UnknownPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             Prototype = (string)info.GetValue("prototype", typeof(string));
         }

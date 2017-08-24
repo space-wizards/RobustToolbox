@@ -32,6 +32,9 @@ namespace SS14.Client.Placement.Modes
             if (!RangeCheck())
                 return false;
 
+            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
+            var failtoplace = entitymanager.AnyEntitiesIntersecting(new Box2(new Vector2(currentTile.X, currentTile.Y), new Vector2(currentTile.X + 0.99f, currentTile.Y + 0.99f)));
+
             if (pManager.CurrentPermission.IsTile)
             {
                 mouseWorld = new Vector2(currentTile.X + 0.5f,
@@ -44,11 +47,7 @@ namespace SS14.Client.Placement.Modes
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
             }
-
-            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
-            if (entitymanager.AnyEntitiesIntersecting(new Box2(new Vector2(currentTile.X - 0.49f, currentTile.Y - 0.49f), new Vector2(currentTile.X + 0.49f, currentTile.Y + 0.49f))))
-                return false;
-            return true;
+            return failtoplace;
         }
     }
 }

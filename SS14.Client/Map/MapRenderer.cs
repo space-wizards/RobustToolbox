@@ -58,7 +58,7 @@ namespace SS14.Client.Map
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;
-            shape.Position = new Vector2f(x, y);
+            shape.Position = new Vector2f(x - bounds.Width/2, y - bounds.Height/2);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 

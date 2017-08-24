@@ -33,6 +33,47 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (position.Intersects(component.WorldAABB))
+                        yield return entity;
+                }
+                else
+                {
+                    var transform = entity.GetComponent<ITransformComponent>();
+                    if (position.Contains(transform.Position))
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
+        public bool AnyEntitiesIntersecting(Box2 position)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (position.Intersects(component.WorldAABB))
+                        return true;
+                }
+                else
+                {
+                    var transform = entity.GetComponent<ITransformComponent>();
+                    if (position.Contains(transform.Position))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void Initialize()
         {
             if (Initialized)

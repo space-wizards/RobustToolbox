@@ -65,9 +65,7 @@ namespace SS14.Client.State.States
 
         private List<RenderImage> _cleanupList = new List<RenderImage>();
         private List<Sprite> _cleanupSpriteList = new List<Sprite>();
-
-        private SpriteBatch _wallBatch;
-        private SpriteBatch _wallTopsBatch;
+        
         private SpriteBatch _floorBatch;
         private SpriteBatch _gasBatch;
         private SpriteBatch _decalBatch;
@@ -230,12 +228,6 @@ namespace SS14.Client.State.States
             _gasBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _gasBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            _wallTopsBatch = new SpriteBatch();
-            _wallTopsBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _wallTopsBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
-            _wallTopsBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _wallTopsBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-
             _decalBatch = new SpriteBatch();
             _decalBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _decalBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
@@ -243,7 +235,6 @@ namespace SS14.Client.State.States
             _decalBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
             _floorBatch = new SpriteBatch();
-            _wallBatch = new SpriteBatch();
         }
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
@@ -391,12 +382,6 @@ namespace SS14.Client.State.States
                     _tilesTarget.Draw(_floorBatch);
                 }
 
-                if (_wallBatch.Count > 0)
-                    _tilesTarget.Draw(_wallBatch);
-
-                if (_wallTopsBatch.Count > 0)
-                    _overlayTarget.Draw(_wallTopsBatch);
-
                 _tilesTarget.EndDrawing();
                 _redrawTiles = false;
             }
@@ -493,8 +478,6 @@ namespace SS14.Client.State.States
             _decalBatch.Dispose();
             _floorBatch.Dispose();
             _gasBatch.Dispose();
-            _wallBatch.Dispose();
-            _wallTopsBatch.Dispose();
             GC.Collect();
         }
 
@@ -1114,18 +1097,14 @@ namespace SS14.Client.State.States
             BlurPlayerVision();
 
             _decalBatch.BeginDrawing();
-            _wallTopsBatch.BeginDrawing();
             _floorBatch.BeginDrawing();
-            _wallBatch.BeginDrawing();
             _gasBatch.BeginDrawing();
 
             DrawTiles(vision);
 
             _floorBatch.EndDrawing();
             _decalBatch.EndDrawing();
-            _wallTopsBatch.EndDrawing();
             _gasBatch.EndDrawing();
-            _wallBatch.EndDrawing();
 
             _recalculateScene = false;
             _redrawTiles = true;
@@ -1207,14 +1186,15 @@ namespace SS14.Client.State.States
             Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
             var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
 
-            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(lightArea, true, tRef => tRef.TileDef.IsWall);
+            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
 
-            foreach (TileRef t in tiles)
+            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea).Where(t => t.Name == "Wall")) //TODO: Replace with component or variable
             {
-                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(new Vector2(t.X, t.Y)));
-                MapRenderer.RenderPos(t.TileDef, pos.X, pos.Y);
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(t.GetComponent<ITransformComponent>().Position));
+                MapRenderer.RenderPos(t, pos.X, pos.Y);
             }
         }
+
 
         private void BlurPlayerVision()
         {
@@ -1231,7 +1211,7 @@ namespace SS14.Client.State.States
         {
             var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision, false);
 
-            MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch, _wallBatch, _wallTopsBatch);
+            MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch);
         }
 
         /// <summary>

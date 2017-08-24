@@ -17,7 +17,6 @@
             IsCollidable = false;
             IsGasVolume = true;
             IsVentedIntoSpace = true;
-            IsWall = false;
             SpriteName = "space_texture";
         }
     }
@@ -39,30 +38,7 @@
             IsCollidable = false;
             IsGasVolume = true;
             IsVentedIntoSpace = false;
-            IsWall = false;
             SpriteName = "floor_texture";
-        }
-    }
-
-    /// <summary>
-    ///     Default TileDefinition of a Wall
-    /// </summary>
-    public sealed class WallTileDefinition : TileDefinition
-    {
-        /// <summary>
-        ///     Default Constructor
-        /// </summary>
-        public WallTileDefinition()
-        {
-            Name = "Wall";
-
-            IsConnectingSprite = false;
-            IsOpaque = true;
-            IsCollidable = true;
-            IsGasVolume = false;
-            IsVentedIntoSpace = false;
-            IsWall = true;
-            SpriteName = "wall_texture";
         }
     }
 }

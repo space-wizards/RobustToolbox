@@ -47,11 +47,6 @@ namespace SS14.Shared.Interfaces.Map
         bool IsFloor { get; }
 
         /// <summary>
-        ///     Is this tile a wall?
-        /// </summary>
-        bool IsWall { get; }
-
-        /// <summary>
         ///     The name of the sprite to draw.
         /// </summary>
         string SpriteName { get; }

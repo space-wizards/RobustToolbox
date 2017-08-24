@@ -8,6 +8,8 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.Map
 {
@@ -17,35 +19,16 @@ namespace SS14.Client.Map
     /// </summary>
     public static class MapRenderer
     {
-        public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch, SpriteBatch wallBatch, SpriteBatch wallTopsBatch)
+        public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
             var walls = new List<TileRef>();
 
             foreach (var tileReference in tileRefs)
             {
                 var tileType = tileReference.TileDef;
-
-                if (tileType.IsWall)
-                {
-                    walls.Add(tileReference);
-                }
-                else
-                {
-                    var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
-                    RenderTile(tileType, point.X, point.Y, floorBatch);
-                    RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
-                }
-            }
-
-            walls.Sort((t1, t2) => (int) t1.Y - (int) t2.Y);
-
-            foreach (var tr in walls)
-            {
-                var td = tr.TileDef;
-
-                var point = CluwneLib.WorldToScreen(new Vector2(tr.X, tr.Y));
-                RenderTile(td, point.X, point.Y, wallBatch);
-                RenderTop(td, point.X, point.Y, wallTopsBatch);
+                var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
+                RenderTile(tileType, point.X, point.Y, floorBatch);
+                RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
             }
         }
 
@@ -64,18 +47,18 @@ namespace SS14.Client.Map
         }
 
         /// <summary>
-        ///     Render a solid black instance of a tile at the given coordinates.
+        ///     Renders a shadow cast from the object
         /// </summary>
         /// <param name="def">The definition of the tile to use.</param>
         /// <param name="x">X position in world coordinates.</param>
         /// <param name="y">Y position in world coordinates.</param>
-        public static void RenderPos(ITileDefinition def, float x, float y)
+        public static void RenderPos(IEntity entity, float x, float y)
         {
-            var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
+            var tileSprite = entity.GetComponent<ISpriteComponent>().GetCurrentSprite();
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;
-            shape.Position = new Vector2f(x, y);
+            shape.Position = new Vector2f(x - bounds.Width/2, y - bounds.Height/2);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 

@@ -9,6 +9,8 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.IoC;
+using SS14.Client.Interfaces.GameObjects;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -27,9 +29,6 @@ namespace SS14.Client.Placement.Modes
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            if (currentTile.Tile.TileId != 0)
-                return false;
-
             if (!RangeCheck())
                 return false;
 
@@ -44,11 +43,11 @@ namespace SS14.Client.Placement.Modes
                 mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
                                          currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
                 mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
-
-                if (CheckCollision())
-                    return false;
             }
 
+            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
+            if (entitymanager.AnyEntitiesIntersecting(new Box2(new Vector2(currentTile.X - 0.49f, currentTile.Y - 0.49f), new Vector2(currentTile.X + 0.49f, currentTile.Y + 0.49f))))
+                return false;
             return true;
         }
     }

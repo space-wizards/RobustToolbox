@@ -11,6 +11,7 @@ namespace SS14.Client.Interfaces.GameObjects
     {
         IEnumerable<IEntity> GetEntitiesInRange(Vector2 position, float Range);
         IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position);
+        bool AnyEntitiesIntersecting(Box2 position);
         void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime);
     }
 }

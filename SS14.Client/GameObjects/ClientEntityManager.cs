@@ -53,6 +53,27 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public bool AnyEntitiesIntersecting(Box2 position)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (position.Intersects(component.WorldAABB))
+                        return true;
+                }
+                else
+                {
+                    var transform = entity.GetComponent<ITransformComponent>();
+                    if (position.Contains(transform.Position))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public void Initialize()
         {
             if (Initialized)

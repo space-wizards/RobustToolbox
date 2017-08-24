@@ -31,6 +31,7 @@ using SS14.Shared.Interfaces.Timing;
 using KeyArgs = SFML.Window.KeyEventArgs;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
 
 namespace SS14.Client
 {
@@ -104,7 +105,9 @@ namespace SS14.Client
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
             _mapManager.Initialize();
-
+            
+            _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
+            _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _stateManager.RequestStateChange<MainScreen>();

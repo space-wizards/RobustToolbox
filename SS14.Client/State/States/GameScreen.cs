@@ -23,7 +23,6 @@ using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
-using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -71,11 +70,6 @@ namespace SS14.Client.State.States
         private SpriteBatch _floorBatch;
         private SpriteBatch _gasBatch;
         private SpriteBatch _decalBatch;
-
-        #region gameState stuff
-        private readonly Dictionary<uint, GameState> _lastStates = new Dictionary<uint, GameState>();
-        private uint _currentStateSequence; //We only ever want a newer state than the current one
-        #endregion gameState stuff
 
         #region Mouse/Camera stuff
         public Vector2i MousePosScreen = new Vector2i();
@@ -808,12 +802,6 @@ namespace SS14.Client.State.States
                         case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
-                        case NetMessages.StateUpdate:
-                            HandleStateUpdate(message);
-                            break;
-                        case NetMessages.FullState:
-                            HandleFullState(message);
-                            break;
                     }
                     break;
             }
@@ -822,94 +810,6 @@ namespace SS14.Client.State.States
         #endregion Messages
 
         #region State
-
-        /// <summary>
-        /// HandleStateUpdate
-        ///
-        /// Receives a state update message and unpacks the delicious GameStateDelta hidden inside
-        /// Then it applies the gamestatedelta to a past state to form: a full game state!
-        /// </summary>
-        /// <param name="message">incoming state update message</param>
-        private void HandleStateUpdate(NetIncomingMessage message)
-        {
-            //Read the delta from the message
-            GameStateDelta delta = GameStateDelta.ReadDelta(message);
-
-            if (!_lastStates.ContainsKey(delta.FromSequence)) // Drop messages that reference a state that we don't have
-                return; //TODO request full state here?
-
-            //Acknowledge reciept before we do too much more shit -- ack as quickly as possible
-            SendStateAck(delta.Sequence);
-
-            //Grab the 'from' state
-            GameState fromState = _lastStates[delta.FromSequence];
-            //Apply the delta
-            GameState newState = fromState + delta;
-            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
-
-            // Go ahead and store it even if our current state is newer than this one, because
-            // a newer state delta may later reference this one.
-            _lastStates[delta.Sequence] = newState;
-
-            if (delta.Sequence > _currentStateSequence)
-                _currentStateSequence = delta.Sequence;
-
-            ApplyCurrentGameState();
-
-            //Dump states that have passed out of being relevant
-            CullOldStates(delta.FromSequence);
-        }
-
-        /// <summary>
-        /// CullOldStates
-        ///
-        /// Deletes states that are no longer relevant
-        /// </summary>
-        /// <param name="sequence">state sequence number</param>
-        private void CullOldStates(uint sequence)
-        {
-            foreach (uint v in _lastStates.Keys.Where(v => v < sequence).ToList())
-                _lastStates.Remove(v);
-        }
-
-        /// <summary>
-        /// HandleFullState
-        ///
-        /// Handles full gamestates - for initializing.
-        /// </summary>
-        /// <param name="message">incoming full state message</param>
-        private void HandleFullState(NetIncomingMessage message)
-        {
-            GameState newState = GameState.ReadStateMessage(message);
-            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
-            SendStateAck(newState.Sequence);
-
-            //Store the new state
-            _lastStates[newState.Sequence] = newState;
-            _currentStateSequence = newState.Sequence;
-            ApplyCurrentGameState();
-        }
-
-        private void ApplyCurrentGameState()
-        {
-            GameState currentState = _lastStates[_currentStateSequence];
-            _entityManager.ApplyEntityStates(currentState.EntityStates, currentState.GameTime);
-            PlayerManager.ApplyPlayerStates(currentState.PlayerStates);
-        }
-
-        /// <summary>
-        /// SendStateAck
-        ///
-        /// Acknowledge a game state being received
-        /// </summary>
-        /// <param name="sequence">State sequence number</param>
-        private void SendStateAck(uint sequence)
-        {
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.StateAck);
-            message.Write(sequence);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.Unreliable);
-        }
 
         public void FormResize()
         {

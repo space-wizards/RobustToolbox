@@ -1,57 +1,95 @@
+﻿using Lidgren.Network;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
+using SS14.Client.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Client.GameStates
 {
-    public class GameStateManager : Dictionary<uint, GameState>, IGameStateManager
+    public class GameStateManager : IGameStateManager
     {
-        private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
-        private uint currentStateSeq;
-        public GameState CurrentState { get; private set; }
+        public Dictionary<uint, GameState> GameStates;
 
-        #region IGameStateManager Members
+        private List<uint> AckedGameStates;
 
-        public void Cull()
-        {
-            foreach (uint v in Keys.Where(v => v < OldestStateAcked).ToList())
-                Remove(v);
-        }
-
-        public uint OldestStateAcked
+        public GameState CurrentState
         {
             get
             {
-                uint state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Max());
-                return state;
+                return GameStates.Values.Last();
             }
         }
 
-        public void Ack(long uniqueIdentifier, uint stateAcked)
+        public GameStateManager()
         {
-            if (!ackedStates.ContainsKey(uniqueIdentifier))
-                ackedStates.Add(uniqueIdentifier, stateAcked);
-            else
-                ackedStates[uniqueIdentifier] = stateAcked;
+            GameStates = new Dictionary<uint, GameState>();
+            AckedGameStates = new List<uint>();
         }
 
-        #endregion
-
-        public void CullAll()
+        public void HandleFullStateMessage(MsgFullState message)
         {
-            Clear();
+            if (!GameStates.Keys.Contains(message.State.Sequence))
+            {
+                message.State.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
+                ApplyFullGameState(message.State);
+            }
         }
 
-        public void ApplyFullState(uint seq, GameState fullState)
+        public void HandleStateUpdateMessage(MsgStateUpdate message)
         {
-            CurrentState = fullState;
-            currentStateSeq = seq;
+            if (GameStates.ContainsKey(message.StateDelta.FromSequence))
+            {
+                ApplyDeltaGameState(message.StateDelta);
+            }
         }
 
-        public void ApplyDeltaState(uint oldStateSeq, uint newStateSeq, GameStateDelta delta)
+        private void CullOldStates(uint sequence)
         {
+            foreach (uint v in GameStates.Keys.Where(v => v < sequence).ToList())
+                GameStates.Remove(v);
+        }
+
+        private void AckGameState(uint sequence)
+        {
+            IClientNetManager networkManager = IoCManager.Resolve<IClientNetManager>();
+            NetOutgoingMessage ack = networkManager.CreateMessage();
+            ack.Write((byte)NetMessages.StateAck);
+            ack.Write(sequence);
+            networkManager.ClientSendMessage(ack, NetDeliveryMethod.ReliableUnordered);
+
+            AckedGameStates.Add(sequence);
+        }
+
+        private void ApplyFullGameState(GameState gameState)
+        {
+            GameStates[gameState.Sequence] = gameState;
+            AckGameState(gameState.Sequence);
+
+            IoCManager.Resolve<IClientEntityManager>().ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
+            IoCManager.Resolve<IPlayerManager>().ApplyPlayerStates(CurrentState.PlayerStates);
+        }
+
+        private void ApplyDeltaGameState(GameStateDelta delta)
+        {
+            AckGameState(delta.Sequence);
+
+            GameState fromState = GameStates[delta.FromSequence];
+            GameState newState = fromState + delta;
+            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
+
+            GameStates[delta.Sequence] = newState;
+
+            IoCManager.Resolve<IClientEntityManager>().ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
+            IoCManager.Resolve<IPlayerManager>().ApplyPlayerStates(CurrentState.PlayerStates);
+
+            CullOldStates(delta.FromSequence);
         }
     }
 }

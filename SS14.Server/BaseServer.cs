@@ -195,9 +195,9 @@ namespace SS14.Server
 
             netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int) MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity) message));
             netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int) MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin) message));
-            // Not converted yet: NetMessages.StateUpdate
+            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
-            // Not converted yet: NetMessages.FullState
+            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
             Serializer.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
@@ -519,8 +519,23 @@ namespace SS14.Server
                 return;
             }
 
-            var stateMessage = generateStateMessage(c, state);
-            netMan.ServerSendMessage(stateMessage, c.Connection, NetDeliveryMethod.Unreliable);
+            var stateManager = IoCManager.Resolve<IGameStateManager>();
+
+            if (stateManager.GetLastStateAcked(c) == 0)
+            {
+                MsgFullState fullStateMessage = netMan.CreateNetMessage<MsgFullState>();
+                fullStateMessage.State = state;
+                fullStateMessage.Sequence = state.Sequence;
+
+                netMan.ServerSendMessage(fullStateMessage, c);
+            }
+            else
+            {
+                MsgStateUpdate stateUpdateMessage = netMan.CreateNetMessage<MsgStateUpdate>();
+                stateUpdateMessage.StateDelta = stateManager.GetDelta(c, _time.CurTick);
+
+                netMan.ServerSendMessage(stateUpdateMessage, c);
+            }
         }
 
         private GameState CreateGameState()
@@ -530,26 +545,6 @@ namespace SS14.Server
                 state.EntityStates = _entities.GetEntityStates();
             state.PlayerStates = IoCManager.Resolve<IPlayerManager>().GetPlayerStates();
             return state;
-        }
-
-        private NetOutgoingMessage generateStateMessage(INetChannel c, GameState state)
-        {
-            var netMan = IoCManager.Resolve<IServerNetManager>();
-            var stateManager = IoCManager.Resolve<IGameStateManager>();
-            var stateMessage = netMan.CreateMessage();
-            var lastStateAcked = stateManager.GetLastStateAcked(c);
-
-            if (lastStateAcked == 0) // || forceFullState)
-            {
-                state.WriteStateMessage(stateMessage);
-            }
-            else
-            {
-                stateMessage.Write((byte)NetMessages.StateUpdate);
-                var delta = stateManager.GetDelta(c, _time.CurTick);
-                delta.WriteDelta(stateMessage);
-            }
-            return stateMessage;
         }
 
         #region MessageProcessing

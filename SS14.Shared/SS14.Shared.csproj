@@ -191,6 +191,8 @@
     <Compile Include="EntityBaseClass.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
+    <Compile Include="Network\Messages\MsgFullState.cs" />
+    <Compile Include="Network\Messages\MsgStateUpdate.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgAdmin.cs" />

@@ -18,14 +18,16 @@ namespace SS14.Client.GameStates
         public Dictionary<uint, GameState> GameStates;
 
         private List<uint> AckedGameStates;
+        [Dependency]
+        private readonly IGameTiming timing;
+        [Dependency]
+        private readonly IClientNetManager networkManager;
+        [Dependency]
+        private readonly IClientEntityManager entityManager;
+        [Dependency]
+        private readonly IPlayerManager playerManager;
 
-        public GameState CurrentState
-        {
-            get
-            {
-                return GameStates.Values.Last();
-            }
-        }
+        public GameState CurrentState { get; private set; }
 
         public GameStateManager()
         {
@@ -33,22 +35,37 @@ namespace SS14.Client.GameStates
             AckedGameStates = new List<uint>();
         }
 
+        #region Network
+
         public void HandleFullStateMessage(MsgFullState message)
         {
             if (!GameStates.Keys.Contains(message.State.Sequence))
             {
-                message.State.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
-                ApplyFullGameState(message.State);
+                AckGameState(message.State.Sequence);
+
+                message.State.GameTime = (float)timing.CurTime.TotalSeconds;
+                ApplyGameState(message.State);
             }
         }
 
         public void HandleStateUpdateMessage(MsgStateUpdate message)
         {
-            if (GameStates.ContainsKey(message.StateDelta.FromSequence))
+            GameStateDelta delta = message.StateDelta;
+
+            if (GameStates.ContainsKey(delta.FromSequence))
             {
-                ApplyDeltaGameState(message.StateDelta);
+                AckGameState(delta.Sequence);
+
+                GameState fromState = GameStates[delta.FromSequence];
+                GameState newState = fromState + delta;
+                newState.GameTime = (float)timing.CurTime.TotalSeconds;
+                ApplyGameState(newState);
+
+                CullOldStates(delta.FromSequence);
             }
         }
+
+        #endregion Network
 
         private void CullOldStates(uint sequence)
         {
@@ -58,7 +75,6 @@ namespace SS14.Client.GameStates
 
         private void AckGameState(uint sequence)
         {
-            IClientNetManager networkManager = IoCManager.Resolve<IClientNetManager>();
             NetOutgoingMessage ack = networkManager.CreateMessage();
             ack.Write((byte)NetMessages.StateAck);
             ack.Write(sequence);
@@ -67,29 +83,13 @@ namespace SS14.Client.GameStates
             AckedGameStates.Add(sequence);
         }
 
-        private void ApplyFullGameState(GameState gameState)
+        private void ApplyGameState(GameState gameState)
         {
             GameStates[gameState.Sequence] = gameState;
-            AckGameState(gameState.Sequence);
+            CurrentState = gameState;
 
-            IoCManager.Resolve<IClientEntityManager>().ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
-            IoCManager.Resolve<IPlayerManager>().ApplyPlayerStates(CurrentState.PlayerStates);
-        }
-
-        private void ApplyDeltaGameState(GameStateDelta delta)
-        {
-            AckGameState(delta.Sequence);
-
-            GameState fromState = GameStates[delta.FromSequence];
-            GameState newState = fromState + delta;
-            newState.GameTime = (float)IoCManager.Resolve<IGameTiming>().CurTime.TotalSeconds;
-
-            GameStates[delta.Sequence] = newState;
-
-            IoCManager.Resolve<IClientEntityManager>().ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
-            IoCManager.Resolve<IPlayerManager>().ApplyPlayerStates(CurrentState.PlayerStates);
-
-            CullOldStates(delta.FromSequence);
+            entityManager.ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
+            playerManager.ApplyPlayerStates(CurrentState.PlayerStates);
         }
     }
 }

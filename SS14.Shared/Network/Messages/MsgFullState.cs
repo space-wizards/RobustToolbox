@@ -21,11 +21,9 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public GameState State { get; set; }
-        public uint Sequence;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            Sequence = buffer.ReadUInt32();
             int length = buffer.ReadInt32();
             byte[] stateData = Decompress(buffer.ReadBytes(length));
             using (var stateStream = new MemoryStream(stateData))
@@ -38,8 +36,7 @@ namespace SS14.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             byte[] stateData = Compress(State.GetSerializedDataBuffer());
-
-            buffer.Write(Sequence);
+            
             buffer.Write(stateData.Length);
             buffer.Write(stateData);
         }

@@ -525,7 +525,6 @@ namespace SS14.Server
             {
                 MsgFullState fullStateMessage = netMan.CreateNetMessage<MsgFullState>();
                 fullStateMessage.State = state;
-                fullStateMessage.Sequence = state.Sequence;
 
                 netMan.ServerSendMessage(fullStateMessage, c);
             }

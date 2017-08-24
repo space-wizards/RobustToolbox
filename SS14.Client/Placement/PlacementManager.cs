@@ -233,16 +233,8 @@ namespace SS14.Client.Placement
         {
             var tileDefs = IoCManager.Resolve<ITileDefinitionManager>();
 
-            if (tileDefs[tileType.TileId].IsWall)
-            {
-                CurrentBaseSprite = ResourceCache.GetSprite("wall");
-                CurrentBaseSpriteKey = "wall";
-            }
-            else
-            {
-                CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
-                CurrentBaseSpriteKey = "tilebuildoverlay";
-            }
+            CurrentBaseSprite = ResourceCache.GetSprite("tilebuildoverlay");
+            CurrentBaseSpriteKey = "tilebuildoverlay";
 
             IsActive = true;
         }

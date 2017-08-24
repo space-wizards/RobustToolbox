@@ -32,9 +32,6 @@ namespace SS14.Client.Placement.Modes
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            if (!currentTile.TileDef.IsWall)
-                return false;
-
             if (!RangeCheck())
                 return false;
 

@@ -1136,6 +1136,7 @@ namespace SS14.Client.State.States
                 }
 
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
                 area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
                 Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
@@ -1178,6 +1179,22 @@ namespace SS14.Client.State.States
                 playerOcclusionTarget.Clear(Color.Black);
             }
         }
+
+        // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
+        private void DrawWallsRelativeToLight(ILightArea area)
+        {
+            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
+            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+
+            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
+
+            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea).Where(t => t.Name == "Wall")) //TODO: Replace with component or variable
+            {
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(t.GetComponent<ITransformComponent>().Position));
+                MapRenderer.RenderPos(t, pos.X, pos.Y);
+            }
+        }
+
 
         private void BlurPlayerVision()
         {
@@ -1317,6 +1334,7 @@ namespace SS14.Client.State.States
                                                   MapManager.TileSize + 1);
             }
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+            DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
             shadowMapResolver.ResolveShadows((LightArea)area, true); // Calc shadows
             area.Calculated = true;

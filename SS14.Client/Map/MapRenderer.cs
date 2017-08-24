@@ -8,6 +8,8 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Client.Map
 {
@@ -45,14 +47,14 @@ namespace SS14.Client.Map
         }
 
         /// <summary>
-        ///     Render a solid black instance of a tile at the given coordinates.
+        ///     Renders a shadow cast from the object
         /// </summary>
         /// <param name="def">The definition of the tile to use.</param>
         /// <param name="x">X position in world coordinates.</param>
         /// <param name="y">Y position in world coordinates.</param>
-        public static void RenderPos(ITileDefinition def, float x, float y)
+        public static void RenderPos(IEntity entity, float x, float y)
         {
-            var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
+            var tileSprite = entity.GetComponent<ISpriteComponent>().GetCurrentSprite();
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;

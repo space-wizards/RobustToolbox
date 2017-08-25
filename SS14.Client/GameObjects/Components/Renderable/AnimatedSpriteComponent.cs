@@ -264,7 +264,12 @@ namespace SS14.Client.GameObjects
             if (sprite == null || IsSlaved())
                 return;
 
-            sprite.Direction = Owner.GetComponent<TransformComponent>().Rotation.GetDir();
+            var worldRot = Owner.GetComponent<TransformComponent>().Rotation.ToVec();
+
+            // world2screen 
+            worldRot = new Vector2(worldRot.X, worldRot.Y * -1);
+
+            sprite.Direction = worldRot.GetDir();
             sprite.Update(frameTime);
         }
 

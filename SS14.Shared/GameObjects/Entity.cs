@@ -393,8 +393,6 @@ namespace SS14.Shared.GameObjects
             _components.Clear();
             _netIDs.Clear();
             _componentReferences.Clear();
-            var componentmanager = IoCManager.Resolve<IComponentManager>();
-            componentmanager.Cull();
         }
 
         public IEnumerable<IComponent> GetComponents()

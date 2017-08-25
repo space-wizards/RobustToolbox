@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using OpenTK;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using OpenTK;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -59,8 +60,9 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridId">The id of the new grid to create.</param>
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
+        /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16);
+        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, int snapSize = 32);
 
         /// <summary>
         ///     Checks if a grid exists with the given ID.
@@ -83,6 +85,19 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="mapGrid">The grid associated with the grid ID. If no grid exists, this is null.</param>
         /// <returns></returns>
         bool TryGetGrid(int gridId, out IMapGrid mapGrid);
+
+        /// <summary>
+        ///     Finds the grid at this world coordinate
+        /// </summary>
+        /// <param name="xWorld">The X coordinate in the world.</param>
+        /// <param name="yWorld">The Y coordinate in the world.</param>
+        bool TryFindGridAt(float xWorld, float yWorld, out IMapGrid currentgrid);
+
+        /// <summary>
+        ///     Finds the grid at this world coordinate
+        /// </summary>
+        /// <param name="WorldPos">The X coordinate in the world.</param>
+        bool TryFindGridAt(Vector2 worldPos, out IMapGrid currentgrid);
 
         /// <summary>
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);

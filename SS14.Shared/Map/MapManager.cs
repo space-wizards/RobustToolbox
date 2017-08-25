@@ -77,7 +77,7 @@ namespace SS14.Shared.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, int snapSize = 32)
+        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, float snapSize = 1)
         {
             var newGrid = new MapGrid(this, gridId, chunkSize, snapSize);
             _grids.Add(gridId, newGrid);

@@ -11,9 +11,9 @@ using System;
 
 namespace SS14.Client.Placement.Modes
 {
-    public class AlignSnapgridBorder : PlacementMode
+    public class SnapgridBorder : PlacementMode
     {
-        public AlignSnapgridBorder(PlacementManager pMan) : base(pMan)
+        public SnapgridBorder(PlacementManager pMan) : base(pMan)
         {
         }
 
@@ -30,8 +30,8 @@ namespace SS14.Client.Placement.Modes
             var mouselocal = currentgrid.WorldToLocal(mouseWorld); //Convert code to local grid coordinates
             var snapsize = currentgrid.SnapSize; //Find snap size
             mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float)Math.Round((mouselocal.X * 32 / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize / 32,
-                (float)Math.Round((mouselocal.Y * 32 / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize / 32);
+                (float)Math.Round((mouselocal.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
+                (float)Math.Round((mouselocal.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);
 
             //Convert back to original world and screen coordinates after applying offset
             mouseWorld = currentgrid.LocalToWorld(mouselocal) + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);

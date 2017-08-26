@@ -75,13 +75,17 @@ namespace SS14.Server.GameObjects
         {
             var input = Owner.GetComponent<KeyBindingInputComponent>();
 
+            // key directions are in screen coordinates
+            // _moveDir is in world coordinates
+            // if the camera is moved, this needs to be changed
+
             var x = 0;
             x -= input.GetKeyState(BoundKeyFunctions.MoveLeft) ? 1 : 0;
             x += input.GetKeyState(BoundKeyFunctions.MoveRight) ? 1 : 0;
 
             var y = 0;
-            y -= input.GetKeyState(BoundKeyFunctions.MoveDown) ? 1 : 0;
-            y += input.GetKeyState(BoundKeyFunctions.MoveUp) ? 1 : 0;
+            y += input.GetKeyState(BoundKeyFunctions.MoveDown) ? 1 : 0;
+            y -= input.GetKeyState(BoundKeyFunctions.MoveUp) ? 1 : 0;
 
             _moveDir = new Vector2(x, y);
 

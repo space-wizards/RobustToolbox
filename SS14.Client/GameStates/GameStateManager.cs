@@ -16,8 +16,7 @@ namespace SS14.Client.GameStates
     public class GameStateManager : IGameStateManager
     {
         public Dictionary<uint, GameState> GameStates;
-
-        private List<uint> AckedGameStates;
+        
         [Dependency]
         private readonly IGameTiming timing;
         [Dependency]
@@ -32,7 +31,6 @@ namespace SS14.Client.GameStates
         public GameStateManager()
         {
             GameStates = new Dictionary<uint, GameState>();
-            AckedGameStates = new List<uint>();
         }
 
         #region Network
@@ -69,7 +67,7 @@ namespace SS14.Client.GameStates
 
         private void CullOldStates(uint sequence)
         {
-            foreach (uint v in GameStates.Keys.Where(v => v < sequence).ToList())
+            foreach (uint v in GameStates.Keys.Where(v => v <= sequence).ToList())
                 GameStates.Remove(v);
         }
 
@@ -79,8 +77,6 @@ namespace SS14.Client.GameStates
             ack.Write((byte)NetMessages.StateAck);
             ack.Write(sequence);
             networkManager.ClientSendMessage(ack, NetDeliveryMethod.ReliableUnordered);
-
-            AckedGameStates.Add(sequence);
         }
 
         private void ApplyGameState(GameState gameState)

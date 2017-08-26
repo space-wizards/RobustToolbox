@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
+using OpenTK.Graphics;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -31,11 +32,11 @@ namespace SS14.Client.Placement.Modes
                 (float)(Math.Round((position.Y / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize));
                 for (float a = gridstart.X; a < CluwneLib.ScreenViewportSize.X; a += snapsize * 32) //Iterate through screen creating gridlines
                 {
-                    CluwneLib.drawLine(a, 0, CluwneLib.ScreenViewportSize.Y, 90, 0.5f, Color.Blue);
+                    CluwneLib.drawLine(a, 0, CluwneLib.ScreenViewportSize.Y, 90, 0.5f, Color4.Blue);
                 }
                 for (float a = gridstart.Y; a < CluwneLib.ScreenViewportSize.Y; a += snapsize * 32)
                 {
-                    CluwneLib.drawLine(0, a, CluwneLib.ScreenViewportSize.X, 0, 0.5f, Color.Blue);
+                    CluwneLib.drawLine(0, a, CluwneLib.ScreenViewportSize.X, 0, 0.5f, Color4.Blue);
                 }
             }
         }

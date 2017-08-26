@@ -21,6 +21,11 @@ namespace SS14.Shared.Interfaces.Map
         ushort ChunkSize { get; }
 
         /// <summary>
+        ///     The distance between the snap grid, between each center snap and between each offset snap grid location
+        /// </summary>
+        float SnapSize { get; }
+
+        /// <summary>
         ///     The origin of the grid in world coordinates. Make sure to set this!
         /// </summary>
         Vector2 WorldPosition { get; set; }

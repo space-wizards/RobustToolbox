@@ -75,10 +75,11 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="gridId">The id of the new grid to create.</param>
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
+        /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32)
+        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, float snapSize = 1)
         {
-            var newGrid = new MapGrid(this, gridId, chunkSize);
+            var newGrid = new MapGrid(this, gridId, chunkSize, snapSize);
             _grids.Add(gridId, newGrid);
             return newGrid;
         }
@@ -182,6 +183,40 @@ namespace SS14.Shared.Map
                 if (kvGrid.Value.AABBWorld.Contains(pos))
                     gridList.Add(kvGrid.Value);
             return gridList;
+        }
+
+        /// <summary>
+        ///     Finds the grid at this world coordinate
+        /// </summary>
+        /// <param name="xWorld">The X coordinate in the world.</param>
+        /// <param name="yWorld">The Y coordinate in the world.</param>
+        public bool TryFindGridAt(float xWorld, float yWorld, out IMapGrid currentgrid)
+        {
+            var pos = new Vector2(xWorld, yWorld);
+            foreach (var kvGrid in _grids)
+                if (kvGrid.Value.AABBWorld.Contains(pos))
+                {
+                    currentgrid = kvGrid.Value;
+                    return true;
+                }
+            currentgrid = GetDefaultGrid();
+            return false;
+        }
+
+        /// <summary>
+        ///     Finds the grid at this world coordinate
+        /// </summary>
+        /// <param name="WorldPos">The X coordinate in the world.</param>
+        public bool TryFindGridAt(Vector2 worldPos, out IMapGrid currentgrid)
+        {
+            foreach (var kvGrid in _grids)
+                if (kvGrid.Value.AABBWorld.Contains(worldPos))
+                {
+                    currentgrid = kvGrid.Value;
+                    return true;
+                }
+            currentgrid = GetDefaultGrid();
+            return false;
         }
 
         /// <summary>

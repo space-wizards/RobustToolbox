@@ -9,6 +9,8 @@ using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using OpenTK.Graphics;
+using SS14.Shared.IoC;
+using SS14.Shared.Prototypes;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -61,6 +63,10 @@ namespace SS14.Client.Placement.Modes
             //Convert back to original world and screen coordinates after applying offset
             mouseWorld = currentgrid.LocalToWorld(mouselocal) + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
             mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+
+            var protomanager = IoCManager.Resolve<IPrototypeManager>();
+            if (!protomanager.CanSpawnAt(pManager.CurrentPrototype.Name, currentgrid, mouselocal))
+                return false;
 
             if (!RangeCheck())
                 return false;

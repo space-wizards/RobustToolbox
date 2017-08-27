@@ -120,9 +120,9 @@ namespace SS14.Shared.GameObjects
             }
 
             // COMPONENTS
-            if (mapping.TryGetNode<YamlSequenceNode>("components", out var sequence))
+            if (mapping.TryGetNode<YamlSequenceNode>("components", out var componentsequence))
             {
-                foreach (var componentMapping in sequence.Cast<YamlMappingNode>())
+                foreach (var componentMapping in componentsequence.Cast<YamlMappingNode>())
                 {
                     ReadComponent(componentMapping);
                 }
@@ -142,11 +142,12 @@ namespace SS14.Shared.GameObjects
             }
 
             // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
-            if (mapping.TryGetNode<YamlMappingNode>("snap", out var snappingcategories))
+            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
             {
-                foreach (var snapnode in sequence.Cast<YamlMappingNode>())
+                var flagslist = snapsequence.Select(p => p.AsEnum<SnapFlags>());
+                foreach(SnapFlags flags in flagslist)
                 {
-                    SnapFlags |= snapnode.AsEnum<SnapFlags>();
+                    SnapFlags |= flags;
                 }
             }
         }

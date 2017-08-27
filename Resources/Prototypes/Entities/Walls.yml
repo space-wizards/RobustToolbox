@@ -17,4 +17,4 @@
   - type: Collidable
 
   snap:
-  - type: Wall
+  - Wall

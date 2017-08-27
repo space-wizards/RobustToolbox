@@ -9,12 +9,12 @@
     - fire_extinguisher
 
   snap:
-  - type: Wallmount
+  - Wallmount
 
   placement:
     mode: AlignWall
     range: 200
-    modes:
+    nodes:
     - 18
     - 26
     - 32
@@ -33,7 +33,7 @@
     icon: fire_alarm_off
 
   snap:
-  - type: Wallmount
+  - Wallmount
 
   placement:
     mode: AlignWall
@@ -57,7 +57,7 @@
     icon: med_cabinet
 
   snap:
-  - type: Wallmount
+  - Wallmount
 
   placement:
     mode: AlignWall

@@ -66,16 +66,6 @@ namespace SS14.Server.GameObjects
                 DrawDepth = node.AsEnum<DrawDepth>();
             }
 
-            if (mapping.TryGetNode("color", out node))
-            {
-                Color = System.Drawing.Color.FromName(node.ToString());
-            }
-
-            if (mapping.TryGetNode("hexcolor", out node))
-            {
-                Color = node.AsHexColor();
-            }
-
             if (mapping.TryGetNode("sprite", out node))
             {
                 SpriteName = node.AsString();

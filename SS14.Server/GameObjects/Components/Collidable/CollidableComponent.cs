@@ -68,12 +68,11 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Removes the AABB from the collisionmanager.
         /// </summary>
-        public override void OnRemove()
+        public override void Shutdown()
         {
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
-
-            base.OnRemove();
+            base.Shutdown();
         }
 
         public bool TryCollision(Vector2 offset, bool bump = false)

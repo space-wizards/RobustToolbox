@@ -305,6 +305,28 @@ namespace SS14.Shared.GameObjects
             {
                 throw new InvalidOperationException("Component is not owned by us");
             }
+            
+            component.Shutdown();
+
+            InternalRemoveComponent(component);
+        }
+
+        private void RemoveComponent(Type type)
+        {
+            RemoveComponent(GetComponent(type));
+        }
+
+        public void RemoveComponent<T>()
+        {
+            RemoveComponent((IComponent)GetComponent<T>());
+        }
+
+        private void InternalRemoveComponent(IComponent component)
+        {
+            if (component.Owner != this)
+            {
+                throw new InvalidOperationException("Component is not owned by us");
+            }
 
             IComponentRegistration reg = IoCManager.Resolve<IComponentFactory>().GetRegistration(component);
 
@@ -321,16 +343,6 @@ namespace SS14.Shared.GameObjects
             {
                 _netIDs.Remove(component.NetID.Value);
             }
-        }
-
-        private void RemoveComponent(Type type)
-        {
-            RemoveComponent(GetComponent(type));
-        }
-
-        public void RemoveComponent<T>()
-        {
-            RemoveComponent((IComponent)GetComponent<T>());
         }
 
         public bool HasComponent<T>()
@@ -384,13 +396,21 @@ namespace SS14.Shared.GameObjects
             return _netIDs.TryGetValue(netID, out component);
         }
 
+        /// <inheritdoc />
         public virtual void Shutdown()
         {
-            foreach (IComponent component in _components)
+            // first we shut down every component.
+            foreach (var component in _components)
             {
                 component.Shutdown();
             }
-            _components.Clear();
+
+            // then we remove every component.
+            foreach (IComponent component in _components.ToList())
+            {
+                InternalRemoveComponent(component);
+            }
+
             _netIDs.Clear();
             _componentReferences.Clear();
         }

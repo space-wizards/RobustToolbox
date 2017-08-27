@@ -33,15 +33,6 @@ namespace SS14.Client.GameObjects
             //Set up keystates
         }
 
-        public override void OnRemove()
-        {
-            base.OnRemove();
-
-            var keyBindingManager = IoCManager.Resolve<IKeyBindingManager>();
-            keyBindingManager.BoundKeyDown -= KeyDown;
-            keyBindingManager.BoundKeyUp -= KeyUp;
-        }
-
         public override void OnAdd(IEntity owner)
         {
             base.OnAdd(owner);

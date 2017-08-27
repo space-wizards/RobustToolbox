@@ -63,7 +63,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         ///     removes the AABB from the CollisionManager.
         /// </summary>
-        public override void OnRemove()
+        public override void Shutdown()
         {
             if (collisionEnabled)
             {
@@ -71,7 +71,7 @@ namespace SS14.Client.GameObjects
                 cm.RemoveCollidable(this);
             }
 
-            base.OnRemove();
+            base.Shutdown();
         }
 
         /// <summary>

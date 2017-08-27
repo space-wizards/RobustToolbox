@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
-        public Color4 Color { get; set; }
+        public Color4 Color { get; set; } = Color4.White;
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 

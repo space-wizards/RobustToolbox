@@ -41,7 +41,7 @@ namespace SS14.Client.GameObjects
         protected Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
-        public Color4 Color { get; set; }
+        public Color4 Color { get; set; } = Color4.White;
 
         public override Type StateType => typeof(SpriteComponentState);
 

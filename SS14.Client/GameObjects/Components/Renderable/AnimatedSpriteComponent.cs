@@ -198,12 +198,14 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("color", out node))
             {
-                Color = System.Drawing.Color.FromName(node.ToString());
-            }
-
-            if (mapping.TryGetNode("hexcolor", out node))
-            {
-                Color = node.AsHexColor();
+                try
+                {
+                    Color = System.Drawing.Color.FromName(node.ToString());
+                }
+                catch
+                {
+                    Color = node.AsHexColor();
+                }
             }
 
             if (mapping.TryGetNode("sprite", out node))

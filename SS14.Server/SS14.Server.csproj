@@ -136,6 +136,12 @@
   <ItemGroup>
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
+    <Compile Include="GameObjects\Components\Damage\DamageableComponent.cs" />
+    <Compile Include="GameObjects\Components\Damage\DestructibleComponent.cs" />
+    <Compile Include="GameObjects\Components\Damage\ResistanceSet.cs" />
+    <Compile Include="GameObjects\Components\Temperature\TemperatureComponent.cs" />
+    <Compile Include="GameObjects\Components\Temperature\TemperatureConstants.cs" />
+    <Compile Include="Interfaces\GameObjects\IOnDamageBehaviour.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
     <Compile Include="Log\ServerLogManager.cs" />

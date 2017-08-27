@@ -77,9 +77,9 @@ namespace SS14.Shared.GameObjects
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         public void Update(float frameTime)
         {
-            foreach (var component in allComponents)
+            for (int i = 0; i < allComponents.Count; i++)
             {
-                component.Update(frameTime);
+                allComponents[i]?.Update(frameTime);
             }
         }
 

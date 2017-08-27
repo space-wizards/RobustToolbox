@@ -35,6 +35,11 @@ namespace SS14.Server.GameObjects
             RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ContainerManagerComponent>();
+
+            Register<DamageableComponent>();
+            Register<DestructibleComponent>();
+
+            Register<TemperatureComponent>();
         }
     }
 }

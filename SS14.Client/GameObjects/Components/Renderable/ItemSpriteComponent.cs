@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using OpenTK.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -148,6 +149,18 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("drawdepth", out node))
             {
                 SetDrawDepth(node.AsEnum<DrawDepth>());
+            }
+
+            if (mapping.TryGetNode("color", out node))
+            {
+                try
+                {
+                    Color = System.Drawing.Color.FromName(node.ToString());
+                }
+                catch
+                {
+                    Color = node.AsHexColor();
+                }
             }
 
             if (mapping.TryGetNode("basename", out node))

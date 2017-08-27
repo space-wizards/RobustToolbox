@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
+using OpenTK.Graphics;
 
 namespace SS14.Client.Graphics.Sprite
 {
@@ -135,10 +136,12 @@ namespace SS14.Client.Graphics.Sprite
             return _currentSprite;
         }
 
-        public void Draw()
+        public void Draw(Color4 Color)
         {
             _currentSprite.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
+            _currentSprite.Color = Color.Convert();
             _currentSprite.Draw();
+            _currentSprite.Color = Color4.White.Convert();
         }
 
         public void SetPosition(float x, float y)

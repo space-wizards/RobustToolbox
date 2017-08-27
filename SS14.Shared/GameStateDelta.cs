@@ -1,5 +1,4 @@
 ﻿using BsDiffLib;
-using Lidgren.Network;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
@@ -9,8 +8,8 @@ using System.IO;
 
 namespace SS14.Shared
 {
-    [Serializable]
-    public class GameStateDelta : INetSerializableType
+    [Serializable, NetSerializable]
+    public class GameStateDelta
     {
         public readonly MemoryStream deltaBytes = new MemoryStream();
         public uint FromSequence;

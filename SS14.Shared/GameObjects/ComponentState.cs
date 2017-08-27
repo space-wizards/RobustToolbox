@@ -3,8 +3,8 @@ using System;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
-    public class ComponentState : INetSerializableType
+    [Serializable, NetSerializable]
+    public class ComponentState
     {
         [NonSerialized]
         public float ReceivedTime;

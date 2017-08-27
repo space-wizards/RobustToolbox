@@ -1,11 +1,11 @@
-using SS14.Shared.Serialization;
+﻿using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 
 namespace SS14.Shared.GameObjects
 {
-    [Serializable]
-    public class EntityState : INetSerializableType
+    [Serializable, NetSerializable]
+    public class EntityState
     {
         public EntityStateData StateData;
         [NonSerialized]
@@ -25,8 +25,8 @@ namespace SS14.Shared.GameObjects
         }
     }
 
-    [Serializable]
-    public struct EntityStateData : INetSerializableType
+    [Serializable, NetSerializable]
+    public struct EntityStateData
     {
         public string Name;
         public string TemplateName;

@@ -1,10 +1,10 @@
-using SS14.Shared.Serialization;
+﻿using SS14.Shared.Serialization;
 using System;
 
 namespace SS14.Shared.GameStates
 {
-    [Serializable]
-    public class PlayerState : INetSerializableType
+    [Serializable, NetSerializable]
+    public class PlayerState
     {
         public int? ControlledEntity;
         public string Name;

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using ICSharpCode.SharpZipLib.Zip;
 using SS14.Shared.Log;
 
@@ -51,6 +52,16 @@ namespace SS14.Shared.ContentPack
             }
 
             return memStream;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> FindFiles(string path)
+        {
+            foreach (ZipEntry zipEntry in _zip)
+            {
+                if (zipEntry.IsFile && zipEntry.Name.StartsWith(path))
+                    yield return zipEntry.Name;
+            }
         }
     }
 }

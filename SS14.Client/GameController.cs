@@ -99,7 +99,7 @@ namespace SS14.Client
 
             _serializer.Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
+            prototypeManager.LoadDirectory(@"Prototypes");
             prototypeManager.Resync();
             _networkManager.Initialize(false);
             _netGrapher.Initialize();

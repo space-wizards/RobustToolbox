@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace SS14.Shared.ContentPack
 {
@@ -35,6 +36,17 @@ namespace SS14.Shared.ContentPack
 
             var bytes = File.ReadAllBytes(fullPath);
             return new MemoryStream(bytes, false);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> FindFiles(string path)
+        {
+            var fullPath = Path.GetFullPath(Path.Combine(_directory.FullName, path));
+            var paths = PathHelpers.GetFiles(fullPath);
+
+            // GetFiles returns full paths, we want them relative to root
+            foreach (var filePath in paths)
+                yield return filePath.Substring(_directory.FullName.Length);
         }
     }
 }

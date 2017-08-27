@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace SS14.Shared.ContentPack
 {
@@ -19,5 +20,12 @@ namespace SS14.Shared.ContentPack
         /// <param name="relPath">Relative path from the root directory.</param>
         /// <returns>A stream of the file loaded into memory.</returns>
         MemoryStream GetFile(string relPath);
+
+        /// <summary>
+        ///     Recursively finds all files in a directory and all sub directories.
+        /// </summary>
+        /// <param name="path">Directory to search inside of.</param>
+        /// <returns>Enumeration of all relative file paths of the files found.</returns>
+        IEnumerable<string> FindFiles(string path);
     }
 }

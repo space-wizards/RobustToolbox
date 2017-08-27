@@ -372,13 +372,15 @@ namespace SS14.Client.Graphics
         /// <param name="rotate"> Line Rotation </param>
         /// <param name="thickness"> Line Thickness </param>
         /// <param name="Color"> Line Color </param>
-        public static void drawLine(int posX, int posY, int rotate, float thickness, Color Color)
+        public static void drawLine(float posX, float posY, float length, float rotate, float thickness, Color4 Color)
         {
             RectangleShape line = new RectangleShape();
             line.Position = new Vector2f(posX, posY);
+            line.Size = new Vector2f(length, thickness);
             line.Rotation = rotate;
             line.OutlineThickness = thickness;
-            line.FillColor = Color;
+            line.FillColor = Color.Convert();
+            line.OutlineColor = Color.Convert();
 
             CurrentRenderTarget.Draw(line);
         }

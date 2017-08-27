@@ -44,6 +44,8 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Physics;
+using SS14.Client.Interfaces.GameStates;
+using SS14.Client.GameStates;
 
 namespace SS14.Client
 {
@@ -102,6 +104,7 @@ namespace SS14.Client
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
+            IoCManager.Register<IGameStateManager, GameStateManager>();
 
             IoCManager.BuildGraph();
         }

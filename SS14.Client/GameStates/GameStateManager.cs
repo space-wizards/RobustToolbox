@@ -1,57 +1,91 @@
+﻿using Lidgren.Network;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
+using SS14.Client.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SS14.Client.GameStates
 {
-    public class GameStateManager : Dictionary<uint, GameState>, IGameStateManager
+    public class GameStateManager : IGameStateManager
     {
-        private readonly Dictionary<long, uint> ackedStates = new Dictionary<long, uint>();
-        private uint currentStateSeq;
+        public Dictionary<uint, GameState> GameStates;
+        
+        [Dependency]
+        private readonly IGameTiming timing;
+        [Dependency]
+        private readonly IClientNetManager networkManager;
+        [Dependency]
+        private readonly IClientEntityManager entityManager;
+        [Dependency]
+        private readonly IPlayerManager playerManager;
+
         public GameState CurrentState { get; private set; }
 
-        #region IGameStateManager Members
-
-        public void Cull()
+        public GameStateManager()
         {
-            foreach (uint v in Keys.Where(v => v < OldestStateAcked).ToList())
-                Remove(v);
+            GameStates = new Dictionary<uint, GameState>();
         }
 
-        public uint OldestStateAcked
+        #region Network
+
+        public void HandleFullStateMessage(MsgFullState message)
         {
-            get
+            if (!GameStates.Keys.Contains(message.State.Sequence))
             {
-                uint state = ackedStates.Values.FirstOrDefault(val => val == ackedStates.Values.Max());
-                return state;
+                AckGameState(message.State.Sequence);
+
+                message.State.GameTime = (float)timing.CurTime.TotalSeconds;
+                ApplyGameState(message.State);
             }
         }
 
-        public void Ack(long uniqueIdentifier, uint stateAcked)
+        public void HandleStateUpdateMessage(MsgStateUpdate message)
         {
-            if (!ackedStates.ContainsKey(uniqueIdentifier))
-                ackedStates.Add(uniqueIdentifier, stateAcked);
-            else
-                ackedStates[uniqueIdentifier] = stateAcked;
+            GameStateDelta delta = message.StateDelta;
+
+            if (GameStates.ContainsKey(delta.FromSequence))
+            {
+                AckGameState(delta.Sequence);
+
+                GameState fromState = GameStates[delta.FromSequence];
+                GameState newState = fromState + delta;
+                newState.GameTime = (float)timing.CurTime.TotalSeconds;
+                ApplyGameState(newState);
+
+                CullOldStates(delta.FromSequence);
+            }
         }
 
-        #endregion
+        #endregion Network
 
-        public void CullAll()
+        private void CullOldStates(uint sequence)
         {
-            Clear();
+            foreach (uint v in GameStates.Keys.Where(v => v <= sequence).ToList())
+                GameStates.Remove(v);
         }
 
-        public void ApplyFullState(uint seq, GameState fullState)
+        private void AckGameState(uint sequence)
         {
-            CurrentState = fullState;
-            currentStateSeq = seq;
+            NetOutgoingMessage ack = networkManager.CreateMessage();
+            ack.Write((byte)NetMessages.StateAck);
+            ack.Write(sequence);
+            networkManager.ClientSendMessage(ack, NetDeliveryMethod.ReliableUnordered);
         }
 
-        public void ApplyDeltaState(uint oldStateSeq, uint newStateSeq, GameStateDelta delta)
+        private void ApplyGameState(GameState gameState)
         {
+            GameStates[gameState.Sequence] = gameState;
+            CurrentState = gameState;
+
+            entityManager.ApplyEntityStates(CurrentState.EntityStates, CurrentState.GameTime);
+            playerManager.ApplyPlayerStates(CurrentState.PlayerStates);
         }
     }
 }

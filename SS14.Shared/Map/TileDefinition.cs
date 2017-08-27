@@ -40,8 +40,6 @@ namespace SS14.Shared.Map
         
         public bool IsFloor { get; protected set; }
 
-        public bool IsWall { get; protected set; }
-
         public string SpriteName { get; protected set; }
 
         /// <summary>

@@ -53,11 +53,12 @@ namespace SS14.Shared.Map
             }
         }
 
-        internal MapGrid(MapManager mapManager, int gridIndex, ushort chunkSize)
+        internal MapGrid(MapManager mapManager, int gridIndex, ushort chunkSize, float snapsize)
         {
             _mapManager = mapManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
+            SnapSize = snapsize;
         }
 
         /// <summary>
@@ -70,6 +71,9 @@ namespace SS14.Shared.Map
 
         /// <inheritdoc />
         public ushort ChunkSize { get; }
+
+        /// <inheritdoc />
+        public float SnapSize { get; }
 
         public int Index { get; }
 

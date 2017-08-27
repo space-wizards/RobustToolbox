@@ -38,10 +38,6 @@ namespace SS14.Client.Placement.Modes
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
 
-            //Align to similar if nearby found else free
-            if (currentTile.TileDef.IsWall)
-                return false; //HANDLE CURSOR OUTSIDE MAP
-
             if (!RangeCheck())
                 return false;
 

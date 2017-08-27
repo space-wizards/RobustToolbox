@@ -449,6 +449,10 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
         {
+            // not connected to a server, so a message cannot be sent to it.
+            if(ServerChannel == null)
+                return;
+
             _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
         }
         #endregion NetMessages

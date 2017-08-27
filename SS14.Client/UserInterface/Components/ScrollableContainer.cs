@@ -201,8 +201,8 @@ namespace SS14.Client.UserInterface.Components
             if (ClientArea.Contains(e.X, e.Y))
             {
                 MouseButtonEvent mbe = new MouseButtonEvent();
-                mbe.X = e.X - (Position.X + (int)scrollbarH.Value);
-                mbe.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
+                mbe.X = e.X - Position.X + (int)scrollbarH.Value;
+                mbe.Y = e.Y - Position.Y + (int)scrollbarV.Value;
                 mbe.Button = e.Button;
 
                 MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);

@@ -1,17 +1,15 @@
-﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 
 namespace SS14.Shared.GameStates
 {
-    [Serializable]
-    public class GameState : INetSerializableType
+    [Serializable, NetSerializable]
+    public class GameState
     {
         [NonSerialized] private bool _serialized;
         [NonSerialized] private MemoryStream _serializedData;
@@ -128,84 +126,6 @@ namespace SS14.Shared.GameStates
             using (var stream = new MemoryStream(data))
             {
                 return serializer.Deserialize<GameState>(new MemoryStream(data));
-            }
-        }
-
-        /// <summary>
-        /// Writes a full game state into a NetOutgoingMessage
-        /// </summary>
-        /// <param name="message">NetOutgoingMessage to write to</param>
-        public int WriteStateMessage(NetOutgoingMessage message)
-        {
-            message.Write((byte)NetMessages.FullState);
-            byte[] stateData = Compress(GetSerializedDataBuffer());
-            message.Write(Sequence);
-            message.Write(stateData.Length);
-            message.Write(stateData);
-            return stateData.Length;
-        }
-
-        /// <summary>
-        /// Reads a full gamestate from a NetIncomingMessage
-        /// </summary>
-        /// <param name="message">NetIncomingMessage that contains the state data</param>
-        /// <returns></returns>
-        public static GameState ReadStateMessage(NetIncomingMessage message)
-        {
-            uint sequence = message.ReadUInt32();
-            int length = message.ReadInt32();
-            byte[] stateData = Decompress(message.ReadBytes(length));
-            using (var stateStream = new MemoryStream(stateData))
-            {
-                var serializer = IoCManager.Resolve<ISS14Serializer>();
-                return serializer.Deserialize<GameState>(stateStream);
-            }
-        }
-
-        /// <summary>
-        /// Compresses a decompressed state data byte array into a compressed one.
-        /// </summary>
-        /// <param name="stateData">full state data</param>
-        /// <returns></returns>
-        private static byte[] Compress(byte[] stateData)
-        {
-            using (var compressedDataStream = new MemoryStream())
-            {
-                using (var gzip = new GZipStream(compressedDataStream, CompressionMode.Compress, true))
-                {
-                    gzip.Write(stateData, 0, stateData.Length);
-                }
-                return compressedDataStream.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Decompresses a compressed state data byte array into a decompressed one.
-        /// </summary>
-        /// <param name="compressedStateData">compressed state data</param>
-        /// <returns></returns>
-        private static byte[] Decompress(byte[] compressedStateData)
-        {
-            // Create a GZIP stream with decompression mode.
-            // ... Then create a buffer and write into while reading from the GZIP stream.
-            using (var compressedStream = new MemoryStream(compressedStateData))
-            using (var stream = new GZipStream(compressedStream, CompressionMode.Decompress))
-            {
-                const int size = 2048;
-                var buffer = new byte[size];
-                using (var memory = new MemoryStream())
-                {
-                    int count = 0;
-                    do
-                    {
-                        count = stream.Read(buffer, 0, size);
-                        if (count > 0)
-                        {
-                            memory.Write(buffer, 0, count);
-                        }
-                    } while (count > 0);
-                    return memory.ToArray();
-                }
             }
         }
     }

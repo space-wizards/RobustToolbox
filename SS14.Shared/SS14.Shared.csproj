@@ -191,6 +191,8 @@
     <Compile Include="EntityBaseClass.cs" />
     <Compile Include="IncomingEntityComponentMessage.cs" />
     <Compile Include="IncomingEntityMessage.cs" />
+    <Compile Include="Network\Messages\MsgFullState.cs" />
+    <Compile Include="Network\Messages\MsgStateUpdate.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
     <Compile Include="Network\Messages\MsgAdmin.cs" />
@@ -225,8 +227,8 @@
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
+    <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
-    <Compile Include="Serialization\INetSerializableType.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="Timing\GameTiming.cs" />

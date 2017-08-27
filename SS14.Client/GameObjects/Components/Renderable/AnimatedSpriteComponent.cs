@@ -19,6 +19,7 @@ using System.Linq;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using OpenTK.Graphics;
 
 namespace SS14.Client.GameObjects
 {
@@ -34,6 +35,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
+        public Color4 Color { get; set; }
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 
@@ -194,6 +196,16 @@ namespace SS14.Client.GameObjects
                 SetDrawDepth(node.AsEnum<DrawDepth>());
             }
 
+            if (mapping.TryGetNode("color", out node))
+            {
+                Color = System.Drawing.Color.FromName(node.ToString());
+            }
+
+            if (mapping.TryGetNode("hexcolor", out node))
+            {
+                Color = node.AsHexColor();
+            }
+
             if (mapping.TryGetNode("sprite", out node))
             {
                 baseSprite = node.AsString();
@@ -234,7 +246,7 @@ namespace SS14.Client.GameObjects
                 return;
 
             sprite.HorizontalFlip = HorizontalFlip;
-            sprite.Draw();
+            sprite.Draw(Color);
 
             //Render slaves above
             IEnumerable<IRenderableComponent> renderablesAbove = from IRenderableComponent c in slaves

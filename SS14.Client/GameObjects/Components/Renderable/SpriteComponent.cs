@@ -19,6 +19,7 @@ using System.Linq;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -40,6 +41,7 @@ namespace SS14.Client.GameObjects
         protected Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
+        public Color4 Color { get; set; }
 
         public override Type StateType => typeof(SpriteComponentState);
 
@@ -271,6 +273,16 @@ namespace SS14.Client.GameObjects
                 SetDrawDepth(node.AsEnum<DrawDepth>());
             }
 
+            if (mapping.TryGetNode("color", out node))
+            {
+                Color = System.Drawing.Color.FromName(node.ToString());
+            }
+
+            if (mapping.TryGetNode("hexcolor", out node))
+            {
+                Color = node.AsHexColor();
+            }
+
             if (mapping.TryGetNode<YamlSequenceNode>("sprites", out var sequence))
             {
                 foreach (YamlNode spriteNode in sequence)
@@ -311,7 +323,9 @@ namespace SS14.Client.GameObjects
                 return;
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Color = this.Color.Convert();
             spriteToRender.Draw();
+            spriteToRender.Color = Color4.White.Convert();
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves

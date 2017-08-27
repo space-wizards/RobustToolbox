@@ -34,10 +34,6 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void OnRemove()
         {
-            OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
-            OnShutdown = null;
-            Shutdown();
-
             //Send us to the manager so it knows we're dead.
             IoCManager.Resolve<IComponentManager>().RemoveComponent(this);
             Owner = null;
@@ -62,6 +58,8 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public virtual void Shutdown()
         {
+            OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
+            OnShutdown = null;
         }
 
         /// <inheritdoc />

@@ -135,12 +135,12 @@ namespace SS14.Client.GameObjects
                 ModeClass = LightModeClass.Constant;
             }
         }
-
-        public override void OnRemove()
+        
+        public override void Shutdown()
         {
             Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
             IoCManager.Resolve<ILightManager>().RemoveLight(Light);
-            base.OnRemove();
+            base.Shutdown();
         }
 
         private void OnMove(object sender, VectorEventArgs args)

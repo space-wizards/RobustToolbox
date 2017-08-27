@@ -1,17 +1,15 @@
-﻿using Lidgren.Network;
-using SS14.Shared.GameObjects;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 
 namespace SS14.Shared.GameStates
 {
-    [Serializable]
-    public class GameState : INetSerializableType
+    [Serializable, NetSerializable]
+    public class GameState
     {
         [NonSerialized] private bool _serialized;
         [NonSerialized] private MemoryStream _serializedData;

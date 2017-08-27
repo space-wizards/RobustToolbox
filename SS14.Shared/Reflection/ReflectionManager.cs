@@ -59,5 +59,18 @@ namespace SS14.Shared.Reflection
 
             return null;
         }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> FindTypesWithAttribute<T>()
+        {
+            var types = new List<Type>();
+
+            foreach (var assembly in Assemblies)
+            {
+                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(T))));
+            }
+
+            return types;
+        }
     }
 }

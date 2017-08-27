@@ -53,6 +53,13 @@ namespace SS14.Shared.Interfaces.Reflection
         Type GetType(string name);
 
         /// <summary>
+        /// Finds all Types in all Assemblies that have a specific Attribute.
+        /// </summary>
+        /// <typeparam name="T">Attribute to search for.</typeparam>
+        /// <returns>Enumeration of all types with the specified attribute.</returns>
+        IEnumerable<Type> FindTypesWithAttribute<T>();
+
+        /// <summary>
         /// Loads assemblies into the manager and get all the types.
         /// </summary>
         void LoadAssemblies(IEnumerable<Assembly> assemblies);

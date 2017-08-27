@@ -19,7 +19,7 @@ namespace SS14.Shared.Serialization
 
         public void Initialize()
         {
-            var types = reflectionManager.GetAllChildren<INetSerializableType>();
+            var types = reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>();
             var settings = new Settings()
             {
                 CustomTypeSerializers = new ITypeSerializer[] { new OpenTKTypeSerializer() }

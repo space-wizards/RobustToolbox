@@ -88,6 +88,11 @@ namespace SS14.Shared.GameObjects
         public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
 
         /// <summary>
+        /// Bitflag to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
+        /// </summary>
+        public SnapFlags SnapFlags { get; set; }
+
+        /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
         /// </summary>
         public YamlMappingNode DataNode;
@@ -134,6 +139,15 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode<YamlMappingNode>("placement", out var placementMapping))
             {
                 ReadPlacementProperties(placementMapping);
+            }
+
+            // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
+            if (mapping.TryGetNode<YamlMappingNode>("snap", out var snappingcategories))
+            {
+                foreach (var snapnode in sequence.Cast<YamlMappingNode>())
+                {
+                    SnapFlags |= snapnode.AsEnum<SnapFlags>();
+                }
             }
         }
 

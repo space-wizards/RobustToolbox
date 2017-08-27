@@ -106,6 +106,16 @@ namespace SS14.Shared.Map
             AABBWorld = new Box2(x, y, width - x, height - y);
         }
 
+        public bool OnSnapCenter(Vector2 position)
+        {
+            return (position.X % SnapSize == 0 && position.Y % SnapSize == 0);
+        }
+
+        public bool OnSnapBorder(Vector2 position)
+        {
+            return (position.X % SnapSize == SnapSize/2 && position.Y % SnapSize == SnapSize/2);
+        }
+
         #region  TileAccess
 
         /// <inheritdoc />

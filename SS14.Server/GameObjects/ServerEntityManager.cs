@@ -14,6 +14,8 @@ using System.Xml.Linq;
 using OpenTK;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
+using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Server.GameObjects
 {
@@ -40,12 +42,65 @@ namespace SS14.Server.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public IEntity SpawnEntityAt(string EntityType, Vector2 position)
+        public bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity)
         {
-            IEntity e = SpawnEntity(EntityType);
-            e.GetComponent<TransformComponent>().Position = position;
-            e.Initialize();
-            return e;
+            var protomanager = IoCManager.Resolve<IPrototypeManager>();
+            if(protomanager.CanSpawnAt(EntityType, grid, position))
+            {
+                entity = SpawnEntity(EntityType);
+                entity.GetComponent<TransformComponent>().Position = position;
+                entity.Initialize();
+                return true;
+            }
+            entity = new Entity(); //This is a bad
+            return false;
+        }
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity)
+        {
+            var mapmanager = IoCManager.Resolve<IMapManager>(); //TODO: wait we only have one map? this only supports one map
+            if(mapmanager.TryFindGridAt(position, out IMapGrid gridlocation))
+            {
+                bool returnvalue = TrySpawnEntityAt(EntityType, gridlocation, position, out IEntity returnoutvar);
+                entity = returnoutvar;
+                return returnvalue;
+            }
+            entity = ForceSpawnEntityAt(EntityType, position);
+            return true;
+        }
+
+        /// <summary>
+        /// Spawns an entity at a specific position in grid space
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public IEntity ForceSpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position)
+        {
+            IEntity entity = SpawnEntity(EntityType);
+            entity.GetComponent<TransformComponent>().Position = position;
+            entity.Initialize();
+            return entity;
+        }
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public IEntity ForceSpawnEntityAt(string EntityType, Vector2 position)
+        {
+            IEntity entity = SpawnEntity(EntityType);
+            entity.GetComponent<TransformComponent>().Position = position;
+            entity.Initialize();
+            return entity;
         }
 
         public List<EntityState> GetEntityStates()

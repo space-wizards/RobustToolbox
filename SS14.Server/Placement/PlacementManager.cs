@@ -101,7 +101,7 @@ namespace SS14.Server.Placement
                 if (!isTile)
                 {
                     var manager = IoCManager.Resolve<IServerEntityManager>();
-                    IEntity created = manager.SpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv));
+                    manager.TrySpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv), out IEntity created);
                     if (created != null)
                     {
                         created.GetComponent<TransformComponent>().Position =

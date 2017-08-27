@@ -93,7 +93,7 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession session)
         {
             //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.SpawnEntityAt("HumanMob", new Vector2(0, 0));
+            IEntity entity = _entityManager.ForceSpawnEntityAt("HumanMob", new Vector2(0, 0));
             session.AttachToEntity(entity);
         }
 

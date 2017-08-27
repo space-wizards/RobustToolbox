@@ -55,11 +55,11 @@ namespace SS14.Client.GameObjects
             transform.OnMove += OnMove;
         }
 
-        public override void OnRemove()
+        public override void Shutdown()
         {
             var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove -= OnMove;
-            base.OnRemove();
+            base.Shutdown();
         }
 
         public override void Update(float frameTime)

@@ -65,7 +65,7 @@ namespace SS14.Client.Placement.Modes
             mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
             var protomanager = IoCManager.Resolve<IPrototypeManager>();
-            if (!protomanager.CanSpawnAt(pManager.CurrentPrototype.Name, currentgrid, mouselocal))
+            if (!protomanager.CanSpawnAt(pManager.CurrentPrototype.ID, currentgrid, mouselocal))
                 return false;
 
             if (!RangeCheck())

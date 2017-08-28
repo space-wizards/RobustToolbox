@@ -208,7 +208,7 @@ namespace SS14.Server
             // Set up the VFS
             _resources.Initialize();
 
-            _resources.MountContentDirectory(@"");
+            _resources.MountContentDirectory(@"./Resources/");
 
             //mount the engine content pack
             _resources.MountContentPack(@"EngineContentPack.zip");
@@ -225,7 +225,7 @@ namespace SS14.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadDirectory(PathHelpers.ExecutableRelativeFile("Resources/Prototypes"));
+            prototypeManager.LoadDirectory(@"Prototypes");
             prototypeManager.Resync();
 
             var clientConsole = IoCManager.Resolve<IClientConsoleHost>();

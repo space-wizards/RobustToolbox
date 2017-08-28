@@ -256,7 +256,7 @@ namespace SS14.Shared.GameObjects
                 target.PlacementOffset = source.PlacementOffset;
             }
 
-            if(target.MountingPoints == null)
+            if(target.MountingPoints == null && source.MountingPoints != null)
             {
                 target.MountingPoints = new List<int>(source.MountingPoints);
             }

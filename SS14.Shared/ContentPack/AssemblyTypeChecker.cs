@@ -71,6 +71,7 @@ namespace SS14.Shared.ContentPack
 
             // Common System things.
             "System.Collections.Generic",
+            "System.Collections.IEnumerator",
             "System.Console",
             "System.Math",
             "System.ArgumentNullException",
@@ -98,6 +99,7 @@ namespace SS14.Shared.ContentPack
             "System.IComparable",
             "System.IEquatable",
             "System.ParamArrayAttribute",
+            "System.Threading.Interlocked",
 
             // SFML stuff.
             "SFML.Graphics.Color",

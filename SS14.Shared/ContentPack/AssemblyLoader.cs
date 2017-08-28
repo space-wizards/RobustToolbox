@@ -22,6 +22,11 @@ namespace SS14.Shared.ContentPack
             Init = 1
         }
 
+        /// <summary>
+        ///     Loaded assemblies.
+        /// </summary>
+        private static readonly List<ModInfo> _mods = new List<ModInfo>();
+
         static AssemblyLoader()
         {
             // Make it attempt to use already loaded assemblies,
@@ -35,17 +40,10 @@ namespace SS14.Shared.ContentPack
             foreach (var mod in _mods)
             {
                 if (mod.GameAssembly.FullName == args.Name)
-                {
                     return mod.GameAssembly;
-                }
             }
             return null;
         }
-
-        /// <summary>
-        ///     Loaded assemblies.
-        /// </summary>
-        private static readonly List<ModInfo> _mods = new List<ModInfo>();
 
         /// <summary>
         ///     Gets an assembly by name from the given AppDomain.

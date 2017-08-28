@@ -5,7 +5,7 @@
   - type: Transform
   - type: Clickable
   - type: WearableAnimatedSprite
-    sprite: player_toolbox
+    sprite: player_mop
     notWornSprite: mop
 
   - type: Icon

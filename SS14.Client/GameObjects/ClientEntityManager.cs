@@ -53,6 +53,26 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        public IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (component.WorldAABB.Contains(position))
+                        yield return entity;
+                }
+                else
+                {
+                    var transform = entity.GetComponent<ITransformComponent>();
+                    if (position == transform.Position)
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
         public bool AnyEntitiesIntersecting(Box2 position)
         {
             foreach (var entity in _entities.Values)

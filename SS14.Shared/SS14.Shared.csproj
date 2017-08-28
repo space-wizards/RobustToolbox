@@ -225,7 +225,6 @@
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
     <Compile Include="PostProcessingEffects.cs" />
-    <Compile Include="Prototypes\SnapFlags.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />

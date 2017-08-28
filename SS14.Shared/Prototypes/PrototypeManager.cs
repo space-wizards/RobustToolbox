@@ -65,10 +65,6 @@ namespace SS14.Shared.Prototypes
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
-        /// <summary>
-        /// Tests whether the prototype is going to conflict with anything previously placed in this location on the snap grid
-        /// </summary>
-        bool CanSpawnAt(string EntityType, IMapGrid grid, Vector2 position);
     }
 
     /// <summary>
@@ -211,21 +207,6 @@ namespace SS14.Shared.Prototypes
                     throw new PrototypeLoadException(string.Format("Failed to load prototypes from document#{0}", i), e);
                 }
             }
-        }
-
-        public bool CanSpawnAt(string EntityType, IMapGrid grid, Vector2 position)
-        {
-            if(!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
-                return true;
-            var entitymanager = IoCManager.Resolve<IEntityManager>();
-            var entities = entitymanager.GetEntitiesAt(position);
-            EntityPrototype prototype = Index<EntityPrototype>(EntityType);
-            foreach (var e in entities)
-            {
-                if ((prototype.SnapFlags & e.Prototype.SnapFlags) != 0)
-                    return false;
-            }
-            return true;
         }
 
         #endregion IPrototypeManager members

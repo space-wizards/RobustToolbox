@@ -1,6 +1,8 @@
-﻿using SS14.Shared.IoC;
+﻿using OpenTK;
+using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Reflection;
 using SS14.Shared.Prototypes;
@@ -62,6 +64,11 @@ namespace SS14.Shared.GameObjects
         private int placementRange = 200;
 
         /// <summary>
+        /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
+        /// </summary>
+        public readonly HashSet<string> SnapFlags = new HashSet<string>();
+
+        /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
         public Vector2i PlacementOffset { get; protected set; }
@@ -86,11 +93,6 @@ namespace SS14.Shared.GameObjects
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
         public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
-
-        /// <summary>
-        /// Bitflag to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
-        /// </summary>
-        public SnapFlags SnapFlags { get; set; }
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -144,10 +146,10 @@ namespace SS14.Shared.GameObjects
             // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
             if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
             {
-                var flagslist = snapsequence.Select(p => p.AsEnum<SnapFlags>());
-                foreach(SnapFlags flags in flagslist)
+                var flagslist = snapsequence.Select(p => p.AsString());
+                foreach (var flag in flagslist)
                 {
-                    SnapFlags |= flags;
+                    SnapFlags.Add(flag);
                 }
             }
         }
@@ -286,6 +288,20 @@ namespace SS14.Shared.GameObjects
             }
 
             return entity;
+        }
+
+        /// <summary>
+        /// Tests whether the prototype is going to conflict with anything previously placed in this location on the snap grid
+        /// </summary>
+        public bool CanSpawnAt(IMapGrid grid, Vector2 position)
+        {
+            if(!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
+            {
+                return true;
+            }
+            var entitymanager = IoCManager.Resolve<IEntityManager>();
+            var entities = entitymanager.GetEntitiesAt(position);
+            return !entities.SelectMany(e => e.Prototype.SnapFlags).Any(f => SnapFlags.Contains(f));
         }
 
         // 100% completely refined & distilled cancer.

@@ -55,17 +55,16 @@ namespace SS14.Client.Placement.Modes
 
             var mouselocal = currentgrid.WorldToLocal(mouseWorld); //Convert code to local grid coordinates
             snapsize = currentgrid.SnapSize; //Find snap size.
-            
+
             mouselocal = new Vector2( //Round local coordinates onto the snap grid
                 (float)Math.Round((mouselocal.X / snapsize), MidpointRounding.AwayFromZero) * snapsize,
                 (float)Math.Round((mouselocal.Y / snapsize), MidpointRounding.AwayFromZero) * snapsize);
-            
+
             //Convert back to original world and screen coordinates after applying offset
             mouseWorld = currentgrid.LocalToWorld(mouselocal) + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
             mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
 
-            var protomanager = IoCManager.Resolve<IPrototypeManager>();
-            if (!protomanager.CanSpawnAt(pManager.CurrentPrototype.ID, currentgrid, mouselocal))
+            if (!pManager.CurrentPrototype.CanSpawnAt(currentgrid, mouselocal))
                 return false;
 
             if (!RangeCheck())

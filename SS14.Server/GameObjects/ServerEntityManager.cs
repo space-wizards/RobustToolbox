@@ -45,7 +45,8 @@ namespace SS14.Server.GameObjects
         public bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity)
         {
             var protomanager = IoCManager.Resolve<IPrototypeManager>();
-            if(protomanager.CanSpawnAt(EntityType, grid, position))
+            var prototype = protomanager.Index<EntityPrototype>(EntityType);
+            if (prototype.CanSpawnAt(grid, position))
             {
                 entity = SpawnEntity(EntityType);
                 entity.GetComponent<TransformComponent>().Position = position;
@@ -65,7 +66,7 @@ namespace SS14.Server.GameObjects
         public bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity)
         {
             var mapmanager = IoCManager.Resolve<IMapManager>(); //TODO: wait we only have one map? this only supports one map
-            if(mapmanager.TryFindGridAt(position, out IMapGrid gridlocation))
+            if (mapmanager.TryFindGridAt(position, out IMapGrid gridlocation))
             {
                 bool returnvalue = TrySpawnEntityAt(EntityType, gridlocation, position, out IEntity returnoutvar);
                 entity = returnoutvar;

@@ -43,10 +43,14 @@ namespace SS14.Shared.ContentPack
                 path = queue.Dequeue();
 
                 foreach (var subDir in Directory.GetDirectories(path))
+                {
                     queue.Enqueue(subDir);
+                }
 
                 foreach (var file in Directory.GetFiles(path))
+                {
                     yield return file;
+                }
             }
         }
     }

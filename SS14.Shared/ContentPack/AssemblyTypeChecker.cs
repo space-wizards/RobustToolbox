@@ -154,7 +154,7 @@ namespace SS14.Shared.ContentPack
             "OpenTK.Vector3h",
             "OpenTK.Vector4",
             "OpenTK.Vector4d",
-            "OpenTK.Vector4h",
+            "OpenTK.Vector4h"
         };
 
         /// <summary>
@@ -208,12 +208,16 @@ namespace SS14.Shared.ContentPack
                     // Assemblies are guilty until proven innocent in a court of law.
                     var safe = false;
                     foreach (var typeName in _typeWhiteList)
+                    {
                         if (typeRef.FullName.StartsWith(typeName))
                             safe = true;
+                    }
 
                     foreach (var typeName in _typeBlackList)
+                    {
                         if (typeRef.FullName.StartsWith(typeName))
                             safe = false;
+                    }
 
                     if (safe)
                         continue;

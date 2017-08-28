@@ -46,7 +46,9 @@ namespace SS14.Shared.ContentPack
 
             // GetFiles returns full paths, we want them relative to root
             foreach (var filePath in paths)
+            {
                 yield return filePath.Substring(_directory.FullName.Length);
+            }
         }
     }
 }

@@ -52,6 +52,7 @@ namespace SS14.Shared.GameObjects
             protected set { placementMode = value; }
         }
         private string placementMode = "PlaceNearby";
+        private bool placementmodeoverriden = false;
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
@@ -61,17 +62,20 @@ namespace SS14.Shared.GameObjects
             get { return placementRange; }
             protected set { placementRange = value; }
         }
-        private int placementRange = 200;
+        private const int DEFAULT_RANGE = 200;
+        private int placementRange = DEFAULT_RANGE;
 
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
         /// </summary>
         public readonly HashSet<string> SnapFlags = new HashSet<string>();
+        private bool snapoverriden = false;
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
         public Vector2i PlacementOffset { get; protected set; }
+        private bool placementoverriden = false;
 
         /// <summary>
         /// The prototype we inherit from.
@@ -150,11 +154,13 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("mode", out node))
             {
                 PlacementMode = node.AsString();
+                placementmodeoverriden = true;
             }
 
             if (mapping.TryGetNode("offset", out node))
             {
                 PlacementOffset = node.AsVector2i();
+                placementoverriden = true;
             }
 
             if (mapping.TryGetNode<YamlSequenceNode>("nodes", out var sequence))
@@ -175,6 +181,7 @@ namespace SS14.Shared.GameObjects
                 {
                     SnapFlags.Add(flag);
                 }
+                snapoverriden = true;
             }
         }
 
@@ -236,6 +243,34 @@ namespace SS14.Shared.GameObjects
                 {
                     // Copy component into the target, since it doesn't have it yet.
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
+                }
+            }
+            
+            if(!target.placementoverriden)
+            {
+                target.PlacementMode = source.PlacementMode;
+            }
+
+            if(!target.placementoverriden)
+            {
+                target.PlacementOffset = source.PlacementOffset;
+            }
+
+            if(target.MountingPoints == null)
+            {
+                target.MountingPoints = new List<int>(source.MountingPoints);
+            }
+
+            if(target.PlacementRange == DEFAULT_RANGE)
+            {
+                target.PlacementRange = source.PlacementRange;
+            }
+
+            if(!target.snapoverriden)
+            {
+                foreach (var flag in source.SnapFlags)
+                {
+                    target.SnapFlags.Add(flag);
                 }
             }
 

@@ -259,10 +259,6 @@
     <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
     <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
-    <Compile Include="Interfaces\Lighting\ILight.cs" />
-    <Compile Include="Interfaces\Lighting\ILightArea.cs" />
-    <Compile Include="Interfaces\Lighting\ILightManager.cs" />
-    <Compile Include="Interfaces\Lighting\LightMode.cs" />
     <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
@@ -273,12 +269,6 @@
     <Compile Include="Interfaces\UserInterface\IGuiComponent.cs" />
     <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
-    <Compile Include="Lighting\Light.cs" />
-    <Compile Include="Lighting\LightArea.cs" />
-    <Compile Include="Lighting\LightManager.cs" />
-    <Compile Include="Lighting\QuadRenderer.cs" />
-    <Compile Include="Lighting\ShadowMapResolver.cs" />
-    <Compile Include="Lighting\ShadowmapSize.cs" />
     <Compile Include="Lighting\LightModes\Flicker.cs" />
     <Compile Include="Network\NetworkGrapher.cs" />
     <Compile Include="Placement\PlacementManager.cs" />

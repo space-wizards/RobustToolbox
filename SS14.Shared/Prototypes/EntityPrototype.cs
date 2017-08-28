@@ -142,16 +142,6 @@ namespace SS14.Shared.GameObjects
             {
                 ReadPlacementProperties(placementMapping);
             }
-
-            // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
-            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
-            {
-                var flagslist = snapsequence.Select(p => p.AsString());
-                foreach (var flag in flagslist)
-                {
-                    SnapFlags.Add(flag);
-                }
-            }
         }
 
         private void ReadPlacementProperties(YamlMappingNode mapping)
@@ -175,6 +165,16 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("range", out node))
             {
                 PlacementRange = node.AsInt();
+            }
+
+            // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
+            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
+            {
+                var flagslist = snapsequence.Select(p => p.AsString());
+                foreach (var flag in flagslist)
+                {
+                    SnapFlags.Add(flag);
+                }
             }
         }
 

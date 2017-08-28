@@ -13,10 +13,40 @@ namespace SS14.Server.Interfaces.GameObjects
         void LoadEntities();
         void SaveEntities();
         IEntity SpawnEntity(string template, int? uid = null);
-        bool TrySpawnEntityAt(string entityTemplateName, IMapGrid grid, Vector2 vector2, out IEntity entity);
-        IEntity ForceSpawnEntityAt(string entityTemplateName, IMapGrid grid, Vector2 vector2);
-        bool TrySpawnEntityAt(string entityTemplateName, Vector2 vector2, out IEntity entity);
-        IEntity ForceSpawnEntityAt(string entityTemplateName, Vector2 vector2);
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="grid"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity);
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="grid"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        IEntity ForceSpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position);
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity);
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position);
         List<EntityState> GetEntityStates();
     }
 }

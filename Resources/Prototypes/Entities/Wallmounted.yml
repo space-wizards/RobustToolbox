@@ -8,9 +8,6 @@
     sprites:
     - fire_extinguisher
 
-  snap:
-  - Wallmount
-
   placement:
     mode: AlignWall
     range: 200
@@ -18,6 +15,8 @@
     - 18
     - 26
     - 32
+    snap:
+    - Wallmount
 
 - type: entity
   id: FireAlarm
@@ -32,9 +31,6 @@
   - type: Icon
     icon: fire_alarm_off
 
-  snap:
-  - Wallmount
-
   placement:
     mode: AlignWall
     range: 180
@@ -42,6 +38,8 @@
     - 5
     - 10
     - 15
+    snap:
+    - Wallmount
 
 - type: entity
   id: MedCabinet
@@ -56,8 +54,7 @@
   - type: Icon
     icon: med_cabinet
 
-  snap:
-  - Wallmount
-
   placement:
     mode: AlignWall
+    snap:
+    - Wallmount

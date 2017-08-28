@@ -26,6 +26,9 @@ namespace SS14.Server.GameObjects
     {
         #region IEntityManager Members
 
+        [Dependency]
+        readonly private IPrototypeManager _protoManager;
+
         public void SaveEntities()
         {
             IEnumerable<XElement> entities = from IEntity e in _entities.Values
@@ -36,52 +39,35 @@ namespace SS14.Server.GameObjects
             saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
         }
 
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity)
         {
-            var protomanager = IoCManager.Resolve<IPrototypeManager>();
-            var prototype = protomanager.Index<EntityPrototype>(EntityType);
+            var prototype = _protoManager.Index<EntityPrototype>(EntityType);
             if (prototype.CanSpawnAt(grid, position))
             {
-                entity = SpawnEntity(EntityType);
-                entity.GetComponent<TransformComponent>().Position = position;
-                entity.Initialize();
+                IEntity typecastentity = SpawnEntity(EntityType);
+                typecastentity.GetComponent<TransformComponent>().Position = position;
+                typecastentity.Initialize();
+                entity = typecastentity;
                 return true;
             }
-            entity = new Entity(); //This is a bad
+            entity = null;
             return false;
         }
 
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity)
         {
             var mapmanager = IoCManager.Resolve<IMapManager>(); //TODO: wait we only have one map? this only supports one map
             if (mapmanager.TryFindGridAt(position, out IMapGrid gridlocation))
             {
-                bool returnvalue = TrySpawnEntityAt(EntityType, gridlocation, position, out IEntity returnoutvar);
-                entity = returnoutvar;
-                return returnvalue;
+                return TrySpawnEntityAt(EntityType, gridlocation, position, out entity);
             }
-            entity = ForceSpawnEntityAt(EntityType, position);
+            entity = null;
             return true;
         }
 
-        /// <summary>
-        /// Spawns an entity at a specific position in grid space
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position)
         {
             IEntity entity = SpawnEntity(EntityType);
@@ -90,12 +76,7 @@ namespace SS14.Server.GameObjects
             return entity;
         }
 
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IEntity ForceSpawnEntityAt(string EntityType, Vector2 position)
         {
             IEntity entity = SpawnEntity(EntityType);

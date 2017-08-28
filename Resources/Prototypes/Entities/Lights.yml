@@ -15,5 +15,6 @@
     radius: 1024
     color: "#DCDCC6"
 
-  snap:
-  - Wallmount
+  placement:
+    snap:
+    - Wallmount

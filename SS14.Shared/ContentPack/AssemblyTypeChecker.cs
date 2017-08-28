@@ -154,7 +154,7 @@ namespace SS14.Shared.ContentPack
             "OpenTK.Vector3h",
             "OpenTK.Vector4",
             "OpenTK.Vector4d",
-            "OpenTK.Vector4h"
+            "OpenTK.Vector4h",
         };
 
         /// <summary>

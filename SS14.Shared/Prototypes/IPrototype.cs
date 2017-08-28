@@ -16,11 +16,6 @@ namespace SS14.Shared.Prototypes
         /// Load data from the YAML mappings in the prototype files.
         /// </summary>
         void LoadFrom(YamlMappingNode node);
-
-        /// <summary>
-        /// Bitflag to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
-        /// </summary>
-        SnapFlags SnapFlags { get; set; }
     }
 
     /// <summary>

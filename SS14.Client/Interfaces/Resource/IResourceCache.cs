@@ -1,5 +1,6 @@
 ﻿using SFML.Graphics;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprite;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace SS14.Client.Interfaces.Resource
         GLSLShader GetShader(string key);
         TechniqueList GetTechnique(string key);
         ParticleSettings GetParticles(string key);
-        object GetAnimatedSprite(string key);
+        AnimatedSprite GetAnimatedSprite(string key);
         void LoadLocalResources();
         void LoadBaseResources();
         /// <summary>

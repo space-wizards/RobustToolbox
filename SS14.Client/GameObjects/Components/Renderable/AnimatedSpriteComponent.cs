@@ -63,7 +63,7 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public Box2 AABB
+        public virtual Box2 AABB
         {
             get
             {
@@ -96,7 +96,7 @@ namespace SS14.Client.GameObjects
         public void SetSprite(string name)
         {
             currentSprite = name;
-            sprite = (AnimatedSprite)IoCManager.Resolve<IResourceCache>().GetAnimatedSprite(name);
+            sprite = IoCManager.Resolve<IResourceCache>().GetAnimatedSprite(name);
         }
 
         public void SetAnimationState(string state, bool loop = true)
@@ -145,7 +145,7 @@ namespace SS14.Client.GameObjects
             DrawDepth = p;
         }
 
-        public Sprite GetCurrentSprite()
+        public virtual Sprite GetCurrentSprite()
         {
             return sprite.GetCurrentSprite();
         }
@@ -154,15 +154,13 @@ namespace SS14.Client.GameObjects
         {
             if (sprite == null || !visible) return false;
 
-            Sprite spriteToCheck = sprite.GetCurrentSprite();
+            Sprite spriteToCheck = GetCurrentSprite();
             var bounds = spriteToCheck.GetLocalBounds();
 
             var AABB =
                 Box2.FromDimensions(
-                    Owner.GetComponent<ITransformComponent>().Position.X -
-                    (bounds.Width / 2),
-                    Owner.GetComponent<ITransformComponent>().Position.Y -
-                    (bounds.Height / 2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
+                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture

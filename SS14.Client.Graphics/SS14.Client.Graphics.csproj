@@ -94,9 +94,6 @@
     <Compile Include="texture\TextureCache.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Interfaces\ICluwneDrawable.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -116,9 +113,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\TextSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VertexData\VertexEnums.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="VertexData\VertexField.cs">

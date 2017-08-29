@@ -595,21 +595,16 @@ namespace SS14.Client.State.States
 
             #region Object clicking
 
-            // Convert our click from screen -> world coordinates
-            float checkDistance = 1.5f;
-            // Find all the entities near us we could have clicked
+            // Find all the entities intersecting our click
             IEnumerable<IEntity> entities =
-                _entityManager.GetEntitiesInRange(
-                    PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position,
-                    checkDistance);
+                _entityManager.GetEntitiesIntersecting(MousePosWorld);
 
-            // See which one our click AABB intersected with
+            // Check the entities against whether or not we can click them
             var clickedEntities = new List<ClickData>();
-            var clickedWorldPoint = new Vector2(MousePosWorld.X, MousePosWorld.Y);
             foreach (IEntity entity in entities)
             {
                 if (entity.TryGetComponent<IClientClickableComponent>(out var component)
-                 && component.CheckClick(clickedWorldPoint, out int drawdepthofclicked))
+                 && component.CheckClick(MousePosWorld, out int drawdepthofclicked))
                 {
                     clickedEntities.Add(new ClickData(entity, drawdepthofclicked));
                 }
@@ -620,6 +615,7 @@ namespace SS14.Client.State.States
                 return;
             }
 
+            //Sort them by which we should click
             IEntity entToClick = (from cd in clickedEntities
                                   orderby cd.Drawdepth ascending,
                                       cd.Clicked.GetComponent<ITransformComponent>().Position
@@ -631,6 +627,12 @@ namespace SS14.Client.State.States
                 PlacementManager.HandleDeletion(entToClick);
                 return;
             }
+
+            // Check whether click is outside our 1.5 tile range
+            float checkDistance = 1.5f * MapManager.TileSize;
+            var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position - entToClick.GetComponent<ITransformComponent>().Position;
+            if (dist.Length > checkDistance)
+                return;
 
             var clickable = entToClick.GetComponent<IClientClickableComponent>();
             switch (e.Button)

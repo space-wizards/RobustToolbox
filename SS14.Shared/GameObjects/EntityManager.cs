@@ -1,6 +1,9 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using System;
@@ -93,6 +96,18 @@ namespace SS14.Shared.GameObjects
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
             return _entities.Values.Where(e => e.Match(query));
+        }
+
+        public IEnumerable<IEntity> GetEntitiesAt(Vector2 position)
+        {
+            foreach (var entity in _entities.Values)
+            {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (FloatMath.CloseTo(transform.Position.X, position.X) && FloatMath.CloseTo(transform.Position.Y, position.Y))
+                {
+                    yield return entity;
+                }
+            }
         }
 
         /// <summary>

@@ -1,6 +1,8 @@
-﻿using SS14.Shared.IoC;
+﻿using OpenTK;
+using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Reflection;
 using SS14.Shared.Prototypes;
@@ -50,6 +52,7 @@ namespace SS14.Shared.GameObjects
             protected set { placementMode = value; }
         }
         private string placementMode = "PlaceNearby";
+        private bool placementmodeoverriden = false;
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
@@ -59,12 +62,20 @@ namespace SS14.Shared.GameObjects
             get { return placementRange; }
             protected set { placementRange = value; }
         }
-        private int placementRange = 200;
+        private const int DEFAULT_RANGE = 200;
+        private int placementRange = DEFAULT_RANGE;
+
+        /// <summary>
+        /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
+        /// </summary>
+        public readonly HashSet<string> SnapFlags = new HashSet<string>();
+        private bool snapoverriden = false;
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
         public Vector2i PlacementOffset { get; protected set; }
+        private bool placementoverriden = false;
 
         /// <summary>
         /// The prototype we inherit from.
@@ -115,9 +126,9 @@ namespace SS14.Shared.GameObjects
             }
 
             // COMPONENTS
-            if (mapping.TryGetNode<YamlSequenceNode>("components", out var sequence))
+            if (mapping.TryGetNode<YamlSequenceNode>("components", out var componentsequence))
             {
-                foreach (var componentMapping in sequence.Cast<YamlMappingNode>())
+                foreach (var componentMapping in componentsequence.Cast<YamlMappingNode>())
                 {
                     ReadComponent(componentMapping);
                 }
@@ -143,11 +154,13 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("mode", out node))
             {
                 PlacementMode = node.AsString();
+                placementmodeoverriden = true;
             }
 
             if (mapping.TryGetNode("offset", out node))
             {
                 PlacementOffset = node.AsVector2i();
+                placementoverriden = true;
             }
 
             if (mapping.TryGetNode<YamlSequenceNode>("nodes", out var sequence))
@@ -158,6 +171,17 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("range", out node))
             {
                 PlacementRange = node.AsInt();
+            }
+
+            // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
+            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
+            {
+                var flagslist = snapsequence.Select(p => p.AsString());
+                foreach (var flag in flagslist)
+                {
+                    SnapFlags.Add(flag);
+                }
+                snapoverriden = true;
             }
         }
 
@@ -221,6 +245,34 @@ namespace SS14.Shared.GameObjects
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
             }
+            
+            if(!target.placementoverriden)
+            {
+                target.PlacementMode = source.PlacementMode;
+            }
+
+            if(!target.placementoverriden)
+            {
+                target.PlacementOffset = source.PlacementOffset;
+            }
+
+            if(target.MountingPoints == null && source.MountingPoints != null)
+            {
+                target.MountingPoints = new List<int>(source.MountingPoints);
+            }
+
+            if(target.PlacementRange == DEFAULT_RANGE)
+            {
+                target.PlacementRange = source.PlacementRange;
+            }
+
+            if(!target.snapoverriden)
+            {
+                foreach (var flag in source.SnapFlags)
+                {
+                    target.SnapFlags.Add(flag);
+                }
+            }
 
             if (target.Name == null)
             {
@@ -271,6 +323,20 @@ namespace SS14.Shared.GameObjects
             }
 
             return entity;
+        }
+
+        /// <summary>
+        /// Tests whether the prototype is going to conflict with anything previously placed in this location on the snap grid
+        /// </summary>
+        public bool CanSpawnAt(IMapGrid grid, Vector2 position)
+        {
+            if(!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
+            {
+                return true;
+            }
+            var entitymanager = IoCManager.Resolve<IEntityManager>();
+            var entities = entitymanager.GetEntitiesAt(position);
+            return !entities.SelectMany(e => e.Prototype.SnapFlags).Any(f => SnapFlags.Contains(f));
         }
 
         // 100% completely refined & distilled cancer.

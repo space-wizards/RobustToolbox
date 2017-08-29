@@ -30,6 +30,16 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
+        /// <summary>
+        ///     Is this located at a position on the center grid of snap positions, accepts local coordinates
+        /// </summary>
+        bool OnSnapCenter(Vector2 position);
+
+        /// <summary>
+        ///     Is this located at a position on the border grid of snap positions, accepts local coordinates
+        /// </summary>
+        bool OnSnapBorder(Vector2 position);
+
         #region TileAccess
 
         /// <summary>

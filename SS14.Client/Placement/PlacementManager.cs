@@ -169,11 +169,11 @@ namespace SS14.Client.Placement
                 PreparePlacement(info.EntityType);
         }
 
-        public void Update(Vector2i mouseScreen, IMapManager currentMap)
+        public void Update(ScreenCoordinates mouseScreen)
         {
             if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
 
-            ValidPosition = CurrentMode.Update(mouseScreen, currentMap);
+            ValidPosition = CurrentMode.Update(mouseScreen);
         }
 
         public void Render()

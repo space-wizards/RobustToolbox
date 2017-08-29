@@ -36,7 +36,7 @@ namespace SS14.Server.GameObjects
         public event EventHandler<VectorEventArgs> OnMove;
 
         /// <inheritdoc />
-        public Vector2 Position
+        public WorldCoordinates Position
         {
             get
             {
@@ -46,7 +46,7 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    return _position;
+                    return new WorldCoordinates(_position, mapid);
                 }
             }
             set

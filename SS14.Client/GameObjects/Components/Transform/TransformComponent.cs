@@ -14,7 +14,7 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
-        public Vector2 Position { get; private set; }
+        public WorldCoordinates Position { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
 

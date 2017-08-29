@@ -65,7 +65,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position == transform.Position)
+                    if (FloatMath.CloseTo(transform.Position.X, position.X) && FloatMath.CloseTo(transform.Position.Y, position.Y))
                     {
                         yield return entity;
                     }

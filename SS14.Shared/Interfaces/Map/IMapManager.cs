@@ -62,7 +62,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, float snapSize = 1);
+        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, float snapSize = 1, int mapID = 0);
 
         /// <summary>
         ///     Checks if a grid exists with the given ID.

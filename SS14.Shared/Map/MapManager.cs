@@ -77,9 +77,9 @@ namespace SS14.Shared.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, float snapSize = 1)
+        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, float snapSize = 1, int mapID = 0)
         {
-            var newGrid = new MapGrid(this, gridId, chunkSize, snapSize);
+            var newGrid = new MapGrid(this, gridId, chunkSize, snapSize, mapID);
             _grids.Add(gridId, newGrid);
             return newGrid;
         }
@@ -147,9 +147,9 @@ namespace SS14.Shared.Map
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <returns>True if there is any grid at the location.</returns>
-        public bool IsGridAt(float xWorld, float yWorld)
+        public bool IsGridAt(WorldCoordinates posWorld)
         {
-            var pos = new Vector2(xWorld, yWorld);
+            var pos = posWorld.Position;
             foreach (var kvGrid in _grids)
                 if (kvGrid.Value.AABBWorld.Contains(pos))
                     return true;
@@ -163,9 +163,9 @@ namespace SS14.Shared.Map
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <param name="gridId">The grid id to find.</param>
         /// <returns></returns>
-        public bool IsGridAt(float xWorld, float yWorld, int gridId)
+        public bool IsGridAt(WorldCoordinates worldPos, int gridId)
         {
-            var pos = new Vector2(xWorld, yWorld);
+            var pos = worldPos.Position;
             return _grids.TryGetValue(gridId, out MapGrid output) && output.AABBWorld.Contains(pos);
         }
 
@@ -175,9 +175,9 @@ namespace SS14.Shared.Map
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsAt(float xWorld, float yWorld)
+        public IEnumerable<IMapGrid> FindGridsAt(WorldCoordinates worldPos)
         {
-            var pos = new Vector2(xWorld, yWorld);
+            var pos = worldPos.Position;
             var gridList = new List<MapGrid>();
             foreach (var kvGrid in _grids)
                 if (kvGrid.Value.AABBWorld.Contains(pos))
@@ -190,16 +190,16 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
-        public bool TryFindGridAt(float xWorld, float yWorld, out IMapGrid currentgrid)
+        public bool TryFindGridAt(WorldCoordinates worldPos, out IMapGrid currentgrid)
         {
-            var pos = new Vector2(xWorld, yWorld);
+            var pos = worldPos.Position;
             foreach (var kvGrid in _grids)
                 if (kvGrid.Value.AABBWorld.Contains(pos))
                 {
                     currentgrid = kvGrid.Value;
                     return true;
                 }
-            currentgrid = GetDefaultGrid();
+            currentgrid = null;
             return false;
         }
 

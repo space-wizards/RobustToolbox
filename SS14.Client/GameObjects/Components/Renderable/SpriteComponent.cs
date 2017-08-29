@@ -20,6 +20,7 @@ using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Utility;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -222,7 +223,7 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
-        public virtual bool WasClicked(Vector2 worldPos)
+        public virtual bool WasClicked(WorldCoordinates worldPos)
         {
             if (currentBaseSprite == null || !visible) return false;
 

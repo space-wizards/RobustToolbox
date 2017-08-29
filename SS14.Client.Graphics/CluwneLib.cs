@@ -8,6 +8,7 @@ using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Graphics.View;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Timing;
 using System;
@@ -414,10 +415,10 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static Vector2 WorldToScreen(Vector2 point)
+        public static Vector2 WorldToScreen(WorldCoordinates point) //TODO: move to another coordinate type
         {
             var center = WorldCenter;
-            return (point - center) * TileSize + ScreenViewportSize / 2;
+            return (point.Position - center) * TileSize + ScreenViewportSize / 2;
         }
 
         /// <summary>
@@ -453,9 +454,9 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static Vector2 ScreenToWorld(Vector2i point)
+        public static WorldCoordinates ScreenToWorld(ScreenCoordinates point)
         {
-            return ((Vector2)point - ScreenViewportSize / 2) / TileSize + WorldCenter;
+            return new WorldCoordinates((point.Position - ScreenViewportSize / 2) / TileSize + WorldCenter, point.MapID);
         }
 
         /// <summary>

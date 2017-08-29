@@ -18,7 +18,7 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2i mouseS, IMapManager currentMap)
+        public override bool Update(ScreenCoordinates mouseS)
         {
             if (currentMap == null) return false;
 

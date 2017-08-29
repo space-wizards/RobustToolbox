@@ -11,6 +11,11 @@ namespace SS14.Shared.Interfaces.Map
     public interface IMapGrid : IDisposable
     {
         /// <summary>
+        ///     The integer ID of the map this grid is located within
+        /// </summary>
+        int MapID { get; }
+
+        /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
         Box2 AABBWorld { get; }
@@ -152,7 +157,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
         /// <returns>The world-space coordinates with global origin.</returns>
-        Vector2 LocalToWorld(Vector2 posLocal);
+        WorldCoordinates LocalToWorld(LocalCoordinates posLocal);
 
 
         /// <summary>
@@ -160,14 +165,14 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="gridTile"></param>
         /// <returns></returns>
-        Vector2 GridTileToLocal(MapGrid.Indices gridTile);
+        LocalCoordinates GridTileToLocal(MapGrid.Indices gridTile);
 
         /// <summary>
         ///     Transforms grid-space tile indices to world coordinates.
         /// </summary>
         /// <param name="gridTile">The Grid Tile indices.</param>
         /// <returns></returns>
-        Vector2 GridTileToWorld(MapGrid.Indices gridTile);
+        WorldCoordinates GridTileToWorld(MapGrid.Indices gridTile);
 
         /// <summary>
         ///     Transforms grid indices into an outvar tile, returns false if no tile is found

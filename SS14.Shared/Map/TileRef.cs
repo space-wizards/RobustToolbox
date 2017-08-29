@@ -33,8 +33,8 @@ namespace SS14.Shared.Map
 
         public int X => _gridTile.X;
         public int Y => _gridTile.Y;
-        public Vector2f LocalPos => _manager.GetGrid(_gridIndex).GridTileToLocal(_gridTile);
-        public Vector2f WorldPos => _manager.GetGrid(_gridIndex).GridTileToWorld(_gridTile);
+        public LocalCoordinates LocalPos => _manager.GetGrid(_gridIndex).GridTileToLocal(_gridTile);
+        public WorldCoordinates WorldPos => _manager.GetGrid(_gridIndex).GridTileToWorld(_gridTile);
         public ushort TileSize => _manager.TileSize;
         public Tile Tile
         {

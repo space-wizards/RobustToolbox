@@ -172,6 +172,7 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Maths\Angle.cs" />
     <Compile Include="Maths\Box2i.cs" />
     <Compile Include="Map\Chunk.cs" />

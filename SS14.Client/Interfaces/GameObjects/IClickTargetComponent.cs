@@ -1,7 +1,8 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Interfaces.GameObjects
 {
@@ -10,7 +11,7 @@ namespace SS14.Client.Interfaces.GameObjects
     /// </summary>
     public interface IClickTargetComponent : IComponent
     {
-        bool WasClicked(Vector2 worldPos);
+        bool WasClicked(WorldCoordinates worldPos);
         DrawDepth DrawDepth { get; }
     }
 }

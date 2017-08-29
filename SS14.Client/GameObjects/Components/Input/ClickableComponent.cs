@@ -8,6 +8,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using System;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -19,7 +20,7 @@ namespace SS14.Client.GameObjects
 
         public event EventHandler<ClickEventArgs> OnClick;
 
-        public bool CheckClick(Vector2 worldPos, out int drawdepth)
+        public bool CheckClick(WorldCoordinates worldPos, out int drawdepth)
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 

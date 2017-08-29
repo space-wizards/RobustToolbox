@@ -8,6 +8,7 @@ namespace SS14.Shared.Map
 {
     public class MapGrid : IMapGrid
     {
+        public int MapID { get; private set; } = 0;
         private readonly MapManager _mapManager;
         private readonly Dictionary<Indices, Chunk> _chunks = new Dictionary<Indices, Chunk>();
 
@@ -54,12 +55,13 @@ namespace SS14.Shared.Map
             }
         }
 
-        internal MapGrid(MapManager mapManager, int gridIndex, ushort chunkSize, float snapsize)
+        internal MapGrid(MapManager mapManager, int gridIndex, ushort chunkSize, float snapsize, int mapID)
         {
             _mapManager = mapManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
             SnapSize = snapsize;
+            MapID = mapID;
         }
 
         /// <summary>
@@ -88,10 +90,9 @@ namespace SS14.Shared.Map
         /// <param name="gridTile">The new tile to check.</param>
         public void UpdateAABB(Indices gridTile)
         {
-            var localPos = GridTileToLocal(gridTile);
-            var worldPos = LocalToWorld(localPos);
+            var worldPos = GridTileToLocal(gridTile).ToWorld();
 
-            if (AABBWorld.Contains(worldPos))
+            if (AABBWorld.Contains(worldPos.Position))
                 return;
 
             // rect union
@@ -137,7 +138,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public TileRef GetTile(float xWorld, float yWorld)
         {
-            return GetTile(new Vector2(xWorld, yWorld));
+            return GetTile(new Vector2(xWorld, yWorld)); //TODO: check this
         }
 
         /// <inheritdoc />
@@ -154,13 +155,7 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(float xWorld, float yWorld, Tile tile)
-        {
-            SetTile(new Vector2(xWorld, yWorld), tile);
-        }
-
-        /// <inheritdoc />
-        public void SetTile(Vector2 worldPos, Tile tile)
+        public void SetTile(WorldCoordinates worldPos, Tile tile)
         {
             var localTile = WorldToTile(worldPos);
             SetTile(localTile.X, localTile.Y, tile);
@@ -177,9 +172,9 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(float xWorld, float yWorld, ushort tileId, ushort tileData = 0)
+        public void SetTile(WorldCoordinates worldPos, ushort tileId, ushort tileData = 0)
         {
-            SetTile(new Vector2(xWorld, yWorld), new Tile(tileId, tileData));
+            SetTile(worldPos, new Tile(tileId, tileData));
         }
 
         /// <inheritdoc />
@@ -272,18 +267,18 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public Vector2 LocalToWorld(Vector2 posLocal)
+        public WorldCoordinates LocalToWorld(LocalCoordinates local)
         {
-            return posLocal + WorldPosition;
+            return new WorldCoordinates(local.Position + WorldPosition, MapID);
         }
 
         /// <summary>
         /// Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
         /// <returns></returns>
-        public Indices WorldToTile(Vector2 worldPos)
+        public Indices WorldToTile(WorldCoordinates worldPos)
         {
-            var local = WorldToLocal(worldPos);
+            var local = worldPos.ToLocal(this); 
             var x = (int)Math.Floor(local.X / _mapManager.TileSize);
             var y = (int)Math.Floor(local.Y / _mapManager.TileSize);
             return new Indices(x, y);
@@ -316,17 +311,17 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public Vector2 GridTileToLocal(Indices gridTile)
+        public LocalCoordinates GridTileToLocal(Indices gridTile)
         {
             var tileSize = _mapManager.TileSize;
-            return new Vector2(gridTile.X * tileSize + (tileSize/2), gridTile.Y * tileSize + (tileSize / 2));
+            return new LocalCoordinates(gridTile.X * tileSize + (tileSize / 2), gridTile.Y * tileSize + (tileSize / 2), this);
         }
 
         /// <inheritdoc />
-        public Vector2 GridTileToWorld(Indices gridTile)
+        public WorldCoordinates GridTileToWorld(Indices gridTile)
         {
             var local = GridTileToLocal(gridTile);
-            return LocalToWorld(local);
+            return local.ToWorld();
         }
 
         /// <inheritdoc />

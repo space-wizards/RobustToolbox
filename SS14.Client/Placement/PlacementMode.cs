@@ -16,8 +16,8 @@ namespace SS14.Client.Placement
         public readonly PlacementManager pManager;
 
         public TileRef currentTile;
-        public Vector2i mouseScreen;
-        public Vector2 mouseWorld;
+        public ScreenCoordinates mouseScreen;
+        public WorldCoordinates mouseWorld;
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
@@ -33,7 +33,7 @@ namespace SS14.Client.Placement
             get { return GetType().Name; }
         }
 
-        public virtual bool Update(Vector2i mouseScreen, IMapManager currentMap) //Return valid position?
+        public virtual bool Update(ScreenCoordinates mouseScreen)
         {
             return false;
         }

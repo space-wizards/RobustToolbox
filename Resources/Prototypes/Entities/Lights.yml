@@ -14,3 +14,7 @@
   - type: PointLight
     radius: 1024
     color: "#DCDCC6"
+
+  placement:
+    snap:
+    - Wallmount

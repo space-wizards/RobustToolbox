@@ -574,7 +574,7 @@ namespace SS14.Server
                     {
                         if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
                         {
-                            manager.SpawnEntityAt("Wall", new OpenTK.Vector2(x, y));
+                            manager.ForceSpawnEntityAt("Wall", grid, new OpenTK.Vector2(x, y));
                         }
                         grid.SetTile(x, y, new Tile(floor));
                     }

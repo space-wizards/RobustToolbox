@@ -69,7 +69,29 @@ namespace SS14.Shared.Maths
             else return val;
         }
 
+        public static bool CloseTo(float A, float B)
+        {
+            var epsilon = Math.Min(A, B) * 0.00001; // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(A - B) <= epsilon;
+        }
 
+        public static bool CloseTo(float A, double B)
+        {
+            var epsilon = Math.Min(A, B) * 0.00001; // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(A - B) <= epsilon;
+        }
+
+        public static bool CloseTo(double A, float B)
+        {
+            var epsilon = Math.Min(A, B) * 0.00001; // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(A - B) <= epsilon;
+        }
+
+        public static bool CloseTo(double A, double B)
+        {
+            var epsilon = Math.Min(A, B) * 0.00001; // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            return Math.Abs(A - B) <= epsilon;
+        }
     }
 }
 

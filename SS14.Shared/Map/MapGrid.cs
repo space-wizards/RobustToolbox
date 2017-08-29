@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenTK;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Maths;
 
 namespace SS14.Shared.Map
 {
@@ -108,12 +109,12 @@ namespace SS14.Shared.Map
 
         public bool OnSnapCenter(Vector2 position)
         {
-            return (position.X % SnapSize == 0 && position.Y % SnapSize == 0);
+            return (FloatMath.CloseTo(position.X % SnapSize, 0) && FloatMath.CloseTo(position.Y % SnapSize, 0));
         }
 
         public bool OnSnapBorder(Vector2 position)
         {
-            return (position.X % SnapSize == SnapSize/2 && position.Y % SnapSize == SnapSize/2);
+            return (FloatMath.CloseTo(position.X % SnapSize, SnapSize/2) && FloatMath.CloseTo(position.Y % SnapSize, SnapSize/2));
         }
 
         #region  TileAccess

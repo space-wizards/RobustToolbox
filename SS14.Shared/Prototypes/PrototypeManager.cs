@@ -6,11 +6,16 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Runtime.Serialization;
-using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces;
+using SS14.Shared.Log;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
+using OpenTK;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.GameObjects;
 
 namespace SS14.Shared.Prototypes
 {
@@ -82,6 +87,9 @@ namespace SS14.Shared.Prototypes
         [Dependency]
         private readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
+
+        [Dependency]
+        private readonly IResourceManager _resources;
 
         #region IPrototypeManager members
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
@@ -163,20 +171,22 @@ namespace SS14.Shared.Prototypes
             }
         }
 
+        /// <inheritdoc />
         public void LoadDirectory(string path)
         {
-            foreach (string filePath in PathHelpers.GetFiles(path))
+            foreach (var filePath in _resources.FindFiles(path))
             {
-                var file = File.OpenRead(filePath);
-                var stream = new StreamReader(file, Encoding.UTF8);
-
-                try
+                using (var reader = new StreamReader(_resources.ContentFileRead(filePath), Encoding.UTF8))
                 {
-                    LoadFromStream(stream);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Exception whilst loading prototypes from {0}: {1}", filePath, e);
+                    try
+                    {
+                        LoadFromStream(reader);
+                    }
+                    catch (Exception e)
+                        when (e is YamlException || e is PrototypeLoadException)
+                    {
+                        Logger.Error($"[ENG] Exception whilst loading prototypes from {filePath}: {e.Message}");
+                    }
                 }
             }
         }

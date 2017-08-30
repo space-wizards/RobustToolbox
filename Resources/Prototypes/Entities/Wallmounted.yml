@@ -11,10 +11,12 @@
   placement:
     mode: AlignWall
     range: 200
-    modes:
+    nodes:
     - 18
     - 26
     - 32
+    snap:
+    - Wallmount
 
 - type: entity
   id: FireAlarm
@@ -36,6 +38,8 @@
     - 5
     - 10
     - 15
+    snap:
+    - Wallmount
 
 - type: entity
   id: MedCabinet
@@ -52,3 +56,5 @@
 
   placement:
     mode: AlignWall
+    snap:
+    - Wallmount

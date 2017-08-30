@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
@@ -99,6 +100,16 @@ namespace SS14.Shared.ContentPack
         public bool ContentFileExists(string path)
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> FindFiles(string path)
+        {
+            // some LINQ magic
+            return _contentRoots
+                .Select(root => root.FindFiles(path)) // get a collection of strings (paths) from each root
+                .SelectMany(x => x) // merge the collections together to one big collection of strings
+                .Distinct(); // remove duplicate strings
         }
     }
 }

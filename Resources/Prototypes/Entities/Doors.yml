@@ -15,3 +15,7 @@
 
   - type: BoundingBox
   - type: Collidable
+
+  placement:
+    snap:
+    - Wall

@@ -65,7 +65,7 @@ namespace SS14.Client.Resources
         {
             _resources.Initialize();
 
-            _resources.MountContentDirectory("");
+            _resources.MountContentDirectory(@"./Resources/");
 
             _resources.MountContentPack(@"./EngineContentPack.zip");
         }
@@ -594,14 +594,22 @@ namespace SS14.Client.Resources
 
         }
 
-        public object GetAnimatedSprite(string key)
+        public AnimatedSprite GetAnimatedSprite(string key)
         {
             key = key.ToLowerInvariant();
             if (_animationCollections.ContainsKey(key))
             {
                 return new AnimatedSprite(key, _animationCollections[key], this);
             }
-            return DefaultSprite();
+            return AnimatedDefaultSprite();
+        }
+
+        public AnimatedSprite AnimatedDefaultSprite()
+        {
+            var test = _animationCollections.Keys.First();
+            if (test == null)
+                throw new NotImplementedException();
+            return new AnimatedSprite(test, _animationCollections[test], this);
         }
 
         public Sprite DefaultSprite()

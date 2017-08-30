@@ -38,6 +38,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         /// <returns>An enumerable over all matching entities.</returns>
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
+        IEnumerable<IEntity> GetEntitiesAt(Vector2 position);
+
         /// <summary>
         /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
         /// </summary>

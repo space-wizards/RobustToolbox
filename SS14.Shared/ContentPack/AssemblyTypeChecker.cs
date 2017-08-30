@@ -71,6 +71,7 @@ namespace SS14.Shared.ContentPack
 
             // Common System things.
             "System.Collections.Generic",
+            "System.Collections.IEnumerator",
             "System.Console",
             "System.Math",
             "System.ArgumentNullException",
@@ -98,6 +99,7 @@ namespace SS14.Shared.ContentPack
             "System.IComparable",
             "System.IEquatable",
             "System.ParamArrayAttribute",
+            "System.Threading.Interlocked",
 
             // SFML stuff.
             "SFML.Graphics.Color",
@@ -208,12 +210,16 @@ namespace SS14.Shared.ContentPack
                     // Assemblies are guilty until proven innocent in a court of law.
                     var safe = false;
                     foreach (var typeName in _typeWhiteList)
+                    {
                         if (typeRef.FullName.StartsWith(typeName))
                             safe = true;
+                    }
 
                     foreach (var typeName in _typeBlackList)
+                    {
                         if (typeRef.FullName.StartsWith(typeName))
                             safe = false;
+                    }
 
                     if (safe)
                         continue;

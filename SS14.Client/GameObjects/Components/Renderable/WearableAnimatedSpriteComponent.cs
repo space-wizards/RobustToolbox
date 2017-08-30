@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -43,6 +44,13 @@ namespace SS14.Client.GameObjects
             CarriedSprite = spritename;
         }
 
+        public override Sprite GetCurrentSprite()
+        {
+            if (!IsCurrentlyWorn)
+                return NotWornSprite;
+            return base.GetCurrentSprite();
+        }
+
         public override void LoadParameters(YamlMappingNode mapping)
         {
             base.LoadParameters(mapping);
@@ -56,6 +64,19 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("carriedSprite", out node))
             {
                 SetCarriedSprite(node.AsString());
+            }
+        }
+
+        public override Box2 AABB
+        {
+            get
+            {
+                if (!IsCurrentlyWorn)
+                {
+                    var bounds = GetCurrentSprite().GetLocalBounds();
+                    return Box2.FromDimensions(0, 0, bounds.Width, bounds.Height);
+                }
+                return base.AABB;
             }
         }
 
@@ -117,6 +138,12 @@ namespace SS14.Client.GameObjects
             {
                 component.Render(topLeft, bottomRight);
             }
+
+            //Draw AABB
+            var aabb = AABB;
+            if (CluwneLib.Debug.DebugColliders)
+                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
+
         }
     }
 }

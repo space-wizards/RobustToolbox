@@ -16,13 +16,12 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Configuration;
-using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
@@ -280,11 +279,11 @@ namespace SS14.Client
             _resourceCache.LoadSpriteFromTexture("ss14_logo_nt", nanotrasenTexture);
         }
 
+        [Conditional("RELEASE")]
         private void ShowSplashScreen()
         {
             // Do nothing when we're on DEBUG builds.
             // The splash is just annoying.
-#if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
             // Size of the NT logo in the bottom right.
@@ -307,16 +306,12 @@ namespace SS14.Client
             window.Draw(logo);
             window.Draw(nanotrasen);
             window.Display();
-#endif
         }
 
+        [Conditional("RELEASE")]
         private void CleanupSplashScreen()
         {
-            // Do nothing when we're on DEBUG builds.
-            // The splash is just annoying.
-#if !DEBUG
             CluwneLib.CleanupSplashScreen();
-#endif
         }
 
         #endregion Constructors

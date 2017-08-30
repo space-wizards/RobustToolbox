@@ -34,31 +34,19 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Viewport scaling
         /// </summary>
-        public static int TileSize { get; set; } = 32;
+        public static int PixelsPerMeter { get; } = 32;
 
-        public static Box2 WorldViewport
-        {
-            get
-            {
-                return ScreenToWorld(ScreenViewport);
-            }
-        }
-        public static Box2i ScreenViewport
-        {
-            get
-            {
-                return Box2i.FromDimensions(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
-            }
-        }
+        public static Box2 WorldViewport => ScreenToWorld(ScreenViewport);
+        private static Box2i ScreenViewport => Box2i.FromDimensions(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
 
-        public static bool IsInitialized { get; set; }
-        public static bool IsRunning { get; set; }
+        private static bool IsInitialized { get; set; }
+        public static bool IsRunning { get; private set; }
         public static bool FrameStatsVisible { get; set; }
 
-        public static CluwneWindow SplashScreen { get; set; }
-        public static CluwneWindow Screen { get; set; }
-        public static VideoSettings Video { get; private set; }
-        public static Debug Debug { get; private set; }
+        private static CluwneWindow SplashScreen { get; set; }
+        public static CluwneWindow Screen { get; private set; }
+        public static VideoSettings Video { get; }
+        public static Debug Debug { get; }
         public static GLSLShader CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }
@@ -417,7 +405,7 @@ namespace SS14.Client.Graphics
         public static Vector2 WorldToScreen(Vector2 point)
         {
             var center = WorldCenter;
-            return (point - center) * TileSize + ScreenViewportSize / 2;
+            return (point - center) * PixelsPerMeter + ScreenViewportSize / 2;
         }
 
         /// <summary>
@@ -455,7 +443,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2 ScreenToWorld(Vector2i point)
         {
-            return ((Vector2)point - ScreenViewportSize / 2) / TileSize + WorldCenter;
+            return ((Vector2)point - ScreenViewportSize / 2) / PixelsPerMeter + WorldCenter;
         }
 
         /// <summary>
@@ -465,8 +453,8 @@ namespace SS14.Client.Graphics
         {
             var center = WorldCenter;
             return new Box2(
-                ((Vector2)rect.TopLeft - ScreenViewportSize / 2) / TileSize + center,
-                ((Vector2)rect.BottomRight - ScreenViewportSize / 2) / TileSize + center
+                ((Vector2)rect.TopLeft - ScreenViewportSize / 2) / PixelsPerMeter + center,
+                ((Vector2)rect.BottomRight - ScreenViewportSize / 2) / PixelsPerMeter + center
             );
         }
 
@@ -477,7 +465,7 @@ namespace SS14.Client.Graphics
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {
-            return vec / TileSize;
+            return vec / PixelsPerMeter;
         }
 
         /// <summary>
@@ -488,10 +476,10 @@ namespace SS14.Client.Graphics
         public static Box2 PixelToTile(Box2 rect)
         {
             return new Box2(
-                rect.Left / TileSize,
-                rect.Top / TileSize,
-                rect.Right / TileSize,
-                rect.Bottom / TileSize
+                rect.Left / PixelsPerMeter,
+                rect.Top / PixelsPerMeter,
+                rect.Right / PixelsPerMeter,
+                rect.Bottom / PixelsPerMeter
             );
         }
 
@@ -501,8 +489,8 @@ namespace SS14.Client.Graphics
         public static Vector2 GetNearestPixel(Vector2 worldPoint)
         {
             return new Vector2(
-                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
-                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
+                (float)Math.Round(worldPoint.X * PixelsPerMeter) / PixelsPerMeter,
+                (float)Math.Round(worldPoint.Y * PixelsPerMeter) / PixelsPerMeter
             );
         }
 

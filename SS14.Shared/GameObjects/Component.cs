@@ -32,11 +32,14 @@ namespace SS14.Shared.GameObjects
         public event Action<ComponentShutdownEventArgs> OnShutdown;
 
         /// <inheritdoc />
+        public bool Deleted { get; private set; } = false;
+
+        /// <inheritdoc />
         public virtual void OnRemove()
         {
-            //Send us to the manager so it knows we're dead.
-            IoCManager.Resolve<IComponentManager>().RemoveComponent(this);
             Owner = null;
+            // Component manager will cull us because we've set ourselves to deleted.
+            Deleted = true;
         }
 
         /// <inheritdoc />

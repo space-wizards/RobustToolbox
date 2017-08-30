@@ -10,6 +10,7 @@ namespace SS14.Shared.Map
 {
     public abstract class Coordinates
     {
+        public const int NULLSPACE = 0;
         public Vector2 Position;
 
         public float X

@@ -151,7 +151,7 @@ namespace SS14.Client.GameObjects
                 return;
             }
 
-            var position = Owner.GetComponent<ITransformComponent>().Position;
+            var position = Owner.GetComponent<ITransformComponent>().WorldPosition;
 
             if (position.X < topLeft.X
                 || position.X > bottomRight.X

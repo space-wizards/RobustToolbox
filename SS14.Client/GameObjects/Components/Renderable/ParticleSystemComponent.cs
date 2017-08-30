@@ -74,7 +74,7 @@ namespace SS14.Client.GameObjects
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
             Vector2 renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().Position);
+                    Owner.GetComponent<ITransformComponent>().WorldPosition);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
@@ -87,7 +87,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().Position.Y;
+                return Owner.GetComponent<ITransformComponent>().WorldPosition.Y;
             }
         }
 

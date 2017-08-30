@@ -411,9 +411,9 @@ namespace SS14.Shared.Map
                 for (var y = -32; y <= 32; ++y)
                 for (var x = -32; x <= 32; ++x)
                     if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
-                        grid.SetTile(x, y, new Tile(wall));
+                        grid.SetTile(new WorldCoordinates(x,y,0), new Tile(wall)); //TODO: Fix this
                     else
-                        grid.SetTile(x, y, new Tile(floor));
+                        grid.SetTile(new WorldCoordinates(x,y,0), new Tile(floor)); //TODO: Fix this
             }
             finally
             {

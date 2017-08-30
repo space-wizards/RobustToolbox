@@ -6,6 +6,7 @@ using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
+using SS14.Shared.Map;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -37,7 +38,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(Vector2 position, int range);
+        List<IPlayerSession> GetPlayersInRange(WorldCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

@@ -1,6 +1,7 @@
 ﻿using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;

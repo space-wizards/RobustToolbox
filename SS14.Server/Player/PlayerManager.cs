@@ -19,6 +19,7 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 
 namespace SS14.Server.Player
 {
@@ -194,13 +195,14 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(Vector2 position, int range)
+        public List<IPlayerSession> GetPlayersInRange(WorldCoordinates position, int range)
         {
+
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared < range * range)
+                    (position - x.attachedEntity.GetComponent<ITransformComponent>().WorldPosition).LengthSquared < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

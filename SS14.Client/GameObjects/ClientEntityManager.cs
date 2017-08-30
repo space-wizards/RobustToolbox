@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -18,14 +19,14 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(Vector2 position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(WorldCoordinates worldPos, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
 
             foreach (var entity in _entities.Values)
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                var relativePosition = position - transform.Position;
+                var relativePosition = worldPos.Position - transform.WorldPosition;
                 if (relativePosition.LengthSquared <= Range)
                 {
                     yield return entity;
@@ -45,7 +46,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.Position))
+                    if (position.Contains(transform.WorldPosition))
                     {
                         yield return entity;
                     }
@@ -85,7 +86,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.Position))
+                    if (position.Contains(transform.WorldPosition))
                     {
                         return true;
                     }

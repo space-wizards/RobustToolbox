@@ -121,7 +121,7 @@ namespace SS14.Shared.Map
         #region  TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTile(Vector2 worldPos)
+        public TileRef GetTile(WorldCoordinates worldPos)
         {
             var chunkIndices = WorldToChunk(worldPos);
             var gridTileIndices = WorldToTile(worldPos);
@@ -133,12 +133,6 @@ namespace SS14.Shared.Map
                 return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
             }
             return new TileRef(_mapManager, Index, gridTileIndices.X, gridTileIndices.Y, default(Tile));
-        }
-
-        /// <inheritdoc />
-        public TileRef GetTile(float xWorld, float yWorld)
-        {
-            return GetTile(new Vector2(xWorld, yWorld)); //TODO: check this
         }
 
         /// <inheritdoc />
@@ -289,9 +283,9 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="localPos">The position in the world.</param>
         /// <returns></returns>
-        public Indices WorldToChunk(Vector2 localPos)
+        public Indices WorldToChunk(WorldCoordinates posWorld)
         {
-            var local = localPos - WorldPosition;
+            var local = posWorld.Position - WorldPosition;
             var x = (int)Math.Floor(local.X / (_mapManager.TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (_mapManager.TileSize * ChunkSize));
             return new Indices(x,y);

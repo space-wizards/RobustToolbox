@@ -39,7 +39,7 @@ namespace SS14.Shared.Map
         public Tile Tile
         {
             get => _tile;
-            set => _manager.GetGrid(_gridIndex).SetTile(_gridTile.X, _gridTile.Y, value);
+            set => _manager.GetGrid(_gridIndex).SetTile(new WorldCoordinates(_gridTile.X, _gridTile.Y, 0), value); //TODO: Fix this
         }
 
         public ITileDefinition TileDef => IoCManager.Resolve<ITileDefinitionManager>()[Tile.TileId];

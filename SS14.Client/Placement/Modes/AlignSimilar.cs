@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -28,8 +29,8 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
-            
+            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
 
@@ -48,7 +49,7 @@ namespace SS14.Client.Placement.Modes
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).Position - mouseWorld).LengthSquared
+                        ).WorldPosition - mouseWorld).LengthSquared
                     ascending
                 select entity;
 
@@ -62,8 +63,8 @@ namespace SS14.Client.Placement.Modes
 
                     var closestRect =
                         Box2.FromDimensions(
-                            closestEntity.GetComponent<ITransformComponent>().Position.X - closestBounds.Width / 2f,
-                            closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
                     var sides = new Vector2[]
@@ -78,7 +79,7 @@ namespace SS14.Client.Placement.Modes
                         (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared ascending select side).First();
 
                     mouseWorld = closestSide;
-                    mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+                    mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
                 }
             }
 

@@ -8,6 +8,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Text;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {

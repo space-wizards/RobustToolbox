@@ -60,7 +60,7 @@ namespace SS14.Server.GameObjects.EntitySystems
             }
 
             //Apply velocity
-            transform.Position += movement;
+            transform.WorldPosition += movement;
         }
     }
 }

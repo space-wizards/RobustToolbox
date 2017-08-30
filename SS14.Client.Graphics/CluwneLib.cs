@@ -415,10 +415,16 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static Vector2 WorldToScreen(WorldCoordinates point) //TODO: move to another coordinate type
+        public static ScreenCoordinates WorldToScreen(WorldCoordinates point) //TODO: move to another coordinate type
         {
             var center = WorldCenter;
-            return (point.Position - center) * TileSize + ScreenViewportSize / 2;
+            return new ScreenCoordinates(((point.Position - center) * TileSize + ScreenViewportSize / 2), point.MapID);
+        }
+
+        public static Vector2 WorldToScreen(Vector2 point) //TODO: move to another coordinate type
+        {
+            var center = WorldCenter;
+            return (point - center) * TileSize + ScreenViewportSize / 2;
         }
 
         /// <summary>

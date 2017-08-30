@@ -222,7 +222,7 @@ namespace SS14.Shared.Map
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
             const int MAP_INDEX = 0;
 
-            _mapManager.GetGrid(MAP_INDEX).SetTile(x, y, tile);
+            _mapManager.GetGrid(MAP_INDEX).SetTile(new WorldCoordinates(x, y, 0), tile); //TODO: Fix this
         }
     }
 }

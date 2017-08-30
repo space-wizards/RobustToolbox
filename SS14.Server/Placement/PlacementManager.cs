@@ -103,7 +103,7 @@ namespace SS14.Server.Placement
                     var manager = IoCManager.Resolve<IServerEntityManager>();
                     if(manager.TrySpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv), out IEntity created))
                     {
-                        created.GetComponent<TransformComponent>().Position =
+                        created.GetComponent<TransformComponent>().WorldPosition =
                             new Vector2(xRcv, yRcv);
                         if (created.TryGetComponent<TransformComponent>(out var component))
                             component.Rotation = dirRcv.ToAngle();

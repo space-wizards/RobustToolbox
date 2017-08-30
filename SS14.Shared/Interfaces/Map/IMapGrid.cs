@@ -52,15 +52,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(Vector2 worldPos);
-
-        /// <summary>
-        ///     Gets a tile a the given world coordinates. This will not create a new chunk.
-        /// </summary>
-        /// <param name="xWorld">The X coordinate of the tile in the world.</param>
-        /// <param name="yWorld">The Y coordinate of the tile in the world.</param>
-        /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(float xWorld, float yWorld);
+        TileRef GetTile(WorldCoordinates posWorld);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -71,25 +63,10 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     Replaces a single tile inside of the grid.
         /// </summary>
-        /// <param name="xWorld">The X coordinate of the tile in the world.</param>
-        /// <param name="yWorld">The Y coordinate of the tile in the world.</param>
-        /// <param name="tile">The new tile to insert.</param>
-        void SetTile(float xWorld, float yWorld, Tile tile);
-
-        /// <summary>
-        ///     Replaces a single tile inside of the grid.
-        /// </summary>
-        /// <param name="worldPos">The location of the tile in global world coordinates.</param>
-        /// <param name="tile">The new tile to insert.</param>
-        void SetTile(Vector2 worldPos, Tile tile);
-
-        /// <summary>
-        ///     Replaces a single tile inside of the grid.
-        /// </summary>
         /// <param name="xIndex">The local x tile index inside of the grid.</param>
         /// <param name="yIndex">The local y tile index inside of the grid.</param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(int xIndex, int yIndex, Tile tile);
+        void SetTile(WorldCoordinates posWorld, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -98,7 +75,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="yWorld">The Y coordinate of the tile in the world.</param>
         /// <param name="tileId">The new internal ID of the tile.</param>
         /// <param name="tileData">The new data of the tile.</param>
-        void SetTile(float xWorld, float yWorld, ushort tileId, ushort tileData = 0);
+        void SetTile(WorldCoordinates posWorld, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.

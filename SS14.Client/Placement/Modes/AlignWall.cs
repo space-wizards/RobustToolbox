@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Placement.Modes
 {
@@ -22,7 +23,7 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
 
             mouseScreen = mouseS;
             mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
@@ -56,7 +57,7 @@ namespace SS14.Client.Placement.Modes
 
             mouseWorld = closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                     pManager.CurrentPrototype.PlacementOffset.Y);
-            mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+            mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
 
             return true;
         }

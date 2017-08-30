@@ -50,7 +50,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().Position.Y +
+                return Owner.GetComponent<ITransformComponent>().WorldPosition.Y +
                        (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
             }
         }
@@ -232,8 +232,8 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 Box2.FromDimensions(
-                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<ITransformComponent>().WorldPosition.X - (bounds.Width / 2),
+                    Owner.GetComponent<ITransformComponent>().WorldPosition.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
@@ -315,14 +315,14 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
+            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos);
 
-            if (Owner.GetComponent<ITransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<ITransformComponent>().Position.X > bottomRight.X
-                || Owner.GetComponent<ITransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
@@ -358,6 +358,11 @@ namespace SS14.Client.GameObjects
             var bounds = GetActiveDirectionalSprite().GetLocalBounds();
             sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),
                                                        center.Y - (bounds.Height / 2));
+        }
+
+        public void SetSpriteCenter(Sprite sprite, WorldCoordinates worldPos)
+        {
+            SetSpriteCenter(sprite, worldPos.Position);
         }
 
         public bool IsSlaved()

@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Server.Interfaces.GameObjects;
+using SS14.Shared.Map;
 
 namespace SS14.Server.GameObjects
 {
@@ -36,13 +37,13 @@ namespace SS14.Server.GameObjects
         public event EventHandler<VectorEventArgs> OnMove;
 
         /// <inheritdoc />
-        public WorldCoordinates Position
+        public WorldCoordinates WorldPosition
         {
             get
             {
                 if (Parent != null)
                 {
-                    return GetMapTransform().Position; //Search up the tree for the true map position
+                    return GetMapTransform().WorldPosition; //Search up the tree for the true map position
                 }
                 else
                 {
@@ -61,7 +62,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(Position, Rotation, Parent);
+            return new TransformComponentState(WorldPosition, Rotation, Parent);
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -14,7 +15,7 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
-        public WorldCoordinates Position { get; private set; }
+        public WorldCoordinates WorldPosition { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
 
@@ -38,10 +39,10 @@ namespace SS14.Client.GameObjects
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
 
-            if (Position != newState.Position)
+            if (WorldPosition != newState.Position)
             {
-                OnMove?.Invoke(this, new VectorEventArgs(Position, newState.Position));
-                Position = newState.Position;
+                OnMove?.Invoke(this, new VectorEventArgs(WorldPosition, newState.Position));
+                WorldPosition = newState.Position;
             }
 
             if (Parent != newState.Parent)

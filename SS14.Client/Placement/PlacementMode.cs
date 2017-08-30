@@ -80,7 +80,7 @@ namespace SS14.Client.Placement
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > rangeSquared)
+                         .WorldPosition - mouseWorld).LengthSquared > rangeSquared)
                     return false;
             return true;
         }

@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Interfaces.Placement
 {
@@ -24,7 +25,7 @@ namespace SS14.Client.Interfaces.Placement
         void ToggleEraser();
         void Rotate();
 
-        void Update(Vector2i mouseScreen, IMapManager currentMap);
+        void Update(ScreenCoordinates mouseScreen);
         void HandleNetMessage(NetIncomingMessage msg);
     }
 }

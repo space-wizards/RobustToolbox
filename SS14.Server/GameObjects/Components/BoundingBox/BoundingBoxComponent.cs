@@ -35,7 +35,7 @@ namespace SS14.Server.GameObjects
                 var trans = Owner.GetComponent<ITransformComponent>();
                 var bounds = AABB;
 
-                return bounds.Translated(trans.Position);
+                return bounds.Translated(trans.WorldPosition);
             }
         }
 

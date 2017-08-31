@@ -1,36 +1,68 @@
-using SFML.Graphics;
-using SFML.Window;
+﻿using SFML.Graphics;
 using System;
-
+using SFML.Window;
+using SS14.Client.Graphics.Settings;
+using SS14.Client.Graphics.View;
 
 namespace SS14.Client.Graphics.Render
 {
-    public class CluwneWindow : RenderWindow
+    public class CluwneWindow
     {
-        public CluwneWindow(VideoMode mode, string title) : base(mode, title)
+        private readonly RenderWindow _window;
+        private readonly VideoSettings _settings;
+
+        internal CluwneWindow(RenderWindow window, VideoSettings settings)
         {
+            _window = window;
+            _settings = settings;
+            Graphics = new GraphicsContext(_window);
+            Camera = new Camera(_window);
+            Viewport = new Viewport(0,0,_window.Size.X, _window.Size.Y);
+            
+            CluwneLib.Input = new InputEvents(_window);
+
+            _window.Closed += (sender, args) => Closed?.Invoke(sender, args);
+            _window.Resized += (sender, args) => Resized?.Invoke(sender, args);
         }
 
-        public CluwneWindow(VideoMode mode, string title, Styles style) : base(mode, title, style)
+        public Viewport Viewport { get; set; }
+
+        public RenderTarget Screen => _window;
+
+        /// <summary>
+        /// Graphics context of the window.
+        /// </summary>
+        public GraphicsContext Graphics { get; }
+
+        public Camera Camera { get; }
+
+        public void SetMouseCursorVisible(bool visible)
         {
+            _window.SetMouseCursorVisible(visible);
         }
 
-        public CluwneWindow(VideoMode mode, string title, Styles style, ContextSettings settings) : base(mode, title, style, settings)
+        public void DispatchEvents()
         {
+            _window.DispatchEvents();
         }
 
-        public CluwneWindow(IntPtr handle) : base(handle)
+        // close the window
+        public void Close()
         {
+            // prevents null issues
+            CluwneLib.Input = new InputEvents(null);
+
+            _window.Close();
         }
 
-        public CluwneWindow(IntPtr handle, ContextSettings settings) : base(handle, settings)
+        [Obsolete("Use the new API.")]
+        public static implicit operator RenderWindow(CluwneWindow window)
         {
+            return window._window;
         }
+        
 
-        public Color BackgroundColor
-        {
-            get;
-            set;
-        }
+        public event EventHandler<EventArgs> Closed;
+        public event EventHandler<SizeEventArgs> Resized;
     }
 }

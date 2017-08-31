@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFML.System;
 using OpenTK;
 using OpenTK.Graphics;
@@ -36,7 +36,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
-                CluwneLib.Screen.DispatchEvents();
+                CluwneLib.Window.DispatchEvents();
 
                 renderimage.BeginDrawing(); // set temp as CRT (Current Render Target)
                 renderimage.Clear();       //Clear
@@ -46,7 +46,7 @@ namespace SS14.UnitTesting.SS14.Client.Helpers
 
                 renderimage.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
-                CluwneLib.Screen.Display();
+                CluwneLib.Window.Graphics.Display();
             }
         }
     }

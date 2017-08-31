@@ -78,6 +78,7 @@
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Render\GraphicsContext.cs" />
     <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="Sprite\SpriteInfo.cs" />
@@ -122,6 +123,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Settings\VideoSettings.cs" />
+    <Compile Include="View\Camera.cs" />
     <Compile Include="View\Viewport.cs">
       <SubType>Code</SubType>
     </Compile>

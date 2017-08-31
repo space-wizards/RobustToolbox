@@ -45,8 +45,8 @@ namespace SS14.Client.State.States
 
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
-            _Width = (int)CluwneLib.Screen.Size.X;
-            _Height = (int)CluwneLib.Screen.Size.Y;
+            _Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
             _background = ResourceCache.GetSprite("ss14_logo_background");
 
             _btnConnect = new ImageButton
@@ -100,8 +100,8 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
-            _Width = (int)CluwneLib.Screen.Size.X;
-            _Height = (int)CluwneLib.Screen.Size.Y;
+            _Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
             _background.Scale = new Vector2f((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
             _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                                 _Height - _lblVersion.ClientArea.Height - 3);

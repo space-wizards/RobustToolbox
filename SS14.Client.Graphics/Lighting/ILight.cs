@@ -1,9 +1,8 @@
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using SS14.Shared;
-using SS14.Shared.Maths;
 
-namespace SS14.Client.Interfaces.Lighting
+namespace SS14.Client.Graphics.Lighting
 {
     public interface ILight
     {
@@ -15,6 +14,6 @@ namespace SS14.Client.Interfaces.Lighting
         ILightArea LightArea { get; }
         LightMode LightMode { get; set; }
         void Update(float frametime);
-        void SetMask(string _mask);
+        void SetMask(SFML.Graphics.Sprite _mask);
     }
 }

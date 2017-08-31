@@ -2,7 +2,6 @@
 using OpenTK.Graphics;
 using Lidgren.Network;
 using SFML.System;
-using SS14.Client.Interfaces.Lighting;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -11,6 +10,8 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Graphics.Lighting;
+using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects
@@ -53,7 +54,9 @@ namespace SS14.Client.GameObjects
             set
             {
                 mask = value;
-                Light.SetMask(value);
+
+                var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
+                Light.SetMask(sprMask);
             }
         }
 

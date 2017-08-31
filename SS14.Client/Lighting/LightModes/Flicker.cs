@@ -1,10 +1,9 @@
+﻿using System.Diagnostics;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SS14.Client.Interfaces.Lighting;
+using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using System.Diagnostics;
 
 namespace SS14.Client.GameObjects.Light.LightModes
 {
@@ -14,16 +13,9 @@ namespace SS14.Client.GameObjects.Light.LightModes
         private Color4 _lightColorOriginal;
         private int flickerCount;
         private bool flickering;
-        private LightModeClass lightModeClass = LightModeClass.Flicker;
         private bool lightOn = true;
 
-        #region LightMode Members
-
-        public LightModeClass LightModeClass
-        {
-            get { return lightModeClass; }
-            set { lightModeClass = value; }
-        }
+        public LightModeClass LightModeClass { get; set; } = LightModeClass.Flicker;
 
         //Since lightcolor is only saved when added, changes made during the effects of this mode will reset. FIX THIS.
 
@@ -39,7 +31,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
             owner.LightArea.Calculated = false;
         }
 
-        public void Update(ILight owner, float frametime)
+        public void Update(ILight owner)
         {
             if (flickering)
             {
@@ -58,8 +50,8 @@ namespace SS14.Client.GameObjects.Light.LightModes
                 }
                 else if (timer.ElapsedMilliseconds >= 50 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                 {
-                    owner.Color = new Color4((_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
-                                            (_lightColorOriginal.B/2), (_lightColorOriginal.A/2));
+                    owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
+                        _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
                     owner.LightArea.Calculated = false;
                     lightOn = false;
                     timer.Reset();
@@ -72,14 +64,12 @@ namespace SS14.Client.GameObjects.Light.LightModes
                     flickering = true;
                     flickerCount = 0;
                     lightOn = false;
-                    owner.Color = new Color4((_lightColorOriginal.R/2), (_lightColorOriginal.G/2),
-                                             (_lightColorOriginal.B/2), (_lightColorOriginal.A/2));
+                    owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
+                        _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
                     owner.LightArea.Calculated = false;
                     timer.Reset();
                 }
             }
         }
-
-        #endregion
     }
 }

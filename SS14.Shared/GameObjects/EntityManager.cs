@@ -159,7 +159,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public void FlushEntities()
         {
-            foreach (IEntity e in _entities.Values)
+            foreach (IEntity e in GetEntities())
             {
                 e.Shutdown();
             }
@@ -216,7 +216,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         protected void InitializeEntities()
         {
-            foreach (var entity in _entities.Values.Where(e => !e.Initialized))
+            foreach (var entity in GetEntities().Where(e => !e.Initialized))
             {
                 InitializeEntity(entity);
             }

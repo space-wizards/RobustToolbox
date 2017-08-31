@@ -78,14 +78,20 @@
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Lighting\ILight.cs" />
+    <Compile Include="Lighting\ILightArea.cs" />
+    <Compile Include="Lighting\ILightManager.cs" />
+    <Compile Include="Lighting\LightArea.cs" />
+    <Compile Include="Lighting\LightManager.cs" />
+    <Compile Include="Lighting\LightMode.cs" />
+    <Compile Include="Lighting\Light.cs" />
+    <Compile Include="Lighting\ShadowMapResolver.cs" />
+    <Compile Include="Lighting\ShadowmapSize.cs" />
     <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprite\AnimationInfo.cs" />
     <Compile Include="Sprite\SpriteInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
     <Compile Include="texture\TextureCache.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Interface\ICluwneDrawable.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -107,9 +113,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Sprite\TextSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VertexData\VertexEnums.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="VertexData\VertexField.cs">
@@ -153,6 +156,7 @@
     </Content>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

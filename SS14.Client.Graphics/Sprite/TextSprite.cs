@@ -2,7 +2,6 @@
 using SFML.System;
 using OpenTK;
 using OpenTK.Graphics;
-using SS14.Client.Graphics.Interface;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -12,7 +11,7 @@ namespace SS14.Client.Graphics.Sprite
     /// <summary>
     /// Sprite that contains Text
     /// </summary>
-    public class TextSprite : ICluwneDrawable
+    public class TextSprite
     {
         private bool _shadowed;                                    // Is the Text Shadowed
         private Color4 _shadowColor;                                // Shadow Color

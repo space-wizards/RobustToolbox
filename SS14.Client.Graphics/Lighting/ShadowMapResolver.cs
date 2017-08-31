@@ -1,21 +1,13 @@
-﻿using OpenTK;
+﻿using System;
+using OpenTK;
 using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using System;
-using Color = SFML.Graphics.Color;
 
-
-namespace SS14.Client.Lighting
+namespace SS14.Client.Graphics.Lighting
 {
     public class ShadowMapResolver : IDisposable
     {
-        private readonly IResourceCache _resourceCache;
         private readonly int baseSize;
 
         private readonly int reductionChainCount;
@@ -25,29 +17,38 @@ namespace SS14.Client.Lighting
         private RenderImage distancesRT;
         private RenderImage distortRT;
         private RenderImage processedShadowsRT;
-        private RenderImage shadowMap;
-        private RenderImage shadowsRT;
+        private TechniqueList reductionEffectTechnique;
         private RenderImage[] reductionRT;
 
         private TechniqueList resolveShadowsEffectTechnique;
-        private TechniqueList reductionEffectTechnique;
+        private RenderImage shadowMap;
+        private RenderImage shadowsRT;
 
-
-        public ShadowMapResolver(ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize,
-                                 IResourceCache resourceCache)
+        public ShadowMapResolver(ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize)
         {
-            _resourceCache = resourceCache;
-
-
             reductionChainCount = (int) maxShadowmapSize;
             baseSize = 2 << reductionChainCount;
             depthBufferSize = 2 << (int) maxDepthBufferSize;
         }
 
-        public void LoadContent()
+        public void Dispose()
         {
-            reductionEffectTechnique = _resourceCache.GetTechnique("reductionEffect");
-            resolveShadowsEffectTechnique = _resourceCache.GetTechnique("resolveShadowsEffect");
+            distancesRT.Dispose();
+            distortRT.Dispose();
+            processedShadowsRT.Dispose();
+            foreach (var rt in reductionRT)
+            {
+                rt.Dispose();
+            }
+
+            shadowMap.Dispose();
+            shadowsRT.Dispose();
+        }
+
+        public void LoadContent(TechniqueList reduction, TechniqueList resolve)
+        {
+            reductionEffectTechnique = reduction;
+            resolveShadowsEffectTechnique = resolve;
 
             //// BUFFER TYPES ARE VERY IMPORTANT HERE AND IT WILL BREAK IF YOU CHANGE THEM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! HONK HONK
             //these work fine
@@ -57,22 +58,22 @@ namespace SS14.Client.Lighting
             //these need the buffer format
             shadowMap = new RenderImage("shadowMap" + baseSize, 2, baseSize, ImageBufferFormats.BufferGR1616F);
             reductionRT = new RenderImage[reductionChainCount];
-            for (int i = 0; i < reductionChainCount; i++)
+            for (var i = 0; i < reductionChainCount; i++)
             {
                 reductionRT[i] = new RenderImage("reductionRT" + i + baseSize, 2 << i, baseSize,
-                                                 ImageBufferFormats.BufferGR1616F);
+                    ImageBufferFormats.BufferGR1616F);
             }
             shadowsRT = new RenderImage("shadowsRT" + baseSize, baseSize, baseSize, ImageBufferFormats.BufferRGB888A8);
             processedShadowsRT = new RenderImage("processedShadowsRT" + baseSize, baseSize, baseSize,
-                                                 ImageBufferFormats.BufferRGB888A8);
+                ImageBufferFormats.BufferRGB888A8);
         }
 
         public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
         {
-            RenderImage Result = Area.RenderTarget;
-            Texture MaskTexture = mask == null ? Area.Mask.Texture : mask;
-            Vector4 MaskProps = Vector4.Zero;
-            Vector4 diffuseColor = Vector4.One;
+            var Result = Area.RenderTarget;
+            var MaskTexture = mask == null ? Area.Mask.Texture : mask;
+            var MaskProps = Vector4.Zero;
+            var diffuseColor = Vector4.One;
 
             ExecuteTechnique(Area.RenderTarget, distancesRT, "ComputeDistances");
             ExecuteTechnique(distancesRT, distortRT, "Distort");
@@ -86,7 +87,7 @@ namespace SS14.Client.Lighting
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
 
             var maskSize = MaskTexture.Size;
-            RenderImage MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
+            var MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();
@@ -113,7 +114,7 @@ namespace SS14.Client.Lighting
             destinationTarget.BeginDrawing();
             destinationTarget.Clear(Color.White);
 
-            resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader() ;
+            resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader();
 
             resolveShadowsEffectTechnique[techniqueName].SetUniform("renderTargetSize", renderTargetSize);
             resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
@@ -127,13 +128,11 @@ namespace SS14.Client.Lighting
             destinationTarget.EndDrawing();
         }
 
-
-
         private void ApplyHorizontalReduction(RenderImage source, RenderImage destination)
         {
-            int step = reductionChainCount - 1;
-            RenderImage src = source;
-            RenderImage HorizontalReduction= reductionRT[step];
+            var step = reductionChainCount - 1;
+            var src = source;
+            var HorizontalReduction = reductionRT[step];
             reductionEffectTechnique["HorizontalReduction"].setAsCurrentShader();
             // Disabled GLTexture stuff for now just to get the pipeline working.
             // The only side effect is that floating point precision will be low,
@@ -145,17 +144,16 @@ namespace SS14.Client.Lighting
                 HorizontalReduction.BeginDrawing();
                 HorizontalReduction.Clear(Color.White);
 
-                reductionEffectTechnique["HorizontalReduction"].SetUniform("TextureDimensions",1.0f/src.Width);
+                reductionEffectTechnique["HorizontalReduction"].SetUniform("TextureDimensions", 1.0f / src.Width);
 
                 // Sourcetexture not needed... just blit!
                 src.Blit(0, 0, HorizontalReduction.Width, HorizontalReduction.Height, BlitterSizeMode.Scale); // draw SRC to HR
-                                                                                                              //fix
+                //fix
 
                 HorizontalReduction.EndDrawing();
                 src = HorizontalReduction; // hr becomes new src
                 step--;
             }
-
 
             CluwneLib.ResetShader();
             //copy to destination
@@ -165,22 +163,6 @@ namespace SS14.Client.Lighting
             HorizontalReduction.Blit(0, 0, destination.Height, destination.Width);
             destination.EndDrawing();
             CluwneLib.ResetRenderTarget();
-        }
-
-        public void Dispose()
-        {
-
-            distancesRT.Dispose();
-            distortRT.Dispose();
-            processedShadowsRT.Dispose();
-            foreach(var rt in reductionRT)
-            {
-
-                rt.Dispose();
-            }
-
-            shadowMap.Dispose();
-            shadowsRT.Dispose();
         }
     }
 }

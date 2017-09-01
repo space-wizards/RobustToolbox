@@ -2,7 +2,6 @@
 using SFML.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagment;
-using SS14.Client.Resources;
 
 namespace SS14.Client.ResourceManagement
 {
@@ -11,6 +10,9 @@ namespace SS14.Client.ResourceManagement
     /// </summary>
     public class SpriteResource : BaseResource
     {
+        /// <inheritdoc />
+        public override string Fallback => @"Textures/noSprite.png";
+
         /// <summary>
         /// The contained SFML Sprite.
         /// </summary>
@@ -33,6 +35,11 @@ namespace SS14.Client.ResourceManagement
         public override void Dispose()
         {
             Sprite.Dispose();
+        }
+
+        public static implicit operator Sprite(SpriteResource res)
+        {
+            return res.Sprite;
         }
     }
 }

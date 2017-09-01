@@ -310,13 +310,24 @@ namespace SS14.Client.Resources
             }
 
             Image img = new Image(stream);
-            bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
-            for (int y = 0; y < img.Size.Y; y++)
+            var size = img.Size;
+            var pixels = img.Pixels;
+            bool[,] opacityMap = new bool[size.X, size.Y];
+
+            for (int y = 0; y < size.Y; y++)
             {
-                for (int x = 0; x < img.Size.X; x++)
+                for (int x = 0; x < size.X; x++)
                 {
-                    Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
-                    if (pColor.A > Limits.ClickthroughLimit)
+                    //Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
+                    //byte alpha = pColor.A;
+
+                    var pixel = (y * size.X) + x;
+                    byte alpha = pixels[ pixel * 4 + 3 ];
+
+                    //if(salpha != qalpha)
+                        //throw new Exception();
+
+                    if (alpha > Limits.ClickthroughLimit)
                     {
                         opacityMap[x, y] = true;
                     }
@@ -728,9 +739,11 @@ namespace SS14.Client.Resources
             // stop this, we failed
             if (tempRes.Fallback != null && tempRes.Fallback != path)
             {
-                TryGetResource(tempRes.Fallback, out T fallbackRes);
-                resource = fallbackRes;
-                return true;
+                if (TryGetResource(tempRes.Fallback, out T fallbackRes))
+                {
+                    resource = fallbackRes;
+                    return true;
+                }
             }
 
             resource = default(T);

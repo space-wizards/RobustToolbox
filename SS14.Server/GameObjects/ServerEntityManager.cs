@@ -31,7 +31,7 @@ namespace SS14.Server.GameObjects
 
         public void SaveEntities()
         {
-            IEnumerable<XElement> entities = from IEntity e in _entities.Values
+            IEnumerable<XElement> entities = from IEntity e in GetEntities()
                                              where e.Prototype.ID != "HumanMob"
                                              select ToXML(e);
 
@@ -88,7 +88,7 @@ namespace SS14.Server.GameObjects
         public List<EntityState> GetEntityStates()
         {
             var stateEntities = new List<EntityState>();
-            foreach (IEntity entity in _entities.Values)
+            foreach (IEntity entity in GetEntities())
             {
                 EntityState entityState = entity.GetEntityState();
                 stateEntities.Add(entityState);

@@ -177,13 +177,10 @@ namespace SS14.Client.GameObjects
             Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
-            bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'
-            if (!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
-            {
-                return false;
-            }
+            var opacityMap = TextureCache.Textures[textureKey].Image; //get our clickthrough 'map'
 
-            return true;
+            // Check if the clicked pixel is opaque
+            return opacityMap.GetPixel((uint) spritePosition.X, (uint) spritePosition.Y).A <= Limits.ClickthroughLimit;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

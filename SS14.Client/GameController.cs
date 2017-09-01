@@ -16,13 +16,12 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Configuration;
-using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Prototypes;
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
@@ -252,7 +251,7 @@ namespace SS14.Client
         private void Render(FrameEventArgs e)
         {
             CluwneLib.ClearCurrentRendertarget(Color4.Black);
-            CluwneLib.Screen.DispatchEvents();
+            CluwneLib.Window.DispatchEvents();
 
             // draw everything
             _stateManager.Render(e);
@@ -265,7 +264,7 @@ namespace SS14.Client
             _netGrapher.Update();
 
             // swap buffers to show the screen
-            CluwneLib.Screen.Display();
+            CluwneLib.Window.Graphics.Display();
         }
 
         private void LoadSplashResources()
@@ -280,17 +279,17 @@ namespace SS14.Client
             _resourceCache.LoadSpriteFromTexture("ss14_logo_nt", nanotrasenTexture);
         }
 
+        [Conditional("RELEASE")]
         private void ShowSplashScreen()
         {
             // Do nothing when we're on DEBUG builds.
             // The splash is just annoying.
-#if !DEBUG
             const uint SIZE_X = 600;
             const uint SIZE_Y = 300;
             // Size of the NT logo in the bottom right.
             const float NT_SIZE_X = SIZE_X / 10f;
             const float NT_SIZE_Y = SIZE_Y / 10f;
-            CluwneWindow window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y));
+            var window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y)).Graphics;
 
             var logo = _resourceCache.GetSprite("ss14_logo");
             logo.Position = new Vector2f(SIZE_X / 2 - logo.TextureRect.Width / 2, SIZE_Y / 2 - logo.TextureRect.Height / 2);
@@ -307,16 +306,12 @@ namespace SS14.Client
             window.Draw(logo);
             window.Draw(nanotrasen);
             window.Display();
-#endif
         }
 
+        [Conditional("RELEASE")]
         private void CleanupSplashScreen()
         {
-            // Do nothing when we're on DEBUG builds.
-            // The splash is just annoying.
-#if !DEBUG
             CluwneLib.CleanupSplashScreen();
-#endif
         }
 
         #endregion Constructors
@@ -334,7 +329,7 @@ namespace SS14.Client
                 new SFML.System.Vector2f(e.Width / 2, e.Height / 2),
                 new SFML.System.Vector2f(e.Width, e.Height)
                 );
-            CluwneLib.Screen.SetView(view);
+            CluwneLib.Window.Camera.SetView(view);
             _stateManager.FormResize();
         }
         private void MainWindowRequestClose(object sender, EventArgs e)
@@ -468,7 +463,7 @@ namespace SS14.Client
             bool isFullscreen = _configurationManager.GetCVar<bool>("display.fullscreen");
             uint refresh = (uint) _configurationManager.GetCVar<int>("display.refresh");
 
-            CluwneLib.Video.SetFullscreen(isFullscreen);
+            CluwneLib.Video.SetFullScreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);
             CluwneLib.Video.SetWindowSize(displayWidth, displayHeight);
             CluwneLib.Initialize();
@@ -479,19 +474,19 @@ namespace SS14.Client
                 CluwneLib.RefreshVideoSettings += SetupCluwne;
                 onetime = false;
             }
-            CluwneLib.Screen.SetMouseCursorVisible(false);
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.Screen.Resized += MainWindowResizeEnd;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
-            CluwneLib.Screen.KeyPressed += KeyDownEvent;
-            CluwneLib.Screen.KeyReleased += KeyUpEvent;
-            CluwneLib.Screen.MouseButtonPressed += MouseDownEvent;
-            CluwneLib.Screen.MouseButtonReleased += MouseUpEvent;
-            CluwneLib.Screen.MouseMoved += MouseMoveEvent;
-            CluwneLib.Screen.MouseWheelMoved += MouseWheelMoveEvent;
-            CluwneLib.Screen.MouseEntered += MouseEntered;
-            CluwneLib.Screen.MouseLeft += MouseLeft;
-            CluwneLib.Screen.TextEntered += TextEntered;
+            CluwneLib.Window.SetMouseCursorVisible(false);
+            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
+            CluwneLib.Window.Resized += MainWindowResizeEnd;
+            CluwneLib.Window.Closed += MainWindowRequestClose;
+            CluwneLib.Input.KeyPressed += KeyDownEvent;
+            CluwneLib.Input.KeyReleased += KeyUpEvent;
+            CluwneLib.Input.MouseButtonPressed += MouseDownEvent;
+            CluwneLib.Input.MouseButtonReleased += MouseUpEvent;
+            CluwneLib.Input.MouseMoved += MouseMoveEvent;
+            CluwneLib.Input.MouseWheelMoved += MouseWheelMoveEvent;
+            CluwneLib.Input.MouseEntered += MouseEntered;
+            CluwneLib.Input.MouseLeft += MouseLeft;
+            CluwneLib.Input.TextEntered += TextEntered;
 
             CluwneLib.Go();
             IoCManager.Resolve<IKeyBindingManager>().Initialize();

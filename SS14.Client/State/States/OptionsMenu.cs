@@ -53,7 +53,7 @@ namespace SS14.Client.State.States
 
         private void UpdateBounds()
         {
-            var top = (int)(CluwneLib.Screen.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
+            var top = (int)(CluwneLib.Window.Viewport.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
             _boundingArea = Box2i.FromDimensions(0, top, 1000, 600);
         }
 
@@ -156,14 +156,14 @@ namespace SS14.Client.State.States
             if (
                  vmList.Any(
                     x =>
-                    x.Value.Width == CluwneLib.Screen.Size.X && x.Value.Height == CluwneLib.Screen.Size.Y))
+                    x.Value.Width == CluwneLib.Window.Viewport.Size.X && x.Value.Height == CluwneLib.Window.Viewport.Size.Y))
 
             {
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == CluwneLib.Screen.Size.X &&
-                        x.Value.Height == CluwneLib.Screen.Size.Y);
+                        x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                        x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
 
                 _lstResolution.SelectItem(curr.Key, false);
             }
@@ -173,8 +173,8 @@ namespace SS14.Client.State.States
                 KeyValuePair<string, VideoMode> curr =
                     vmList.FirstOrDefault(
                         x =>
-                        x.Value.Width == CluwneLib.Screen.Size.X &&
-                        x.Value.Height == CluwneLib.Screen.Size.Y);
+                        x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                        x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
                 _lstResolution.SelectItem(curr.Key, false);
             }
         }
@@ -195,10 +195,10 @@ namespace SS14.Client.State.States
 
         public void Update(FrameEventArgs e)
         {
-            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
+            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
             {
-                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
+                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
                 UpdateBounds();
                 UpdateGUIPosition();
             }
@@ -213,7 +213,7 @@ namespace SS14.Client.State.States
 
         public void Render(FrameEventArgs e)
         {
-            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Screen.Size.X, (int) CluwneLib.Screen.Size.Y));
+            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Window.Viewport.Size.X, (int) CluwneLib.Window.Viewport.Size.Y));
             _background.Draw();
 
             _ticketBg.SetTransformToRect(_boundingArea);

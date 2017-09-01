@@ -27,8 +27,8 @@ namespace SS14.Client.Input
         public void Initialize()
         {
             Enabled = true;
-            CluwneLib.Screen.KeyPressed += KeyDown;
-            CluwneLib.Screen.KeyReleased += KeyUp;
+            CluwneLib.Input.KeyPressed += KeyDown;
+            CluwneLib.Input.KeyReleased += KeyUp;
             LoadKeys();
         }
 
@@ -39,8 +39,8 @@ namespace SS14.Client.Input
         /// </summary>
         ~KeyBindingManager()
         {
-            CluwneLib.Screen.KeyPressed  -= KeyDown;
-            CluwneLib.Screen.KeyReleased -= KeyUp;
+            CluwneLib.Input.KeyPressed  -= KeyDown;
+            CluwneLib.Input.KeyReleased -= KeyUp;
         }
 
         private void KeyDown(object sender, KeyEventArgs e)

@@ -327,10 +327,10 @@ namespace SS14.Client.State.States
 
         public void Update(FrameEventArgs e)
         {
-            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
+            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
             {
-                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
+                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
                 UpdateGUIPosition();
             }
 
@@ -346,8 +346,8 @@ namespace SS14.Client.State.States
         public void UpdateGUIPosition()
         {
             _imgMainBg.Position = new Vector2i(
-                (int)((CluwneLib.Screen.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
-                (int)((CluwneLib.Screen.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
+                (int)((CluwneLib.Window.Viewport.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
+                (int)((CluwneLib.Window.Viewport.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
             _imgMainBg.Update(0);
 
             _recStatus = Box2.FromDimensions(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);

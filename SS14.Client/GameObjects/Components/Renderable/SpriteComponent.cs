@@ -223,7 +223,7 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
-        public virtual bool WasClicked(WorldCoordinates worldPos)
+        public virtual bool WasClicked(LocalCoordinates worldPos)
         {
             if (currentBaseSprite == null || !visible) return false;
 
@@ -315,9 +315,9 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition);
             var bounds = spriteToRender.GetLocalBounds();
-            SetSpriteCenter(spriteToRender, renderPos);
+            SetSpriteCenter(spriteToRender, renderPos.Position);
 
             if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
                 || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
@@ -360,7 +360,7 @@ namespace SS14.Client.GameObjects
                                                        center.Y - (bounds.Height / 2));
         }
 
-        public void SetSpriteCenter(Sprite sprite, WorldCoordinates worldPos)
+        public void SetSpriteCenter(Sprite sprite, LocalCoordinates worldPos)
         {
             SetSpriteCenter(sprite, worldPos.Position);
         }

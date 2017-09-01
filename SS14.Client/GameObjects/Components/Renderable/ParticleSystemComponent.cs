@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -73,7 +74,7 @@ namespace SS14.Client.GameObjects
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
-            Vector2 renderPos = CluwneLib.WorldToScreen(
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(
                     Owner.GetComponent<ITransformComponent>().WorldPosition);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)

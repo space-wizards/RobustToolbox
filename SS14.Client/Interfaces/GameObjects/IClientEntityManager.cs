@@ -10,7 +10,7 @@ namespace SS14.Client.Interfaces.GameObjects
 {
     public interface IClientEntityManager : IEntityManager
     {
-        IEnumerable<IEntity> GetEntitiesInRange(WorldCoordinates position, float Range);
+        IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range);
         IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position);
         IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position);
         bool AnyEntitiesIntersecting(Box2 position);

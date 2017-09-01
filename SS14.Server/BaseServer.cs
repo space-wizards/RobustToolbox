@@ -576,7 +576,7 @@ namespace SS14.Server
                         {
                             manager.ForceSpawnEntityAt("Wall", grid, new OpenTK.Vector2(x, y));
                         }
-                        grid.SetTile(new WorldCoordinates(x, y, 0), new Tile(floor)); //TODO: Fix this
+                        grid.SetTile(new LocalCoordinates(x, y, 0), new Tile(floor)); //TODO: Fix this
                     }
                 }
             }

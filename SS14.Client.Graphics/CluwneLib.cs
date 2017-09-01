@@ -415,7 +415,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static ScreenCoordinates WorldToScreen(WorldCoordinates point) //TODO: move to another coordinate type
+        public static ScreenCoordinates WorldToScreen(LocalCoordinates point) //TODO: move to another coordinate type
         {
             var center = WorldCenter;
             return new ScreenCoordinates(((point.Position - center) * TileSize + ScreenViewportSize / 2), point.MapID);
@@ -460,9 +460,9 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static WorldCoordinates ScreenToWorld(ScreenCoordinates point)
+        public static LocalCoordinates ScreenToWorld(ScreenCoordinates point)
         {
-            return new WorldCoordinates((point.Position - ScreenViewportSize / 2) / TileSize + WorldCenter, point.MapID);
+            return new LocalCoordinates((point.Position - ScreenViewportSize / 2) / TileSize + WorldCenter, point.MapID);
         }
 
         /// <summary>

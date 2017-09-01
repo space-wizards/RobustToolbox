@@ -19,7 +19,7 @@ namespace SS14.Client.Interfaces.GameObjects.Components
         /// Used by <see cref="GameScreen" /> to sort and pick the highest successful one when multiple overlapping entities passed.
         /// </param>
         /// <returns>True if the click worked, false otherwise.</returns>
-        bool CheckClick(WorldCoordinates worldPos, out int drawdepth);
+        bool CheckClick(LocalCoordinates worldPos, out int drawdepth);
 
         /// <summary>
         /// Sends the click to the sister component on the server and things subscribed to

@@ -38,7 +38,7 @@ namespace SS14.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
-        List<IPlayerSession> GetPlayersInRange(WorldCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates();
     }

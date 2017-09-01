@@ -11,7 +11,7 @@ namespace SS14.Client.Interfaces.GameObjects
     /// </summary>
     public interface IClickTargetComponent : IComponent
     {
-        bool WasClicked(WorldCoordinates worldPos);
+        bool WasClicked(LocalCoordinates worldPos);
         DrawDepth DrawDepth { get; }
     }
 }

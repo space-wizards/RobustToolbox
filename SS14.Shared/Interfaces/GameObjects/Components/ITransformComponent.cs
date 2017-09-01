@@ -13,7 +13,9 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        WorldCoordinates WorldPosition { get; }
+        LocalCoordinates WorldPosition { get; }
+
+        int MapID { get; }
 
         /// <summary>
         ///     Current rotation offset of the entity.

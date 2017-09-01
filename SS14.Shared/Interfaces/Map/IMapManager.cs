@@ -91,7 +91,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
-        bool TryFindGridAt(WorldCoordinates posWorld, out IMapGrid currentgrid);
+        bool TryFindGridAt(LocalCoordinates posWorld, out IMapGrid currentgrid);
 
         /// <summary>
         ///     Finds the grid at this world coordinate
@@ -117,7 +117,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <returns>True if there is any grid at the location.</returns>
-        bool IsGridAt(WorldCoordinates posWorld);
+        bool IsGridAt(LocalCoordinates posWorld);
 
         /// <summary>
         ///     Is the specified grid at this position in the world?
@@ -126,14 +126,14 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <param name="gridId">The grid id to find.</param>
         /// <returns></returns>
-        bool IsGridAt(WorldCoordinates posWorld, int gridId);
+        bool IsGridAt(LocalCoordinates posWorld, int gridId);
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IEnumerable<IMapGrid> FindGridsAt(WorldCoordinates posWorld);
+        IEnumerable<IMapGrid> FindGridsAt(LocalCoordinates posWorld);
 
         /// <summary>
         ///     Finds all grids that intersect the rectangle in the world.

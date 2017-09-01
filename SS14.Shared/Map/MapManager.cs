@@ -147,7 +147,7 @@ namespace SS14.Shared.Map
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <returns>True if there is any grid at the location.</returns>
-        public bool IsGridAt(WorldCoordinates posWorld)
+        public bool IsGridAt(LocalCoordinates posWorld)
         {
             var pos = posWorld.Position;
             foreach (var kvGrid in _grids)
@@ -163,7 +163,7 @@ namespace SS14.Shared.Map
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <param name="gridId">The grid id to find.</param>
         /// <returns></returns>
-        public bool IsGridAt(WorldCoordinates worldPos, int gridId)
+        public bool IsGridAt(LocalCoordinates worldPos, int gridId)
         {
             var pos = worldPos.Position;
             return _grids.TryGetValue(gridId, out MapGrid output) && output.AABBWorld.Contains(pos);
@@ -175,7 +175,7 @@ namespace SS14.Shared.Map
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
         /// <returns></returns>
-        public IEnumerable<IMapGrid> FindGridsAt(WorldCoordinates worldPos)
+        public IEnumerable<IMapGrid> FindGridsAt(LocalCoordinates worldPos)
         {
             var pos = worldPos.Position;
             var gridList = new List<MapGrid>();
@@ -190,7 +190,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="xWorld">The X coordinate in the world.</param>
         /// <param name="yWorld">The Y coordinate in the world.</param>
-        public bool TryFindGridAt(WorldCoordinates worldPos, out IMapGrid currentgrid)
+        public bool TryFindGridAt(LocalCoordinates worldPos, out IMapGrid currentgrid)
         {
             var pos = worldPos.Position;
             foreach (var kvGrid in _grids)
@@ -411,9 +411,9 @@ namespace SS14.Shared.Map
                 for (var y = -32; y <= 32; ++y)
                 for (var x = -32; x <= 32; ++x)
                     if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
-                        grid.SetTile(new WorldCoordinates(x,y,0), new Tile(wall)); //TODO: Fix this
+                        grid.SetTile(new LocalCoordinates(x,y,grid), new Tile(wall)); //TODO: Fix this
                     else
-                        grid.SetTile(new WorldCoordinates(x,y,0), new Tile(floor)); //TODO: Fix this
+                        grid.SetTile(new LocalCoordinates(x,y,grid), new Tile(floor)); //TODO: Fix this
             }
             finally
             {

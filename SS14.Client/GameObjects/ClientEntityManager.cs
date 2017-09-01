@@ -19,7 +19,7 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(WorldCoordinates worldPos, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
 
@@ -86,7 +86,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.WorldPosition))
+                    if (position.Contains(transform.WorldPosition.Position))
                     {
                         return true;
                     }

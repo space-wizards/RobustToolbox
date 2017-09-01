@@ -47,21 +47,15 @@ namespace SS14.Client.Placement.Modes
             if (mouseS.MapID == Coordinates.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-
-            if (! (ongrid = currentMap.TryFindGridAt(mouseWorld, out IMapGrid currentgrid))) //Cant find a grid
-                return false;
-
-            var mouselocal = currentgrid.WorldToLocal(mouseWorld); //Convert code to local grid coordinates
-            snapsize = currentgrid.SnapSize; //Find snap size.
+            snapsize = mouseCoords.Grid.SnapSize; //Find snap size.
             
-            mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float)Math.Round((mouselocal.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
-                (float)Math.Round((mouselocal.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);
+            var mouselocal = new Vector2( //Round local coordinates onto the snap grid
+                (float)Math.Round((mouseCoords.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
+                (float)Math.Round((mouseCoords.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);
             
             //Convert back to original world and screen coordinates after applying offset
-            mouseWorld = currentgrid.LocalToWorld(mouselocal) + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
-            mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+            mouseCoords.Position = mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
+            mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
             if (!RangeCheck())
                 return false;

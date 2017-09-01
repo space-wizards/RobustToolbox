@@ -52,7 +52,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTile(WorldCoordinates posWorld);
+        TileRef GetTile(LocalCoordinates posWorld);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -66,7 +66,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="xIndex">The local x tile index inside of the grid.</param>
         /// <param name="yIndex">The local y tile index inside of the grid.</param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(WorldCoordinates posWorld, Tile tile);
+        void SetTile(LocalCoordinates posWorld, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -75,7 +75,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="yWorld">The Y coordinate of the tile in the world.</param>
         /// <param name="tileId">The new internal ID of the tile.</param>
         /// <param name="tileData">The new data of the tile.</param>
-        void SetTile(WorldCoordinates posWorld, ushort tileId, ushort tileData = 0);
+        void SetTile(LocalCoordinates posWorld, ushort tileId, ushort tileData = 0);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
@@ -134,7 +134,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
         /// <returns>The world-space coordinates with global origin.</returns>
-        WorldCoordinates LocalToWorld(LocalCoordinates posLocal);
+        LocalCoordinates LocalToWorld(LocalCoordinates posLocal);
 
 
         /// <summary>
@@ -143,13 +143,6 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="gridTile"></param>
         /// <returns></returns>
         LocalCoordinates GridTileToLocal(MapGrid.Indices gridTile);
-
-        /// <summary>
-        ///     Transforms grid-space tile indices to world coordinates.
-        /// </summary>
-        /// <param name="gridTile">The Grid Tile indices.</param>
-        /// <returns></returns>
-        WorldCoordinates GridTileToWorld(MapGrid.Indices gridTile);
 
         /// <summary>
         ///     Transforms grid indices into an outvar tile, returns false if no tile is found

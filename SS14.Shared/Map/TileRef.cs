@@ -34,12 +34,15 @@ namespace SS14.Shared.Map
         public int X => _gridTile.X;
         public int Y => _gridTile.Y;
         public LocalCoordinates LocalPos => _manager.GetGrid(_gridIndex).GridTileToLocal(_gridTile);
-        public WorldCoordinates WorldPos => _manager.GetGrid(_gridIndex).GridTileToWorld(_gridTile);
         public ushort TileSize => _manager.TileSize;
         public Tile Tile
         {
             get => _tile;
-            set => _manager.GetGrid(_gridIndex).SetTile(new WorldCoordinates(_gridTile.X, _gridTile.Y, 0), value); //TODO: Fix this
+            set
+            {
+                IMapGrid grid = _manager.GetGrid(_gridIndex);
+                grid.SetTile(new LocalCoordinates(_gridTile.X, _gridTile.Y, grid), value);
+            }
         }
 
         public ITileDefinition TileDef => IoCManager.Resolve<ITileDefinitionManager>()[Tile.TileId];

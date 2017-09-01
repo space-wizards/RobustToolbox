@@ -32,12 +32,12 @@ namespace SS14.Client.Placement.Modes
             if (mouseS.MapID == Coordinates.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -45,11 +45,11 @@ namespace SS14.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             IOrderedEnumerable<IEntity> snapToEntities =
-                from IEntity entity in manager.GetEntitiesInRange(mouseWorld, snapToRange)
+                from IEntity entity in manager.GetEntitiesInRange(mouseCoords, snapToRange)
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).WorldPosition - mouseWorld).LengthSquared
+                        ).WorldPosition - mouseCoords).LengthSquared
                     ascending
                 select entity;
 
@@ -76,10 +76,10 @@ namespace SS14.Client.Placement.Modes
                     };
 
                     Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared ascending select side).First();
+                        (from Vector2 side in sides orderby (side - mouseCoords).LengthSquared ascending select side).First();
 
-                    mouseWorld = closestSide;
-                    mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+                    mouseCoords = closestSide;
+                    mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
                 }
             }
 

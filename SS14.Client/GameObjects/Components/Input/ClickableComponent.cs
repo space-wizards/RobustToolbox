@@ -20,7 +20,7 @@ namespace SS14.Client.GameObjects
 
         public event EventHandler<ClickEventArgs> OnClick;
 
-        public bool CheckClick(WorldCoordinates worldPos, out int drawdepth)
+        public bool CheckClick(LocalCoordinates worldPos, out int drawdepth)
         {
             var component = Owner.GetComponent<IClickTargetComponent>();
 

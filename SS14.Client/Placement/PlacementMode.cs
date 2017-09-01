@@ -17,7 +17,7 @@ namespace SS14.Client.Placement
 
         public TileRef currentTile;
         public ScreenCoordinates mouseScreen;
-        public WorldCoordinates mouseWorld;
+        public LocalCoordinates mouseCoords;
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
@@ -80,7 +80,7 @@ namespace SS14.Client.Placement
             var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
             if (rangeSquared > 0)
                 if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .WorldPosition - mouseWorld).LengthSquared > rangeSquared)
+                         .WorldPosition - mouseCoords).LengthSquared > rangeSquared)
                     return false;
             return true;
         }
@@ -90,8 +90,8 @@ namespace SS14.Client.Placement
             var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
             var bounds = drawsprite.GetLocalBounds();
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
-            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteSize.X / 2f),
-                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+            var spriteRectWorld = Box2.FromDimensions(mouseCoords.X - (spriteSize.X / 2f),
+                                                 mouseCoords.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                 return false;

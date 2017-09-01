@@ -21,6 +21,7 @@ namespace SS14.Server.GameObjects
         public ITransformComponent Parent { get; set; }
 
         private Vector2 _position;
+        public int MapID { get; set; }
 
         /// <summary>
         ///     Current rotation offset of the entity.
@@ -37,7 +38,7 @@ namespace SS14.Server.GameObjects
         public event EventHandler<VectorEventArgs> OnMove;
 
         /// <inheritdoc />
-        public WorldCoordinates WorldPosition
+        public LocalCoordinates WorldPosition
         {
             get
             {
@@ -47,13 +48,13 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    return new WorldCoordinates(_position, mapid);
+                    return new LocalCoordinates(_position, MapID);
                 }
             }
             set
             {
                 var oldPosition = _position;
-                _position = value;
+                _position = value.Position;
 
                 OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }

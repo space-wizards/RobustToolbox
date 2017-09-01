@@ -26,47 +26,30 @@ namespace SS14.Shared.Map
         }
     }
 
-    public class WorldCoordinates : Coordinates
-    {
-        public int MapID;
-
-        public WorldCoordinates(Vector2 argPosition, int argMap)
-        {
-            Position = argPosition;
-            MapID = argMap;
-        }
-
-        public WorldCoordinates(float X, float Y, int argMap)
-        {
-            Position = new Vector2(X, Y);
-            MapID = argMap;
-        }
-
-        public LocalCoordinates ToLocal(IMapGrid grid)
-        {
-            return new LocalCoordinates(Position, grid);
-        }
-    }
-
     public class LocalCoordinates : Coordinates
     {
         public IMapGrid Grid;
+        public int MapID;
 
         public LocalCoordinates(Vector2 argPosition, IMapGrid argGrid)
         {
             Position = argPosition;
             Grid = argGrid;
+            MapID = argGrid.MapID;
         }
 
         public LocalCoordinates(float X, float Y, IMapGrid argGrid)
         {
             Position = new Vector2(X, Y);
             Grid = argGrid;
+            MapID = argGrid.MapID;
         }
 
-        public WorldCoordinates ToWorld()
+        public LocalCoordinates(float X, float Y, int argGrid, int argMap)
         {
-            return Grid.LocalToWorld(this);
+            Position = new Vector2(X, Y);
+            MapID = argMap;
+            argGrid = GetMap(argMap).GetGrid(argGrid);
         }
     }
 

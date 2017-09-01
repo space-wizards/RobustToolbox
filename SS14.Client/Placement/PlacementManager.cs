@@ -255,8 +255,8 @@ namespace SS14.Client.Placement
             if (CurrentPermission.IsTile) message.Write(CurrentPermission.TileType);
             else message.Write(CurrentPermission.EntityType);
 
-            message.Write(CurrentMode.mouseWorld.X);
-            message.Write(CurrentMode.mouseWorld.Y);
+            message.Write(CurrentMode.mouseCoords.X);
+            message.Write(CurrentMode.mouseCoords.Y);
 
             message.Write((byte)Direction);
 

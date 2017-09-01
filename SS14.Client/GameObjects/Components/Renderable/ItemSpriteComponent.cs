@@ -205,7 +205,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override bool WasClicked(WorldCoordinates worldPos)
+        public override bool WasClicked(LocalCoordinates worldPos)
         {
             return !IsInHand && base.WasClicked(worldPos);
         }

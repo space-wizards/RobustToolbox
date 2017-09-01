@@ -24,26 +24,26 @@ namespace SS14.Client.Placement.Modes
             if (mouseS.MapID == Coordinates.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new WorldCoordinates(currentTile.X + 0.5f,
+                mouseCoords = new LocalCoordinates(currentTile.X + 0.5f,
                                                   currentTile.Y + 0.5f,
                                                   mouseS.MapID);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
             else
             {
-                mouseWorld = new WorldCoordinates(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
+                mouseCoords = new LocalCoordinates(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
                                                   currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y,
                                                   mouseS.MapID);
-                mouseScreen = CluwneLib.WorldToScreen(mouseWorld);
+                mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
                 if (CheckCollision())
                     return false;

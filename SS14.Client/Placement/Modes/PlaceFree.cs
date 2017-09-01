@@ -19,8 +19,8 @@ namespace SS14.Client.Placement.Modes
             if (currentMap == null) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
+            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
 
             return true;
         }

@@ -195,7 +195,7 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(WorldCoordinates position, int range)
+        public List<IPlayerSession> GetPlayersInRange(LocalCoordinates position, int range)
         {
 
             //TODO: This needs to be moved to the PVS system.

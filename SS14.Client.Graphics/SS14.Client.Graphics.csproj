@@ -45,7 +45,7 @@
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
     <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
@@ -78,6 +78,7 @@
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Render\GraphicsContext.cs" />
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
     <Compile Include="Lighting\ILightManager.cs" />
@@ -125,6 +126,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Settings\VideoSettings.cs" />
+    <Compile Include="View\Camera.cs" />
     <Compile Include="View\Viewport.cs">
       <SubType>Code</SubType>
     </Compile>

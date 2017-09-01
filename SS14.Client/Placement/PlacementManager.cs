@@ -185,9 +185,9 @@ namespace SS14.Client.Placement
                 if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.rangerequired)
                 {
                     var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
-                    CluwneLib.drawHollowCircle((int)Math.Floor(pos.X),
-                        (int)Math.Floor(pos.Y),
-                        CurrentPermission.Range * CluwneLib.TileSize,
+                    CluwneLib.drawHollowCircle((int) Math.Floor(pos.X),
+                        (int) Math.Floor(pos.Y),
+                        CurrentPermission.Range * CluwneLib.Window.Camera.PixelsPerMeter,
                         3f,
                         Color4.White);
                 }

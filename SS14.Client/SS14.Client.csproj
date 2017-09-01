@@ -72,7 +72,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>

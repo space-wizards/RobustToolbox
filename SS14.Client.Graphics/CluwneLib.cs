@@ -7,10 +7,10 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Utility;
-using SS14.Client.Graphics.View;
 using SS14.Shared.Maths;
 using SS14.Shared.Timing;
 using System;
+using GraphicsContext = OpenTK.Graphics.GraphicsContext;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
 
@@ -22,43 +22,20 @@ namespace SS14.Client.Graphics
 
         public static GameTiming Time { get; private set; }
         public static event EventHandler<FrameEventArgs> FrameEvent;
-        public static Viewport CurrentClippingViewport;
-
         public delegate void EventHandler();
         public static event EventHandler RefreshVideoSettings;
-
-        #region Accessors
-        public static Vector2 WorldCenter { get; set; }
-        public static Vector2u ScreenViewportSize { get; set; }
-
-        /// <summary>
-        /// Viewport scaling
-        /// </summary>
-        public static int TileSize { get; set; } = 32;
-
-        public static Box2 WorldViewport
-        {
-            get
-            {
-                return ScreenToWorld(ScreenViewport);
-            }
-        }
-        public static Box2i ScreenViewport
-        {
-            get
-            {
-                return Box2i.FromDimensions(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
-            }
-        }
-
-        public static bool IsInitialized { get; set; }
-        public static bool IsRunning { get; set; }
+        
+        public static Box2 WorldViewport => ScreenToWorld(Box2i.FromDimensions(0, 0, (int)Window.Viewport.Size.X, (int)Window.Viewport.Size.Y));
+        
+        private static bool IsInitialized { get; set; }
+        public static bool IsRunning { get; private set; }
         public static bool FrameStatsVisible { get; set; }
 
-        public static CluwneWindow SplashScreen { get; set; }
-        public static CluwneWindow Screen { get; set; }
-        public static VideoSettings Video { get; private set; }
-        public static Debug Debug { get; private set; }
+        public static InputEvents Input { get; internal set; }
+        private static CluwneWindow SplashScreen { get; set; }
+        public static CluwneWindow Window { get; private set; }
+        public static VideoSettings Video { get; }
+        public static Debug Debug { get; }
         public static GLSLShader CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }
@@ -67,20 +44,18 @@ namespace SS14.Client.Graphics
             get
             {
                 if (renderTargetArray[0] == null)
-                    renderTargetArray[0] = Screen;
+                    renderTargetArray[0] = Window.Screen;
 
                 return renderTargetArray[0];
             }
             internal set
             {
                 if (value == null)
-                    value = Screen;
+                    value = Window.Screen;
 
                 setAdditionalRenderTarget(0, value);
             }
         }
-
-        #endregion Accessors
 
         static CluwneLib()
         {
@@ -100,7 +75,7 @@ namespace SS14.Client.Graphics
                 Initialize();
             }
 
-            if ((Screen != null) && (renderTargetArray == null))
+            if ((Window != null) && (renderTargetArray == null))
                 throw new InvalidOperationException("Something has gone terribly wrong!");
 
             if (IsRunning)
@@ -112,7 +87,7 @@ namespace SS14.Client.Graphics
                 {
                     if (renderTargetArray[0] == null)
                     {
-                        renderTargetArray[0] = Screen;
+                        renderTargetArray[0] = Window.Screen;
                     }
                 }
             }
@@ -122,12 +97,11 @@ namespace SS14.Client.Graphics
 
         public static CluwneWindow ShowSplashScreen(VideoMode vMode)
         {
-            if (SplashScreen == null)
-            {
-                SplashScreen = new CluwneWindow(vMode, "Space Station 14", Styles.None);
-            }
+            if (SplashScreen != null)
+                return SplashScreen;
 
-            return SplashScreen;
+            var video = new VideoSettings(vMode);
+            return SplashScreen = new CluwneWindow(new RenderWindow(vMode, "Space Station 14", Styles.None), video);
         }
 
         public static void CleanupSplashScreen()
@@ -143,12 +117,14 @@ namespace SS14.Client.Graphics
 
             Time = new GameTiming();
 
-            Screen = new CluwneWindow(CluwneLib.Video.getVideoMode(), "Developer Station 14", CluwneLib.Video.getWindowStyle());
-            Screen.SetVerticalSyncEnabled(true);
-            Screen.SetFramerateLimit(300);
+            var video = Video;
+            var wind = new RenderWindow(video.GetVideoMode(), "Developer Station 14", video.GetWindowStyle());
+            Window = new CluwneWindow(wind, video);
+            Window.Graphics.SetVerticalSyncEnabled(true);
+            Window.Graphics.SetFramerateLimit(300);
 
             renderTargetArray = new RenderTarget[5];
-            CurrentClippingViewport = new Viewport(0, 0, Screen.Size.X, Screen.Size.Y);
+            //Window.Viewport = new Viewport(0, 0, 800, 600);
             IsInitialized = true;
 
             //Hook OpenTK into SFMLs Opengl
@@ -160,11 +136,6 @@ namespace SS14.Client.Graphics
             new GraphicsContext(OpenTK.ContextHandle.Zero, null);
         }
 
-        public static void RequestGC(Action action)
-        {
-            action.Invoke();
-        }
-
         public static void ClearCurrentRendertarget(Color4 color)
         {
             CurrentRenderTarget.Clear(color.Convert());
@@ -172,9 +143,8 @@ namespace SS14.Client.Graphics
 
         public static void Terminate()
         {
-            CurrentClippingViewport = null;
             IsInitialized = false;
-            Screen.Close();
+            Window.Close();
         }
 
         public static void RunIdle(object sender, FrameEventArgs e)
@@ -416,8 +386,8 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2 WorldToScreen(Vector2 point)
         {
-            var center = WorldCenter;
-            return (point - center) * TileSize + ScreenViewportSize / 2;
+            var center = Window.Camera.Position;
+            return (point - center) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2;
         }
 
         /// <summary>
@@ -425,7 +395,6 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Box2 WorldToScreen(Box2 rect)
         {
-            var center = WorldCenter;
             var topLeft = new Vector2(rect.Left, rect.Top);
             var bottomRight = new Vector2(rect.Right, rect.Bottom);
             return new Box2(
@@ -455,7 +424,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2 ScreenToWorld(Vector2i point)
         {
-            return ((Vector2)point - ScreenViewportSize / 2) / TileSize + WorldCenter;
+            return ((Vector2)point - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
         }
 
         /// <summary>
@@ -463,10 +432,10 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Box2 ScreenToWorld(Box2i rect)
         {
-            var center = WorldCenter;
+            var center = Window.Camera.Position;
             return new Box2(
-                ((Vector2)rect.TopLeft - ScreenViewportSize / 2) / TileSize + center,
-                ((Vector2)rect.BottomRight - ScreenViewportSize / 2) / TileSize + center
+                ((Vector2)rect.TopLeft - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center,
+                ((Vector2)rect.BottomRight - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center
             );
         }
 
@@ -477,35 +446,44 @@ namespace SS14.Client.Graphics
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {
-            return vec / TileSize;
-        }
-
-        /// <summary>
-        /// Scales a rectangle from pixel coordinates to tile coordinates.
-        /// </summary>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public static Box2 PixelToTile(Box2 rect)
-        {
-            return new Box2(
-                rect.Left / TileSize,
-                rect.Top / TileSize,
-                rect.Right / TileSize,
-                rect.Bottom / TileSize
-            );
-        }
-
-        /// <summary>
-        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
-        /// </summary>
-        public static Vector2 GetNearestPixel(Vector2 worldPoint)
-        {
-            return new Vector2(
-                (float)Math.Round(worldPoint.X * TileSize) / TileSize,
-                (float)Math.Round(worldPoint.Y * TileSize) / TileSize
-            );
+            return vec / Window.Camera.PixelsPerMeter;
         }
 
         #endregion Client Window Data
+
+    }
+
+    public class InputEvents
+    {
+        private RenderWindow _window;
+
+        public InputEvents(RenderWindow window)
+        {
+            // if dummy don't attach events
+            if(window == null)
+                return;
+
+            _window = window;
+
+            _window.KeyPressed += (sender, args) => KeyPressed?.Invoke(sender, args);
+            _window.KeyReleased += (sender, args) => KeyReleased?.Invoke(sender, args);
+            _window.MouseButtonPressed += (sender, args) => MouseButtonPressed?.Invoke(sender, args);
+            _window.MouseButtonReleased += (sender, args) => MouseButtonReleased?.Invoke(sender, args);
+            _window.MouseMoved += (sender, args) => MouseMoved?.Invoke(sender, args);
+            _window.MouseWheelMoved += (sender, args) => MouseWheelMoved?.Invoke(sender, args);
+            _window.MouseEntered += (sender, args) => MouseEntered?.Invoke(sender, args);
+            _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
+            _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
+        }
+
+        public event EventHandler<KeyEventArgs> KeyPressed;
+        public event EventHandler<KeyEventArgs> KeyReleased;
+        public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
+        public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
+        public event EventHandler<MouseMoveEventArgs> MouseMoved;
+        public event EventHandler<MouseWheelEventArgs> MouseWheelMoved;
+        public event EventHandler<EventArgs> MouseEntered;
+        public event EventHandler<EventArgs> MouseLeft;
+        public event EventHandler<TextEventArgs> TextEntered;
     }
 }

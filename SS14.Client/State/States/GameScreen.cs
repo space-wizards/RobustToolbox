@@ -8,15 +8,12 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
-using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
-using SS14.Client.Lighting;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Components;
@@ -28,7 +25,6 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
-using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -36,10 +32,10 @@ using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Graphics.Lighting;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
-using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.State.States
 {
@@ -255,13 +251,20 @@ namespace SS14.Client.State.States
 
         private void InitalizeLighting()
         {
-            shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024,
-                                                      ResourceCache);
-            shadowMapResolver.LoadContent();
-            lightArea128 = new LightArea(ShadowmapSize.Size128);
-            lightArea256 = new LightArea(ShadowmapSize.Size256);
-            lightArea512 = new LightArea(ShadowmapSize.Size512);
-            lightArea1024 = new LightArea(ShadowmapSize.Size1024);
+            shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024);
+            
+            var lightManager = IoCManager.Resolve<ILightManager>();
+            var resourceCache = IoCManager.Resolve<IResourceCache>();
+
+            var reductionEffectTechnique = resourceCache.GetTechnique("reductionEffect");
+            var resolveShadowsEffectTechnique = resourceCache.GetTechnique("resolveShadowsEffect");
+            shadowMapResolver.LoadContent(reductionEffectTechnique, resolveShadowsEffectTechnique);
+
+            lightManager.LightMask = resourceCache.GetSprite("whitemask");
+            lightArea128 = new LightArea(ShadowmapSize.Size128, lightManager.LightMask);
+            lightArea256 = new LightArea(ShadowmapSize.Size256, lightManager.LightMask);
+            lightArea512 = new LightArea(ShadowmapSize.Size512, lightManager.LightMask);
+            lightArea1024 = new LightArea(ShadowmapSize.Size1024, lightManager.LightMask);
 
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
@@ -279,10 +282,10 @@ namespace SS14.Client.State.States
             _cleanupList.Add(playerOcclusionTarget);
             playerOcclusionTarget.UseDepthBuffer = false;
 
-            LightblendTechnique = IoCManager.Resolve<IResourceCache>().GetTechnique("lightblend");
-            Lightmap = IoCManager.Resolve<IResourceCache>().GetShader("lightmap");
+            LightblendTechnique = resourceCache.GetTechnique("lightblend");
+            Lightmap = resourceCache.GetShader("lightmap");
 
-            playerVision = IoCManager.Resolve<ILightManager>().CreateLight();
+            playerVision = lightManager.CreateLight();
             playerVision.Color = Color4.Blue;
             playerVision.Radius = 1024;
             playerVision.Position = new Vector2();

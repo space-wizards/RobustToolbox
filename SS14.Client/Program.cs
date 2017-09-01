@@ -3,7 +3,6 @@ using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Lighting;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
@@ -11,7 +10,6 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Interfaces.Utility;
-using SS14.Client.Lighting;
 using SS14.Client.Network;
 using SS14.Client.Placement;
 using SS14.Client.Player;
@@ -46,6 +44,7 @@ using SS14.Shared.Network;
 using SS14.Shared.Physics;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.GameStates;
+using SS14.Client.Graphics.Lighting;
 
 namespace SS14.Client
 {

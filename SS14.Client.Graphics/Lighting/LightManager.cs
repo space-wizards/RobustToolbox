@@ -1,31 +1,26 @@
-﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Interfaces.Lighting;
-using SS14.Shared;
-using SS14.Shared.Maths;
-using SS14.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using OpenTK;
+using SS14.Shared;
+using SS14.Shared.Maths;
 
-namespace SS14.Client.Lighting
+namespace SS14.Client.Graphics.Lighting
 {
     public class LightManager : ILightManager
     {
-        private readonly List<Type> LightModes = new List<Type>();
         private readonly List<ILight> _lights = new List<ILight>();
+        private readonly List<Type> LightModes = new List<Type>();
 
         public LightManager()
         {
-            List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
             LightModes =
                 assemblies.SelectMany(t => t.GetTypes()).Where(
-                    p => typeof (LightMode).IsAssignableFrom(p) && !p.IsInterface).ToList();
+                    p => typeof(LightMode).IsAssignableFrom(p) && !p.IsInterface).ToList();
         }
 
-        #region ILightManager Members
+        public SFML.Graphics.Sprite LightMask { get; set; }
 
         public void SetLightMode(LightModeClass? mode, ILight light)
         {
@@ -39,7 +34,7 @@ namespace SS14.Client.Lighting
                 return;
             }
 
-            foreach (Type t in LightModes)
+            foreach (var t in LightModes)
             {
                 var temp = (LightMode) Activator.CreateInstance(t);
                 if (temp.LightModeClass == mode.Value)
@@ -73,22 +68,10 @@ namespace SS14.Client.Lighting
             return _lights.ToArray();
         }
 
-        public ILight[] lightsInRadius(Vector2 point, float radius)
-        {
-            return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared) <= radius * radius).ToArray();
-        }
-
         public ILight[] LightsIntersectingRect(Box2 rect)
         {
             return _lights
                 .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
-                .ToArray();
-        }
-
-        public ILight[] LightsIntersectingPoint(Vector2 point)
-        {
-            return _lights
-                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point))
                 .ToArray();
         }
 
@@ -99,16 +82,7 @@ namespace SS14.Client.Lighting
 
         public void RecalculateLights()
         {
-            foreach (ILight l in _lights)
-            {
-                l.LightArea.Calculated = false;
-            }
-        }
-
-        public void RecalculateLightsInView(Vector2 point)
-        {
-            ILight[] lights = LightsIntersectingPoint(point);
-            foreach (ILight l in lights)
+            foreach (var l in _lights)
             {
                 l.LightArea.Calculated = false;
             }
@@ -116,13 +90,32 @@ namespace SS14.Client.Lighting
 
         public void RecalculateLightsInView(Box2 rect)
         {
-            ILight[] lights = LightsIntersectingRect(rect);
-            foreach (ILight l in lights)
+            var lights = LightsIntersectingRect(rect);
+            foreach (var l in lights)
             {
                 l.LightArea.Calculated = false;
             }
         }
 
-        #endregion
+        public ILight[] lightsInRadius(Vector2 point, float radius)
+        {
+            return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared) <= radius * radius).ToArray();
+        }
+
+        public ILight[] LightsIntersectingPoint(Vector2 point)
+        {
+            return _lights
+                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point))
+                .ToArray();
+        }
+
+        public void RecalculateLightsInView(Vector2 point)
+        {
+            var lights = LightsIntersectingPoint(point);
+            foreach (var l in lights)
+            {
+                l.LightArea.Calculated = false;
+            }
+        }
     }
 }

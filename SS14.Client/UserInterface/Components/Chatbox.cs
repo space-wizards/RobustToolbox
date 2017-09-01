@@ -84,7 +84,7 @@ namespace SS14.Client.UserInterface.Components
         {
             scrollbarH.SetVisible(false);
 
-            Position = new Vector2i((int)CluwneLib.CurrentClippingViewport.Width - (int)Size.X - 10, 10);
+            Position = new Vector2i((int)CluwneLib.Window.Viewport.Width - (int)Size.X - 10, 10);
 
             input = new Textbox(Size.X, resourceCache)
             {

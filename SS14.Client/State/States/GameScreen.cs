@@ -309,7 +309,7 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -322,7 +322,6 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.ScreenViewportSize = CluwneLib.Window.Viewport.Size;
                 var vp = CluwneLib.WorldViewport;
 
                 if (!bFullVision)
@@ -799,8 +798,6 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
-            CluwneLib.ScreenViewportSize = CluwneLib.Window.Viewport.Size;
-
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
@@ -1163,8 +1160,8 @@ namespace SS14.Client.State.States
             _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
             Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
-            float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
-            float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
+            float texratiox = (float)CluwneLib.Window.Viewport.Width / outofview.Texture.Size.X;
+            float texratioy = (float)CluwneLib.Window.Viewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4(texratiox, texratioy, 0, 0);
 
             LightblendTechnique["FinalLightBlend"].SetUniform("PlayerViewTexture", playerOcclusionTarget);

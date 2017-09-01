@@ -7,7 +7,6 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Utility;
-using SS14.Client.Graphics.View;
 using SS14.Shared.Maths;
 using SS14.Shared.Timing;
 using System;
@@ -25,16 +24,9 @@ namespace SS14.Client.Graphics
         public static event EventHandler<FrameEventArgs> FrameEvent;
         public delegate void EventHandler();
         public static event EventHandler RefreshVideoSettings;
-
-        public static Viewport CurrentClippingViewport;
-        public static Camera CurrentCamera;
-
-        public static Vector2 WorldCenter { get; set; }
-        public static Vector2u ScreenViewportSize { get; set; }
-        public static int PixelsPerMeter { get; } = 32;
-        public static Box2 WorldViewport => ScreenToWorld(ScreenViewport);
-        private static Box2i ScreenViewport => Box2i.FromDimensions(0, 0, (int)ScreenViewportSize.X, (int)ScreenViewportSize.Y);
-
+        
+        public static Box2 WorldViewport => ScreenToWorld(Box2i.FromDimensions(0, 0, (int)Window.Viewport.Size.X, (int)Window.Viewport.Size.Y));
+        
         private static bool IsInitialized { get; set; }
         public static bool IsRunning { get; private set; }
         public static bool FrameStatsVisible { get; set; }
@@ -133,7 +125,6 @@ namespace SS14.Client.Graphics
 
             renderTargetArray = new RenderTarget[5];
             //Window.Viewport = new Viewport(0, 0, 800, 600);
-            CurrentClippingViewport = Window.Viewport;
             IsInitialized = true;
 
             //Hook OpenTK into SFMLs Opengl
@@ -152,7 +143,6 @@ namespace SS14.Client.Graphics
 
         public static void Terminate()
         {
-            CurrentClippingViewport = null;
             IsInitialized = false;
             Window.Close();
         }
@@ -396,8 +386,8 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2 WorldToScreen(Vector2 point)
         {
-            var center = WorldCenter;
-            return (point - center) * PixelsPerMeter + ScreenViewportSize / 2;
+            var center = Window.Camera.Position;
+            return (point - center) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2;
         }
 
         /// <summary>
@@ -405,7 +395,6 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Box2 WorldToScreen(Box2 rect)
         {
-            var center = WorldCenter;
             var topLeft = new Vector2(rect.Left, rect.Top);
             var bottomRight = new Vector2(rect.Right, rect.Bottom);
             return new Box2(
@@ -435,7 +424,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Vector2 ScreenToWorld(Vector2i point)
         {
-            return ((Vector2)point - ScreenViewportSize / 2) / PixelsPerMeter + WorldCenter;
+            return ((Vector2)point - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
         }
 
         /// <summary>
@@ -443,10 +432,10 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Box2 ScreenToWorld(Box2i rect)
         {
-            var center = WorldCenter;
+            var center = Window.Camera.Position;
             return new Box2(
-                ((Vector2)rect.TopLeft - ScreenViewportSize / 2) / PixelsPerMeter + center,
-                ((Vector2)rect.BottomRight - ScreenViewportSize / 2) / PixelsPerMeter + center
+                ((Vector2)rect.TopLeft - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center,
+                ((Vector2)rect.BottomRight - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center
             );
         }
 
@@ -457,33 +446,7 @@ namespace SS14.Client.Graphics
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {
-            return vec / PixelsPerMeter;
-        }
-
-        /// <summary>
-        /// Scales a rectangle from pixel coordinates to tile coordinates.
-        /// </summary>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public static Box2 PixelToTile(Box2 rect)
-        {
-            return new Box2(
-                rect.Left / PixelsPerMeter,
-                rect.Top / PixelsPerMeter,
-                rect.Right / PixelsPerMeter,
-                rect.Bottom / PixelsPerMeter
-            );
-        }
-
-        /// <summary>
-        /// Takes a point in world (tile) coordinates, and rounds it to the nearest pixel.
-        /// </summary>
-        public static Vector2 GetNearestPixel(Vector2 worldPoint)
-        {
-            return new Vector2(
-                (float)Math.Round(worldPoint.X * PixelsPerMeter) / PixelsPerMeter,
-                (float)Math.Round(worldPoint.Y * PixelsPerMeter) / PixelsPerMeter
-            );
+            return vec / Window.Camera.PixelsPerMeter;
         }
 
         #endregion Client Window Data

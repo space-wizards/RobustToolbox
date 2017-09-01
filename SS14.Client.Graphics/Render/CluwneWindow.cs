@@ -22,7 +22,12 @@ namespace SS14.Client.Graphics.Render
             CluwneLib.Input = new InputEvents(_window);
 
             _window.Closed += (sender, args) => Closed?.Invoke(sender, args);
-            _window.Resized += (sender, args) => Resized?.Invoke(sender, args);
+            _window.Resized += (sender, args) =>
+            {
+                Viewport.Width = _window.Size.X;
+                Viewport.Height = _window.Size.Y;
+                Resized?.Invoke(sender, args);
+            };
         }
 
         public Viewport Viewport { get; set; }

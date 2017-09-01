@@ -187,7 +187,7 @@ namespace SS14.Client.Placement
                     var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
                     CluwneLib.drawHollowCircle((int) Math.Floor(pos.X),
                         (int) Math.Floor(pos.Y),
-                        CurrentPermission.Range * CluwneLib.PixelsPerMeter,
+                        CurrentPermission.Range * CluwneLib.Window.Camera.PixelsPerMeter,
                         3f,
                         Color4.White);
                 }

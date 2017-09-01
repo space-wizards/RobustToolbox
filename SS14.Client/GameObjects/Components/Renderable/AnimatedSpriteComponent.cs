@@ -20,7 +20,9 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using OpenTK.Graphics;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Utility;
 
 namespace SS14.Client.GameObjects
 {
@@ -156,13 +158,27 @@ namespace SS14.Client.GameObjects
             if (sprite == null || !visible) return false;
 
             Sprite spriteToCheck = GetCurrentSprite();
-            var bounds = spriteToCheck.GetLocalBounds();
 
-            var AABB =
-                Box2.FromDimensions(
-                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
-            if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
+            // local screen coords
+            var localBounds = spriteToCheck.GetLocalBounds().Convert();
+
+            // local world coords
+            var scale = CluwneLib.Window.Camera.PixelsPerMeter;
+            var worldBounds = new Box2(
+                localBounds.Left / scale,
+                localBounds.Top / scale,
+                localBounds.Right / scale,
+                localBounds.Bottom / scale);
+
+            // move the origin from top left to center
+            worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
+
+            // absolute world coords
+            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
+
+            // check if clicked inside of the rectangle
+            if (!worldBounds.Contains(worldPos))
+                return false;
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;

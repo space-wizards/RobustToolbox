@@ -14,15 +14,17 @@ namespace SS14.Shared.Utility
         // TODO: verify whether C#'s List<T> implementation
         //         won't explode and cause performance issues.
         /// <summary>
-        /// Remove an item from the list, replacing it with the one at the very end of the list.
-        /// This means that the order will not be preserved, but it should be an O(1) operation.
+        ///     Remove an item from the list, replacing it with the one at the very end of the list.
+        ///     This means that the order will not be preserved, but it should be an O(1) operation.
         /// </summary>
         /// <param name="index">The index to remove</param>
         /// <returns>The removed element</returns>
         public static T RemoveSwap<T>(this IList<T> list, int index)
         {
-            T old = list[index];
-            T replacement = list[list.Count-1];
+            // This method has no implementation details,
+            // and changing the result of an operation is a breaking change.
+            var old = list[index];
+            var replacement = list[list.Count-1];
             list[index] = replacement;
             // TODO: Any more efficient way to pop the last element off?
             list.RemoveAt(list.Count-1);

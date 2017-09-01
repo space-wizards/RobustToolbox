@@ -22,7 +22,7 @@ namespace SS14.Client.GameObjects
         {
             Range *= Range; // Square it here to avoid Sqrt
 
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
                 var relativePosition = position - transform.Position;
@@ -35,7 +35,7 @@ namespace SS14.Client.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
@@ -55,7 +55,7 @@ namespace SS14.Client.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
@@ -75,7 +75,7 @@ namespace SS14.Client.GameObjects
 
         public bool AnyEntitiesIntersecting(Box2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {

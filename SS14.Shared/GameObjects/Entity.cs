@@ -32,6 +32,9 @@ namespace SS14.Shared.GameObjects
         public string Name { get; set; }
 
         public bool Initialized { get; set; }
+
+        /// <inheritdoc />
+        public bool Deleted { get; private set; }
         public event EntityShutdownEvent OnShutdown;
 
         #endregion Members
@@ -305,7 +308,7 @@ namespace SS14.Shared.GameObjects
             {
                 throw new InvalidOperationException("Component is not owned by us");
             }
-            
+
             component.Shutdown();
 
             InternalRemoveComponent(component);
@@ -411,8 +414,16 @@ namespace SS14.Shared.GameObjects
                 InternalRemoveComponent(component);
             }
 
+            // Entity manager culls us because we're set to Deleted.
+            Deleted = true;
             _netIDs.Clear();
             _componentReferences.Clear();
+        }
+
+        /// <inheritdoc />
+        public void Delete()
+        {
+            EntityManager.DeleteEntity(this);
         }
 
         public IEnumerable<IComponent> GetComponents()

@@ -34,6 +34,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         bool Initialized { get; set; }
 
         /// <summary>
+        ///     True if the entity has been deleted.
+        /// </summary>
+        bool Deleted { get; }
+
+        /// <summary>
         ///     The prototype that was used to create this entity.
         /// </summary>
         EntityPrototype Prototype { get; set; }
@@ -184,9 +189,15 @@ namespace SS14.Shared.Interfaces.GameObjects
 
         /// <summary>
         ///     Used by the entity manager to delete the entity.
-        ///     Do not call directly.
+        ///     Do not call directly. If you want to delete entities,
+        ///     see <see cref="Delete" />.
         /// </summary>
         void Shutdown();
+
+        /// <summary>
+        ///     Deletes this entity.
+        /// </summary>
+        void Delete();
 
         /// <summary>
         ///     Returns all components on the entity.

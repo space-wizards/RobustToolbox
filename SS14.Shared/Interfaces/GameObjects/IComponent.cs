@@ -48,6 +48,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         Type StateType { get; }
 
         /// <summary>
+        ///     True if the component has been removed from its owner, AKA deleted.
+        /// </summary>
+        bool Deleted { get; }
+
+        /// <summary>
         ///     Called when the component is removed from an entity.
         ///     Shuts down the component.
         ///     This should be called AFTER any inheriting classes OnRemove code has run. This should be last.

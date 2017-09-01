@@ -24,12 +24,6 @@ namespace SS14.Shared.Interfaces.GameObjects
         void AddComponent(IComponent component);
 
         /// <summary>
-        /// Remove a component from the master component list.
-        /// </summary>
-        /// <param name="component"></param>
-        void RemoveComponent(IComponent component);
-
-        /// <summary>
         /// Clear the master component list
         /// </summary>
         void Cull();

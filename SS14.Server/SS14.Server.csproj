@@ -6,70 +6,60 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{B04AAE71-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ApplicationIcon>
-    </ApplicationIcon>
-    <AssemblyKeyContainerName>
-    </AssemblyKeyContainerName>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ApplicationIcon />
+    <AssemblyKeyContainerName />
     <AssemblyName>SS14.Server</AssemblyName>
-    <DefaultClientScript>JScript</DefaultClientScript>
-    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
-    <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder />
     <RootNamespace>SS14.Server</RootNamespace>
-    <StartupObject>
-    </StartupObject>
-    <StartArguments>
-    </StartArguments>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
+    <StartupObject />
+    <StartArguments />
+    <FileUpgradeFlags />
     <TargetFrameworkProfile />
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NoWarn>0649</NoWarn>
     <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
+    <BaseAddress>285212672</BaseAddress>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <ConfigurationOverrideFile />
+    <DocumentationFile />
+    <FileAlignment>4096</FileAlignment>
+    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <NoStdLib>False</NoStdLib>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
     <DefineConstants>TRACE;RELEASE</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>$(SolutionDir)bin\Server\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <Optimize>False</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <Optimize>True</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>

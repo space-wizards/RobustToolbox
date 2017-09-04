@@ -455,7 +455,6 @@ namespace SS14.Client.Graphics
 
     public class InputEvents
     {
-        private RenderWindow _window;
 
         public InputEvents(RenderWindow window)
         {
@@ -463,7 +462,7 @@ namespace SS14.Client.Graphics
             if(window == null)
                 return;
 
-            _window = window;
+            RenderWindow _window = window;
 
             _window.KeyPressed += (sender, args) => KeyPressed?.Invoke(sender, args);
             _window.KeyReleased += (sender, args) => KeyReleased?.Invoke(sender, args);

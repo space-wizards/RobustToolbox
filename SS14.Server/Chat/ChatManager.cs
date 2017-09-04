@@ -271,8 +271,8 @@ namespace SS14.Server.Chat
 
     public struct Emote
     {
-        public string Command;
-        public string SelfText;
-        public string OtherText;
+        public string Command { get; set; }
+        public string SelfText { get; set; }
+        public string OtherText { get; set; }
     }
 }

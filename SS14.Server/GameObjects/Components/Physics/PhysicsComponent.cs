@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
 {

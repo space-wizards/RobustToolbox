@@ -16,6 +16,7 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Interfaces.Map;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
 {

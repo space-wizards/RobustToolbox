@@ -1,6 +1,7 @@
 ﻿using OpenTK;
 using SFML.Graphics;
 using SS14.Client.Graphics.Render;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
 {

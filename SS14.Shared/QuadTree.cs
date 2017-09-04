@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared
 {
@@ -70,7 +71,7 @@ namespace SS14.Shared
                     rootSizeF = new Vector2((float)(minLeafSizeF.X * multiplier), (float)(minLeafSizeF.Y * multiplier));
                     var center = new Vector2i((int)(bounds.Left + bounds.Width / 2), (int)(bounds.Top + bounds.Height / 2));
                     var rootOrigin = new Vector2i((int)(center.X - rootSizeF.X / 2), (int)(center.Y - rootSizeF.Y / 2));
-                    root = new QuadNode(Box2.FromDimensions(rootOrigin, rootSizeF));
+                    root = new QuadNode(Box2.FromDimensions((Vector2)rootOrigin, rootSizeF));
                 }
 
                 while (!root.Bounds.Encloses(bounds))

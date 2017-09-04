@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using ShaderClass = SFML.Graphics.Shader;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 
 namespace SS14.Client.Graphics.Shader

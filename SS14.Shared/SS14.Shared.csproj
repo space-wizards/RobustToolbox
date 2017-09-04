@@ -185,6 +185,7 @@
     <Compile Include="Maths\Box2Ext.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
+    <Compile Include="Maths\Vector2.cs" />
     <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector2u.cs" />
     <Compile Include="EntityBaseClass.cs" />

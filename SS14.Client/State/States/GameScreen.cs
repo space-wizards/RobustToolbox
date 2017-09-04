@@ -36,6 +36,7 @@ using SS14.Client.Graphics.Lighting;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.State.States
 {
@@ -60,7 +61,7 @@ namespace SS14.Client.State.States
 
         private List<RenderImage> _cleanupList = new List<RenderImage>();
         private List<Sprite> _cleanupSpriteList = new List<Sprite>();
-        
+
         private SpriteBatch _floorBatch;
         private SpriteBatch _gasBatch;
         private SpriteBatch _decalBatch;
@@ -252,7 +253,7 @@ namespace SS14.Client.State.States
         private void InitalizeLighting()
         {
             shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024);
-            
+
             var lightManager = IoCManager.Resolve<ILightManager>();
             var resourceCache = IoCManager.Resolve<IResourceCache>();
 

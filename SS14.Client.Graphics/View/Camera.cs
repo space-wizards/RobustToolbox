@@ -1,5 +1,5 @@
-﻿using OpenTK;
-using SFML.Graphics;
+﻿using SFML.Graphics;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.View
 {

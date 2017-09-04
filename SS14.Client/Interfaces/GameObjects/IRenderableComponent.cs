@@ -3,6 +3,7 @@ using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Interfaces.GameObjects
 {

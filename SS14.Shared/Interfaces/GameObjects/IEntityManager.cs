@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Network.Messages;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.GameObjects
 {

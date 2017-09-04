@@ -661,7 +661,7 @@ namespace SS14.Server
             IoCManager.Resolve<IConsoleManager>().Update();
         }
 
-        private void SendGameStateUpdate(bool forceFullState = false)
+        private void SendGameStateUpdate()
         {
             //Create a new GameState object
             var stateManager = IoCManager.Resolve<IGameStateManager>();

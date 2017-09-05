@@ -176,7 +176,7 @@ namespace SS14.Shared.Maths
         {
             return new Vector2(
                 vector.X.Clamp(min.X, max.X),
-                vector.X.Clamp(min.Y, max.Y)
+                vector.Y.Clamp(min.Y, max.Y)
             );
         }
 

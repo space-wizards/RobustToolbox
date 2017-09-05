@@ -202,7 +202,7 @@ namespace SS14.Server.Player
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().WorldPosition).LengthSquared < range * range)
+                    (position.Position - x.attachedEntity.GetComponent<ITransformComponent>().WorldPosition).LengthSquared < range * range)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

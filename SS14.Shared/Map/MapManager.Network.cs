@@ -71,12 +71,14 @@ namespace SS14.Shared.Map
 
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
             const int MAP_INDEX = 0;
+            const int GRID_INDEX = 0;
 
             Logger.Log(channel.RemoteAddress + ": Sending map");
 
             var message = _netManager.CreateNetMessage<MsgMap>();
             message.MessageType = MapMessage.SendTileMap;
             message.MapIndex = MAP_INDEX;
+            message.GridIndex = GRID_INDEX;
             // Tile definition mapping
             message.TileDefs = new MsgMap.TileDef[_defManager.Count];
 
@@ -89,7 +91,7 @@ namespace SS14.Shared.Map
             }
 
             // Map chunks
-            var grid = _mapManager.GetGrid(MAP_INDEX);
+            var grid = _mapManager.GetMap(MAP_INDEX).GetGrid(GRID_INDEX);
             var gridSize = grid.ChunkSize;
             message.ChunkSize = gridSize;
             message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
@@ -181,14 +183,15 @@ namespace SS14.Shared.Map
             Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
             var mapIndex = message.MapIndex;
+            var gridIndex = message.GridIndex;
 
             _defManager.RegisterServerTileMapping(message);
 
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;
 
-            if (!_mapManager.TryGetGrid(mapIndex, out IMapGrid grid))
-                grid = _mapManager.CreateGrid(mapIndex, chunkSize);
+            if (!_mapManager.GetMap(mapIndex).TryGetGrid(gridIndex, out IMapGrid grid)) //Fix this
+                grid = _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
 
             for (var i = 0; i < chunkCount; ++i)
             {
@@ -222,8 +225,8 @@ namespace SS14.Shared.Map
             //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
             const int MAP_INDEX = 0;
             const int GRID_INDEX = 0;
-
-            _mapManager.GetGrid(MAP_INDEX).SetTile(new LocalCoordinates(x, y, 0, 0), tile); //TODO: Fix this
+            LocalCoordinates coords = new LocalCoordinates(x, y, GRID_INDEX, MAP_INDEX);
+            coords.Grid.SetTile(coords, tile); //TODO: Fix this
         }
     }
 }

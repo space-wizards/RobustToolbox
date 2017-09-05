@@ -18,6 +18,7 @@ namespace SS14.Client.GameObjects
         public LocalCoordinates WorldPosition { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
+        public int MapID {get; set;}
 
         //TODO: Make parenting actually work.
 

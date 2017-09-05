@@ -74,7 +74,7 @@ namespace SS14.Shared.Physics
                     collided = true;
 
             //TODO: This needs multi-grid support.
-            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(collider).Any(t => t.TileDef.IsCollidable);
+            return collided;
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace SS14.Shared.Physics
             }
 
             //TODO: This needs multi-grid support.
-            return collided || IoCManager.Resolve<IMapManager>().GetDefaultGrid().GetTilesIntersecting(colliderAABB).Any(t => t.TileDef.IsCollidable);
+            return collided;
         }
 
         /// <summary>

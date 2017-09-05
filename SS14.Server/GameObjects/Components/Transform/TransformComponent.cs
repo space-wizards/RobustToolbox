@@ -38,7 +38,29 @@ namespace SS14.Server.GameObjects
         public event EventHandler<VectorEventArgs> OnMove;
 
         /// <inheritdoc />
-        public LocalCoordinates WorldPosition
+        public LocalCoordinates Position
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    return GetMapTransform().Position; //Search up the tree for the true map position
+                }
+                else
+                {
+                    return new LocalCoordinates(_position, 0, MapID); //TODO: fix this
+                }
+            }
+            set
+            {
+                var oldPosition = _position;
+                _position = value.Position;
+
+                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+            }
+        }
+
+        public Vector2 WorldPosition
         {
             get
             {
@@ -48,13 +70,13 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    return new LocalCoordinates(_position, MapID);
+                    return _position;
                 }
             }
             set
             {
                 var oldPosition = _position;
-                _position = value.Position;
+                _position = value;
 
                 OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }

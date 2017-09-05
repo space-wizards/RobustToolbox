@@ -151,7 +151,7 @@ namespace SS14.Client.GameObjects
             return sprite.GetCurrentSprite();
         }
 
-        public virtual bool WasClicked(WorldCoordinates worldPos)
+        public virtual bool WasClicked(LocalCoordinates worldPos)
         {
             if (sprite == null || !visible) return false;
 

@@ -16,6 +16,7 @@ namespace SS14.Shared.Network.Messages
 
         public MapMessage MessageType { get; set; }
         public int MapIndex { get; set; }
+        public int GridIndex { get; set; }
 
         public Turf SingleTurf { get; set; }
 
@@ -58,6 +59,7 @@ namespace SS14.Shared.Network.Messages
                     };
                     break;
                 case MapMessage.SendTileMap:
+                    GridIndex = buffer.ReadInt32();
                     MapIndex = buffer.ReadInt32();
 
                     //tile defs
@@ -109,6 +111,7 @@ namespace SS14.Shared.Network.Messages
                     buffer.Write(SingleTurf.Tile);
                     break;
                 case MapMessage.SendTileMap:
+                    buffer.Write(GridIndex);
                     buffer.Write(MapIndex);
 
                     // Tile defs, ordered list

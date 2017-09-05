@@ -15,6 +15,13 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         int MapID { get; }
 
+        int Index { get; }
+
+        /// <summary>
+        ///     The length of the side of a square tile in world units.
+        /// </summary>
+        ushort TileSize { get; }
+
         /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>

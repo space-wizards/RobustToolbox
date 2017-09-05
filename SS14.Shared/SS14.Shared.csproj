@@ -148,6 +148,7 @@
     <Compile Include="Interfaces\GameObjects\IEntitySystemManager.cs" />
     <Compile Include="Interfaces\IResourceManager.cs" />
     <Compile Include="Interfaces\Log\ILogManager.cs" />
+    <Compile Include="Interfaces\Map\IMap.cs" />
     <Compile Include="Interfaces\Network\INetChannel.cs" />
     <Compile Include="Interfaces\Network\IClientNetManager.cs" />
     <Compile Include="Interfaces\Network\INetManager.cs" />
@@ -172,6 +173,7 @@
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
+    <Compile Include="Map\Map.cs" />
     <Compile Include="Map\Coordinates.cs" />
     <Compile Include="Maths\Angle.cs" />
     <Compile Include="Maths\Box2i.cs" />

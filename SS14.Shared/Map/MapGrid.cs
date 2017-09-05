@@ -80,6 +80,11 @@ namespace SS14.Shared.Map
 
         public int Index { get; }
 
+        /// <summary>
+        ///     The length of the side of a square tile in world units.
+        /// </summary>
+        public ushort TileSize { get; set; }
+
         /// <inheritdoc />
         public Vector2 WorldPosition { get; set; }
 
@@ -132,7 +137,7 @@ namespace SS14.Shared.Map
                 var chunkTileIndices = output.GridTileToChunkTile(gridTileIndices);
                 return output.GetTile((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
             }
-            return new TileRef(_mapManager, Index, gridTileIndices.X, gridTileIndices.Y, default(Tile));
+            return new TileRef(MapID, Index, gridTileIndices.X, gridTileIndices.Y, default(Tile));
         }
 
         /// <inheritdoc />
@@ -203,7 +208,7 @@ namespace SS14.Shared.Map
                     }
                     else if(!ignoreEmpty)
                     {
-                        var tile = new TileRef(_mapManager, Index, x, y, new Tile());
+                        var tile = new TileRef(MapID, Index, x, y, new Tile());
 
                         if (predicate == null || predicate(tile))
                         {
@@ -263,18 +268,18 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public LocalCoordinates LocalToWorld(LocalCoordinates local)
         {
-            return new LocalCoordinates(local.Position + WorldPosition, MapID);
+            return new LocalCoordinates(local.Position + WorldPosition, 0, local.MapID);
         }
 
         /// <summary>
         /// Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
         /// <returns></returns>
-        public Indices WorldToTile(LocalCoordinates worldPos)
+        public Indices WorldToTile(LocalCoordinates posWorld)
         {
-            var local = worldPos.ToLocal(this); 
-            var x = (int)Math.Floor(local.X / _mapManager.TileSize);
-            var y = (int)Math.Floor(local.Y / _mapManager.TileSize);
+            var local = posWorld.ConvertToGrid(this); 
+            var x = (int)Math.Floor(local.X / TileSize);
+            var y = (int)Math.Floor(local.Y / TileSize);
             return new Indices(x, y);
         }
 
@@ -285,9 +290,9 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public Indices WorldToChunk(LocalCoordinates posWorld)
         {
-            var local = posWorld.Position - WorldPosition;
-            var x = (int)Math.Floor(local.X / (_mapManager.TileSize * ChunkSize));
-            var y = (int)Math.Floor(local.Y / (_mapManager.TileSize * ChunkSize));
+            var local = posWorld.ConvertToGrid(this);
+            var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
+            var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new Indices(x,y);
         }
 
@@ -307,8 +312,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public LocalCoordinates GridTileToLocal(Indices gridTile)
         {
-            var tileSize = _mapManager.TileSize;
-            return new LocalCoordinates(gridTile.X * tileSize + (tileSize / 2), gridTile.Y * tileSize + (tileSize / 2), this);
+            return new LocalCoordinates(gridTile.X * TileSize + (TileSize / 2), gridTile.Y * TileSize + (TileSize / 2), this);
         }
 
         /// <inheritdoc />

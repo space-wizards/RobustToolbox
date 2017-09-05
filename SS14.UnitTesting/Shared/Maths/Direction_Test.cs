@@ -4,7 +4,7 @@ using OpenTK;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.UnitTesting.Shared.Math
+namespace SS14.UnitTesting.Shared.Maths
 {
     [TestFixture]
     internal class Direction_Test

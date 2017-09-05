@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -138,7 +139,7 @@ namespace SS14.Client.GameObjects
                 ModeClass = LightModeClass.Constant;
             }
         }
-        
+
         public override void Shutdown()
         {
             Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;

@@ -11,6 +11,7 @@ using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {

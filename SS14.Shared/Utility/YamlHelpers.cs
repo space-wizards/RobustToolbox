@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Utility
 {

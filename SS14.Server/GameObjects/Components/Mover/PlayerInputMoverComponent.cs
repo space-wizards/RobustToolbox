@@ -5,6 +5,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
 {
@@ -91,7 +92,7 @@ namespace SS14.Server.GameObjects
 
             // can't normalize zero length vector
             if (_moveDir.LengthSquared > 1.0e-6)
-                _moveDir.Normalize();
+                _moveDir = _moveDir.Normalized;
 
             // players can run or walk
             _run = input.GetKeyState(BoundKeyFunctions.Run);

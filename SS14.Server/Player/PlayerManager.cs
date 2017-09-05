@@ -19,6 +19,7 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
 {

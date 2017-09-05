@@ -9,6 +9,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Linq;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Helpers
 {

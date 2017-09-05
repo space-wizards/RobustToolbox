@@ -9,6 +9,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System.IO;
 using YamlDotNet.RepresentationModel;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.UnitTesting.SS14.Shared.Prototypes
 {

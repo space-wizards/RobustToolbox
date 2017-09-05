@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
@@ -12,14 +13,14 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-using OpenTK.Graphics;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -275,7 +276,7 @@ namespace SS14.Client.GameObjects
 
             var worldRot = Owner.GetComponent<TransformComponent>().Rotation.ToVec();
 
-            // world2screen 
+            // world2screen
             worldRot = new Vector2(worldRot.X, worldRot.Y * -1);
 
             sprite.Direction = worldRot.GetDir();

@@ -6,6 +6,7 @@ using SS14.Client.Graphics.VertexData;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -90,8 +91,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (titleArea.Contains((int)e.X, (int)e.Y))
             {
-                draggingOffset.X = (int)e.X - Position.X;
-                draggingOffset.Y = (int)e.Y - Position.Y;
+                draggingOffset = new Vector2(e.X, e.Y) - Position;
                 dragging = true;
                 return true;
             }

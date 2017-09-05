@@ -183,9 +183,9 @@ namespace SS14.Shared.Maths
         /// <summary>
         ///     Calculates the dot product of two vectors.
         /// </summary>
-        public static Vector2 Dot(Vector2 a, Vector2 b)
+        public static float Dot(Vector2 a, Vector2 b)
         {
-            return new Vector2(a.X * b.X, a.Y * b.Y);
+            return a.X * b.X + a.Y * b.Y;
         }
 
         /// <summary>

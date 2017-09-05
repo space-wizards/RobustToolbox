@@ -338,7 +338,7 @@
   </PropertyGroup>
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared;CopyMacNatives;CopyWinNatives" />
   <Target Name="CopyMacNatives" Condition="'$(targetOS)' == 'MacOS'">
-    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
+    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Download SFML 2.4 and CSFML 2.4 for MacOS, and copy the contents of libs/ and extlibs/ in both to Third-Party/extlibs/Mac." Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libcsfml-graphics.2.4.0.dylib')" />
     <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
   </Target>
   <Target Name="CopyWinNatives" Condition="'$(targetOS)' == 'Windows'">

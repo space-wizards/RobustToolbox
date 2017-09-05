@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK;
 using SS14.Shared.Maths;
 
 namespace SS14.Shared.Interfaces.GameObjects.Components

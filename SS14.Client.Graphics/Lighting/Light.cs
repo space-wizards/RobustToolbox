@@ -2,6 +2,7 @@
 using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
 {

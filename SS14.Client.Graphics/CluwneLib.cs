@@ -13,6 +13,7 @@ using System;
 using GraphicsContext = OpenTK.Graphics.GraphicsContext;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics
 {
@@ -24,9 +25,9 @@ namespace SS14.Client.Graphics
         public static event EventHandler<FrameEventArgs> FrameEvent;
         public delegate void EventHandler();
         public static event EventHandler RefreshVideoSettings;
-        
+
         public static Box2 WorldViewport => ScreenToWorld(Box2i.FromDimensions(0, 0, (int)Window.Viewport.Size.X, (int)Window.Viewport.Size.Y));
-        
+
         private static bool IsInitialized { get; set; }
         public static bool IsRunning { get; private set; }
         public static bool FrameStatsVisible { get; set; }

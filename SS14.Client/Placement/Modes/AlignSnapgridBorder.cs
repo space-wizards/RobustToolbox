@@ -11,6 +11,7 @@ using System;
 using OpenTK.Graphics;
 using SS14.Shared.Prototypes;
 using SS14.Shared.IoC;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Placement.Modes
 {

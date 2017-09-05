@@ -4,6 +4,7 @@ using OpenTK;
 using SS14.Shared.GameObjects;
 using SS14.Shared.GameObjects.System;
 using SS14.Shared.Interfaces.GameObjects;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects.EntitySystems
 {

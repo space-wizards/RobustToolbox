@@ -2,8 +2,9 @@
 using NUnit.Framework;
 using OpenTK;
 using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.UnitTesting.Shared.Math
+namespace SS14.UnitTesting.Shared.Maths
 {
     [TestFixture]
     public class Angle_Test
@@ -26,7 +27,7 @@ namespace SS14.UnitTesting.Shared.Math
         [Sequential]
         public void TestAngleToVector2([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
         {
-            var control = new Vector2(test.Item1, test.Item2).Normalized();
+            var control = new Vector2(test.Item1, test.Item2).Normalized;
             var target = new Angle(test.Item4);
 
             Assert.That((control - target.ToVec()).LengthSquared, Is.AtMost(Epsilon));

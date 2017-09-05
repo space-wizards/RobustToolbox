@@ -4,6 +4,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Interfaces.GameObjects
 {

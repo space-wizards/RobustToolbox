@@ -57,7 +57,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
         /// </summary>
-        /// <param name="worldPos">The location of the tile in world coordinates.</param>
+        /// <param name="worldPos">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
         TileRef GetTile(LocalCoordinates posWorld);
 

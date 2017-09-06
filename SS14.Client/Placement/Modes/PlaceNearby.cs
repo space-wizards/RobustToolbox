@@ -23,11 +23,11 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;

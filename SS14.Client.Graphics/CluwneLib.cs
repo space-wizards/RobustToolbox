@@ -8,6 +8,8 @@ using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Graphics.View;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Timing;
@@ -460,9 +462,11 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static LocalCoordinates ScreenToWorld(ScreenCoordinates point)
+        public static LocalCoordinates ScreenToCoordinates(ScreenCoordinates point)
         {
-            return new LocalCoordinates((point.Position - ScreenViewportSize / 2) / TileSize + WorldCenter, point.MapID);
+            var pos = (point.Position - ScreenViewportSize / 2) / TileSize + WorldCenter;
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
+            return new LocalCoordinates(pos, grid);
         }
 
         /// <summary>

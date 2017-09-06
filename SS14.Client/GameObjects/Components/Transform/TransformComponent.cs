@@ -15,11 +15,11 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
-        public LocalCoordinates WorldPosition { get; private set; }
+        public Vector2 WorldPosition { get; private set; }
+        public int MapID { get; private set; }
+        public int GridID { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
-        public int MapID {get; set;}
-
         //TODO: Make parenting actually work.
 
         /// <inheritdoc />
@@ -33,6 +33,8 @@ namespace SS14.Client.GameObjects
 
         /// <inheritdoc />
         public event EventHandler<VectorEventArgs> OnMove;
+
+        public LocalCoordinates Position => new LocalCoordinates(WorldPosition, GridID, MapID);
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)

@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using System.Collections.Generic;
 
 namespace SS14.Server.Interfaces.GameObjects
@@ -18,19 +19,26 @@ namespace SS14.Server.Interfaces.GameObjects
         /// Spawns an entity at a specific position
         /// </summary>
         /// <param name="EntityType"></param>
-        /// <param name="grid"></param>
         /// <param name="position"></param>
+        /// <param name="argMap"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity);
+        bool TrySpawnEntityAt(string EntityType, Vector2 position, int argMap, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
         /// </summary>
         /// <param name="EntityType"></param>
-        /// <param name="grid"></param>
-        /// <param name="position"></param>
+        /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position);
+        IEntity ForceSpawnEntityAt(string EntityType, LocalCoordinates coordinates);
+
+        /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="EntityType"></param>
+        /// <param name="coordinates"></param>
+        /// <returns></returns>
+        bool TrySpawnEntityAt(string EntityType, LocalCoordinates coordinates, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -38,15 +46,8 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity);
+        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, int argMap);
 
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="EntityType"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position);
         List<EntityState> GetEntityStates();
     }
 }

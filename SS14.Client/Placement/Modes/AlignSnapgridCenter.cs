@@ -44,10 +44,10 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
             if (! (ongrid = currentMap.TryFindGridAt(mouseCoords, out IMapGrid currentgrid))) //Cant find a grid
                 return false;

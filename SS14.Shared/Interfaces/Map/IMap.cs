@@ -20,7 +20,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, float snapSize = 1, int mapID = 0);
+        IMapGrid CreateGrid(int gridId, ushort chunkSize = 16, float snapSize = 1);
 
         /// <summary>
         ///     Checks if a grid exists with the given ID.
@@ -45,19 +45,6 @@ namespace SS14.Shared.Interfaces.Map
         bool TryGetGrid(int gridId, out IMapGrid mapGrid);
 
         /// <summary>
-        ///     Finds the grid at this world coordinate
-        /// </summary>
-        /// <param name="xWorld">The X coordinate in the world.</param>
-        /// <param name="yWorld">The Y coordinate in the world.</param>
-        bool TryFindGridAt(LocalCoordinates posWorld, out IMapGrid currentgrid);
-
-        /// <summary>
-        ///     Finds the grid at this world coordinate
-        /// </summary>
-        /// <param name="WorldPos">The X coordinate in the world.</param>
-        bool TryFindGridAt(Vector2 worldPos, out IMapGrid currentgrid);
-
-        /// <summary>
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
         /// </summary>
         /// <returns></returns>
@@ -70,28 +57,18 @@ namespace SS14.Shared.Interfaces.Map
         void RemoveGrid(int gridId);
 
         /// <summary>
-        ///     Is there any grid at this position in the world?
+        ///     Finds all of the grids at this position in the world.
         /// </summary>
-        /// <param name="xWorld">The X coordinate in the world.</param>
-        /// <param name="yWorld">The Y coordinate in the world.</param>
-        /// <returns>True if there is any grid at the location.</returns>
-        bool IsGridAt(LocalCoordinates posWorld);
-
-        /// <summary>
-        ///     Is the specified grid at this position in the world?
-        /// </summary>
-        /// <param name="xWorld">The X coordinate in the world.</param>
-        /// <param name="yWorld">The Y coordinate in the world.</param>
-        /// <param name="gridId">The grid id to find.</param>
+        /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        bool IsGridAt(LocalCoordinates posWorld, int gridId);
+        IMapGrid FindGridAt(LocalCoordinates posWorld);
 
         /// <summary>
         ///     Finds all of the grids at this position in the world.
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IEnumerable<IMapGrid> FindGridsAt(LocalCoordinates posWorld);
+        IMapGrid FindGridAt(Vector2 worldPos);
 
         /// <summary>
         ///     Finds all grids that intersect the rectangle in the world.

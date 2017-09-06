@@ -7,6 +7,8 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Server.GameObjects
 {
@@ -21,7 +23,8 @@ namespace SS14.Server.GameObjects
         public ITransformComponent Parent { get; set; }
 
         private Vector2 _position;
-        public int MapID { get; set; }
+        private int MapID;
+        private int GridID;
 
         /// <summary>
         ///     Current rotation offset of the entity.
@@ -48,7 +51,7 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    return new LocalCoordinates(_position, 0, MapID); //TODO: fix this
+                    return new LocalCoordinates(_position, GridID, MapID);
                 }
             }
             set
@@ -56,7 +59,12 @@ namespace SS14.Server.GameObjects
                 var oldPosition = _position;
                 _position = value.Position;
 
-                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                var invokeonmove = (MapID == value.MapID && GridID == value.GridID);
+                MapID = value.MapID;
+                GridID = value.GridID;
+
+                if(invokeonmove)
+                    OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }
         }
 
@@ -77,6 +85,7 @@ namespace SS14.Server.GameObjects
             {
                 var oldPosition = _position;
                 _position = value;
+                GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
 
                 OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
             }

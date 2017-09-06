@@ -34,11 +34,6 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         event TileChangedEventHandler OnTileChanged;
 
-        //TODO: Map serializer/deserializer
-        bool LoadMap(string mapName);
-
-        void SaveMap(string mapName);
-
         /// <summary>
         ///     Starts up the map system.
         /// </summary>

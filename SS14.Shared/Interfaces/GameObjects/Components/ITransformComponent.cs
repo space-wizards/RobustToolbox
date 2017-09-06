@@ -20,8 +20,6 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// </summary>
         Vector2 WorldPosition { get; }
 
-        int MapID { get; }
-
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>

@@ -475,7 +475,7 @@ namespace SS14.Server
             var defManager = IoCManager.Resolve<ITileDefinitionManager>();
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
-            NewDefaultMap(mapMgr, defManager, mapMgr.DefaultGridId);
+            NewDefaultMap(mapMgr, defManager, 1);
 
             return true;
 #if _OLD
@@ -556,7 +556,7 @@ namespace SS14.Server
         /// <param name="mapManager">The map manager to work with.</param>
         /// <param name="defManager">The definition manager to work with.</param>
         /// <param name="gridId">The ID of the grid to generate and insert into the map manager.</param>
-        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridId)
+        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridID)
         {
             mapManager.SuppressOnTileChanged = true;
             try
@@ -565,18 +565,20 @@ namespace SS14.Server
                 var floor = defManager["Floor"].TileId;
 
                 Debug.Assert(floor > 0);
-
-                var grid = mapManager.GetGrid(gridId) ?? mapManager.CreateGrid(gridId);
+                
                 var manager = IoCManager.Resolve<IServerEntityManager>();
+                var map = mapManager.CreateMap(1); //TODO: default map
+                var grid = map.GetGrid(gridID) ?? map.CreateGrid(gridID); //TODO: huh wha maybe? check grid ID
+
                 for (var y = -32; y <= 32; ++y)
                 {
                     for (var x = -32; x <= 32; ++x)
                     {
                         if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
                         {
-                            manager.ForceSpawnEntityAt("Wall", grid, new OpenTK.Vector2(x, y));
+                            manager.ForceSpawnEntityAt("Wall", new LocalCoordinates(new OpenTK.Vector2(x, y), grid));
                         }
-                        grid.SetTile(new LocalCoordinates(x, y, 0), new Tile(floor)); //TODO: Fix this
+                        grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
                     }
                 }
             }

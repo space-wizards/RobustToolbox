@@ -208,7 +208,7 @@ namespace SS14.Server.Chat
                 return;
             List<INetChannel> recipients = IoCManager.Resolve<IPlayerManager>()
                 .GetPlayersInRange(entityManager.GetEntity((int) entityId)
-                .GetComponent<ITransformComponent>().WorldPosition, withinRange)
+                .GetComponent<ITransformComponent>().Position, withinRange)
                 .Select(p => p.ConnectedClient).ToList();
 
             IoCManager.Resolve<IServerNetManager>().ServerSendToMany(message, recipients);

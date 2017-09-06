@@ -26,7 +26,7 @@ namespace SS14.Client.Placement.Modes
             if (mouseS.MapID == Coordinates.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
             currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
 

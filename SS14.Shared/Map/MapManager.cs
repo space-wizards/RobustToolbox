@@ -11,7 +11,7 @@ namespace SS14.Shared.Map
 {
     public partial class MapManager : IMapManager
     {
-        private const int NULLSPACE = 0;
+        public const int NULLSPACE = 0;
         private const int GridIndex = 0;
         private const ushort DefaultTileSize = 1;
 

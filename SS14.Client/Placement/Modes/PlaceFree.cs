@@ -16,11 +16,11 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToWorld(mouseScreen);
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             return true;
         }

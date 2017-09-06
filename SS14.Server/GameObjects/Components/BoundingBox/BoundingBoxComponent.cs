@@ -48,30 +48,29 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override void LoadParameters(YamlMappingNode mapping)
         {
-            var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
 
             YamlNode node;
             if (mapping.TryGetNode("sizeX", out node))
             {
-                var width = node.AsFloat() / tileSize;
+                var width = node.AsFloat();
                 AABB = Box2.FromDimensions(AABB.Left + (AABB.Width - width) / 2f, AABB.Top, width, AABB.Height);
             }
 
             if (mapping.TryGetNode("sizeY", out node))
             {
-                var height = node.AsFloat() / tileSize;
+                var height = node.AsFloat();
                 AABB = Box2.FromDimensions(AABB.Left, AABB.Top + (AABB.Height - height) / 2f, AABB.Width, height);
             }
 
             if (mapping.TryGetNode("offsetX", out node))
             {
-                var x = node.AsFloat() / tileSize;
+                var x = node.AsFloat();
                 AABB = Box2.FromDimensions(x - AABB.Width / 2f, AABB.Top, AABB.Width, AABB.Height);
             }
 
             if (mapping.TryGetNode("offsetY", out node))
             {
-                var y = node.AsFloat() / tileSize;
+                var y = node.AsFloat();
                 AABB = Box2.FromDimensions(AABB.Left, y - AABB.Height / 2f, AABB.Width, AABB.Height);
             }
         }

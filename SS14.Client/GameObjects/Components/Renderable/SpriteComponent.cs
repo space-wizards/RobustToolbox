@@ -16,11 +16,13 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Map;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -250,13 +252,10 @@ namespace SS14.Client.GameObjects
             Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
             string textureKey = tmp[spriteToCheck.Texture];
-            bool[,] opacityMap = TextureCache.Textures[textureKey].Opacity; //get our clickthrough 'map'
-            if (!opacityMap[spritePosition.X, spritePosition.Y]) // Check if the clicked pixel is opaque
-            {
-                return false;
-            }
+            var opacityMap = TextureCache.Textures[textureKey].Image; //get our clickthrough 'map'
 
-            return true;
+            // Check if the clicked pixel is opaque
+            return opacityMap.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A <= Limits.ClickthroughLimit;
         }
 
         public bool SpriteExists(string key)

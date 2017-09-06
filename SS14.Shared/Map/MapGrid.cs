@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenTK;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Map
 {

@@ -15,7 +15,11 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.Placement.Modes
 {
@@ -29,7 +33,11 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
+<<<<<<< HEAD
             if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+=======
+            if (currentMap == null) return false;
+>>>>>>> master-wizfederation
 
             mouseScreen = mouseS;
             mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);

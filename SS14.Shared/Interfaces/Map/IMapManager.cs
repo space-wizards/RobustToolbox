@@ -3,6 +3,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using OpenTK;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {

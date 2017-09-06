@@ -2,8 +2,9 @@
 using NUnit.Framework;
 using OpenTK;
 using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.UnitTesting.Shared.Math
+namespace SS14.UnitTesting.Shared.Maths
 {
     [TestFixture]
     internal class Direction_Test
@@ -36,7 +37,7 @@ namespace SS14.UnitTesting.Shared.Math
         [Sequential]
         public void TestDirectionToVec([ValueSource(nameof(sources))] (float, float, Direction, double) test)
         {
-            var control = new Vector2(test.Item1, test.Item2).Normalized();
+            var control = new Vector2(test.Item1, test.Item2).Normalized;
             var val = test.Item3.ToVec();
 
             Assert.That((control - val).LengthSquared, Is.AtMost(Epsilon));
@@ -46,7 +47,7 @@ namespace SS14.UnitTesting.Shared.Math
         [Sequential]
         public void TestVecToAngle([ValueSource(nameof(sources))] (float, float, Direction, double) test)
         {
-            var target = new Vector2(test.Item1, test.Item2).Normalized();
+            var target = new Vector2(test.Item1, test.Item2).Normalized;
 
             Assert.That(System.Math.Abs(target.ToAngle() - test.Item4), Is.AtMost(Epsilon));
         }
@@ -55,7 +56,7 @@ namespace SS14.UnitTesting.Shared.Math
         [Sequential]
         public void TestVector2ToDirection([ValueSource(nameof(sources))] (float, float, Direction, double) test)
         {
-            var target = new Vector2(test.Item1, test.Item2).Normalized();
+            var target = new Vector2(test.Item1, test.Item2).Normalized;
 
             Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
         }

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using OpenTK.Graphics;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {

@@ -6,7 +6,11 @@ using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Server.Interfaces.Player
 {

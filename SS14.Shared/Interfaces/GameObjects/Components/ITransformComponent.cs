@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK;
 using SS14.Shared.Maths;
 using SS14.Shared.Map;
 

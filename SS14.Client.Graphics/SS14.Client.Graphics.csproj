@@ -5,54 +5,51 @@
     <ProjectType>Local</ProjectType>
     <ProjectGuid>{302B877E-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <AssemblyKeyContainerName>
-    </AssemblyKeyContainerName>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <AssemblyKeyContainerName />
     <AssemblyName>SS14.Client.Graphics</AssemblyName>
-    <DefaultClientScript>JScript</DefaultClientScript>
-    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
-    <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder />
     <RootNamespace>SS14.Client.Graphics</RootNamespace>
-    <StartArguments>
-    </StartArguments>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <StartArguments />
+    <FileUpgradeFlags />
     <TargetFrameworkProfile />
+    <ConfigurationOverrideFile />
     <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <FileAlignment>4096</FileAlignment>
+    <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugSymbols>True</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
     <Optimize>false</Optimize>
-    <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
-    <DefineConstants>TRACE</DefineConstants>
-    <FileAlignment>4096</FileAlignment>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <Optimize>True</Optimize>
-    <OutputPath>$(SolutionDir)bin\Graphics\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <Optimize>false</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <Optimize>True</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
@@ -78,6 +75,7 @@
     <Compile Include="Enums\GraphicsEnums.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Render\GraphicsContext.cs" />
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
     <Compile Include="Lighting\ILightManager.cs" />
@@ -125,6 +123,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Settings\VideoSettings.cs" />
+    <Compile Include="View\Camera.cs" />
     <Compile Include="View\Viewport.cs">
       <SubType>Code</SubType>
     </Compile>

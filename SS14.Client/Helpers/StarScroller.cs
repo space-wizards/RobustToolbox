@@ -24,9 +24,9 @@ namespace SS14.Client.Helpers
             {
                 for (int i = 0; i < _stars.Length/4; i++)
                 {
-                    _stars[i, layer].Position = new Vector2((float) (_random.NextDouble()*CluwneLib.Screen.Size.X),
+                    _stars[i, layer].Position = new Vector2((float) (_random.NextDouble()*CluwneLib.Window.Viewport.Size.X),
                                                              (float)
-                                                             (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Height));
+                                                             (_random.NextDouble()* CluwneLib.Window.Viewport.Height));
 
                     // Select magnitude.
                     switch (layer)
@@ -64,9 +64,9 @@ namespace SS14.Client.Helpers
                 _stars[i, layer].Position.Y += _stars[i, layer].VDelta*deltaTime;
 
                 // Wrap around.
-                if (_stars[i, layer].Position.Y > CluwneLib.CurrentClippingViewport.Height)
+                if (_stars[i, layer].Position.Y > CluwneLib.Window.Viewport.Height)
                     _stars[i, layer].Position =
-                        new Vector2((float) (_random.NextDouble()*CluwneLib.CurrentClippingViewport.Width), 0);
+                        new Vector2((float) (_random.NextDouble()* CluwneLib.Window.Viewport.Width), 0);
             }
         }
 

@@ -11,6 +11,7 @@ using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -65,15 +66,15 @@ namespace SS14.Client.UserInterface.Components
                                        (int)bounds.Width, (int)bounds.Height);
 
             //Outside screen. Does not respect rotation. FIX.
-            if (ClientArea.Left >CluwneLib.Screen.Size.X)
+            if (ClientArea.Left >CluwneLib.Window.Viewport.Size.X)
                 SpriteLocation = new Vector2((0 - bounds.Width), SpriteLocation.Y);
             else if (ClientArea.Left < (0 - bounds.Width))
-                SpriteLocation = new Vector2(CluwneLib.Screen.Size.X, SpriteLocation.Y);
+                SpriteLocation = new Vector2(CluwneLib.Window.Viewport.Size.X, SpriteLocation.Y);
 
-            if (ClientArea.Top > CluwneLib.Screen.Size.Y)
+            if (ClientArea.Top > CluwneLib.Window.Viewport.Size.Y)
                 SpriteLocation = new Vector2(SpriteLocation.X, (0 - bounds.Height));
             else if (ClientArea.Top < (0 - bounds.Height))
-                SpriteLocation = new Vector2(SpriteLocation.X, CluwneLib.Screen.Size.Y);
+                SpriteLocation = new Vector2(SpriteLocation.X, CluwneLib.Window.Viewport.Size.Y);
 
             if (MouseParallax)
             {
@@ -82,13 +83,13 @@ namespace SS14.Client.UserInterface.Components
 
                 if (MouseParallaxHorizontal)
                 {
-                    ParX = Math.Abs(_uiMgr.MousePos.X - (CluwneLib.Screen.Size.X));
+                    ParX = Math.Abs(_uiMgr.MousePos.X - (CluwneLib.Window.Viewport.Size.X));
                     ParX *= ParallaxScale;
                 }
 
                 if (MouseParallaxVertical)
                 {
-                    ParY = Math.Abs(_uiMgr.MousePos.Y - ((CluwneLib.Screen.Size.Y)));
+                    ParY = Math.Abs(_uiMgr.MousePos.Y - ((CluwneLib.Window.Viewport.Size.Y)));
                     ParY *= ParallaxScale;
                 }
 

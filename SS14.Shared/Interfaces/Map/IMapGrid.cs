@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using SS14.Shared.Map;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {

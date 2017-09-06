@@ -273,12 +273,12 @@ namespace SS14.UnitTesting
             GetClock = new Clock();
 
             CluwneLib.Video.SetWindowSize(1280, 720);
-            CluwneLib.Video.SetFullscreen(false);
+            CluwneLib.Video.SetFullScreen(false);
             CluwneLib.Video.SetRefreshRate(60);
 
             CluwneLib.Initialize();
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
+            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
+            CluwneLib.Window.Closed += MainWindowRequestClose;
 
             CluwneLib.Go();
         }
@@ -288,12 +288,12 @@ namespace SS14.UnitTesting
             GetClock = new Clock();
 
             CluwneLib.Video.SetWindowSize(width, height);
-            CluwneLib.Video.SetFullscreen(fullscreen);
+            CluwneLib.Video.SetFullScreen(fullscreen);
             CluwneLib.Video.SetRefreshRate(refreshrate);
 
             CluwneLib.Initialize();
-            CluwneLib.Screen.BackgroundColor = Color.Black;
-            CluwneLib.Screen.Closed += MainWindowRequestClose;
+            CluwneLib.Window.Graphics.BackgroundColor = Color.Black;
+            CluwneLib.Window.Closed += MainWindowRequestClose;
 
             CluwneLib.Go();
         }
@@ -306,9 +306,9 @@ namespace SS14.UnitTesting
                 GetClock.Restart();
                 frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
-                CluwneLib.Screen.DispatchEvents();
+                CluwneLib.Window.DispatchEvents();
                 InjectedMethod();
-                CluwneLib.Screen.Display();
+                CluwneLib.Window.Graphics.Display();
             }
         }
 

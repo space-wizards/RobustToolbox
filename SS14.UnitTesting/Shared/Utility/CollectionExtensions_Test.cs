@@ -10,7 +10,11 @@ namespace SS14.UnitTesting.SS14.Shared.Utility
         [Test]
         public void RemoveSwapTest()
         {
-            List<int> list = new List<int> { 1, 2, 3 };
+            var list = new List<int> { 1, 2, 3 };
+            list.RemoveSwap(2);
+            Assert.That(list, Is.EqualTo(new List<int> { 1, 2 }));
+
+            list = new List<int> { 1, 2, 3 };
             list.RemoveSwap(0);
             Assert.That(list, Is.EqualTo(new List<int> { 3, 2 }));
         }

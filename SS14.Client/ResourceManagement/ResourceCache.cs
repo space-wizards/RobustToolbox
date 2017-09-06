@@ -26,6 +26,7 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Maths;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Resources
 {
@@ -310,25 +311,8 @@ namespace SS14.Client.Resources
             }
 
             Image img = new Image(stream);
-            bool[,] opacityMap = new bool[img.Size.X, img.Size.Y];
-            for (int y = 0; y < img.Size.Y; y++)
-            {
-                for (int x = 0; x < img.Size.X; x++)
-                {
-                    Color pColor = img.GetPixel(Convert.ToUInt32(x), Convert.ToUInt32(y));
-                    if (pColor.A > Limits.ClickthroughLimit)
-                    {
-                        opacityMap[x, y] = true;
-                    }
-                    else
-                    {
-                        opacityMap[x, y] = false;
-                    }
-                }
-            }
-
-            Texture texture = new Texture(img);
-            TextureInfo tmp = new TextureInfo(texture, img, opacityMap);
+            var texture = new Texture(img);
+            TextureInfo tmp = new TextureInfo(texture, img);
             TextureCache.Add(name, tmp);
             _textureToKey.Add(texture, name);
 
@@ -551,9 +535,9 @@ namespace SS14.Client.Resources
             return sprite;
         }
 
-        #endregion Resource Loading & Disposal
+#endregion Resource Loading & Disposal
 
-        #region Resource Retrieval
+#region Resource Retrieval
 
         /// <summary>
         ///  <para>Retrieves the Image with the given key from the Resource list and returns it as a Sprite.</para>
@@ -668,9 +652,9 @@ namespace SS14.Client.Resources
         }
 
 
-        #endregion Resource Retrieval
+#endregion Resource Retrieval
 
-        #endregion OldCode
+#endregion OldCode
 
         /// <summary>
         /// fetches the resource from the cache.
@@ -728,9 +712,11 @@ namespace SS14.Client.Resources
             // stop this, we failed
             if (tempRes.Fallback != null && tempRes.Fallback != path)
             {
-                TryGetResource(tempRes.Fallback, out T fallbackRes);
-                resource = fallbackRes;
-                return true;
+                if (TryGetResource(tempRes.Fallback, out T fallbackRes))
+                {
+                    resource = fallbackRes;
+                    return true;
+                }
             }
 
             resource = default(T);

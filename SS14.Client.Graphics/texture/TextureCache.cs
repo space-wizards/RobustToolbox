@@ -1,4 +1,4 @@
-using SFMLTexture = SFML.Graphics.Texture;
+﻿using SFMLTexture = SFML.Graphics.Texture;
 using SFML.Graphics;
 using System.Collections.Generic;
 
@@ -8,19 +8,17 @@ namespace SS14.Client.Graphics.TexHelpers
     {
         public SFMLTexture Texture;
         public Image Image;
-        public bool[,] Opacity;
 
-        public TextureInfo(SFMLTexture tex, Image img, bool[,] opacity)
+        public TextureInfo(SFMLTexture tex, Image img)
         {
             Texture = tex;
             Image = img;
-            Opacity = opacity;
         }
     }
 
     public static class TextureCache
     {
-        private static Dictionary<string, TextureInfo> _textures = null;
+        private static Dictionary<string, TextureInfo> _textures;
 
         public static Dictionary<string, TextureInfo> Textures
         {

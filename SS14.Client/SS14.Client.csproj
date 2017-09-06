@@ -7,24 +7,17 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{0C31DFDF-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ApplicationIcon>ss14.ico</ApplicationIcon>
-    <AssemblyKeyContainerName>
-    </AssemblyKeyContainerName>
+    <AssemblyKeyContainerName />
     <AssemblyName>SS14.Client</AssemblyName>
-    <DefaultClientScript>JScript</DefaultClientScript>
-    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
-    <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder />
     <RootNamespace>SS14.Client</RootNamespace>
-    <StartupObject>
-    </StartupObject>
-    <StartArguments>
-    </StartArguments>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
+    <StartupObject />
+    <StartArguments />
+    <FileUpgradeFlags />
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -44,47 +37,46 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <NoWarn>0649</NoWarn>
     <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile />
+    <FileAlignment>4096</FileAlignment>
+    <OutputPath>$(SolutionDir)bin\Client\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <DocumentationFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>$(SolutionDir)bin\Client\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile>
-    </ConfigurationOverrideFile>
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <DebugSymbols>False</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>$(SolutionDir)bin\Client\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <Optimize>False</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
+    <DebugSymbols>False</DebugSymbols>
+    <Optimize>True</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
@@ -346,7 +338,7 @@
   </PropertyGroup>
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared;CopyMacNatives;CopyWinNatives" />
   <Target Name="CopyMacNatives" Condition="'$(targetOS)' == 'MacOS'">
-    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libsfml-audio.2.2.0.dylib')" />
+    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Download SFML 2.4 and CSFML 2.4 for MacOS, and copy the contents of libs/ and extlibs/ in both to Third-Party/extlibs/Mac." Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libcsfml-graphics.2.4.0.dylib')" />
     <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
   </Target>
   <Target Name="CopyWinNatives" Condition="'$(targetOS)' == 'Windows'">

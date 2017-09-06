@@ -9,7 +9,13 @@ using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using OpenTK.Graphics;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+using SS14.Shared.Prototypes;
+using SS14.Shared.IoC;
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.Placement.Modes
 {
@@ -29,15 +35,21 @@ namespace SS14.Client.Placement.Modes
             {
                 var position = CluwneLib.ScreenToWorld(new Vector2i(0,0));  //Find world coordinates closest to screen origin
                 var gridstart = CluwneLib.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
+<<<<<<< HEAD
                 (float)Math.Round((position.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
                 (float)Math.Round((position.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize));
                 for (float a = gridstart.X; a < CluwneLib.ScreenViewportSize.X; a += snapsize * 32) //Iterate through screen creating gridlines
+=======
+                (float)Math.Round((position.X / snapsize), MidpointRounding.AwayFromZero) * snapsize,
+                (float)Math.Round((position.Y / snapsize), MidpointRounding.AwayFromZero) * snapsize));
+                for (float a = gridstart.X; a < CluwneLib.Window.Viewport.Size.X; a += snapsize * 32) //Iterate through screen creating gridlines
+>>>>>>> master-wizfederation
                 {
-                    CluwneLib.drawLine(a, 0, CluwneLib.ScreenViewportSize.Y, 90, 0.5f, Color4.Blue);
+                    CluwneLib.drawLine(a, 0, CluwneLib.Window.Viewport.Size.Y, 90, 0.5f, Color4.Blue);
                 }
-                for (float a = gridstart.Y; a < CluwneLib.ScreenViewportSize.Y; a += snapsize * 32)
+                for (float a = gridstart.Y; a < CluwneLib.Window.Viewport.Size.Y; a += snapsize * 32)
                 {
-                    CluwneLib.drawLine(0, a, CluwneLib.ScreenViewportSize.X, 0, 0.5f, Color4.Blue);
+                    CluwneLib.drawLine(0, a, CluwneLib.Window.Viewport.Size.X, 0, 0.5f, Color4.Blue);
                 }
             }
         }

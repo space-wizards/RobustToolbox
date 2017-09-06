@@ -36,6 +36,7 @@ using SS14.Client.Graphics.Lighting;
 using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.State.States
 {
@@ -60,7 +61,7 @@ namespace SS14.Client.State.States
 
         private List<RenderImage> _cleanupList = new List<RenderImage>();
         private List<Sprite> _cleanupSpriteList = new List<Sprite>();
-        
+
         private SpriteBatch _floorBatch;
         private SpriteBatch _gasBatch;
         private SpriteBatch _decalBatch;
@@ -173,18 +174,20 @@ namespace SS14.Client.State.States
 
         private void InitializeRenderTargets()
         {
-            _baseTarget = new RenderImage("baseTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
+            var width = CluwneLib.Window.Viewport.Size.X;
+            var height = CluwneLib.Window.Viewport.Size.Y;
+            _baseTarget = new RenderImage("baseTarget", width, height, true);
             _cleanupList.Add(_baseTarget);
 
             _baseTargetSprite = new Sprite(_baseTarget.Texture);
             _cleanupSpriteList.Add(_baseTargetSprite);
 
-            _sceneTarget = new RenderImage("sceneTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
+            _sceneTarget = new RenderImage("sceneTarget", width, height, true);
             _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage("tilesTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
+            _tilesTarget = new RenderImage("tilesTarget", width, height, true);
             _cleanupList.Add(_tilesTarget);
 
-            _overlayTarget = new RenderImage("OverlayTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, true);
+            _overlayTarget = new RenderImage("OverlayTarget", width, height, true);
             _cleanupList.Add(_overlayTarget);
 
             _overlayTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -192,18 +195,18 @@ namespace SS14.Client.State.States
             _overlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _overlayTarget.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            _composedSceneTarget = new RenderImage("composedSceneTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
+            _composedSceneTarget = new RenderImage("composedSceneTarget", width, height,
                                                  ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_composedSceneTarget);
 
-            _lightTarget = new RenderImage("lightTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, ImageBufferFormats.BufferRGB888A8);
+            _lightTarget = new RenderImage("lightTarget", width, height, ImageBufferFormats.BufferRGB888A8);
 
             _cleanupList.Add(_lightTarget);
             _lightTargetSprite = new Sprite(_lightTarget.Texture);
 
             _cleanupSpriteList.Add(_lightTargetSprite);
 
-            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
+            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", width, height,
                                                       ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_lightTargetIntermediate);
             _lightTargetIntermediateSprite = new Sprite(_lightTargetIntermediate.Texture);
@@ -231,7 +234,7 @@ namespace SS14.Client.State.States
 
         private void UpdateGUIPosition()
         {
-            _gameChat.Position = new Vector2i((int)CluwneLib.Screen.Size.X - _gameChatSize.X - 10, 10);
+            _gameChat.Position = new Vector2i((int)CluwneLib.Window.Viewport.Size.X - _gameChatSize.X - 10, 10);
         }
 
         private void InitializeGUI()
@@ -250,7 +253,7 @@ namespace SS14.Client.State.States
         private void InitalizeLighting()
         {
             shadowMapResolver = new ShadowMapResolver(ShadowmapSize.Size1024, ShadowmapSize.Size1024);
-            
+
             var lightManager = IoCManager.Resolve<ILightManager>();
             var resourceCache = IoCManager.Resolve<IResourceCache>();
 
@@ -264,20 +267,19 @@ namespace SS14.Client.State.States
             lightArea512 = new LightArea(ShadowmapSize.Size512, lightManager.LightMask);
             lightArea1024 = new LightArea(ShadowmapSize.Size1024, lightManager.LightMask);
 
-            screenShadows = new RenderImage("screenShadows", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y, ImageBufferFormats.BufferRGB888A8);
+            var width = CluwneLib.Window.Viewport.Size.X;
+            var height = CluwneLib.Window.Viewport.Size.Y;
+            screenShadows = new RenderImage("screenShadows", width, height, ImageBufferFormats.BufferRGB888A8);
 
             _cleanupList.Add(screenShadows);
             screenShadows.UseDepthBuffer = false;
-            shadowIntermediate = new RenderImage("shadowIntermediate", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
-                                                 ImageBufferFormats.BufferRGB888A8);
+            shadowIntermediate = new RenderImage("shadowIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(shadowIntermediate);
             shadowIntermediate.UseDepthBuffer = false;
-            shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
-                                                      ImageBufferFormats.BufferRGB888A8);
+            shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(shadowBlendIntermediate);
             shadowBlendIntermediate.UseDepthBuffer = false;
-            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y,
-                                                    ImageBufferFormats.BufferRGB888A8);
+            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", width, height, ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(playerOcclusionTarget);
             playerOcclusionTarget.UseDepthBuffer = false;
 
@@ -289,7 +291,7 @@ namespace SS14.Client.State.States
             playerVision.Radius = 1024;
             playerVision.Position = new Vector2();
 
-            _occluderDebugTarget = new RenderImage("debug", CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+            _occluderDebugTarget = new RenderImage("debug", width, height);
         }
 
         public void Update(FrameEventArgs e)
@@ -297,10 +299,10 @@ namespace SS14.Client.State.States
             LastUpdate = Now;
             Now = DateTime.Now;
 
-            if (CluwneLib.Screen.Size.X != _prevScreenWidth || CluwneLib.Screen.Size.Y != _prevScreenHeight)
+            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
             {
-                _prevScreenHeight = (int)CluwneLib.Screen.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Screen.Size.X;
+                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
+                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
                 UpdateGUIPosition();
             }
 
@@ -311,20 +313,19 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.WorldCenter = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
                 MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
 
         public void Render(FrameEventArgs e)
         {
-            CluwneLib.Screen.Clear(Color.Black);
+            CluwneLib.Window.Graphics.Clear(Color.Black);
 
             CalculateAllLights();
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.ScreenViewportSize = new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
                 var vp = CluwneLib.WorldViewport;
 
                 if (!bFullVision)
@@ -350,12 +351,12 @@ namespace SS14.Client.State.States
 
                 _sceneTarget.EndDrawing();
                 _sceneTarget.ResetCurrentRenderTarget();
-                //_sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
 
                 //Debug.DebugRendertarget(_sceneTarget);
 
                 if (bFullVision)
-                    _sceneTarget.Blit(0, 0, CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
+                    _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
                 else
                     LightScene();
 
@@ -801,9 +802,6 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
-            CluwneLib.ScreenViewportSize =
-                new Vector2u(CluwneLib.Screen.Size.X, CluwneLib.Screen.Size.Y);
-
             UserInterfaceManager.ResizeComponents();
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
@@ -1166,8 +1164,8 @@ namespace SS14.Client.State.States
             _composedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
             Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
-            float texratiox = (float)CluwneLib.CurrentClippingViewport.Width / outofview.Texture.Size.X;
-            float texratioy = (float)CluwneLib.CurrentClippingViewport.Height / outofview.Texture.Size.Y;
+            float texratiox = (float)CluwneLib.Window.Viewport.Width / outofview.Texture.Size.X;
+            float texratioy = (float)CluwneLib.Window.Viewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4(texratiox, texratioy, 0, 0);
 
             LightblendTechnique["FinalLightBlend"].SetUniform("PlayerViewTexture", playerOcclusionTarget);
@@ -1188,7 +1186,7 @@ namespace SS14.Client.State.States
             PlayerPostProcess();
 
             //redraw composed scene
-            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Screen.Size.X, (uint)CluwneLib.Screen.Size.Y, Color.White, BlitterSizeMode.Crop);
+            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Window.Viewport.Size.X, (uint)CluwneLib.Window.Viewport.Size.Y, Color.White, BlitterSizeMode.Crop);
         }
 
         private void BlurShadowMap()

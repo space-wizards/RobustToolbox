@@ -10,7 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.GameObjects
 {
@@ -23,7 +27,7 @@ namespace SS14.Client.GameObjects
         {
             Range *= Range; // Square it here to avoid Sqrt
 
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
                 var relativePosition = worldPos.Position - transform.WorldPosition;
@@ -36,7 +40,7 @@ namespace SS14.Client.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
@@ -56,7 +60,7 @@ namespace SS14.Client.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
@@ -76,7 +80,7 @@ namespace SS14.Client.GameObjects
 
         public bool AnyEntitiesIntersecting(Box2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {

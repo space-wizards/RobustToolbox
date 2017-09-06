@@ -11,7 +11,11 @@ using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Shared.IoC;
 using SS14.Client.Interfaces.GameObjects;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.Placement.Modes
 {

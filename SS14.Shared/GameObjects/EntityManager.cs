@@ -6,9 +6,11 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
+using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.GameObjects
 {
@@ -28,6 +30,10 @@ namespace SS14.Shared.GameObjects
         # endregion Dependencies
 
         protected readonly Dictionary<int, IEntity> _entities = new Dictionary<int, IEntity>();
+        /// <summary>
+        /// List of all entities, used for iteration.
+        /// </summary>
+        private readonly List<IEntity> _allEntities = new List<IEntity>();
         protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid = 0;
 
@@ -56,6 +62,7 @@ namespace SS14.Shared.GameObjects
         {
             EntitySystemManager.Update(frameTime);
             ProcessEventQueue();
+            CullDeletedEntities();
         }
 
         /// <summary>
@@ -77,7 +84,8 @@ namespace SS14.Shared.GameObjects
         /// <returns>Entity or null if entity id doesn't exist</returns>
         public IEntity GetEntity(int eid)
         {
-            return _entities.ContainsKey(eid) ? _entities[eid] : null;
+            TryGetEntity(eid, out var entity);
+            return entity;
         }
 
         /// <summary>
@@ -88,19 +96,25 @@ namespace SS14.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(int eid, out IEntity entity)
         {
-            entity = GetEntity(eid);
+            if (_entities.TryGetValue(eid, out entity) && !entity.Deleted)
+            {
+                return true;
+            }
 
-            return entity != null;
+            // entity might get assigned if it's deleted but still found,
+            // prevent somebody from being "smart".
+            entity = null;
+            return false;
         }
 
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
-            return _entities.Values.Where(e => e.Match(query));
+            return GetEntities().Where(e => e.Match(query));
         }
 
         public IEnumerable<IEntity> GetEntitiesAt(Vector2 position)
         {
-            foreach (var entity in _entities.Values)
+            foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
                 if (FloatMath.CloseTo(transform.Position.X, position.X) && FloatMath.CloseTo(transform.Position.Y, position.Y))
@@ -110,6 +124,11 @@ namespace SS14.Shared.GameObjects
             }
         }
 
+        public IEnumerable<IEntity> GetEntities()
+        {
+            return _allEntities.Where(e => !e.Deleted);
+        }
+
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
@@ -117,14 +136,13 @@ namespace SS14.Shared.GameObjects
         public void DeleteEntity(IEntity e)
         {
             e.Shutdown();
-            _entities.Remove(e.Uid);
         }
 
         public void DeleteEntity(int entityUid)
         {
-            if (EntityExists(entityUid))
+            if (!TryGetEntity(entityUid, out var entity))
             {
-                DeleteEntity(GetEntity(entityUid));
+                DeleteEntity(entity);
             }
             else
             {
@@ -134,7 +152,7 @@ namespace SS14.Shared.GameObjects
 
         public bool EntityExists(int eid)
         {
-            return _entities.ContainsKey(eid);
+            return TryGetEntity(eid, out var _);
         }
 
         /// <summary>
@@ -142,7 +160,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public void FlushEntities()
         {
-            foreach (IEntity e in _entities.Values)
+            foreach (IEntity e in GetEntities())
             {
                 e.Shutdown();
             }
@@ -173,6 +191,7 @@ namespace SS14.Shared.GameObjects
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             IEntity entity = prototype.CreateEntity(uid, this, EntityNetworkManager, ComponentFactory);
             _entities[uid] = entity;
+            _allEntities.Add(entity);
 
             // We batch the first set of initializations together.
             if (Initialized)
@@ -198,7 +217,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         protected void InitializeEntities()
         {
-            foreach (var entity in _entities.Values.Where(e => !e.Initialized))
+            foreach (var entity in GetEntities().Where(e => !e.Initialized))
             {
                 InitializeEntity(entity);
             }
@@ -361,5 +380,26 @@ namespace SS14.Shared.GameObjects
         }
 
         #endregion message processing
+
+        private void CullDeletedEntities()
+        {
+            // Culling happens in updates.
+            // It doesn't matter because to-be culled entities can't be accessed.
+            // This should prevent most cases of "somebody is iterating while we're removing things"
+            for (var i = 0; i < _allEntities.Count; i++)
+            {
+                var entity = _allEntities[i];
+                if (!entity.Deleted)
+                {
+                    continue;
+                }
+
+                _allEntities.RemoveSwap(i);
+                _entities.Remove(entity.Uid);
+
+                // Process the one we just swapped next.
+                i--;
+            }
+        }
     }
 }

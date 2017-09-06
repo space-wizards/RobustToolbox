@@ -20,12 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-<<<<<<< HEAD
-using OpenTK.Graphics;
 using SS14.Shared.Map;
-=======
 using Vector2 = SS14.Shared.Maths.Vector2;
->>>>>>> master-wizfederation
 
 namespace SS14.Client.GameObjects
 {

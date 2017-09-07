@@ -37,7 +37,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.TRANSFORM;
 
         /// <inheritdoc />
-        public event EventHandler<VectorEventArgs> OnMove;
+        public event EventHandler<MoveEventArgs> OnMove;
 
         /// <inheritdoc />
         public LocalCoordinates Position
@@ -55,15 +55,13 @@ namespace SS14.Server.GameObjects
             }
             set
             {
-                var oldPosition = _position;
+                var oldPosition = Position;
                 _position = value.Position;
-
-                var invokeonmove = (MapID == value.MapID && GridID == value.GridID);
+                
                 MapID = value.MapID;
                 GridID = value.GridID;
 
-                if(invokeonmove)
-                    OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                OnMove?.Invoke(this, new MoveEventArgs(Position, value));
             }
         }
 
@@ -82,18 +80,18 @@ namespace SS14.Server.GameObjects
             }
             set
             {
-                var oldPosition = _position;
+                var oldPosition = Position;
                 _position = value;
                 GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
 
-                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                OnMove?.Invoke(this, new MoveEventArgs(Position, new LocalCoordinates(_position, GridID, MapID)));
             }
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(WorldPosition, Rotation, Parent);
+            return new TransformComponentState(Position, Rotation, Parent);
         }
 
         /// <summary>

@@ -33,7 +33,7 @@ namespace SS14.Client.GameObjects
         public override Type StateType => typeof(TransformComponentState);
 
         /// <inheritdoc />
-        public event EventHandler<VectorEventArgs> OnMove;
+        public event EventHandler<MoveEventArgs> OnMove;
 
         public LocalCoordinates Position => new LocalCoordinates(WorldPosition, GridID, MapID);
 
@@ -43,10 +43,12 @@ namespace SS14.Client.GameObjects
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
 
-            if (WorldPosition != newState.Position)
+            if (Position != newState.Coordinates)
             {
-                OnMove?.Invoke(this, new VectorEventArgs(WorldPosition, newState.Position));
-                WorldPosition = newState.Position;
+                OnMove?.Invoke(this, new MoveEventArgs(Position, newState.Coordinates));
+                WorldPosition = newState.Coordinates.Position;
+                MapID = newState.Coordinates.MapID;
+                GridID = newState.Coordinates.GridID;
             }
 
             if (Parent != newState.Parent)

@@ -148,20 +148,20 @@ namespace SS14.Client.GameObjects
             base.Shutdown();
         }
 
-        private void OnMove(object sender, VectorEventArgs args)
+        private void OnMove(object sender, MoveEventArgs args)
         {
-            UpdateLightPosition();
+            UpdateLightPosition(args.NewPosition);
+        }
+
+        protected void UpdateLightPosition(LocalCoordinates NewPosition)
+        {
+            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
         }
 
         protected void UpdateLightPosition()
         {
             var transform = Owner.GetComponent<ITransformComponent>();
             UpdateLightPosition(transform.Position);
-        }
-
-        protected void UpdateLightPosition(LocalCoordinates NewPosition)
-        {
-            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
         }
 
         public override void Update(float frameTime)

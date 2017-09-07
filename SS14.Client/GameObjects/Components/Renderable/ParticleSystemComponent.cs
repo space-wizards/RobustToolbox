@@ -40,10 +40,10 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(ParticleSystemComponentState);
 
-        public void OnMove(object sender, VectorEventArgs args)
+        public void OnMove(object sender, MoveEventArgs args)
         {
-            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2(args.NewPosition.Position.X, args.NewPosition.Position.Y) -
+                         new Vector2(args.OldPosition.Position.X, args.OldPosition.Position.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);

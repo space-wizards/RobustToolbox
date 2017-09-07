@@ -2,6 +2,7 @@
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Map;
 
 namespace SS14.Shared.GameObjects
 {
@@ -19,7 +20,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        public readonly Vector2 Position;
+        public readonly LocalCoordinates Coordinates;
 
         /// <summary>
         ///     Current rotation offset of the entity.
@@ -32,10 +33,10 @@ namespace SS14.Shared.GameObjects
         /// <param name="position">Current position offset of the entity.</param>
         /// <param name="rotation">Current direction offset of the entity.</param>
         /// <param name="parent">Current parent transform of this entity.</param>
-        public TransformComponentState(Vector2 position, Angle rotation, ITransformComponent parent)
+        public TransformComponentState(LocalCoordinates position, Angle rotation, ITransformComponent parent)
             : base(NetIDs.TRANSFORM)
         {
-            Position = position;
+            Coordinates = position;
             Rotation = rotation;
             Parent = parent;
         }

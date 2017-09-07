@@ -27,6 +27,7 @@ namespace SS14.Shared.Map
         }
     }
 
+    [Serializable]
     public class LocalCoordinates : Coordinates
     {
         public int GridID;

@@ -817,7 +817,7 @@ namespace SS14.Client.State.States
 
         #endregion State
 
-        private void OnPlayerMove(object sender, VectorEventArgs args)
+        private void OnPlayerMove(object sender, MoveEventArgs args)
         {
             //Recalculate scene batches for drawing.
             RecalculateScene();

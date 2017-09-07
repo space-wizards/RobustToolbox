@@ -54,11 +54,10 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
                 return Box2.FromDimensions(
-                    aaabb.Left / tileSize, aaabb.Top / tileSize,
-                    aaabb.Width / tileSize, aaabb.Height / tileSize
+                    aaabb.Left, aaabb.Top,
+                    aaabb.Width, aaabb.Height
                     );
             }
         }
@@ -69,10 +68,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-
-                return Box2.FromDimensions(0, 0, sprite.AABB.Width / (float)tileSize,
-                                                 sprite.AABB.Height / (float)tileSize);
+                return Box2.FromDimensions(0, 0, sprite.AABB.Width, sprite.AABB.Height);
             }
         }
 
@@ -234,8 +230,8 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
-            SetSpriteCenter(renderPos);
+            var renderPos = CluwneLib.WorldToScreen(ownerPos);
+            SetSpriteCenter(renderPos.Position);
             var bounds = sprite.AABB;
 
             if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
@@ -263,7 +259,7 @@ namespace SS14.Client.GameObjects
             var aabb = AABB;
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition),
                                    new Vector2(), aabb);
         }
 

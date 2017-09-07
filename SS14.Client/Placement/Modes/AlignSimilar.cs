@@ -30,7 +30,7 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
             mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
@@ -38,7 +38,7 @@ namespace SS14.Client.Placement.Modes
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -50,7 +50,7 @@ namespace SS14.Client.Placement.Modes
                 where entity.Prototype == pManager.CurrentPrototype
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).WorldPosition - mouseCoords).LengthSquared
+                        ).WorldPosition - mouseCoords.Position).LengthSquared
                     ascending
                 select entity;
 
@@ -77,9 +77,9 @@ namespace SS14.Client.Placement.Modes
                     };
 
                     Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseCoords).LengthSquared ascending select side).First();
+                        (from Vector2 side in sides orderby (side - mouseCoords.Position).LengthSquared ascending select side).First();
 
-                    mouseCoords = closestSide;
+                    mouseCoords = new LocalCoordinates(closestSide, mouseCoords.Grid);
                     mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
                 }
             }

@@ -171,7 +171,7 @@ namespace SS14.Client.Placement
 
         public void Update(ScreenCoordinates mouseScreen)
         {
-            if (currentMap == null || CurrentPermission == null || CurrentMode == null) return;
+            if (mouseScreen.MapID == MapManager.NULLSPACE || CurrentPermission == null || CurrentMode == null) return;
 
             ValidPosition = CurrentMode.Update(mouseScreen);
         }

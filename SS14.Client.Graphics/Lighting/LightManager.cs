@@ -100,7 +100,7 @@ namespace SS14.Client.Graphics.Lighting
 
         public ILight[] lightsInRadius(Vector2 point, float radius)
         {
-            return _lights.FindAll(l => Math.Abs((l.Position - point).LengthSquared) <= radius * radius).ToArray();
+            return _lights.FindAll(l => Math.Abs((l.Coordinates.Position - point).LengthSquared) <= radius * radius).ToArray();
         }
 
         public ILight[] LightsIntersectingPoint(Vector2 point)

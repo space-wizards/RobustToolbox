@@ -87,7 +87,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.WorldPosition.Position))
+                    if (position.Contains(transform.WorldPosition))
                     {
                         return true;
                     }

@@ -53,11 +53,12 @@ namespace SS14.Client.Placement.Modes
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - mouseCoords).LengthSquared ascending
+                                    orderby (node - mouseCoords.Position).LengthSquared ascending
                                     select node).First();
 
-            mouseCoords = closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
-                                                    pManager.CurrentPrototype.PlacementOffset.Y);
+            mouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
+                                                                         pManager.CurrentPrototype.PlacementOffset.Y),
+                                               mouseCoords.Grid);
             mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
             return true;

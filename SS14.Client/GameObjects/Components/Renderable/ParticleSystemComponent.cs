@@ -75,12 +75,11 @@ namespace SS14.Client.GameObjects
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
-            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().WorldPosition);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
-                particleSystem.Value.Move(renderPos);
+                particleSystem.Value.Move(renderPos.Position);
                 particleSystem.Value.Render();
             }
         }

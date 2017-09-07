@@ -20,6 +20,7 @@ namespace SS14.Shared.Map
         public void Initialize()
         {
             NetSetup();
+            CreateMap(MapManager.NULLSPACE);
         }
 
         /// <inheritdoc />
@@ -133,7 +134,7 @@ namespace SS14.Shared.Map
         public bool LoadMap(string mapName)
         {
             var defManager = IoCManager.Resolve<ITileDefinitionManager>();
-
+            
             NewDefaultMap(this, defManager, 1);
 
             return true;

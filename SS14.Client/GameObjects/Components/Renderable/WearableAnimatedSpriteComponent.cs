@@ -115,8 +115,7 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = NotWornSprite;
             var bounds = spriteToRender.GetLocalBounds();
 
-            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().WorldPosition);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
             spriteToRender.Position = new Vector2f(renderPos.X - (bounds.Width / 2),
                                                                renderPos.Y - (bounds.Height / 2));
 

@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,7 +69,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         /// <param name="worldPos">The location of the tile in world coordinates.</param>
         /// <returns></returns>
-        IMapGrid FindGridAt(Vector2 worldPos);
+        IMapGrid FindGridAt(Maths.Vector2 worldPos);
 
         /// <summary>
         ///     Finds all grids that intersect the rectangle in the world.

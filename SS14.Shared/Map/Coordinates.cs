@@ -1,6 +1,6 @@
-﻿using OpenTK;
-using SS14.Shared.Interfaces.Map;
+﻿using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;

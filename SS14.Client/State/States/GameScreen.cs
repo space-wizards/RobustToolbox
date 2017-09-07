@@ -67,8 +67,8 @@ namespace SS14.Client.State.States
         private SpriteBatch _decalBatch;
 
         #region Mouse/Camera stuff
-        public Vector2i MousePosScreen = new Vector2i();
-        public Vector2 MousePosWorld = new Vector2();
+        public ScreenCoordinates MousePosScreen = new ScreenCoordinates(0,0,0);
+        public LocalCoordinates MousePosWorld = new LocalCoordinates(0,0,0,0);
         #endregion Mouse/Camera stuff
 
         #region UI Variables
@@ -289,7 +289,7 @@ namespace SS14.Client.State.States
             playerVision = lightManager.CreateLight();
             playerVision.Color = Color4.Blue;
             playerVision.Radius = 1024;
-            playerVision.Position = new Vector2();
+            playerVision.Coordinates = new LocalCoordinates(0,0,0,0);
 
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
@@ -308,13 +308,13 @@ namespace SS14.Client.State.States
 
             _componentManager.Update((float)e.Time);
             _entityManager.Update((float)e.Time);
-            PlacementManager.Update(MousePosScreen, MapManager);
+            PlacementManager.Update(MousePosScreen);
             PlayerManager.Update((float)e.Time);
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
-                MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
 
@@ -438,7 +438,7 @@ namespace SS14.Client.State.States
                         Color4.Blue.WithAlpha(64));
 
                 // Player position debug
-                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
                 Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
@@ -449,8 +449,8 @@ namespace SS14.Client.State.States
                 CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color4.White, font);
 
                 // Mouse position debug
-                Vector2i mouseScreenPos = MousePosScreen; // default to screen space
-                Vector2 mouseWorldOffset = CluwneLib.ScreenToWorld(MousePosScreen);
+                Vector2i mouseScreenPos = (Vector2i)MousePosScreen.Position; // default to screen space
+                Vector2 mouseWorldOffset = CluwneLib.ScreenToCoordinates(MousePosScreen).Position;
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
                 CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color4.White, font);
                 CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color4.White, font);
@@ -601,7 +601,7 @@ namespace SS14.Client.State.States
 
             // Find all the entities intersecting our click
             IEnumerable<IEntity> entities =
-                _entityManager.GetEntitiesIntersecting(MousePosWorld);
+                _entityManager.GetEntitiesIntersecting(MousePosWorld.Position);
 
             // Check the entities against whether or not we can click them
             var clickedEntities = new List<ClickData>();
@@ -632,9 +632,9 @@ namespace SS14.Client.State.States
                 return;
             }
 
-            // Check whether click is outside our 1.5 tile range
-            float checkDistance = 1.5f * MapManager.TileSize;
-            var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position - entToClick.GetComponent<ITransformComponent>().Position;
+            // Check whether click is outside our 1.5 meter range
+            float checkDistance = 1.5f;
+            var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition - entToClick.GetComponent<ITransformComponent>().WorldPosition;
             if (dist.Length > checkDistance)
                 return;
 
@@ -659,8 +659,15 @@ namespace SS14.Client.State.States
 
         public void MouseMove(MouseMoveEventArgs e)
         {
-            MousePosScreen = new Vector2i(e.X, e.Y);
-            MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen);
+            if(PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
+            {
+                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.Position.MapID);
+            }
+            else
+            {
+                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), Shared.Map.MapManager.NULLSPACE);
+            }
+            MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
         }
 
@@ -1026,16 +1033,17 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                playerVision.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                var playerposition = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                playerVision.Coordinates = playerposition;
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
-                area.LightPosition = playerVision.Position; // Set the light position
+                area.LightPosition = playerVision.Coordinates.Position; // Set the light position
 
-                TileRef TileReference = MapManager.GetDefaultGrid().GetTile(playerVision.Position);
+                TileRef TileReference = playerposition.Grid.GetTile(playerposition);
 
                 if (TileReference.TileDef.IsOpaque)
                 {
-                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + MapManager.TileSize + 1);
+                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + playerposition.Grid.TileSize + 1);
                 }
 
                 area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
@@ -1093,7 +1101,7 @@ namespace SS14.Client.State.States
 
             foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea).Where(t => t.Name == "Wall")) //TODO: Replace with component or variable
             {
-                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(t.GetComponent<ITransformComponent>().Position));
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(t.GetComponent<ITransformComponent>().WorldPosition));
                 MapRenderer.RenderPos(t, pos.X, pos.Y);
             }
         }
@@ -1112,7 +1120,8 @@ namespace SS14.Client.State.States
         /// </summary>
         private void DrawTiles(Box2 vision)
         {
-            var tiles = MapManager.GetDefaultGrid().GetTilesIntersecting(vision, false);
+            var position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+            var tiles = position.Grid.GetTilesIntersecting(vision, false);
 
             MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch);
         }
@@ -1226,15 +1235,15 @@ namespace SS14.Client.State.States
             ILightArea area = light.LightArea;
             if (area.Calculated)
                 return;
-            area.LightPosition = light.Position; //mousePosWorld; // Set the light position
-            TileRef t = MapManager.GetDefaultGrid().GetTile(light.Position);
+            area.LightPosition = light.Coordinates.Position; //mousePosWorld; // Set the light position
+            TileRef t = light.Coordinates.Grid.GetTile(light.Coordinates);
             if (t.Tile.IsEmpty)
                 return;
             if (t.TileDef.IsOpaque)
             {
                 area.LightPosition = new Vector2(area.LightPosition.X,
                                                   t.Y +
-                                                  MapManager.TileSize + 1);
+                                                  light.Coordinates.Grid.TileSize + 1);
             }
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black

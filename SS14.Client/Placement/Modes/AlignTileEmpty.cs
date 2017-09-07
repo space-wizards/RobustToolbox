@@ -24,12 +24,12 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
             mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseCoords);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -41,14 +41,14 @@ namespace SS14.Client.Placement.Modes
             {
                 mouseCoords = new LocalCoordinates(currentTile.X + 0.5f,
                                                   currentTile.Y + 0.5f,
-                                                  mouseS.MapID);
+                                                  mouseCoords.Grid);
                 mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
             else
             {
                 mouseCoords = new LocalCoordinates(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
                                                   currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y,
-                                                  mouseS.MapID);
+                                                  mouseCoords.Grid);
                 mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
             return failtoplace;

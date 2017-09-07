@@ -30,7 +30,7 @@ namespace SS14.Client.Placement.Modes
             base.Render();
             if (ongrid)
             {
-                var position = CluwneLib.ScreenToWorld(new Vector2i(0,0));  //Find world coordinates closest to screen origin
+                var position = CluwneLib.ScreenToCoordinates(new ScreenCoordinates(0, 0, mouseCoords.MapID));  //Find world coordinates closest to screen origin
                 var gridstart = CluwneLib.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
 
                 (float)Math.Round((position.X / snapsize), MidpointRounding.AwayFromZero) * snapsize,
@@ -48,7 +48,7 @@ namespace SS14.Client.Placement.Modes
 
         public override bool Update(ScreenCoordinates mouseS)
         {
-            if (mouseS.MapID == Coordinates.NULLSPACE) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
             snapsize = mouseCoords.Grid.SnapSize; //Find snap size.

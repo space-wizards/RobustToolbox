@@ -74,7 +74,7 @@ namespace SS14.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(tablePath, null, CVarFlags.NONE) { Value = TypeConvert(obj) };
+                    var cVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
                     _configVars.Add(tablePath, cVar);
                 }
             }
@@ -164,7 +164,7 @@ namespace SS14.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void RegisterCVar(string name, object defaultValue, CVarFlags flags = CVarFlags.NONE)
+        public void RegisterCVar(string name, object defaultValue, CVar flags = CVar.NONE)
         {
             if (_configVars.TryGetValue(name, out ConfigVar cVar))
             {
@@ -246,7 +246,7 @@ namespace SS14.Shared.Configuration
             /// everything after is the CVar name in the TOML document.</param>
             /// <param name="defaultValue">The default value of this CVar.</param>
             /// <param name="flags">Optional flags to modify the behavior of this CVar.</param>
-            public ConfigVar(string name, object defaultValue, CVarFlags flags)
+            public ConfigVar(string name, object defaultValue, CVar flags)
             {
                 Name = name;
                 DefaultValue = defaultValue;
@@ -266,7 +266,7 @@ namespace SS14.Shared.Configuration
             /// <summary>
             ///     Optional flags to modify the behavior of this CVar.
             /// </summary>
-            public CVarFlags Flags { get; set; }
+            public CVar Flags { get; set; }
 
             /// <summary>
             ///     The current value of this CVar.

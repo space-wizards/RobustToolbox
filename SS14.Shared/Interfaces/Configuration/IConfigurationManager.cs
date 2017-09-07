@@ -26,7 +26,7 @@ namespace SS14.Shared.Interfaces.Configuration
         /// everything after is the CVar name in the TOML document.</param>
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
-        void RegisterCVar(string name, object defaultValue, CVarFlags flags = CVarFlags.NONE);
+        void RegisterCVar(string name, object defaultValue, CVar flags = CVar.NONE);
 
         /// <summary>
         /// Is the named CVar already registered?

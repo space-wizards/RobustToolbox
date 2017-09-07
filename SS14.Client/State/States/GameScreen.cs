@@ -133,7 +133,7 @@ namespace SS14.Client.State.States
         public void Startup()
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
-            manager.RegisterCVar("player.name", "Joe Genero", CVarFlags.ARCHIVE);
+            manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
             LastUpdate = DateTime.Now;
             Now = DateTime.Now;

@@ -338,7 +338,7 @@
   </PropertyGroup>
   <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared;CopyMacNatives;CopyWinNatives" />
   <Target Name="CopyMacNatives" Condition="'$(targetOS)' == 'MacOS'">
-    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Download SFML 2.4 and CSFML 2.4 for MacOS, and copy the contents of libs/ and extlibs/ in both to Third-Party/extlibs/Mac." Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libcsfml-graphics.2.4.0.dylib')" />
+    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Download SFML 2.4 and CSFML 2.4 for MacOS, and copy the contents of libs/ and extlibs/ in both to Third-Party/extlibs/Mac. You will have to edit the dylib ID's and reference paths with InstallNameTool (https://code.google.com/archive/p/install-name-tool-gui/). Open each file, edit their ID so they match the file name, delete any @rpath's, and fix the freetype.framework path in sfmlgraphic and audio." Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libcsfml-graphics.2.4.0.dylib')" />
     <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
   </Target>
   <Target Name="CopyWinNatives" Condition="'$(targetOS)' == 'Windows'">

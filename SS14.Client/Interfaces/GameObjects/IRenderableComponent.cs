@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
@@ -19,5 +19,6 @@ namespace SS14.Client.Interfaces.GameObjects
         void UnsetMaster();
         void AddSlave(IRenderableComponent slavecompo);
         void RemoveSlave(IRenderableComponent slavecompo);
+        int MapID { get; }
     }
 }

@@ -327,6 +327,7 @@ namespace SS14.Client.State.States
             if (PlayerManager.ControlledEntity != null)
             {
                 var vp = CluwneLib.WorldViewport;
+                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.MapID;
 
                 if (!bFullVision)
                 {
@@ -345,7 +346,7 @@ namespace SS14.Client.State.States
                 //PreOcclusion
                 RenderTiles();
 
-                RenderComponents((float)e.Time, vp);
+                RenderComponents((float)e.Time, vp, map);
 
                 RenderOverlay();
 
@@ -1132,7 +1133,7 @@ namespace SS14.Client.State.States
         /// Render the renderables
         /// </summary>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        private void RenderComponents(float frameTime, Box2 viewPort)
+        private void RenderComponents(float frameTime, Box2 viewPort, int argMapLevel)
         {
             IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
                                           .Cast<IComponent>()
@@ -1140,7 +1141,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                 where c.DrawDepth < DrawDepth.MobBase
+                                                                 where c.DrawDepth < DrawDepth.MobBase && 
+                                                                       c.MapID == argMapLevel
                                                                  select c;
 
             RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
@@ -1149,7 +1151,8 @@ namespace SS14.Client.State.States
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending
                                                                  where c.DrawDepth >= DrawDepth.MobBase &&
-                                                                       c.DrawDepth < DrawDepth.WallTops
+                                                                       c.DrawDepth < DrawDepth.WallTops &&
+                                                                       c.MapID == argMapLevel
                                                                  select c;
 
             RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),
@@ -1157,7 +1160,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
                                                                    orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                   where c.DrawDepth >= DrawDepth.WallTops
+                                                                   where c.DrawDepth >= DrawDepth.WallTops &&
+                                                                         c.MapID == argMapLevel
                                                                    select c;
 
             RenderList(new Vector2(viewPort.Left, viewPort.Top), new Vector2(viewPort.Right, viewPort.Bottom),

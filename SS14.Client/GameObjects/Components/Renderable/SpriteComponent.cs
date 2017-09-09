@@ -45,6 +45,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         public Color4 Color { get; set; } = Color4.White;
+        public int MapID {get; private set;}
 
         public override Type StateType => typeof(SpriteComponentState);
 
@@ -150,6 +151,20 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove += OnMove;
+        }
+
+        public override void Shutdown()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove -= OnMove;
+            base.Shutdown();
+        }
+
+        public void OnMove(object sender, MoveEventArgs args)
+        {
+            MapID = args.NewPosition.MapID;
         }
 
         public void ClearSprites()

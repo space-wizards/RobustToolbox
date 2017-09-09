@@ -38,6 +38,7 @@ namespace SS14.Client.GameObjects
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
         public Color4 Color { get; set; } = Color4.White;
+        public int MapID { get; private set; }
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 
@@ -81,6 +82,20 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove += OnMove;
+        }
+
+        public override void Shutdown()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove -= OnMove;
+            base.Shutdown();
+        }
+
+        public void OnMove(object sender, MoveEventArgs args)
+        {
+            MapID = args.NewPosition.MapID;
         }
 
         public void SetSprite()

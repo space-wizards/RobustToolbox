@@ -69,6 +69,25 @@ namespace SS14.Shared.Map
             return _Maps[mapID];
         }
 
+        public bool TryGetMap(int mapID, out IMap map)
+        {
+            if (_Maps.ContainsKey(mapID))
+            {
+                map = _Maps[mapID];
+                return true;
+            }
+            map = null;
+            return false;
+        }
+
+        public IEnumerable<IMap> GetAllMaps()
+        {
+            foreach(var kmap in _Maps)
+            {
+                yield return kmap.Value;
+            }
+        }
+
         #endregion MapAccess
 
         #region File Operations

@@ -568,7 +568,7 @@ namespace SS14.Server
                 
                 var manager = IoCManager.Resolve<IServerEntityManager>();
                 var map = mapManager.CreateMap(1); //TODO: default map
-                var grid = map.GetGrid(gridID) ?? map.CreateGrid(gridID); //TODO: huh wha maybe? check grid ID
+                var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
 
                 for (var y = -32; y <= 32; ++y)
                 {

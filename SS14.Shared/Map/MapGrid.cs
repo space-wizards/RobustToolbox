@@ -84,7 +84,7 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     The length of the side of a square tile in world units.
         /// </summary>
-        public ushort TileSize { get; set; }
+        public ushort TileSize { get; set; } = 1;
 
         /// <inheritdoc />
         public Vector2 WorldPosition { get; set; }

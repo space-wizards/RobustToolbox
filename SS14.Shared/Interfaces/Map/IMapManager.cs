@@ -41,5 +41,7 @@ namespace SS14.Shared.Interfaces.Map
         void Initialize();
 
         void SendMap(INetChannel channel);
+
+        bool TryGetMap(int mapID, out IMap map);
     }
 }

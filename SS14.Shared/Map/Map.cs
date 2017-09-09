@@ -82,6 +82,14 @@ namespace SS14.Shared.Map
             return GetGrid(DefaultGridIndex);
         }
 
+        public IEnumerable<IMapGrid> GetAllGrids()
+        {
+            foreach(var kgrid in _grids)
+            {
+                yield return kgrid.Value;
+            }
+        }
+
         /// <summary>
         ///     Deletes the grid associated with the given grid ID.
         /// </summary>

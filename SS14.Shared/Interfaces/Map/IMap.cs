@@ -79,5 +79,7 @@ namespace SS14.Shared.Interfaces.Map
         IEnumerable<IMapGrid> FindGridsIntersecting(Box2 worldArea);
 
         #endregion
+
+        IEnumerable<IMapGrid> GetAllGrids();
     }
 }

@@ -29,6 +29,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.Placement
 {
@@ -244,21 +245,21 @@ namespace SS14.Client.Placement
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
 
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
+            var message = NetworkManager.CreateNetMessage<MsgPlacement>();
+            message.PlaceType = PlacementManagerMessage.RequestPlacement;
 
-            message.Write((byte)NetMessages.PlacementManagerMessage);
-            message.Write((byte)PlacementManagerMessage.RequestPlacement);
-            message.Write(CurrentMode.ModeName);
+            message.Align = CurrentMode.ModeName;
+            message.IsTile = CurrentPermission.IsTile;
 
-            message.Write(CurrentPermission.IsTile);
+            if (CurrentPermission.IsTile) message.TileType = CurrentPermission.TileType;
+            else message.EntityTemplateName = CurrentPermission.EntityType;
 
-            if (CurrentPermission.IsTile) message.Write(CurrentPermission.TileType);
-            else message.Write(CurrentPermission.EntityType);
+            message.XValue = CurrentMode.mouseCoords.X;
+            message.YValue = CurrentMode.mouseCoords.Y;
+            message.GridIndex = CurrentMode.mouseCoords.GridID;
+            message.MapIndex = CurrentMode.mouseCoords.MapID;
 
-            message.Write(CurrentMode.mouseCoords.X);
-            message.Write(CurrentMode.mouseCoords.Y);
-
-            message.Write((byte)Direction);
+            message.DirRcv = Direction;
 
             NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
         }

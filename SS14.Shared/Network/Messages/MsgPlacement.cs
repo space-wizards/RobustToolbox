@@ -69,8 +69,10 @@ namespace SS14.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     buffer.Write(Align);
                     buffer.Write(IsTile);
+
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);
+
                     buffer.Write(XValue);
                     buffer.Write(YValue);
                     buffer.Write(GridIndex);

@@ -51,8 +51,10 @@ namespace SS14.Client.Placement.Modes
             if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            snapsize = mouseCoords.Grid.SnapSize; //Find snap size.
-            
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+
+            var snapsize = mouseCoords.Grid.SnapSize; //Find snap size.
+
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
                 (float)Math.Round((mouseCoords.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
                 (float)Math.Round((mouseCoords.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);

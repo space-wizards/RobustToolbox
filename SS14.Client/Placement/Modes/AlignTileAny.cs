@@ -28,21 +28,22 @@ namespace SS14.Client.Placement.Modes
             mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
             currentTile = mouseCoords.Grid.GetTile(mouseCoords);
+            var tilesize = mouseCoords.Grid.TileSize;
 
             if (!RangeCheck())
                 return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseCoords = new LocalCoordinates(currentTile.X + 0.5f,
-                                                  currentTile.Y + 0.5f,
+                mouseCoords = new LocalCoordinates(currentTile.X + tilesize/2,
+                                                  currentTile.Y + tilesize/2,
                                                   mouseCoords.Grid);
                 mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
             else
             {
-                mouseCoords = new LocalCoordinates(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
-                                                  currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y,
+                mouseCoords = new LocalCoordinates(currentTile.X + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.X,
+                                                  currentTile.Y + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.Y,
                                                   mouseCoords.Grid);
                 mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }

@@ -136,7 +136,7 @@ namespace SS14.Client.GameObjects
             }
 
             // After the first set of states comes in we do the initialization.
-            if (!Initialized)
+            if (!Initialized && MapsInitialized)
             {
                 Initialize();
             }

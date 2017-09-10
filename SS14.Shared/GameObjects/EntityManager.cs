@@ -46,6 +46,7 @@ namespace SS14.Shared.GameObjects
             = new Queue<Tuple<object, EntityEventArgs>>();
 
         public bool Initialized { get; protected set; }
+        public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
 

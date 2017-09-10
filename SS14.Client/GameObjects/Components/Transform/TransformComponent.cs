@@ -43,12 +43,12 @@ namespace SS14.Client.GameObjects
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
 
-            if (Position != newState.Coordinates)
+            if (WorldPosition != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
-                OnMove?.Invoke(this, new MoveEventArgs(Position, newState.Coordinates));
-                WorldPosition = newState.Coordinates.Position;
-                MapID = newState.Coordinates.MapID;
-                GridID = newState.Coordinates.GridID;
+                OnMove?.Invoke(this, new MoveEventArgs(Position, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
+                WorldPosition = newState.Position;
+                MapID = newState.MapID;
+                GridID = newState.GridID;
             }
 
             if (Parent != newState.Parent)

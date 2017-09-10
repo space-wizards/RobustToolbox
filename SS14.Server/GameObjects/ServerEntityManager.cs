@@ -129,9 +129,8 @@ namespace SS14.Server.GameObjects
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
-            IEntity ent = SpawnEntity(template);
+            IEntity ent = ForceSpawnEntityAt(template, new LocalCoordinates(new Vector2(X, Y), 1, 1));
             ent.Name = name;
-            ent.GetComponent<TransformComponent>().WorldPosition = new Vector2(X, Y);
             ent.GetComponent<TransformComponent>().Rotation = (float) dir.ToAngle();
         }
 

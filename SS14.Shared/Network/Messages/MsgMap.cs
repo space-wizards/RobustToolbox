@@ -25,6 +25,9 @@ namespace SS14.Shared.Network.Messages
 
         public ushort ChunkSize { get; set; }
 
+        public int MapGridsToSend { get; set; }
+
+
         public class Turf
         {
             public int X { get; set; }
@@ -97,6 +100,9 @@ namespace SS14.Shared.Network.Messages
                         ChunkDefs[i] = newChunk;
                     }
                     break;
+                case MapMessage.SendMapInfo:
+                    MapGridsToSend = buffer.ReadInt32();
+                    break;
             }
         }
 
@@ -132,6 +138,9 @@ namespace SS14.Shared.Network.Messages
                             buffer.Write(tile);
                     }
 
+                    break;
+                case MapMessage.SendMapInfo:
+                    buffer.Write(MapGridsToSend);
                     break;
             }
         }

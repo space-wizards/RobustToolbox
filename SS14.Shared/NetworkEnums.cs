@@ -95,7 +95,8 @@
         //TurfAddDecal,
         //TurfRemoveDecal,
         //SendTileIndex,
-        SendTileMap
+        SendTileMap,
+        SendMapInfo
     }
 
     public enum MobHand

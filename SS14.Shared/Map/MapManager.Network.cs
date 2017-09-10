@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Map
 {
@@ -24,6 +25,8 @@ namespace SS14.Shared.Map
         ///     The accepted version of the NetworkMessage map format.
         /// </summary>
         private const int MapVersion = 1;
+        private int GridsToReceive = -1;
+        private int GridsReceived = 0;
 
         /// <summary>
         ///     Default constructor.
@@ -59,6 +62,9 @@ namespace SS14.Shared.Map
                 case MapMessage.SendTileMap:
                     HandleTileMap(message);
                     break;
+                case MapMessage.SendMapInfo:
+                    CollectMapInfo(message);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(message));
             }
@@ -71,10 +77,13 @@ namespace SS14.Shared.Map
 
             Logger.Log(channel.RemoteAddress + ": Sending map");
 
+            int QuantityGridsSent = 0;
+
             foreach(Map Map in GetAllMaps())
             {
                 foreach(IMapGrid Grid in Map.GetAllGrids())
                 {
+                    QuantityGridsSent++;
                     var message = _netManager.CreateNetMessage<MsgMap>();
                     message.MessageType = MapMessage.SendTileMap;
                     message.MapIndex = Map.Index;
@@ -118,6 +127,10 @@ namespace SS14.Shared.Map
                     _netManager.ServerSendMessage(message, channel);
                 }
             }
+            var mapmessage = _netManager.CreateNetMessage<MsgMap>();
+            mapmessage.MessageType = MapMessage.SendMapInfo;
+            mapmessage.MapGridsToSend = QuantityGridsSent;
+            _netManager.ServerSendMessage(mapmessage, channel);
         }
 
         /// <summary>
@@ -184,6 +197,8 @@ namespace SS14.Shared.Map
         {
             Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
+            GridsReceived++;
+
             var mapIndex = message.MapIndex;
             var gridIndex = message.GridIndex;
 
@@ -212,6 +227,11 @@ namespace SS14.Shared.Map
                     }
                 }
             }
+
+            if(GridsReceived == GridsToReceive)
+            {
+                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
+            }
         }
 
         /// <summary>
@@ -228,6 +248,18 @@ namespace SS14.Shared.Map
             
             LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
             coords.Grid.SetTile(coords, tile); //TODO: Fix this
+        }
+
+        private void CollectMapInfo(MsgMap message)
+        {
+            Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
+
+            GridsToReceive = message.MapGridsToSend;
+
+            if (GridsReceived == GridsToReceive)
+            {
+                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
+            }
         }
     }
 }

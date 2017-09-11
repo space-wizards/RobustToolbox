@@ -29,7 +29,6 @@ namespace SS14.Client.GameObjects.EntitySystems
             foreach (var entity in entities)
             {
                 var inputs = entity.GetComponent<KeyBindingInputComponent>();
-
                 //Animation setting
                 if (entity.TryGetComponent<AnimatedSpriteComponent>(out var component))
                 {

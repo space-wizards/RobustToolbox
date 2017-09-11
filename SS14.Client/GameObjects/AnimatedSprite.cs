@@ -163,7 +163,6 @@ namespace SS14.Client.Graphics.Sprite
                     return;
                 _currentAnimationState.Reset();
             }
-
             if (state != null)
             {
                 _currentAnimationState = AnimationStates[state];

@@ -452,11 +452,11 @@ namespace SS14.Client
 
         private void SetupCluwne()
         {
-            _configurationManager.RegisterCVar("display.width", 1280, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display.height", 720, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display.fullscreen", false, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display.refresh", 60, CVarFlags.ARCHIVE);
-            _configurationManager.RegisterCVar("display.vsync", false, CVarFlags.ARCHIVE);
+            _configurationManager.RegisterCVar("display.width", 1280, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("display.height", 720, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("display.fullscreen", false, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("display.refresh", 60, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("display.vsync", false, CVar.ARCHIVE);
 
             uint displayWidth = (uint) _configurationManager.GetCVar<int>("display.width");
             uint displayHeight = (uint) _configurationManager.GetCVar<int>("display.height");

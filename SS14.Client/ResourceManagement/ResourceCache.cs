@@ -91,7 +91,7 @@ namespace SS14.Client.Resources
         {
             var cfgMgr = _config;
 
-            cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("res.pack", Path.Combine("..","..","Resources","ResourcePack.zip"), CVar.ARCHIVE);
 
             string zipPath = path ?? _config.GetCVar<string>("res.pack");
 

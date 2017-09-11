@@ -4,9 +4,9 @@ namespace SS14.Shared
 {
     public class BoundKeyEventArgs : EventArgs
     {
-        public BoundKeyFunctions Function;
-        public BoundKeyState FunctionState;
-        public float time;
+        public BoundKeyFunctions Function { get; set; }
+        public BoundKeyState FunctionState { get; set; }
+        public float time { get; set; }
 
         public BoundKeyEventArgs(BoundKeyState functionState, BoundKeyFunctions function)
         {

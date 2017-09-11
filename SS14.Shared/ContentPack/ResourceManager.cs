@@ -22,7 +22,7 @@ namespace SS14.Shared.ContentPack
         /// <inheritdoc />
         public void Initialize()
         {
-            _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVarFlags.ARCHIVE);
+            _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVar.ARCHIVE);
         }
 
         /// <inheritdoc />

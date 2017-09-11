@@ -67,7 +67,6 @@ namespace SS14.Shared.GameObjects
 
             var name = dummy.Name;
             var netID = dummy.NetID;
-            var type = typeof(T);
             var netSyncExist = dummy.NetworkSynchronizeExistence;
 
             if (IgnoredComponentNames.Contains(name))

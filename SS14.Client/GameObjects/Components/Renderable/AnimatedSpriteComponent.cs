@@ -279,8 +279,14 @@ namespace SS14.Client.GameObjects
             // world2screen
             worldRot = new Vector2(worldRot.X, worldRot.Y * -1);
 
-            sprite.Direction = worldRot.GetDir();
-            sprite.Update(frameTime);
+            //If the sprite is idle, it won't try to update Direction, meaning you stay facing the way you move
+            if (sprite.CurrentAnimationStateKey.Equals("idle"))
+                sprite.Update(frameTime);
+            else
+            {
+                sprite.Direction = worldRot.GetDir();
+                sprite.Update(frameTime);
+            }
         }
 
         public virtual void UpdateSlaves()

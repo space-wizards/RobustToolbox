@@ -49,7 +49,7 @@ namespace SS14.Client.UserInterface
 
         public void PostInject()
         {
-            _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("key.keyboard.console", Keyboard.Key.Home, CVar.ARCHIVE);
         }
 
         public void Initialize()

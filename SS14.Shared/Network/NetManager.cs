@@ -81,8 +81,8 @@ namespace SS14.Shared.Network
 
             IsServer = isServer;
 
-            _config.RegisterCVar("net.port", 1212, CVarFlags.ARCHIVE);
-            _config.RegisterCVar("net.allowdupeip", false, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
+            _config.RegisterCVar("net.allowdupeip", false, CVar.ARCHIVE);
 
             var netConfig = new NetPeerConfiguration("SS13_NetTag");
 
@@ -94,18 +94,18 @@ namespace SS14.Shared.Network
 
             if (!isServer)
             {
-                _config.RegisterCVar("net.server", "127.0.0.1", CVarFlags.ARCHIVE);
-                _config.RegisterCVar("net.updaterate", 20, CVarFlags.ARCHIVE);
-                _config.RegisterCVar("net.cmdrate", 30, CVarFlags.ARCHIVE);
-                _config.RegisterCVar("net.interpolation", 0.1f, CVarFlags.ARCHIVE);
-                _config.RegisterCVar("net.rate", 10240, CVarFlags.REPLICATED | CVarFlags.ARCHIVE);
+                _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
+                _config.RegisterCVar("net.updaterate", 20, CVar.ARCHIVE);
+                _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
+                _config.RegisterCVar("net.interpolation", 0.1f, CVar.ARCHIVE);
+                _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
             }
 
 #if DEBUG
-            _config.RegisterCVar("net.fakelag", false, CVarFlags.CHEAT);
-            _config.RegisterCVar("net.fakeloss", 0.0f, CVarFlags.CHEAT);
-            _config.RegisterCVar("net.fakelagmin", 0.0f, CVarFlags.CHEAT);
-            _config.RegisterCVar("net.fakelagrand", 0.0f, CVarFlags.CHEAT);
+            _config.RegisterCVar("net.fakelag", false, CVar.CHEAT);
+            _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT);
+            _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT);
+            _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT);
 
             //Simulate Latency
             if (_config.GetCVar<bool>("net.fakelag"))

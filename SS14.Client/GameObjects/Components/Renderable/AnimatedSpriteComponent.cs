@@ -153,27 +153,27 @@ namespace SS14.Client.GameObjects
             return sprite.GetCurrentSprite();
         }
 
+        /// <summary>
+        ///     Check if the world position is inside of the sprite texture. This checks both sprite bounds and transparency.
+        /// </summary>
+        /// <param name="worldPos">World position to check.</param>
+        /// <returns>Is the world position inside of the sprite?</returns>
         public virtual bool WasClicked(Vector2 worldPos)
         {
             if (sprite == null || !visible) return false;
 
-            Sprite spriteToCheck = GetCurrentSprite();
+            var spriteToCheck = GetCurrentSprite();
 
-            // local screen coords
+            // local screen bounds
             var localBounds = spriteToCheck.GetLocalBounds().Convert();
 
-            // local world coords
-            var scale = CluwneLib.Window.Camera.PixelsPerMeter;
-            var worldBounds = new Box2(
-                localBounds.Left / scale,
-                localBounds.Top / scale,
-                localBounds.Right / scale,
-                localBounds.Bottom / scale);
+            // local world bounds
+            var worldBounds = localBounds.Scale(1.0f / CluwneLib.Window.Camera.PixelsPerMeter);
 
-            // move the origin from top left to center
+            // move the origin from bottom right to center
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
 
-            // absolute world coords
+            // absolute world bounds
             worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
 
             // check if clicked inside of the rectangle
@@ -184,20 +184,23 @@ namespace SS14.Client.GameObjects
             var texRect = spriteToCheck.TextureRect;
 
             // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
-                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
+            var spritePosition = new Vector2i((int) (worldPos.X - AABB.Left + texRect.Left),
+                (int) (worldPos.Y - AABB.Top + texRect.Top));
 
+            // make sure the position is not negative on the texture
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
 
-            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
-            Dictionary<Texture, string> tmp = resCache.TextureToKey;
-            if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
-            string textureKey = tmp[spriteToCheck.Texture];
-            var opacityMap = TextureCache.Textures[textureKey].Image; //get our clickthrough 'map'
+            // fetch texture key of the sprite
+            var resCache = IoCManager.Resolve<IResourceCache>();
+            if (!resCache.TextureToKey.TryGetValue(spriteToCheck.Texture, out string textureKey))
+                throw new InvalidOperationException("Trying to look up a texture that does not exist in the Resource Cache.");
 
-            // Check if the clicked pixel is opaque
-            return opacityMap.GetPixel((uint) spritePosition.X, (uint) spritePosition.Y).A <= Limits.ClickthroughLimit;
+            // use the texture key to fetch the Image of the sprite
+            var image = TextureCache.Textures[textureKey].Image;
+
+            // Check if the clicked pixel is transparent enough in the Image
+            return image.GetPixel((uint) spritePosition.X, (uint) spritePosition.Y).A <= Limits.ClickthroughLimit;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

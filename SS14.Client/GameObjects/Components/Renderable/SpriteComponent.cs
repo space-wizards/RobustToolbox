@@ -226,58 +226,59 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
+        /// <summary>
+        ///     Check if the world position is inside of the sprite texture. This checks both sprite bounds and transparency.
+        /// </summary>
+        /// <param name="worldPos">World position to check.</param>
+        /// <returns>Is the world position inside of the sprite?</returns>
         public virtual bool WasClicked(Vector2 worldPos)
         {
-            if (currentBaseSprite == null || !visible) return false;
+            var spriteToCheck = GetActiveDirectionalSprite();
 
-            Sprite spriteToCheck = GetActiveDirectionalSprite();
-            var bounds = spriteToCheck.GetLocalBounds();
+            if (spriteToCheck == null || !visible) return false;
 
-            // local screen coords
+            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+
+            // local screen bounds
             var localBounds = spriteToCheck.GetLocalBounds().Convert();
 
-            // local world coords
-            var scale = CluwneLib.Window.Camera.PixelsPerMeter;
-            var worldBounds = new Box2(
-                localBounds.Left / scale,
-                localBounds.Top / scale,
-                localBounds.Right / scale,
-                localBounds.Bottom / scale);
+            // local world bounds
+            var worldBounds = localBounds.Scale(1.0f / screenScale);
 
-            // move the origin from top left to center
+            // move the origin from bottom right to center
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
 
-            // absolute world coords
+            // absolute world bounds
             worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
 
             // check if clicked inside of the rectangle
             if (!worldBounds.Contains(worldPos))
                 return false;
 
-            /*
-            var AABB =
-                Box2.FromDimensions(
-                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
-*/
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
-            // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int)(worldPos.X - LocalAABB.Left + texRect.Left),
-                                              (int)(worldPos.Y - LocalAABB.Top + texRect.Top));
+            // Get the clicked position relative to the texture (World to Texture)
+            var pixelPos = new Vector2i((int)((worldPos.X - worldBounds.Left) * screenScale), (int)((worldPos.Y - worldBounds.Top) * screenScale));
 
-            if (spritePosition.X < 0 || spritePosition.Y < 0)
-                return false;
+            // offset pos by texture sub-rectangle
+            pixelPos = pixelPos + new Vector2i(texRect.Left, texRect.Top);
 
-            IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
-            Dictionary<Texture, string> tmp = resCache.TextureToKey;
-            if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
-            string textureKey = tmp[spriteToCheck.Texture];
-            var opacityMap = TextureCache.Textures[textureKey].Image; //get our clickthrough 'map'
+            // make sure the position is actually inside the texture
+            if (!texRect.Contains(pixelPos.X, pixelPos.Y))
+                throw new InvalidOperationException("The click was inside the sprite bounds, but not inside the texture bounds? Check yo math.");
 
-            // Check if the clicked pixel is opaque
-            return opacityMap.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A <= Limits.ClickthroughLimit;
+            // fetch texture key of the sprite
+            var resCache = IoCManager.Resolve<IResourceCache>();
+            if (!resCache.TextureToKey.TryGetValue(spriteToCheck.Texture, out string textureKey))
+                throw new InvalidOperationException("Trying to look up a texture that does not exist in the ResourceCache.");
+
+            // use the texture key to fetch the Image of the sprite
+            if (!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
+                throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
+
+            // Check if the clicked pixel is transparent enough in the Image
+            return texInfo.Image.GetPixel((uint)pixelPos.X, (uint)pixelPos.Y).A >= Limits.ClickthroughLimit;
         }
 
         public bool SpriteExists(string key)

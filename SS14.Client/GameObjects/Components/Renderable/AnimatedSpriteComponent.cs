@@ -47,7 +47,7 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Owner.GetComponent<ITransformComponent>().Position.Y +
-                       (sprite.AABB.Height / 2);
+                       (sprite.TextureRect.Height / 2);
             }
         }
 
@@ -66,16 +66,7 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public virtual Box2 AABB
-        {
-            get
-            {
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
-
-                return Box2.FromDimensions(0, 0, sprite.AABB.Width / (float)tileSize,
-                                                 sprite.AABB.Height / (float)tileSize);
-            }
-        }
+        public virtual Box2 LocalAABB => sprite.LocalAABB;
 
         public bool HorizontalFlip { get; set; }
 
@@ -164,11 +155,13 @@ namespace SS14.Client.GameObjects
 
             var spriteToCheck = GetCurrentSprite();
 
+            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+
             // local screen bounds
             var localBounds = spriteToCheck.GetLocalBounds().Convert();
 
             // local world bounds
-            var worldBounds = localBounds.Scale(1.0f / CluwneLib.Window.Camera.PixelsPerMeter);
+            var worldBounds = localBounds.Scale(1.0f / screenScale);
 
             // move the origin from bottom right to center
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
@@ -183,24 +176,27 @@ namespace SS14.Client.GameObjects
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
-            // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int) (worldPos.X - AABB.Left + texRect.Left),
-                (int) (worldPos.Y - AABB.Top + texRect.Top));
+            // Get the clicked position relative to the texture (World to Texture)
+            var pixelPos = new Vector2i((int) ((worldPos.X - worldBounds.Left) * screenScale), (int) ((worldPos.Y - worldBounds.Top) * screenScale));
 
-            // make sure the position is not negative on the texture
-            if (spritePosition.X < 0 || spritePosition.Y < 0)
-                return false;
+            // offset pos by texture sub-rectangle
+            pixelPos = pixelPos + new Vector2i(texRect.Left, texRect.Top);
+
+            // make sure the position is actually inside the texture
+            if (!texRect.Contains(pixelPos.X, pixelPos.Y))
+                throw new InvalidOperationException("The click was inside the sprite bounds, but not inside the texture bounds? Check yo math.");
 
             // fetch texture key of the sprite
             var resCache = IoCManager.Resolve<IResourceCache>();
             if (!resCache.TextureToKey.TryGetValue(spriteToCheck.Texture, out string textureKey))
-                throw new InvalidOperationException("Trying to look up a texture that does not exist in the Resource Cache.");
+                throw new InvalidOperationException("Trying to look up a texture that does not exist in the ResourceCache.");
 
             // use the texture key to fetch the Image of the sprite
-            var image = TextureCache.Textures[textureKey].Image;
+            if(!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
+                throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
 
             // Check if the clicked pixel is transparent enough in the Image
-            return image.GetPixel((uint) spritePosition.X, (uint) spritePosition.Y).A <= Limits.ClickthroughLimit;
+            return texInfo.Image.GetPixel((uint) pixelPos.X, (uint) pixelPos.Y).A >= Limits.ClickthroughLimit;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -254,7 +250,7 @@ namespace SS14.Client.GameObjects
 
             Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos);
-            var bounds = sprite.AABB;
+            var bounds = sprite.TextureRect;
 
             if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
                 || ownerPos.X > bottomRight.X
@@ -278,7 +274,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Draw AABB
-            var aabb = AABB;
+            var aabb = LocalAABB;
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
@@ -329,8 +325,8 @@ namespace SS14.Client.GameObjects
 
         public void SetSpriteCenter(Vector2 center)
         {
-            sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
-                               center.Y - (sprite.AABB.Height / 2));
+            sprite.SetPosition(center.X - (sprite.TextureRect.Width / 2),
+                               center.Y - (sprite.TextureRect.Height / 2));
         }
 
         public bool IsSlaved()

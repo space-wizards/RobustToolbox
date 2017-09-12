@@ -58,9 +58,11 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public Box2 AverageAABB => AABB;
+        public Box2 AverageAABB => LocalAABB;
 
-        public Box2 AABB
+
+
+        public Box2 LocalAABB
         {
             get
             {
@@ -262,8 +264,8 @@ namespace SS14.Client.GameObjects
             var texRect = spriteToCheck.TextureRect;
 
             // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
-                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
+            var spritePosition = new Vector2i((int)(worldPos.X - LocalAABB.Left + texRect.Left),
+                                              (int)(worldPos.Y - LocalAABB.Top + texRect.Top));
 
             if (spritePosition.X < 0 || spritePosition.Y < 0)
                 return false;
@@ -362,7 +364,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Draw AABB
-            var aabb = AABB;
+            var aabb = LocalAABB;
             if (CluwneLib.Debug.DebugColliders)
                 CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
         }

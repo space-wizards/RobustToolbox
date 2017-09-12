@@ -30,9 +30,9 @@ namespace SS14.Client.GameObjects
         #endregion Variables.
 
         #region Properties
-        public Box2 AverageAABB => AABB;
+        public Box2 AverageAABB => LocalAABB;
 
-        public Box2 AABB => new Box2();
+        public Box2 LocalAABB => new Box2();
 
         #endregion Properties
 

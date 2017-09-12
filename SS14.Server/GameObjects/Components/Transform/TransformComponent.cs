@@ -75,7 +75,7 @@ namespace SS14.Server.GameObjects
                 }
                 else
                 {
-                    return _position;
+                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
                 }
             }
             set

@@ -42,14 +42,10 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 
-        public float Bottom
-        {
-            get
-            {
-                return Owner.GetComponent<ITransformComponent>().Position.Y +
-                       (sprite.TextureRect.Height / 2);
-            }
-        }
+        /// <summary>
+        ///     Center of the Y axis of the sprite bounds in world coords.
+        /// </summary>
+        public float Bottom => Owner.GetComponent<ITransformComponent>().Position.Y + sprite.LocalAABB.Height / 2;
 
         public Box2 AverageAABB
         {

@@ -388,12 +388,12 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
-        public static ScreenCoordinates WorldToScreen(LocalCoordinates point) //TODO: move to another coordinate type
+        public static ScreenCoordinates WorldToScreen(LocalCoordinates point)
         {
             return new ScreenCoordinates(((point.Position - Window.Camera.Position) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2), point.MapID);
         }
 
-        public static Vector2 WorldToScreen(Vector2 point) //TODO: move to another coordinate type
+        public static Vector2 WorldToScreen(Vector2 point)
         {
             var center = Window.Camera.Position;
             return (point - center) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2;

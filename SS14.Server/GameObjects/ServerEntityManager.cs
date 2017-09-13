@@ -59,7 +59,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string EntityType, Vector2 position, int argMap, out IEntity entity)
         {
-            var mapmanager = IoCManager.Resolve<IMapManager>(); //TODO: wait we only have one map? this only supports one map
+            var mapmanager = IoCManager.Resolve<IMapManager>();
             var coordinates = new LocalCoordinates(position, mapmanager.GetMap(argMap).FindGridAt(position));
             return TrySpawnEntityAt(EntityType, coordinates, out entity);
         }

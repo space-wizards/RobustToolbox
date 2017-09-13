@@ -37,7 +37,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
-        public LocalCoordinates Position => new LocalCoordinates(_position, GridID, MapID);
+        public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
 
         public Vector2 WorldPosition
         {
@@ -62,7 +62,7 @@ namespace SS14.Client.GameObjects
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
-                OnMove?.Invoke(this, new MoveEventArgs(Position, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
                 _position = newState.Position;
                 MapID = newState.MapID;
                 GridID = newState.GridID;

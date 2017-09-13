@@ -161,7 +161,7 @@ namespace SS14.Client.GameObjects
         protected void UpdateLightPosition()
         {
             var transform = Owner.GetComponent<ITransformComponent>();
-            UpdateLightPosition(transform.Position);
+            UpdateLightPosition(transform.LocalPosition);
         }
 
         public override void Update(float frameTime)

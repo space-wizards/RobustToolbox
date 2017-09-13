@@ -40,13 +40,13 @@ namespace SS14.Server.GameObjects
         public event EventHandler<MoveEventArgs> OnMove;
 
         /// <inheritdoc />
-        public LocalCoordinates Position
+        public LocalCoordinates LocalPosition
         {
             get
             {
                 if (Parent != null)
                 {
-                    return GetMapTransform().Position; //Search up the tree for the true map position
+                    return GetMapTransform().LocalPosition; //Search up the tree for the true map position
                 }
                 else
                 {
@@ -55,13 +55,13 @@ namespace SS14.Server.GameObjects
             }
             set
             {
-                var oldPosition = Position;
+                var oldPosition = LocalPosition;
                 _position = value.Position;
                 
                 MapID = value.MapID;
                 GridID = value.GridID;
 
-                OnMove?.Invoke(this, new MoveEventArgs(Position, value));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, value));
             }
         }
 
@@ -80,18 +80,18 @@ namespace SS14.Server.GameObjects
             }
             set
             {
-                var oldPosition = Position;
+                var oldPosition = LocalPosition;
                 _position = value;
                 GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
 
-                OnMove?.Invoke(this, new MoveEventArgs(Position, new LocalCoordinates(_position, GridID, MapID)));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));
             }
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(Position, Rotation, Parent);
+            return new TransformComponentState(LocalPosition, Rotation, Parent);
         }
 
         /// <summary>

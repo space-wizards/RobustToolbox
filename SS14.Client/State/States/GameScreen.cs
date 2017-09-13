@@ -327,7 +327,7 @@ namespace SS14.Client.State.States
             if (PlayerManager.ControlledEntity != null)
             {
                 var vp = CluwneLib.WorldViewport;
-                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position.MapID;
+                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.MapID;
 
                 if (!bFullVision)
                 {
@@ -450,7 +450,7 @@ namespace SS14.Client.State.States
                 CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color4.White, font);
 
                 // Mouse position debug
-                Vector2i mouseScreenPos = (Vector2i)MousePosScreen.Position; // default to screen space
+                Vector2i mouseScreenPos = (Vector2i)MousePosScreen.Position;
                 var mousepos = CluwneLib.ScreenToCoordinates(MousePosScreen);
                 Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
@@ -625,7 +625,7 @@ namespace SS14.Client.State.States
             //Sort them by which we should click
             IEntity entToClick = (from cd in clickedEntities
                                   orderby cd.Drawdepth ascending,
-                                      cd.Clicked.GetComponent<ITransformComponent>().Position
+                                      cd.Clicked.GetComponent<ITransformComponent>().LocalPosition
                                       .Y ascending
                                   select cd.Clicked).Last();
 
@@ -637,10 +637,9 @@ namespace SS14.Client.State.States
 
             // Check whether click is outside our 1.5 meter range
             float checkDistance = 1.5f;
-            var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition - entToClick.GetComponent<ITransformComponent>().WorldPosition;
-            if (dist.Length > checkDistance)
+            if (!PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
                 return;
-
+            
             var clickable = entToClick.GetComponent<IClientClickableComponent>();
             switch (e.Button)
             {
@@ -664,7 +663,7 @@ namespace SS14.Client.State.States
         {
             if(PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
-                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.Position.MapID);
+                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.LocalPosition.MapID);
             }
             else
             {
@@ -1036,7 +1035,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 playerOcclusionTarget.Clear(Color.Black);
-                var playerposition = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                var playerposition = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
                 playerVision.Coordinates = playerposition;
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
@@ -1123,7 +1122,7 @@ namespace SS14.Client.State.States
         /// </summary>
         private void DrawTiles(Box2 vision)
         {
-            var position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+            var position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
             var tiles = position.Grid.GetTilesIntersecting(vision, false);
 
             MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch);
@@ -1141,7 +1140,7 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                 where c.DrawDepth < DrawDepth.MobBase && 
+                                                                 where c.DrawDepth < DrawDepth.MobBase &&
                                                                        c.MapID == argMapLevel
                                                                  select c;
 

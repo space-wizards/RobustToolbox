@@ -47,10 +47,9 @@ namespace SS14.Server.GameObjects
             var prototype = _protoManager.Index<EntityPrototype>(EntityType);
             if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
-                IEntity typecastentity = SpawnEntity(EntityType);
-                typecastentity.GetComponent<TransformComponent>().Position = coordinates;
-                typecastentity.Initialize();
-                entity = typecastentity;
+                entity = SpawnEntity(EntityType);
+                entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
+                entity.Initialize();
                 return true;
             }
             entity = null;
@@ -69,7 +68,7 @@ namespace SS14.Server.GameObjects
         public IEntity ForceSpawnEntityAt(string EntityType, LocalCoordinates coordinates)
         {
             IEntity entity = SpawnEntity(EntityType);
-            entity.GetComponent<TransformComponent>().Position = coordinates;
+            entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
             entity.Initialize();
             return entity;
         }
@@ -138,10 +137,10 @@ namespace SS14.Server.GameObjects
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X",
-                                                 e.GetComponent<ITransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().LocalPosition.
                                                      X.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("Y",
-                                                 e.GetComponent<ITransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().LocalPosition.
                                                      Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),

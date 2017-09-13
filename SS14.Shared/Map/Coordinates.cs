@@ -9,29 +9,24 @@ using System.Threading.Tasks;
 
 namespace SS14.Shared.Map
 {
-    public abstract class Coordinates
+    [Serializable]
+    public struct LocalCoordinates
     {
-        public const int NULLSPACE = 0;
+        public readonly int GridID;
+        public readonly int MapID;
         public Vector2 Position;
 
         public float X
         {
             get => Position.X;
-            set => Position = new Vector2(value, Position.Y);
+            set => new LocalCoordinates(value, Position.Y, GridID, MapID);
         }
 
         public float Y
         {
             get => Position.Y;
-            set => Position = new Vector2(Position.X, value);
+            set => new LocalCoordinates(Position.X, value, GridID, MapID);
         }
-    }
-
-    [Serializable]
-    public class LocalCoordinates : Coordinates
-    {
-        public int GridID;
-        public int MapID;
 
         public IMap Map => IoCManager.Resolve<IMapManager>().GetMap(MapID);
 
@@ -73,14 +68,41 @@ namespace SS14.Shared.Map
 
         public LocalCoordinates ToWorld()
         {
-            var defaultgrid = IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(0);
+            if (MapID == MapManager.DEFAULTGRID)
+                return this;
+            var defaultgrid = IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(MapManager.DEFAULTGRID);
             return new LocalCoordinates(Position + Grid.WorldPosition - defaultgrid.WorldPosition, defaultgrid);
+        }
+
+        public bool InRange(LocalCoordinates localpos, float range)
+        {
+            if (localpos.MapID != MapID)
+                return false;
+            return ((localpos.ToWorld().Position - ToWorld().Position).LengthSquared < range * range);
+        }
+
+        public bool InRange(LocalCoordinates localpos, int range)
+        {
+            return InRange(localpos, (float)range);
         }
     }
 
-    public class ScreenCoordinates : Coordinates
+    public struct ScreenCoordinates
     {
-        public int MapID;
+        public readonly int MapID;
+        public Vector2 Position;
+
+        public float X
+        {
+            get => Position.X;
+            set => new ScreenCoordinates(value, Position.Y, MapID);
+        }
+
+        public float Y
+        {
+            get => Position.Y;
+            set => new ScreenCoordinates(Position.X, value, MapID);
+        }
 
         public ScreenCoordinates(Vector2 argPosition, int argMap)
         {

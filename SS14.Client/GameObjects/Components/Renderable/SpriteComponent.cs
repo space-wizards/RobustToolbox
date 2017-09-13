@@ -329,7 +329,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
             var bounds = spriteToRender.GetLocalBounds();
             SetSpriteCenter(spriteToRender, renderPos.Position);
 

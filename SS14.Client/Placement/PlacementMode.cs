@@ -49,9 +49,8 @@ namespace SS14.Client.Placement
 
             var bounds = spriteToDraw.GetLocalBounds().Convert();
             spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-            if(mouseScreen != null) //bad
-                spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
-                                                        mouseScreen.Y - (bounds.Height / 2f));
+            spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
+                                                 mouseScreen.Y - (bounds.Height / 2f));
             //Centering the sprite on the cursor.
             spriteToDraw.Draw();
         }
@@ -79,10 +78,8 @@ namespace SS14.Client.Placement
         {
             if (!rangerequired)
                 return true;
-            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
-            if (rangeSquared > 0)
-                if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .WorldPosition - mouseCoords.Position).LengthSquared > rangeSquared) //TODO: make coordinate world position
+            var range = pManager.CurrentPermission.Range;
+            if (range > 0 && !pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(mouseCoords, range))
                     return false;
             return true;
         }

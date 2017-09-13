@@ -272,6 +272,11 @@ namespace SS14.Shared.Map
             return new LocalCoordinates(local.Position + WorldPosition, 0, local.MapID);
         }
 
+        public Vector2 ConvertToWorld(Vector2 localpos)
+        {
+            return localpos + WorldPosition;
+        }
+
         /// <summary>
         /// Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>

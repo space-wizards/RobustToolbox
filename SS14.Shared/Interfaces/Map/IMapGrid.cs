@@ -144,6 +144,12 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns>The world-space coordinates with global origin.</returns>
         LocalCoordinates LocalToWorld(LocalCoordinates posLocal);
 
+        /// <summary>
+        ///     Transforms local vectors into world space vectors
+        /// </summary>
+        /// <param name="posLocal">The local vector with this grid as origin.</param>
+        /// <returns>The world-space vector with global origin.</returns>
+        Vector2 ConvertToWorld(Vector2 localpos);
 
         /// <summary>
         ///     Transforms grid-space tile indices to local coordinates.

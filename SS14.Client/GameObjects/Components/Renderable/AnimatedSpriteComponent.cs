@@ -46,7 +46,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().Position.Y +
+                return Owner.GetComponent<ITransformComponent>().LocalPosition.Y +
                        (sprite.AABB.Height / 2);
             }
         }
@@ -172,8 +172,8 @@ namespace SS14.Client.GameObjects
 
             var AABB =
                 Box2.FromDimensions(
-                    Owner.GetComponent<ITransformComponent>().Position.X - (bounds.Width / 2),
-                    Owner.GetComponent<ITransformComponent>().Position.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
+                    Owner.GetComponent<ITransformComponent>().LocalPosition.X - (bounds.Width / 2),
+                    Owner.GetComponent<ITransformComponent>().LocalPosition.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
 
             // Get the sprite's position within the texture
@@ -243,7 +243,7 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
+            var ownerPos = Owner.GetComponent<ITransformComponent>().LocalPosition;
 
             var renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos.Position);

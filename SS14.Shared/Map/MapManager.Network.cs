@@ -209,8 +209,9 @@ namespace SS14.Shared.Map
 
             if (!_mapManager.TryGetMap(mapIndex, out IMap map))
                 map = _mapManager.CreateMap(mapIndex);
-            if (!map.TryGetGrid(gridIndex, out IMapGrid grid))
-                grid = _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
+            if (!map.GridExists(gridIndex))
+                _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
+            IMapGrid grid = _mapManager.GetMap(mapIndex).GetGrid(gridIndex);
 
             for (var i = 0; i < chunkCount; ++i)
             {

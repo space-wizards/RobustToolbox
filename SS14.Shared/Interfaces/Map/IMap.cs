@@ -38,14 +38,6 @@ namespace SS14.Shared.Interfaces.Map
         IMapGrid GetGrid(int gridId);
 
         /// <summary>
-        ///     Gets the grid associated with the given grid ID.
-        /// </summary>
-        /// <param name="gridId">The id of the grid to get.</param>
-        /// <param name="mapGrid">The grid associated with the grid ID. If no grid exists, this is null.</param>
-        /// <returns></returns>
-        bool TryGetGrid(int gridId, out IMapGrid mapGrid);
-
-        /// <summary>
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
         /// </summary>
         /// <returns></returns>

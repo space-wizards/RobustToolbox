@@ -13,13 +13,12 @@ namespace SS14.Shared.Map
         public int Index = 0;
         private readonly MapManager _mapManager;
         private readonly Dictionary<int, MapGrid> _grids = new Dictionary<int, MapGrid>();
-        private int DefaultGridIndex = 0;
 
         public Map(MapManager mapManager, int mapID)
         {
             Index = mapID;
             _mapManager = mapManager;
-            CreateGrid(DefaultGridIndex);
+            CreateGrid(MapManager.DEFAULTGRID);
         }
 
         #region GridAccess
@@ -62,24 +61,12 @@ namespace SS14.Shared.Map
         }
 
         /// <summary>
-        ///     Gets the grid associated with the given grid ID.
-        /// </summary>
-        /// <param name="gridId">The id of the grid to get.</param>
-        /// <param name="mapGrid">The grid associated with the grid ID. If no grid exists, this is null.</param>
-        /// <returns></returns>
-        public bool TryGetGrid(int gridId, out IMapGrid mapGrid)
-        {
-            mapGrid = GetGrid(gridId);
-            return mapGrid != null;
-        }
-
-        /// <summary>
         ///     Alias of IMapManager.GetGrid(IMapManager.DefaultGridId);
         /// </summary>
         /// <returns></returns>
         public IMapGrid GetDefaultGrid()
         {
-            return GetGrid(DefaultGridIndex);
+            return GetGrid(MapManager.DEFAULTGRID);
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -110,7 +97,7 @@ namespace SS14.Shared.Map
             var pos = worldPos.ToWorld().Position;
             IMapGrid grid = GetDefaultGrid();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(pos) && kvGrid.Value.Index != DefaultGridIndex)
+                if (kvGrid.Value.AABBWorld.Contains(pos) && kvGrid.Value.Index != MapManager.DEFAULTGRID)
                     grid = kvGrid.Value;
             return grid;
         }
@@ -120,7 +107,7 @@ namespace SS14.Shared.Map
         {
             IMapGrid grid = GetDefaultGrid();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(worldPos) && kvGrid.Value.Index != DefaultGridIndex)
+                if (kvGrid.Value.AABBWorld.Contains(worldPos) && kvGrid.Value.Index != MapManager.DEFAULTGRID)
                     grid = kvGrid.Value;
             return grid;
         }

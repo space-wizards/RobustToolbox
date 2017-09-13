@@ -6,10 +6,14 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
+<<<<<<< HEAD
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Map;
+=======
+using Vector2 = SS14.Shared.Maths.Vector2;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.GameObjects
 {

@@ -476,15 +476,14 @@ namespace SS14.Client.Graphics
 
     public class InputEvents
     {
-        private RenderWindow _window;
 
         public InputEvents(RenderWindow window)
         {
             // if dummy don't attach events
-            if(window == null)
+            if (window == null)
                 return;
 
-            _window = window;
+            RenderWindow _window = window;
 
             _window.KeyPressed += (sender, args) => KeyPressed?.Invoke(sender, args);
             _window.KeyReleased += (sender, args) => KeyReleased?.Invoke(sender, args);
@@ -496,6 +495,7 @@ namespace SS14.Client.Graphics
             _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
             _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
         }
+
 
         public event EventHandler<KeyEventArgs> KeyPressed;
         public event EventHandler<KeyEventArgs> KeyReleased;

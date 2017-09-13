@@ -58,15 +58,15 @@ namespace SS14.Client.Graphics.Sprite
 
         #region Sprite passthrough methods
 
-        public Box2i AABB
-        {
-            get
-            {
-                if (_currentSprite != null)
-                    return _currentSprite.TextureRect.Convert();
-                return new Box2i();
-            }
-        }
+        /// <summary>
+        ///     Sub-rectangle of the texture to use as the sprite. This is NOT the local bounds of the sprite.
+        /// </summary>
+        public Box2i TextureRect => _currentSprite?.TextureRect.Convert() ?? new Box2i();
+
+        /// <summary>
+        ///     Local bounding box of the sprite, with the origin at the top left.
+        /// </summary>
+        public Box2 LocalAABB => _currentSprite?.GetLocalBounds().Convert() ?? new Box2();
 
         public bool HorizontalFlip { get; set; }
 
@@ -163,7 +163,6 @@ namespace SS14.Client.Graphics.Sprite
                     return;
                 _currentAnimationState.Reset();
             }
-
             if (state != null)
             {
                 _currentAnimationState = AnimationStates[state];

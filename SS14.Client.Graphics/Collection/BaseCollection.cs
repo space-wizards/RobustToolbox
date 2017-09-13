@@ -20,8 +20,7 @@ namespace SS14.Client.Graphics.Collection
     /// </para>
     /// </remarks>
     /// <typeparam name="T">Type of data to store.</typeparam>
-	public abstract class BaseCollection<T> 
-		: IEnumerable<T>
+	public abstract class BaseCollection<T> : IEnumerable<T>
 	{
 		#region Variables.
 		private SortedList<string, T> _items = null;	// Container for the collection data.

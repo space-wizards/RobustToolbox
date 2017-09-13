@@ -120,7 +120,7 @@ namespace SS14.Server
             //TODO: This needs to hard-reset all modules. The Game manager needs to control soft "round restarts".
             Logger.Info("[SRV] Soft restarting Server...");
             IoCManager.Resolve<IPlayerManager>().SendJoinLobbyToAll();
-            SendGameStateUpdate(true);
+            SendGameStateUpdate();
             DisposeForRestart();
             StartLobby();
         }
@@ -149,9 +149,9 @@ namespace SS14.Server
             _config.LoadFromFile(_commandLine.ConfigFile);
 
             //Sets up Logging
-            _config.RegisterCVar("log.path", "logs", CVarFlags.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVarFlags.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Information, CVarFlags.ARCHIVE);
+            _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
+            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
+            _config.RegisterCVar("log.level", LogLevel.Information, CVar.ARCHIVE);
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");
@@ -365,13 +365,13 @@ namespace SS14.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 66, CVarFlags.ARCHIVE | CVarFlags.REPLICATED | CVarFlags.SERVER);
+            cfgMgr.RegisterCVar("net.tickrate", 66, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
-            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVarFlags.ARCHIVE);
-            cfgMgr.RegisterCVar("game.maxplayers", 32, CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
+            cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVar.ARCHIVE);
+            cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
-            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVarFlags.ARCHIVE);
+            cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVar.ARCHIVE);
 
             _entities = IoCManager.Resolve<IServerEntityManager>();
             _components = IoCManager.Resolve<IComponentManager>();
@@ -663,7 +663,7 @@ namespace SS14.Server
             IoCManager.Resolve<IConsoleManager>().Update();
         }
 
-        private void SendGameStateUpdate(bool forceFullState = false)
+        private void SendGameStateUpdate()
         {
             //Create a new GameState object
             var stateManager = IoCManager.Resolve<IGameStateManager>();

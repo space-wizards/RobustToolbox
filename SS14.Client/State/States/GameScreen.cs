@@ -133,7 +133,7 @@ namespace SS14.Client.State.States
         public void Startup()
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
-            manager.RegisterCVar("player.name", "Joe Genero", CVarFlags.ARCHIVE);
+            manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
             LastUpdate = DateTime.Now;
             Now = DateTime.Now;
@@ -313,8 +313,13 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
+<<<<<<< HEAD
                 CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
                 MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+=======
+                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position;
+                MousePosWorld = CluwneLib.ScreenToWorld(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+>>>>>>> master-wizfederation
             }
         }
 
@@ -635,9 +640,16 @@ namespace SS14.Client.State.States
                 return;
             }
 
+<<<<<<< HEAD
             // Check whether click is outside our 1.5 meter range
             float checkDistance = 1.5f;
             if (!PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
+=======
+            // Check whether click is outside our 1.5 tile range
+            float checkDistance = 1.5f * MapManager.TileSize;
+            var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position - entToClick.GetComponent<ITransformComponent>().Position;
+            if (dist.LengthSquared > checkDistance * checkDistance)
+>>>>>>> master-wizfederation
                 return;
             
             var clickable = entToClick.GetComponent<IClientClickableComponent>();

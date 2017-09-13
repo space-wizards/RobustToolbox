@@ -116,7 +116,7 @@
     <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="ColorUtils.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
-    <Compile Include="Configuration\CVarFlags.cs" />
+    <Compile Include="Configuration\CVar.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />
     <Compile Include="ContentPack\DirLoader.cs" />
     <Compile Include="ContentPack\GameClient.cs" />

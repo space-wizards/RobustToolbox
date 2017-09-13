@@ -14,7 +14,10 @@ using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.GameObjects
 {

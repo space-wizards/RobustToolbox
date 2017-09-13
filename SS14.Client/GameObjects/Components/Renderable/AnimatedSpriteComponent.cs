@@ -20,8 +20,14 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+<<<<<<< HEAD
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+=======
+using OpenTK.Graphics;
+using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Utility;
+>>>>>>> master-wizfederation
 
 namespace SS14.Client.GameObjects
 {
@@ -42,6 +48,7 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 
+<<<<<<< HEAD
         public float Bottom
         {
             get
@@ -50,6 +57,12 @@ namespace SS14.Client.GameObjects
                        (sprite.AABB.Height / 2);
             }
         }
+=======
+        /// <summary>
+        ///     Center of the Y axis of the sprite bounds in world coords.
+        /// </summary>
+        public float Bottom => Owner.GetComponent<ITransformComponent>().Position.Y + sprite.LocalAABB.Height / 2;
+>>>>>>> master-wizfederation
 
         public Box2 AverageAABB
         {
@@ -65,6 +78,7 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
+<<<<<<< HEAD
         public virtual Box2 AABB
         {
             get
@@ -72,6 +86,9 @@ namespace SS14.Client.GameObjects
                 return Box2.FromDimensions(0, 0, sprite.AABB.Width, sprite.AABB.Height);
             }
         }
+=======
+        public virtual Box2 LocalAABB => sprite.LocalAABB;
+>>>>>>> master-wizfederation
 
         public bool HorizontalFlip { get; set; }
 
@@ -163,29 +180,57 @@ namespace SS14.Client.GameObjects
             return sprite.GetCurrentSprite();
         }
 
+<<<<<<< HEAD
         public virtual bool WasClicked(LocalCoordinates worldPos)
+=======
+        /// <summary>
+        ///     Check if the world position is inside of the sprite texture. This checks both sprite bounds and transparency.
+        /// </summary>
+        /// <param name="worldPos">World position to check.</param>
+        /// <returns>Is the world position inside of the sprite?</returns>
+        public virtual bool WasClicked(Vector2 worldPos)
+>>>>>>> master-wizfederation
         {
             if (sprite == null || !visible) return false;
 
-            Sprite spriteToCheck = GetCurrentSprite();
-            var bounds = spriteToCheck.GetLocalBounds();
+            var spriteToCheck = GetCurrentSprite();
 
+<<<<<<< HEAD
             var AABB =
                 Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().LocalPosition.X - (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().LocalPosition.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
+=======
+            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+
+            // local screen bounds
+            var localBounds = spriteToCheck.GetLocalBounds().Convert();
+
+            // local world bounds
+            var worldBounds = localBounds.Scale(1.0f / screenScale);
+
+            // move the origin from bottom right to center
+            worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
+
+            // absolute world bounds
+            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
+
+            // check if clicked inside of the rectangle
+            if (!worldBounds.Contains(worldPos))
+                return false;
+>>>>>>> master-wizfederation
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
-            // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
-                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
+            // Get the clicked position relative to the texture (World to Texture)
+            var pixelPos = new Vector2i((int) ((worldPos.X - worldBounds.Left) * screenScale), (int) ((worldPos.Y - worldBounds.Top) * screenScale));
 
-            if (spritePosition.X < 0 || spritePosition.Y < 0)
-                return false;
+            // offset pos by texture sub-rectangle
+            pixelPos = pixelPos + new Vector2i(texRect.Left, texRect.Top);
 
+<<<<<<< HEAD
             IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
             Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
@@ -194,6 +239,23 @@ namespace SS14.Client.GameObjects
 
             // Check if the clicked pixel is opaque
             return opacityMap.GetPixel((uint) spritePosition.X, (uint) spritePosition.Y).A <= Limits.ClickthroughLimit;
+=======
+            // make sure the position is actually inside the texture
+            if (!texRect.Contains(pixelPos.X, pixelPos.Y))
+                throw new InvalidOperationException("The click was inside the sprite bounds, but not inside the texture bounds? Check yo math.");
+
+            // fetch texture key of the sprite
+            var resCache = IoCManager.Resolve<IResourceCache>();
+            if (!resCache.TextureToKey.TryGetValue(spriteToCheck.Texture, out string textureKey))
+                throw new InvalidOperationException("Trying to look up a texture that does not exist in the ResourceCache.");
+
+            // use the texture key to fetch the Image of the sprite
+            if(!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
+                throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
+
+            // Check if the clicked pixel is transparent enough in the Image
+            return texInfo.Image.GetPixel((uint) pixelPos.X, (uint) pixelPos.Y).A >= Limits.ClickthroughLimit;
+>>>>>>> master-wizfederation
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -245,9 +307,15 @@ namespace SS14.Client.GameObjects
 
             var ownerPos = Owner.GetComponent<ITransformComponent>().LocalPosition;
 
+<<<<<<< HEAD
             var renderPos = CluwneLib.WorldToScreen(ownerPos);
             SetSpriteCenter(renderPos.Position);
             var bounds = sprite.AABB;
+=======
+            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
+            SetSpriteCenter(renderPos);
+            var bounds = sprite.TextureRect;
+>>>>>>> master-wizfederation
 
             if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
                 || ownerPos.X > bottomRight.X
@@ -271,7 +339,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Draw AABB
-            var aabb = AABB;
+            var aabb = LocalAABB;
 
             if (_speechBubble != null)
                 _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition),
@@ -291,8 +359,14 @@ namespace SS14.Client.GameObjects
             // world2screen
             worldRot = new Vector2(worldRot.X, worldRot.Y * -1);
 
-            sprite.Direction = worldRot.GetDir();
-            sprite.Update(frameTime);
+            //If the sprite is idle, it won't try to update Direction, meaning you stay facing the way you move
+            if (sprite.CurrentAnimationStateKey.Equals("idle"))
+                sprite.Update(frameTime);
+            else
+            {
+                sprite.Direction = worldRot.GetDir();
+                sprite.Update(frameTime);
+            }
         }
 
         public virtual void UpdateSlaves()
@@ -316,8 +390,8 @@ namespace SS14.Client.GameObjects
 
         public void SetSpriteCenter(Vector2 center)
         {
-            sprite.SetPosition(center.X - (sprite.AABB.Width / 2),
-                               center.Y - (sprite.AABB.Height / 2));
+            sprite.SetPosition(center.X - (sprite.TextureRect.Width / 2),
+                               center.Y - (sprite.TextureRect.Height / 2));
         }
 
         public bool IsSlaved()

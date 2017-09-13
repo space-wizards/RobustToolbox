@@ -21,7 +21,10 @@ using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Utility;
+<<<<<<< HEAD
 using SS14.Shared.Map;
+=======
+>>>>>>> master-wizfederation
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -60,9 +63,11 @@ namespace SS14.Client.GameObjects
 
         #region ISpriteComponent Members
 
-        public Box2 AverageAABB => AABB;
+        public Box2 AverageAABB => LocalAABB;
 
-        public Box2 AABB
+
+
+        public Box2 LocalAABB
         {
             get
             {
@@ -240,29 +245,57 @@ namespace SS14.Client.GameObjects
             return sprite;
         }
 
+<<<<<<< HEAD
         public virtual bool WasClicked(LocalCoordinates worldPos)
+=======
+        /// <summary>
+        ///     Check if the world position is inside of the sprite texture. This checks both sprite bounds and transparency.
+        /// </summary>
+        /// <param name="worldPos">World position to check.</param>
+        /// <returns>Is the world position inside of the sprite?</returns>
+        public virtual bool WasClicked(Vector2 worldPos)
+>>>>>>> master-wizfederation
         {
-            if (currentBaseSprite == null || !visible) return false;
+            var spriteToCheck = GetActiveDirectionalSprite();
 
-            Sprite spriteToCheck = GetActiveDirectionalSprite();
-            var bounds = spriteToCheck.GetLocalBounds();
+            if (spriteToCheck == null || !visible) return false;
 
+            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+
+            // local screen bounds
+            var localBounds = spriteToCheck.GetLocalBounds().Convert();
+
+            // local world bounds
+            var worldBounds = localBounds.Scale(1.0f / screenScale);
+
+            // move the origin from bottom right to center
+            worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
+
+            // absolute world bounds
+            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
+
+<<<<<<< HEAD
             var AABB =
                 Box2.FromDimensions(
                     Owner.GetComponent<ITransformComponent>().WorldPosition.X - (bounds.Width / 2),
                     Owner.GetComponent<ITransformComponent>().WorldPosition.Y - (bounds.Height / 2), bounds.Width, bounds.Height);
             if (!AABB.Contains(new Vector2(worldPos.X, worldPos.Y))) return false;
+=======
+            // check if clicked inside of the rectangle
+            if (!worldBounds.Contains(worldPos))
+                return false;
+>>>>>>> master-wizfederation
 
             // Get the sprite's position within the texture
             var texRect = spriteToCheck.TextureRect;
 
-            // Get the clicked position relative to the texture
-            var spritePosition = new Vector2i((int)(worldPos.X - AABB.Left + texRect.Left),
-                                              (int)(worldPos.Y - AABB.Top + texRect.Top));
+            // Get the clicked position relative to the texture (World to Texture)
+            var pixelPos = new Vector2i((int)((worldPos.X - worldBounds.Left) * screenScale), (int)((worldPos.Y - worldBounds.Top) * screenScale));
 
-            if (spritePosition.X < 0 || spritePosition.Y < 0)
-                return false;
+            // offset pos by texture sub-rectangle
+            pixelPos = pixelPos + new Vector2i(texRect.Left, texRect.Top);
 
+<<<<<<< HEAD
             IResourceCache resCache = IoCManager.Resolve<IResourceCache>();
             Dictionary<Texture, string> tmp = resCache.TextureToKey;
             if (!tmp.ContainsKey(spriteToCheck.Texture)) { return false; } //if it doesn't exist, something's fucked
@@ -271,6 +304,23 @@ namespace SS14.Client.GameObjects
 
             // Check if the clicked pixel is opaque
             return opacityMap.GetPixel((uint)spritePosition.X, (uint)spritePosition.Y).A <= Limits.ClickthroughLimit;
+=======
+            // make sure the position is actually inside the texture
+            if (!texRect.Contains(pixelPos.X, pixelPos.Y))
+                throw new InvalidOperationException("The click was inside the sprite bounds, but not inside the texture bounds? Check yo math.");
+
+            // fetch texture key of the sprite
+            var resCache = IoCManager.Resolve<IResourceCache>();
+            if (!resCache.TextureToKey.TryGetValue(spriteToCheck.Texture, out string textureKey))
+                throw new InvalidOperationException("Trying to look up a texture that does not exist in the ResourceCache.");
+
+            // use the texture key to fetch the Image of the sprite
+            if (!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
+                throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
+
+            // Check if the clicked pixel is transparent enough in the Image
+            return texInfo.Image.GetPixel((uint)pixelPos.X, (uint)pixelPos.Y).A >= Limits.ClickthroughLimit;
+>>>>>>> master-wizfederation
         }
 
         public bool SpriteExists(string key)
@@ -357,7 +407,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Draw AABB
-            var aabb = AABB;
+            var aabb = LocalAABB;
             if (CluwneLib.Debug.DebugColliders)
                 CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
         }

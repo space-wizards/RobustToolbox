@@ -140,7 +140,7 @@ namespace SS14.Shared.GameObjects
 
         public void DeleteEntity(int entityUid)
         {
-            if (!TryGetEntity(entityUid, out var entity))
+            if (TryGetEntity(entityUid, out var entity))
             {
                 DeleteEntity(entity);
             }

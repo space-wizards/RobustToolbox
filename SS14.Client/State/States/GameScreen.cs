@@ -635,7 +635,7 @@ namespace SS14.Client.State.States
             // Check whether click is outside our 1.5 tile range
             float checkDistance = 1.5f * MapManager.TileSize;
             var dist = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position - entToClick.GetComponent<ITransformComponent>().Position;
-            if (dist.Length > checkDistance)
+            if (dist.LengthSquared > checkDistance * checkDistance)
                 return;
 
             var clickable = entToClick.GetComponent<IClientClickableComponent>();

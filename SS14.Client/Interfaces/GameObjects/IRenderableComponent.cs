@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.Graphics;
 using SFML.System;
 using SS14.Shared.GameObjects;
@@ -12,7 +12,7 @@ namespace SS14.Client.Interfaces.GameObjects
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
         void Render(Vector2 topLeft, Vector2 bottomRight);
-        Box2 AABB { get; }
+        Box2 LocalAABB { get; }
         Box2 AverageAABB { get; }
         bool IsSlaved();
         void SetMaster(IEntity m);

@@ -185,11 +185,7 @@ namespace SS14.Client.Placement
 
                 if (CurrentPermission != null && CurrentPermission.Range > 0 && CurrentMode.rangerequired)
                 {
-<<<<<<< HEAD
                     var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition);
-=======
-                    var pos = CluwneLib.WorldToScreen(PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().Position);
->>>>>>> master-wizfederation
                     CluwneLib.drawHollowCircle((int) Math.Floor(pos.X),
                         (int) Math.Floor(pos.Y),
                         CurrentPermission.Range * CluwneLib.Window.Camera.PixelsPerMeter,

@@ -10,10 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
-<<<<<<< HEAD
 using SS14.Shared.Map;
-=======
->>>>>>> master-wizfederation
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects

@@ -44,7 +44,7 @@ namespace SS14.Shared.Map
         {
             Position = argPosition;
             GridID = argGrid;
-            MapID = argGrid;
+            MapID = argMap;
         }
 
         public LocalCoordinates(float X, float Y, IMapGrid argGrid)
@@ -57,8 +57,8 @@ namespace SS14.Shared.Map
         public LocalCoordinates(float X, float Y, int argGrid, int argMap)
         {
             Position = new Vector2(X, Y);
-            MapID = argMap;
             GridID = argGrid;
+            MapID = argMap;
         }
 
         public LocalCoordinates ConvertToGrid(IMapGrid argGrid)

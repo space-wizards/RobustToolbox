@@ -14,19 +14,11 @@ namespace SS14.Shared.Map
     {
         public readonly int GridID;
         public readonly int MapID;
-        public Vector2 Position;
+        public readonly Vector2 Position;
 
-        public float X
-        {
-            get => Position.X;
-            set => new LocalCoordinates(value, Position.Y, GridID, MapID);
-        }
+        public float X => Position.X;
 
-        public float Y
-        {
-            get => Position.Y;
-            set => new LocalCoordinates(Position.X, value, GridID, MapID);
-        }
+        public float Y => Position.Y;
 
         public IMap Map => IoCManager.Resolve<IMapManager>().GetMap(MapID);
 
@@ -90,19 +82,11 @@ namespace SS14.Shared.Map
     public struct ScreenCoordinates
     {
         public readonly int MapID;
-        public Vector2 Position;
+        public readonly Vector2 Position;
 
-        public float X
-        {
-            get => Position.X;
-            set => new ScreenCoordinates(value, Position.Y, MapID);
-        }
+        public float X => Position.X;
 
-        public float Y
-        {
-            get => Position.Y;
-            set => new ScreenCoordinates(Position.X, value, MapID);
-        }
+        public float Y => Position.Y;
 
         public ScreenCoordinates(Vector2 argPosition, int argMap)
         {

@@ -60,7 +60,7 @@ namespace SS14.Client.Placement.Modes
                 (float)Math.Round((mouseCoords.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);
             
             //Convert back to original world and screen coordinates after applying offset
-            mouseCoords.Position = mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
+            mouseCoords = new LocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), mouseCoords.Grid);
             mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
             if (!RangeCheck())

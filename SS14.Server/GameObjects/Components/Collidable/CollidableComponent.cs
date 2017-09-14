@@ -20,6 +20,9 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.COLLIDABLE;
 
         /// <inheritdoc />
+        public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
+
+        /// <inheritdoc />
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
             switch ((ComponentMessageType) message.MessageParameters[0])

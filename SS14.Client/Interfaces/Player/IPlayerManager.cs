@@ -16,7 +16,7 @@ namespace SS14.Client.Interfaces.Player
         IEntity ControlledEntity { get; }
 
         event EventHandler<TypeEventArgs> RequestedStateSwitch;
-        event EventHandler<VectorEventArgs> OnPlayerMove;
+        event EventHandler<MoveEventArgs> OnPlayerMove;
 
         void Attach(IEntity newEntity);
         void Detach();

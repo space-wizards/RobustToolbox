@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Placement.Modes
@@ -21,17 +22,17 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2i mouseS, IMapManager currentMap)
+        public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -42,22 +43,23 @@ namespace SS14.Client.Placement.Modes
             {
                 nodes.AddRange(
                     pManager.CurrentPrototype.MountingPoints.Select(
-                        current => new Vector2(mouseWorld.X, currentTile.Y + current)));
+                        current => new Vector2(mouseCoords.X, currentTile.Y + current)));
             }
             else
             {
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 0.5f));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.0f));
-                nodes.Add(new Vector2(mouseWorld.X, currentTile.Y + 1.5f));
+                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 0.5f));
+                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 1.0f));
+                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 1.5f));
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - mouseWorld).LengthSquared ascending
+                                    orderby (node - mouseCoords.Position).LengthSquared ascending
                                     select node).First();
 
-            mouseWorld = closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
-                                                    pManager.CurrentPrototype.PlacementOffset.Y);
-            mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+            mouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
+                                                                         pManager.CurrentPrototype.PlacementOffset.Y),
+                                               mouseCoords.Grid);
+            mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
             return true;
         }

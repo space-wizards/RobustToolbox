@@ -9,6 +9,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Placement.Modes
@@ -19,29 +20,32 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2i mouseS, IMapManager currentMap)
+        public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
+            var tilesize = mouseCoords.Grid.TileSize;
 
             if (!RangeCheck())
                 return false;
 
             if (pManager.CurrentPermission.IsTile)
             {
-                mouseWorld = new Vector2(currentTile.X + 0.5f,
-                                         currentTile.Y + 0.5f);
-                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+                mouseCoords = new LocalCoordinates(currentTile.X + tilesize/2,
+                                                  currentTile.Y + tilesize/2,
+                                                  mouseCoords.Grid);
+                mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
             else
             {
-                mouseWorld = new Vector2(currentTile.X + 0.5f + pManager.CurrentPrototype.PlacementOffset.X,
-                                         currentTile.Y + 0.5f + pManager.CurrentPrototype.PlacementOffset.Y);
-                mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+                mouseCoords = new LocalCoordinates(currentTile.X + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.X,
+                                                  currentTile.Y + tilesize/2 + pManager.CurrentPrototype.PlacementOffset.Y,
+                                                  mouseCoords.Grid);
+                mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
             }
 
             return true;

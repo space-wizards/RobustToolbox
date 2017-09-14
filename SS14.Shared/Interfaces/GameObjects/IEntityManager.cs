@@ -14,6 +14,8 @@ namespace SS14.Shared.Interfaces.GameObjects
         void Shutdown();
         void Update(float frameTime);
         void HandleEntityNetworkMessage(MsgEntity msg);
+        bool MapsInitialized { get; set; }
+
 
         #region Entity Management
 

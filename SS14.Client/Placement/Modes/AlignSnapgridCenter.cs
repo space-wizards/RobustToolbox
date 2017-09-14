@@ -9,6 +9,7 @@ using SS14.Shared.Utility;
 using SS14.Shared.Maths;
 using System;
 using OpenTK.Graphics;
+using SS14.Shared.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using Vector2 = SS14.Shared.Maths.Vector2;
@@ -29,8 +30,9 @@ namespace SS14.Client.Placement.Modes
             base.Render();
             if (ongrid)
             {
-                var position = CluwneLib.ScreenToWorld(new Vector2i(0, 0)); //Find world coordinates closest to screen origin
+                var position = CluwneLib.ScreenToCoordinates(new ScreenCoordinates(0,0,mouseCoords.MapID)); //Find world coordinates closest to screen origin
                 var gridstart = CluwneLib.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
+
                 (float)(Math.Round(((position.X / snapsize)-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize,
                 (float)(Math.Round(((position.Y / snapsize)-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize));
                 for (float a = gridstart.X; a < CluwneLib.Window.Viewport.Size.X; a += snapsize * 32) //Iterate through screen creating gridlines
@@ -44,29 +46,22 @@ namespace SS14.Client.Placement.Modes
             }
         }
 
-        public override bool Update(Vector2i mouseS, IMapManager currentMap)
+        public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+            
+            var snapsize = mouseCoords.Grid.SnapSize; //Find snap size.
 
-            if (! (ongrid = currentMap.TryFindGridAt(mouseWorld, out IMapGrid currentgrid))) //Cant find a grid
-                return false;
+            var mouselocal = new Vector2( //Round local coordinates onto the snap grid
+                (float)(Math.Round((mouseCoords.Position.X / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize, 
+                (float)(Math.Round((mouseCoords.Position.Y / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize);
 
-            var mouselocal = currentgrid.WorldToLocal(mouseWorld); //Convert code to local grid coordinates
-            snapsize = currentgrid.SnapSize; //Find snap size.
-
-            mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float)(Math.Round(((mouselocal.X / snapsize)- 0.5), MidpointRounding.AwayFromZero)+ 0.5) * snapsize,
-                (float)(Math.Round(((mouselocal.Y / snapsize)- 0.5), MidpointRounding.AwayFromZero)+ 0.5) * snapsize);
-
-            //Convert back to original world and screen coordinates after applying offset
-            mouseWorld = currentgrid.LocalToWorld(mouselocal) + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y);
-            mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
-
-            if (!pManager.CurrentPrototype.CanSpawnAt(currentgrid, mouselocal))
-                return false;
+            //Adjust mouseCoords to new calculated position
+            mouseCoords = new LocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), mouseCoords.Grid);
+            mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
 
             if (!RangeCheck())
                 return false;

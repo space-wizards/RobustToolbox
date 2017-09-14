@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -19,14 +20,14 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(Vector2 position, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
 
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                var relativePosition = position - transform.Position;
+                var relativePosition = worldPos.Position - transform.WorldPosition;
                 if (relativePosition.LengthSquared <= Range)
                 {
                     yield return entity;
@@ -46,7 +47,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.Position))
+                    if (position.Contains(transform.WorldPosition))
                     {
                         yield return entity;
                     }
@@ -66,7 +67,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (FloatMath.CloseTo(transform.Position.X, position.X) && FloatMath.CloseTo(transform.Position.Y, position.Y))
+                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -86,7 +87,7 @@ namespace SS14.Client.GameObjects
                 else
                 {
                     var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.Position))
+                    if (position.Contains(transform.WorldPosition))
                     {
                         return true;
                     }
@@ -135,7 +136,7 @@ namespace SS14.Client.GameObjects
             }
 
             // After the first set of states comes in we do the initialization.
-            if (!Initialized)
+            if (!Initialized && MapsInitialized)
             {
                 Initialize();
             }

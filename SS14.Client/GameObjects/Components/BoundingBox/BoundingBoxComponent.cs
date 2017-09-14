@@ -35,8 +35,8 @@ namespace SS14.Client.GameObjects
                 var bounds = AABB;
 
                 return Box2.FromDimensions(
-                    bounds.Left + trans.Position.X,
-                    bounds.Top + trans.Position.Y,
+                    bounds.Left + trans.WorldPosition.X,
+                    bounds.Top + trans.WorldPosition.Y,
                     bounds.Width,
                     bounds.Height);
             }

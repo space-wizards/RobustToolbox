@@ -6,7 +6,10 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -15,10 +18,11 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class TransformComponent : Component, ITransformComponent
     {
-        public Vector2 Position { get; private set; }
+        private Vector2 _position;
+        public int MapID { get; private set; }
+        public int GridID { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
-
         //TODO: Make parenting actually work.
 
         /// <inheritdoc />
@@ -31,7 +35,24 @@ namespace SS14.Client.GameObjects
         public override Type StateType => typeof(TransformComponentState);
 
         /// <inheritdoc />
-        public event EventHandler<VectorEventArgs> OnMove;
+        public event EventHandler<MoveEventArgs> OnMove;
+
+        public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
+
+        public Vector2 WorldPosition
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    return GetMapTransform().WorldPosition; //Search up the tree for the true map position
+                }
+                else
+                {
+                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
+                }
+            }
+        }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
@@ -39,10 +60,12 @@ namespace SS14.Client.GameObjects
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
 
-            if (Position != newState.Position)
+            if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
-                OnMove?.Invoke(this, new VectorEventArgs(Position, newState.Position));
-                Position = newState.Position;
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
+                _position = newState.Position;
+                MapID = newState.MapID;
+                GridID = newState.GridID;
             }
 
             if (Parent != newState.Parent)

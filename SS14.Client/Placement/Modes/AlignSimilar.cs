@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Placement.Modes
@@ -27,17 +28,17 @@ namespace SS14.Client.Placement.Modes
         {
         }
 
-        public override bool Update(Vector2i mouseS, IMapManager currentMap)
+        public override bool Update(ScreenCoordinates mouseS)
         {
-            if (currentMap == null) return false;
+            if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
             mouseScreen = mouseS;
-            mouseWorld = CluwneLib.ScreenToWorld(mouseScreen);
+            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = currentMap.GetDefaultGrid().GetTile(mouseWorld);
+            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -45,11 +46,12 @@ namespace SS14.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             IOrderedEnumerable<IEntity> snapToEntities =
-                from IEntity entity in manager.GetEntitiesInRange(mouseWorld, snapToRange)
-                where entity.Prototype == pManager.CurrentPrototype
+                from IEntity entity in manager.GetEntitiesInRange(mouseCoords, snapToRange)
+                where entity.Prototype == pManager.CurrentPrototype &&
+                      entity.GetComponent<ITransformComponent>().MapID == mouseCoords.MapID
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).Position - mouseWorld).LengthSquared
+                        ).WorldPosition - mouseCoords.ToWorld().Position).LengthSquared
                     ascending
                 select entity;
 
@@ -63,8 +65,8 @@ namespace SS14.Client.Placement.Modes
 
                     var closestRect =
                         Box2.FromDimensions(
-                            closestEntity.GetComponent<ITransformComponent>().Position.X - closestBounds.Width / 2f,
-                            closestEntity.GetComponent<ITransformComponent>().Position.Y - closestBounds.Height / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.X - closestBounds.Width / 2f,
+                            closestEntity.GetComponent<ITransformComponent>().WorldPosition.Y - closestBounds.Height / 2f,
                             closestBounds.Width, closestBounds.Height);
 
                     var sides = new Vector2[]
@@ -76,10 +78,10 @@ namespace SS14.Client.Placement.Modes
                     };
 
                     Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseWorld).LengthSquared ascending select side).First();
+                        (from Vector2 side in sides orderby (side - mouseCoords.Position).LengthSquared ascending select side).First();
 
-                    mouseWorld = closestSide;
-                    mouseScreen = (Vector2i)CluwneLib.WorldToScreen(mouseWorld);
+                    mouseCoords = new LocalCoordinates(closestSide, mouseCoords.Grid);
+                    mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
                 }
             }
 

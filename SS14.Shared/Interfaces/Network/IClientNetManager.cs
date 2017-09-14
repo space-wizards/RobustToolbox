@@ -41,5 +41,12 @@ namespace SS14.Shared.Interfaces.Network
         /// <param name="message"></param>
         /// <param name="deliveryMethod"></param>
         void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod);
+
+        /// <summary>
+        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="deliveryMethod"></param>
+        void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod);
     }
 }

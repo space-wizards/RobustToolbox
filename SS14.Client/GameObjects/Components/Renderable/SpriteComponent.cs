@@ -21,6 +21,7 @@ using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Utility;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -44,6 +45,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         public Color4 Color { get; set; } = Color4.White;
+        public int MapID {get; private set;}
 
         public override Type StateType => typeof(SpriteComponentState);
 
@@ -51,7 +53,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().Position.Y +
+                return Owner.GetComponent<ITransformComponent>().WorldPosition.Y +
                        (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
             }
         }
@@ -151,6 +153,20 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove += OnMove;
+        }
+
+        public override void Shutdown()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove -= OnMove;
+            base.Shutdown();
+        }
+
+        public void OnMove(object sender, MoveEventArgs args)
+        {
+            MapID = args.NewPosition.MapID;
         }
 
         public void ClearSprites()
@@ -231,7 +247,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         /// <param name="worldPos">World position to check.</param>
         /// <returns>Is the world position inside of the sprite?</returns>
-        public virtual bool WasClicked(Vector2 worldPos)
+        public virtual bool WasClicked(LocalCoordinates worldPos)
         {
             var spriteToCheck = GetActiveDirectionalSprite();
 
@@ -249,10 +265,10 @@ namespace SS14.Client.GameObjects
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
 
             // absolute world bounds
-            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
+            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().WorldPosition);
 
             // check if clicked inside of the rectangle
-            if (!worldBounds.Contains(worldPos))
+            if (!worldBounds.Contains(worldPos.ToWorld().Position))
                 return false;
 
             // Get the sprite's position within the texture
@@ -337,14 +353,14 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
             var bounds = spriteToRender.GetLocalBounds();
-            SetSpriteCenter(spriteToRender, renderPos);
+            SetSpriteCenter(spriteToRender, renderPos.Position);
 
-            if (Owner.GetComponent<ITransformComponent>().Position.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<ITransformComponent>().Position.X > bottomRight.X
-                || Owner.GetComponent<ITransformComponent>().Position.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<ITransformComponent>().Position.Y > bottomRight.Y)
+            if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
+                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
@@ -380,6 +396,11 @@ namespace SS14.Client.GameObjects
             var bounds = GetActiveDirectionalSprite().GetLocalBounds();
             sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),
                                                        center.Y - (bounds.Height / 2));
+        }
+
+        public void SetSpriteCenter(Sprite sprite, LocalCoordinates worldPos)
+        {
+            SetSpriteCenter(sprite, worldPos.Position);
         }
 
         public bool IsSlaved()

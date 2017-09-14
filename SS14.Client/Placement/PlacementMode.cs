@@ -17,8 +17,8 @@ namespace SS14.Client.Placement
         public readonly PlacementManager pManager;
 
         public TileRef currentTile;
-        public Vector2i mouseScreen;
-        public Vector2 mouseWorld;
+        public ScreenCoordinates mouseScreen;
+        public LocalCoordinates mouseCoords;
         public Sprite spriteToDraw;
         public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
         public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
@@ -34,7 +34,7 @@ namespace SS14.Client.Placement
             get { return GetType().Name; }
         }
 
-        public virtual bool Update(Vector2i mouseScreen, IMapManager currentMap) //Return valid position?
+        public virtual bool Update(ScreenCoordinates mouseScreen)
         {
             return false;
         }
@@ -50,7 +50,7 @@ namespace SS14.Client.Placement
             var bounds = spriteToDraw.GetLocalBounds().Convert();
             spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
             spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
-                                                    mouseScreen.Y - (bounds.Height / 2f));
+                                                 mouseScreen.Y - (bounds.Height / 2f));
             //Centering the sprite on the cursor.
             spriteToDraw.Draw();
         }
@@ -78,10 +78,8 @@ namespace SS14.Client.Placement
         {
             if (!rangerequired)
                 return true;
-            var rangeSquared = pManager.CurrentPermission.Range * pManager.CurrentPermission.Range;
-            if (rangeSquared > 0)
-                if ((pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>()
-                         .Position - mouseWorld).LengthSquared > rangeSquared)
+            var range = pManager.CurrentPermission.Range;
+            if (range > 0 && !pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(mouseCoords, range))
                     return false;
             return true;
         }
@@ -91,8 +89,8 @@ namespace SS14.Client.Placement
             var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
             var bounds = drawsprite.GetLocalBounds();
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
-            var spriteRectWorld = Box2.FromDimensions(mouseWorld.X - (spriteSize.X / 2f),
-                                                 mouseWorld.Y - (spriteSize.Y / 2f),
+            var spriteRectWorld = Box2.FromDimensions(mouseCoords.X - (spriteSize.X / 2f),
+                                                 mouseCoords.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                 return false;

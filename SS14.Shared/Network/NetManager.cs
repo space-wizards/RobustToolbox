@@ -447,6 +447,13 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
+        public void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod)
+        {
+            var packet = BuildMessage(message);
+            ClientSendMessage(packet, deliveryMethod);
+        }
+
+        /// <inheritdoc />
         public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
         {
             // not connected to a server, so a message cannot be sent to it.

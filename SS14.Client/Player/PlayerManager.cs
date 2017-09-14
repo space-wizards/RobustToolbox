@@ -34,7 +34,7 @@ namespace SS14.Client.Player
         #region IPlayerManager Members
 
         public event EventHandler<TypeEventArgs> RequestedStateSwitch;
-        public event EventHandler<VectorEventArgs> OnPlayerMove;
+        public event EventHandler<MoveEventArgs> OnPlayerMove;
 
         public IEntity ControlledEntity { get; private set; }
 
@@ -185,7 +185,7 @@ namespace SS14.Client.Player
                 _effects.Remove(effect);
         }
 
-        private void PlayerEntityMoved(object sender, VectorEventArgs args)
+        private void PlayerEntityMoved(object sender, MoveEventArgs args)
         {
             if (OnPlayerMove != null)
                 OnPlayerMove(sender, args);

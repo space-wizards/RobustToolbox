@@ -14,6 +14,9 @@ using GraphicsContext = OpenTK.Graphics.GraphicsContext;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Map;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
 
 namespace SS14.Client.Graphics
 {
@@ -385,6 +388,11 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the world (tile) space, to screen (pixel) space.
         /// </summary>
+        public static ScreenCoordinates WorldToScreen(LocalCoordinates point)
+        {
+            return new ScreenCoordinates(((point.Position - Window.Camera.Position) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2), point.MapID);
+        }
+
         public static Vector2 WorldToScreen(Vector2 point)
         {
             var center = Window.Camera.Position;
@@ -423,9 +431,11 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static Vector2 ScreenToWorld(Vector2i point)
+        public static LocalCoordinates ScreenToCoordinates(ScreenCoordinates point)
         {
-            return ((Vector2)point - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
+            var pos = (point.Position - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
+            return new LocalCoordinates(pos, grid);
         }
 
         /// <summary>
@@ -438,6 +448,16 @@ namespace SS14.Client.Graphics
                 ((Vector2)rect.TopLeft - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center,
                 ((Vector2)rect.BottomRight - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center
             );
+        }
+
+        /// <summary>
+        /// Transforms a point from the screen (pixel) space, to world (tile) space.
+        /// </summary>
+        public static LocalCoordinates ScreenToWorld(Vector2i point, int argMap)
+        {
+            var pos = ((Vector2)point - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
+            var grid = IoCManager.Resolve<IMapManager>().GetMap(argMap).FindGridAt(pos);
+            return new LocalCoordinates(pos, grid);
         }
 
         /// <summary>
@@ -460,7 +480,7 @@ namespace SS14.Client.Graphics
         public InputEvents(RenderWindow window)
         {
             // if dummy don't attach events
-            if(window == null)
+            if (window == null)
                 return;
 
             RenderWindow _window = window;
@@ -475,6 +495,7 @@ namespace SS14.Client.Graphics
             _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
             _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
         }
+
 
         public event EventHandler<KeyEventArgs> KeyPressed;
         public event EventHandler<KeyEventArgs> KeyReleased;

@@ -7,6 +7,7 @@ import sys
 import traceback
 
 VERSION = sys.version_info
+NO_PROMPT = "--no-prompt" in sys.argv
 
 sane_input = raw_input if VERSION.major < 3 else input
 
@@ -14,7 +15,8 @@ def main():
     if VERSION.major < 3 or (VERSION.major == 3 and VERSION.minor < 5):
         print("ERROR: You need at least Python 3.5 to build SS14.")
         # Need "press enter to exit" stuff because Windows just immediately closes conhost.
-        sane_input("Press enter to exit...")
+        if not NO_PROMPT:
+            sane_input("Press enter to exit...")
         exit(1)
 
     # Import git_helper by modifying the path.
@@ -29,9 +31,11 @@ def main():
         print("ERROR:")
         traceback.print_exc()
         print("This was NOT intentional. If the error is not immediately obvious, ask on Discord or IRC for help.")
-        sane_input("Press enter to exit...")
+        if not NO_PROMPT:
+            sane_input("Press enter to exit...")
         exit(1)
 
 if __name__ == "__main__":
     main()
-    sane_input("Success! Press enter to exit...")
+    if not NO_PROMPT:
+        sane_input("Success! Press enter to exit...")

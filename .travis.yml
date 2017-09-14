@@ -20,7 +20,7 @@ before_install:
 
 before_script:
 - "nuget restore SpaceStation14.sln"
-- "python3.6 RUN_THIS.py"
+- "python3.6 RUN_THIS.py --no-prompt"
 
 script:
 - "python3.6 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"

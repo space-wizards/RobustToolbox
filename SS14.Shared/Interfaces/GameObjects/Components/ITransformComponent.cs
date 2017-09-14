@@ -43,5 +43,15 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         ///     Returns whether the entity of this transform contains the entity argument
         /// </summary>
         bool ContainsEntity(ITransformComponent entity);
+
+        /// <summary>
+        ///     Returns the index of the map which this object is on
+        /// </summary>
+        int MapID { get; }
+
+        /// <summary>
+        ///     Returns the index of the grid which this object is on
+        /// </summary>
+        int GridID { get; }
     }
 }

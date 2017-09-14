@@ -48,7 +48,7 @@ namespace SS14.Client.Placement.Modes
             IOrderedEnumerable<IEntity> snapToEntities =
                 from IEntity entity in manager.GetEntitiesInRange(mouseCoords, snapToRange)
                 where entity.Prototype == pManager.CurrentPrototype &&
-                      entity.GetComponent<ITransformComponent>().LocalPosition.MapID == mouseCoords.MapID
+                      entity.GetComponent<ITransformComponent>().MapID == mouseCoords.MapID
                 orderby
                     (entity.GetComponent<ITransformComponent>(
                         ).WorldPosition - mouseCoords.ToWorld().Position).LengthSquared

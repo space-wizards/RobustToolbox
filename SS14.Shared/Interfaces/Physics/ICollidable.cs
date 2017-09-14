@@ -24,5 +24,10 @@ namespace SS14.Shared.Interfaces.Physics
         ///     Called when the collidable is bumped into by someone/something
         /// </summary>
         void Bump(IEntity ent);
+
+        /// <summary>
+        ///     The map index this collidable is located upon
+        /// </summary>
+        int MapID { get; }
     }
 }

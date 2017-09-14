@@ -327,7 +327,7 @@ namespace SS14.Client.State.States
             if (PlayerManager.ControlledEntity != null)
             {
                 var vp = CluwneLib.WorldViewport;
-                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.MapID;
+                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
 
                 if (!bFullVision)
                 {
@@ -361,7 +361,7 @@ namespace SS14.Client.State.States
                 else
                     LightScene();
 
-                RenderDebug(vp);
+                RenderDebug(vp, map);
 
                 //Render the placement manager shit
                 PlacementManager.Render();
@@ -410,7 +410,7 @@ namespace SS14.Client.State.States
             _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
-        private void RenderDebug(Box2 viewport)
+        private void RenderDebug(Box2 viewport, int argMap)
         {
             if (debugWallOccluders || debugPlayerShadowMap)
                 _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, Color.White, BlitterSizeMode.Scale);
@@ -419,6 +419,7 @@ namespace SS14.Client.State.States
             {
                 var collidables =
                     _componentManager.GetComponents<CollidableComponent>()
+                    .Where(c => c.MapID == argMap)
                     .Select(c => new { Color = c.DebugColor, AABB = c.Owner.GetComponent<BoundingBoxComponent>().WorldAABB })
                     .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
 
@@ -663,7 +664,7 @@ namespace SS14.Client.State.States
         {
             if(PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
-                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.LocalPosition.MapID);
+                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.MapID);
             }
             else
             {

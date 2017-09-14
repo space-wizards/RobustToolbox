@@ -122,7 +122,9 @@ namespace SS14.Shared.Physics
                     .SelectMany(b => b.GetPoints()) // Get all of the points
                     .Select(p => p.ParentAABB) // Expand points to distinct AABBs
                     .Distinct()
-                    .Where(aabb => aabb.Collidable.WorldAABB != collider.WorldAABB && aabb.Collidable.WorldAABB.Intersects(colliderAABB)); //try all of the AABBs against the target rect.
+                    .Where(aabb => aabb.Collidable.WorldAABB != collider.WorldAABB && 
+                           aabb.Collidable.WorldAABB.Intersects(colliderAABB) && 
+                           aabb.Collidable.MapID == collider.MapID); //try all of the AABBs against the target rect.
 
             //try all of the AABBs against the target rect.
             var collided = false;

@@ -22,8 +22,8 @@ namespace SS14.Server.GameObjects
         public ITransformComponent Parent { get; set; }
 
         private Vector2 _position;
-        private int MapID = MapManager.NULLSPACE;
-        private int GridID = 0;
+        public int MapID { get; private set; } = MapManager.NULLSPACE;
+        public int GridID { get; private set; } = 0;
 
         /// <summary>
         ///     Current rotation offset of the entity.

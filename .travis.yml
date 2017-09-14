@@ -7,16 +7,24 @@ os:
 - linux
 - osx
 
+addons:
+  apt:
+    sources:
+    - deadsnakes
+
+    packages:
+    - python3.6
+
 before_install:
   - if [ $TRAVIS_OS_NAME = osx ]; then brew update && brew install python3; fi
 
 before_script:
 - "nuget restore SpaceStation14.sln"
-- "python3 RUN_THIS.py"
+- "python3.6 RUN_THIS.py --no-prompt"
 
 script:
-- "python3 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
-- "msbuild /p:Configuration=Release /p:Platform=x86 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln"
+- "python3.6 ./Resources/buildResourcePack.py --resources-dir ./Resources --out ./Resources/ResourcePack.zip --no-atlas --no-animations --to-stderr"
+- "msbuild /p:Configuration=Release /p:Platform=x86 /p:HEADLESS=1 /nologo /m /p:AllowMissingMacNatives=yes SpaceStation14.sln /p:Python=python3.6"
 - "cd packages/NUnit.ConsoleRunner.3.7.0/tools"
 - "mono --debug nunit3-console.exe ../../../bin/UnitTesting/SS14.UnitTesting.dll"
 

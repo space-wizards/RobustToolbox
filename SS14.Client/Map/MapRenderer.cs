@@ -23,8 +23,6 @@ namespace SS14.Client.Map
     {
         public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
-            var walls = new List<TileRef>();
-            var viewport = CluwneLib.WorldViewport;
             foreach (var tileReference in tileRefs)
             {
                 var tileType = tileReference.TileDef;

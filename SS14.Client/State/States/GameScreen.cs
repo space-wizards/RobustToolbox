@@ -1124,9 +1124,22 @@ namespace SS14.Client.State.States
         private void DrawTiles(Box2 vision)
         {
             var position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
-            var tiles = position.Grid.GetTilesIntersecting(vision, false);
+            var grids = position.Map.FindGridsIntersecting(vision); //Collect all grids in vision range
 
-            MapRenderer.DrawTiles(tiles, _floorBatch, _gasBatch);
+            //Draw the default grid as the background which will be drawn over
+            var background = position.Map.GetDefaultGrid().GetTilesIntersecting(vision, false);
+            MapRenderer.DrawTiles(background, _floorBatch, _gasBatch);
+
+            foreach (var grid in grids)
+            {
+                //We've already drawn the default grid
+                if (grid.Index == SS14.Shared.Map.MapManager.DEFAULTGRID)
+                    continue;
+
+                //Collects all tiles from grids in vision, gathering empty tiles only from the default grid
+                var gridtiles = grid.GetTilesIntersecting(vision);
+                MapRenderer.DrawTiles(gridtiles, _floorBatch, _gasBatch);
+            }
         }
 
         /// <summary>

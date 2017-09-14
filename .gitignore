@@ -81,3 +81,7 @@ NetSerializerDebug.dll
 Third-Party/extlibs/Mac/
 # Or the automatically-fetched Windows natives, for that matter.
 Third-Party/extlibs/Windows/
+
+# Python stuff
+__pycache__
+.mypy_cache

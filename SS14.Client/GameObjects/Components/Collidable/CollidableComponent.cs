@@ -32,6 +32,9 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
+        /// <inheritdoc />
+        public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
+
         /// <summary>
         ///     Called when the collidable is bumped into by someone/something
         /// </summary>

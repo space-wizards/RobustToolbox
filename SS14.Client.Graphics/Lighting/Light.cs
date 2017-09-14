@@ -2,6 +2,7 @@
 using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
@@ -11,6 +12,8 @@ namespace SS14.Client.Graphics.Lighting
         private LightState lightState = LightState.On;
 
         private Vector2 position;
+        private int MapID;
+        private int GridID;
 
         private int radius;
 
@@ -19,14 +22,16 @@ namespace SS14.Client.Graphics.Lighting
             Radius = 256;
         }
 
-        public Vector2 Position
+        public LocalCoordinates Coordinates
         {
-            get => position;
+            get => new LocalCoordinates(position, GridID, MapID);
             set
             {
-                if (position != value)
+                if (position != value.Position || MapID != value.MapID || GridID != value.GridID)
                 {
-                    position = value;
+                    position = value.Position;
+                    MapID = value.MapID;
+                    GridID = value.GridID;
                     LightArea.Calculated = false;
                 }
             }

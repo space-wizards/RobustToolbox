@@ -10,22 +10,22 @@ namespace SS14.Shared.Map
     /// </summary>
     public struct TileRef
     {
-        private readonly MapManager _manager;
+        private readonly int _mapIndex;
         private readonly int _gridIndex;
         private readonly Tile _tile;
         private readonly MapGrid.Indices _gridTile;
         
-        internal TileRef(MapManager manager, int gridIndex, int xIndex, int yIndex, Tile tile)
+        internal TileRef(int argMap, int gridIndex, int xIndex, int yIndex, Tile tile)
         {
-            _manager = manager;
+            _mapIndex = argMap;
             _gridTile = new MapGrid.Indices(xIndex, yIndex);
             _gridIndex = gridIndex;
             _tile = tile;
         }
 
-        internal TileRef(MapManager manager, int gridIndex, MapGrid.Indices gridTile, Tile tile)
+        internal TileRef(int argMap, int gridIndex, MapGrid.Indices gridTile, Tile tile)
         {
-            _manager = manager;
+            _mapIndex = argMap;
             _gridTile = gridTile;
             _gridIndex = gridIndex;
             _tile = tile;
@@ -33,13 +33,16 @@ namespace SS14.Shared.Map
 
         public int X => _gridTile.X;
         public int Y => _gridTile.Y;
-        public Vector2f LocalPos => _manager.GetGrid(_gridIndex).GridTileToLocal(_gridTile);
-        public Vector2f WorldPos => _manager.GetGrid(_gridIndex).GridTileToWorld(_gridTile);
-        public ushort TileSize => _manager.TileSize;
+        public LocalCoordinates LocalPos => IoCManager.Resolve<IMapManager>().GetMap(_mapIndex).GetGrid(_gridIndex).GridTileToLocal(_gridTile);
+        public ushort TileSize => IoCManager.Resolve<IMapManager>().GetMap(_mapIndex).GetGrid(_gridIndex).TileSize;
         public Tile Tile
         {
             get => _tile;
-            set => _manager.GetGrid(_gridIndex).SetTile(_gridTile.X, _gridTile.Y, value);
+            set
+            {
+                IMapGrid grid = IoCManager.Resolve<IMapManager>().GetMap(_mapIndex).GetGrid(_gridIndex);
+                grid.SetTile(new LocalCoordinates(_gridTile.X, _gridTile.Y, grid), value);
+            }
         }
 
         public ITileDefinition TileDef => IoCManager.Resolve<ITileDefinitionManager>()[Tile.TileId];
@@ -85,7 +88,7 @@ namespace SS14.Shared.Map
                     return false;
             }
             currenttile += shift;
-            return _manager.GetGrid(_gridIndex).IndicesToTile(currenttile, out steptile);
+            return IoCManager.Resolve<IMapManager>().GetMap(_mapIndex).GetGrid(_gridIndex).IndicesToTile(currenttile, out steptile);
         }
     }
 }

@@ -20,8 +20,10 @@ namespace SS14.Shared.Network.Messages
         public bool IsTile { get; set; }
         public ushort TileType { get; set; }
         public string EntityTemplateName { get; set; }
-        public float XRcv { get; set; }
-        public float YRcv { get; set; }
+        public float XValue { get; set; }
+        public float YValue { get; set; }
+        public int GridIndex { get; set; }
+        public int MapIndex { get; set; }
         public Direction DirRcv { get; set; }
 
         public int Range { get; set; }
@@ -39,8 +41,10 @@ namespace SS14.Shared.Network.Messages
                 if (IsTile) TileType = buffer.ReadUInt16();
                 else EntityTemplateName = buffer.ReadString();
 
-                XRcv = buffer.ReadFloat();
-                YRcv = buffer.ReadFloat();
+                XValue = buffer.ReadFloat();
+                YValue = buffer.ReadFloat();
+                GridIndex = buffer.ReadInt32();
+                MapIndex = buffer.ReadInt32();
                 DirRcv = (Direction)buffer.ReadByte();
             }
             else if (PlaceType == PlacementManagerMessage.StartPlacement)
@@ -65,10 +69,14 @@ namespace SS14.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     buffer.Write(Align);
                     buffer.Write(IsTile);
+
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);
-                    buffer.Write(XRcv);
-                    buffer.Write(YRcv);
+
+                    buffer.Write(XValue);
+                    buffer.Write(YValue);
+                    buffer.Write(GridIndex);
+                    buffer.Write(MapIndex);
                     buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:

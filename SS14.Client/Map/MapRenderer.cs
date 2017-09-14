@@ -10,6 +10,8 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Client.Interfaces.Player;
+using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.Map
 {
@@ -21,8 +23,6 @@ namespace SS14.Client.Map
     {
         public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
-            var walls = new List<TileRef>();
-
             foreach (var tileReference in tileRefs)
             {
                 var tileType = tileReference.TileDef;

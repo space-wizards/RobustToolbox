@@ -46,6 +46,7 @@ namespace SS14.Shared.GameObjects
             = new Queue<Tuple<object, EntityEventArgs>>();
 
         public bool Initialized { get; protected set; }
+        public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
 
@@ -117,7 +118,7 @@ namespace SS14.Shared.GameObjects
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                if (FloatMath.CloseTo(transform.Position.X, position.X) && FloatMath.CloseTo(transform.Position.Y, position.Y))
+                if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
                 {
                     yield return entity;
                 }

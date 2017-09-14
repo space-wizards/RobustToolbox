@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -25,6 +26,7 @@ namespace SS14.Client.GameObjects
         private Dictionary<string, ParticleSystem> _emitters = new Dictionary<string, ParticleSystem>(); // List of particle emitters.
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
+        public int MapID { get; private set; }
 
         public DrawDepth DrawDepth { get; set; } = DrawDepth.ItemsOnTables;
         #endregion Variables.
@@ -39,14 +41,15 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(ParticleSystemComponentState);
 
-        public void OnMove(object sender, VectorEventArgs args)
+        public void OnMove(object sender, MoveEventArgs args)
         {
-            var offset = new Vector2(args.VectorTo.X, args.VectorTo.Y) -
-                         new Vector2(args.VectorFrom.X, args.VectorFrom.Y);
+            var offset = new Vector2(args.NewPosition.Position.X, args.NewPosition.Position.Y) -
+                         new Vector2(args.OldPosition.Position.X, args.OldPosition.Position.Y);
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
                 particleSystem.Value.MoveEmitter(particleSystem.Value.EmitterPosition + offset);
             }
+            MapID = args.NewPosition.MapID;
         }
 
         public override void OnAdd(IEntity owner)
@@ -74,12 +77,11 @@ namespace SS14.Client.GameObjects
 
         public virtual void Render(Vector2 topLeft, Vector2 bottomRight)
         {
-            Vector2 renderPos = CluwneLib.WorldToScreen(
-                    Owner.GetComponent<ITransformComponent>().Position);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
 
             foreach (KeyValuePair<string, ParticleSystem> particleSystem in _emitters)
             {
-                particleSystem.Value.Move(renderPos);
+                particleSystem.Value.Move(renderPos.Position);
                 particleSystem.Value.Render();
             }
         }
@@ -88,7 +90,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().Position.Y;
+                return Owner.GetComponent<ITransformComponent>().WorldPosition.Y;
             }
         }
 

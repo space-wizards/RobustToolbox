@@ -63,8 +63,12 @@ namespace SS14.Server.Placement
             if (isTile) tileType = msg.TileType;
             else entityTemplateName = msg.EntityTemplateName;
 
-            float xRcv = msg.XRcv;
-            float yRcv = msg.YRcv;
+            float XValue = msg.XValue;
+            float YValue = msg.YValue;
+            int GridIndex = msg.GridIndex;
+            int MapIndex = msg.MapIndex;
+            var coordinates = new LocalCoordinates(XValue, YValue, GridIndex, MapIndex);
+
             var dirRcv = msg.DirRcv;
 
             IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.MsgChannel.NetworkId);
@@ -73,8 +77,8 @@ namespace SS14.Server.Placement
 
             PlacementInformation permission = GetPermission(session.attachedEntity.Uid, alignRcv);
 
-            float a = (float)Math.Floor(xRcv);
-            float b = (float)Math.Floor(yRcv);
+            float a = (float)Math.Floor(XValue);
+            float b = (float)Math.Floor(YValue);
             Vector2 tilePos = new Vector2(a, b);
 
             if (permission != null || true)
@@ -102,17 +106,17 @@ namespace SS14.Server.Placement
                 if (!isTile)
                 {
                     var manager = IoCManager.Resolve<IServerEntityManager>();
-                    if(manager.TrySpawnEntityAt(entityTemplateName, new Vector2(xRcv, yRcv), out IEntity created))
+                    if(manager.TrySpawnEntityAt(entityTemplateName, coordinates, out IEntity created))
                     {
-                        created.GetComponent<TransformComponent>().Position =
-                            new Vector2(xRcv, yRcv);
+                        created.GetComponent<TransformComponent>().WorldPosition =
+                            new Vector2(XValue, YValue);
                         if (created.TryGetComponent<TransformComponent>(out var component))
                             component.Rotation = dirRcv.ToAngle();
                     }
                 }
                 else
                 {
-                    mapMgr.GetGrid(mapMgr.DefaultGridId).SetTile(tilePos, new Tile(tileType));
+                    coordinates.Grid.SetTile(coordinates, new Tile(tileType));
                 }
             }
         }

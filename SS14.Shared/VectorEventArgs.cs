@@ -1,17 +1,18 @@
 ﻿using System;
 using SS14.Shared.Maths;
+using SS14.Shared.Map;
 
 namespace SS14.Shared
 {
-    public class VectorEventArgs : EventArgs
+    public class MoveEventArgs : EventArgs
     {
-        public VectorEventArgs(Vector2 vectorFrom, Vector2 vectorTo)
+        public MoveEventArgs(LocalCoordinates oldPos, LocalCoordinates newPos)
         {
-            VectorFrom = vectorFrom;
-            VectorTo = vectorTo;
+            OldPosition = oldPos;
+            NewPosition = newPos;
         }
 
-        public Vector2 VectorFrom { get; }
-        public Vector2 VectorTo { get; }
+        public LocalCoordinates OldPosition { get; }
+        public LocalCoordinates NewPosition { get; }
     }
 }

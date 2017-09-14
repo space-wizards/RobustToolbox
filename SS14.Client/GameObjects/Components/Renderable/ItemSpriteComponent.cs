@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using OpenTK.Graphics;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -205,7 +206,7 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public override bool WasClicked(Vector2 worldPos)
+        public override bool WasClicked(LocalCoordinates worldPos)
         {
             return !IsInHand && base.WasClicked(worldPos);
         }

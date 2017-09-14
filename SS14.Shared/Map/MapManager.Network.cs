@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Map
 {
@@ -24,6 +25,8 @@ namespace SS14.Shared.Map
         ///     The accepted version of the NetworkMessage map format.
         /// </summary>
         private const int MapVersion = 1;
+        private int GridsToReceive = -1;
+        private int GridsReceived = 0;
 
         /// <summary>
         ///     Default constructor.
@@ -59,6 +62,9 @@ namespace SS14.Shared.Map
                 case MapMessage.SendTileMap:
                     HandleTileMap(message);
                     break;
+                case MapMessage.SendMapInfo:
+                    CollectMapInfo(message);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(message));
             }
@@ -69,51 +75,62 @@ namespace SS14.Shared.Map
         {
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
-            //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
-            const int MAP_INDEX = 0;
-
             Logger.Log(channel.RemoteAddress + ": Sending map");
 
-            var message = _netManager.CreateNetMessage<MsgMap>();
-            message.MessageType = MapMessage.SendTileMap;
-            message.MapIndex = MAP_INDEX;
-            // Tile definition mapping
-            message.TileDefs = new MsgMap.TileDef[_defManager.Count];
+            int QuantityGridsSent = 0;
 
-            for (var i = 0; i < _defManager.Count; i++)
+            foreach(Map Map in GetAllMaps())
             {
-                message.TileDefs[i] = new MsgMap.TileDef()
+                foreach(IMapGrid Grid in Map.GetAllGrids())
                 {
-                    Name = _defManager[i].Name
-                };
-            }
+                    QuantityGridsSent++;
+                    var message = _netManager.CreateNetMessage<MsgMap>();
+                    message.MessageType = MapMessage.SendTileMap;
+                    message.MapIndex = Map.Index;
+                    message.GridIndex = Grid.Index;
+                    // Tile definition mapping
+                    message.TileDefs = new MsgMap.TileDef[_defManager.Count];
 
-            // Map chunks
-            var grid = _mapManager.GetGrid(MAP_INDEX);
-            var gridSize = grid.ChunkSize;
-            message.ChunkSize = gridSize;
-            message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
-            var defCounter = 0;
-            foreach (var chunk in grid.GetMapChunks())
-            {
-                var newChunk = new MsgMap.ChunkDef()
-                {
-                    X = chunk.X,
-                    Y = chunk.Y
-                };
-                
-                newChunk.Tiles = new uint[gridSize * gridSize];
-                var counter = 0;
-                foreach (var tile in chunk)
-                {
-                    newChunk.Tiles[counter] = (uint)tile.Tile;
-                    counter++;
+                    for (var i = 0; i < _defManager.Count; i++)
+                    {
+                        message.TileDefs[i] = new MsgMap.TileDef()
+                        {
+                            Name = _defManager[i].Name
+                        };
+                    }
+
+                    // Map chunks
+                    var grid = _mapManager.GetMap(Map.Index).GetGrid(Grid.Index);
+                    var gridSize = grid.ChunkSize;
+                    message.ChunkSize = gridSize;
+                    message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
+                    var defCounter = 0;
+                    foreach (var chunk in grid.GetMapChunks())
+                    {
+                        var newChunk = new MsgMap.ChunkDef()
+                        {
+                            X = chunk.X,
+                            Y = chunk.Y
+                        };
+
+                        newChunk.Tiles = new uint[gridSize * gridSize];
+                        var counter = 0;
+                        foreach (var tile in chunk)
+                        {
+                            newChunk.Tiles[counter] = (uint)tile.Tile;
+                            counter++;
+                        }
+
+                        message.ChunkDefs[defCounter++] = newChunk;
+                    }
+
+                    _netManager.ServerSendMessage(message, channel);
                 }
-
-                message.ChunkDefs[defCounter++] = newChunk;
             }
-
-            _netManager.ServerSendMessage(message, channel);
+            var mapmessage = _netManager.CreateNetMessage<MsgMap>();
+            mapmessage.MessageType = MapMessage.SendMapInfo;
+            mapmessage.MapGridsToSend = QuantityGridsSent;
+            _netManager.ServerSendMessage(mapmessage, channel);
         }
 
         /// <summary>
@@ -180,15 +197,21 @@ namespace SS14.Shared.Map
         {
             Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
+            GridsReceived++;
+
             var mapIndex = message.MapIndex;
+            var gridIndex = message.GridIndex;
 
             _defManager.RegisterServerTileMapping(message);
 
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;
 
-            if (!_mapManager.TryGetGrid(mapIndex, out IMapGrid grid))
-                grid = _mapManager.CreateGrid(mapIndex, chunkSize);
+            if (!_mapManager.TryGetMap(mapIndex, out IMap map))
+                map = _mapManager.CreateMap(mapIndex);
+            if (!map.GridExists(gridIndex))
+                _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
+            IMapGrid grid = _mapManager.GetMap(mapIndex).GetGrid(gridIndex);
 
             for (var i = 0; i < chunkCount; ++i)
             {
@@ -205,6 +228,11 @@ namespace SS14.Shared.Map
                     }
                 }
             }
+
+            if(GridsReceived == GridsToReceive)
+            {
+                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
+            }
         }
 
         /// <summary>
@@ -218,11 +246,21 @@ namespace SS14.Shared.Map
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
             var tile = (Tile) message.SingleTurf.Tile;
+            
+            LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
+            coords.Grid.SetTile(coords, tile); //TODO: Fix this
+        }
 
-            //TODO: This should be a part of the network message, so that multiple maps(z-levels) are possible.
-            const int MAP_INDEX = 0;
+        private void CollectMapInfo(MsgMap message)
+        {
+            Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
-            _mapManager.GetGrid(MAP_INDEX).SetTile(x, y, tile);
+            GridsToReceive = message.MapGridsToSend;
+
+            if (GridsReceived == GridsToReceive)
+            {
+                IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
+            }
         }
     }
 }

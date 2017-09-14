@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-using OpenTK.Graphics;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Utility;
 
@@ -39,29 +39,29 @@ namespace SS14.Client.GameObjects
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
         public Color4 Color { get; set; } = Color4.White;
+        public int MapID { get; private set; }
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
 
         /// <summary>
         ///     Center of the Y axis of the sprite bounds in world coords.
         /// </summary>
-        public float Bottom => Owner.GetComponent<ITransformComponent>().Position.Y + sprite.LocalAABB.Height / 2;
+        public float Bottom => Owner.GetComponent<ITransformComponent>().WorldPosition.Y + sprite.LocalAABB.Height / 2;
 
         public Box2 AverageAABB
         {
             get
             {
-                var tileSize = IoCManager.Resolve<IMapManager>().TileSize;
                 var aaabb = sprite.AverageAABB;
                 return Box2.FromDimensions(
-                    aaabb.Left / tileSize, aaabb.Top / tileSize,
-                    aaabb.Width / tileSize, aaabb.Height / tileSize
+                    aaabb.Left, aaabb.Top,
+                    aaabb.Width, aaabb.Height
                     );
             }
         }
 
         #region ISpriteComponent Members
-
+        
         public virtual Box2 LocalAABB => sprite.LocalAABB;
 
         public bool HorizontalFlip { get; set; }
@@ -73,6 +73,20 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove += OnMove;
+        }
+
+        public override void Shutdown()
+        {
+            var transform = Owner.GetComponent<ITransformComponent>();
+            transform.OnMove -= OnMove;
+            base.Shutdown();
+        }
+
+        public void OnMove(object sender, MoveEventArgs args)
+        {
+            MapID = args.NewPosition.MapID;
         }
 
         public void SetSprite()
@@ -145,7 +159,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         /// <param name="worldPos">World position to check.</param>
         /// <returns>Is the world position inside of the sprite?</returns>
-        public virtual bool WasClicked(Vector2 worldPos)
+        public virtual bool WasClicked(LocalCoordinates worldPos)
         {
             if (sprite == null || !visible) return false;
 
@@ -163,10 +177,10 @@ namespace SS14.Client.GameObjects
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
 
             // absolute world bounds
-            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().Position);
+            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().WorldPosition);
 
             // check if clicked inside of the rectangle
-            if (!worldBounds.Contains(worldPos))
+            if (!worldBounds.Contains(worldPos.ToWorld().Position))
                 return false;
 
             // Get the sprite's position within the texture
@@ -242,10 +256,10 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            var ownerPos = Owner.GetComponent<ITransformComponent>().Position;
+            var ownerPos = Owner.GetComponent<ITransformComponent>().LocalPosition;
 
-            Vector2 renderPos = CluwneLib.WorldToScreen(ownerPos);
-            SetSpriteCenter(renderPos);
+            var renderPos = CluwneLib.WorldToScreen(ownerPos);
+            SetSpriteCenter(renderPos.Position);
             var bounds = sprite.TextureRect;
 
             if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
@@ -273,7 +287,7 @@ namespace SS14.Client.GameObjects
             var aabb = LocalAABB;
 
             if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().Position),
+                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition),
                                    new Vector2(), aabb);
         }
 

@@ -16,6 +16,7 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
@@ -41,15 +42,14 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TrySpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position, out IEntity entity)
+        public bool TrySpawnEntityAt(string EntityType, LocalCoordinates coordinates, out IEntity entity)
         {
             var prototype = _protoManager.Index<EntityPrototype>(EntityType);
-            if (prototype.CanSpawnAt(grid, position))
+            if (prototype.CanSpawnAt(coordinates.Grid, coordinates.Position))
             {
-                IEntity typecastentity = SpawnEntity(EntityType);
-                typecastentity.GetComponent<TransformComponent>().Position = position;
-                typecastentity.Initialize();
-                entity = typecastentity;
+                entity = SpawnEntity(EntityType);
+                entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
+                entity.Initialize();
                 return true;
             }
             entity = null;
@@ -57,33 +57,28 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TrySpawnEntityAt(string EntityType, Vector2 position, out IEntity entity)
+        public bool TrySpawnEntityAt(string EntityType, Vector2 position, int argMap, out IEntity entity)
         {
-            var mapmanager = IoCManager.Resolve<IMapManager>(); //TODO: wait we only have one map? this only supports one map
-            if (mapmanager.TryFindGridAt(position, out IMapGrid gridlocation))
-            {
-                return TrySpawnEntityAt(EntityType, gridlocation, position, out entity);
-            }
-            entity = null;
-            return true;
+            var mapmanager = IoCManager.Resolve<IMapManager>();
+            var coordinates = new LocalCoordinates(position, mapmanager.GetMap(argMap).FindGridAt(position));
+            return TrySpawnEntityAt(EntityType, coordinates, out entity);
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string EntityType, IMapGrid grid, Vector2 position)
+        public IEntity ForceSpawnEntityAt(string EntityType, LocalCoordinates coordinates)
         {
             IEntity entity = SpawnEntity(EntityType);
-            entity.GetComponent<TransformComponent>().Position = position;
+            entity.GetComponent<TransformComponent>().LocalPosition = coordinates;
             entity.Initialize();
             return entity;
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string EntityType, Vector2 position)
+        public IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, int argMap)
         {
-            IEntity entity = SpawnEntity(EntityType);
-            entity.GetComponent<TransformComponent>().Position = position;
-            entity.Initialize();
-            return entity;
+            var mapmanager = IoCManager.Resolve<IMapManager>();
+            var coordinates = new LocalCoordinates(position, mapmanager.GetMap(argMap).FindGridAt(position));
+            return ForceSpawnEntityAt(EntityType, coordinates);
         }
 
         public List<EntityState> GetEntityStates()
@@ -133,9 +128,8 @@ namespace SS14.Server.GameObjects
 
             string template = e.Attribute("template").Value;
             string name = e.Attribute("name").Value;
-            IEntity ent = SpawnEntity(template);
+            IEntity ent = ForceSpawnEntityAt(template, new LocalCoordinates(new Vector2(X, Y), 1, 1));
             ent.Name = name;
-            ent.GetComponent<TransformComponent>().Position = new Vector2(X, Y);
             ent.GetComponent<TransformComponent>().Rotation = (float) dir.ToAngle();
         }
 
@@ -143,10 +137,10 @@ namespace SS14.Server.GameObjects
         {
             var el = new XElement("SavedEntity",
                                   new XAttribute("X",
-                                                 e.GetComponent<ITransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().LocalPosition.
                                                      X.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("Y",
-                                                 e.GetComponent<ITransformComponent>().Position.
+                                                 e.GetComponent<ITransformComponent>().LocalPosition.
                                                      Y.ToString(CultureInfo.InvariantCulture)),
                                   new XAttribute("template", e.Prototype.ID),
                                   new XAttribute("name", e.Name),

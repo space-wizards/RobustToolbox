@@ -14,6 +14,7 @@ using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Map;
 
 namespace SS14.Client.GameObjects
 {
@@ -147,20 +148,20 @@ namespace SS14.Client.GameObjects
             base.Shutdown();
         }
 
-        private void OnMove(object sender, VectorEventArgs args)
+        private void OnMove(object sender, MoveEventArgs args)
         {
-            UpdateLightPosition(args.VectorTo);
+            UpdateLightPosition(args.NewPosition);
         }
 
-        protected void UpdateLightPosition(Vector2 NewPosition)
+        protected void UpdateLightPosition(LocalCoordinates NewPosition)
         {
-            Light.Position = NewPosition + Offset;
+            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
         }
 
         protected void UpdateLightPosition()
         {
             var transform = Owner.GetComponent<ITransformComponent>();
-            UpdateLightPosition(transform.Position);
+            UpdateLightPosition(transform.LocalPosition);
         }
 
         public override void Update(float frameTime)

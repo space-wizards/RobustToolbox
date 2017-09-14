@@ -5,6 +5,9 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Maths;
 using SS14.Server.Interfaces.GameObjects;
+using SS14.Shared.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Map;
 
 namespace SS14.Server.GameObjects
 {
@@ -19,6 +22,8 @@ namespace SS14.Server.GameObjects
         public ITransformComponent Parent { get; set; }
 
         private Vector2 _position;
+        public int MapID { get; private set; } = MapManager.NULLSPACE;
+        public int GridID { get; private set; } = 0;
 
         /// <summary>
         ///     Current rotation offset of the entity.
@@ -32,35 +37,61 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.TRANSFORM;
 
         /// <inheritdoc />
-        public event EventHandler<VectorEventArgs> OnMove;
+        public event EventHandler<MoveEventArgs> OnMove;
 
         /// <inheritdoc />
-        public Vector2 Position
+        public LocalCoordinates LocalPosition
         {
             get
             {
                 if (Parent != null)
                 {
-                    return GetMapTransform().Position; //Search up the tree for the true map position
+                    return GetMapTransform().LocalPosition; //Search up the tree for the true map position
                 }
                 else
                 {
-                    return _position;
+                    return new LocalCoordinates(_position, GridID, MapID);
                 }
             }
             set
             {
-                var oldPosition = _position;
-                _position = value;
+                var oldPosition = LocalPosition;
+                _position = value.Position;
+                
+                MapID = value.MapID;
+                GridID = value.GridID;
 
-                OnMove?.Invoke(this, new VectorEventArgs(oldPosition, _position));
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, value));
+            }
+        }
+
+        public Vector2 WorldPosition
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    return GetMapTransform().WorldPosition; //Search up the tree for the true map position
+                }
+                else
+                {
+                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
+                }
+            }
+            set
+            {
+                var oldPosition = LocalPosition;
+                _position = value;
+                GridID = IoCManager.Resolve<IMapManager>().GetMap(MapID).FindGridAt(_position).Index;
+
+                OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(_position, GridID, MapID)));
             }
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(Position, Rotation, Parent);
+            return new TransformComponentState(LocalPosition, Rotation, Parent);
         }
 
         /// <summary>

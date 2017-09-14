@@ -19,6 +19,7 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
+using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
@@ -94,7 +95,7 @@ namespace SS14.Server.Player
         public void SpawnPlayerMob(IPlayerSession session)
         {
             //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.ForceSpawnEntityAt("HumanMob", new Vector2(0, 0));
+            IEntity entity = _entityManager.ForceSpawnEntityAt("HumanMob", new Vector2(0, 0), 1); //TODO: Fix this
             session.AttachToEntity(entity);
         }
 
@@ -195,13 +196,14 @@ namespace SS14.Server.Player
         /// <param name="position">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(Vector2 position, int range)
+        public List<IPlayerSession> GetPlayersInRange(LocalCoordinates position, int range)
         {
+
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Values.Where(x =>
                     x.attachedEntity != null &&
-                    (position - x.attachedEntity.GetComponent<ITransformComponent>().Position).LengthSquared < range * range)
+                    position.InRange(x.attachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
                     .ToList();
         }

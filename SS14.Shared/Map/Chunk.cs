@@ -62,7 +62,7 @@ namespace SS14.Shared.Map
                 throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
 
             var indices = ChunkTileToGridTile(new MapGrid.Indices(xTile, yTile));
-            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
+            return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[xTile, yTile]);
         }
         public TileRef GetTile(MapGrid.Indices indices)
         {
@@ -70,7 +70,7 @@ namespace SS14.Shared.Map
             if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
                 throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
             
-            return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
+            return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
         }
 
         /// <inheritdoc />
@@ -84,7 +84,7 @@ namespace SS14.Shared.Map
                     continue;
 
                 var indices = ChunkTileToGridTile(new MapGrid.Indices(x, y));
-                yield return new TileRef(_mapManager, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                yield return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
             }
         }
 
@@ -96,7 +96,7 @@ namespace SS14.Shared.Map
 
             var gridTile = ChunkTileToGridTile(new MapGrid.Indices(xChunkTile, yChunkTile));
 
-            var newTileRef = new TileRef(_mapManager, _grid.Index, gridTile.X, gridTile.Y, tile);
+            var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
             var oldTile = _tiles[xChunkTile, yChunkTile];
             _mapManager.RaiseOnTileChanged(_grid.Index, newTileRef, oldTile);
             _grid.UpdateAABB(gridTile);
@@ -114,7 +114,7 @@ namespace SS14.Shared.Map
             for (var y = 0; y < ChunkSize; y++)
             {
                 var gridTile = ChunkTileToGridTile(new MapGrid.Indices(x, y));
-                yield return new TileRef(_mapManager, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                yield return new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
             }
         }
 

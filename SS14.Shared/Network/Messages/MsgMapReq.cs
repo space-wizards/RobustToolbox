@@ -19,7 +19,9 @@ namespace SS14.Shared.Network.Messages
             : base(NAME, GROUP, ID)
         { }
         #endregion
-        
+
+        public int MapGridsToSend { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
         }

@@ -13,9 +13,15 @@ If you want to learn more about these kinds of things, check out Microsoft's off
 https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition="'$(Python)' == ''">
+      <PropertyGroup>
+        <Python>python3</Python>
+        <Python Condition="'$(OS)'=='Windows_NT' Or '$(OS)'=='Windows'">py -3</Python>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <PropertyGroup>
-    <Python>python3</Python>
-    <Python Condition="'$(OS)'=='Windows_NT' Or '$(OS)'=='Windows'">py -3</Python>
     <ProjectGuid>{D0DA124B-5580-4345-A02B-9F051F78915F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>

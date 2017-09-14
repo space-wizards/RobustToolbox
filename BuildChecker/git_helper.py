@@ -8,7 +8,9 @@ import shutil
 from pathlib import Path
 from typing import List
 
-SOLUTION_PATH = Path("..") / "SpaceStation14Content.sln"
+BUILD_CHECKER_PATH = Path(Path(__file__).resolve(strict=True).parent)
+SS14_ROOT_PATH = Path(BUILD_CHECKER_PATH.parent)
+SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14Content.sln")
 CURRENT_HOOKS_VERSION = "2" # If this doesn't match the saved version we overwrite them all.
 QUIET = "--quiet" in sys.argv
 NO_HOOKS = "--nohooks" in sys.argv
@@ -26,12 +28,12 @@ def run_command(command: List[str], capture: bool = False) -> subprocess.Complet
     completed = None
 
     if capture:
-        completed = subprocess.run(command, cwd="..", stdout=subprocess.PIPE)
+        completed = subprocess.run(command, cwd=str(SS14_ROOT_PATH), stdout=subprocess.PIPE)
     else:
-        completed = subprocess.run(command, cwd="..")
+        completed = subprocess.run(command, cwd=str(SS14_ROOT_PATH))
 
     if completed.returncode != 0:
-        print("Error: command exited with code {}!".format(completed.returncode))
+        raise RuntimeError("Error: command exited with code {}!".format(completed.returncode))
 
     return completed
 
@@ -41,15 +43,11 @@ def update_submodules():
     Updates all submodules.
     """
 
-    # If the status doesn't match, force VS to reload the solution.
-    # status = run_command(["git", "submodule", "status"], capture=True)
-    run_command(["git", "submodule", "update", "--init", "--recursive"])
-    # status2 = run_command(["git", "submodule", "status"], capture=True)
+    status = run_command(["git", "submodule", "update", "--init", "--recursive"], capture=True)
 
-    # Something changed.
-    # if status.stdout != status2.stdout:
-    #     print("Git submodules changed. Reloading solution.")
-    #     reset_solution()
+    if status.stdout.decode().strip():
+        print("Git submodules changed. Reloading solution.")
+        reset_solution()
 
 def install_hooks():
     """
@@ -57,20 +55,20 @@ def install_hooks():
     """
 
     # Read version file.
-    if os.path.isfile("INSTALLED_HOOKS_VERSION"):
-        with open("INSTALLED_HOOKS_VERSION", "r") as f:
+    if os.path.isfile(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION"):
+        with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "r") as f:
             if f.read() == CURRENT_HOOKS_VERSION:
                 if not QUIET:
                     print("No hooks change detected.")
                 return
 
-    with open("INSTALLED_HOOKS_VERSION", "w") as f:
+    with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "w") as f:
         f.write(CURRENT_HOOKS_VERSION)
 
     print("Hooks need updating.")
 
-    hooks_target_dir = Path("..")/".git"/"hooks"
-    hooks_source_dir = Path("hooks")
+    hooks_target_dir = SS14_ROOT_PATH/".git"/"hooks"
+    hooks_source_dir = BUILD_CHECKER_PATH/"hooks"
 
     if not os.path.exists(str(hooks_target_dir)):
         os.makedirs(str(hooks_target_dir))
@@ -86,7 +84,8 @@ def install_hooks():
 
 def reset_solution():
     """
-    Force VS to think the solution has been changed to prompt the user to reload it, thus fixing any load errors.
+    Force VS to think the solution has been changed to prompt the user to reload it,
+    thus fixing any load errors.
     """
 
     with SOLUTION_PATH.open("r") as f:
@@ -95,7 +94,10 @@ def reset_solution():
     with SOLUTION_PATH.open("w") as f:
         f.write(content)
 
-if __name__ == '__main__':
+def main():
     if not NO_HOOKS:
         install_hooks()
     update_submodules()
+
+if __name__ == '__main__':
+    main()

@@ -10,7 +10,7 @@ from typing import List
 
 BUILD_CHECKER_PATH = Path(Path(__file__).resolve().parent)
 SS14_ROOT_PATH = Path(BUILD_CHECKER_PATH.parent)
-SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14Content.sln")
+SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14.sln")
 CURRENT_HOOKS_VERSION = "2" # If this doesn't match the saved version we overwrite them all.
 QUIET = "--quiet" in sys.argv
 NO_HOOKS = "--nohooks" in sys.argv

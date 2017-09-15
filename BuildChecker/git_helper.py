@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 from typing import List
 
-BUILD_CHECKER_PATH = Path(Path(__file__).resolve(strict=True).parent)
+BUILD_CHECKER_PATH = Path(Path(__file__).resolve().parent)
 SS14_ROOT_PATH = Path(BUILD_CHECKER_PATH.parent)
 SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14Content.sln")
 CURRENT_HOOKS_VERSION = "2" # If this doesn't match the saved version we overwrite them all.

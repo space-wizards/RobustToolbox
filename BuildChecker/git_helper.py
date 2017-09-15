@@ -55,14 +55,16 @@ def install_hooks():
     """
 
     # Read version file.
-    if os.path.isfile(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION"):
-        with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "r") as f:
+    hooks_version_file = BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION"
+
+    if os.path.isfile(str(hooks_version_file)):
+        with open(str(hooks_version_file), "r") as f:
             if f.read() == CURRENT_HOOKS_VERSION:
                 if not QUIET:
                     print("No hooks change detected.")
                 return
 
-    with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "w") as f:
+    with open(str(hooks_version_file), "w") as f:
         f.write(CURRENT_HOOKS_VERSION)
 
     print("Hooks need updating.")

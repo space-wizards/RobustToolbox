@@ -8,9 +8,9 @@ import shutil
 from pathlib import Path
 from typing import List
 
-BUILD_CHECKER_PATH = Path(Path(__file__).resolve(strict=True).parent)
+BUILD_CHECKER_PATH = Path(Path(__file__).resolve().parent)
 SS14_ROOT_PATH = Path(BUILD_CHECKER_PATH.parent)
-SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14Content.sln")
+SOLUTION_PATH = Path(SS14_ROOT_PATH/"SpaceStation14.sln")
 CURRENT_HOOKS_VERSION = "2" # If this doesn't match the saved version we overwrite them all.
 QUIET = "--quiet" in sys.argv
 NO_HOOKS = "--nohooks" in sys.argv
@@ -55,14 +55,16 @@ def install_hooks():
     """
 
     # Read version file.
-    if os.path.isfile(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION"):
-        with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "r") as f:
+    hooks_version_file = BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION"
+
+    if os.path.isfile(str(hooks_version_file)):
+        with open(str(hooks_version_file), "r") as f:
             if f.read() == CURRENT_HOOKS_VERSION:
                 if not QUIET:
                     print("No hooks change detected.")
                 return
 
-    with open(BUILD_CHECKER_PATH/"INSTALLED_HOOKS_VERSION", "w") as f:
+    with open(str(hooks_version_file), "w") as f:
         f.write(CURRENT_HOOKS_VERSION)
 
     print("Hooks need updating.")

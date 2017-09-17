@@ -109,21 +109,14 @@ namespace SS14.Client.GameObjects
             return this;
         }
 
-        public bool IsMapTransform(ITransformComponent transform)
-        {
-            if (transform.Parent != null)
-            {
-                return false;
-            }
-            return true;
-        }
+        public bool IsMapTransform => Parent == null;
 
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
         public bool ContainsEntity(ITransformComponent transform)
         {
-            if (IsMapTransform(transform)) //Is the entity on the map
+            if (transform.IsMapTransform) //Is the entity on the map
             {
                 if (this == transform.Parent) //Is this the direct container of the entity
                 {

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace SS14.Server.GameObjects.Components.Container
 {
@@ -23,7 +24,7 @@ namespace SS14.Server.GameObjects.Components.Container
             {
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
             }
-            T container = (T)Activator.CreateInstance(typeof(T), id);
+            T container = (T)Activator.CreateInstance(typeof(T), id, this);
             EntityContainers[id] = container;
             return container;
         }

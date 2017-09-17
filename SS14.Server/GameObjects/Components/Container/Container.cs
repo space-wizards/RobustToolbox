@@ -31,7 +31,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Deleted { get; private set; } = false;
 
-        private List<IEntity> ContainerList;
+        private List<IEntity> ContainerList = new List<IEntity>();
 
         /// <summary>
         /// Shortcut method to make creation of containers easier.
@@ -58,7 +58,7 @@ namespace SS14.Server.GameObjects.Components.Container
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> or <see cref="Create" /> instead.
         /// </summary>
-        internal Container(string id, IContainerManager manager)
+        public Container(string id, IContainerManager manager)
         {
             ID = id;
             Manager = manager;
@@ -78,10 +78,16 @@ namespace SS14.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool Insert(IEntity toinsert)
         {
-            if (CanInsert(toinsert) && toinsert.GetComponent<ITransformComponent>().Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert)) //Verify we can insert and that the object got properly removed from its current location
+            if (CanInsert(toinsert)) //Verify we can insert and that the object got properly removed from its current location
             {
+                var transform = toinsert.GetComponent<IServerTransformComponent>();
+                if (!transform.IsMapTransform && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
+                {
+                    // Can't detach the entity from its parent, can't insert.
+                    return false;
+                }
                 ContainerList.Add(toinsert);
-                toinsert.GetComponent<IServerTransformComponent>().AttachParent(Owner.GetComponent<ITransformComponent>());
+                transform.AttachParent(Owner.GetComponent<ITransformComponent>());
                 //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }

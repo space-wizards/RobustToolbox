@@ -4,7 +4,7 @@ using System;
 using System.Globalization;
 using YamlDotNet.RepresentationModel;
 
-namespace SS14.UnitTesting.SS14.Shared.Utility
+namespace SS14.UnitTesting.Shared.Utility
 {
     [TestFixture]
     public class YamlHelpers_Test : SS14UnitTest

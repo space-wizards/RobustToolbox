@@ -57,7 +57,7 @@ namespace SS14.Server.GameObjects
             {
                 var oldPosition = LocalPosition;
                 _position = value.Position;
-                
+
                 MapID = value.MapID;
                 GridID = value.GridID;
 
@@ -131,32 +131,27 @@ namespace SS14.Server.GameObjects
             return this;
         }
 
-        public bool IsMapTransform(ITransformComponent transform)
-        {
-            if (transform.Parent != null)
-            {
-                return false;
-            }
-            return true;
-        }
+
+        public bool IsMapTransform => Parent == null;
 
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
         public bool ContainsEntity(ITransformComponent transform)
         {
-            if (IsMapTransform(transform)) //Is the entity on the map
+            if (transform.IsMapTransform) //Is the entity on the map
             {
-                if (this == transform.Parent) //Is this the direct container of the entity
-                {
-                    return true;
-                }
-                else
-                {
-                    return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
-                }
+                return false;
             }
-            return false;
+
+            if (this == transform.Parent) //Is this the direct container of the entity
+            {
+                return true;
+            }
+            else
+            {
+                return ContainsEntity(transform.Parent); //Recursively search up the entitys containers for this object
+            }
         }
     }
 }

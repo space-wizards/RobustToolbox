@@ -11,78 +11,124 @@ using SS14.Shared.IoC;
 
 namespace SS14.Server.GameObjects.Components.Container
 {
-    abstract class Container : IContainer
+    /// <summary>
+    /// Default implementation for containers,
+    /// cannot be inherited. If additional logic is needed,
+    /// this logic should go on the systems that are holding this container.
+    /// For example, inventory containers should be modified only through an inventory component.
+    /// </summary>
+    public sealed class Container : IContainer
     {
-        private List<IEntity> ContainerList;
+        /// <inheritdoc />
+        public string ID { get; }
 
-        public Container(IComponent holder)
+        /// <inheritdoc />
+        public IContainerManager Manager { get; private set; }
+
+        /// <inheritdoc />
+        public IEntity Owner => Manager.Owner;
+
+        /// <inheritdoc />
+        public bool Deleted { get; private set; } = false;
+
+        private List<IEntity> ContainerList = new List<IEntity>();
+
+        /// <summary>
+        /// Shortcut method to make creation of containers easier.
+        /// Creates a new container on the entity and gives it back to you.
+        /// </summary>
+        /// <param name="id">The ID of the new container.</param>
+        /// <param name="entity">The entity to create the container for.</param>
+        /// <returns>The new container.</returns>
+        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
+        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        public static IContainer Create(string id, IEntity entity)
         {
-            if (!holder.Owner.TryGetComponent<IContainerManager>(out var containermanager))
+            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
             {
                 var factory = IoCManager.Resolve<IComponentFactory>();
-                holder.Owner.AddComponent(factory.GetComponent<ContainerManagerComponent>());
+                containermanager = factory.GetComponent<ContainerManagerComponent>();
+                entity.AddComponent(containermanager);
             }
-            Owner = holder.Owner;
-            if(containermanager.EntityContainers.ContainsKey(holder.GetType()))
-            {
-                throw new InvalidOperationException(); //This system is designed to have singular containers per component, make a new component dummy.
-            }
-            containermanager.EntityContainers[holder.GetType()] = this;
+
+            return containermanager.MakeContainer<Container>(id);
         }
 
-        private IEntity Owner { get; set; }
-
-        public virtual bool CanInsert(IEntity toinsert)
+        /// <summary>
+        /// DO NOT CALL THIS METHOD DIRECTLY!
+        /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> or <see cref="Create" /> instead.
+        /// </summary>
+        public Container(string id, IContainerManager manager)
         {
-            if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>())) //Crucial, prevent circular insertion
+            ID = id;
+            Manager = manager;
+        }
+
+        /// <inheritdoc />
+        public bool CanInsert(IEntity toinsert)
+        {
+            // Crucial, prevent circular insertion.
+            if (toinsert.GetComponent<ITransformComponent>().ContainsEntity(Owner.GetComponent<ITransformComponent>()))
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Attempt to insert entity into one of its children.");
             }
             return true;
         }
 
+        /// <inheritdoc />
         public bool Insert(IEntity toinsert)
         {
-            if (CanInsert(toinsert) && toinsert.GetComponent<ITransformComponent>().Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert)) //Verify we can insert and that the object got properly removed from its current location
+            if (CanInsert(toinsert)) //Verify we can insert and that the object got properly removed from its current location
             {
+                var transform = toinsert.GetComponent<IServerTransformComponent>();
+                if (!transform.IsMapTransform && !transform.Parent.Owner.GetComponent<IContainerManager>().Remove(toinsert))
+                {
+                    // Can't detach the entity from its parent, can't insert.
+                    return false;
+                }
                 ContainerList.Add(toinsert);
-                toinsert.GetComponent<IServerTransformComponent>().AttachParent(Owner.GetComponent<ITransformComponent>());
+                transform.AttachParent(Owner.GetComponent<ITransformComponent>());
                 //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }
             return false;
         }
 
-        public virtual bool CanRemove(IEntity toremove)
+        /// <inheritdoc />
+        public bool CanRemove(IEntity toremove)
         {
-            if(!ContainerList.Contains(toremove))
+            return Contains(toremove);
+        }
+
+        /// <inheritdoc />
+        public bool Remove(IEntity toremove)
+        {
+            if (!CanRemove(toremove))
             {
                 return false;
             }
+            ContainerList.Remove(toremove);
+            toremove.GetComponent<IServerTransformComponent>().DetachParent();
+            //OnRemoval(toremove); If necessary a component may add eventhandlers for this and delegate some functions to it
             return true;
         }
 
-        public bool Remove(IEntity toremove)
-        {
-            if (CanRemove(toremove))
-            {
-                ContainerList.Remove(toremove);
-                toremove.GetComponent<IServerTransformComponent>().DetachParent();
-                //OnRemoval(toremove); If necessary a component may add eventhandlers for this and delegate some functions to it
-                return true;
-            }
-            return false;
-        }
-
+        /// <inheritdoc />
         public bool Contains(IEntity contained)
         {
             return ContainerList.Contains(contained);
         }
 
+        /// <inheritdoc />
         public void Shutdown()
         {
-            Owner = null;
-            ContainerList.Clear();
+            Deleted = true;
+            Manager = null;
+            foreach (var entity in ContainerList)
+            {
+                var transform = entity.GetComponent<IServerTransformComponent>();
+                transform.DetachParent();
+            }
         }
     }
 }

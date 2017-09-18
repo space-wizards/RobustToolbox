@@ -11,7 +11,7 @@ using System.IO;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.UnitTesting.SS14.Shared.Prototypes
+namespace SS14.UnitTesting.Shared.Prototypes
 {
     [TestFixture]
     public class PrototypeManager_Test : SS14UnitTest

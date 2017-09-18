@@ -35,6 +35,11 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         ITransformComponent Parent { get; }
 
         /// <summary>
+        /// Whether or not this entity is on the map, AKA it has no parent.
+        /// </summary>
+        bool IsMapTransform { get; }
+
+        /// <summary>
         ///     Finds the transform located on the map or in nullspace
         /// </summary>
         ITransformComponent GetMapTransform();

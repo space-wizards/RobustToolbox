@@ -6,7 +6,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
 using System;
 
-namespace SS14.UnitTesting.SS14.Shared.IoC
+namespace SS14.UnitTesting.Shared.IoC
 {
     [TestFixture]
     public class IoCManager_Test : SS14UnitTest

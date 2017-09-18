@@ -6,7 +6,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using System;
 
-namespace SS14.UnitTesting.SS14.Client.Helpers
+namespace SS14.UnitTesting.Client.Helpers
 {
     [TestFixture, Explicit]
     [Category("rendering")]

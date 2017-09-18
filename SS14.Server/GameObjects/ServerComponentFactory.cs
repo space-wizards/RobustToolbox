@@ -30,11 +30,13 @@ namespace SS14.Server.GameObjects
             Register<WearableAnimatedSpriteComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+            RegisterReference<TransformComponent, IServerTransformComponent>();
 
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
         }
     }
 }

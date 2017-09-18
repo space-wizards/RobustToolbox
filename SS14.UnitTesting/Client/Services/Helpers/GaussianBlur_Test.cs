@@ -10,7 +10,7 @@ using SS14.Client.Helpers;
 using SS14.Shared.Interfaces.Configuration;
 using System;
 
-namespace SS14.UnitTesting.SS14.Client.Helpers
+namespace SS14.UnitTesting.Client.Helpers
 {
     [TestFixture, Explicit]
     [Category("rendering")]

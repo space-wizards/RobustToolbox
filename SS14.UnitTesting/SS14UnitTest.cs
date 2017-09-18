@@ -234,11 +234,11 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IConsoleManager, ConsoleManager>();
                     IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
                     IoCManager.Register<IRoundManager, RoundManager>();
-                    IoCManager.Register<IEntityNetworkManager, Server.GameObjects.ServerEntityNetworkManager>();
+                    IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
                     IoCManager.Register<ICommandLineArgs, CommandLineArgs>();
                     IoCManager.Register<IGameStateManager, GameStateManager>();
                     IoCManager.Register<IReflectionManager, ServerReflectionManager>();
-                    IoCManager.Register<IClientConsoleHost, Server.ClientConsoleHost.ClientConsoleHost>();
+                    IoCManager.Register<IClientConsoleHost, SS14.Server.ClientConsoleHost.ClientConsoleHost>();
                     IoCManager.Register<IPlayerManager, PlayerManager>();
                     IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     IoCManager.Register<IBaseServer, BaseServer>();

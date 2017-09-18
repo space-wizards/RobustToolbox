@@ -2,7 +2,7 @@ using NUnit.Framework;
 using SS14.Shared.Utility;
 using System.Collections.Generic;
 
-namespace SS14.UnitTesting.SS14.Shared.Utility
+namespace SS14.UnitTesting.Shared.Utility
 {
     [TestFixture]
     public class CollectionExtensions_Test

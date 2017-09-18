@@ -4,7 +4,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 
-namespace SS14.UnitTesting.SS14.Client.Graphics.Sprite
+namespace SS14.UnitTesting.Client.Graphics.Sprite
 {
     [TestFixture, Explicit]
     [Category("rendering")]

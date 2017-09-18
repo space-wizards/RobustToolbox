@@ -5,7 +5,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
 
-namespace SS14.UnitTesting.SS14.Client.Graphics.Shaders
+namespace SS14.UnitTesting.Client.Graphics.Shaders
 {
     [TestFixture, Explicit]
     [Category("rendering")]

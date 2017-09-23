@@ -61,7 +61,7 @@ namespace SS14.Client.GameObjects
         }
 
         #region ISpriteComponent Members
-        
+
         public virtual Box2 LocalAABB => sprite.LocalAABB;
 
         public bool HorizontalFlip { get; set; }
@@ -73,8 +73,14 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             //Send a spritechanged message so everything knows whassup.
             Owner.SendMessage(this, ComponentMessageType.SpriteChanged);
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
             var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove += OnMove;
+            MapID = transform.MapID;
         }
 
         public override void Shutdown()

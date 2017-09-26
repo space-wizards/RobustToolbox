@@ -65,7 +65,10 @@ namespace SS14.Shared.ContentPack
         public static void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
             where T : GameShared
         {
-            AssemblyTypeChecker.DisableTypeCheck = false;
+            // TODO: Re-enable type check when it's not just a giant pain in the butt.
+            // It slows down development too much and we need other things like System.Type fixed
+            // before it can reasonably be re-enabled.
+            AssemblyTypeChecker.DisableTypeCheck = true;
             AssemblyTypeChecker.DumpTypes = true;
             if (!AssemblyTypeChecker.CheckAssembly(assembly))
                 return;

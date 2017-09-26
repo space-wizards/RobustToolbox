@@ -200,7 +200,6 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
-            Serializer.Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this);
             IoCManager.Resolve<IMapManager>().Initialize();
@@ -218,6 +217,11 @@ namespace SS14.Server
 
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameServer>("Server");
+
+            // HAS to happen after content gets loaded.
+            // Else the content types won't be included.
+            // TODO: solve this properly.
+            Serializer.Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
@@ -565,7 +569,7 @@ namespace SS14.Server
                 var floor = defManager["Floor"].TileId;
 
                 Debug.Assert(floor > 0);
-                
+
                 var manager = IoCManager.Resolve<IServerEntityManager>();
                 var map = mapManager.CreateMap(1); //TODO: default map
                 var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID

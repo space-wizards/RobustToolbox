@@ -428,7 +428,15 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IComponent> GetComponents()
         {
-            return _components;
+            for (var i = 0; i < _components.Count; i++)
+            {
+                var component = _components[i];
+                if (component.Deleted)
+                {
+                    continue;
+                }
+                yield return component;
+            }
         }
 
         public IEnumerable<T> GetComponents<T>()

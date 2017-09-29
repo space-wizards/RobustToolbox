@@ -34,7 +34,7 @@ namespace SS14.Server.GameObjects
         public void SaveEntities()
         {
             IEnumerable<XElement> entities = from IEntity e in GetEntities()
-                                             where e.Prototype.ID != "HumanMob"
+                                             where e.Prototype.ID != "HumanMob" && e.Prototype.ID != "HumanMob_Content"
                                              select ToXML(e);
 
             var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));

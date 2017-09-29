@@ -52,6 +52,8 @@ namespace SS14.Shared.Prototypes
         /// Thrown if the ID does not exist or the type of prototype is not registered.
         /// </exception>
         IIndexedPrototype Index(Type type, string id);
+        bool HasIndex<T>(string id) where T: IIndexedPrototype;
+        bool TryIndex<T>(string id, out T prototype) where T: IIndexedPrototype;
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
@@ -97,7 +99,7 @@ namespace SS14.Shared.Prototypes
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
-            return prototypes[typeof(T)].Select((IPrototype p) => p as T);
+            return prototypes[typeof(T)].Select((IPrototype p) => (T)p);
         }
 
         public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
@@ -109,7 +111,7 @@ namespace SS14.Shared.Prototypes
         {
             try
             {
-                return indexedPrototypes[typeof(T)][id] as T;
+                return (T)indexedPrototypes[typeof(T)][id];
             }
             catch (KeyNotFoundException)
             {
@@ -268,6 +270,26 @@ namespace SS14.Shared.Prototypes
                     indexedPrototypes[prototypeType][id] = (IIndexedPrototype)prototype;
                 }
             }
+        }
+
+        public bool HasIndex<T>(string id) where T : IIndexedPrototype
+        {
+            if (!indexedPrototypes.TryGetValue(typeof(T), out var index))
+            {
+                throw new UnknownPrototypeException(id);
+            }
+            return index.ContainsKey(id);
+        }
+
+        public bool TryIndex<T>(string id, out T prototype) where T : IIndexedPrototype
+        {
+            if (!indexedPrototypes.TryGetValue(typeof(T), out var index))
+            {
+                throw new UnknownPrototypeException(id);
+            }
+            var returned = index.TryGetValue(id, out var uncast);
+            prototype = (T)uncast;
+            return returned;
         }
     }
 

@@ -11,6 +11,7 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
 using System.Collections.Generic;
 using System.Linq;
 using Lidgren.Network;
@@ -35,14 +36,18 @@ namespace SS14.Server.Player
         public IBaseServer Server;
 
         private readonly Dictionary<int, PlayerSession> _sessions;
+
+        [Dependency]
         private readonly IServerEntityManager _entityManager;
+
+        [Dependency]
+        private readonly IPrototypeManager _prototypeManager;
 
         /// <summary>
         /// Constructs an instance of the player manager.
         /// </summary>
         public PlayerManager()
         {
-            _entityManager = IoCManager.Resolve<IServerEntityManager>();
             _sessions = new Dictionary<int, PlayerSession>();
         }
 
@@ -94,8 +99,13 @@ namespace SS14.Server.Player
         /// <param name="session"></param>
         public void SpawnPlayerMob(IPlayerSession session)
         {
-            //TODO: There's probably a much better place to do this.
-            IEntity entity = _entityManager.ForceSpawnEntityAt("HumanMob", new Vector2(0, 0), 1); //TODO: Fix this
+            // TODO: There's probably a much better place to do this.
+            var prototype = "HumanMob";
+            if (_prototypeManager.HasIndex<EntityPrototype>("HumanMob_Content"))
+            {
+                prototype = "HumanMob_Content";
+            }
+            IEntity entity = _entityManager.ForceSpawnEntityAt(prototype, new Vector2(0, 0), 1); //TODO: Fix this
             session.AttachToEntity(entity);
         }
 

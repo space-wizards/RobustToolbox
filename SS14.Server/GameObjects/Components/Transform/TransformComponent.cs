@@ -91,7 +91,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(LocalPosition, Rotation, Parent);
+            return new TransformComponentState(LocalPosition, Rotation, Parent?.Owner?.Uid);
         }
 
         /// <summary>
@@ -130,7 +130,6 @@ namespace SS14.Server.GameObjects
             }
             return this;
         }
-
 
         public bool IsMapTransform => Parent == null;
 

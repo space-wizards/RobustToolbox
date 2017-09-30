@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using OpenTK;
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Maths;
-using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using System;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -68,10 +65,15 @@ namespace SS14.Client.GameObjects
                 GridID = newState.GridID;
             }
 
-            if (Parent != newState.Parent)
+            if (Parent?.Owner?.Uid != newState.ParentID)
             {
                 DetachParent();
-                AttachParent(newState.Parent);
+                if (!(newState.ParentID is int parentID))
+                {
+                    return;
+                }
+                var newParent = Owner.EntityManager.GetEntity(parentID);
+                AttachParent(newParent.GetComponent<ITransformComponent>());
             }
         }
 

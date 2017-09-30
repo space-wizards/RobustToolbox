@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{59250BAF-0000-0000-0000-000000000000}"
 EndProject
@@ -83,6 +83,7 @@ Global
 		{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}.Release|x86.ActiveCfg = Release|x86
 		{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}.Release|x86.Build.0 = Release|x86
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Debug|x64.ActiveCfg = Debug|x64
+		{D0DA124B-5580-4345-A02B-9F051F78915F}.Debug|x64.Build.0 = Debug|x64
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Debug|x86.ActiveCfg = Debug|x86
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Debug|x86.Build.0 = Debug|x86
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Release|x64.ActiveCfg = Release|x64

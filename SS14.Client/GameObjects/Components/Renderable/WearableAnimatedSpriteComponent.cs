@@ -33,7 +33,7 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState state)
         {
             base.HandleComponentState(state);
-            IsCurrentlyWorn = ((WearableAnimatedSpriteComponentState) state).IsCurrentlyWorn;
+            IsCurrentlyWorn = ((WearableAnimatedSpriteComponentState)state).IsCurrentlyWorn;
         }
 
         public void SetNotWornSprite(string spritename)
@@ -144,7 +144,6 @@ namespace SS14.Client.GameObjects
             var aabb = LocalAABB;
             if (CluwneLib.Debug.DebugColliders)
                 CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
-
         }
     }
 }

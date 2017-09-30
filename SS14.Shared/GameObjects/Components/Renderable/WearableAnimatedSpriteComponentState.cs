@@ -9,7 +9,7 @@ namespace SS14.Shared.GameObjects
         public readonly bool IsCurrentlyCarried;
 
         public WearableAnimatedSpriteComponentState(bool isCurrentlyWorn, bool isCurrentlyCarried, bool visible, DrawDepth drawDepth, string name, string currentAnimation, bool loop, int? masterUid)
-            : base(visible, drawDepth, name, currentAnimation, loop, masterUid)
+            : base(visible, drawDepth, name, currentAnimation, loop, masterUid, NetIDs.WEARABLE_ANIMATED_SPRITE)
         {
             IsCurrentlyWorn = isCurrentlyWorn;
             IsCurrentlyCarried = isCurrentlyCarried;

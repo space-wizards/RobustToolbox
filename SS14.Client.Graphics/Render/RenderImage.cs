@@ -172,7 +172,8 @@ namespace SS14.Client.Graphics.Render
         /// <param name="key"></param>
         private void CheckIfKeyIsNull(string key)
         {
-            if (key.Equals(null))
+            // string.Equals(null) always returns false, so don't use it here
+            if (key == null)
             {
                 throw new Exception("key Cannot be null!");
             }
@@ -355,6 +356,6 @@ namespace SS14.Client.Graphics.Render
         }
 
         #endregion
-        
+
     }
 }

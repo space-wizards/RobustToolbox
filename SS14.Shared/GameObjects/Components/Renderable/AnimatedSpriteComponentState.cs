@@ -11,8 +11,8 @@ namespace SS14.Shared.GameObjects
         public readonly bool Visible;
 
         public AnimatedSpriteComponentState(bool visible, DrawDepth drawDepth, string name, string currentAnimation,
-            bool loop, int? masterUid)
-            : base(drawDepth, masterUid, NetIDs.ANIMATED_SPRITE)
+            bool loop, int? masterUid, uint netID = NetIDs.ANIMATED_SPRITE)
+            : base(drawDepth, masterUid, netID)
         {
             Visible = visible;
             CurrentAnimation = currentAnimation;

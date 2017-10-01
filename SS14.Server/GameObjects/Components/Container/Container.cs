@@ -87,7 +87,7 @@ namespace SS14.Server.GameObjects.Components.Container
                     return false;
                 }
                 ContainerList.Add(toinsert);
-                transform.AttachParent(Owner.GetComponent<ITransformComponent>());
+                transform.AttachParent(Owner.GetComponent<IServerTransformComponent>());
                 //OnInsert(); If necessary a component may add eventhandlers for this and delegate some functions to it
                 return true;
             }

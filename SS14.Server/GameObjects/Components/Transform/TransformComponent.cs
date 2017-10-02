@@ -1,13 +1,12 @@
-﻿using System;
+﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Maths;
-using SS14.Server.Interfaces.GameObjects;
-using SS14.Shared.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using System;
 
 namespace SS14.Server.GameObjects
 {
@@ -19,7 +18,8 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public ITransformComponent Parent { get; set; }
+        public IServerTransformComponent Parent { get; private set; }
+        ITransformComponent ITransformComponent.Parent => Parent;
 
         private Vector2 _position;
         public int MapID { get; private set; } = MapManager.NULLSPACE;
@@ -110,7 +110,7 @@ namespace SS14.Server.GameObjects
         /// Sets another entity as the parent entity.
         /// </summary>
         /// <param name="parent"></param>
-        public void AttachParent(ITransformComponent parent)
+        public void AttachParent(IServerTransformComponent parent)
         {
             // nothing to attach to.
             if (parent == null)
@@ -122,7 +122,7 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Finds the transform of the entity located on the map itself
         /// </summary>
-        public ITransformComponent GetMapTransform()
+        public IServerTransformComponent GetMapTransform()
         {
             if (Parent != null) //If we are not the final transform, query up the chain of parents
             {
@@ -130,6 +130,8 @@ namespace SS14.Server.GameObjects
             }
             return this;
         }
+
+        ITransformComponent ITransformComponent.GetMapTransform() => GetMapTransform();
 
         public bool IsMapTransform => Parent == null;
 

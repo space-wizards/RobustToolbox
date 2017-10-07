@@ -128,7 +128,9 @@
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
     <Compile Include="Interfaces\Log\IServerLogManager.cs" />
+    <Compile Include="Interfaces\Maps\IMapLoader.cs" />
     <Compile Include="Log\ServerLogManager.cs" />
+    <Compile Include="Maps\MapLoader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ServerReflectionManager.cs" />
@@ -142,10 +144,6 @@
     </Content>
     <None Include="app.config" />
     <Content Include="emotes.xml">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SavedEntities.xml">
       <SubType>Code</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

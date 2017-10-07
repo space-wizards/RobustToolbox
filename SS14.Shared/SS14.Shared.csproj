@@ -368,6 +368,10 @@
       <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
+    <Resources Include="..\Resources\SavedEntities.xml" >
+      <ResourceRoot />
+      <Visible>False</Visible>
+    </Resources>
   </ItemGroup>
   <Target Name="AfterBuild">
     <RemoveDir Directories="$(OutputPath)Resources" />

@@ -16,6 +16,7 @@ namespace SS14.Shared.Maths
         public Vector2i TopLeft => new Vector2i(Left, Top);
         public int Width => Math.Abs(Right - Left);
         public int Height => Math.Abs(Top - Bottom);
+        public Vector2i Size => new Vector2i(Width, Height);
 
         public Box2i(Vector2i TopLeft, Vector2i BottomRight)
         {
@@ -90,6 +91,16 @@ namespace SS14.Shared.Maths
             code = (code * 929) ^ Top.GetHashCode();
             code = (code * 929) ^ Bottom.GetHashCode();
             return code;
+        }
+
+        public static explicit operator Box2i(Box2 box)
+        {
+            return new Box2i((int)box.Left, (int)box.Top, (int)box.Right, (int)box.Bottom);
+        }
+
+        public static implicit operator Box2(Box2i box)
+        {
+            return new Box2(box.Left, box.Top, box.Right, box.Bottom);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace SS14.Shared.Map
 {
     public class Map : IMap
     {
-        public int Index = 0;
+        public int Index { get; private set; } = 0;
         private readonly MapManager _mapManager;
         private readonly Dictionary<int, MapGrid> _grids = new Dictionary<int, MapGrid>();
 
@@ -71,7 +71,7 @@ namespace SS14.Shared.Map
 
         public IEnumerable<IMapGrid> GetAllGrids()
         {
-            foreach(var kgrid in _grids)
+            foreach (var kgrid in _grids)
             {
                 yield return kgrid.Value;
             }

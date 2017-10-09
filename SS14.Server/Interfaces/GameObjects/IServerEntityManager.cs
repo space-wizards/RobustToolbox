@@ -12,8 +12,7 @@ namespace SS14.Server.Interfaces.GameObjects
     public interface IServerEntityManager : IEntityManager
     {
         void Initialize();
-        void LoadEntities();
-        void SaveEntities();
+
         IEntity SpawnEntity(string template, int? uid = null);
 
         /// <summary>

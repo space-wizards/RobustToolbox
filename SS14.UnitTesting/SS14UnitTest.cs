@@ -68,6 +68,8 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
 using SS14.Shared.Physics;
 using SS14.Shared.Timing;
+using SS14.Server.Interfaces.Maps;
+using SS14.Server.Maps;
 
 namespace SS14.UnitTesting
 {
@@ -242,6 +244,7 @@ namespace SS14.UnitTesting
                     IoCManager.Register<IPlayerManager, PlayerManager>();
                     IoCManager.Register<IComponentFactory, ServerComponentFactory>();
                     IoCManager.Register<IBaseServer, BaseServer>();
+                    IoCManager.Register<IMapLoader, MapLoader>();
                     break;
 
                 default:
@@ -259,7 +262,6 @@ namespace SS14.UnitTesting
         /// </summary>
         protected virtual void OverrideIoC()
         {
-
         }
 
         public void InitializeResources()

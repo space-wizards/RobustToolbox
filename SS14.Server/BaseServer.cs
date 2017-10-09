@@ -34,6 +34,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Map;
+using SS14.Server.Interfaces.Maps;
 
 namespace SS14.Server
 {
@@ -59,24 +60,22 @@ namespace SS14.Server
         private readonly ICommandLineArgs _commandLine;
         [Dependency]
         private readonly IConfigurationManager _config;
-
         [Dependency]
-        private IComponentManager _components;
-
+        private readonly IComponentManager _components;
         [Dependency]
-        private IServerEntityManager _entities;
-
+        private readonly IServerEntityManager _entities;
         [Dependency]
-        private IServerLogManager _logman;
-
+        private readonly IServerLogManager _logman;
         [Dependency]
         private readonly ISS14Serializer Serializer;
-
         [Dependency]
         private readonly IGameTiming _time;
-
         [Dependency]
         private readonly IResourceManager _resources;
+        [Dependency]
+        private readonly IMapLoader mapLoader;
+        [Dependency]
+        private readonly IMapManager mapManager;
 
         private const int GAME_COUNTDOWN = 15;
 
@@ -138,8 +137,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public void SaveGame()
         {
-            SaveMap(MapName);
-            _entities.SaveEntities();
+            mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), mapManager.GetMap(1));
         }
 
         /// <inheritdoc />
@@ -174,30 +172,30 @@ namespace SS14.Server
             netMan.Initialize(true);
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int) MsgClGreet.ID, message => HandleClientGreet((MsgClGreet) message));
-            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int) MsgServerInfoReq.ID, HandleWelcomeMessageReq);
-            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int) MsgPlayerListReq.ID, HandlePlayerListReq);
-            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
+            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
+            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
+            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleErrorMessage);
 
             // Unused: NetMessages.LobbyChat
-            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, message => IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat) message));
-            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int) MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession) message));
-            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int) MsgConCmd.ID, message => IoCManager.Resolve<IClientConsoleHost>().ProcessCommand((MsgConCmd) message));
-            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int) MsgConCmdAck.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int)MsgChat.ID, message => IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat)message));
+            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession)message));
+            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, message => IoCManager.Resolve<IClientConsoleHost>().ProcessCommand((MsgConCmd)message));
+            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
-            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int) MsgMapReq.ID, message => SendMap(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, message => SendMap(message.MsgChannel));
 
-            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement) message));
-            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int) MsgUi.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int) MsgJoinGame.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int) MsgRestartReq.ID, message => Restart());
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
+            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int)MsgJoinGame.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int)MsgRestartReq.ID, message => Restart());
 
-            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int) MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity) message));
-            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int) MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin) message));
+            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
+            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
             netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
-            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int) MsgStateAck.ID, message => HandleStateAck((MsgStateAck) message));
+            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
             IoCManager.Resolve<IChatManager>().Initialize();
@@ -244,7 +242,7 @@ namespace SS14.Server
             return false;
         }
 
-        private void LoadContentAssembly<T>(string name) where T: GameShared
+        private void LoadContentAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
             if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
@@ -328,7 +326,7 @@ namespace SS14.Server
                     _time.StartFrame();
 
                     // only run the sim if unpaused, but still use up the accumulated time
-                    if(!_time.Paused)
+                    if (!_time.Paused)
                     {
                         Update((float)_time.FrameTime.TotalSeconds);
                         _time.CurTick++;
@@ -372,13 +370,10 @@ namespace SS14.Server
             cfgMgr.RegisterCVar("net.tickrate", 66, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.mapname", "SavedMap", CVar.ARCHIVE);
+            cfgMgr.RegisterCVar("game.mapname", "SavedEntities.xml", CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
             cfgMgr.RegisterCVar("game.welcomemsg", "Welcome to the server!", CVar.ARCHIVE);
-
-            _entities = IoCManager.Resolve<IServerEntityManager>();
-            _components = IoCManager.Resolve<IComponentManager>();
 
             _time.TickRate = _config.GetCVar<int>("net.tickrate");
 
@@ -413,66 +408,7 @@ namespace SS14.Server
             }
         }
 
-
         #region File Operations
-
-        public void SaveMap(string mapName)
-        {
-            throw new NotImplementedException();
-#if _OLD
-            mapName = Regex.Replace(mapName, @"-\d\d-\d\d_\d\d-\d\d-\d\d", ""); //Strip timestamp, same format as below
-            DateTime date = DateTime.Now;
-            mapName = String.Concat(mapName, date.ToString("-MM-dd_HH-mm-ss")); //Add timestamp, same format as above
-
-            Logger.Log(string.Format("We are attempting to save map with name {0}", mapName));
-
-            var badChars = Path.GetInvalidFileNameChars();
-            if (mapName.Any(c => badChars.Contains(c)))
-                throw new ArgumentException("Invalid characters in map name.", "mapName");
-
-            string pathName = Path.Combine(Assembly.GetEntryAssembly().Location, @"..\Maps");
-            Directory.CreateDirectory(pathName);
-
-            string fileName = Path.GetFullPath(Path.Combine(pathName, mapName));
-
-            using (var fs = new FileStream(fileName, FileMode.Create))
-            {
-                var sw = new StreamWriter(fs);
-                var bw = new BinaryWriter(fs);
-                Logger.Log(string.Format("Saving map: \"{0}\" {1:N} Chunks", mapName, chunks.Count));
-
-                sw.Write("SS14 Map File Version ");
-                sw.Write((int)1); // Format version.  Who knows, it could come in handy.
-                sw.Write("\r\n"); // Doing this instead of using WriteLine to keep things platform-agnostic.
-                sw.Flush();
-
-                // Tile definition mapping
-                var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
-                bw.Write((int)tileDefManager.Count);
-                for (int tileId = 0; tileId < tileDefManager.Count; ++tileId)
-                {
-                    bw.Write((ushort)tileId);
-                    bw.Write((string)tileDefManager[tileId].Name);
-                }
-
-                // Map chunks
-                bw.Write((int)Chunks.Count);
-                foreach (var kvChunk in Chunks)
-                {
-                    bw.Write((int)kvChunk.Key.X);
-                    bw.Write((int)kvChunk.Key.Y);
-
-                    foreach (var tile in kvChunk.Value.Tiles)
-                        bw.Write((uint)tile);
-                }
-
-                bw.Write("End of Map");
-                bw.Flush();
-            }
-
-            Logger.Log("Done saving map.");
-#endif
-        }
 
         public bool LoadMap(string mapName)
         {
@@ -480,77 +416,9 @@ namespace SS14.Server
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
             NewDefaultMap(mapMgr, defManager, 1);
+            mapLoader.Load(MapName, mapMgr.GetMap(1));
 
             return true;
-#if _OLD
-            SuppressOnTileChanged = true;
-            try
-            {
-                var badChars = Path.GetInvalidFileNameChars();
-                if (mapName.Any(c => badChars.Contains(c)))
-                    throw new ArgumentException("Invalid characters in map name.", "mapName");
-
-                string fileName = Path.GetFullPath(Path.Combine(Assembly.GetEntryAssembly().Location, @"..\Maps", mapName));
-
-                if (!File.Exists(fileName))
-                    return false;
-
-                using (var fs = new FileStream(fileName, FileMode.Open))
-                {
-                    var sr = new StreamReader(fs);
-                    var br = new BinaryReader(fs);
-                    Logger.Log(string.Format("Loading map: \"{0}\"", mapName));
-
-                    var versionString = sr.ReadLine();
-                    if (!versionString.StartsWith("SS14 Map File Version "))
-                        return false;
-
-                    fs.Seek(versionString.Length + 2, SeekOrigin.Begin);
-
-                    int formatVersion;
-                    if (!Int32.TryParse(versionString.Substring(22), out formatVersion))
-                        return false;
-
-                    if (formatVersion != 1)
-                        return false; // Unsupported version.
-
-                    var tileDefMgr = IoCManager.Resolve<ITileDefinitionManager>();
-
-                    //Dictionary<ushort, ITileDefinition> tileMapping = new Dictionary<ushort, ITileDefinition>();
-                    int tileDefCount = br.ReadInt32();
-                    for (int i = 0; i < tileDefCount; ++i)
-                    {
-                        ushort tileId = br.ReadUInt16();
-                        string tileName = br.ReadString();
-                        //tileMapping[tileId] = tileDefMgr[tileName];
-                    }
-
-                    int chunkCount = br.ReadInt32();
-                    for (int i = 0; i < chunkCount; ++i)
-                    {
-                        int cx = br.ReadInt32() * ChunkSize;
-                        int cy = br.ReadInt32() * ChunkSize;
-
-                        for (int y = cy; y < cy + ChunkSize; ++y)
-                        for (int x = cx; x < cx + ChunkSize; ++x)
-                        {
-                            Tile tile = (Tile)br.ReadUInt32();
-                            Tiles[x, y] = tile;
-                        }
-                    }
-
-                    string ending = br.ReadString();
-                    Debug.Assert(ending == "End of Map");
-                }
-
-                Logger.Log("Done loading map.");
-                return true;
-            }
-            finally
-            {
-                SuppressOnTileChanged = false;
-            }
-#endif
         }
 
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
@@ -570,7 +438,6 @@ namespace SS14.Server
 
                 Debug.Assert(floor > 0);
 
-                var manager = IoCManager.Resolve<IServerEntityManager>();
                 var map = mapManager.CreateMap(1); //TODO: default map
                 var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
 
@@ -578,10 +445,6 @@ namespace SS14.Server
                 {
                     for (var x = -32; x <= 32; ++x)
                     {
-                        if (Math.Abs(x) == 32 || Math.Abs(y) == 32 || Math.Abs(x) == 5 && Math.Abs(y) < 5 || Math.Abs(y) == 7 && Math.Abs(x) < 3)
-                        {
-                            manager.ForceSpawnEntityAt("Wall", new LocalCoordinates(new OpenTK.Vector2(x, y), grid));
-                        }
                         grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
                     }
                 }
@@ -592,7 +455,7 @@ namespace SS14.Server
             }
         }
 
-        #endregion
+        #endregion File Operations
 
         private void StartLobby()
         {
@@ -774,7 +637,7 @@ namespace SS14.Server
             var plyMgr = IoCManager.Resolve<IPlayerManager>();
             var players = plyMgr.GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
-            netMsg.PlyCount = (byte) players.Length;
+            netMsg.PlyCount = (byte)players.Length;
 
             var list = new List<MsgPlayerList.PlyInfo>();
             foreach (var client in players)
@@ -782,7 +645,7 @@ namespace SS14.Server
                 var info = new MsgPlayerList.PlyInfo
                 {
                     Name = client.Name,
-                    Status = (byte) client.Status,
+                    Status = (byte)client.Status,
                     Ping = client.ConnectedClient.Connection.AverageRoundtripTime
                 };
                 list.Add(info);
@@ -823,6 +686,6 @@ namespace SS14.Server
                 IoCManager.Resolve<IPlayerManager>().GetSessionById(client.NetworkId)); //SPAWN PLAYER
         }
 
-        #endregion
+        #endregion MessageProcessing
     }
 }

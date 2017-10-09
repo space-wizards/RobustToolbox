@@ -7,40 +7,42 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.GameState;
 using SS14.Server.Interfaces.Log;
+using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Server.Interfaces.ServerConsole;
 using SS14.Server.Log;
+using SS14.Server.Maps;
 using SS14.Server.Placement;
 using SS14.Server.Player;
 using SS14.Server.Reflection;
 using SS14.Server.Round;
 using SS14.Server.ServerConsole;
 using SS14.Shared.Configuration;
+using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
+using SS14.Shared.Physics;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timing;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using SS14.Shared.ContentPack;
-using SS14.Shared.Interfaces;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Physics;
-using SS14.Shared.Interfaces.Timing;
-using SS14.Shared.Network;
-using SS14.Shared.Physics;
-using SS14.Shared.Timing;
 
 namespace SS14.Server
 {
@@ -124,10 +126,11 @@ namespace SS14.Server
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost.ClientConsoleHost>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
+            IoCManager.Register<IMapLoader, MapLoader>();
 
             IoCManager.BuildGraph();
         }
-        
+
         private static void LoadContentAssemblies()
         {
             // gets a handle to the shared and the current (server) dll.

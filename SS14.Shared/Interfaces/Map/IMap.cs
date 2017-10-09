@@ -11,6 +11,8 @@ namespace SS14.Shared.Interfaces.Map
 {
     public interface IMap
     {
+        int Index { get; }
+
         #region GridAccess
 
         /// <summary>
@@ -70,7 +72,7 @@ namespace SS14.Shared.Interfaces.Map
         /// <returns></returns>
         IEnumerable<IMapGrid> FindGridsIntersecting(Box2 worldArea);
 
-        #endregion
+        #endregion GridAccess
 
         IEnumerable<IMapGrid> GetAllGrids();
     }

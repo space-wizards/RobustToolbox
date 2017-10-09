@@ -31,16 +31,6 @@ namespace SS14.Server.GameObjects
         [Dependency]
         readonly private IPrototypeManager _protoManager;
 
-        public void SaveEntities()
-        {
-            IEnumerable<XElement> entities = from IEntity e in GetEntities()
-                                             where e.Prototype.ID != "HumanMob" && e.Prototype.ID != "HumanMob_Content"
-                                             select ToXML(e);
-
-            var saveFile = new XDocument(new XElement("SavedEntities", entities.ToArray()));
-            saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
-        }
-
         /// <inheritdoc />
         public bool TrySpawnEntityAt(string EntityType, LocalCoordinates coordinates, out IEntity entity)
         {
@@ -94,65 +84,8 @@ namespace SS14.Server.GameObjects
 
         #endregion IEntityManager Members
 
-        /// <summary>
-        /// Load all entities from SavedEntities.xml
-        /// </summary>
-        public void LoadEntities()
-        {
-            XElement tmp;
-            try
-            {
-                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
-            }
-            catch (FileNotFoundException)
-            {
-                var saveFile = new XDocument(new XElement("SavedEntities"));
-                saveFile.Save(PathHelpers.ExecutableRelativeFile("SavedEntities.xml"));
-                tmp = XDocument.Load(PathHelpers.ExecutableRelativeFile("SavedEntities.xml")).Element("SavedEntities");
-            }
-            IEnumerable<XElement> SavedEntities = tmp.Descendants("SavedEntity");
-            foreach (XElement e in SavedEntities)
-            {
-                LoadEntity(e);
-            }
-        }
-
-        public void LoadEntity(XElement e)
-        {
-            float X = float.Parse(e.Attribute("X").Value, CultureInfo.InvariantCulture);
-            float Y = float.Parse(e.Attribute("Y").Value, CultureInfo.InvariantCulture);
-
-            var dir = Direction.South;
-            if (e.Attribute("direction") != null)
-                dir = (Direction)Enum.Parse(typeof(Direction), e.Attribute("direction").Value, true);
-
-            string template = e.Attribute("template").Value;
-            string name = e.Attribute("name").Value;
-            IEntity ent = ForceSpawnEntityAt(template, new LocalCoordinates(new Vector2(X, Y), 1, 1));
-            ent.Name = name;
-            ent.GetComponent<TransformComponent>().Rotation = (float) dir.ToAngle();
-        }
-
-        private XElement ToXML(IEntity e)
-        {
-            var el = new XElement("SavedEntity",
-                                  new XAttribute("X",
-                                                 e.GetComponent<ITransformComponent>().LocalPosition.
-                                                     X.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("Y",
-                                                 e.GetComponent<ITransformComponent>().LocalPosition.
-                                                     Y.ToString(CultureInfo.InvariantCulture)),
-                                  new XAttribute("template", e.Prototype.ID),
-                                  new XAttribute("name", e.Name),
-                                  new XAttribute("direction",
-                                                 e.GetComponent<TransformComponent>().Rotation.GetDir()
-                                                     .ToString()));
-            return el;
-        }
-
         public void Initialize()
         {
-            LoadEntities();
             EntitySystemManager.Initialize();
             Initialized = true;
             InitializeEntities();

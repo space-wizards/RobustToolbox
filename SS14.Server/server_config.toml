@@ -11,7 +11,7 @@ port = 1212
 
 [game]
 hostname = "MyServer"
-mapname = "SavedMap"
+mapname = "SavedEntities.xml"
 maxplayers = 32
 type = 1
 welcomemsg = "Welcome to the server!"

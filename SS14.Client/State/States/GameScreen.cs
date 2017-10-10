@@ -992,10 +992,6 @@ namespace SS14.Client.State.States
                 source.Blit(0, 0, source.Width, source.Height);
                 screenShadows.EndDrawing();
             }
-
-            Image texunflipx = screenShadows.Texture.CopyToImage();
-            texunflipx.FlipVertically();
-            screenShadows.Texture.Update(texunflipx);
         }
 
         private void CalculateSceneBatches(Box2 vision)

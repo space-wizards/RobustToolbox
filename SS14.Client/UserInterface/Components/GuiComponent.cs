@@ -23,34 +23,30 @@ namespace SS14.Client.UserInterface.Components
 
         public IReadOnlyList<GuiComponent> Children => _children;
 
-        public GuiComponent Parent
-        {
-            get => _parent;
-            set
-            {
-                if(value == null)
-                    throw new ArgumentNullException(nameof(value));
-
-                _parent.RemoveComponent(this);
-                _parent = value;
-                _parent.AddComponent(this);
-            }
-        }
+        public GuiComponent Parent => _parent;
 
         public void AddComponent(GuiComponent child)
         {
             if(_children.Contains(child))
                 throw new InvalidOperationException();
 
+            if(this == child)
+                throw new InvalidOperationException();
+
+            child._parent = this;
             _children.Add(child);
         }
 
         public void RemoveComponent(GuiComponent child)
         {
+            if(child == null)
+                throw new InvalidOperationException();
+
             if(!_children.Contains(child))
                 throw new InvalidOperationException();
 
             _children.Remove(child);
+            child._parent = null;
         }
 
         public void Destroy()
@@ -59,16 +55,14 @@ namespace SS14.Client.UserInterface.Components
             {
                 child.Destroy();
             }
+
+            Parent?.RemoveComponent(this);
         }
         
         public GuiComponentType ComponentClass { get; protected set; }
         public virtual Vector2i Position { get; set; }
 
-        public virtual Box2i ClientArea
-        {
-            get;
-            set;
-        }
+        public virtual Box2i ClientArea { get; set; }
 
         public int ZDepth { get; set; }
 
@@ -125,33 +119,90 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
+        [Obsolete("Really, UI accepting raw packets? Really?")]
         public virtual void HandleNetworkMessage(NetIncomingMessage message) { }
 
         public virtual bool MouseDown(MouseButtonEventArgs e)
         {
-            return false;
+            var consumed = false;
+            foreach (var child in _children)
+            {
+                if (!child.MouseDown(e))
+                    continue;
+
+                consumed = true;
+                break;
+            }
+
+            return consumed;
         }
 
         public virtual bool MouseUp(MouseButtonEventArgs e)
         {
-            return false;
+            var consumed = false;
+            foreach (var child in _children)
+            {
+                if (!child.MouseUp(e))
+                    continue;
+
+                consumed = true;
+                break;
+            }
+
+            return consumed;
         }
 
-        public virtual void MouseMove(MouseMoveEventArgs e) { }
+        public virtual void MouseMove(MouseMoveEventArgs e)
+        {
+            foreach (var child in _children)
+            {
+                child.MouseMove(e);
+            }
+        }
 
         public virtual bool MouseWheelMove(MouseWheelEventArgs e)
         {
-            return false;
+            var consumed = false;
+            foreach (var child in _children)
+            {
+                if (!child.MouseWheelMove(e))
+                    continue;
+
+                consumed = true;
+                break;
+            }
+
+            return consumed;
         }
 
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            return false;
+            var consumed = false;
+            foreach (var child in _children)
+            {
+                if (!child.KeyDown(e))
+                    continue;
+
+                consumed = true;
+                break;
+            }
+
+            return consumed;
         }
 
         public virtual bool TextEntered(TextEventArgs e)
         {
-            return false;
+            var consumed = false;
+            foreach (var child in _children)
+            {
+                if (!child.TextEntered(e))
+                    continue;
+
+                consumed = true;
+                break;
+            }
+
+            return consumed;
         }
     }
 }

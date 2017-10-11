@@ -874,8 +874,6 @@ namespace SS14.Client.State.States
             }
 
             //Step 2 - Set up the render targets for the composite lighting.
-            screenShadows.Clear(Color.Black);
-
             RenderImage source = screenShadows;
             source.Clear(Color.Black);
 

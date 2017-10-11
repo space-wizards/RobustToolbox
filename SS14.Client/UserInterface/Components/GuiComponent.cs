@@ -51,7 +51,8 @@ namespace SS14.Client.UserInterface.Components
 
         public void Destroy()
         {
-            foreach (var child in _children)
+            var children = new List<GuiComponent>(_children);
+            foreach (var child in children)
             {
                 child.Destroy();
             }

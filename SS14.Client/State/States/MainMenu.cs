@@ -18,8 +18,6 @@ namespace SS14.Client.State.States
 {
     public class MainScreen : State, IState
     {
-        #region Fields
-
         /// <summary>
         /// Default port that the client tries to connect to if no other port is specified.
         /// </summary>
@@ -38,16 +36,8 @@ namespace SS14.Client.State.States
         private DateTime _connectTime;
         private bool _isConnecting;
 
-        private int _width;
-        private int _height;
-
-        #endregion Fields
-
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
-            _width = (int)CluwneLib.Window.Viewport.Size.X;
-            _height = (int)CluwneLib.Window.Viewport.Size.Y;
-
             _uiScreen = new Screen
             {
                 Background = ResourceCache.GetSprite("ss14_logo_background")
@@ -115,6 +105,13 @@ namespace SS14.Client.State.States
                 Sprite = "ss14_logo",
             };
 
+            _uiScreen.AddComponent(_imgTitle);
+            _uiScreen.AddComponent(_txtConnect);
+            _uiScreen.AddComponent(_btnConnect);
+            _uiScreen.AddComponent(_btnOptions);
+            _uiScreen.AddComponent(_btnExit);
+            _uiScreen.AddComponent(_lblVersion);
+
             FormResize();
         }
 
@@ -122,8 +119,8 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
-            _width = (int)CluwneLib.Window.Viewport.Size.X;
-            _height = (int)CluwneLib.Window.Viewport.Size.Y;
+            var _width = (int)CluwneLib.Window.Viewport.Size.X;
+            var _height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             _uiScreen.Width = _width;
             _uiScreen.Height = _height;
@@ -202,13 +199,6 @@ namespace SS14.Client.State.States
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
 
-            _uiScreen.AddComponent(_imgTitle);
-            _uiScreen.AddComponent(_txtConnect);
-            _uiScreen.AddComponent(_btnConnect);
-            _uiScreen.AddComponent(_btnOptions);
-            _uiScreen.AddComponent(_btnExit);
-            _uiScreen.AddComponent(_lblVersion);
-
             UserInterfaceManager.AddComponent(_uiScreen);
         }
 
@@ -217,8 +207,10 @@ namespace SS14.Client.State.States
             NetworkManager.Connected -= OnConnected;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
-            _uiScreen.Destroy();
-            _uiScreen = null;
+
+            // 
+            //_uiScreen.Destroy();
+            //_uiScreen = null;
         }
 
         public void Update(FrameEventArgs e)

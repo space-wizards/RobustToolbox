@@ -27,6 +27,9 @@ namespace SS14.Client.UserInterface.Components
         protected Vector2i Size;
         protected RenderImage clippingRI;
 
+        public string name { get; protected set; }
+
+
         public List<GuiComponent> components = new List<GuiComponent>();
 
         protected bool disposing = false;

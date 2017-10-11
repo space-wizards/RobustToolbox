@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -25,8 +25,6 @@ namespace SS14.Client.Interfaces.UserInterface
         bool Focus { get; set; }
 
         int ZDepth { get; set; }
-
-        string name { get; }
 
         void Update(float frameTime);
         void Render();

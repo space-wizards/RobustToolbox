@@ -1,7 +1,6 @@
 ﻿using Lidgren.Network;
 using OpenTK;
 using OpenTK.Graphics;
-using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -12,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using SS14.Client.UserInterface;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
@@ -25,9 +25,9 @@ namespace SS14.Client.State.States
         /// </summary>
         public const ushort DEFAULT_PORT = 1212;
         private const float ConnectTimeOut = 5000.0f;
-        private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
-        private readonly Sprite _background;
+        private Screen _uiScreen;
+
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;
@@ -38,50 +38,77 @@ namespace SS14.Client.State.States
         private DateTime _connectTime;
         private bool _isConnecting;
 
-        private int _Width;
-        private int _Height;
+        private int _width;
+        private int _height;
 
         #endregion Fields
 
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
-            _Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            _background = ResourceCache.GetSprite("ss14_logo_background");
+            _width = (int)CluwneLib.Window.Viewport.Size.X;
+            _height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            _uiScreen = new Screen
+            {
+                Background = ResourceCache.GetSprite("ss14_logo_background")
+            };
 
             _btnConnect = new ImageButton
             {
                 ImageNormal = "connect_norm",
                 ImageHover = "connect_hover"
             };
-            _btnConnect.Clicked += _buttConnect_Clicked;
+            _btnConnect.Clicked += sender =>
+            {
+                if (!_isConnecting)
+                    StartConnect(_txtConnect.Text);
+                else
+                {
+                    _isConnecting = false;
+                    NetworkManager.ClientDisconnect("Client disconnected from game.");
+                }
+            };
 
             _btnOptions = new ImageButton
             {
                 ImageNormal = "options_norm",
                 ImageHover = "options_hover"
             };
-            _btnOptions.Clicked += _buttOptions_Clicked;
+            _btnOptions.Clicked += sender =>
+            {
+                if (_isConnecting)
+                {
+                    _isConnecting = false;
+                    NetworkManager.ClientDisconnect("Client disconnected from game.");
+                }
+
+                StateManager.RequestStateChange<OptionsMenu>();
+            };
 
             _btnExit = new ImageButton
             {
                 ImageNormal = "exit_norm",
                 ImageHover = "exit_hover"
             };
-            _btnExit.Clicked += _buttExit_Clicked;
+            _btnExit.Clicked += sender => CluwneLib.Stop();
 
-            _txtConnect = new Textbox(100, ResourceCache) { Text = ConfigurationManager.GetCVar<string>("net.server") };
-            _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
-            _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
+            _txtConnect = new Textbox(100, ResourceCache)
+            {
+                Text = ConfigurationManager.GetCVar<string>("net.server")
+            };
+            _txtConnect.OnSubmit += (text, sender) =>
+            {
+                StartConnect(text);
+            };
 
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-
-            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            _lblVersion.Text.Color = new Color4(245, 245, 245, 255);
-
-            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
-                                             _Height - _lblVersion.ClientArea.Height - 3);
+            var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
+            {
+                Text =
+                {
+                    Color = new Color4(245, 245, 245, 255)
+                },
+            };
 
             _imgTitle = new SimpleImage
             {
@@ -91,22 +118,20 @@ namespace SS14.Client.State.States
             FormResize();
         }
 
-        #region IState Members
-
-        public void Render(FrameEventArgs e)
-        {
-            _background.Draw();
-        }
+        public void Render(FrameEventArgs e) { }
 
         public void FormResize()
         {
-            _Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            _background.Scale = new Vector2f((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
-            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
-                                                _Height - _lblVersion.ClientArea.Height - 3);
+            _width = (int)CluwneLib.Window.Viewport.Size.X;
+            _height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            _uiScreen.Width = _width;
+            _uiScreen.Height = _height;
+
+            _lblVersion.Position = new Vector2i(_width - _lblVersion.ClientArea.Width - 3,
+                                                _height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
-            _imgTitle.Position = new Vector2i(_Width - 550, 100);
+            _imgTitle.Position = new Vector2i(_width - 550, 100);
             _imgTitle.Update(0);
             _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
             _txtConnect.Update(0);
@@ -117,7 +142,6 @@ namespace SS14.Client.State.States
             _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
             _btnExit.Update(0);
         }
-        #endregion IState Members
 
         #region Input
         public void KeyDown(KeyEventArgs e)
@@ -171,38 +195,6 @@ namespace SS14.Client.State.States
         }
         #endregion Input
 
-        private void _buttExit_Clicked(ImageButton sender)
-        {
-            CluwneLib.Stop();
-        }
-
-        private void _buttOptions_Clicked(ImageButton sender)
-        {
-            if (_isConnecting)
-            {
-                _isConnecting = false;
-                NetworkManager.ClientDisconnect("Client disconnected from game.");
-            }
-
-            StateManager.RequestStateChange<OptionsMenu>();
-        }
-
-        private void _buttConnect_Clicked(ImageButton sender)
-        {
-            if (!_isConnecting)
-                StartConnect(_txtConnect.Text);
-            else
-            {
-                _isConnecting = false;
-                NetworkManager.ClientDisconnect("Client disconnected from game.");
-            }
-        }
-
-        private void ConnectTextboxOnSubmit(string text, Textbox sender)
-        {
-            StartConnect(text);
-        }
-
         #region Startup, Shutdown, Update
 
         public void Startup()
@@ -210,32 +202,23 @@ namespace SS14.Client.State.States
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
 
-            foreach (FloatingDecoration floatingDeco in DecoFloats)
-                UserInterfaceManager.AddComponent(floatingDeco);
+            _uiScreen.AddComponent(_imgTitle);
+            _uiScreen.AddComponent(_txtConnect);
+            _uiScreen.AddComponent(_btnConnect);
+            _uiScreen.AddComponent(_btnOptions);
+            _uiScreen.AddComponent(_btnExit);
+            _uiScreen.AddComponent(_lblVersion);
 
-            UserInterfaceManager.AddComponent(_txtConnect);
-            UserInterfaceManager.AddComponent(_btnConnect);
-            UserInterfaceManager.AddComponent(_btnOptions);
-            UserInterfaceManager.AddComponent(_btnExit);
-            UserInterfaceManager.AddComponent(_imgTitle);
-            UserInterfaceManager.AddComponent(_lblVersion);
+            UserInterfaceManager.AddComponent(_uiScreen);
         }
 
         public void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
 
-            UserInterfaceManager.RemoveComponent(_txtConnect);
-            UserInterfaceManager.RemoveComponent(_btnConnect);
-            UserInterfaceManager.RemoveComponent(_btnOptions);
-            UserInterfaceManager.RemoveComponent(_btnExit);
-            UserInterfaceManager.RemoveComponent(_imgTitle);
-            UserInterfaceManager.RemoveComponent(_lblVersion);
-
-            foreach (FloatingDecoration floatingDeco in DecoFloats)
-                UserInterfaceManager.RemoveComponent(floatingDeco);
-
-            DecoFloats.Clear();
+            UserInterfaceManager.RemoveComponent(_uiScreen);
+            _uiScreen.Destroy();
+            _uiScreen = null;
         }
 
         public void Update(FrameEventArgs e)

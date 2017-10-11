@@ -1,54 +1,106 @@
-﻿using Lidgren.Network;
+﻿using System;
+using System.Collections.Generic;
+using Lidgren.Network;
+using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class GuiComponent : IGuiComponent
+    public abstract class GuiComponent : IGuiComponent
     {
-        public object UserData;
-        private bool _receiveInput = true;
+        protected readonly List<GuiComponent> _children = new List<GuiComponent>();
+        protected GuiComponent _parent;
         private bool _visible = true;
+        public object UserData;
 
-        public string name { get; protected set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
 
-        #region IGuiComponent Members
+        public IReadOnlyList<GuiComponent> Children => _children;
 
+        public GuiComponent Parent
+        {
+            get => _parent;
+            set
+            {
+                if(value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                _parent.RemoveComponent(this);
+                _parent = value;
+                _parent.AddComponent(this);
+            }
+        }
+
+        public void AddComponent(GuiComponent child)
+        {
+            if(_children.Contains(child))
+                throw new InvalidOperationException();
+
+            _children.Add(child);
+        }
+
+        public void RemoveComponent(GuiComponent child)
+        {
+            if(!_children.Contains(child))
+                throw new InvalidOperationException();
+
+            _children.Remove(child);
+        }
+
+        public void Destroy()
+        {
+            foreach (var child in _children)
+            {
+                child.Destroy();
+            }
+        }
+        
         public GuiComponentType ComponentClass { get; protected set; }
         public virtual Vector2i Position { get; set; }
-        public virtual Box2i ClientArea { get; set; }
+
+        public virtual Box2i ClientArea
+        {
+            get;
+            set;
+        }
 
         public int ZDepth { get; set; }
 
-        public bool ReceiveInput
-        {
-            get { return _receiveInput; }
-            set { _receiveInput = value; }
-        }
+        public bool ReceiveInput { get; set; } = true;
 
         public virtual bool Focus { get; set; }
 
-        public virtual void ComponentUpdate(params object[] args)
-        {
-        }
+        public virtual void ComponentUpdate(params object[] args) { }
 
         public virtual void Update(float frameTime)
         {
+            foreach (var child in _children)
+            {
+                child.Update(frameTime);
+            }
         }
 
         public virtual void Render()
         {
+            // todo: need ordered batching
+            foreach (var child in _children)
+            {
+                child.Render();
+            }
         }
 
         public virtual void Resize()
         {
+            foreach (var child in _children)
+            {
+                child.Resize();
+            }
         }
 
         public virtual void ToggleVisible()
@@ -73,9 +125,7 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public virtual void HandleNetworkMessage(NetIncomingMessage message)
-        {
-        }
+        public virtual void HandleNetworkMessage(NetIncomingMessage message) { }
 
         public virtual bool MouseDown(MouseButtonEventArgs e)
         {
@@ -87,9 +137,7 @@ namespace SS14.Client.UserInterface.Components
             return false;
         }
 
-        public virtual void MouseMove(MouseMoveEventArgs e)
-        {
-        }
+        public virtual void MouseMove(MouseMoveEventArgs e) { }
 
         public virtual bool MouseWheelMove(MouseWheelEventArgs e)
         {
@@ -105,7 +153,5 @@ namespace SS14.Client.UserInterface.Components
         {
             return false;
         }
-
-        #endregion IGuiComponent Members
     }
 }

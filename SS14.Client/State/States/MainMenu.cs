@@ -1,47 +1,65 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces.State;
-using SS14.Client.UserInterface.Components;
-using SS14.Shared.Maths;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Lidgren.Network;
+using OpenTK;
+using OpenTK.Graphics;
+using SFML.Window;
+using SS14.Client.Graphics;
 using SS14.Client.UserInterface;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.UserInterface.Components;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States
 {
+    /// <summary>
+    ///     Main menu screen that is the first screen to be displayed when the game starts.
+    /// </summary>
     public class MainScreen : State
     {
         /// <summary>
-        /// Default port that the client tries to connect to if no other port is specified.
+        ///     Default port that the client tries to connect to if no other port is specified.
         /// </summary>
-        public const ushort DEFAULT_PORT = 1212;
-        private const float ConnectTimeOut = 5000.0f;
+        public const ushort DefaultPort = 1212;
 
-        private Screen _uiScreen;
+        private const float ConnectTimeOut = 5000.0f;
 
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;
-        private readonly Textbox _txtConnect;
-        private readonly Label _lblVersion;
         private readonly SimpleImage _imgTitle;
+        private readonly Label _lblVersion;
+        private readonly Textbox _txtConnect;
+
+        private readonly Screen _uiScreen;
 
         private DateTime _connectTime;
         private bool _isConnecting;
 
+        /// <summary>
+        ///     Constructs an instance of this object.
+        /// </summary>
+        /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
             _uiScreen = new Screen
             {
                 Background = ResourceCache.GetSprite("ss14_logo_background")
             };
+
+            _imgTitle = new SimpleImage
+            {
+                Sprite = "ss14_logo",
+            };
+            _uiScreen.AddComponent(_imgTitle);
+
+            _txtConnect = new Textbox(100, ResourceCache)
+            {
+                Text = ConfigurationManager.GetCVar<string>("net.server")
+            };
+            _txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
+            _uiScreen.AddComponent(_txtConnect);
 
             _btnConnect = new ImageButton
             {
@@ -51,13 +69,16 @@ namespace SS14.Client.State.States
             _btnConnect.Clicked += sender =>
             {
                 if (!_isConnecting)
+                {
                     StartConnect(_txtConnect.Text);
+                }
                 else
                 {
                     _isConnecting = false;
                     NetworkManager.ClientDisconnect("Client disconnected from game.");
                 }
             };
+            _uiScreen.AddComponent(_btnConnect);
 
             _btnOptions = new ImageButton
             {
@@ -74,6 +95,7 @@ namespace SS14.Client.State.States
 
                 StateManager.RequestStateChange<OptionsMenu>();
             };
+            _uiScreen.AddComponent(_btnOptions);
 
             _btnExit = new ImageButton
             {
@@ -81,15 +103,7 @@ namespace SS14.Client.State.States
                 ImageHover = "exit_hover"
             };
             _btnExit.Clicked += sender => CluwneLib.Stop();
-
-            _txtConnect = new Textbox(100, ResourceCache)
-            {
-                Text = ConfigurationManager.GetCVar<string>("net.server")
-            };
-            _txtConnect.OnSubmit += (text, sender) =>
-            {
-                StartConnect(text);
-            };
+            _uiScreen.AddComponent(_btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
@@ -99,34 +113,22 @@ namespace SS14.Client.State.States
                     Color = new Color4(245, 245, 245, 255)
                 },
             };
-
-            _imgTitle = new SimpleImage
-            {
-                Sprite = "ss14_logo",
-            };
-
-            _uiScreen.AddComponent(_imgTitle);
-            _uiScreen.AddComponent(_txtConnect);
-            _uiScreen.AddComponent(_btnConnect);
-            _uiScreen.AddComponent(_btnOptions);
-            _uiScreen.AddComponent(_btnExit);
             _uiScreen.AddComponent(_lblVersion);
-
-            FormResize();
         }
-        
+
+        /// <inheritdoc />
         public override void FormResize()
         {
-            var _width = (int)CluwneLib.Window.Viewport.Size.X;
-            var _height = (int)CluwneLib.Window.Viewport.Size.Y;
+            var width = (int) CluwneLib.Window.Viewport.Size.X;
+            var height = (int) CluwneLib.Window.Viewport.Size.Y;
 
-            _uiScreen.Width = _width;
-            _uiScreen.Height = _height;
+            _uiScreen.Width = width;
+            _uiScreen.Height = height;
 
-            _lblVersion.Position = new Vector2i(_width - _lblVersion.ClientArea.Width - 3,
-                                                _height - _lblVersion.ClientArea.Height - 3);
+            _lblVersion.Position = new Vector2i(width - _lblVersion.ClientArea.Width - 3,
+                height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
-            _imgTitle.Position = new Vector2i(_width - 550, 100);
+            _imgTitle.Position = new Vector2i(width - 550, 100);
             _imgTitle.Update(0);
             _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
             _txtConnect.Update(0);
@@ -140,66 +142,77 @@ namespace SS14.Client.State.States
             base.FormResize();
         }
 
-        #region Input
+        /// <inheritdoc />
         public override void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public override void KeyUp(KeyEventArgs e)
-        {
-        }
+        /// <inheritdoc />
+        public override void KeyUp(KeyEventArgs e) { }
 
+        /// <inheritdoc />
         public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
+        /// <inheritdoc />
         public override void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public override void MouseMoved(MouseMoveEventArgs e)
-        {
-        }
+        /// <inheritdoc />
+        public override void MouseMoved(MouseMoveEventArgs e) { }
+
+        /// <inheritdoc />
         public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
+
+        /// <inheritdoc />
         public override void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
+        /// <inheritdoc />
         public override void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
+        /// <inheritdoc />
         public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
+
+        /// <inheritdoc />
         public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
 
+        /// <inheritdoc />
         public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion Input
-        
+
+        /// <inheritdoc />
         public override void Startup()
         {
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
 
             UserInterfaceManager.AddComponent(_uiScreen);
+            FormResize();
         }
 
+        /// <inheritdoc />
         public override void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
@@ -211,11 +224,12 @@ namespace SS14.Client.State.States
             //_uiScreen = null;
         }
 
+        /// <inheritdoc />
         public override void Update(FrameEventArgs e)
         {
             if (_isConnecting)
             {
-                TimeSpan dif = DateTime.Now - _connectTime;
+                var dif = DateTime.Now - _connectTime;
                 if (dif.TotalMilliseconds > ConnectTimeOut)
                 {
                     _isConnecting = false;
@@ -233,34 +247,25 @@ namespace SS14.Client.State.States
         private void StartConnect(string address)
         {
             if (_isConnecting)
-            {
                 return;
-            }
 
             // See if the IP includes a port.
             var split = address.Split(':');
-            string ip = address;
-            ushort port = DEFAULT_PORT;
+            var ip = address;
+            var port = DefaultPort;
             if (split.Length > 2)
-            {
-                // Multiple colons?
                 throw new InvalidOperationException("Not a valid Address.");
-            }
 
             // IP:port format.
             if (split.Length == 2)
             {
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
-                {
                     throw new InvalidOperationException("Not a valid port.");
-                }
             }
 
             if (NetUtility.Resolve(ip, port) == null)
-            {
                 throw new InvalidOperationException("Not a valid Address.");
-            }
 
             _connectTime = DateTime.Now;
             _isConnecting = true;

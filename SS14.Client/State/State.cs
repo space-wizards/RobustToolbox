@@ -62,6 +62,8 @@ namespace SS14.Client.State
         /// </summary>
         public virtual void Render(FrameEventArgs e) { }
 
+        #region Events
+
         /// <summary>
         ///     Key was pressed.
         /// </summary>
@@ -121,5 +123,7 @@ namespace SS14.Client.State
         ///     A char has been typed. This gives the actual character, unlike KeyDown that gives the VK code.
         /// </summary>
         public virtual void TextEntered(TextEventArgs e) { }
+
+        #endregion
     }
 }

@@ -36,12 +36,12 @@ namespace SS14.Client.State
         [Dependency]
         private readonly IKeyBindingManager keyBindingManager;
 
-        private readonly Dictionary<Type, IState> _loadedStates = new Dictionary<Type, IState>();
+        private readonly Dictionary<Type, State> _loadedStates = new Dictionary<Type, State>();
         private readonly Dictionary<Type, object> _managers = new Dictionary<Type, object>();
 
         #region IStateManager Members
 
-        public IState CurrentState { get; private set; } = null;
+        public State CurrentState { get; private set; } = null;
 
         #endregion
 
@@ -130,7 +130,7 @@ namespace SS14.Client.State
             CurrentState?.Render(e);
         }
 
-        public void RequestStateChange<T>() where T : IState
+        public void RequestStateChange<T>() where T : State
         {
             if (CurrentState == null || CurrentState.GetType() != typeof (T))
                 SwitchToState<T>();
@@ -144,9 +144,9 @@ namespace SS14.Client.State
             CurrentState.FormResize();
         }
 
-        private void SwitchToState<T>() where T : IState
+        private void SwitchToState<T>() where T : State
         {
-            IState newState;
+            State newState;
 
             if (_loadedStates.ContainsKey(typeof (T)))
             {
@@ -175,7 +175,7 @@ namespace SS14.Client.State
 
         private void SwitchToState(Type type)
         {
-            IState newState;
+            State newState;
 
             if (_loadedStates.ContainsKey(type))
             {
@@ -184,7 +184,7 @@ namespace SS14.Client.State
             else
             {
                 var parameters = new object[] {_managers};
-                newState = (IState) Activator.CreateInstance(type, parameters);
+                newState = (State) Activator.CreateInstance(type, parameters);
                 _loadedStates.Add(type, newState);
             }
 

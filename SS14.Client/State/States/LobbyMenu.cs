@@ -22,7 +22,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {
-    public class Lobby : State, IState
+    public class Lobby : State
     {
         #region Fields
 
@@ -285,7 +285,7 @@ namespace SS14.Client.State.States
 
         #region Startup, Shutdown, Update
 
-        public void Startup()
+        public override void Startup()
         {
             UserInterfaceManager.AddComponent(_imgMainBg);
             UserInterfaceManager.AddComponent(_imgStatus);
@@ -309,7 +309,7 @@ namespace SS14.Client.State.States
             NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
-        public void Shutdown()
+        public override void Shutdown()
         {
             UserInterfaceManager.RemoveComponent(_imgMainBg);
             UserInterfaceManager.RemoveComponent(_imgStatus);
@@ -325,7 +325,7 @@ namespace SS14.Client.State.States
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
         }
 
-        public void Update(FrameEventArgs e)
+        public override void Update(FrameEventArgs e)
         {
             if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
             {
@@ -425,13 +425,13 @@ namespace SS14.Client.State.States
 
         #region IState Members
 
-        public void Render(FrameEventArgs e)
+        public override void Render(FrameEventArgs e)
         {
             _background.Draw();
             UserInterfaceManager.Render(e);
         }
 
-        public void FormResize()
+        public override void FormResize()
         {
         }
 
@@ -439,55 +439,55 @@ namespace SS14.Client.State.States
 
         #region Input
 
-        public void KeyDown(KeyEventArgs e)
+        public override void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public override void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp(MouseButtonEventArgs e)
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
+        public override void MouseMoved(MouseMoveEventArgs e)
         {
         }
 
-        public void MousePressed(MouseButtonEventArgs e)
+        public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public override void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
 
-        public void MouseLeft(EventArgs e)
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
 
-        public void TextEntered(TextEventArgs e)
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
         }

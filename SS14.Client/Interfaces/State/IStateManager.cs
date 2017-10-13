@@ -7,8 +7,8 @@ namespace SS14.Client.Interfaces.State
 {
     public interface IStateManager
     {
-        IState CurrentState { get; }
-        void RequestStateChange<T>() where T : IState;
+        Client.State.State CurrentState { get; }
+        void RequestStateChange<T>() where T : Client.State.State;
         void Update(FrameEventArgs e);
         void Render(FrameEventArgs e);
         void KeyDown(KeyEventArgs e);

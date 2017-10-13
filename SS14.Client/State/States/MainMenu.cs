@@ -16,7 +16,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {
-    public class MainScreen : State, IState
+    public class MainScreen : State
     {
         /// <summary>
         /// Default port that the client tries to connect to if no other port is specified.
@@ -114,10 +114,8 @@ namespace SS14.Client.State.States
 
             FormResize();
         }
-
-        public void Render(FrameEventArgs e) { }
-
-        public void FormResize()
+        
+        public override void FormResize()
         {
             var _width = (int)CluwneLib.Window.Viewport.Size.X;
             var _height = (int)CluwneLib.Window.Viewport.Size.Y;
@@ -138,63 +136,63 @@ namespace SS14.Client.State.States
             _btnOptions.Update(0);
             _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
             _btnExit.Update(0);
+
+            base.FormResize();
         }
 
         #region Input
-        public void KeyDown(KeyEventArgs e)
+        public override void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public override void KeyUp(KeyEventArgs e)
         {
         }
 
-        public void MouseUp(MouseButtonEventArgs e)
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
+        public override void MouseMoved(MouseMoveEventArgs e)
         {
         }
-        public void MousePressed(MouseButtonEventArgs e)
+        public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public override void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
-        public void MouseLeft(EventArgs e)
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
 
-        public void TextEntered(TextEventArgs e)
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
         #endregion Input
-
-        #region Startup, Shutdown, Update
-
-        public void Startup()
+        
+        public override void Startup()
         {
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
@@ -202,18 +200,18 @@ namespace SS14.Client.State.States
             UserInterfaceManager.AddComponent(_uiScreen);
         }
 
-        public void Shutdown()
+        public override void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
 
-            // 
+            // There is no way to actually destroy a screen.
             //_uiScreen.Destroy();
             //_uiScreen = null;
         }
 
-        public void Update(FrameEventArgs e)
+        public override void Update(FrameEventArgs e)
         {
             if (_isConnecting)
             {
@@ -232,7 +230,7 @@ namespace SS14.Client.State.States
             StateManager.RequestStateChange<Lobby>();
         }
 
-        public void StartConnect(string address)
+        private void StartConnect(string address)
         {
             if (_isConnecting)
             {
@@ -268,7 +266,5 @@ namespace SS14.Client.State.States
             _isConnecting = true;
             NetworkManager.ClientConnect(ip, port);
         }
-
-        #endregion Startup, Shutdown, Update
     }
 }

@@ -40,7 +40,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.State.States
 {
-    public class GameScreen : State, IState
+    public class GameScreen : State
     {
         #region Variables
         public DateTime LastUpdate;
@@ -130,7 +130,7 @@ namespace SS14.Client.State.States
 
         #region IState Members
 
-        public void Startup()
+        public override void Startup()
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
             manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
@@ -294,8 +294,10 @@ namespace SS14.Client.State.States
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
 
-        public void Update(FrameEventArgs e)
+        public override void Update(FrameEventArgs e)
         {
+            base.Update(e);
+
             LastUpdate = Now;
             Now = DateTime.Now;
 
@@ -318,8 +320,10 @@ namespace SS14.Client.State.States
             }
         }
 
-        public void Render(FrameEventArgs e)
+        public override void Render(FrameEventArgs e)
         {
+            base.Render(e);
+
             CluwneLib.Window.Graphics.Clear(Color.Black);
 
             CalculateAllLights();
@@ -463,7 +467,7 @@ namespace SS14.Client.State.States
             }
         }
 
-        public void Shutdown()
+        public override void Shutdown()
         {
             IoCManager.Resolve<IPlayerManager>().Detach();
 
@@ -488,11 +492,7 @@ namespace SS14.Client.State.States
         #region Input
 
         #region Keyboard
-        public void KeyPressed(KeyEventArgs e)
-        {
-        }
-
-        public void KeyDown(KeyEventArgs e)
+        public override void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
@@ -559,24 +559,24 @@ namespace SS14.Client.State.States
             PlayerManager.KeyDown(e.Code);
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public override void KeyUp(KeyEventArgs e)
         {
             PlayerManager.KeyUp(e.Code);
         }
 
-        public void TextEntered(TextEventArgs e)
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
         #endregion Keyboard
 
         #region Mouse
-        public void MouseUp(MouseButtonEventArgs e)
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             if (PlayerManager.ControlledEntity == null)
                 return;
@@ -660,7 +660,7 @@ namespace SS14.Client.State.States
             #endregion Object clicking
         }
 
-        public void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if(PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
@@ -674,25 +674,25 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
+        public override void MouseMoved(MouseMoveEventArgs e)
         {
         }
 
-        public void MousePressed(MouseButtonEventArgs e)
+        public override void MousePressed(MouseButtonEventArgs e)
         {
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public override void MouseWheelMove(MouseWheelEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
 
-        public void MouseLeft(EventArgs e)
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }

@@ -16,6 +16,7 @@ namespace SS14.Client.State.States
     /// <summary>
     ///     Main menu screen that is the first screen to be displayed when the game starts.
     /// </summary>
+    // Instantiated dynamically through the StateManager.
     public class MainScreen : State
     {
         /// <summary>

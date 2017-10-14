@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace SS14.Client.Graphics.Sprite
+namespace SS14.Client.Graphics.Sprites
 {
     /// <summary>
     /// Provides optimized drawing of sprites

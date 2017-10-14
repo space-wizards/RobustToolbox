@@ -64,17 +64,11 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CluwneLib.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="CluwneLib.cs" />
     <Compile Include="Collection\AnimationCollection.cs" />
-    <Compile Include="Collection\BaseCollection.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Collection\BaseCollection.cs" />
     <Compile Include="Debug.cs" />
-    <Compile Include="Enums\GraphicsEnums.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Enums\GraphicsEnums.cs" />
     <Compile Include="Render\GraphicsContext.cs" />
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
@@ -86,47 +80,26 @@
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Lighting\ShadowmapSize.cs" />
     <Compile Include="Shader\TechniqueList.cs" />
-    <Compile Include="Sprite\AnimationInfo.cs" />
-    <Compile Include="Sprite\SpriteInfo.cs" />
+    <Compile Include="Sprites\AnimationInfo.cs" />
+    <Compile Include="Sprites\SpriteInfo.cs" />
     <Compile Include="States\AnimationState.cs" />
-    <Compile Include="texture\TextureCache.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Render\CluwneWindow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Render\RenderImage.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Shader\GLSLShader.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sprite\SpriteBatch.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sprite\CluwneSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Sprite\TextSprite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VertexData\VertexField.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VertexData\VertexType.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VertexData\VertexTypeList.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="texture\TextureCache.cs" />
+    <Compile Include="texture\ITexture.cs" />
+    <Compile Include="texture\Texture.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Render\CluwneWindow.cs" />
+    <Compile Include="Render\RenderImage.cs" />
+    <Compile Include="Shader\GLSLShader.cs" />
+    <Compile Include="Sprites\SpriteBatch.cs" />
+    <Compile Include="Sprites\ISprite.cs" />
+    <Compile Include="Sprites\Sprite.cs" />
+    <Compile Include="Sprites\TextSprite.cs" />
+    <Compile Include="VertexData\VertexField.cs" />
+    <Compile Include="VertexData\VertexType.cs" />
+    <Compile Include="VertexData\VertexTypeList.cs" />
     <Compile Include="Settings\VideoSettings.cs" />
     <Compile Include="View\Camera.cs" />
-    <Compile Include="View\Viewport.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="View\Viewport.cs" />
     <Compile Include="Utility\SfmlExt.cs" />
     <Compile Include="Utility\SfmlCompatibility.cs" />
   </ItemGroup>

@@ -46,21 +46,27 @@ namespace SS14.Client.State.States
         {
             _uiScreen = new Screen
             {
-                Background = ResourceCache.GetSprite("ss14_logo_background")
+                Background = ResourceCache.GetSprite("ss14_logo_background"),
+                Width  = (int)CluwneLib.Window.Viewport.Size.X,
+                Height = (int)CluwneLib.Window.Viewport.Size.Y,
             };
 
             _imgTitle = new SimpleImage
             {
                 Sprite = "ss14_logo",
+                Anchors = Anchor.Right,
+                LocalPosition = new Vector2i(-550, 100)
             };
             _uiScreen.AddComponent(_imgTitle);
 
             _txtConnect = new Textbox(100, ResourceCache)
             {
-                Text = ConfigurationManager.GetCVar<string>("net.server")
+                Text = ConfigurationManager.GetCVar<string>("net.server"),
+                Anchors = Anchor.Left & Anchor.Bottom,
+                LocalPosition = new Vector2i(10, 50)
             };
             _txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
-            _uiScreen.AddComponent(_txtConnect);
+            _imgTitle.AddComponent(_txtConnect);
 
             _btnConnect = new ImageButton
             {
@@ -126,8 +132,10 @@ namespace SS14.Client.State.States
             _uiScreen.Width = width;
             _uiScreen.Height = height;
 
-            _lblVersion.Position = new Vector2i(width - _lblVersion.ClientArea.Width - 3,
-                height - _lblVersion.ClientArea.Height - 3);
+            UserInterfaceManager.ResizeComponents();
+
+            /*
+            _lblVersion.Position = new Vector2i(width - _lblVersion.ClientArea.Width - 3, height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
             _imgTitle.Position = new Vector2i(width - 550, 100);
             _imgTitle.Update(0);
@@ -139,6 +147,8 @@ namespace SS14.Client.State.States
             _btnOptions.Update(0);
             _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
             _btnExit.Update(0);
+
+            */
 
             base.FormResize();
         }

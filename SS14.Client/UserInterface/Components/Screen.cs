@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.UserInterface.Components;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
 {
-    class Screen : GuiComponent
+    public class Screen : GuiComponent
     {
         public Sprite Background { get; set; }
 
@@ -25,6 +21,8 @@ namespace SS14.Client.UserInterface
         {
             if(Background != null)
                 Background.Scale = new Vector2f((float)Width / Background.TextureRect.Width, (float)Height / Background.TextureRect.Height);
+
+            _clientArea = Box2i.FromDimensions(Position.X, Position.Y, Width, Height);
 
             base.Resize();
         }

@@ -37,11 +37,13 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
+            /*
             if (drawingSprite != null)
             {
                 var bounds = drawingSprite.GetLocalBounds();
                 ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
+            */
         }
 
         public override void Render()
@@ -56,31 +58,26 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
+        /*
         public override Box2i ClientArea {
             get {
                 var fr = drawingSprite.GetLocalBounds().Convert();
                 return Box2i.FromDimensions((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
             }
         }
+        */
+        public override void Resize()
+        {
+            var fr = drawingSprite.GetLocalBounds().Convert();
+            _size = new Vector2i((int) fr.Width, (int) fr.Height);
+            _clientArea = Box2i.FromDimensions(Position.X, Position.Y, _size.X, _size.Y);
 
-        public override Vector2i Position {
-            get {
-                if (drawingSprite == null)
-                    return new Vector2i(0, 0);
-                return new Vector2i((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
+            base.Resize();
+
+            if (drawingSprite != null)
+            {
+                drawingSprite.Position = new Vector2f(_screenPos.X, _screenPos.Y);
             }
-            set { drawingSprite.Position = new Vector2f(value.X, value.Y); }
-        }
-
-
-        public override bool MouseDown(MouseButtonEventArgs e)
-        {
-            return false;
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
-            return false;
         }
     }
 }

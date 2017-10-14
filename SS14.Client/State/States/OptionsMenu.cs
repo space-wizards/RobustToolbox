@@ -5,6 +5,7 @@ using OpenTK;
 using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 
@@ -17,7 +18,10 @@ namespace SS14.Client.State.States
     public class OptionsMenu : State
     {
         private readonly Dictionary<string, VideoMode> _videoModeList = new Dictionary<string, VideoMode>();
-        private Sprite _background;
+        //private Sprite _background;
+
+        private Screen _uiScreen;
+        private Panel _bgPanel;
 
         private Box2i _boundingArea;
         private Button _btnApply;
@@ -31,31 +35,29 @@ namespace SS14.Client.State.States
         private Label _lblVSync;
 
         private Listbox _lstResolution;
-        private int _previousScreenHeight;
-        private int _previousScreenWidth;
-        private Sprite _ticketBg;
+        //private Sprite _ticketBg;
 
         /// <summary>
         ///     Constructs an instance of this object.
         /// </summary>
         /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
         public OptionsMenu(IDictionary<Type, object> managers)
-            : base(managers)
-        {
-            UpdateBounds();
-        }
-
-        private void UpdateBounds()
-        {
-            //TODO: This needs to go in form resize.
-            var top = (int) (CluwneLib.Window.Viewport.Size.Y / 2f) - (int) (_boundingArea.Height / 2f);
-            _boundingArea = Box2i.FromDimensions(0, top, 1000, 600);
-        }
-
+            : base(managers) { }
+        
         private void InitializeGui()
         {
-            _background = ResourceCache.GetSprite("mainbg");
-            _ticketBg = ResourceCache.GetSprite("ticketoverlay");
+            _uiScreen = new Screen();
+            _uiScreen.Position = new Vector2i(0, 0);
+            _uiScreen.Background = ResourceCache.GetSprite("ss14_logo_background");
+            UserInterfaceManager.AddComponent(_uiScreen);
+
+            _bgPanel = new Panel();
+            _bgPanel.LocalPosition = new Vector2i(10, 10);
+            _bgPanel.Background = ResourceCache.GetSprite("ticketoverlay");
+            _uiScreen.AddComponent(_bgPanel);
+
+            //_background = ResourceCache.GetSprite("ss14_logo_background");
+            //_ticketBg = ResourceCache.GetSprite("ticketoverlay");
 
             _lblTitle = new Label("Options", "CALIBRI", 48, ResourceCache);
             UserInterfaceManager.AddComponent(_lblTitle);
@@ -88,16 +90,30 @@ namespace SS14.Client.State.States
             _btnApply = new Button("Apply Settings", ResourceCache);
             _btnApply.Clicked += _btnApply_Clicked;
             UserInterfaceManager.AddComponent(_btnApply);
-
-            UpdateGuiPosition();
         }
 
         private void UpdateGuiPosition()
         {
-            //TODO: This needs to go in form resize.
             const int sectionPadding = 50;
             const int optionPadding = 10;
             const int labelPadding = 3;
+
+            const int ticketPadding = 100;
+
+            var width = (int)CluwneLib.Window.Viewport.Size.X;
+            var height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            var top = (int)(height / 2f) - (int)(_boundingArea.Height / 2f);
+            var left = 0;
+            _boundingArea = Box2i.FromDimensions(left, top, width, height);
+
+
+            _uiScreen.Width = width;
+            _uiScreen.Height = height;
+
+            //_background.SetTransformToRect(Box2i.FromDimensions(0, 0, width, height));
+
+            //_ticketBg.SetTransformToRect(_boundingArea);
 
             _lblTitle.Position = new Vector2i(_boundingArea.Left + 10, _boundingArea.Top + 10);
             _lblTitle.Update(0);
@@ -108,6 +124,7 @@ namespace SS14.Client.State.States
 
             _chkFullScreen.Position = new Vector2i(_lstResolution.Position.X,
                 _lstResolution.Position.Y + _lstResolution.ClientArea.Height + sectionPadding);
+            _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             _chkFullScreen.Update(0);
             _lblFullScreen.Position = new Vector2i(_chkFullScreen.Position.X + _chkFullScreen.ClientArea.Width + labelPadding,
                 _chkFullScreen.Position.Y);
@@ -178,8 +195,8 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            NetworkManager.ClientDisconnect("Client killed old session."); //TODO: Is this really needed here?
             InitializeGui();
+            FormResize();
         }
 
         /// <inheritdoc />
@@ -191,31 +208,23 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Update(FrameEventArgs e)
         {
-            if (CluwneLib.Window.Viewport.Size.X != _previousScreenWidth || CluwneLib.Window.Viewport.Size.Y != _previousScreenHeight)
-            {
-                _previousScreenHeight = (int) CluwneLib.Window.Viewport.Size.Y;
-                _previousScreenWidth = (int) CluwneLib.Window.Viewport.Size.X;
-                UpdateBounds();
-                UpdateGuiPosition();
-            }
-
-            _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             UserInterfaceManager.Update(e);
         }
 
         /// <inheritdoc />
         public override void Render(FrameEventArgs e)
         {
-            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int) CluwneLib.Window.Viewport.Size.X, (int) CluwneLib.Window.Viewport.Size.Y));
-            _background.Draw();
+            //_background.Draw();
+            //_ticketBg.Draw();
 
-            _ticketBg.SetTransformToRect(_boundingArea);
-            _ticketBg.Draw();
             UserInterfaceManager.Render(e);
         }
 
         /// <inheritdoc />
-        public override void FormResize() { }
+        public override void FormResize()
+        {
+            UpdateGuiPosition();
+        }
 
         /// <inheritdoc />
         public override void KeyDown(KeyEventArgs e)

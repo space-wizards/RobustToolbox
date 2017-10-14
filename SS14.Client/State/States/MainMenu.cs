@@ -1,9 +1,4 @@
 ﻿using Lidgren.Network;
-using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
@@ -13,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.State.States
 {
@@ -27,7 +24,7 @@ namespace SS14.Client.State.States
         private const float ConnectTimeOut = 5000.0f;
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
-        private readonly Sprite _background;
+        private readonly ISprite _background;
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;
@@ -78,7 +75,7 @@ namespace SS14.Client.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            _lblVersion.Text.Color = new Color4(245, 245, 245, 255);
+            _lblVersion.Text.Color = new Color(245, 245, 245);
 
             _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                              _Height - _lblVersion.ClientArea.Height - 3);
@@ -102,7 +99,7 @@ namespace SS14.Client.State.States
         {
             _Width = (int)CluwneLib.Window.Viewport.Size.X;
             _Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            _background.Scale = new Vector2f((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
+            _background.Scale = new Vector2((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
             _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                                 _Height - _lblVersion.ClientArea.Height - 3);
             _lblVersion.Update(0);
@@ -151,7 +148,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

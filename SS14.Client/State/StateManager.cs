@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using SFML.Window;
-using SS14.Client.Interfaces.Input;
+﻿using SS14.Client.Interfaces.Input;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
@@ -13,7 +11,8 @@ using SS14.Shared.Interfaces.Configuration;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
-using KeyEventArgs = SFML.Window.KeyEventArgs;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.State
 {
@@ -43,7 +42,7 @@ namespace SS14.Client.State
 
         public IState CurrentState { get; private set; } = null;
 
-        #endregion
+        #endregion IStateManager Members
 
         public void PostInject()
         {
@@ -92,7 +91,7 @@ namespace SS14.Client.State
                 CurrentState.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseWheelMove(e);
@@ -116,7 +115,7 @@ namespace SS14.Client.State
                 CurrentState.TextEntered(e);
         }
 
-        #endregion
+        #endregion Input
 
         #region Updates & Statechanges
 
@@ -132,7 +131,7 @@ namespace SS14.Client.State
 
         public void RequestStateChange<T>() where T : IState
         {
-            if (CurrentState == null || CurrentState.GetType() != typeof (T))
+            if (CurrentState == null || CurrentState.GetType() != typeof(T))
                 SwitchToState<T>();
         }
 
@@ -148,15 +147,15 @@ namespace SS14.Client.State
         {
             IState newState;
 
-            if (_loadedStates.ContainsKey(typeof (T)))
+            if (_loadedStates.ContainsKey(typeof(T)))
             {
-                newState = (T) _loadedStates[typeof (T)];
+                newState = (T)_loadedStates[typeof(T)];
             }
             else
             {
-                var parameters = new object[] {_managers};
-                newState = (T) Activator.CreateInstance(typeof (T), parameters);
-                _loadedStates.Add(typeof (T), newState);
+                var parameters = new object[] { _managers };
+                newState = (T)Activator.CreateInstance(typeof(T), parameters);
+                _loadedStates.Add(typeof(T), newState);
             }
 
             if (CurrentState != null) CurrentState.Shutdown();
@@ -183,8 +182,8 @@ namespace SS14.Client.State
             }
             else
             {
-                var parameters = new object[] {_managers};
-                newState = (IState) Activator.CreateInstance(type, parameters);
+                var parameters = new object[] { _managers };
+                newState = (IState)Activator.CreateInstance(type, parameters);
                 _loadedStates.Add(type, newState);
             }
 
@@ -202,6 +201,6 @@ namespace SS14.Client.State
             }
         }
 
-        #endregion
+        #endregion Updates & Statechanges
     }
 }

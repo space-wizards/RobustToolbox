@@ -89,6 +89,7 @@
     <Reference Include="System.Data.DataSetExtensions">
       <Name>System.Data.DataSetExtensions</Name>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms">
       <Name>System.Windows.Forms</Name>
     </Reference>
@@ -114,7 +115,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BoundKeyEventArgs.cs" />
-    <Compile Include="ColorUtils.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVar.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />
@@ -186,6 +186,7 @@
     <Compile Include="Map\TileDefinitionManager.cs" />
     <Compile Include="Map\TileRef.cs" />
     <Compile Include="Maths\Box2Ext.cs" />
+    <Compile Include="Maths\Color.cs" />
     <Compile Include="Maths\FloatMath.cs" />
     <Compile Include="Maths\Direction.cs" />
     <Compile Include="Maths\Vector2.cs" />
@@ -320,7 +321,8 @@
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <WarningLevel>4</WarningLevel>
-    <NoWarn></NoWarn>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->
@@ -368,7 +370,7 @@
       <ResourceRoot>Prototypes\Engine</ResourceRoot>
       <Visible>False</Visible>
     </Resources>
-    <Resources Include="..\Resources\SavedEntities.xml" >
+    <Resources Include="..\Resources\SavedEntities.xml">
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>

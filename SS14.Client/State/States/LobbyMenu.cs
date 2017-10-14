@@ -1,23 +1,14 @@
 ﻿using Lidgren.Network;
-using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Network;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
-using SS14.Shared.Utility;
+using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using SS14.Shared.Network;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
@@ -472,7 +463,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

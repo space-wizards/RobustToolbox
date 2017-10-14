@@ -1,5 +1,4 @@
-﻿using SFML.Graphics;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Graphics.Utility;
@@ -11,7 +10,7 @@ using System.Linq;
 using SS14.Shared.Maths;
 using OpenTK.Graphics;
 
-namespace SS14.Client.Graphics.Sprite
+namespace SS14.Client.Graphics.Sprites
 {
     public class AnimatedSprite
     {
@@ -38,7 +37,7 @@ namespace SS14.Client.Graphics.Sprite
             get { return _direction; }
             set
             {
-                if(_direction != value)
+                if (_direction != value)
                 {
                     _direction = value;
                     UpdateDirection();
@@ -70,9 +69,9 @@ namespace SS14.Client.Graphics.Sprite
 
         public bool HorizontalFlip { get; set; }
 
-        #endregion
+        #endregion Sprite passthrough methods
 
-        #endregion
+        #endregion Public Properties
 
         #region Variables
 
@@ -86,7 +85,7 @@ namespace SS14.Client.Graphics.Sprite
 
         private Direction _direction = Direction.South;
 
-        #endregion
+        #endregion Variables
 
         #region Methods
 
@@ -226,7 +225,7 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        #endregion
+        #endregion Methods
 
         #region Constructor
 
@@ -243,6 +242,6 @@ namespace SS14.Client.Graphics.Sprite
             //IoCManager.Resolve<IResourceCache>().
         }
 
-        #endregion
+        #endregion Constructor
     }
 }

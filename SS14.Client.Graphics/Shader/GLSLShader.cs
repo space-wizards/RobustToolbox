@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.System;
 using SFML.Graphics.Glsl;
 using SS14.Client.Graphics.Render;
@@ -11,27 +11,22 @@ using System.Linq;
 using ShaderClass = SFML.Graphics.Shader;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
-
 namespace SS14.Client.Graphics.Shader
 {
     [DebuggerDisplay("[GLSLShader] ResourceName = {_resourceName} | availible? {isAvalible}")]
-    public class GLSLShader : ShaderClass
+    class GLSLShader : IGLSLShader
     {
-
+        private ShaderClass _shaderClass;
         private string _resourceName;
-
-
 
         public GLSLShader(string vertexShaderFilename, string fragmentShaderFilename)
             : base(vertexShaderFilename, null, fragmentShaderFilename)
         {
-
         }
 
         public GLSLShader(Stream vertexShaderStream, Stream fragmentShaderStream)
             : base(vertexShaderStream, null, fragmentShaderStream)
         {
-
         }
 
         public string ResourceName
@@ -52,7 +47,6 @@ namespace SS14.Client.Graphics.Shader
 
         public void setDuration(float duration)
         {
-
         }
 
         public void SetUniform(string Parameter, RenderImage Image)

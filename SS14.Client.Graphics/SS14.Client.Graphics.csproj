@@ -69,6 +69,14 @@
     <Compile Include="Collection\BaseCollection.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Enums\GraphicsEnums.cs" />
+    <Compile Include="FrameEventArgs.cs" />
+    <Compile Include="Input\KeyEventArgs.cs" />
+    <Compile Include="Input\Keyboard.cs" />
+    <Compile Include="Input\Mouse.cs" />
+    <Compile Include="Input\MouseButtonEventArgs.cs" />
+    <Compile Include="Input\MouseMoveEventArgs.cs" />
+    <Compile Include="Input\MouseWheelScrollEventArgs.cs" />
+    <Compile Include="Input\TextEventArgs.cs" />
     <Compile Include="Render\GraphicsContext.cs" />
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
@@ -79,6 +87,8 @@
     <Compile Include="Lighting\Light.cs" />
     <Compile Include="Lighting\ShadowMapResolver.cs" />
     <Compile Include="Lighting\ShadowmapSize.cs" />
+    <Compile Include="Render\IRenderTarget.cs" />
+    <Compile Include="Shader\IGLSLShader.cs" />
     <Compile Include="Shader\TechniqueList.cs" />
     <Compile Include="Sprites\AnimationInfo.cs" />
     <Compile Include="Sprites\SpriteInfo.cs" />

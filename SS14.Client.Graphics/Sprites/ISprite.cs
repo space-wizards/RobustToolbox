@@ -1,4 +1,4 @@
-using SS14.Client.Graphics.Textures;
+﻿using SS14.Client.Graphics.Textures;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Sprites
@@ -7,6 +7,8 @@ namespace SS14.Client.Graphics.Sprites
     {
         ITexture Texture { get; }
         Vector2i Size { get; }
-        Box2i TexturRect { get; }
+        Box2i TextureRect { get; }
+
+        void Draw();
     }
 }

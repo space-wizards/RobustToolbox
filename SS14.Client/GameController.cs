@@ -27,6 +27,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.Client
 {
@@ -156,7 +157,7 @@ namespace SS14.Client
                     if (!_time.Paused)
                     {
                         // update the simulation
-                        var simFrameEvent = new FrameEventArgs((float) _time.FrameTime.TotalSeconds);
+                        var simFrameEvent = new FrameEventArgs((float)_time.FrameTime.TotalSeconds);
                         Update(simFrameEvent);
                         _time.CurTick++;
                     }
@@ -172,7 +173,7 @@ namespace SS14.Client
                 Render(realFrameEvent);
             }
 
-            #endregion
+            #endregion GameLoop
 
             _networkManager.ClientDisconnect("Client disconnected from game.");
             CluwneLib.Terminate();
@@ -181,7 +182,7 @@ namespace SS14.Client
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
 
-        private void LoadContentAssembly<T>(string name) where T: GameShared
+        private void LoadContentAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
             if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
@@ -226,7 +227,6 @@ namespace SS14.Client
         private void Process(FrameEventArgs e)
         {
             //TODO: Keyboard/Mouse input needs to be processed here.
-
         }
 
         /// <summary>
@@ -333,7 +333,7 @@ namespace SS14.Client
             CluwneLib.Stop();
         }
 
-#region Input Handling
+        #region Input Handling
 
         /// <summary>
         /// Handles any keydown events.
@@ -438,11 +438,11 @@ namespace SS14.Client
                 _stateManager.TextEntered(e);
         }
 
-#endregion Input Handling
+        #endregion Input Handling
 
-#endregion EventHandlers
+        #endregion EventHandlers
 
-#region Privates
+        #region Privates
 
         bool onetime = true;
 
@@ -454,10 +454,10 @@ namespace SS14.Client
             _configurationManager.RegisterCVar("display.refresh", 60, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("display.vsync", false, CVar.ARCHIVE);
 
-            uint displayWidth = (uint) _configurationManager.GetCVar<int>("display.width");
-            uint displayHeight = (uint) _configurationManager.GetCVar<int>("display.height");
+            uint displayWidth = (uint)_configurationManager.GetCVar<int>("display.width");
+            uint displayHeight = (uint)_configurationManager.GetCVar<int>("display.height");
             bool isFullscreen = _configurationManager.GetCVar<bool>("display.fullscreen");
-            uint refresh = (uint) _configurationManager.GetCVar<int>("display.refresh");
+            uint refresh = (uint)_configurationManager.GetCVar<int>("display.refresh");
 
             CluwneLib.Video.SetFullScreen(isFullscreen);
             CluwneLib.Video.SetRefreshRate(refresh);
@@ -488,8 +488,8 @@ namespace SS14.Client
             IoCManager.Resolve<IKeyBindingManager>().Initialize();
         }
 
-#endregion Privates
+        #endregion Privates
 
-#endregion Methods
+        #endregion Methods
     }
 }

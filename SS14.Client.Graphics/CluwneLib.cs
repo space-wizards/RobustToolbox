@@ -17,12 +17,13 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Map;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.Graphics
 {
     public class CluwneLib
     {
-        private static RenderTarget[] renderTargetArray;
+        private static IRenderTarget[] renderTargetArray;
 
         public static GameTiming Time { get; private set; }
         public static event EventHandler<FrameEventArgs> FrameEvent;
@@ -43,7 +44,7 @@ namespace SS14.Client.Graphics
         public static GLSLShader CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }
-        public static RenderTarget CurrentRenderTarget
+        public static IRenderTarget CurrentRenderTarget
         {
             get
             {
@@ -127,7 +128,7 @@ namespace SS14.Client.Graphics
             Window.Graphics.SetVerticalSyncEnabled(true);
             Window.Graphics.SetFramerateLimit(300);
 
-            renderTargetArray = new RenderTarget[5];
+            renderTargetArray = new IRenderTarget[5];
             //Window.Viewport = new Viewport(0, 0, 800, 600);
             IsInitialized = true;
 
@@ -140,9 +141,9 @@ namespace SS14.Client.Graphics
             new GraphicsContext(OpenTK.ContextHandle.Zero, null);
         }
 
-        public static void ClearCurrentRendertarget(Color4 color)
+        public static void ClearCurrentRendertarget(Color color)
         {
-            CurrentRenderTarget.Clear(color.Convert());
+            CurrentRenderTarget.Clear(color);
         }
 
         public static void Terminate()
@@ -171,12 +172,12 @@ namespace SS14.Client.Graphics
 
         #region RenderTarget Stuff
 
-        public static void setAdditionalRenderTarget(int index, RenderTarget _target)
+        public static void setAdditionalRenderTarget(int index, IRenderTarget _target)
         {
             renderTargetArray[index] = _target;
         }
 
-        public static RenderTarget getAdditionalRenderTarget(int index)
+        public static IRenderTarget getAdditionalRenderTarget(int index)
         {
             return renderTargetArray[index];
         }
@@ -211,7 +212,7 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color4 Color)
+        public static void drawRectangle(int posX, int posY, int WidthX, int HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
@@ -229,7 +230,7 @@ namespace SS14.Client.Graphics
         /// <param name="WidthX"> Width X of rectangle </param>
         /// <param name="HeightY"> Height Y of rectangle </param>
         /// <param name="Color"> Fill Color </param>
-        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, Color4 Color)
+        public static void drawRectangle(float posX, float posY, float WidthX, float HeightY, Color Color)
         {
             RectangleShape rectangle = new RectangleShape();
             rectangle.Position = new SFML.System.Vector2f(posX, posY);
@@ -248,10 +249,10 @@ namespace SS14.Client.Graphics
         /// <param name="heightY"> Height Y of rectangle </param>
         /// <param name="OutlineThickness"> Outline Thickness of rectangle </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color4 OutlineColor)
+        public static void drawHollowRectangle(int posX, int posY, int widthX, int heightY, float OutlineThickness, Color OutlineColor)
         {
             RectangleShape HollowRect = new RectangleShape();
-            HollowRect.FillColor = Color.Transparent;
+            HollowRect.FillColor = Color.Transparent.Convert();
             HollowRect.Position = new SFML.System.Vector2f(posX, posY);
             HollowRect.Size = new SFML.System.Vector2f(widthX, heightY);
             HollowRect.OutlineThickness = OutlineThickness;
@@ -269,7 +270,7 @@ namespace SS14.Client.Graphics
         /// <param name="posY"> Pos Y of Circle </param>
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawCircle(int posX, int posY, int radius, Color4 color)
+        public static void drawCircle(int posX, int posY, int radius, Color color)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2f(posX, posY);
@@ -286,12 +287,12 @@ namespace SS14.Client.Graphics
         /// <param name="radius"> Radius of Circle </param>
         /// <param name="OutlineThickness"> Thickness of Circle Outline </param>
         /// <param name="OutlineColor"> Circle outline Color </param>
-        public static void drawHollowCircle(int posX, int posY, int radius, float OutlineThickness, Color4 OutlineColor)
+        public static void drawHollowCircle(int posX, int posY, int radius, float OutlineThickness, Color OutlineColor)
         {
             CircleShape Circle = new CircleShape();
             Circle.Position = new Vector2f(posX - radius, posY - radius);
             Circle.Radius = radius;
-            Circle.FillColor = Color.Transparent;
+            Circle.FillColor = Color.Transparent.Convert();
             Circle.OutlineThickness = OutlineThickness;
             Circle.OutlineColor = OutlineColor.Convert();
 
@@ -307,7 +308,7 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="color"> Fill Color </param>
-        public static void drawPoint(int posX, int posY, Color4 color)
+        public static void drawPoint(int posX, int posY, Color color)
         {
             RectangleShape Point = new RectangleShape();
             Point.Position = new Vector2f(posX, posY);
@@ -323,12 +324,12 @@ namespace SS14.Client.Graphics
         /// <param name="posX"> Pos X of Point </param>
         /// <param name="posY"> Pos Y of Point </param>
         /// <param name="OutlineColor"> Outline Color </param>
-        public static void drawHollowPoint(int posX, int posY, Color4 OutlineColor)
+        public static void drawHollowPoint(int posX, int posY, Color OutlineColor)
         {
             RectangleShape hollowPoint = new RectangleShape();
             hollowPoint.Position = new Vector2f(posX, posY);
             hollowPoint.Size = new Vector2f(1, 1);
-            hollowPoint.FillColor = Color.Transparent;
+            hollowPoint.FillColor = Color.Transparent.Convert();
             hollowPoint.OutlineThickness = .6f;
             hollowPoint.OutlineColor = OutlineColor.Convert();
 
@@ -346,7 +347,7 @@ namespace SS14.Client.Graphics
         /// <param name="rotate"> Line Rotation </param>
         /// <param name="thickness"> Line Thickness </param>
         /// <param name="Color"> Line Color </param>
-        public static void drawLine(float posX, float posY, float length, float rotate, float thickness, Color4 Color)
+        public static void drawLine(float posX, float posY, float length, float rotate, float thickness, Color Color)
         {
             RectangleShape line = new RectangleShape();
             line.Position = new Vector2f(posX, posY);
@@ -370,7 +371,7 @@ namespace SS14.Client.Graphics
         /// <param name="text"> Text to render </param>
         /// <param name="size"> Size of the font </param>
         /// <param name="textColor"> Color of the text </param>
-        public static void drawText(float posX, float posY, string text, uint size, Color4 textColor, Font font)
+        public static void drawText(float posX, float posY, string text, uint size, Color textColor, Font font)
         {
             Text _text = new Text(text, font);
             _text.Position = new SFML.System.Vector2f(posX, posY);
@@ -471,12 +472,10 @@ namespace SS14.Client.Graphics
         }
 
         #endregion Client Window Data
-
     }
 
     public class InputEvents
     {
-
         public InputEvents(RenderWindow window)
         {
             // if dummy don't attach events
@@ -495,7 +494,6 @@ namespace SS14.Client.Graphics
             _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
             _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
         }
-
 
         public event EventHandler<KeyEventArgs> KeyPressed;
         public event EventHandler<KeyEventArgs> KeyReleased;

@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -58,7 +56,7 @@ namespace SS14.Client.Map
             var bounds = tileSprite.GetLocalBounds();
             var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;
-            shape.Position = new Vector2f(x - bounds.Width/2, y - bounds.Height/2);
+            shape.Position = new Vector2f(x - bounds.Width / 2, y - bounds.Height / 2);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 

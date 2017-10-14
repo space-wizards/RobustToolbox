@@ -1,6 +1,7 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using System.Windows.Forms;
+using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
@@ -10,31 +11,18 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using System;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.UserInterface.Components
 {
     internal class Textbox : GuiComponent
     {
-        #region Delegates
-
         public delegate void TextSubmitHandler(string text, Textbox sender);
 
-        #endregion Delegates
-
-        private readonly IResourceCache _resourceCache;
-        public bool ClearFocusOnSubmit = true;
-        public bool ClearOnSubmit = true;
-        public bool AllowEmptySubmit = true;
-
-        public TextSprite Label;
-        public int MaxCharacters = 255;
-        public int Width;
-        private float _caretHeight = 12;
+        private const float CaretHeight = 12;
+        private const float CaretWidth = 2;
         private int _caretIndex;
         private float _caretPos;
-        private float _caretWidth = 2;
 
         private Box2i _clientAreaLeft;
         private Box2i _clientAreaMain;
@@ -47,33 +35,26 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _textboxLeft;
         private Sprite _textboxMain;
         private Sprite _textboxRight;
-
-        public Color4 drawColor = Color4.White;
-        public Color4 textColor = Color4.Black;
+        public bool AllowEmptySubmit = true;
 
         private float blinkCount;
+        public bool ClearFocusOnSubmit = true;
+        public bool ClearOnSubmit = true;
+
+        public Color4 drawColor = Color4.White;
 
         // Terrible hack to get around TextEntered AND KeyDown firing at once.
         // Set to true after handling a KeyDown that produces a character to this.
-        public bool ignoreNextText = false;
+        public bool ignoreNextText;
 
-        public Textbox(int width, IResourceCache resourceCache)
-        {
-            _resourceCache = resourceCache;
-            _textboxLeft = _resourceCache.GetSprite("text_left");
-            _textboxMain = _resourceCache.GetSprite("text_middle");
-            _textboxRight = _resourceCache.GetSprite("text_right");
-
-            Width = width;
-
-            Label = new TextSprite("Textbox", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color4.Black };
-
-            Update(0);
-        }
+        public TextSprite Label;
+        public int MaxCharacters = 255;
+        public Color4 textColor = Color4.Black;
+        public int Width;
 
         public string Text
         {
-            get { return _text; }
+            get => _text;
             set
             {
                 _text = value;
@@ -81,25 +62,25 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
+        public Textbox(int width, IResourceCache resourceCache)
+        {
+            _textboxLeft = resourceCache.GetSprite("text_left");
+            _textboxMain = resourceCache.GetSprite("text_middle");
+            _textboxRight = resourceCache.GetSprite("text_right");
+
+            Width = width;
+
+            Label = new TextSprite("Textbox", "", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
+
+            Update(0);
+        }
+
         public event TextSubmitHandler OnSubmit;
 
+        /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            var boundsLeft = _textboxLeft.GetLocalBounds();
-            var boundsMain = _textboxMain.GetLocalBounds();
-            var boundsRight = _textboxRight.GetLocalBounds();
-            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
-                                            Width, (int)boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y,
-                                             (int)boundsRight.Width, (int)boundsRight.Height);
-            ClientArea = Box2i.FromDimensions(Position,
-                                       new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
-                                                Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
-                                                         _clientAreaMain.Height)));
-            Label.Position = new Vector2i(_clientAreaLeft.Right,
-                                       Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
+            base.Update(frameTime);
 
             if (Focus)
             {
@@ -108,8 +89,34 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
+        /// <inheritdoc />
+        public override void Resize()
+        {
+            var boundsLeft = _textboxLeft.GetLocalBounds();
+            var boundsMain = _textboxMain.GetLocalBounds();
+            var boundsRight = _textboxRight.GetLocalBounds();
+
+            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y, Width, (int)boundsMain.Height);
+
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y, (int)boundsRight.Width, (int)boundsRight.Height);
+
+            _clientArea = Box2i.FromDimensions(new Vector2i(0,0), 
+                new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
+                    Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
+                        _clientAreaMain.Height)));
+
+            Label.Position = new Vector2i(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
+
+            base.Resize();
+        }
+
+        /// <inheritdoc />
         public override void Render()
         {
+            base.Render();
+
             if (drawColor != Color4.White)
             {
                 _textboxLeft.Color = drawColor.Convert();
@@ -125,7 +132,7 @@ namespace SS14.Client.UserInterface.Components
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                CluwneLib.drawRectangle(Label.Position.X + _caretPos - _caretWidth, Label.Position.Y + (Label.Height / 2f) - (_caretHeight / 2f), _caretWidth, _caretHeight, new Color4(255, 255, 250, 255));
+                CluwneLib.drawRectangle(Label.Position.X + _caretPos - CaretWidth, Label.Position.Y + Label.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
             if (drawColor != Color4.White)
             {
@@ -153,16 +160,9 @@ namespace SS14.Client.UserInterface.Components
         public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(e.X, e.Y))
-            {
                 return true;
-            }
 
-            return false;
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
-            return false;
+            return base.MouseDown(e);
         }
 
         public override bool KeyDown(KeyEventArgs e)
@@ -171,7 +171,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (e.Control && e.Code == Keyboard.Key.V)
             {
-                string ret = System.Windows.Forms.Clipboard.GetText();
+                var ret = Clipboard.GetText();
                 Text = Text.Insert(_caretIndex, ret);
                 if (_caretIndex < _text.Length) _caretIndex += ret.Length;
                 SetVisibleText();
@@ -181,7 +181,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (e.Control && e.Code == Keyboard.Key.C)
             {
-                System.Windows.Forms.Clipboard.SetText(Text);
+                Clipboard.SetText(Text);
                 ignoreNextText = true;
                 return true;
             }
@@ -200,7 +200,7 @@ namespace SS14.Client.UserInterface.Components
                 SetVisibleText();
                 return true;
             }
-            else if (e.Code == Keyboard.Key.Right)
+            if (e.Code == Keyboard.Key.Right)
             {
                 if (_caretIndex < _text.Length) _caretIndex++;
                 SetVisibleText();
@@ -261,14 +261,15 @@ namespace SS14.Client.UserInterface.Components
                     //Caret outside to the left. Move display text to the left by setting its index to the caret.
                     _displayIndex = _caretIndex;
 
-                int glyphCount = 0;
+                var glyphCount = 0;
 
-                while (_displayIndex + (glyphCount + 1) < _text.Length &&
+                while (_displayIndex + glyphCount + 1 < _text.Length &&
                        Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
+                {
                     glyphCount++; //How many glyphs we could/would draw with the current index.
+                }
 
                 if (_caretIndex > _displayIndex + glyphCount) //Caret outside?
-                {
                     if (_text.Substring(_displayIndex + 1).Length != glyphCount) //Still stuff outside the screen?
                     {
                         _displayIndex++;
@@ -276,12 +277,13 @@ namespace SS14.Client.UserInterface.Components
 
                         glyphCount = 0; //Update glyphcount with new index.
 
-                        while (_displayIndex + (glyphCount + 1) < _text.Length &&
+                        while (_displayIndex + glyphCount + 1 < _text.Length &&
                                Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) <
                                _clientAreaMain.Width)
+                        {
                             glyphCount++;
+                        }
                     }
-                }
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
                 _caretPos = Label.Position.X +
@@ -295,17 +297,17 @@ namespace SS14.Client.UserInterface.Components
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
                 _caretPos =
-                            Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                    Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
 
         private void Submit()
         {
-            if (OnSubmit != null) OnSubmit(Text, this);
+            OnSubmit?.Invoke(Text, this);
+
             if (ClearOnSubmit)
-            {
                 Clear();
-            }
+
             if (ClearFocusOnSubmit)
             {
                 Focus = false;

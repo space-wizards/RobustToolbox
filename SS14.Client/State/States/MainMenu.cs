@@ -50,11 +50,12 @@ namespace SS14.Client.State.States
                 Width  = (int)CluwneLib.Window.Viewport.Size.X,
                 Height = (int)CluwneLib.Window.Viewport.Size.Y,
             };
+            // UI screen is added in startup
 
             _imgTitle = new SimpleImage
             {
                 Sprite = "ss14_logo",
-                Anchors = Anchor.Right,
+                Alignment = Align.Right,
                 LocalPosition = new Vector2i(-550, 100)
             };
             _uiScreen.AddComponent(_imgTitle);
@@ -62,7 +63,7 @@ namespace SS14.Client.State.States
             _txtConnect = new Textbox(100, ResourceCache)
             {
                 Text = ConfigurationManager.GetCVar<string>("net.server"),
-                Anchors = Anchor.Left & Anchor.Bottom,
+                Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(10, 50)
             };
             _txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
@@ -71,7 +72,9 @@ namespace SS14.Client.State.States
             _btnConnect = new ImageButton
             {
                 ImageNormal = "connect_norm",
-                ImageHover = "connect_hover"
+                ImageHover = "connect_hover",
+                Alignment = Align.Left | Align.Bottom,
+                LocalPosition = new Vector2i(0, 20)
             };
             _btnConnect.Clicked += sender =>
             {
@@ -85,12 +88,14 @@ namespace SS14.Client.State.States
                     NetworkManager.ClientDisconnect("Client disconnected from game.");
                 }
             };
-            _uiScreen.AddComponent(_btnConnect);
-
+            _txtConnect.AddComponent(_btnConnect);
+            
             _btnOptions = new ImageButton
             {
                 ImageNormal = "options_norm",
-                ImageHover = "options_hover"
+                ImageHover = "options_hover",
+                Alignment = Align.Left | Align.Bottom,
+                LocalPosition = new Vector2i(0, 20)
             };
             _btnOptions.Clicked += sender =>
             {
@@ -102,23 +107,24 @@ namespace SS14.Client.State.States
 
                 StateManager.RequestStateChange<OptionsMenu>();
             };
-            _uiScreen.AddComponent(_btnOptions);
-
+            _btnConnect.AddComponent(_btnOptions);
+            
             _btnExit = new ImageButton
             {
                 ImageNormal = "exit_norm",
-                ImageHover = "exit_hover"
+                ImageHover = "exit_hover",
+                Alignment = Align.Left | Align.Bottom,
+                LocalPosition = new Vector2i(0, 20)
             };
             _btnExit.Clicked += sender => CluwneLib.Stop();
-            _uiScreen.AddComponent(_btnExit);
+            _btnOptions.AddComponent(_btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
             {
-                Text =
-                {
-                    Color = new Color4(245, 245, 245, 255)
-                },
+                Text = { Color = new Color4(245, 245, 245, 255) },
+                Alignment = Align.Left | Align.Bottom,
+                LocalPosition = new Vector2i(3, -20), // no way to make this dynamic, need a Resize event :(
             };
             _uiScreen.AddComponent(_lblVersion);
         }
@@ -126,30 +132,11 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            var width = (int) CluwneLib.Window.Viewport.Size.X;
-            var height = (int) CluwneLib.Window.Viewport.Size.Y;
-
-            _uiScreen.Width = width;
-            _uiScreen.Height = height;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
-
-            /*
-            _lblVersion.Position = new Vector2i(width - _lblVersion.ClientArea.Width - 3, height - _lblVersion.ClientArea.Height - 3);
-            _lblVersion.Update(0);
-            _imgTitle.Position = new Vector2i(width - 550, 100);
-            _imgTitle.Update(0);
-            _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
-            _txtConnect.Update(0);
-            _btnConnect.Position = new Vector2i(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
-            _btnConnect.Update(0);
-            _btnOptions.Position = new Vector2i(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
-            _btnOptions.Update(0);
-            _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
-            _btnExit.Update(0);
-
-            */
-
+            
             base.FormResize();
         }
 

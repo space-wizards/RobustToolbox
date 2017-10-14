@@ -22,7 +22,7 @@ namespace SS14.Client.UserInterface
             if(Background != null)
                 Background.Scale = new Vector2f((float)Width / Background.TextureRect.Width, (float)Height / Background.TextureRect.Height);
 
-            _clientArea = Box2i.FromDimensions(Position.X, Position.Y, Width, Height);
+            _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
 
             base.Resize();
         }

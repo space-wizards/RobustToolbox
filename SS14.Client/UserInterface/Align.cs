@@ -3,7 +3,7 @@
 namespace SS14.Client.UserInterface
 {
     [Flags]
-    public enum Anchor
+    public enum Align
     {
         None   = 0,
         Right  = 1 << 0,

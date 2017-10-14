@@ -1,4 +1,4 @@
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -13,71 +13,73 @@ namespace SS14.Client.UserInterface.Components
 {
     public class ImageButton : GuiComponent
     {
-        #region Delegates
-
         public delegate void ImageButtonPressHandler(ImageButton sender);
-
-        #endregion
-
+        
         private readonly IResourceCache _resourceCache;
         private Sprite _buttonClick;
         private Sprite _buttonHover;
         private Sprite _buttonNormal;
-
         private Sprite _drawSprite;
 
         public ImageButton()
         {
             _resourceCache = IoCManager.Resolve<IResourceCache>();
             Color = Color4.White;
-            Update(0);
         }
 
         public Color4 Color { get; set; }
 
         public string ImageNormal
         {
-            set { _buttonNormal = _resourceCache.GetSprite(value); }
+            set
+            {
+                _buttonNormal = _resourceCache.GetSprite(value);
+
+                if (_drawSprite == null)
+                    _drawSprite = _buttonNormal;
+
+                Resize();
+            }
         }
 
         public string ImageHover
         {
-            set { _buttonHover = _resourceCache.GetSprite(value); }
+            set => _buttonHover = _resourceCache.GetSprite(value);
         }
 
         public string ImageClick
         {
-            set { _buttonClick = _resourceCache.GetSprite(value); }
+            set => _buttonClick = _resourceCache.GetSprite(value);
         }
 
         public event ImageButtonPressHandler Clicked;
-
-        public override sealed void Update(float frameTime)
+        
+        public override void Resize()
         {
-            if (_drawSprite == null && _buttonNormal != null)
-                _drawSprite = _buttonNormal;
-
-            if (_drawSprite != null)
+            if (_buttonNormal != null)
             {
-                _drawSprite.Position = new Vector2f( Position.X,Position.Y);
                 var bounds = _drawSprite.GetLocalBounds();
-                ClientArea = Box2i.FromDimensions(Position,
-                                           new Vector2i((int)bounds.Width, (int)bounds.Height));
+                _clientArea = new Box2i(0,0, (int) bounds.Width, (int) bounds.Height);
             }
+
+            base.Resize();
         }
 
+        /// <inheritdoc />
         public override void Render()
         {
-            if (_drawSprite != null)
-            {
-                _drawSprite.Color = Color.Convert();
-                _drawSprite.Position = new Vector2f(Position.X,Position.Y);
-                _drawSprite.Texture.Smooth = true;
-                _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
-                _drawSprite.Color = Color.Convert();
-            }
+            base.Render();
+
+            if (_drawSprite == null)
+                return;
+
+            _drawSprite.Color = Color.Convert();
+            _drawSprite.Position = new Vector2f(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
+            _drawSprite.Texture.Smooth = true;
+            _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             _buttonNormal = null;
@@ -100,6 +102,8 @@ namespace SS14.Client.UserInterface.Components
                 if (_drawSprite != _buttonClick)
                     _drawSprite = _buttonNormal;
             }
+
+            base.MouseMove(e);
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -107,10 +111,11 @@ namespace SS14.Client.UserInterface.Components
             if (ClientArea.Contains(e.X, e.Y))
             {
                 if (_buttonClick != null) _drawSprite = _buttonClick;
-                if (Clicked != null) Clicked(this);
+                Clicked?.Invoke(this);
                 return true;
             }
-            return false;
+
+            return base.MouseDown(e);
         }
 
         public override bool MouseUp(MouseButtonEventArgs e)
@@ -122,7 +127,8 @@ namespace SS14.Client.UserInterface.Components
                                       : _buttonNormal;
                 else
                     _drawSprite = _buttonNormal;
-            return false;
+
+            return base.MouseUp(e);
         }
     }
 }

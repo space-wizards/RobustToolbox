@@ -12,18 +12,19 @@ namespace SS14.Client.UserInterface.Components
     public abstract class GuiComponent : IGuiComponent
     {
         protected readonly List<GuiComponent> _children = new List<GuiComponent>();
+        protected Align _align;
+        protected Box2i _clientArea;
+        protected Box2i _localBounds;
+        protected Vector2i _localPos;
+        protected Box2i _margins;
         protected GuiComponent _parent;
-        private bool _visible = true;
-        public object UserData;
+        protected Vector2i _screenPos;
 
         protected Vector2i _size;
-        protected Box2i _margins;
-        protected Vector2i _localPos;
-        protected Vector2i _screenPos;
-        protected Anchor _anchors;
-        protected Box2i _clientArea;
-        protected bool PctPos = false;
+        private bool _visible = true;
         protected bool PctMgn = false;
+        protected bool PctPos = false;
+        public object UserData;
 
         public int Width
         {
@@ -48,53 +49,9 @@ namespace SS14.Client.UserInterface.Components
         public IReadOnlyList<GuiComponent> Children => _children;
         public GuiComponent Parent => _parent;
 
-        public void AddComponent(GuiComponent child)
-        {
-            if(_children.Contains(child))
-                throw new InvalidOperationException();
-
-            if(this == child)
-                throw new InvalidOperationException();
-
-            child._parent = this;
-            _children.Add(child);
-            child.Resize();
-        }
-
-        public void RemoveComponent(GuiComponent child)
-        {
-            if(child == null)
-                throw new InvalidOperationException();
-
-            if(!_children.Contains(child))
-                throw new InvalidOperationException();
-
-            _children.Remove(child);
-            child._parent = null;
-            child.Resize();
-        }
-
-        public void Destroy()
-        {
-            var children = new List<GuiComponent>(_children);
-            foreach (var child in children)
-            {
-                child.Destroy();
-            }
-
-            Parent?.RemoveComponent(this);
-        }
-        
-        public virtual Vector2i Position
-        {
-            get => _screenPos;
-            set
-            {
-                _screenPos = value;
-                Resize();
-            }
-        }
-
+        /// <summary>
+        ///     Local position relative to parent control (modified by Alignment).
+        /// </summary>
         public virtual Vector2i LocalPosition
         {
             get => _localPos;
@@ -115,16 +72,40 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public virtual Anchor Anchors
+        /// <summary>
+        ///     Total size of the control. This includes borders, title bars, scrollbars, etc.
+        /// </summary>
+        public Vector2i Size => _size;
+
+        /// <summary>
+        ///     How to align the control inside of its parent. Default is Top Left.
+        /// </summary>
+        public virtual Align Alignment
         {
-            get => _anchors;
+            get => _align;
             set
             {
-                _anchors = value;
+                _align = value;
                 Resize();
             }
         }
 
+        /// <summary>
+        ///     Absolute screen position of control.
+        /// </summary>
+        public virtual Vector2i Position
+        {
+            get => _screenPos;
+            set
+            {
+                _screenPos = value;
+                Resize();
+            }
+        }
+
+        /// <summary>
+        ///     the LOCAL area inside of the control for children.
+        /// </summary>
         public virtual Box2i ClientArea
         {
             get => _clientArea;
@@ -134,6 +115,7 @@ namespace SS14.Client.UserInterface.Components
                 Resize();
             }
         }
+
         public GuiComponentType ComponentClass { get; protected set; }
         public int ZDepth { get; set; }
         public bool ReceiveInput { get; set; } = true;
@@ -141,7 +123,7 @@ namespace SS14.Client.UserInterface.Components
         public virtual void ComponentUpdate(params object[] args) { }
 
         /// <summary>
-        /// called regularly
+        ///     called regularly
         /// </summary>
         public virtual void Update(float frameTime)
         {
@@ -152,7 +134,7 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <summary>
-        /// draws the control to the screen.
+        ///     draws the control to the screen.
         /// </summary>
         public virtual void Render()
         {
@@ -164,30 +146,45 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <summary>
-        /// Moves and/or changes size of the control.
+        ///     Moves and/or changes size of the control.
         /// </summary>
         public virtual void Resize()
         {
-            Vector2i pos = new Vector2i();
+            int scrX;
+            int scrY;
 
             if (Parent == null)
-                pos += _localPos;
+            {
+                _screenPos = _localPos;
+            }
             else
             {
+                var parentPos = Parent.Position;
                 var parentRect = Parent.ClientArea;
-                if (Anchors == Anchor.None)
-                    pos += _localPos;
-                else if ((Anchors & Anchor.HCenter) != 0)
-                {
-                    pos += new Vector2i((parentRect.Width / 2) - (Width / 2), _localPos.Y);
-                }
-                else if((Anchors & Anchor.Right) != 0)
-                {
-                    pos += (new Vector2i(parentRect.Width, 0) + _localPos);
-                }
+
+                // horizontal
+                if ((Alignment & Align.HCenter) != 0)
+                    scrX = parentRect.Width / 2 - Width / 2;
+
+                else if ((Alignment & Align.Right) != 0)
+                    scrX = parentRect.Width + _localPos.X;
+
+                else // aligning left = not aligning
+                    scrX = _localPos.X;
+
+                // vertical
+                if((Alignment & Align.VCenter) != 0)
+                    scrY = parentRect.Height / 2 - Height / 2;
+
+                else if ((Alignment & Align.Bottom) != 0)
+                    scrY = parentRect.Height + _localPos.Y;
+
+                else // aligning top == not aligning
+                    scrY = _localPos.Y;
+                
+                _screenPos = new Vector2i(scrX, scrY) + parentPos;
             }
-            
-            _screenPos = pos;
+
 
             foreach (var child in _children)
             {
@@ -210,6 +207,9 @@ namespace SS14.Client.UserInterface.Components
             return _visible;
         }
 
+        /// <summary>
+        /// Cleans up any resources.
+        /// </summary>
         public virtual void Dispose()
         {
             var _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
@@ -301,6 +301,43 @@ namespace SS14.Client.UserInterface.Components
             }
 
             return consumed;
+        }
+
+        public void AddComponent(GuiComponent child)
+        {
+            if (_children.Contains(child))
+                throw new InvalidOperationException();
+
+            if (this == child)
+                throw new InvalidOperationException();
+
+            child._parent = this;
+            _children.Add(child);
+            child.Resize();
+        }
+
+        public void RemoveComponent(GuiComponent child)
+        {
+            if (child == null)
+                throw new InvalidOperationException();
+
+            if (!_children.Contains(child))
+                throw new InvalidOperationException();
+
+            _children.Remove(child);
+            child._parent = null;
+            child.Resize();
+        }
+
+        public void Destroy()
+        {
+            var children = new List<GuiComponent>(_children);
+            foreach (var child in children)
+            {
+                child.Destroy();
+            }
+
+            Parent?.RemoveComponent(this);
         }
     }
 }

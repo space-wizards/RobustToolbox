@@ -83,6 +83,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
         {
+            throw new NotSupportedException();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)

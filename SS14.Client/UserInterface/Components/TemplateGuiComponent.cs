@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Window;
 using SS14.Shared;
 using System;
@@ -14,18 +14,22 @@ namespace SS14.Client.UserInterface.Components
 
         public override void ComponentUpdate(params object[] args)
         {
+            throw new NotSupportedException();
         }
 
         public override void Update(float frameTime)
         {
+            throw new NotSupportedException();
         }
 
         public override void Render()
         {
+            throw new NotSupportedException();
         }
 
         public override void Resize()
         {
+            throw new NotSupportedException();
         }
 
         public override void Dispose()
@@ -36,6 +40,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void HandleNetworkMessage(NetIncomingMessage message)
         {
+            throw new NotSupportedException();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -58,6 +63,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
+            throw new NotSupportedException();
         }
 
         public override bool MouseWheelMove(MouseWheelEventArgs e)

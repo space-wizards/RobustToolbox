@@ -86,7 +86,7 @@ namespace SS14.Client.Helpers
 
         public void Dispose()
         {
-
+            throw new NotSupportedException();
         }
 
         public void SetAmount(float amount)

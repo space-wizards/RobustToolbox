@@ -188,7 +188,7 @@ namespace SS14.Client.State.States
 
         private void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         #region Network

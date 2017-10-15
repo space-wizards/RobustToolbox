@@ -70,7 +70,7 @@ namespace SS14.Shared.Map
         /// </summary>
         public void Dispose()
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

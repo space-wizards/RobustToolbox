@@ -12,35 +12,10 @@ namespace SS14.Client.UserInterface.Components
             ComponentClass = GuiComponentType.Undefined;
         }
 
-        public override void ComponentUpdate(params object[] args)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Update(float frameTime)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Render()
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Resize()
-        {
-            throw new NotSupportedException();
-        }
-
         public override void Dispose()
         {
             base.Dispose();
             GC.SuppressFinalize(this);
-        }
-
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
-            throw new NotSupportedException();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -59,11 +34,6 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
             return false;
-        }
-
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            throw new NotSupportedException();
         }
 
         public override bool MouseWheelMove(MouseWheelEventArgs e)

@@ -94,10 +94,5 @@ namespace SS14.Client.GameObjects
                 }
             }
         }
-
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
-        {
-            throw new NotSupportedException();
-        }
     }
 }

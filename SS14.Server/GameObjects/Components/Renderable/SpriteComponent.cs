@@ -4,7 +4,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
-using System; //TODO: Remove this when all NotSupportedExceptions are dealt with
+using System; //TODO: Remove this when all NotImplementedExceptions are dealt with
 
 namespace SS14.Server.GameObjects
 {
@@ -52,12 +52,12 @@ namespace SS14.Server.GameObjects
 
         private void SendVisible(NetConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         private void SendDrawDepth(NetConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,

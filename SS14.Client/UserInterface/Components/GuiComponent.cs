@@ -37,18 +37,22 @@ namespace SS14.Client.UserInterface.Components
 
         public virtual void ComponentUpdate(params object[] args)
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual void Update(float frameTime)
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual void Render()
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual void Resize()
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual void ToggleVisible()
@@ -75,6 +79,7 @@ namespace SS14.Client.UserInterface.Components
 
         public virtual void HandleNetworkMessage(NetIncomingMessage message)
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual bool MouseDown(MouseButtonEventArgs e)
@@ -89,6 +94,7 @@ namespace SS14.Client.UserInterface.Components
 
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
 
         public virtual bool MouseWheelMove(MouseWheelEventArgs e)

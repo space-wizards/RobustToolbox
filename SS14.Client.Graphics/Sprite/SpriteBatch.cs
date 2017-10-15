@@ -171,7 +171,7 @@ namespace SS14.Client.Graphics.Sprite
 
         public void Dispose()
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         [DebuggerDisplay("[QueueItem] Name: {ID} | Texture: {Texture} | Verticies: {Verticies}")]

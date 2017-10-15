@@ -26,13 +26,6 @@ namespace SS14.Client.State.States
 
         private const float ConnectTimeOut = 5000.0f;
 
-        private readonly ImageButton _btnConnect;
-        private readonly ImageButton _btnExit;
-        private readonly ImageButton _btnOptions;
-        private readonly SimpleImage _imgTitle;
-        private readonly Label _lblVersion;
-        private readonly Textbox _txtConnect;
-
         private readonly Screen _uiScreen;
 
         private DateTime _connectTime;
@@ -52,35 +45,35 @@ namespace SS14.Client.State.States
             };
             // UI screen is added in startup
 
-            _imgTitle = new SimpleImage
+            var imgTitle = new SimpleImage
             {
                 Sprite = "ss14_logo",
                 Alignment = Align.Right,
                 LocalPosition = new Vector2i(-550, 100)
             };
-            _uiScreen.AddComponent(_imgTitle);
+            _uiScreen.AddComponent(imgTitle);
 
-            _txtConnect = new Textbox(100, ResourceCache)
+            var txtConnect = new Textbox(100, ResourceCache)
             {
                 Text = ConfigurationManager.GetCVar<string>("net.server"),
                 Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(10, 50)
             };
-            _txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
-            _imgTitle.AddComponent(_txtConnect);
+            txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
+            imgTitle.AddComponent(txtConnect);
 
-            _btnConnect = new ImageButton
+            var btnConnect = new ImageButton
             {
                 ImageNormal = "connect_norm",
                 ImageHover = "connect_hover",
                 Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(0, 20)
             };
-            _btnConnect.Clicked += sender =>
+            btnConnect.Clicked += sender =>
             {
                 if (!_isConnecting)
                 {
-                    StartConnect(_txtConnect.Text);
+                    StartConnect(txtConnect.Text);
                 }
                 else
                 {
@@ -88,16 +81,16 @@ namespace SS14.Client.State.States
                     NetworkManager.ClientDisconnect("Client disconnected from game.");
                 }
             };
-            _txtConnect.AddComponent(_btnConnect);
+            txtConnect.AddComponent(btnConnect);
             
-            _btnOptions = new ImageButton
+            var btnOptions = new ImageButton
             {
                 ImageNormal = "options_norm",
                 ImageHover = "options_hover",
                 Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(0, 20)
             };
-            _btnOptions.Clicked += sender =>
+            btnOptions.Clicked += sender =>
             {
                 if (_isConnecting)
                 {
@@ -107,26 +100,26 @@ namespace SS14.Client.State.States
 
                 StateManager.RequestStateChange<OptionsMenu>();
             };
-            _btnConnect.AddComponent(_btnOptions);
+            btnConnect.AddComponent(btnOptions);
             
-            _btnExit = new ImageButton
+            var btnExit = new ImageButton
             {
                 ImageNormal = "exit_norm",
                 ImageHover = "exit_hover",
                 Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(0, 20)
             };
-            _btnExit.Clicked += sender => CluwneLib.Stop();
-            _btnOptions.AddComponent(_btnExit);
+            btnExit.Clicked += sender => CluwneLib.Stop();
+            btnOptions.AddComponent(btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
+            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
             {
                 Text = { Color = new Color4(245, 245, 245, 255) },
                 Alignment = Align.Left | Align.Bottom,
                 LocalPosition = new Vector2i(3, -20), // no way to make this dynamic, need a Resize event :(
             };
-            _uiScreen.AddComponent(_lblVersion);
+            _uiScreen.AddComponent(lblVersion);
         }
 
         /// <inheritdoc />

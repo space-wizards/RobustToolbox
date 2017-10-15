@@ -7,7 +7,6 @@ using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -92,7 +91,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y) && _buttonHover != null)
+            if (ClientArea.Translated(_screenPos).Contains(e.X, e.Y) && _buttonHover != null)
             {
                 if (_drawSprite != _buttonClick)
                     _drawSprite = _buttonHover;
@@ -108,7 +107,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Translated(_screenPos).Contains(e.X, e.Y))
             {
                 if (_buttonClick != null) _drawSprite = _buttonClick;
                 Clicked?.Invoke(this);
@@ -122,7 +121,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_drawSprite == _buttonClick)
                 if (_buttonHover != null)
-                    _drawSprite = ClientArea.Contains(e.X, e.Y)
+                    _drawSprite = ClientArea.Translated(_screenPos).Contains(e.X, e.Y)
                                       ? _buttonHover
                                       : _buttonNormal;
                 else

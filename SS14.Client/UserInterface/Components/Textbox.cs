@@ -97,9 +97,7 @@ namespace SS14.Client.UserInterface.Components
             var boundsRight = _textboxRight.GetLocalBounds();
 
             _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y, Width, (int)boundsMain.Height);
-
             _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y, (int)boundsRight.Width, (int)boundsRight.Height);
 
             _clientArea = Box2i.FromDimensions(new Vector2i(0,0), 
@@ -107,9 +105,11 @@ namespace SS14.Client.UserInterface.Components
                     Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                         _clientAreaMain.Height)));
 
-            Label.Position = new Vector2i(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
-
             base.Resize();
+            
+            Label.Position = Position + new Vector2i(_clientAreaMain.Left - Position.X, (int)(_clientArea.Height / 2f) - (int)(Label.Height / 2f));
+
+            SetVisibleText();
         }
 
         /// <inheritdoc />
@@ -143,6 +143,7 @@ namespace SS14.Client.UserInterface.Components
 
             Label.Color = textColor;
             Label.Text = _displayText;
+            
             Label.Draw();
         }
 
@@ -159,7 +160,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
                 return true;
 
             return base.MouseDown(e);
@@ -286,8 +287,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
-                _caretPos = Label.Position.X +
-                            Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                _caretPos = Label.Position.X + Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
             else //Text fits completely inside box.
             {
@@ -296,8 +296,8 @@ namespace SS14.Client.UserInterface.Components
 
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
-                _caretPos =
-                    Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+
+                _caretPos = Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
 

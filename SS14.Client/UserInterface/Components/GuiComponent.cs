@@ -19,13 +19,17 @@ namespace SS14.Client.UserInterface.Components
         protected Box2i _margins;
         protected GuiComponent _parent;
         protected Vector2i _screenPos;
-
+        protected Anchor _anchors;
+        
         protected Vector2i _size;
         private bool _visible = true;
         protected bool PctMgn = false;
         protected bool PctPos = false;
         public object UserData;
 
+        /// <summary>
+        /// Total width of the control.
+        /// </summary>
         public int Width
         {
             get => _size.X;
@@ -36,6 +40,9 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
+        /// <summary>
+        /// Total height of the control.
+        /// </summary>
         public int Height
         {
             get => _size.Y;
@@ -116,6 +123,16 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
+        public Anchor Anchors
+        {
+            get => _anchors;
+            set
+            {
+                _anchors = value;
+                Resize();
+            }
+        }
+
         public GuiComponentType ComponentClass { get; protected set; }
         public int ZDepth { get; set; }
         public bool ReceiveInput { get; set; } = true;
@@ -163,20 +180,20 @@ namespace SS14.Client.UserInterface.Components
                 var parentRect = Parent.ClientArea;
 
                 // horizontal
-                if ((Alignment & Align.HCenter) != 0)
+                if ((Alignment & Align.HCenter) == Align.HCenter)
                     scrX = parentRect.Width / 2 - Width / 2;
 
-                else if ((Alignment & Align.Right) != 0)
+                else if ((Alignment & Align.Right) == Align.Right)
                     scrX = parentRect.Width + _localPos.X;
 
                 else // aligning left = not aligning
                     scrX = _localPos.X;
 
                 // vertical
-                if((Alignment & Align.VCenter) != 0)
+                if((Alignment & Align.VCenter) == Align.VCenter)
                     scrY = parentRect.Height / 2 - Height / 2;
 
-                else if ((Alignment & Align.Bottom) != 0)
+                else if ((Alignment & Align.Bottom) == Align.Bottom)
                     scrY = parentRect.Height + _localPos.Y;
 
                 else // aligning top == not aligning

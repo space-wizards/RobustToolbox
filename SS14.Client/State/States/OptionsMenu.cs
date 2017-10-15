@@ -18,12 +18,9 @@ namespace SS14.Client.State.States
     public class OptionsMenu : State
     {
         private readonly Dictionary<string, VideoMode> _videoModeList = new Dictionary<string, VideoMode>();
-        //private Sprite _background;
-
-        private Screen _uiScreen;
         private Panel _bgPanel;
 
-        private Box2i _boundingArea;
+        //private Box2i _boundingArea;
         private Button _btnApply;
         private Button _btnBack;
 
@@ -35,6 +32,9 @@ namespace SS14.Client.State.States
         private Label _lblVSync;
 
         private Listbox _lstResolution;
+        //private Sprite _background;
+
+        private Screen _uiScreen;
         //private Sprite _ticketBg;
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace SS14.Client.State.States
         /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
         public OptionsMenu(IDictionary<Type, object> managers)
             : base(managers) { }
-        
+
         private void InitializeGui()
         {
             _uiScreen = new Screen();
@@ -52,18 +52,26 @@ namespace SS14.Client.State.States
             UserInterfaceManager.AddComponent(_uiScreen);
 
             _bgPanel = new Panel();
-            _bgPanel.LocalPosition = new Vector2i(10, 10);
             _bgPanel.Background = ResourceCache.GetSprite("ticketoverlay");
+            _bgPanel.Background.Color = new Color(128, 128, 128, 128);
+            _bgPanel.Alignment = Align.HCenter | Align.VCenter;
+            _bgPanel.LocalPosition = new Vector2i(10, 10);
             _uiScreen.AddComponent(_bgPanel);
 
-            //_background = ResourceCache.GetSprite("ss14_logo_background");
-            //_ticketBg = ResourceCache.GetSprite("ticketoverlay");
-
             _lblTitle = new Label("Options", "CALIBRI", 48, ResourceCache);
-            UserInterfaceManager.AddComponent(_lblTitle);
+            _lblTitle.LocalPosition = new Vector2i(10, 10);
+            _bgPanel.AddComponent(_lblTitle);
 
+            _lstResolution = new Listbox(250, 150, ResourceCache);
+            _lstResolution.Alignment = Align.Bottom;
+            _lstResolution.LocalPosition = new Vector2i(50, 50);
+            _lstResolution.ItemSelected += _lstResolution_ItemSelected;
+            _lblTitle.AddComponent(_lstResolution);
+            PopulateAvailableVideoModes();
+
+            /*
             _lblFullScreen = new Label("Fullscreen", "CALIBRI", ResourceCache);
-            UserInterfaceManager.AddComponent(_lblFullScreen);
+            _lblTitle.AddComponent(_lblFullScreen);
 
             _chkFullScreen = new Checkbox(ResourceCache);
             _chkFullScreen.ValueChanged += _chkFullScreen_ValueChanged;
@@ -78,10 +86,6 @@ namespace SS14.Client.State.States
             _chkVSync_ValueChanged(ConfigurationManager.GetCVar<bool>("display.vsync"), _chkVSync);
             UserInterfaceManager.AddComponent(_chkVSync);
 
-            _lstResolution = new Listbox(250, 150, ResourceCache);
-            _lstResolution.ItemSelected += _lstResolution_ItemSelected;
-            PopulateAvailableVideoModes();
-            UserInterfaceManager.AddComponent(_lstResolution);
 
             _btnBack = new Button("Back", ResourceCache);
             _btnBack.Clicked += _btnBack_Clicked;
@@ -90,27 +94,28 @@ namespace SS14.Client.State.States
             _btnApply = new Button("Apply Settings", ResourceCache);
             _btnApply.Clicked += _btnApply_Clicked;
             UserInterfaceManager.AddComponent(_btnApply);
+            */
         }
 
         private void UpdateGuiPosition()
         {
-            const int sectionPadding = 50;
-            const int optionPadding = 10;
-            const int labelPadding = 3;
+            //const int sectionPadding = 50;
+            //const int optionPadding = 10;
+            //const int labelPadding = 3;
 
-            const int ticketPadding = 100;
+            //const int ticketPadding = 100;
 
-            var width = (int)CluwneLib.Window.Viewport.Size.X;
-            var height = (int)CluwneLib.Window.Viewport.Size.Y;
-
-            var top = (int)(height / 2f) - (int)(_boundingArea.Height / 2f);
-            var left = 0;
-            _boundingArea = Box2i.FromDimensions(left, top, width, height);
-
+            var width = (int) CluwneLib.Window.Viewport.Size.X;
+            var height = (int) CluwneLib.Window.Viewport.Size.Y;
 
             _uiScreen.Width = width;
             _uiScreen.Height = height;
 
+            //var top = (int) (height / 2f) - (int) (_boundingArea.Height / 2f);
+            //var left = 0;
+            //_boundingArea = Box2i.FromDimensions(left, top, width, height);
+
+            /*
             //_background.SetTransformToRect(Box2i.FromDimensions(0, 0, width, height));
 
             //_ticketBg.SetTransformToRect(_boundingArea);
@@ -142,6 +147,7 @@ namespace SS14.Client.State.States
             _btnApply.Update(0);
             _btnBack.Position = new Vector2i(_btnApply.Position.X - (_btnBack.ClientArea.Width + optionPadding), _btnApply.Position.Y);
             _btnBack.Update(0);
+            */
         }
 
         private void PopulateAvailableVideoModes()
@@ -196,6 +202,7 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             InitializeGui();
+            
             FormResize();
         }
 
@@ -223,7 +230,12 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            UpdateGuiPosition();
+            //UpdateGuiPosition();
+
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
         }
 
         /// <inheritdoc />

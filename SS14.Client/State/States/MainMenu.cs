@@ -138,10 +138,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.KeyDown(e);
         }
-
-        /// <inheritdoc />
-        public override void KeyUp(KeyEventArgs e) { }
-
+        
         /// <inheritdoc />
         public override void MouseUp(MouseButtonEventArgs e)
         {
@@ -153,10 +150,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseDown(e);
         }
-
-        /// <inheritdoc />
-        public override void MouseMoved(MouseMoveEventArgs e) { }
-
+        
         /// <inheritdoc />
         public override void MousePressed(MouseButtonEventArgs e)
         {

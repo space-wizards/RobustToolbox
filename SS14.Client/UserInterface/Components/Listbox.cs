@@ -18,12 +18,8 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class Listbox : GuiComponent
     {
-        #region Delegates
-
         public delegate void ListboxPressHandler(Label item, Listbox sender);
-
-        #endregion
-
+        
         private readonly List<string> _contentStrings = new List<string>();
         private readonly IResourceCache _resourceCache;
         private readonly int _width;
@@ -133,10 +129,12 @@ namespace SS14.Client.UserInterface.Components
             _dropDown.SetVisible(false);
 
             ((ListboxItem) toSet).Selected = true;
-            IEnumerable<ListboxItem> notSelected = from ListboxItem item in _dropDown.components
-                                                   where item != toSet
-                                                   select item;
-            foreach (ListboxItem curr in notSelected) curr.Selected = false;
+            IEnumerable<ListboxItem> notSelected = _dropDown.components
+                .Cast<ListboxItem>()
+                .Where(item => item != toSet);
+
+            foreach (var item in notSelected)
+                item.Selected = false;
         }
 
         public override sealed void Update(float frameTime)
@@ -161,8 +159,15 @@ namespace SS14.Client.UserInterface.Components
             _dropDown.Update(frameTime);
         }
 
+        public override void Resize()
+        {
+            base.Resize();
+        }
+
         public override void Render()
         {
+            base.Render();
+
             _dropDown.Render();
             _listboxLeft.SetTransformToRect(_clientAreaLeft);
             _listboxMain.SetTransformToRect(_clientAreaMain);
@@ -171,6 +176,7 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain.Draw();
             _listboxRight.Draw();
             _selectedLabel.Draw();
+
         }
 
         public override void Dispose()
@@ -189,7 +195,10 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (base.MouseDown(e))
+                return true;
+
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
                 //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
                 var UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
@@ -203,11 +212,15 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
+            if (base.MouseUp(e))
+                return true;
+
             return _dropDown.MouseUp(e);
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
+            base.MouseMove(e);
             _dropDown.MouseMove(e);
         }
     }

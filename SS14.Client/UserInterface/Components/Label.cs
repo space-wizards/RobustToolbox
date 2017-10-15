@@ -63,20 +63,30 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            Text.Position = Position;
-            ClientArea = Box2i.FromDimensions(Position,
-                                       new Vector2i(FixedWidth == -1 ? (int)Text.Width : FixedWidth,
-                                                FixedHeight == -1 ? (int)Text.Height : FixedHeight));
+        }
+
+        public override void Resize()
+        {
+            _clientArea = Box2i.FromDimensions(new Vector2i(), 
+                new Vector2i(FixedWidth == -1 ? (int)Text.Width : FixedWidth,
+                    FixedHeight == -1 ? (int)Text.Height : FixedHeight));
+
+            base.Resize();
+
+            Text.Position = _screenPos;
         }
 
         public override void Render()
         {
+            base.Render();
+
             if (DrawBackground)
                 CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle((int)(Text.Position.X + 3), (int)Text.Position.Y + 4, (int)Text.Width, (int)Text.Height - 9, BackgroundColor);
             if (DrawBorder)
                 CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
+
             Text.Draw();
         }
 
@@ -90,17 +100,13 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
             {
-                if (Clicked != null) Clicked(this, e);
+                Clicked?.Invoke(this, e);
                 return true;
             }
-            return false;
-        }
 
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
-            return false;
+            return base.MouseDown(e);
         }
     }
 }

@@ -20,11 +20,16 @@ namespace SS14.Client.UserInterface
         public override void Resize()
         {
             if(Background != null)
+            {
                 Background.Scale = new Vector2f((float)Width / Background.TextureRect.Width, (float)Height / Background.TextureRect.Height);
+            }
 
             _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
 
             base.Resize();
+
+            if(Background != null)
+                Background.Position = new Vector2f(_screenPos.X, _screenPos.Y);
         }
     }
 }

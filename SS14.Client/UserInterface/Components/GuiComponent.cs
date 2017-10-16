@@ -11,7 +11,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public abstract class GuiComponent : IGuiComponent
+    public abstract class GuiComponent
     {
         protected readonly List<GuiComponent> _children = new List<GuiComponent>();
         protected Align _align;
@@ -68,7 +68,11 @@ namespace SS14.Client.UserInterface.Components
         /// <summary>
         ///     Total size of the control. This includes borders, title bars, scrollbars, etc.
         /// </summary>
-        public Vector2i Size => _size;
+        public Vector2i Size
+        {
+            get => _size;
+            set => _size = value;
+        }
 
         /// <summary>
         ///     How to align the control inside of its parent. Default is Top Left.
@@ -235,7 +239,7 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public virtual bool MouseWheelMove(MouseWheelEventArgs e)
+        public virtual bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             var consumed = false;
             foreach (var child in _children)

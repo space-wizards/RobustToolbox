@@ -1,40 +1,41 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using OpenTK;
 using SFML.Window;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.IoC;
-using System;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        void Initialize();
         IDragDropInfo DragInfo { get; }
 
         IDebugConsole Console { get; }
+        void Initialize();
 
-        void AddComponent(IGuiComponent component);
-        void RemoveComponent(IGuiComponent component);
+        void AddComponent(GuiComponent component);
+        void RemoveComponent(GuiComponent component);
         void ComponentUpdate(GuiComponentType type, params object[] args);
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
-        void SetFocus(IGuiComponent newFocus);
+        void SetFocus(GuiComponent newFocus);
         void RemoveFocus();
+
         /// <summary>
-        /// Remove focus, but only if the target is currently focused.
+        ///     Remove focus, but only if the target is currently focused.
         /// </summary>
-        void RemoveFocus(IGuiComponent target);
+        void RemoveFocus(GuiComponent target);
+
         void Update(FrameEventArgs e);
         void Render(FrameEventArgs e);
 
         void ToggleMoveMode();
 
         bool KeyDown(KeyEventArgs e);
-        void MouseWheelMove(MouseWheelEventArgs e);
+        void MouseWheelMove(MouseWheelScrollEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
         bool MouseUp(MouseButtonEventArgs e);
         bool MouseDown(MouseButtonEventArgs e);

@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SS14.Client.Interfaces.Resource;
@@ -19,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
 
         public string tabSpriteName
         {
-            set { tabSprite = _resourceCache.GetSprite(value); }
+            set { tabSprite = ResourceCache.GetSprite(value); }
         }
 
         public virtual void Activated() //Called when tab is selected.

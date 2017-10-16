@@ -490,7 +490,7 @@ namespace SS14.Client.Graphics
             _window.MouseButtonPressed += (sender, args) => MouseButtonPressed?.Invoke(sender, args);
             _window.MouseButtonReleased += (sender, args) => MouseButtonReleased?.Invoke(sender, args);
             _window.MouseMoved += (sender, args) => MouseMoved?.Invoke(sender, args);
-            _window.MouseWheelMoved += (sender, args) => MouseWheelMoved?.Invoke(sender, args);
+            _window.MouseWheelScrolled += (sender, args) => MouseWheelMoved?.Invoke(sender, args);
             _window.MouseEntered += (sender, args) => MouseEntered?.Invoke(sender, args);
             _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
             _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
@@ -502,7 +502,7 @@ namespace SS14.Client.Graphics
         public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
         public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
         public event EventHandler<MouseMoveEventArgs> MouseMoved;
-        public event EventHandler<MouseWheelEventArgs> MouseWheelMoved;
+        public event EventHandler<MouseWheelScrollEventArgs> MouseWheelMoved;
         public event EventHandler<EventArgs> MouseEntered;
         public event EventHandler<EventArgs> MouseLeft;
         public event EventHandler<TextEventArgs> TextEntered;

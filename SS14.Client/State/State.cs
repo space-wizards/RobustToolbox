@@ -102,7 +102,7 @@ namespace SS14.Client.State
         /// <summary>
         ///     Mouse wheel has been moved.
         /// </summary>
-        public virtual void MouseWheelMove(MouseWheelEventArgs e) { }
+        public virtual void MouseWheelMove(MouseWheelScrollEventArgs e) { }
 
         /// <summary>
         ///     Mouse has entered this screen.

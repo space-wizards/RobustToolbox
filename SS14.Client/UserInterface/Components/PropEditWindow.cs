@@ -40,7 +40,7 @@ namespace SS14.Client.UserInterface.Components
             search.OnSubmit += search_OnSubmit;
             search.ClearOnSubmit = true;
             search.ClearFocusOnSubmit = false;
-            components.Add(search);
+            Components.Add(search);
 
             assigned = obj;
             BuildPropList();
@@ -61,11 +61,11 @@ namespace SS14.Client.UserInterface.Components
 
         private void RebuildPropList(object newObj)
         {
-            if (scrollbarH.IsVisible()) scrollbarH.Value = 0;
-            if (scrollbarV.IsVisible()) scrollbarV.Value = 0;
+            if (ScrollbarH.IsVisible()) ScrollbarH.Value = 0;
+            if (ScrollbarV.IsVisible()) ScrollbarV.Value = 0;
 
-            components.Clear();
-            components.Add(search);
+            Components.Clear();
+            Components.Add(search);
 
             ObjPropList.Clear();
             assigned = newObj;
@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (o is String || o is string)
             {
-                var editStr = new Textbox(100, _resourceCache);
+                var editStr = new Textbox(100, ResourceCache);
                 editStr.ClearOnSubmit = false;
                 editStr.UserData = field;
                 editStr.Text = ((string) o);
@@ -86,7 +86,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is Enum)
             {
-                var editEnum = new Listbox(100, 100, _resourceCache, Enum.GetNames(o.GetType()).ToList());
+                var editEnum = new Listbox(100, 100, ResourceCache, Enum.GetNames(o.GetType()).ToList());
                 editEnum.UserData = field;
                 editEnum.SelectItem(o.ToString());
                 editEnum.ItemSelected += editEnum_ItemSelected;
@@ -95,7 +95,7 @@ namespace SS14.Client.UserInterface.Components
             else if (o is float || o is int || o is Int16 || o is Int32 || o is Int64 || o is double || o is Double ||
                      o is decimal || o is Decimal || o is Single)
             {
-                var editNum = new Textbox(100, _resourceCache);
+                var editNum = new Textbox(100, ResourceCache);
                 editNum.ClearOnSubmit = false;
                 editNum.UserData = field;
                 editNum.Text = o.ToString();
@@ -104,7 +104,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is bool || o is Boolean)
             {
-                var editBool = new Checkbox(_resourceCache);
+                var editBool = new Checkbox(ResourceCache);
                 editBool.UserData = field;
                 editBool.Value = ((Boolean) o);
                 editBool.ValueChanged += editBool_ValueChanged;
@@ -178,7 +178,7 @@ namespace SS14.Client.UserInterface.Components
                 {
                     newEntry.VarName = field.Name;
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   _resourceCache);
+                                                   ResourceCache);
                     newEntry.CanEdit = false;
                     newEntry.IsListItem = false;
 
@@ -191,7 +191,7 @@ namespace SS14.Client.UserInterface.Components
 
                     pos += 5 + newEntry.LabelName.ClientArea.Height;
 
-                    components.Add(newEntry.LabelName);
+                    Components.Add(newEntry.LabelName);
                     ObjPropList.Add(newEntry);
 
                     newEntry = new PropWindowStruct();
@@ -204,7 +204,7 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.IsListItem = true;
                         newEntry.ListItem = item;
 
-                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", _resourceCache);
+                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", ResourceCache);
                         newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
                         newEntry.LabelName.BorderColor = new Color4(0, 191, 255, 255);
@@ -217,7 +217,7 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.LabelName.Update(0);
                         pos += 5 + newEntry.LabelName.ClientArea.Height;
 
-                        components.Add(newEntry.LabelName);
+                        Components.Add(newEntry.LabelName);
                         ObjPropList.Add(newEntry);
                     }
                 }
@@ -229,7 +229,7 @@ namespace SS14.Client.UserInterface.Components
                     newEntry.IsListItem = false;
 
                     newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   _resourceCache);
+                                                   ResourceCache);
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = newEntry.CanEdit ? new Color4(127, 255, 0, 255) : new Color4(205, 92, 92, 255);
@@ -243,7 +243,7 @@ namespace SS14.Client.UserInterface.Components
                     {
                         edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right + 5,
                                                   newEntry.LabelName.ClientArea.Top);
-                        components.Add(edit);
+                        Components.Add(edit);
                         edit.Update(0);
                         pos += newEntry.LabelName.ClientArea.Height > edit.ClientArea.Height
                                    ? 5 + newEntry.LabelName.ClientArea.Height
@@ -257,7 +257,7 @@ namespace SS14.Client.UserInterface.Components
                         pos += 5 + newEntry.LabelName.ClientArea.Height;
                     }
 
-                    components.Add(newEntry.LabelName);
+                    Components.Add(newEntry.LabelName);
                     ObjPropList.Add(newEntry);
                 }
             }

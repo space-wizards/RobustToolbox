@@ -31,30 +31,30 @@ namespace SS14.Client.UserInterface.Components
         {
             _placementManager = placementManager;
 
-            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), _resourceCache)
+            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), ResourceCache)
             { Position = new Vector2i(5, 5) };
-            components.Add(_entityList);
+            Components.Add(_entityList);
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI", _resourceCache) { Position = new Vector2i(210, 0) };
-            components.Add(searchLabel);
+            var searchLabel = new Label("Entity Search:", "CALIBRI", ResourceCache) { Position = new Vector2i(210, 0) };
+            Components.Add(searchLabel);
 
-            _entSearchTextbox = new Textbox(125, _resourceCache) { Position = new Vector2i(210, 20) };
+            _entSearchTextbox = new Textbox(125, ResourceCache) { Position = new Vector2i(210, 20) };
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
-            components.Add(_entSearchTextbox);
+            Components.Add(_entSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceCache)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", ResourceCache)
             {
                 DrawBackground = true,
                 DrawBorder = true,
                 Position = new Vector2i(210, 55)
             };
 
-            _overLabel = new Label("Override Placement:", "CALIBRI", _resourceCache)
+            _overLabel = new Label("Override Placement:", "CALIBRI", ResourceCache)
             {
                 Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
             };
 
-            components.Add(_overLabel);
+            Components.Add(_overLabel);
 
             var initOpts = new List<string>();
 
@@ -76,11 +76,11 @@ namespace SS14.Client.UserInterface.Components
             _lstOverride.SelectItem("PlaceFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
-            components.Add(_lstOverride);
+            Components.Add(_lstOverride);
 
             _clearLabel.Clicked += ClearLabelClicked;
             _clearLabel.BackgroundColor = Color4.Gray;
-            components.Add(_clearLabel);
+            Components.Add(_clearLabel);
 
             _eraserButton = new ImageButton
             {
@@ -92,7 +92,7 @@ namespace SS14.Client.UserInterface.Components
 
             //eraserButton.Position = new Vector2i(clearLabel.ClientArea.Right + 5, clearLabel.ClientArea.Top); Clientarea not updating properly. FIX THIS
             _eraserButton.Clicked += EraserButtonClicked;
-            components.Add(_eraserButton);
+            Components.Add(_eraserButton);
 
             BuildEntityList();
 
@@ -140,7 +140,7 @@ namespace SS14.Client.UserInterface.Components
         {
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                    _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).selected = false;
         }
 
@@ -149,7 +149,7 @@ namespace SS14.Client.UserInterface.Components
             int maxWidth = 0;
             int yOffset = 5;
 
-            _entityList.components.Clear();
+            _entityList.Components.Clear();
             _entityList.ResetScrollbars();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();
@@ -171,9 +171,9 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 EntitySpawnSelectButton newButton in
-                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, _resourceCache)))
+                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, ResourceCache)))
             {
-                _entityList.components.Add(newButton);
+                _entityList.Components.Add(newButton);
                 newButton.Position = new Vector2i(5, yOffset);
                 newButton.Update(0);
                 yOffset += 5 + newButton.ClientArea.Height;
@@ -184,7 +184,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                    _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).fixed_width = maxWidth;
         }
 
@@ -199,7 +199,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 GuiComponent curr in
-                    _entityList.components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
+                    _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).selected = false;
 
             string overrideMode = "";
@@ -222,20 +222,20 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.Update(frameTime);
         }
 
         public override void Render()
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             _eraserButton.Color = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
             base.Render();
         }
 
         public override void Dispose()
         {
-            if (disposing) return;
+            if (Disposing) return;
             _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
             _entityList.Dispose();
             base.Dispose();
@@ -243,25 +243,25 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (_entityList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;

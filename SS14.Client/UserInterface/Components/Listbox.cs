@@ -33,8 +33,7 @@ namespace SS14.Client.UserInterface.Components
 
         public Label CurrentlySelected { get; private set; }
 
-        public Listbox(int dropDownLength, int width, IResourceCache resourceCache,
-            List<string> initialOptions = null)
+        public Listbox(int dropDownLength, int width, IResourceCache resourceCache, List<string> initialOptions = null)
         {
             _resourceCache = resourceCache;
 
@@ -58,85 +57,7 @@ namespace SS14.Client.UserInterface.Components
             Update(0);
         }
 
-        public event ListboxPressHandler ItemSelected;
-
-        public void AddItem(string str)
-        {
-            _contentStrings.Add(str);
-            RebuildList();
-        }
-
-        /// <summary>
-        ///     Removes all items from the listbox
-        /// </summary>
-        public void ClearItems()
-        {
-            _contentStrings.Clear();
-            RebuildList();
-        }
-
-        public void RemoveItem(string str)
-        {
-            if (!_contentStrings.Contains(str)) return;
-
-            _contentStrings.Remove(str);
-            RebuildList();
-        }
-
-        public void SelectItem(string str, bool raiseEvent = false)
-        {
-            str = str ?? "str";
-
-            var selLabel = (from a in _dropDown.components
-                where a.GetType() == typeof(ListboxItem)
-                let b = (ListboxItem) a
-                where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
-                select b).FirstOrDefault();
-
-            if (selLabel != null)
-                SetItem(selLabel, raiseEvent);
-        }
-
-        private void RebuildList()
-        {
-            CurrentlySelected = null;
-            _dropDown.components.Clear();
-            var offset = 0;
-            foreach (
-                var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceCache)))
-            {
-                newEntry.Position = new Vector2i(0, offset);
-                newEntry.Update(0);
-                newEntry.Clicked += NewEntryClicked;
-                _dropDown.components.Add(newEntry);
-                offset += newEntry.Text.Height;
-            }
-        }
-
-        private void NewEntryClicked(Label sender, MouseButtonEventArgs e)
-        {
-            SetItem(sender, true);
-        }
-
-        private void SetItem(Label toSet, bool raiseEvent = false)
-        {
-            if (ItemSelected != null && raiseEvent) ItemSelected(toSet, this);
-
-            CurrentlySelected = toSet;
-            _selectedLabel.Text = toSet.Text.Text;
-            _dropDown.SetVisible(false);
-
-            ((ListboxItem) toSet).Selected = true;
-            var notSelected = _dropDown.components
-                .Cast<ListboxItem>()
-                .Where(item => item != toSet);
-
-            foreach (var item in notSelected)
-            {
-                item.Selected = false;
-            }
-        }
-
+        /// <inheritdoc />
         public override void Update(float frameTime)
         {
             _dropDown.Update(frameTime);
@@ -145,34 +66,30 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
+            var listboxLeftBounds = _listboxLeft.GetLocalBounds();
+            var listboxMainBounds = _listboxMain.GetLocalBounds();
+            var listboxRightBounds = _listboxRight.GetLocalBounds();
+
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) listboxLeftBounds.Width, (int) listboxLeftBounds.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int) listboxMainBounds.Height);
+            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, 0), new Vector2i((int) listboxRightBounds.Width, (int) listboxRightBounds.Height));
+
+            _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
         }
 
         /// <inheritdoc />
         protected override void OnCalcPosition()
         {
-            var listboxLeftBounds = _listboxLeft.GetLocalBounds();
-            var listboxMainBounds = _listboxMain.GetLocalBounds();
-            var listboxRightBounds = _listboxRight.GetLocalBounds();
-
-            _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
-
             base.OnCalcPosition();
 
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int)listboxMainBounds.Height);
-            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, 0), new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
+            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, 0 + (int) (ClientArea.Height / 2f) - (int) (_selectedLabel.Height / 2f));
 
-            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, 0 + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
-
-            _dropDown.Position = Position + new Vector2i(ClientArea.Left + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
+            _dropDown.Position = Position + new Vector2i(ClientArea.Left + (int) ((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
         }
 
         /// <inheritdoc />
         public override void Render()
         {
-            // drop down covers children, prob want a better way to do this
-            _dropDown.Render();
-
             _listboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
             _listboxMain.SetTransformToRect(_clientAreaMain.Translated(Position));
             _listboxRight.SetTransformToRect(_clientAreaRight.Translated(Position));
@@ -184,6 +101,9 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel.Draw();
 
             base.Render();
+
+            // drop down covers children, prob want a better way to do this
+            _dropDown.Render();
         }
 
         /// <inheritdoc />
@@ -238,6 +158,85 @@ namespace SS14.Client.UserInterface.Components
         {
             _dropDown.MouseMove(e);
             base.MouseMove(e);
+        }
+
+        public event ListboxPressHandler ItemSelected;
+
+        public void AddItem(string str)
+        {
+            _contentStrings.Add(str);
+            RebuildList();
+        }
+
+        /// <summary>
+        ///     Removes all items from the listbox
+        /// </summary>
+        public void ClearItems()
+        {
+            _contentStrings.Clear();
+            RebuildList();
+        }
+
+        public void RemoveItem(string str)
+        {
+            if (!_contentStrings.Contains(str)) return;
+
+            _contentStrings.Remove(str);
+            RebuildList();
+        }
+
+        public void SelectItem(string str, bool raiseEvent = false)
+        {
+            str = str ?? "str";
+
+            var selLabel = (from a in _dropDown.Components
+                where a.GetType() == typeof(ListboxItem)
+                let b = (ListboxItem) a
+                where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
+                select b).FirstOrDefault();
+
+            if (selLabel != null)
+                SetItem(selLabel, raiseEvent);
+        }
+
+        private void RebuildList()
+        {
+            CurrentlySelected = null;
+            _dropDown.Components.Clear();
+            var offset = 0;
+            foreach (
+                var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceCache)))
+            {
+                newEntry.Position = new Vector2i(0, offset);
+                newEntry.Update(0);
+                newEntry.Clicked += NewEntryClicked;
+                _dropDown.Components.Add(newEntry);
+                offset += newEntry.Text.Height;
+            }
+        }
+
+        private void NewEntryClicked(Label sender, MouseButtonEventArgs e)
+        {
+            SetItem(sender, true);
+        }
+
+        private void SetItem(Label toSet, bool raiseEvent = false)
+        {
+            if (ItemSelected != null && raiseEvent) ItemSelected(toSet, this);
+
+            CurrentlySelected = toSet;
+            _selectedLabel.Text = toSet.Text.Text;
+            _dropDown.SetVisible(false);
+
+            ((ListboxItem) toSet).Selected = true;
+            var notSelected = _dropDown.Components
+                .Cast<ListboxItem>()
+                .Where(item => item != toSet);
+
+            foreach (var item in notSelected)
+            {
+                item.Selected = false;
+            }
         }
     }
 

@@ -34,7 +34,7 @@ namespace SS14.Client.UserInterface.Components
             };
 
             closeButton.Clicked += CloseButtonClicked;
-            title = new Label(windowTitle, "CALIBRI", _resourceCache);
+            title = new Label(windowTitle, "CALIBRI", ResourceCache);
             gradient = new GradientBox();
             DrawBackground = true;
             Update(0);
@@ -47,7 +47,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.Update(frameTime);
             if (title == null || gradient == null) return;
             int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
@@ -66,7 +66,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Render() // Renders the main window
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             gradient.Render();
 
             //TODO RenderTargetRectangle
@@ -77,13 +77,13 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Dispose()
         {
-            if (disposing) return;
+            if (Disposing) return;
             base.Dispose();
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
 
             if (closeButton.MouseDown(e)) return true;
 
@@ -102,7 +102,7 @@ namespace SS14.Client.UserInterface.Components
         public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging) dragging = false;
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
 
             return false;
@@ -110,7 +110,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             if (dragging)
             {
                 Position = new Vector2i((int)e.X - (int)draggingOffset.X,
@@ -121,7 +121,7 @@ namespace SS14.Client.UserInterface.Components
             return;
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (base.MouseWheelMove(e)) return true;
             return false;

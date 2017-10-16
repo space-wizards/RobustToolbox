@@ -58,8 +58,8 @@ namespace SS14.Client.UserInterface.Components
 
         public void AddLine(string text, Color4 color)
         {
-            bool atBottom = scrollbarV.Value >= scrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI", this._resourceCache)
+            bool atBottom = ScrollbarV.Value >= ScrollbarV.max;
+            Label newLabel = new Label(text, "CALIBRI", this.ResourceCache)
             {
                 Position = new Vector2i(5, last_y),
                 TextColor = color
@@ -67,11 +67,11 @@ namespace SS14.Client.UserInterface.Components
 
             newLabel.Update(0);
             last_y = newLabel.ClientArea.Bottom;
-            components.Add(newLabel);
+            Components.Add(newLabel);
             if (atBottom)
             {
                 Update(0);
-                scrollbarV.Value = scrollbarV.max;
+                ScrollbarV.Value = ScrollbarV.max;
             }
         }
 
@@ -269,9 +269,9 @@ namespace SS14.Client.UserInterface.Components
 
         public void Clear()
         {
-            components.Clear();
+            Components.Clear();
             last_y = 0;
-            scrollbarV.Value = 0;
+            ScrollbarV.Value = 0;
         }
     }
 

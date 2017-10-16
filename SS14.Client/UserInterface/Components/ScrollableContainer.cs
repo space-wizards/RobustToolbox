@@ -1,132 +1,111 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using System.Collections.Generic;
+using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
     public class ScrollableContainer : GuiComponent
-    //This is a note: Spooge wants support for mouseover-scrolling of scrollable containers inside other scrollable containers.
     {
-        protected readonly IResourceCache _resourceCache;
+        private const float BorderSize = 1.0f;
 
-        public Color4 BackgroundColor = new Color4(169, 169, 169, 255);
-        public bool DrawBackground = false;
-        public bool DrawBorder = true;
-        public float BorderSize = 1.0f;
+        public readonly List<GuiComponent> Components = new List<GuiComponent>();
+        protected readonly IResourceCache ResourceCache;
+        protected readonly Scrollbar ScrollbarH;
+        protected readonly Scrollbar ScrollbarV;
 
-        protected Vector2i Size;
-        protected RenderImage clippingRI;
+        protected Color4 BackgroundColor = new Color4(169, 169, 169, 255);
+        protected bool Disposing;
+        protected bool DrawBackground = false;
+        protected bool DrawBorder = true;
 
-        public string name { get; protected set; }
-
-
-        public List<GuiComponent> components = new List<GuiComponent>();
-
-        protected bool disposing = false;
-        protected IGuiComponent inner_focus;
-        protected float max_x = 0;
-        protected float max_y = 0;
-        protected Scrollbar scrollbarH;
-        protected Scrollbar scrollbarV;
+        private RenderImage _clippingRi;
+        private GuiComponent _innerFocus;
+        private float _maxX;
+        private float _maxY;
 
         public ScrollableContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
         {
-            _resourceCache = resourceCache;
-            name = uniqueName;
+            ResourceCache = resourceCache;
             Size = size;
 
-            clippingRI = new RenderImage(uniqueName, (uint)Size.X, (uint)Size.Y);
-            clippingRI.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            clippingRI.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            clippingRI.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            clippingRI.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            _clippingRi = new RenderImage(uniqueName, (uint) Size.X, (uint) Size.Y);
+            _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            _clippingRi.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            scrollbarH = new Scrollbar(true, _resourceCache);
-            scrollbarV = new Scrollbar(false, _resourceCache);
-            scrollbarV.size = Size.Y;
+            ScrollbarH = new Scrollbar(true, ResourceCache);
+            ScrollbarV = new Scrollbar(false, ResourceCache);
+            ScrollbarV.size = Size.Y;
 
-            scrollbarH.Update(0);
-            scrollbarV.Update(0);
+            ScrollbarH.Update(0);
+            ScrollbarV.Update(0);
 
             Update(0);
         }
 
-        public void ResetScrollbars()
-        {
-            if (scrollbarH.IsVisible()) scrollbarH.Value = 0;
-            if (scrollbarV.IsVisible()) scrollbarV.Value = 0;
-        }
-
-
         /// <inheritdoc />
-        protected override void OnCalcRect()
-        {
-        }
+        protected override void OnCalcRect() { }
 
         public override void Update(float frameTime)
         {
-            if (disposing || !IsVisible()) return;
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)clippingRI.Width, (int)clippingRI.Height));
+            if (Disposing || !IsVisible()) return;
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int) _clippingRi.Width, (int) _clippingRi.Height));
 
-            if (inner_focus != null && !components.Contains((GuiComponent)inner_focus)) ClearFocus();
+            if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
 
-            scrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - scrollbarH.ClientArea.Height);
-            scrollbarV.Position = new Vector2i(ClientArea.Right - scrollbarV.ClientArea.Width, ClientArea.Top);
+            ScrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
+            ScrollbarV.Position = new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
 
-            if (scrollbarV.IsVisible()) scrollbarH.size = Size.X - scrollbarV.ClientArea.Width;
-            else scrollbarH.size = Size.X;
+            if (ScrollbarV.IsVisible()) ScrollbarH.size = Size.X - ScrollbarV.ClientArea.Width;
+            else ScrollbarH.size = Size.X;
 
-            if (scrollbarH.IsVisible()) scrollbarV.size = Size.Y - scrollbarH.ClientArea.Height;
-            else scrollbarV.size = Size.Y;
+            if (ScrollbarH.IsVisible()) ScrollbarV.size = Size.Y - ScrollbarH.ClientArea.Height;
+            else ScrollbarV.size = Size.Y;
 
-            max_x = 0;
-            max_y = 0;
+            _maxX = 0;
+            _maxY = 0;
 
-            foreach (GuiComponent component in components)
+            foreach (var component in Components)
             {
-                if (component.Position.X + component.ClientArea.Width > max_x)
-                    max_x = component.Position.X + component.ClientArea.Width;
-                if (component.Position.Y + component.ClientArea.Height > max_y)
-                    max_y = component.Position.Y + component.ClientArea.Height;
+                if (component.Position.X + component.ClientArea.Width > _maxX)
+                    _maxX = component.Position.X + component.ClientArea.Width;
+                if (component.Position.Y + component.ClientArea.Height > _maxY)
+                    _maxY = component.Position.Y + component.ClientArea.Height;
             }
 
-            scrollbarH.max = (int)max_x - ClientArea.Width +
-                             (max_y > clippingRI.Height ? scrollbarV.ClientArea.Width : 0);
-            if (max_x > clippingRI.Width) scrollbarH.SetVisible(true);
-            else scrollbarH.SetVisible(false);
+            ScrollbarH.max = (int) _maxX - ClientArea.Width +
+                             (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
+            ScrollbarH.SetVisible(_maxX > _clippingRi.Width);
 
-            scrollbarV.max = (int)max_y - ClientArea.Height +
-                             (max_x > clippingRI.Height ? scrollbarH.ClientArea.Height : 0);
-            if (max_y > clippingRI.Height) scrollbarV.SetVisible(true);
-            else scrollbarV.SetVisible(false);
+            ScrollbarV.max = (int) _maxY - ClientArea.Height +
+                             (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
+            ScrollbarV.SetVisible(_maxY > _clippingRi.Height);
 
-            scrollbarH.Update(frameTime);
-            scrollbarV.Update(frameTime);
+            ScrollbarH.Update(frameTime);
+            ScrollbarV.Update(frameTime);
         }
 
         public override void Render()
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
 
-            clippingRI.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
-            clippingRI.BeginDrawing();
+            _clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
+            _clippingRi.BeginDrawing();
 
-            foreach (GuiComponent component in components)
+            foreach (var component in Components)
             {
-                if (inner_focus != null && component == inner_focus) continue;
+                if (_innerFocus != null && component == _innerFocus) continue;
                 var oldPos = component.Position;
-                component.Position = new Vector2i(component.Position.X - (int)scrollbarH.Value,
-                                               component.Position.Y - (int)scrollbarV.Value);
+                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value,
+                    component.Position.Y - (int) ScrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Render();
 
@@ -134,89 +113,65 @@ namespace SS14.Client.UserInterface.Components
                 component.Update(0);
             }
 
-            if (inner_focus != null)
+            if (_innerFocus != null)
             {
-                var oldPos = inner_focus.Position;
-                inner_focus.Position = new Vector2i(inner_focus.Position.X - (int)scrollbarH.Value,
-                                                 inner_focus.Position.Y - (int)scrollbarV.Value);
-                inner_focus.Update(0); //2 Updates per frame D:
-                inner_focus.Render();
-                inner_focus.Position = oldPos;
-                inner_focus.Update(0);
+                var oldPos = _innerFocus.Position;
+                _innerFocus.Position = new Vector2i(_innerFocus.Position.X - (int) ScrollbarH.Value,
+                    _innerFocus.Position.Y - (int) ScrollbarV.Value);
+                _innerFocus.Update(0); //2 Updates per frame D:
+                _innerFocus.Render();
+                _innerFocus.Position = oldPos;
+                _innerFocus.Update(0);
             }
 
-            clippingRI.EndDrawing();
-            clippingRI.Blit(Position.X, Position.Y, clippingRI.Height, clippingRI.Width, Color.White, BlitterSizeMode.None);
+            _clippingRi.EndDrawing();
+            _clippingRi.Blit(Position.X, Position.Y, _clippingRi.Height, _clippingRi.Width, Color.White, BlitterSizeMode.None);
 
-            scrollbarH.Render();
-            scrollbarV.Render();
+            ScrollbarH.Render();
+            ScrollbarV.Render();
 
             if (DrawBorder)
                 CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderSize, Color4.Black);
-            clippingRI.EndDrawing();
+            _clippingRi.EndDrawing();
         }
 
         public override void Dispose()
         {
-            if (disposing) return;
-            disposing = true;
-            components.ForEach(c => c.Dispose());
-            components.Clear();
-            clippingRI.Dispose();
-            clippingRI = null;
+            if (Disposing) return;
+            Disposing = true;
+            Components.ForEach(c => c.Dispose());
+            Components.Clear();
+            _clippingRi.Dispose();
+            _clippingRi = null;
             base.Dispose();
             GC.SuppressFinalize(this);
         }
 
-        protected void SetFocus(IGuiComponent newFocus)
-        {
-            if (inner_focus != null)
-            {
-                inner_focus.Focus = false;
-                inner_focus = newFocus;
-                newFocus.Focus = true;
-            }
-            else
-            {
-                inner_focus = newFocus;
-                newFocus.Focus = true;
-            }
-        }
-
-        protected void ClearFocus()
-        {
-            if (inner_focus != null)
-            {
-                inner_focus.Focus = false;
-                inner_focus = null;
-            }
-        }
-
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
 
-            if (scrollbarH.MouseDown(e))
+            if (ScrollbarH.MouseDown(e))
             {
-                SetFocus(scrollbarH);
+                SetFocus(ScrollbarH);
                 return true;
             }
-            if (scrollbarV.MouseDown(e))
+            if (ScrollbarV.MouseDown(e))
             {
-                SetFocus(scrollbarV);
+                SetFocus(ScrollbarV);
                 return true;
             }
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe = new MouseButtonEvent();
-                mbe.X = e.X - Position.X + (int)scrollbarH.Value;
-                mbe.Y = e.Y - Position.Y + (int)scrollbarV.Value;
+                var mbe = new MouseButtonEvent();
+                mbe.X = e.X - Position.X + (int) ScrollbarH.Value;
+                mbe.Y = e.Y - Position.Y + (int) ScrollbarV.Value;
                 mbe.Button = e.Button;
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
+                var modArgs = new MouseButtonEventArgs(mbe);
 
-                foreach (GuiComponent component in components)
+                foreach (var component in Components)
                 {
                     if (component.MouseDown(modArgs))
                     {
@@ -232,20 +187,20 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
-            if (scrollbarH.MouseUp(e)) return true;
-            if (scrollbarV.MouseUp(e)) return true;
+            if (Disposing || !IsVisible()) return false;
+            if (ScrollbarH.MouseUp(e)) return true;
+            if (ScrollbarV.MouseUp(e)) return true;
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe = new MouseButtonEvent();
-                mbe.X = e.X - (Position.X + (int)scrollbarH.Value);
-                mbe.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
+                var mbe = new MouseButtonEvent();
+                mbe.X = e.X - (Position.X + (int) ScrollbarH.Value);
+                mbe.Y = e.Y - (Position.Y + (int) ScrollbarV.Value);
                 mbe.Button = e.Button;
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
+                var modArgs = new MouseButtonEventArgs(mbe);
 
-                foreach (GuiComponent component in components)
+                foreach (var component in Components)
                 {
                     component.MouseUp(modArgs);
                 }
@@ -255,36 +210,36 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (disposing || !IsVisible()) return;
-            scrollbarH.MouseMove(e);
-            scrollbarV.MouseMove(e);
+            if (Disposing || !IsVisible()) return;
+            ScrollbarH.MouseMove(e);
+            ScrollbarV.MouseMove(e);
 
-            MouseMoveEvent mme = new MouseMoveEvent();
-            mme.X = e.X - (Position.X + (int)scrollbarH.Value);
-            mme.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
-            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(mme);
+            var mme = new MouseMoveEvent();
+            mme.X = e.X - (Position.X + (int) ScrollbarH.Value);
+            mme.Y = e.Y - (Position.Y + (int) ScrollbarV.Value);
+            var modArgs = new MouseMoveEventArgs(mme);
 
-            foreach (GuiComponent component in components)
+            foreach (var component in Components)
+            {
                 component.MouseMove(modArgs);
-
-            return;
+            }
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
-            if (inner_focus != null)
+            if (_innerFocus != null)
             {
-                if (inner_focus.MouseWheelMove(e))
+                if (_innerFocus.MouseWheelMove(e))
                     return true;
-                else if (scrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
+                if (ScrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
                 {
-                    scrollbarV.MouseWheelMove(e);
+                    ScrollbarV.MouseWheelMove(e);
                     return true;
                 }
             }
-            else if (scrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
+            else if (ScrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
             {
-                scrollbarV.MouseWheelMove(e);
+                ScrollbarV.MouseWheelMove(e);
                 return true;
             }
             return false;
@@ -292,16 +247,50 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            foreach (GuiComponent component in components)
+            foreach (var component in Components)
+            {
                 if (component.KeyDown(e)) return true;
+            }
             return false;
         }
 
         public override bool TextEntered(TextEventArgs e)
         {
-            foreach (GuiComponent component in components)
+            foreach (var component in Components)
+            {
                 if (component.TextEntered(e)) return true;
+            }
             return false;
+        }
+
+        public void ResetScrollbars()
+        {
+            if (ScrollbarH.IsVisible()) ScrollbarH.Value = 0;
+            if (ScrollbarV.IsVisible()) ScrollbarV.Value = 0;
+        }
+
+        private void SetFocus(GuiComponent newFocus)
+        {
+            if (_innerFocus != null)
+            {
+                _innerFocus.Focus = false;
+                _innerFocus = newFocus;
+                newFocus.Focus = true;
+            }
+            else
+            {
+                _innerFocus = newFocus;
+                newFocus.Focus = true;
+            }
+        }
+
+        private void ClearFocus()
+        {
+            if (_innerFocus != null)
+            {
+                _innerFocus.Focus = false;
+                _innerFocus = null;
+            }
         }
     }
 }

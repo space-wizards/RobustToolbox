@@ -96,7 +96,7 @@ namespace SS14.Client.UserInterface.Components
             _mainMenuButton.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             return true;
         }

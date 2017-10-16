@@ -180,7 +180,7 @@ namespace SS14.Client.UserInterface.Components
             return base.KeyDown(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             foreach (var curr in _tabs)
             {

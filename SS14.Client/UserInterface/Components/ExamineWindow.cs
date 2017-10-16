@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.GameObjects;
@@ -18,9 +18,9 @@ namespace SS14.Client.UserInterface.Components
         public ExamineWindow(Vector2i size, IEntity entity, IResourceCache resourceCache)
             : base(entity.Name, size, resourceCache)
         {
-            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", _resourceCache);
+            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", ResourceCache);
 
-            components.Add(_entityDescription);
+            Components.Add(_entityDescription);
 
             SetVisible(true);
 

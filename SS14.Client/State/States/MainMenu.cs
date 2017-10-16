@@ -145,7 +145,7 @@ namespace SS14.Client.State.States
         }
 
         /// <inheritdoc />
-        public override void MouseWheelMove(MouseWheelEventArgs e)
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

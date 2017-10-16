@@ -263,7 +263,6 @@
     <Compile Include="Interfaces\Resource\IResourceCache.cs" />
     <Compile Include="Interfaces\State\IStateManager.cs" />
     <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
-    <Compile Include="Interfaces\UserInterface\IGuiComponent.cs" />
     <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
     <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Lighting\LightModes\Flicker.cs" />
@@ -312,7 +311,6 @@
     <Compile Include="UserInterface\Components\Scrollbar.cs" />
     <Compile Include="UserInterface\Components\Showcase.cs" />
     <Compile Include="UserInterface\Components\SimpleImage.cs" />
-    <Compile Include="UserInterface\Components\TemplateGuiComponent.cs" />
     <Compile Include="UserInterface\Components\Textbox.cs" />
     <Compile Include="UserInterface\Components\TileSpawnPanel.cs" />
     <Compile Include="UserInterface\Components\TimerBar.cs" />

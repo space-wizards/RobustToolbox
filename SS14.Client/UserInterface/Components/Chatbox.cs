@@ -17,7 +17,6 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-
     public class Chatbox : ScrollableContainer
     {
         #region Delegates
@@ -82,7 +81,7 @@ namespace SS14.Client.UserInterface.Components
 
         public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
-            scrollbarH.SetVisible(false);
+            ScrollbarH.SetVisible(false);
 
             Position = new Vector2i((int)CluwneLib.Window.Viewport.Width - (int)Size.X - 10, 10);
 
@@ -178,11 +177,11 @@ namespace SS14.Client.UserInterface.Components
 
             int lineHeight = 12;
 
-            bool atBottom = scrollbarV.Value >= scrollbarV.max;
+            bool atBottom = ScrollbarV.Value >= ScrollbarV.max;
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "CALIBRI", _resourceCache)
+                var label = new Label(content, "CALIBRI", ResourceCache)
                 {
                     Position = new Vector2i(5, last_y),
                     Text =
@@ -193,7 +192,7 @@ namespace SS14.Client.UserInterface.Components
                 };
                 label.Update(0);
                 last_y = label.ClientArea.Bottom;
-                components.Add(label);
+                Components.Add(label);
 
                 // If the message had newlines adjust the bottom to fix the extra lines
                 if (message.Split('\n').Length > 0)
@@ -205,7 +204,7 @@ namespace SS14.Client.UserInterface.Components
             if (atBottom)
             {
                 Update(0);
-                scrollbarV.Value = scrollbarV.max;
+                ScrollbarV.Value = ScrollbarV.max;
             }
         }
 

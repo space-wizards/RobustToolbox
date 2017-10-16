@@ -247,7 +247,7 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (ClientArea.Contains(e.X, e.Y))
             {

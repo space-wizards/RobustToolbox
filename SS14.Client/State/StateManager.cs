@@ -92,7 +92,7 @@ namespace SS14.Client.State
                 CurrentState.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (CurrentState != null)
                 CurrentState.MouseWheelMove(e);

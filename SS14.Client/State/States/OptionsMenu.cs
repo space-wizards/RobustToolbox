@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK;
 using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
@@ -19,19 +19,16 @@ namespace SS14.Client.State.States
     {
         private readonly Dictionary<string, VideoMode> _videoModeList = new Dictionary<string, VideoMode>();
         private Panel _bgPanel;
-        
+
         private Button _btnApply;
         private Button _btnBack;
 
         private Checkbox _chkFullScreen;
         private Checkbox _chkVSync;
         private Label _lblFullScreen;
-
         private Label _lblTitle;
         private Label _lblVSync;
-
         private Listbox _lstResolution;
-
         private Screen _uiScreen;
 
         /// <summary>
@@ -41,6 +38,83 @@ namespace SS14.Client.State.States
         public OptionsMenu(IDictionary<Type, object> managers)
             : base(managers) { }
 
+        /// <inheritdoc />
+        public override void Startup()
+        {
+            InitializeGui();
+
+            FormResize();
+        }
+
+        /// <inheritdoc />
+        public override void Shutdown()
+        {
+            UserInterfaceManager.DisposeAllComponents();
+        }
+
+        /// <inheritdoc />
+        public override void FormResize()
+        {
+            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
+        }
+
+        /// <inheritdoc />
+        public override void KeyDown(KeyEventArgs e)
+        {
+            UserInterfaceManager.KeyDown(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseUp(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseUp(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseDown(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+
+        /// <inheritdoc />
+        public override void MousePressed(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseMove(MouseMoveEventArgs e)
+        {
+            UserInterfaceManager.MouseMove(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
+        {
+            UserInterfaceManager.MouseWheelMove(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+
+        /// <inheritdoc />
+        public override void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
+        }
+
+        /// <inheritdoc />
+        public override void TextEntered(TextEventArgs e)
+        {
+            UserInterfaceManager.TextEntered(e);
+        }
+
         private void InitializeGui()
         {
             _uiScreen = new Screen();
@@ -48,7 +122,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.AddComponent(_uiScreen);
 
             _bgPanel = new Panel();
-            _bgPanel.Background = ResourceCache.GetSprite("ticketoverlay");
+            _bgPanel.Background = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
             _bgPanel.Background.Color = new Color(128, 128, 128, 128);
             _bgPanel.Alignment = Align.HCenter | Align.VCenter;
             _bgPanel.Layout += (sender, args) =>
@@ -92,35 +166,28 @@ namespace SS14.Client.State.States
             _lblVSync.Alignment = Align.Right;
             _lblVSync.LocalPosition = new Vector2i(3, 0);
             _chkVSync.AddComponent(_lblVSync);
-            
+
             _btnApply = new Button("Apply Settings", ResourceCache);
             _btnApply.Clicked += _btnApply_Clicked;
             _btnApply.Alignment = Align.Bottom | Align.Right;
-            _btnApply.Resize += (sender, args) =>
-            {
-                _btnApply.LocalPosition = new Vector2i(-10 + -_btnApply.ClientArea.Width, -10 + -_btnApply.ClientArea.Height);
-            };
+            _btnApply.Resize += (sender, args) => { _btnApply.LocalPosition = new Vector2i(-10 + -_btnApply.ClientArea.Width, -10 + -_btnApply.ClientArea.Height); };
             _bgPanel.AddComponent(_btnApply);
 
             _btnBack = new Button("Back", ResourceCache);
             _btnBack.Clicked += _btnBack_Clicked;
-            _btnBack.Resize += (sender, args) =>
-            {
-                _btnBack.LocalPosition = new Vector2i(-10 + -_btnBack.ClientArea.Width, 0);
-            };
+            _btnBack.Resize += (sender, args) => { _btnBack.LocalPosition = new Vector2i(-10 + -_btnBack.ClientArea.Width, 0); };
             _btnApply.AddComponent(_btnBack);
         }
-        
+
         private void PopulateAvailableVideoModes(Listbox resListBox)
         {
-
             resListBox.ClearItems();
             _videoModeList.Clear();
 
-            var modes = from v in VideoMode.FullscreenModes
-                where v.Height > 748 && v.Width > 1024 //GOSH I HOPE NO ONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
-                orderby v.Height * v.Width
-                select v;
+            var modes = VideoMode.FullscreenModes
+                .Where(v => v.Height > 748 && v.Width > 1024)
+                .OrderBy(v => v.Height * v.Width)
+                .ToList();
 
             if (!modes.Any())
                 throw new InvalidOperationException("No available video modes");
@@ -134,17 +201,13 @@ namespace SS14.Client.State.States
                 }
             }
 
-            if (
-                _videoModeList.Any(
-                    x =>
-                        x.Value.Width == CluwneLib.Window.Viewport.Size.X && x.Value.Height == CluwneLib.Window.Viewport.Size.Y))
-
+            if (_videoModeList.Any(x =>
+                x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                x.Value.Height == CluwneLib.Window.Viewport.Size.Y))
             {
-                var currentMode =
-                    _videoModeList.FirstOrDefault(
-                        x =>
-                            x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
-                            x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
+                var currentMode = _videoModeList.FirstOrDefault(x =>
+                    x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                    x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
 
                 resListBox.SelectItem(currentMode.Key);
             }
@@ -160,98 +223,6 @@ namespace SS14.Client.State.States
             }
         }
 
-        /// <inheritdoc />
-        public override void Startup()
-        {
-            InitializeGui();
-            
-            FormResize();
-        }
-
-        /// <inheritdoc />
-        public override void Shutdown()
-        {
-            UserInterfaceManager.DisposeAllComponents();
-        }
-
-        /// <inheritdoc />
-        public override void Update(FrameEventArgs e)
-        {
-            UserInterfaceManager.Update(e);
-        }
-
-        /// <inheritdoc />
-        public override void Render(FrameEventArgs e)
-        {
-            UserInterfaceManager.Render(e);
-        }
-
-        /// <inheritdoc />
-        public override void FormResize()
-        {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
-
-            UserInterfaceManager.ResizeComponents();
-        }
-
-        /// <inheritdoc />
-        public override void KeyDown(KeyEventArgs e)
-        {
-            UserInterfaceManager.KeyDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void KeyUp(KeyEventArgs e) { }
-
-        /// <inheritdoc />
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseUp(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseDown(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-        
-        /// <inheritdoc />
-        public override void MousePressed(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            UserInterfaceManager.MouseMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseWheelMove(MouseWheelEventArgs e)
-        {
-            UserInterfaceManager.MouseWheelMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseEntered(EventArgs e)
-        {
-            UserInterfaceManager.MouseEntered(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseLeft(EventArgs e)
-        {
-            UserInterfaceManager.MouseLeft(e);
-        }
-
-        /// <inheritdoc />
-        public override void TextEntered(TextEventArgs e)
-        {
-            UserInterfaceManager.TextEntered(e);
-        }
-
         private void _chkVSync_ValueChanged(bool newValue, Checkbox sender)
         {
             ConfigurationManager.SetCVar("display.vsync", newValue);
@@ -261,7 +232,7 @@ namespace SS14.Client.State.States
         {
             ConfigurationManager.SetCVar("display.fullscreen", newValue);
         }
-        
+
         private void _lstResolution_ItemSelected(Label item, Listbox sender)
         {
             if (_videoModeList.ContainsKey(item.Text.Text))
@@ -271,6 +242,7 @@ namespace SS14.Client.State.States
                 ConfigurationManager.SetCVar("display.height", (int) sel.Height);
 
                 CluwneLib.UpdateVideoSettings();
+                FormResize();
             }
         }
 

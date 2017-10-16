@@ -368,7 +368,7 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The MouseWheelEventArgs instance containing the event data.</param>
-        private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
+        private void MouseWheelMoveEvent(object sender, MouseWheelScrollEventArgs e)
         {
             if (_stateManager != null)
                 _stateManager.MouseWheelMove(e);

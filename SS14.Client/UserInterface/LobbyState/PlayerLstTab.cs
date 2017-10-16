@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.Components
 
             _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceCache);
             _scPlayerList.Position = new Vector2i(5,10);
-            components.Add(_scPlayerList);
+            Components.Add(_scPlayerList);
         }
 
         public override void Activated() //Called when tab is selected.

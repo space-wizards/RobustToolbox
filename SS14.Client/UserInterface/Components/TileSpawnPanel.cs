@@ -25,18 +25,18 @@ namespace SS14.Client.UserInterface.Components
         {
             _placementManager = placementManager;
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceCache)
+            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), ResourceCache)
                             {Position = new Vector2i(5, 5)};
-            components.Add(_tileList);
+            Components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceCache) {Position = new Vector2i(210, 0)};
-            components.Add(searchLabel);
+            var searchLabel = new Label("Tile Search:", "CALIBRI", ResourceCache) {Position = new Vector2i(210, 0)};
+            Components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceCache) {Position = new Vector2i(210, 20)};
+            _tileSearchTextbox = new Textbox(125, ResourceCache) {Position = new Vector2i(210, 20)};
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
-            components.Add(_tileSearchTextbox);
+            Components.Add(_tileSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceCache)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI", ResourceCache)
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
@@ -45,7 +45,7 @@ namespace SS14.Client.UserInterface.Components
 
             _clearLabel.Clicked += ClearLabelClicked;
             _clearLabel.BackgroundColor = Color4.Gray;
-            components.Add(_clearLabel);
+            Components.Add(_clearLabel);
 
             BuildTileList();
 
@@ -67,7 +67,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).BackgroundColor = Color4.Gray;
         }
 
@@ -76,7 +76,7 @@ namespace SS14.Client.UserInterface.Components
             int maxWidth = 0;
             int yOffset = 5;
 
-            _tileList.components.Clear();
+            _tileList.Components.Clear();
             _tileList.ResetScrollbars();
 
             var tileDefs = IoCManager.Resolve<ITileDefinitionManager>().Select(td => td.Name);
@@ -89,8 +89,8 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string entry in tileDefs)
             {
-                var tileLabel = new Label(entry, "CALIBRI", _resourceCache);
-                _tileList.components.Add(tileLabel);
+                var tileLabel = new Label(entry, "CALIBRI", ResourceCache);
+                _tileList.Components.Add(tileLabel);
                 tileLabel.Position = new Vector2i(5, yOffset);
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
@@ -100,13 +100,13 @@ namespace SS14.Client.UserInterface.Components
                 if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
             }
 
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).FixedWidth = maxWidth;
         }
 
         private void TileLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).BackgroundColor = Color4.Gray;
 
             var newObjInfo = new PlacementInformation
@@ -124,19 +124,19 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.Update(frameTime);
         }
 
         public override void Render()
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.Render();
         }
 
         public override void Dispose()
         {
-            if (disposing) return;
+            if (Disposing) return;
             _placementManager.PlacementCanceled -= PlacementManagerPlacementCanceled;
             _tileList.Dispose();
             base.Dispose();
@@ -144,25 +144,25 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
             if (base.MouseDown(e)) return true;
             return false;
         }
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (disposing || !IsVisible()) return false;
+            if (Disposing || !IsVisible()) return false;
             if (base.MouseUp(e)) return true;
             return false;
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (disposing || !IsVisible()) return;
+            if (Disposing || !IsVisible()) return;
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (_tileList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;

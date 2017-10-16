@@ -259,7 +259,7 @@ namespace SS14.Client.State.States
         {
             byte playerCount = message.ReadByte();
             _serverPlayers = playerCount;
-            _tabServer._scPlayerList.components.Clear();
+            _tabServer._scPlayerList.Components.Clear();
             int offY = 0;
             for (int i = 0; i < playerCount; i++)
             {
@@ -272,7 +272,7 @@ namespace SS14.Client.State.States
                 newLabel.TextColor = Color4.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
-                _tabServer._scPlayerList.components.Add(newLabel);
+                _tabServer._scPlayerList.Components.Add(newLabel);
             }
         }
 
@@ -472,7 +472,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public override void MouseWheelMove(MouseWheelEventArgs e)
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }

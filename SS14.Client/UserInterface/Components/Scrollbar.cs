@@ -125,7 +125,7 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             Value += (e.Delta * -1) * Math.Max((max / 20), 1) * multipler;
             return true;

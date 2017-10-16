@@ -43,7 +43,7 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
+            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
                 {Color = Color4.Black};
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);

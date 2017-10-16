@@ -70,7 +70,7 @@ namespace SS14.Client.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
+            Label = new TextSprite("", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
 
             Update(0);
         }

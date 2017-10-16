@@ -34,7 +34,7 @@ namespace SS14.Client.UserInterface.Components
             _buttonMain = resourceCache.GetSprite("button_middle");
             _buttonRight = resourceCache.GetSprite("button_right");
 
-            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
+            Label = new TextSprite(buttonText, resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
                         {
                             Color = Color4.Black
                         };

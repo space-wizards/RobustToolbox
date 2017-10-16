@@ -120,7 +120,7 @@ namespace SS14.Client.State.States
             };
             lblVersion.Resize += (sender, args) =>
             {
-                lblVersion.LocalPosition = new Vector2i(-3 + lblVersion.ClientArea.Height, -lblVersion.ClientArea.Width);
+                lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Height, -lblVersion.ClientArea.Width);
             };
             _uiScreen.AddComponent(lblVersion);
         }

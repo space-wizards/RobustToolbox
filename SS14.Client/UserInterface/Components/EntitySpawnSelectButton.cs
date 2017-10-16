@@ -52,7 +52,7 @@ namespace SS14.Client.UserInterface.Components
             objectSprite = _resourceCache.GetSprite(SpriteName);
 
             font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
-            name = new TextSprite("Label" + SpriteName, "Name", font);
+            name = new TextSprite("Name", font);
             name.Color = Color4.Black;
             name.Text = ObjectName;
         }

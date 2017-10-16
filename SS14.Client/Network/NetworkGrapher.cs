@@ -41,7 +41,7 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            _textSprite = new TextSprite("NetGraphText", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             _textSprite.Color = Color4.WhiteSmoke;
         }
 

@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface.Components
             if (Horizontal) scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
             else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
 
-            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            DEBUG = new TextSprite("Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             DEBUG.Color = new Color4(255, 128, 0, 255);
             DEBUG.ShadowColor = new Color4(0, 0, 128, 255);
             DEBUG.Shadowed = true;

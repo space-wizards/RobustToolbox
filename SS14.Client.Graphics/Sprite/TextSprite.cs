@@ -3,7 +3,6 @@ using SFML.System;
 using OpenTK;
 using OpenTK.Graphics;
 using SS14.Client.Graphics.Utility;
-using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.Graphics.Sprite
@@ -13,35 +12,28 @@ namespace SS14.Client.Graphics.Sprite
     /// </summary>
     public class TextSprite
     {
-        private bool _shadowed;                                    // Is the Text Shadowed
-        private Color4 _shadowColor;                                // Shadow Color
-        private Text _textSprite;
-        private string Label;
-
-        #region Constructors
-
+        private bool _shadowed;            // Is the Text Shadowed
+        private Color4 _shadowColor;       // Shadow Color
+        private readonly Text _textSprite; // wrapped SFML Text object
+        
         /// <summary>
         /// Creates a TextSprite
         /// </summary>
-        /// <param name="Label"> Label of TextSprite </param>
         /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        /// <param name="font"> Size of the font to use </param>
-        public TextSprite(string Label, string text, Font font, uint size)
+        /// <param name="size"> Size of the font to use </param>
+        public TextSprite(string text, Font font, uint size)
         {
-            this.Label = Label;
             _textSprite = new Text(text, font, size);
         }
 
         /// <summary>
         /// Creates a TextSprite
         /// </summary>
-        /// <param name="Label"> Label of TextSprite </param>
         /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        public TextSprite(string Label, string text, Font font)
+        public TextSprite(string text, Font font)
         {
-            this.Label = Label;
             _textSprite = new Text(text, font, 14);
         }
 
@@ -49,11 +41,7 @@ namespace SS14.Client.Graphics.Sprite
         /// Draws the TextSprite to the CurrentRenderTarget
         /// </summary>
         ///
-
-        #endregion Constructors
-
-        #region Methods
-
+        
         public void Draw()
         {
             _textSprite.Position = new Vector2f(Position.X, Position.Y);
@@ -91,11 +79,7 @@ namespace SS14.Client.Graphics.Sprite
         {
             return _textSprite.FindCharacterPos(index).Convert();
         }
-
-        #endregion Methods
-
-        #region Accessors
-
+        
         public Vector2i Size;
 
         public Color4 Color;
@@ -141,6 +125,5 @@ namespace SS14.Client.Graphics.Sprite
         }
         // FIXME take into account newlines.
         public int Height => (int)_textSprite.CharacterSize;
-        #endregion Accessors
     }
 }

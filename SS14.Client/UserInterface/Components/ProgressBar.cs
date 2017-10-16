@@ -32,7 +32,7 @@ namespace SS14.Client.UserInterface.Components
         public Progress_Bar(Vector2i size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("ProgressBarText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            Text = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             Text.Color = Color4.Black;
             Text.ShadowColor = new Color4(105, 105, 105, 255);
             Text.ShadowOffset = new Vector2(1, 1);

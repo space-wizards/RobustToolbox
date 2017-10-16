@@ -39,12 +39,12 @@ namespace SS14.Client.UserInterface.Components
 
         public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
-            Text = new TextSprite("Label" + text, text, resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
+            Text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font, size) {Color = Color4.Black};
         }
 
         public Label(string text, string font, IResourceCache resourceCache)
         {
-            Text = new TextSprite("Label" + text, text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color4.Black};
+            Text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color4.Black};
         }
 
         public event LabelPressHandler Clicked;

@@ -57,7 +57,7 @@ namespace SS14.Shared
         {
             lock (syncLock)
             {
-                if (sort & !objectSortOrder.ContainsKey(quadObject))
+                if (sort && !objectSortOrder.ContainsKey(quadObject))
                 {
                     objectSortOrder.Add(quadObject, objectSortId++);
                 }

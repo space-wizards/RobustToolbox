@@ -68,7 +68,10 @@ namespace SS14.Shared.Map
         /// <summary>
         /// Disposes the grid.
         /// </summary>
-        public void Dispose() { }
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <inheritdoc />
         public Box2 AABBWorld { get; private set; }

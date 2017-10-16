@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SS14.Client.Graphics.Shader
 {
@@ -35,13 +35,13 @@ namespace SS14.Client.Graphics.Shader
         {
 
             get { return _techniqueList[key.ToLowerInvariant()]; }
-            private set{}
+            private set{ _techniqueList[key.ToLowerInvariant()] = value; }
         }
 
         public Dictionary<string, GLSLShader> Dictonary
         {
             get { return _techniqueList; }
-            private set { }
+            private set { _techniqueList = value; }
         }
 
         public string Name

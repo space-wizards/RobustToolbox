@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.System;
 using SFML.Graphics.Glsl;
 using SS14.Client.Graphics.Render;
@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using ShaderClass = SFML.Graphics.Shader;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using System; //TODO: Remove when all NotImplementedExcpetions are removed
 
 
 namespace SS14.Client.Graphics.Shader
@@ -52,7 +53,7 @@ namespace SS14.Client.Graphics.Shader
 
         public void setDuration(float duration)
         {
-
+            throw new NotImplementedException();
         }
 
         public void SetUniform(string Parameter, RenderImage Image)

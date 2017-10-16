@@ -23,8 +23,7 @@ namespace SS14.Client.State.States
         ///     Default port that the client tries to connect to if no other port is specified.
         /// </summary>
         public const ushort DefaultPort = 1212;
-
-        private const float ConnectTimeOut = 5000.0f;
+        public const float ConnectTimeOut = 5000.0f;
 
         private readonly Screen _uiScreen;
 
@@ -37,38 +36,28 @@ namespace SS14.Client.State.States
         /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
-            _uiScreen = new Screen
-            {
-                Background = ResourceCache.GetSprite("ss14_logo_background"),
-                Width  = (int)CluwneLib.Window.Viewport.Size.X,
-                Height = (int)CluwneLib.Window.Viewport.Size.Y,
-            };
+            _uiScreen = new Screen();
+            _uiScreen.Background = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
 
-            var imgTitle = new SimpleImage
-            {
-                Sprite = "ss14_logo",
-                Alignment = Align.Right,
-                LocalPosition = new Vector2i(-550, 100)
-            };
+            var imgTitle = new SimpleImage();
+            imgTitle.Sprite = "ss14_logo";
+            imgTitle.Alignment = Align.Right;
+            imgTitle.LocalPosition = new Vector2i(-550, 100);
             _uiScreen.AddComponent(imgTitle);
 
-            var txtConnect = new Textbox(100, ResourceCache)
-            {
-                Text = ConfigurationManager.GetCVar<string>("net.server"),
-                Alignment = Align.Left | Align.Bottom,
-                LocalPosition = new Vector2i(10, 50)
-            };
+            var txtConnect = new Textbox(100, ResourceCache);
+            txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
+            txtConnect.Alignment = Align.Left | Align.Bottom;
+            txtConnect.LocalPosition = new Vector2i(10, 50);
             txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
             imgTitle.AddComponent(txtConnect);
 
-            var btnConnect = new ImageButton
-            {
-                ImageNormal = "connect_norm",
-                ImageHover = "connect_hover",
-                Alignment = Align.Left | Align.Bottom,
-                LocalPosition = new Vector2i(0, 20)
-            };
+            var btnConnect = new ImageButton();
+            btnConnect.ImageNormal = "connect_norm";
+            btnConnect.ImageHover = "connect_hover";
+            btnConnect.Alignment = Align.Left | Align.Bottom;
+            btnConnect.LocalPosition = new Vector2i(0, 20);
             btnConnect.Clicked += sender =>
             {
                 if (!_isConnecting)
@@ -82,14 +71,12 @@ namespace SS14.Client.State.States
                 }
             };
             txtConnect.AddComponent(btnConnect);
-            
-            var btnOptions = new ImageButton
-            {
-                ImageNormal = "options_norm",
-                ImageHover = "options_hover",
-                Alignment = Align.Left | Align.Bottom,
-                LocalPosition = new Vector2i(0, 20)
-            };
+
+            var btnOptions = new ImageButton();
+            btnOptions.ImageNormal = "options_norm";
+            btnOptions.ImageHover = "options_hover";
+            btnOptions.Alignment = Align.Left | Align.Bottom;
+            btnOptions.LocalPosition = new Vector2i(0, 20);
             btnOptions.Clicked += sender =>
             {
                 if (_isConnecting)
@@ -101,35 +88,28 @@ namespace SS14.Client.State.States
                 StateManager.RequestStateChange<OptionsMenu>();
             };
             btnConnect.AddComponent(btnOptions);
-            
-            var btnExit = new ImageButton
-            {
-                ImageNormal = "exit_norm",
-                ImageHover = "exit_hover",
-                Alignment = Align.Left | Align.Bottom,
-                LocalPosition = new Vector2i(0, 20)
-            };
+
+            var btnExit = new ImageButton();
+            btnExit.ImageNormal = "exit_norm";
+            btnExit.ImageHover = "exit_hover";
+            btnExit.Alignment = Align.Left | Align.Bottom;
+            btnExit.LocalPosition = new Vector2i(0, 20);
             btnExit.Clicked += sender => CluwneLib.Stop();
             btnOptions.AddComponent(btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
-            {
-                Text = { Color = new Color4(245, 245, 245, 255) },
-                Alignment = Align.Right | Align.Bottom,
-            };
-            lblVersion.Resize += (sender, args) =>
-            {
-                lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Height, -lblVersion.ClientArea.Width);
-            };
+            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
+            lblVersion.TextColor = new Color4(245, 245, 245, 255);
+            lblVersion.Alignment = Align.Right | Align.Bottom;
+            lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
             _uiScreen.AddComponent(lblVersion);
         }
 
         /// <inheritdoc />
         public override void FormResize()
         {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -139,7 +119,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.KeyDown(e);
         }
-        
+
         /// <inheritdoc />
         public override void MouseUp(MouseButtonEventArgs e)
         {
@@ -151,7 +131,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseDown(e);
         }
-        
+
         /// <inheritdoc />
         public override void MousePressed(MouseButtonEventArgs e)
         {

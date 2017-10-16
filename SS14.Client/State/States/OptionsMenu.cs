@@ -19,8 +19,7 @@ namespace SS14.Client.State.States
     {
         private readonly Dictionary<string, VideoMode> _videoModeList = new Dictionary<string, VideoMode>();
         private Panel _bgPanel;
-
-        //private Box2i _boundingArea;
+        
         private Button _btnApply;
         private Button _btnBack;
 
@@ -45,7 +44,6 @@ namespace SS14.Client.State.States
         private void InitializeGui()
         {
             _uiScreen = new Screen();
-            _uiScreen.Position = new Vector2i(0, 0);
             _uiScreen.Background = ResourceCache.GetSprite("ss14_logo_background");
             UserInterfaceManager.AddComponent(_uiScreen);
 
@@ -68,12 +66,12 @@ namespace SS14.Client.State.States
             _lstResolution.Alignment = Align.Bottom;
             _lstResolution.LocalPosition = new Vector2i(50, 50);
             _lstResolution.ItemSelected += _lstResolution_ItemSelected;
-            PopulateAvailableVideoModes();
+            PopulateAvailableVideoModes(_lstResolution);
             _lblTitle.AddComponent(_lstResolution);
 
             _chkFullScreen = new Checkbox(ResourceCache);
+            _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             _chkFullScreen.ValueChanged += _chkFullScreen_ValueChanged;
-            _chkFullScreen_ValueChanged(ConfigurationManager.GetCVar<bool>("display.fullscreen"), _chkFullScreen); // TODO: Dafuk is this?
             _chkFullScreen.Alignment = Align.Bottom;
             _chkFullScreen.LocalPosition = new Vector2i(0, 50);
             _lstResolution.AddComponent(_chkFullScreen);
@@ -84,8 +82,8 @@ namespace SS14.Client.State.States
             _chkFullScreen.AddComponent(_lblFullScreen);
 
             _chkVSync = new Checkbox(ResourceCache);
+            _chkVSync.Value = ConfigurationManager.GetCVar<bool>("display.vsync");
             _chkVSync.ValueChanged += _chkVSync_ValueChanged;
-            _chkVSync_ValueChanged(ConfigurationManager.GetCVar<bool>("display.vsync"), _chkVSync); // TODO: Dafuk is that?
             _chkVSync.Alignment = Align.Bottom;
             _chkVSync.LocalPosition = new Vector2i(0, 3);
             _chkFullScreen.AddComponent(_chkVSync);
@@ -113,9 +111,10 @@ namespace SS14.Client.State.States
             _btnApply.AddComponent(_btnBack);
         }
         
-        private void PopulateAvailableVideoModes()
+        private void PopulateAvailableVideoModes(Listbox resListBox)
         {
-            _lstResolution.ClearItems();
+
+            resListBox.ClearItems();
             _videoModeList.Clear();
 
             var modes = from v in VideoMode.FullscreenModes
@@ -131,7 +130,7 @@ namespace SS14.Client.State.States
                 if (!_videoModeList.ContainsKey(GetVmString(vm)))
                 {
                     _videoModeList.Add(GetVmString(vm), vm);
-                    _lstResolution.AddItem(GetVmString(vm));
+                    resListBox.AddItem(GetVmString(vm));
                 }
             }
 
@@ -147,7 +146,7 @@ namespace SS14.Client.State.States
                             x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
                             x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
 
-                _lstResolution.SelectItem(currentMode.Key);
+                resListBox.SelectItem(currentMode.Key);
             }
             else
             {
@@ -157,7 +156,7 @@ namespace SS14.Client.State.States
                         x =>
                             x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
                             x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
-                _lstResolution.SelectItem(currentMode.Key);
+                resListBox.SelectItem(currentMode.Key);
             }
         }
 

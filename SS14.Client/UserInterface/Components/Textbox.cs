@@ -35,9 +35,9 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _textboxLeft;
         private Sprite _textboxMain;
         private Sprite _textboxRight;
-        public bool AllowEmptySubmit = true;
 
         private float blinkCount;
+
         public bool ClearFocusOnSubmit = true;
         public bool ClearOnSubmit = true;
 
@@ -47,10 +47,13 @@ namespace SS14.Client.UserInterface.Components
         // Set to true after handling a KeyDown that produces a character to this.
         public bool ignoreNextText;
 
-        public TextSprite Label;
         public int MaxCharacters = 255;
         public Color4 textColor = Color4.Black;
+
+        public TextSprite TextSprite { get; private set; }
         public int Width;
+
+        public bool AllowEmptySubmit { get; set; } = true;
 
         public string Text
         {
@@ -70,7 +73,7 @@ namespace SS14.Client.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
+            TextSprite = new TextSprite("", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
 
             Update(0);
         }
@@ -95,10 +98,10 @@ namespace SS14.Client.UserInterface.Components
             var boundsLeft = _textboxLeft.GetLocalBounds();
             var boundsMain = _textboxMain.GetLocalBounds();
             var boundsRight = _textboxRight.GetLocalBounds();
-            
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Width, (int)boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int)boundsRight.Width, (int)boundsRight.Height);
+
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Width, (int) boundsMain.Height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, (int) boundsRight.Height);
 
             _clientArea = Box2i.FromDimensions(new Vector2i(),
                 new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
@@ -109,19 +112,15 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void OnCalcPosition()
         {
-
             base.OnCalcPosition();
-            
-            Label.Position = Position + new Vector2i(_clientAreaMain.Left - Position.X, (int)(_clientArea.Height / 2f) - (int)(Label.Height / 2f));
 
             SetVisibleText();
+            TextSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int) (_clientArea.Height / 2f) - (int) (TextSprite.Height / 2f));
         }
 
         /// <inheritdoc />
         public override void Render()
         {
-            base.Render();
-
             if (drawColor != Color4.White)
             {
                 _textboxLeft.Color = drawColor.Convert();
@@ -137,7 +136,7 @@ namespace SS14.Client.UserInterface.Components
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                CluwneLib.drawRectangle(Label.Position.X + _caretPos - CaretWidth, Label.Position.Y + Label.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
+                CluwneLib.drawRectangle(TextSprite.Position.X + _caretPos - CaretWidth, TextSprite.Position.Y + TextSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
             if (drawColor != Color4.White)
             {
@@ -146,15 +145,18 @@ namespace SS14.Client.UserInterface.Components
                 _textboxRight.Color = Color.White;
             }
 
-            Label.Color = textColor;
-            Label.Text = _displayText;
-            
-            Label.Draw();
+            TextSprite.Color = textColor;
+            TextSprite.Text = _displayText;
+
+            TextSprite.Draw();
+
+            base.Render();
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
-            Label = null;
+            TextSprite = null;
             _textboxLeft = null;
             _textboxMain = null;
             _textboxRight = null;
@@ -163,16 +165,23 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc />
         public override bool MouseDown(MouseButtonEventArgs e)
         {
+            if (base.MouseDown(e))
+                return true;
+
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
                 return true;
 
-            return base.MouseDown(e);
+            return false;
         }
 
         public override bool KeyDown(KeyEventArgs e)
         {
+            if (base.KeyDown(e))
+                return true;
+
             if (!Focus) return false;
 
             if (e.Control && e.Code == Keyboard.Key.V)
@@ -242,6 +251,11 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool TextEntered(TextEventArgs e)
         {
+            if (base.TextEntered(e))
+                return true;
+
+            if (!Focus) return false;
+
             if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Unicode))
                 return false;
 
@@ -261,7 +275,7 @@ namespace SS14.Client.UserInterface.Components
         {
             _displayText = "";
 
-            if (Label.MeasureLine(_text) >= _clientAreaMain.Width) //Text wider than box.
+            if (TextSprite.MeasureLine(_text) >= _clientAreaMain.Width) //Text wider than box.
             {
                 if (_caretIndex < _displayIndex)
                     //Caret outside to the left. Move display text to the left by setting its index to the caret.
@@ -270,7 +284,7 @@ namespace SS14.Client.UserInterface.Components
                 var glyphCount = 0;
 
                 while (_displayIndex + glyphCount + 1 < _text.Length &&
-                       Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
+                       TextSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
                 {
                     glyphCount++; //How many glyphs we could/would draw with the current index.
                 }
@@ -284,7 +298,7 @@ namespace SS14.Client.UserInterface.Components
                         glyphCount = 0; //Update glyphcount with new index.
 
                         while (_displayIndex + glyphCount + 1 < _text.Length &&
-                               Label.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) <
+                               TextSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) <
                                _clientAreaMain.Width)
                         {
                             glyphCount++;
@@ -292,7 +306,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
-                _caretPos = Label.Position.X + Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                _caretPos = TextSprite.Position.X + TextSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
             else //Text fits completely inside box.
             {
@@ -302,7 +316,7 @@ namespace SS14.Client.UserInterface.Components
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
 
-                _caretPos = Label.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                _caretPos = TextSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
 

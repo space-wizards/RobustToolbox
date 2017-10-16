@@ -158,30 +158,32 @@ namespace SS14.Client.UserInterface.Components
 
             base.OnCalcPosition();
 
-            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y, _width, (int)listboxMainBounds.Height);
-            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, Position.Y), new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int)listboxMainBounds.Height);
+            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, 0), new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
 
-            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, Position.Y + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
+            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, 0 + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
+
             _dropDown.Position = Position + new Vector2i(ClientArea.Left + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
         }
 
         /// <inheritdoc />
         public override void Render()
         {
-            // drop down covers children
+            // drop down covers children, prob want a better way to do this
             _dropDown.Render();
 
-            base.Render();
-
-            _listboxLeft.SetTransformToRect(_clientAreaLeft);
-            _listboxMain.SetTransformToRect(_clientAreaMain);
-            _listboxRight.SetTransformToRect(_clientAreaRight);
+            _listboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
+            _listboxMain.SetTransformToRect(_clientAreaMain.Translated(Position));
+            _listboxRight.SetTransformToRect(_clientAreaRight.Translated(Position));
 
             _listboxLeft.Draw();
             _listboxMain.Draw();
             _listboxRight.Draw();
+
             _selectedLabel.Draw();
+
+            base.Render();
         }
 
         /// <inheritdoc />

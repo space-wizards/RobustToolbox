@@ -116,7 +116,8 @@ namespace SS14.Client.UserInterface.Components
         {
             var lineList = new List<string>();
 
-            if (input.Label.MeasureLine(message) < MaxLinePixelLength)
+            var text = input.TextSprite;
+            if (text.MeasureLine(message) < MaxLinePixelLength)
             {
                 lineList.Add(message);
                 return lineList;
@@ -132,25 +133,25 @@ namespace SS14.Client.UserInterface.Components
 
             lineList.Add(header);
 
-            while (input.Label.MeasureLine(lineList[i]) < MaxLinePixelLength)
+            while (text.MeasureLine(lineList[i]) < MaxLinePixelLength)
             {
                 if (!stringChunks.Any()) break;
 
-                if (input.Label.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
+                if (text.MeasureLine(lineList[i] + stringChunks.First()) < MaxLinePixelLength)
                 {
                     lineList[i] += stringChunks.First() + " ";
                     stringChunks.RemoveAt(0);
                 }
                 else if ((i == 0 && totalChunks == stringChunks.Count()) ||
                          (lineList[i] == " " &&
-                          input.Label.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength) ||
-                         (input.Label.MeasureLine(lineList[i]) < MaxLinePixelLength &&
-                          input.Label.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength))
+                          text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength) ||
+                         (text.MeasureLine(lineList[i]) < MaxLinePixelLength &&
+                          text.MeasureLine(stringChunks.First() + " ") > MaxLinePixelLength))
                 {
                     List<char> largeWordChars = stringChunks.First().ToList();
                     stringChunks.RemoveAt(0);
 
-                    while (input.Label.MeasureLine(lineList[i] + largeWordChars.First() + "-") <
+                    while (text.MeasureLine(lineList[i] + largeWordChars.First() + "-") <
                            MaxLinePixelLength)
                     {
                         lineList[i] += largeWordChars.First();
@@ -210,17 +211,19 @@ namespace SS14.Client.UserInterface.Components
 
         private void CheckAndSetLine(string line)
         {
+            var text = input.TextSprite;
+
             // TODO: Refactor to use dynamic input box size.
             // Magic number is pixel width of chatbox input rectangle at
             // current resolution. Will need to modify once handling
             // different resolutions and scaling.
-            if (input.Label.MeasureLine(line) > MaxLinePixelLength)
+            if (text.MeasureLine(line) > MaxLinePixelLength)
             {
                 CheckAndSetLine(line.Substring(1));
             }
             else
             {
-                input.Label.Text = line;
+                text.Text = line;
             }
         }
 

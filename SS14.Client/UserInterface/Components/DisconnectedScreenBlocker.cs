@@ -39,6 +39,20 @@ namespace SS14.Client.UserInterface.Components
             _stateManager.RequestStateChange<MainScreen>();
         }
 
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+        }
+
+
         public override void Update(float frameTime)
         {
             _message.Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),

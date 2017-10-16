@@ -51,6 +51,12 @@ namespace SS14.Client.UserInterface.Components
             set { val = Math.Min(Math.Max(value, min), max); }
         }
 
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+        }
+
         public override void Update(float frameTime)
         {
             Text.Text = Math.Round(percent*100).ToString() + "%";

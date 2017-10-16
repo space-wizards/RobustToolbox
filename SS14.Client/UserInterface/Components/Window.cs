@@ -173,6 +173,11 @@ namespace SS14.Client.UserInterface.Components
             else box[3].Color = Color2;
         }
 
+        protected override void OnCalcRect()
+        {
+            throw new System.NotImplementedException();
+        }
+
         public override void Render()
         {
             //TODO Window Render

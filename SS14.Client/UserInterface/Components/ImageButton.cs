@@ -37,7 +37,7 @@ namespace SS14.Client.UserInterface.Components
                 if (_drawSprite == null)
                     _drawSprite = _buttonNormal;
 
-                Resize();
+                OnCalcPosition();
             }
         }
 
@@ -52,18 +52,18 @@ namespace SS14.Client.UserInterface.Components
         }
 
         public event ImageButtonPressHandler Clicked;
-        
-        public override void Resize()
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
         {
             if (_buttonNormal != null)
             {
                 var bounds = _drawSprite.GetLocalBounds();
-                _clientArea = new Box2i(0,0, (int) bounds.Width, (int) bounds.Height);
+                _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
             }
 
-            base.Resize();
         }
-
+        
         /// <inheritdoc />
         public override void Render()
         {

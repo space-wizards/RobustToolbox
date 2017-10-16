@@ -116,8 +116,11 @@ namespace SS14.Client.State.States
             var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache)
             {
                 Text = { Color = new Color4(245, 245, 245, 255) },
-                Alignment = Align.Left | Align.Bottom,
-                LocalPosition = new Vector2i(3, -20), // no way to make this dynamic, need a Resize event :(
+                Alignment = Align.Right | Align.Bottom,
+            };
+            lblVersion.Resize += (sender, args) =>
+            {
+                lblVersion.LocalPosition = new Vector2i(-3 + lblVersion.ClientArea.Height, -lblVersion.ClientArea.Width);
             };
             _uiScreen.AddComponent(lblVersion);
         }
@@ -129,8 +132,6 @@ namespace SS14.Client.State.States
             _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
-            
-            base.FormResize();
         }
 
         /// <inheritdoc />

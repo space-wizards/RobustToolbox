@@ -1,35 +1,33 @@
 ﻿using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
 {
+    /// <summary>
+    ///     UI Base screen that holds all of the other controls.
+    /// </summary>
     public class Screen : GuiComponent
     {
+        /// <summary>
+        ///     Background sprite of the entire screen.
+        /// </summary>
         public Sprite Background { get; set; }
 
+        /// <inheritdoc />
         public override void Render()
         {
+            Background?.SetTransformToRect(_clientArea.Translated(_screenPos));
             Background?.Draw();
 
             base.Render();
         }
 
-        public override void Resize()
+        /// <inheritdoc />
+        protected override void OnCalcRect()
         {
-            if(Background != null)
-            {
-                Background.Scale = new Vector2f((float)Width / Background.TextureRect.Width, (float)Height / Background.TextureRect.Height);
-            }
-
             _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
-
-            base.Resize();
-
-            if(Background != null)
-                Background.Position = new Vector2f(_screenPos.X, _screenPos.Y);
         }
     }
 }

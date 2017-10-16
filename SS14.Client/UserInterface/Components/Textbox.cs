@@ -90,22 +90,27 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Resize()
+        protected override void OnCalcRect()
         {
             var boundsLeft = _textboxLeft.GetLocalBounds();
             var boundsMain = _textboxMain.GetLocalBounds();
             var boundsRight = _textboxRight.GetLocalBounds();
+            
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Width, (int)boundsMain.Height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int)boundsRight.Width, (int)boundsRight.Height);
 
-            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y, Width, (int)boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y, (int)boundsRight.Width, (int)boundsRight.Height);
-
-            _clientArea = Box2i.FromDimensions(new Vector2i(0,0), 
+            _clientArea = Box2i.FromDimensions(new Vector2i(),
                 new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                     Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                         _clientAreaMain.Height)));
+        }
 
-            base.Resize();
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+
+            base.OnCalcPosition();
             
             Label.Position = Position + new Vector2i(_clientAreaMain.Left - Position.X, (int)(_clientArea.Height / 2f) - (int)(Label.Height / 2f));
 
@@ -124,9 +129,9 @@ namespace SS14.Client.UserInterface.Components
                 _textboxRight.Color = drawColor.Convert();
             }
 
-            _textboxLeft.SetTransformToRect(_clientAreaLeft);
-            _textboxMain.SetTransformToRect(_clientAreaMain);
-            _textboxRight.SetTransformToRect(_clientAreaRight);
+            _textboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
+            _textboxMain.SetTransformToRect(_clientAreaMain.Translated(Position));
+            _textboxRight.SetTransformToRect(_clientAreaRight.Translated(Position));
             _textboxLeft.Draw();
             _textboxMain.Draw();
             _textboxRight.Draw();

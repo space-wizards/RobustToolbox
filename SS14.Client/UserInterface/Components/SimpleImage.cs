@@ -49,6 +49,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.Render();
 
+            _drawingSprite.Position = new Vector2f(_screenPos.X, _screenPos.Y);
             _drawingSprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 
@@ -61,16 +62,11 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Resize()
+        protected override void OnCalcRect()
         {
             var fr = _drawingSprite.GetLocalBounds().Convert();
-            _size = new Vector2i((int) fr.Width, (int) fr.Height);
+            _size = new Vector2i((int)fr.Width, (int)fr.Height);
             _clientArea = Box2i.FromDimensions(0, 0, _size.X, _size.Y);
-
-            base.Resize();
-
-            if (_drawingSprite != null)
-                _drawingSprite.Position = new Vector2f(_screenPos.X, _screenPos.Y);
         }
     }
 }

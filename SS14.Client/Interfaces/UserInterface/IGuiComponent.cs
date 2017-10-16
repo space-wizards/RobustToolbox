@@ -28,7 +28,7 @@ namespace SS14.Client.Interfaces.UserInterface
 
         void Update(float frameTime);
         void Render();
-        void Resize();
+        void DoLayout();
 
         void HandleNetworkMessage(NetIncomingMessage message);
 

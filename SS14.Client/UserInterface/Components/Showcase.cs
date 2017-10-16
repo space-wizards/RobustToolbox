@@ -132,6 +132,11 @@ namespace SS14.Client.UserInterface.Components
                 _items.RemoveAll(x => x.Value == toRemove);
         }
 
+        protected override void OnCalcRect()
+        {
+            
+        }
+
         public override void Update(float frameTime)
         {
             ClientArea = Box2i.FromDimensions(Position, Size);

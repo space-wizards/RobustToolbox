@@ -186,7 +186,7 @@ namespace SS14.Client.UserInterface
         {
             foreach (IGuiComponent guiComponent in _components)
             {
-                guiComponent.Resize();
+                guiComponent.DoLayout();
             }
         }
 

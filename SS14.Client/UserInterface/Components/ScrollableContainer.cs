@@ -67,6 +67,12 @@ namespace SS14.Client.UserInterface.Components
             if (scrollbarV.IsVisible()) scrollbarV.Value = 0;
         }
 
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+        }
+
         public override void Update(float frameTime)
         {
             if (disposing || !IsVisible()) return;

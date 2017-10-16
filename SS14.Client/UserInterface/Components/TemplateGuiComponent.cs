@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SFML.Window;
 using SS14.Shared;
 using System;
@@ -16,6 +16,11 @@ namespace SS14.Client.UserInterface.Components
         {
         }
 
+        protected override void OnCalcRect()
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Update(float frameTime)
         {
         }
@@ -24,7 +29,7 @@ namespace SS14.Client.UserInterface.Components
         {
         }
 
-        public override void Resize()
+        protected override void OnCalcPosition()
         {
         }
 

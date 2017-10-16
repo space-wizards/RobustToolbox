@@ -15,13 +15,7 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class Button : GuiComponent
     {
-        #region Delegates
-
         public delegate void ButtonPressHandler(Button sender);
-
-        #endregion
-
-        private readonly IResourceCache _resourceCache;
 
         private Sprite _buttonLeft;
         private Sprite _buttonMain;
@@ -31,17 +25,16 @@ namespace SS14.Client.UserInterface.Components
         private Box2i _clientAreaMain;
         private Box2i _clientAreaRight;
 
-        private Color4 drawColor = Color4.White;
-        public Color4 mouseOverColor = Color4.White;
+        private Color4 _drawColor = Color4.White;
+        public Color4 MouseOverColor = Color4.White;
 
         public Button(string buttonText, IResourceCache resourceCache)
         {
-            _resourceCache = resourceCache;
-            _buttonLeft = _resourceCache.GetSprite("button_left");
-            _buttonMain = _resourceCache.GetSprite("button_middle");
-            _buttonRight = _resourceCache.GetSprite("button_right");
+            _buttonLeft = resourceCache.GetSprite("button_left");
+            _buttonMain = resourceCache.GetSprite("button_middle");
+            _buttonRight = resourceCache.GetSprite("button_right");
 
-            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
+            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
                         {
                             Color = Color4.Black
                         };
@@ -53,32 +46,40 @@ namespace SS14.Client.UserInterface.Components
 
         public event ButtonPressHandler Clicked;
 
-        public override sealed void Update(float frameTime)
+        /// <inheritdoc />
+        protected override void OnCalcRect()
         {
             var boundsLeft = _buttonLeft.GetLocalBounds();
             var boundsMain = _buttonMain.GetLocalBounds();
             var boundsRight = _buttonRight.GetLocalBounds();
-            _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
-                                            (int) Label.Width, (int)boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y,
-                                             (int)boundsRight.Width, (int)boundsRight.Height);
-            ClientArea = Box2i.FromDimensions(Position,
-                                       new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
-                                                Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
-            Label.Position = new Vector2i(_clientAreaLeft.Right,
-                                       Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
+
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Label.Width, (int)boundsMain.Height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int)boundsRight.Width, (int)boundsRight.Height);
+
+            _clientArea = Box2i.FromDimensions(new Vector2i(),
+                new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
+                    Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
         }
 
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+
+            Label.Position = Position + new Vector2i(_clientAreaLeft.Right, (int)(_clientArea.Height / 2f) - (int)(Label.Height / 2f));
+        }
+
+        /// <inheritdoc />
         public override void Render()
         {
-            _buttonLeft.Color = drawColor.Convert();
-            _buttonMain.Color = drawColor.Convert();
-            _buttonRight.Color = drawColor.Convert();
+            _buttonLeft.Color = _drawColor.Convert();
+            _buttonMain.Color = _drawColor.Convert();
+            _buttonRight.Color = _drawColor.Convert();
 
-            _buttonLeft.SetTransformToRect(_clientAreaLeft);
-            _buttonMain.SetTransformToRect(_clientAreaMain);
-            _buttonRight.SetTransformToRect(_clientAreaRight);
+            _buttonLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
+            _buttonMain.SetTransformToRect(_clientAreaMain.Translated(Position));
+            _buttonRight.SetTransformToRect(_clientAreaRight.Translated(Position));
             _buttonLeft.Draw();
             _buttonMain.Draw();
             _buttonRight.Draw();
@@ -88,8 +89,11 @@ namespace SS14.Client.UserInterface.Components
             _buttonRight.Color = Color.White;
 
             Label.Draw();
+
+            base.Render();
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
             Label = null;
@@ -101,27 +105,28 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc />
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (mouseOverColor != Color4.White)
-                if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
-                    drawColor = mouseOverColor;
-                else
-                    drawColor = Color4.White;
+            base.MouseMove(e);
+
+            if (MouseOverColor == Color4.White)
+                return;
+
+            _drawColor = ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)) ? MouseOverColor : Color4.White;
         }
 
+        /// <inheritdoc />
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
+            if (base.MouseDown(e))
+                return true;
+
+            if (ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)))
             {
-                if (Clicked != null) Clicked(this);
+                Clicked?.Invoke(this);
                 return true;
             }
-            return false;
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
             return false;
         }
     }

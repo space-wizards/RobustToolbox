@@ -28,7 +28,6 @@ namespace SS14.Client.Interfaces.Resource
         Texture LoadTextureFrom(string name, Stream stream);
         Sprite LoadSpriteFromTexture(string name, Texture texture);
 
-
         Sprite DefaultSprite();
 
         T GetResource<T>(string path)

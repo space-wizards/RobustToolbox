@@ -74,6 +74,20 @@ namespace SS14.Client.UserInterface.Components
             return false;
         }
 
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+        }
+
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

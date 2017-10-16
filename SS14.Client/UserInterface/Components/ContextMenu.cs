@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using OpenTK;
@@ -85,6 +85,18 @@ namespace SS14.Client.UserInterface.Components
             {
                 _owningEntity.SendMessage(this, ComponentMessageType.ContextMessage, (string)sender.UserData);
             }
+        }
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
         }
 
         public override void Update(float frameTime)
@@ -175,6 +187,18 @@ namespace SS14.Client.UserInterface.Components
         }
 
         public event ContextPressHandler Selected;
+
+        /// <inheritdoc />
+        protected override void OnCalcRect()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+        }
 
         public override void Update(float frameTime)
         {

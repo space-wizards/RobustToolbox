@@ -1,4 +1,4 @@
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
@@ -10,76 +10,75 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class Checkbox : GuiComponent
     {
-        #region Delegates
-
         public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
 
-        #endregion
+        private Sprite _checkbox;
+        private Sprite _checkboxCheck;
 
-        private readonly IResourceCache _resourceCache;
-
-        private Sprite checkbox;
-        private Sprite checkboxCheck;
-
-        private bool value;
-
-
+        private bool _value;
+        
         public Checkbox(IResourceCache resourceCache)
         {
-            _resourceCache = resourceCache;
-            checkbox = _resourceCache.GetSprite("checkbox0");
-            checkboxCheck = _resourceCache.GetSprite("checkbox1");
-
-            ClientArea = Box2i.FromDimensions(Position,
-                new Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));
-            Update(0);
-
+            _checkbox = resourceCache.GetSprite("checkbox0");
+            _checkboxCheck = resourceCache.GetSprite("checkbox1");
         }
 
         public bool Value
         {
-            get { return value; }
+            get => _value;
             set
             {
-                if (ValueChanged != null) ValueChanged(value, this);
-                this.value = value;
+                ValueChanged?.Invoke(value, this);
+                _value = value;
             }
         }
 
         public event CheckboxChangedHandler ValueChanged;
 
-        public override void Update(float frameTime)
+        /// <inheritdoc />
+        protected override void OnCalcRect()
         {
-            checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
-        }
+            var bounds = _checkbox.GetLocalBounds();
+            _clientArea = Box2i.FromDimensions(new Vector2i(0, 0), new Vector2i((int)bounds.Width, (int)bounds.Height));
 
+        }
+        
+        /// <inheritdoc />
         public override void Render()
         {
-            checkbox.Draw();
-            if (Value) checkboxCheck.Draw();
+            // TODO: Move this to OnCalcPosition once the ResourceCache we stop sharing sprites between controls.
+            _checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            _checkboxCheck.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+
+            _checkbox.Draw();
+
+            if (Value)
+                _checkboxCheck.Draw();
+
+            base.Render();
         }
 
+        /// <inheritdoc />
         public override void Dispose()
         {
-            checkbox = null;
-            checkboxCheck = null;
+            _checkbox = null;
+            _checkboxCheck = null;
             ValueChanged = null;
             base.Dispose();
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc />
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (ClientArea.Contains(new Vector2i(e.X, e.Y)))
+            if (base.MouseDown(e))
+                return true;
+
+            if (ClientArea.Translated(Position).Contains(new Vector2i(e.X, e.Y)))
             {
                 Value = !Value;
                 return true;
             }
-            return false;
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
             return false;
         }
     }

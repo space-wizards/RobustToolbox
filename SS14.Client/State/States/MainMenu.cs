@@ -24,7 +24,7 @@ namespace SS14.Client.State.States
         private const float ConnectTimeOut = 5000.0f;
         private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
 
-        private readonly ISprite _background;
+        private readonly Sprite _background;
         private readonly ImageButton _btnConnect;
         private readonly ImageButton _btnExit;
         private readonly ImageButton _btnOptions;

@@ -47,7 +47,13 @@ namespace SS14.Client.Graphics.Sprites
             _texture = texture;
         }
 
-        internal Sprite(SSprite sprite)
+        public Sprite(Texture texture, Box2i rect)
+        {
+            SFMLSprite = new SSprite(texture.SFMLTexture, rect.Convert());
+            _texture = texture;
+        }
+
+        private Sprite(SSprite sprite)
         {
             SFMLSprite = sprite;
             _texture = new Texture(SFMLSprite.Texture);

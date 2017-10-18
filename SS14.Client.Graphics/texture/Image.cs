@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using SImage = SFML.Graphics.Image;
@@ -7,7 +8,7 @@ namespace SS14.Client.Graphics.Textures
 {
     public class Image : IDisposable
     {
-        public SImage SFMLImage { get; private set; }
+        public SImage SFMLImage { get; }
 
         public Vector2u Size => SFMLImage.Size.Convert();
 
@@ -25,6 +26,19 @@ namespace SS14.Client.Graphics.Textures
         public void FlipVertically()
         {
             SFMLImage.FlipVertically();
+        }
+
+        internal Image(SImage image)
+        {
+            SFMLImage = image;
+        }
+
+        public Image(Stream stream)
+        {
+            if (!stream.CanSeek || !stream.CanRead)
+            {
+                throw new ArgumentException("Must be able to seek and read from stream.", nameof(stream));
+            }
         }
 
         public void Dispose() => SFMLImage.Dispose();

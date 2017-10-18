@@ -50,7 +50,7 @@ namespace SS14.Client.State.States
         private bool _showDebug; // show AABBs & Bounding Circles on Entities.
 
         private RenderImage _baseTarget;
-        private ISprite _baseTargetSprite;
+        private Sprite _baseTargetSprite;
 
         private IClientEntityManager _entityManager;
         private IComponentManager _componentManager;
@@ -58,7 +58,7 @@ namespace SS14.Client.State.States
         private GaussianBlur _gaussianBlur;
 
         private List<RenderImage> _cleanupList = new List<RenderImage>();
-        private List<ISprite> _cleanupSpriteList = new List<ISprite>();
+        private List<Sprite> _cleanupSpriteList = new List<Sprite>();
 
         private SpriteBatch _floorBatch;
         private SpriteBatch _gasBatch;
@@ -78,8 +78,8 @@ namespace SS14.Client.State.States
         #endregion UI Variables
 
         #region Lighting
-        private ISprite _lightTargetIntermediateSprite;
-        private ISprite _lightTargetSprite;
+        private Sprite _lightTargetIntermediateSprite;
+        private Sprite _lightTargetSprite;
 
         private bool bPlayerVision = false;
         private bool bFullVision = false;
@@ -89,7 +89,7 @@ namespace SS14.Client.State.States
         public bool BlendLightMap = true;
 
         private TechniqueList LightblendTechnique;
-        private IGLSLShader Lightmap;
+        private GLSLShader Lightmap;
 
         private LightArea lightArea1024;
         private LightArea lightArea128;
@@ -137,7 +137,7 @@ namespace SS14.Client.State.States
             Now = DateTime.Now;
 
             _cleanupList = new List<RenderImage>();
-            _cleanupSpriteList = new List<ISprite>();
+            _cleanupSpriteList = new List<Sprite>();
 
             UserInterfaceManager.DisposeAllComponents();
 
@@ -177,7 +177,7 @@ namespace SS14.Client.State.States
             _baseTarget = new RenderImage("baseTarget", width, height, true);
             _cleanupList.Add(_baseTarget);
 
-            _baseTargetSprite = _baseTarget.Texture.MakeSprite();
+            _baseTargetSprite = new Sprite(_baseTarget.Texture);
             _cleanupSpriteList.Add(_baseTargetSprite);
 
             _sceneTarget = new RenderImage("sceneTarget", width, height, true);

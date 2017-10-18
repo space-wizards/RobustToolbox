@@ -1,15 +1,18 @@
 ﻿using System.Collections.Generic;
 using OpenTK;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Map
 {
@@ -40,7 +43,7 @@ namespace SS14.Client.Map
         public static void RenderTile(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch batch)
         {
             var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
-            tileSprite.Position = new Vector2f(xTopLeft, yTopLeft);
+            tileSprite.Position = new Vector2(xTopLeft, yTopLeft);
             batch.Draw(tileSprite);
         }
 
@@ -53,15 +56,15 @@ namespace SS14.Client.Map
         public static void RenderPos(IEntity entity, float x, float y)
         {
             var tileSprite = entity.GetComponent<ISpriteComponent>().GetCurrentSprite();
-            var bounds = tileSprite.GetLocalBounds();
-            var shape = new RectangleShape(new Vector2f(bounds.Width, bounds.Height));
+            var bounds = tileSprite.LocalBounds;
+            var shape = new RectangleShape(new Vector2(bounds.Width, bounds.Height));
             shape.FillColor = Color.Red;
-            shape.Position = new Vector2f(x - bounds.Width / 2, y - bounds.Height / 2);
+            shape.Position = new Vector2(x - bounds.Width / 2, y - bounds.Height / 2);
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 
         //What was this supposed to do?
-        public static void RenderPosOffset(ITileDefinition def, float x, float y, int tileSpacing, Vector2f lightPosition)
+        public static void RenderPosOffset(ITileDefinition def, float x, float y, int tileSpacing, Vector2 lightPosition)
         {
         }
 

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SFML.Graphics;
+using SS14.Client.Graphics.Utility;
+using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -31,9 +33,14 @@ namespace SS14.Client.Graphics.Render
             _window.SetFramerateLimit(limit);
         }
 
-        public void Draw(SFML.Graphics.Sprite sprite)
+        public void Draw(IDrawable drawable)
         {
-            _window.Draw(sprite);
+            _window.Draw(drawable.SFMLDrawable);
+        }
+
+        internal void Draw(Drawable drawable)
+        {
+            _window.Draw(drawable);
         }
 
         public void Display()
@@ -43,7 +50,7 @@ namespace SS14.Client.Graphics.Render
 
         public void Clear(Color color)
         {
-            _window.Clear(color);
+            _window.Clear(color.Convert());
         }
     }
 }

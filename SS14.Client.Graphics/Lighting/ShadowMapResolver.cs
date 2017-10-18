@@ -1,8 +1,10 @@
 ﻿using System;
 using OpenTK;
-using SFML.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Textures;
+using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -71,7 +73,7 @@ namespace SS14.Client.Graphics.Lighting
         public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
         {
             var Result = Area.RenderTarget;
-            var MaskTexture = mask == null ? Area.Mask.Texture : mask;
+            var MaskTexture = mask ?? Area.Mask.Texture;
             var MaskProps = Vector4.Zero;
             var diffuseColor = Vector4.One;
 

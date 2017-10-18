@@ -1,5 +1,5 @@
 ﻿using OpenTK;
-using SFML.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
 

@@ -1,8 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -75,7 +74,7 @@ namespace SS14.Client.GameObjects
             {
                 if (!IsCurrentlyWorn)
                 {
-                    var bounds = GetCurrentSprite().GetLocalBounds();
+                    var bounds = GetCurrentSprite().LocalBounds;
                     return Box2.FromDimensions(0, 0, bounds.Width, bounds.Height);
                 }
                 return base.LocalAABB;
@@ -113,11 +112,11 @@ namespace SS14.Client.GameObjects
             if (NotWornSprite == null) return;
 
             Sprite spriteToRender = NotWornSprite;
-            var bounds = spriteToRender.GetLocalBounds();
+            var bounds = spriteToRender.LocalBounds;
 
             ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
-            spriteToRender.Position = new Vector2f(renderPos.X - (bounds.Width / 2),
-                                                               renderPos.Y - (bounds.Height / 2));
+            spriteToRender.Position = new Vector2(renderPos.X - (bounds.Width / 2),
+                                                  renderPos.Y - (bounds.Height / 2));
 
             if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
                 || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
@@ -125,7 +124,7 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
             spriteToRender.Draw();
 
             //Render slaves above

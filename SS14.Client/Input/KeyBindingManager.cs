@@ -1,5 +1,5 @@
-﻿using SFML.Window;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.Utility;
@@ -46,15 +46,15 @@ namespace SS14.Client.Input
         private void KeyDown(object sender, KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Code) && BoundKeyDown != null)
-                BoundKeyDown(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Code]));
+            if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyDown != null)
+                BoundKeyDown(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
         }
 
         private void KeyUp(object sender, KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Code) && BoundKeyUp != null)
-                BoundKeyUp(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Code]));
+            if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyUp != null)
+                BoundKeyUp(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));
         }
 
         private void LoadKeys()

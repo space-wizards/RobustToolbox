@@ -1,56 +1,60 @@
 ﻿using SFML.Graphics;
 using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Graphics.View;
 using SS14.Shared.Maths;
 using System;
+using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.Graphics.Render
 {
-    public class CluwneWindow
+    public class CluwneWindow : IRenderTarget, IDisposable
     {
-        private readonly RenderWindow _window;
+        public readonly RenderWindow SFMLWindow;
+        public RenderTarget SFMLTarget => SFMLWindow;
         private readonly VideoSettings _settings;
+        public Viewport Viewport { get; }
+        public GraphicsContext Graphics { get; }
+        public Camera Camera { get; }
+
+        public event EventHandler<EventArgs> Closed;
+        public event EventHandler<SizeEventArgs> Resized;
+
+        public Vector2u Size => SFMLWindow.Size.Convert();
+        public uint Width => Size.X;
+        public uint Height => Size.Y;
 
         internal CluwneWindow(RenderWindow window, VideoSettings settings)
         {
-            _window = window;
+            SFMLWindow = window;
             _settings = settings;
-            Graphics = new GraphicsContext(_window);
-            Camera = new Camera(_window);
-            Viewport = new Viewport(0, 0, _window.Size.X, _window.Size.Y);
+            Graphics = new GraphicsContext(SFMLWindow);
+            Camera = new Camera(this);
+            Viewport = new Viewport(0, 0, SFMLWindow.Size.X, SFMLWindow.Size.Y);
 
-            CluwneLib.Input = new InputEvents(_window);
+            CluwneLib.Input = new InputEvents(this);
 
-            _window.Closed += (sender, args) => Closed?.Invoke(sender, args);
-            _window.Resized += (sender, args) =>
+            SFMLWindow.Closed += (sender, args) => Closed?.Invoke(sender, args);
+            SFMLWindow.Resized += (sender, args) =>
             {
-                Viewport.Width = _window.Size.X;
-                Viewport.Height = _window.Size.Y;
-                Resized?.Invoke(sender, args);
+                Viewport.Width = SFMLWindow.Size.X;
+                Viewport.Height = SFMLWindow.Size.Y;
+                Resized?.Invoke(sender, new SizeEventArgs(args));
             };
         }
 
-        public Viewport Viewport { get; set; }
-
-        public IRenderTarget Screen => _window;
-
-        /// <summary>
-        /// Graphics context of the window.
-        /// </summary>
-        public GraphicsContext Graphics { get; }
-
-        public Camera Camera { get; }
+        public void Dispose() => SFMLWindow.Dispose();
 
         public void SetMouseCursorVisible(bool visible)
         {
-            _window.SetMouseCursorVisible(visible);
+            SFMLWindow.SetMouseCursorVisible(visible);
         }
 
         public void DispatchEvents()
         {
-            _window.DispatchEvents();
+            SFMLWindow.DispatchEvents();
         }
 
         // close the window
@@ -59,26 +63,32 @@ namespace SS14.Client.Graphics.Render
             // prevents null issues
             CluwneLib.Input = new InputEvents(null);
 
-            _window.Close();
+            SFMLWindow.Close();
         }
 
         /// <summary>
         /// Gets the position of the mouse relative to this window.
         /// </summary>
-        public Vector2i MousePosition => Mouse.GetPosition(_window).Convert();
+        public Vector2i MousePosition => SFML.Window.Mouse.GetPosition(SFMLWindow).Convert();
 
         public void SetMousePosition(Vector2i newPosition)
         {
-            Mouse.SetPosition(newPosition.Convert());
+            SFML.Window.Mouse.SetPosition(newPosition.Convert());
         }
 
-        [Obsolete("Use the new API.")]
-        public static implicit operator RenderWindow(CluwneWindow window)
+        public void Clear(Color color)
         {
-            return window._window;
+            SFMLWindow.Clear(color.Convert());
         }
 
-        public event EventHandler<EventArgs> Closed;
-        public event EventHandler<SizeEventArgs> Resized;
+        public void Draw(IDrawable drawable)
+        {
+            Draw(drawable.SFMLDrawable);
+        }
+
+        public void Draw(Drawable drawable)
+        {
+            SFMLWindow.Draw(drawable);
+        }
     }
 }

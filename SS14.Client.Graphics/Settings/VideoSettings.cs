@@ -1,4 +1,5 @@
 ﻿using SFML.Window;
+using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 
 namespace SS14.Client.Graphics.Settings
 {
@@ -29,7 +30,7 @@ namespace SS14.Client.Graphics.Settings
         /// <returns></returns>
         public VideoMode GetVideoMode()
         {
-            if (_videoMode.IsValid())
+            if (_videoMode.Valid)
                 return _videoMode;
             return new VideoMode(800, 600);
         }
@@ -61,7 +62,7 @@ namespace SS14.Client.Graphics.Settings
         public void SetFullScreen(bool active)
         {
             if (active)
-                if (_videoMode.IsValid())
+                if (_videoMode.Valid)
                     _windowStyle = Styles.Fullscreen;
                 else
                     _windowStyle = Styles.Default;
@@ -88,7 +89,7 @@ namespace SS14.Client.Graphics.Settings
         /// <returns>True if not null and settings are valid  </returns>
         public bool IsValid()
         {
-            if (!_windowStyle.Equals(null) && _videoMode.IsValid() && !_glContextSettings.Equals(null))
+            if (!_windowStyle.Equals(null) && _videoMode.Valid && !_glContextSettings.Equals(null))
                 return true;
             return false;
         }

@@ -1,5 +1,4 @@
-﻿using SFML.System;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using System;

@@ -12,31 +12,27 @@ namespace SS14.Client.Graphics.Shader
     /// </summary>
     public class TechniqueList
     {
-        private Dictionary<string, IGLSLShader> _techniqueList;
+        private Dictionary<string, GLSLShader> _techniqueList;
 
         public TechniqueList()
         {
-            _techniqueList = new Dictionary<string, IGLSLShader>();
+            _techniqueList = new Dictionary<string, GLSLShader>();
         }
 
-        public void Add(IGLSLShader Shader)
+        public void Add(GLSLShader Shader)
         {
             _techniqueList.Add(Shader.ResourceName, Shader);
         }
 
-        public IGLSLShader getShader(string ShaderName)
+        public GLSLShader getShader(string ShaderName)
         {
             return _techniqueList[ShaderName];
         }
 
-        public IGLSLShader this[string key] => _techniqueList[key.ToLowerInvariant()];
+        public GLSLShader this[string key] => _techniqueList[key.ToLowerInvariant()];
 
-        public Dictionary<string, IGLSLShader> Dictonary => _techniqueList;
+        public Dictionary<string, GLSLShader> Dictonary => _techniqueList;
 
-        public string Name
-        {
-            get;
-            set;
-        }
+        public string Name { get; set; }
     }
 }

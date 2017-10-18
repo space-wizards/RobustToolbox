@@ -1,9 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
@@ -38,7 +36,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         private SpeechBubble _speechBubble;
-        public Color4 Color { get; set; } = Color4.White;
+        public Color Color { get; set; } = Color.White;
         public int MapID { get; private set; }
 
         public override Type StateType => typeof(AnimatedSpriteComponentState);
@@ -174,7 +172,7 @@ namespace SS14.Client.GameObjects
             var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
 
             // local screen bounds
-            var localBounds = spriteToCheck.GetLocalBounds().Convert();
+            var localBounds = spriteToCheck.LocalBounds;
 
             // local world bounds
             var worldBounds = localBounds.Scale(1.0f / screenScale);
@@ -212,7 +210,7 @@ namespace SS14.Client.GameObjects
                 throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
 
             // Check if the clicked pixel is transparent enough in the Image
-            return texInfo.Image.GetPixel((uint) pixelPos.X, (uint) pixelPos.Y).A >= Limits.ClickthroughLimit;
+            return texInfo.Image[(uint) pixelPos.X, (uint) pixelPos.Y].AByte >= Limits.ClickthroughLimit;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

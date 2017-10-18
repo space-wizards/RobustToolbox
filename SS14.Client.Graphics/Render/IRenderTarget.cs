@@ -9,11 +9,13 @@ namespace SS14.Client.Graphics.Render
 {
     public interface IRenderTarget
     {
+        SFML.Graphics.RenderTarget SFMLTarget { get; }
         Vector2u Size { get; }
         uint Width { get; }
         uint Height { get; }
 
         void Clear(Color color);
+        void Draw(IDrawable drawable);
         void Draw(SFML.Graphics.Drawable drawable);
     }
 }

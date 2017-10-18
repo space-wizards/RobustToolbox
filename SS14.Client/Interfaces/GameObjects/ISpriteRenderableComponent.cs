@@ -1,11 +1,11 @@
-﻿using OpenTK.Graphics;
-using SFML.Graphics;
+﻿using SS14.Shared.Maths;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.Interfaces.GameObjects
 {
     public interface ISpriteRenderableComponent : IRenderableComponent
     {
         Sprite GetCurrentSprite();
-        Color4 Color { get; set; }
+        Color Color { get; set; }
     }
 }

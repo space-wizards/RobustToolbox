@@ -7,6 +7,9 @@ using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using Color = SS14.Shared.Maths.Color;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using Vector2i = SS14.Shared.Maths.Vector2i;
+using Texture = SS14.Client.Graphics.Textures.Texture;
+using Sprite = SS14.Client.Graphics.Sprites.Sprite;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -18,7 +21,7 @@ namespace SS14.Client.Graphics.Render
     {
         private RenderTexture _renderTexture;
         // Crop or Scale
-        private SFML.Graphics.Sprite blitsprite;          // Sprite used to blit
+        private Sprite blitsprite;          // Sprite used to blit
         private IRenderTarget temp;          // Previous rendertarget
         private bool DrawingToThis = false;
 
@@ -66,11 +69,11 @@ namespace SS14.Client.Graphics.Render
             }
         }
 
-        public Vector2u Size => _renderTexture.Size;
+        public Vector2u Size => _renderTexture.Size.Convert();
         public uint Width => _renderTexture.Size.X;
         public uint Height => _renderTexture.Size.Y;
 
-        public ITexture Texture => new Textures.Texture(_renderTexture.Texture);
+        public Texture Texture => new Texture(_renderTexture.Texture);
 
         public bool UseDepthBuffer
         {
@@ -83,6 +86,8 @@ namespace SS14.Client.Graphics.Render
             get;
             set;
         }
+
+        public RenderTarget SFMLTarget => _renderTexture;
 
         #endregion Accessors
 
@@ -226,7 +231,12 @@ namespace SS14.Client.Graphics.Render
             _renderTexture.Draw(drawable);
         }
 
-        public void Clear(Shared.Maths.Color color)
+        public void Draw(IDrawable drawable)
+        {
+            Draw(drawable.SFMLDrawable);
+        }
+
+        public void Clear(Color color)
         {
             _renderTexture.Clear(color.Convert());
         }
@@ -243,7 +253,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(int posX, int posY, uint width, uint height, Color color, BlitterSizeMode state)
         {
             Mode = state;
-            Blit(new Vector2f(posX, posY), new Vector2f(width, height), color);
+            Blit(new Vector2(posX, posY), new Vector2(width, height), color);
         }
 
         /// <summary>
@@ -258,7 +268,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(float posX, float posY, uint width, uint height, Color color, BlitterSizeMode state)
         {
             Mode = state;
-            Blit(new Vector2f(posX, posY), new Vector2f(width, height), color);
+            Blit(new Vector2(posX, posY), new Vector2(width, height), color);
         }
 
         /// <summary>
@@ -272,7 +282,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(int posX, int posY, uint widthX, uint heightY, BlitterSizeMode mode)
         {
             Mode = mode;
-            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
+            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
         }
 
         /// <summary>
@@ -286,7 +296,7 @@ namespace SS14.Client.Graphics.Render
         public void Blit(float posX, float posY, uint widthX, uint heightY, BlitterSizeMode mode)
         {
             Mode = mode;
-            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
+            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
         }
 
         /// <summary>
@@ -298,7 +308,7 @@ namespace SS14.Client.Graphics.Render
         /// <param name="heightY"> Height of Texture </param>
         public void Blit(int posX, int posY, uint widthX, uint heightY)
         {
-            Blit(new Vector2f(posX, posY), new Vector2f(widthX, heightY), Color.White);
+            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
         }
 
         /// <summary>
@@ -310,41 +320,43 @@ namespace SS14.Client.Graphics.Render
         /// <param name="heightY"> Height of CluwneSprite </param>
         public void Blit(float posX, float posY, uint widthX, uint heightY)
         {
-            Blit(new SFML.System.Vector2f(posX, posY), new SFML.System.Vector2f(widthX, heightY), Color.White);
+            Blit(new Vector2(posX, posY), new Vector2(widthX, heightY), Color.White);
         }
 
         public void Blit(RenderImage target)
         {
-            Blit(new SFML.System.Vector2f(), new SFML.System.Vector2f(target.Size.X, target.Size.Y), Color.White);
+            Blit(Vector2.Zero, target.Size, Color.White);
         }
 
         /// <summary>
         /// Creates a Sprite from RenderImage Texture and draws it to the screen
         /// </summary>
         /// <param name="Position"> Position of Texture </param>
-        /// <param name="Size"> Size of the Texture </param>
+        /// <param name="size"> Size of the Texture </param>
         /// <param name="color"> Global color of object </param>
-        public void Blit(SFML.System.Vector2f position, SFML.System.Vector2f Size, SFML.Graphics.Color color)
+        public void Blit(Vector2 position, Vector2 size, Color color)
         {
             isStillDrawing();
-            blitsprite = new SFML.Graphics.Sprite(_renderTexture.Texture);
+            blitsprite = new Sprite(Texture);
             blitsprite.Position = position;
             blitsprite.Color = color;
-            var bounds = blitsprite.GetLocalBounds();
+            var bounds = blitsprite.LocalBounds;
 
             if (Mode == BlitterSizeMode.Scale)
             {
-                SFML.System.Vector2f scale = new SFML.System.Vector2f((Size.X / bounds.Width), (Size.Y / bounds.Height));
+                var scale = new Vector2((size.X / bounds.Width), (size.Y / bounds.Height));
                 blitsprite.Scale = scale;
             }
             else if (Mode == BlitterSizeMode.Crop)
             {
-                IntRect crop = new IntRect((int)position.X, (int)position.Y, (int)Size.X, (int)Size.Y);
+                Box2i crop = Box2i.FromDimensions((Vector2i)position, (Vector2i)size);
                 blitsprite.TextureRect = crop;
             }
 
             if (CluwneLib.CurrentRenderTarget == this)
+            {
                 return;
+            }
 
             blitsprite.Draw();
         }

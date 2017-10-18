@@ -1,6 +1,5 @@
 ﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -164,9 +163,8 @@ namespace SS14.Client.GameObjects
 
             base.Render(topLeft, bottomRight);
 
-            if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(position),
-                                   new Vector2(), currentBaseSprite);
+            _speechBubble?.Draw(CluwneLib.WorldToScreen(position),
+                                new Vector2(), currentBaseSprite);
         }
 
         /// <inheritdoc />

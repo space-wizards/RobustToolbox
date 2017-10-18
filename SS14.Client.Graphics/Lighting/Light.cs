@@ -4,6 +4,8 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Sprites;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -37,7 +39,7 @@ namespace SS14.Client.Graphics.Lighting
             }
         }
 
-        public Color4 Color { get; set; }
+        public Color Color { get; set; }
         public Vector4 ColorVec => new Vector4(Color.R, Color.G, Color.B, Color.A);
 
         public int Radius
@@ -70,7 +72,7 @@ namespace SS14.Client.Graphics.Lighting
 
         public LightMode LightMode { get; set; }
 
-        public void SetMask(SFML.Graphics.Sprite mask)
+        public void SetMask(Sprite mask)
         {
             LightArea.SetMask(mask);
         }

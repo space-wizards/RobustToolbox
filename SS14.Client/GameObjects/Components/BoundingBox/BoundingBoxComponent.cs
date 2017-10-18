@@ -1,6 +1,5 @@
 ﻿using System;
 using OpenTK;
-using SFML.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Utility;

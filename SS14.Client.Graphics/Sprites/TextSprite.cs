@@ -5,18 +5,35 @@ using OpenTK.Graphics;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
+using Color = SS14.Shared.Maths.Color;
+using SS14.Client.Graphics.Render;
+using System;
+using STransformable = SFML.Graphics.Transformable;
+using RenderStates = SS14.Client.Graphics.Render.RenderStates;
 
 namespace SS14.Client.Graphics.Sprites
 {
     /// <summary>
     /// Sprite that contains Text
     /// </summary>
-    public class TextSprite
+    public class TextSprite : Transformable, IDrawable
     {
-        private bool _shadowed;                                    // Is the Text Shadowed
-        private Color4 _shadowColor;                                // Shadow Color
-        private Text _textSprite;
-        private string Label;
+        [Flags]
+        public enum Styles
+        {
+            None = 0,
+            Bold = 1 << 0,
+            Italic = 1 << 1,
+            Underlined = 1 << 2,
+            StrikeThrough = 1 << 3,
+        }
+
+        public Text SFMLTextSprite { get; }
+
+        public Drawable SFMLDrawable => SFMLTextSprite;
+        public override STransformable SFMLTransformable => SFMLTextSprite;
 
         #region Constructors
 
@@ -27,10 +44,9 @@ namespace SS14.Client.Graphics.Sprites
         /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
         /// <param name="font"> Size of the font to use </param>
-        public TextSprite(string Label, string text, Font font, uint size)
+        public TextSprite(string text, Font font, uint size)
         {
-            this.Label = Label;
-            _textSprite = new Text(text, font, size);
+            SFMLTextSprite = new Text(text, font.SFMLFont, size);
         }
 
         /// <summary>
@@ -39,11 +55,7 @@ namespace SS14.Client.Graphics.Sprites
         /// <param name="Label"> Label of TextSprite </param>
         /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        public TextSprite(string Label, string text, Font font)
-        {
-            this.Label = Label;
-            _textSprite = new Text(text, font, 14);
-        }
+        public TextSprite(string text, Font font) : this(text, font, 14) {}
 
         /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
@@ -54,17 +66,22 @@ namespace SS14.Client.Graphics.Sprites
 
         #region Methods
 
-        public void Draw()
+        public void Draw(IRenderTarget target, RenderStates states)
         {
-            _textSprite.Position = new Vector2f(Position.X, Position.Y);
-            _textSprite.FillColor = Color.Convert();
-            CluwneLib.CurrentRenderTarget.Draw(_textSprite);
+            SFMLTextSprite.Position = new Vector2f(Position.X, Position.Y);
+            SFMLTextSprite.FillColor = FillColor.Convert();
+            SFMLTextSprite.Draw(target.SFMLTarget, states.SFMLRenderStates);
 
             if (CluwneLib.Debug.DebugTextboxes)
             {
-                var fr = _textSprite.GetGlobalBounds().Convert();
-                CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color4.Red);
+                var fr = SFMLTextSprite.GetGlobalBounds().Convert();
+                CluwneLib.drawHollowRectangle((int)fr.Left, (int)fr.Top, (int)fr.Width, (int)fr.Height, 1.0f, Color.Red);
             }
+        }
+
+        public void Draw()
+        {
+            Draw(CluwneLib.CurrentRenderTarget, CluwneLib.ShaderRenderState);
         }
 
         /// <summary>
@@ -74,7 +91,7 @@ namespace SS14.Client.Graphics.Sprites
         {
             string temp = Text;
             Text = _text;
-            int value = (int)_textSprite.FindCharacterPos((uint)_textSprite.DisplayedString.Length + 1).X;
+            int value = (int)SFMLTextSprite.FindCharacterPos((uint)SFMLTextSprite.DisplayedString.Length + 1).X;
             Text = temp;
             return value;
         }
@@ -89,50 +106,42 @@ namespace SS14.Client.Graphics.Sprites
 
         public Vector2 FindCharacterPos(uint index)
         {
-            return _textSprite.FindCharacterPos(index).Convert();
+            return SFMLTextSprite.FindCharacterPos(index).Convert();
         }
 
         #endregion Methods
 
         #region Accessors
 
-        public Vector2i Size;
-
-        public Color4 Color;
-
-        public Vector2 ShadowOffset { get; set; }
-
-        public bool Shadowed
+        public Color FillColor
         {
-            get => _shadowed;
-            set => _shadowed = value;
+            get => SFMLTextSprite.FillColor.Convert();
+            set => SFMLTextSprite.FillColor = value.Convert();
         }
 
         public uint FontSize
         {
-            get => _textSprite.CharacterSize;
-            set => _textSprite.CharacterSize = value;
-        }
-
-        public Color4 ShadowColor
-        {
-            get => _shadowColor;
-            set => this._shadowColor = value;
+            get => SFMLTextSprite.CharacterSize;
+            set => SFMLTextSprite.CharacterSize = value;
         }
 
         public string Text
         {
-            get => _textSprite.DisplayedString;
-            set => _textSprite.DisplayedString = value;
+            get => SFMLTextSprite.DisplayedString;
+            set => SFMLTextSprite.DisplayedString = value;
         }
 
-        public Vector2i Position;
+        public Styles Style
+        {
+            get => (Styles)SFMLTextSprite.Style;
+            set => SFMLTextSprite.Style = (SFML.Graphics.Text.Styles)value;
+        }
 
         public int Width
         {
             get
             {
-                var a = _textSprite;
+                var a = SFMLTextSprite;
                 var b = a.GetLocalBounds();
                 var c = b.Width;
                 var d = (int)c;
@@ -140,7 +149,7 @@ namespace SS14.Client.Graphics.Sprites
             }
         }
         // FIXME take into account newlines.
-        public int Height => (int)_textSprite.CharacterSize;
+        public int Height => (int)SFMLTextSprite.CharacterSize;
         #endregion Accessors
     }
 }

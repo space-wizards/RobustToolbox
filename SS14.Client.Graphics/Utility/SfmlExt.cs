@@ -40,21 +40,6 @@ namespace SS14.Client.Graphics.Utility
             && (outer.Top <= inner.Top)
             && (inner.Bottom() <= outer.Bottom());
 
-        // Color
-        public static uint ToInt(this Color color)
-            => unchecked((uint)(
-                (color.R << 16)
-                | (color.G << 8)
-                | (color.B << 0)
-                | (color.A << 24)));
-
-        public static Color IntToColor(uint color)
-            => unchecked(new Color(
-                (byte)(color >> 16),
-                (byte)(color >> 8),
-                (byte)(color >> 0),
-                (byte)(color >> 24)));
-
         /// <summary>
         /// Returns the dot product of two vectors
         /// </summary>

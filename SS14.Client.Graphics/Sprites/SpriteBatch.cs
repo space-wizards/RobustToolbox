@@ -3,6 +3,11 @@ using SFML.System;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SS14.Client.Graphics.Textures;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Utility;
+using Sprite = SS14.Client.Graphics.Sprites;
+using Texture = SS14.Client.Graphics.Textures.Texture;
 
 namespace SS14.Client.Graphics.Sprites
 {
@@ -75,13 +80,15 @@ namespace SS14.Client.Graphics.Sprites
             }
         }
 
-        public void Draw(IEnumerable<SFML.Graphics.Sprite> sprites)
+        public void Draw(IEnumerable<Sprite> sprites)
         {
             foreach (var s in sprites)
+            {
                 Draw(s);
+            }
         }
 
-        public void Draw(SFML.Graphics.Sprite S)
+        public void Draw(Sprite S)
         {
             count++;
             Using(S.Texture);
@@ -103,7 +110,7 @@ namespace SS14.Client.Graphics.Sprites
                         new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
-                            S.Color,
+                            S.Color.Convert(),
                         new SFML.System.Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top)
@@ -118,7 +125,7 @@ namespace SS14.Client.Graphics.Sprites
                         new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
-                            S.Color,
+                            S.Color.Convert(),
                         new SFML.System.Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top)
@@ -132,7 +139,7 @@ namespace SS14.Client.Graphics.Sprites
                         new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
-                            S.Color,
+                            S.Color.Convert(),
                         new SFML.System.Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top + S.TextureRect.Height)
@@ -146,7 +153,7 @@ namespace SS14.Client.Graphics.Sprites
                         new SFML.System.Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
-                            S.Color,
+                            S.Color.Convert(),
                         new SFML.System.Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top + S.TextureRect.Height)
@@ -161,7 +168,7 @@ namespace SS14.Client.Graphics.Sprites
 
             foreach (var item in QueuedTextures)
             {
-                Renderstates.Texture = item.Texture;
+                Renderstates.Texture = item.Texture.SFMLTexture;
                 Renderstates.BlendMode = BlendingSettings;
 
                 item.Verticies.Draw(target, Renderstates);

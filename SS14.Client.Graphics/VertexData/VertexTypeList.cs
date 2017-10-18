@@ -5,6 +5,7 @@ using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using System;
 using System.Runtime.InteropServices;
+using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.Graphics.VertexData
 {
@@ -13,6 +14,7 @@ namespace SS14.Client.Graphics.VertexData
     /// </summary>
     public class VertexTypeList : BaseCollection<VertexType> , IDisposable
     {
+
         #region Value Types.
         /// <summary>
         /// Value type describing a sprite vertex.
@@ -20,6 +22,20 @@ namespace SS14.Client.Graphics.VertexData
         [StructLayout(LayoutKind.Sequential , Pack = 1)]
         public struct PositionDiffuse2DTexture1
         {
+            private static uint ColorToInt(Color color)
+                => unchecked((uint)(
+                    (color.RByte << 16)
+                    | (color.GByte << 8)
+                    | (color.BByte << 0)
+                    | (color.AByte << 24)));
+
+            private static Color IntToColor(uint color)
+                => unchecked(new Color(
+                    (byte)(color >> 16),
+                    (byte)(color >> 8),
+                    (byte)(color >> 0),
+                    (byte)(color >> 24)));
+
             #region Variables.
             /// <summary>
             /// Position of the vertex.
@@ -45,11 +61,11 @@ namespace SS14.Client.Graphics.VertexData
             {
                 get
                 {
-                    return SfmlExt.IntToColor(ColorValue);
+                    return IntToColor(ColorValue);
                 }
                 set
                 {
-                    ColorValue = value.ToInt();
+                    ColorValue = ColorToInt(value);
                 }
             }
             #endregion
@@ -128,7 +144,7 @@ namespace SS14.Client.Graphics.VertexData
             {
                 // Copy data.
                 Position = position;
-                ColorValue = color.ToInt();
+                ColorValue = ColorToInt(color);
                 TextureCoordinates = textureCoordinates;
             }
             #endregion

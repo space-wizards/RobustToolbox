@@ -18,6 +18,8 @@ using SS14.Shared.Map;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using Color = SS14.Shared.Maths.Color;
+using VideoMode = SS14.Client.Graphics.Render.VideoMode;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.Graphics
 {
@@ -44,21 +46,19 @@ namespace SS14.Client.Graphics
         public static GLSLShader CurrentShader { get; internal set; }
 
         public static BlendingModes BlendingMode { get; set; }
+        public static Render.RenderStates ShaderRenderState => new Render.RenderStates(CurrentShader);
         public static IRenderTarget CurrentRenderTarget
         {
             get
             {
                 if (renderTargetArray[0] == null)
-                    renderTargetArray[0] = Window.Screen;
+                    renderTargetArray[0] = Window;
 
                 return renderTargetArray[0];
             }
             internal set
             {
-                if (value == null)
-                    value = Window.Screen;
-
-                setAdditionalRenderTarget(0, value);
+                setAdditionalRenderTarget(0, value ?? Window);
             }
         }
 
@@ -92,7 +92,7 @@ namespace SS14.Client.Graphics
                 {
                     if (renderTargetArray[0] == null)
                     {
-                        renderTargetArray[0] = Window.Screen;
+                        renderTargetArray[0] = Window;
                     }
                 }
             }
@@ -106,7 +106,7 @@ namespace SS14.Client.Graphics
                 return SplashScreen;
 
             var video = new VideoSettings(vMode);
-            return SplashScreen = new CluwneWindow(new RenderWindow(vMode, "Space Station 14", Styles.None), video);
+            return SplashScreen = new CluwneWindow(new RenderWindow(vMode.SFMLVideoMode, "Space Station 14", Styles.None), video);
         }
 
         public static void CleanupSplashScreen()
@@ -123,7 +123,7 @@ namespace SS14.Client.Graphics
             Time = new GameTiming();
 
             var video = Video;
-            var wind = new RenderWindow(video.GetVideoMode(), "Developer Station 14", video.GetWindowStyle());
+            var wind = new RenderWindow(video.GetVideoMode().SFMLVideoMode, "Developer Station 14", video.GetWindowStyle());
             Window = new CluwneWindow(wind, video);
             Window.Graphics.SetVerticalSyncEnabled(true);
             Window.Graphics.SetFramerateLimit(300);
@@ -472,37 +472,5 @@ namespace SS14.Client.Graphics
         }
 
         #endregion Client Window Data
-    }
-
-    public class InputEvents
-    {
-        public InputEvents(RenderWindow window)
-        {
-            // if dummy don't attach events
-            if (window == null)
-                return;
-
-            RenderWindow _window = window;
-
-            _window.KeyPressed += (sender, args) => KeyPressed?.Invoke(sender, args);
-            _window.KeyReleased += (sender, args) => KeyReleased?.Invoke(sender, args);
-            _window.MouseButtonPressed += (sender, args) => MouseButtonPressed?.Invoke(sender, args);
-            _window.MouseButtonReleased += (sender, args) => MouseButtonReleased?.Invoke(sender, args);
-            _window.MouseMoved += (sender, args) => MouseMoved?.Invoke(sender, args);
-            _window.MouseWheelMoved += (sender, args) => MouseWheelMoved?.Invoke(sender, args);
-            _window.MouseEntered += (sender, args) => MouseEntered?.Invoke(sender, args);
-            _window.MouseLeft += (sender, args) => MouseLeft?.Invoke(sender, args);
-            _window.TextEntered += (sender, args) => TextEntered?.Invoke(sender, args);
-        }
-
-        public event EventHandler<KeyEventArgs> KeyPressed;
-        public event EventHandler<KeyEventArgs> KeyReleased;
-        public event EventHandler<MouseButtonEventArgs> MouseButtonPressed;
-        public event EventHandler<MouseButtonEventArgs> MouseButtonReleased;
-        public event EventHandler<MouseMoveEventArgs> MouseMoved;
-        public event EventHandler<MouseWheelEventArgs> MouseWheelMoved;
-        public event EventHandler<EventArgs> MouseEntered;
-        public event EventHandler<EventArgs> MouseLeft;
-        public event EventHandler<TextEventArgs> TextEntered;
     }
 }

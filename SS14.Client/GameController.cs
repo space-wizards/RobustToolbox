@@ -2,6 +2,7 @@
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -19,7 +20,6 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
@@ -28,6 +28,9 @@ using SS14.Shared.Network.Messages;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using VideoMode = SS14.Client.Graphics.Render.VideoMode;
+using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Maths;
 
 namespace SS14.Client
 {
@@ -280,23 +283,25 @@ namespace SS14.Client
         {
             // Do nothing when we're on DEBUG builds.
             // The splash is just annoying.
-            const uint SIZE_X = 600;
-            const uint SIZE_Y = 300;
+            const int SIZE_X = 600;
+            const int SIZE_Y = 300;
+            var Size = new Vector2i(SIZE_X, SIZE_Y);
             // Size of the NT logo in the bottom right.
             const float NT_SIZE_X = SIZE_X / 10f;
             const float NT_SIZE_Y = SIZE_Y / 10f;
+            var NTSize = new Vector2(NT_SIZE_X, NT_SIZE_Y);
             var window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y)).Graphics;
 
             var logo = _resourceCache.GetSprite("ss14_logo");
-            logo.Position = new Vector2f(SIZE_X / 2 - logo.TextureRect.Width / 2, SIZE_Y / 2 - logo.TextureRect.Height / 2);
+            logo.Position = Size/2 - logo.TextureRect.Size/2;
 
             var background = _resourceCache.GetSprite("ss14_logo_background");
-            background.Scale = new Vector2f((float)SIZE_X / background.TextureRect.Width, (float)SIZE_Y / background.TextureRect.Height);
+            background.Scale = (Vector2)Size/background.TextureRect.Size;
 
             var nanotrasen = _resourceCache.GetSprite("ss14_logo_nt");
-            nanotrasen.Scale = new Vector2f(NT_SIZE_X / nanotrasen.TextureRect.Width, NT_SIZE_Y / nanotrasen.TextureRect.Height);
-            nanotrasen.Position = new Vector2f(SIZE_X - NT_SIZE_X - 5, SIZE_Y - NT_SIZE_Y - 5);
-            nanotrasen.Color = new Color(255, 255, 255, 64);
+            nanotrasen.Scale = NTSize / nanotrasen.TextureRect.Size;
+            nanotrasen.Position = Size - NTSize - 5;
+            nanotrasen.Color = Color.White.WithAlpha(64);
 
             window.Draw(background);
             window.Draw(logo);
@@ -321,11 +326,6 @@ namespace SS14.Client
 
         private void MainWindowResizeEnd(object sender, SizeEventArgs e)
         {
-            var view = new SFML.Graphics.View(
-                new SFML.System.Vector2f(e.Width / 2, e.Height / 2),
-                new SFML.System.Vector2f(e.Width, e.Height)
-                );
-            CluwneLib.Window.Camera.SetView(view);
             _stateManager.FormResize();
         }
         private void MainWindowRequestClose(object sender, EventArgs e)
@@ -340,12 +340,11 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The KeyArgsinstance containing the event data.</param>
-        private void KeyDownEvent(object sender, KeyArgs e)
+        private void KeyDownEvent(object sender, KeyEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.KeyDown(e);
+            _stateManager?.KeyDown(e);
 
-            switch (e.Code)
+            switch (e.Key)
             {
                 case Keyboard.Key.F3:
                     IoCManager.Resolve<INetworkGrapher>().Toggle();
@@ -358,10 +357,9 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The KeyArgs instance containing the event data.</param>
-        private void KeyUpEvent(object sender, KeyArgs e)
+        private void KeyUpEvent(object sender, KeyEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.KeyUp(e);
+            _stateManager?.KeyUp(e);
         }
 
         /// <summary>
@@ -369,10 +367,9 @@ namespace SS14.Client
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The MouseWheelEventArgs instance containing the event data.</param>
-        private void MouseWheelMoveEvent(object sender, MouseWheelEventArgs e)
+        private void MouseWheelMoveEvent(object sender, MouseWheelScrollEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.MouseWheelMove(e);
+            _stateManager?.MouseWheelMove(e);
         }
 
         /// <summary>
@@ -382,8 +379,7 @@ namespace SS14.Client
         /// <param name="e">The MouseMoveEventArgs instance containing the event data.</param>
         private void MouseMoveEvent(object sender, MouseMoveEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.MouseMove(e);
+            _stateManager?.MouseMove(e);
         }
 
         /// <summary>
@@ -393,8 +389,7 @@ namespace SS14.Client
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseDownEvent(object sender, MouseButtonEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.MouseDown(e);
+            _stateManager?.MouseDown(e);
         }
 
         /// <summary>
@@ -404,8 +399,7 @@ namespace SS14.Client
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void MouseUpEvent(object sender, MouseButtonEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.MouseUp(e);
+            _stateManager?.MouseUp(e);
         }
 
         /// <summary>
@@ -415,9 +409,7 @@ namespace SS14.Client
         /// <param name="e">The EventArgs instance containing the event data.</param>
         private void MouseEntered(object sender, EventArgs e)
         {
-            Cursor.Hide();
-            if (_stateManager != null)
-                _stateManager.MouseEntered(e);
+            _stateManager?.MouseEntered(e);
         }
 
         /// <summary>
@@ -427,15 +419,12 @@ namespace SS14.Client
         /// <param name="e">The EventArgs instance containing the event data.</param>
         private void MouseLeft(object sender, EventArgs e)
         {
-            Cursor.Show();
-            if (_stateManager != null)
-                _stateManager.MouseLeft(e);
+            _stateManager?.MouseLeft(e);
         }
 
         private void TextEntered(object sender, TextEventArgs e)
         {
-            if (_stateManager != null)
-                _stateManager.TextEntered(e);
+            _stateManager?.TextEntered(e);
         }
 
         #endregion Input Handling

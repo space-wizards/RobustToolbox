@@ -1,7 +1,6 @@
 ﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -9,6 +8,8 @@ using System;
 using System.Text;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -53,7 +54,7 @@ namespace SS14.Client.GameObjects
         /// <summary>
         /// TextSprite used to hold and display speech text.
         /// </summary>
-        private readonly Text _textSprite;
+        private readonly TextSprite _textSprite;
 
         /// <summary>
         /// Holder for last time the sprite was
@@ -73,10 +74,10 @@ namespace SS14.Client.GameObjects
             _resourceCache = IoCManager.Resolve<IResourceCache>();
             _mobName = mobname;
             _buildTime = DateTime.Now;
-            _textSprite = new Text(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
+            _textSprite = new TextSprite(String.Empty, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font);
             _textSprite.FillColor = Color.Black;
             // TODO Word wrap!
-            _textSprite.Position = new Vector2f(5, 3);
+            _textSprite.Position = new Vector2(5, 3);
             _stringBuilder = new StringBuilder();
 
             _bubbleRender = new RenderImage("bubble ",1, 1);
@@ -95,13 +96,13 @@ namespace SS14.Client.GameObjects
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            var bubbleBounds = _bubbleSprite.GetLocalBounds();
-            var spriteBounds = spriteToDrawAbove.GetLocalBounds();
+            var bubbleBounds = _bubbleSprite.LocalBounds;
+            var spriteBounds = spriteToDrawAbove.LocalBounds;
 
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (spriteBounds.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2f(x, y);
+            _bubbleSprite.Position = new Vector2(x, y);
             _bubbleSprite.Draw();
         }
 
@@ -109,12 +110,12 @@ namespace SS14.Client.GameObjects
         {
             if ((DateTime.Now - _buildTime).TotalMilliseconds >= MillisecondsToLive) return;
 
-            var bubbleBounds = _bubbleSprite.GetLocalBounds();
+            var bubbleBounds = _bubbleSprite.LocalBounds;
 
             float x = position.X - windowOrigin.X - (bubbleBounds.Width / 2.0f);
             float y = position.Y - windowOrigin.Y - (bubbleBounds.Height) - (boundingBox.Height / 2.0f) - 5.0f;
 
-            _bubbleSprite.Position = new Vector2f(x, y);
+            _bubbleSprite.Position = new Vector2(x, y);
             _bubbleSprite.Draw();
         }
 
@@ -128,7 +129,7 @@ namespace SS14.Client.GameObjects
                     _stringBuilder.Append(text[i]);
             }
 
-            _textSprite.DisplayedString = _stringBuilder.ToString();
+            _textSprite.Text = _stringBuilder.ToString();
             _stringBuilder.Clear();
 
             DrawBubbleSprite();

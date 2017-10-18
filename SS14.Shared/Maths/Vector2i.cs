@@ -71,6 +71,26 @@ namespace SS14.Shared.Maths
             return new Vector2i(a.X + b.X, a.Y + b.Y);
         }
 
+        public static Vector2i operator *(Vector2i a, Vector2i b)
+        {
+            return new Vector2i(a.X * b.X, a.Y * b.Y);
+        }
+
+        public static Vector2i operator *(Vector2i a, int scale)
+        {
+            return new Vector2i(a.X * scale, a.Y * scale);
+        }
+
+        public static Vector2i operator /(Vector2i a, Vector2i b)
+        {
+            return new Vector2i(a.X / b.X, a.Y / b.Y);
+        }
+
+        public static Vector2i operator /(Vector2i a, int scale)
+        {
+            return new Vector2i(a.X / scale, a.Y / scale);
+        }
+
         public static implicit operator Vector2(Vector2i vector)
         {
             return new Vector2(vector.X, vector.Y);

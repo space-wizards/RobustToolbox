@@ -103,6 +103,7 @@
     <Compile Include="Render\VideoMode.cs" />
     <Compile Include="Render\SizeEventArgs.cs" />
     <Compile Include="Render\RenderStates.cs" />
+    <Compile Include="Render\BlendMode.cs" />
     <Compile Include="Shader\GLSLShader.cs" />
     <Compile Include="Sprites\SpriteBatch.cs" />
     <Compile Include="Sprites\Sprite.cs" />

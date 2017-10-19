@@ -200,14 +200,14 @@ namespace SS14.Client.State.States
             _lightTarget = new RenderImage("lightTarget", width, height, ImageBufferFormats.BufferRGB888A8);
 
             _cleanupList.Add(_lightTarget);
-            _lightTargetSprite = _lightTarget.Texture.MakeSprite();
+            _lightTargetSprite = new Sprite(_lightTarget.Texture);
 
             _cleanupSpriteList.Add(_lightTargetSprite);
 
             _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", width, height,
                                                       ImageBufferFormats.BufferRGB888A8);
             _cleanupList.Add(_lightTargetIntermediate);
-            _lightTargetIntermediateSprite = _lightTargetIntermediate.Texture.MakeSprite();
+            _lightTargetIntermediateSprite = new Sprite(_lightTargetIntermediate.Texture);
             _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
         }
 

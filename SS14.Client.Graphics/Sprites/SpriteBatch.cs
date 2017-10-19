@@ -4,10 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using SS14.Client.Graphics.Textures;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using Sprite = SS14.Client.Graphics.Sprites;
 using Texture = SS14.Client.Graphics.Textures.Texture;
+using BlendMode = SS14.Client.Graphics.Render.BlendMode;
+using RenderStates = SS14.Client.Graphics.Render.RenderStates;
+using SRenderStates = SFML.Graphics.RenderStates;
+using SBlendMode = SFML.Graphics.BlendMode;
 
 namespace SS14.Client.Graphics.Sprites
 {
@@ -15,7 +20,7 @@ namespace SS14.Client.Graphics.Sprites
     /// Provides optimized drawing of sprites
     /// </summary>
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
-    public class SpriteBatch : Drawable
+    public class SpriteBatch : Drawable, IDrawable
     {
 
         private QueueItem activeItem;
@@ -161,7 +166,7 @@ namespace SS14.Client.Graphics.Sprites
                 );
         }
 
-        public void Draw(RenderTarget target, RenderStates Renderstates)
+        public void Draw(RenderTarget target, SRenderStates Renderstates)
         {
             if (Drawing) throw new Exception("Call End first.");
 
@@ -169,10 +174,9 @@ namespace SS14.Client.Graphics.Sprites
             foreach (var item in QueuedTextures)
             {
                 Renderstates.Texture = item.Texture.SFMLTexture;
-                Renderstates.BlendMode = BlendingSettings;
+                Renderstates.BlendMode = (SBlendMode)BlendingSettings;
 
                 item.Verticies.Draw(target, Renderstates);
-
             }
         }
 

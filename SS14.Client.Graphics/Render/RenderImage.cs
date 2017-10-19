@@ -200,6 +200,9 @@ namespace SS14.Client.Graphics.Render
         /// </summary>
         public void BeginDrawing()
         {
+            if (DrawingToThis == true)
+                throw new InvalidOperationException("Calling BeginDrawing while already drawing.");
+
             DrawingToThis = true;
             temp = CluwneLib.CurrentRenderTarget;
             CluwneLib.CurrentRenderTarget = this;
@@ -210,6 +213,9 @@ namespace SS14.Client.Graphics.Render
         /// </summary>
         public void EndDrawing()
         {
+            if(DrawingToThis == false)
+                throw new InvalidOperationException("Calling EndDrawing without a BenginDrawing.");
+
             DrawingToThis = false;
             base.Display();
             CluwneLib.CurrentRenderTarget = temp;

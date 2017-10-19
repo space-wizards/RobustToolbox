@@ -82,7 +82,7 @@ namespace SS14.Client.UserInterface.Components
             _selectionGlow.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (_items.Count > 0)
             {
@@ -100,10 +100,10 @@ namespace SS14.Client.UserInterface.Components
                     if (_selectionGlow != null && Selected == ScrollOffset)
                     {
                         _selectionGlow.Position = new Vector2i(ItemOffsets.X + ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), middle.Key.ClientArea.Top + (int)(middle.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
-                        _selectionGlow.Render();
+                        _selectionGlow.Draw();
                     }
 
-                    middle.Key.Render();
+                    middle.Key.Draw();
 
                     int lastPosLeft = middle.Key.ClientArea.Left - ItemSpacing;
                     int lastPosRight = middle.Key.ClientArea.Right + ItemSpacing;
@@ -123,13 +123,13 @@ namespace SS14.Client.UserInterface.Components
                             if (_selectionGlow != null && (ScrollOffset - i) == Selected)
                             {
                                 _selectionGlow.Position = new Vector2i(currLeft.Key.ClientArea.Left + (int)(currLeft.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currLeft.Key.ClientArea.Top + (int)(currLeft.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
-                                _selectionGlow.Render();
+                                _selectionGlow.Draw();
                             }
 
                             if (FadeItems)
                                 currLeft.Key.Color = Color4.White.WithAlpha(baseAlpha / alphaAdj);
 
-                            currLeft.Key.Render();
+                            currLeft.Key.Draw();
                         }
 
                         //Right
@@ -142,13 +142,13 @@ namespace SS14.Client.UserInterface.Components
                             if (_selectionGlow != null && (ScrollOffset + i) == Selected)
                             {
                                 _selectionGlow.Position = new Vector2i(currRight.Key.ClientArea.Left + (int)(currRight.Key.ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f), currRight.Key.ClientArea.Top + (int)(currRight.Key.ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
-                                _selectionGlow.Render();
+                                _selectionGlow.Draw();
                             }
 
                             if (FadeItems)
                                 currRight.Key.Color = Color4.White.WithAlpha(baseAlpha / alphaAdj);
 
-                            currRight.Key.Render();
+                            currRight.Key.Draw();
                         }
                     }
                 }
@@ -156,8 +156,8 @@ namespace SS14.Client.UserInterface.Components
 
             if (ShowArrows && ScrollingNeeded())
             {
-                _buttonLeft.Render();
-                _buttonRight.Render();
+                _buttonLeft.Draw();
+                _buttonRight.Draw();
             }
         }
 

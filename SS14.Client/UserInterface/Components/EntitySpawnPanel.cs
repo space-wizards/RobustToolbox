@@ -109,7 +109,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 var newObjInfo = new PlacementInformation
                 {
-                    PlacementOption = item.Text.Text,
+                    PlacementOption = item.Text,
                     EntityType = pMan.CurrentPermission.EntityType,
                     Range = 2,
                     IsTile = pMan.CurrentPermission.IsTile
@@ -139,7 +139,7 @@ namespace SS14.Client.UserInterface.Components
         private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
             foreach (
-                GuiComponent curr in
+                Control curr in
                     _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).selected = false;
         }
@@ -183,7 +183,7 @@ namespace SS14.Client.UserInterface.Components
             }
 
             foreach (
-                GuiComponent curr in
+                Control curr in
                     _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).fixed_width = maxWidth;
         }
@@ -198,14 +198,14 @@ namespace SS14.Client.UserInterface.Components
             }
 
             foreach (
-                GuiComponent curr in
+                Control curr in
                     _entityList.Components.Where(curr => curr.GetType() == typeof(EntitySpawnSelectButton)))
                 ((EntitySpawnSelectButton)curr).selected = false;
 
             string overrideMode = "";
             if (_lstOverride.CurrentlySelected != null)
-                if (_lstOverride.CurrentlySelected.Text.Text != "None")
-                    overrideMode = _lstOverride.CurrentlySelected.Text.Text;
+                if (_lstOverride.CurrentlySelected.Text != "None")
+                    overrideMode = _lstOverride.CurrentlySelected.Text;
 
             var newObjInfo = new PlacementInformation
             {
@@ -226,11 +226,11 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (Disposing || !IsVisible()) return;
             _eraserButton.Color = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
-            base.Render();
+            base.Draw();
         }
 
         public override void Dispose()

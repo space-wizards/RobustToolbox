@@ -42,9 +42,9 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
         }
 
         public override void Dispose()

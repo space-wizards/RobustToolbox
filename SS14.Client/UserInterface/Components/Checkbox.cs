@@ -8,7 +8,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Checkbox : GuiComponent
+    internal class Checkbox : Control
     {
         public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
 
@@ -44,7 +44,7 @@ namespace SS14.Client.UserInterface.Components
         }
         
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
             // TODO: Move this to OnCalcPosition once the ResourceCache we stop sharing sprites between controls.
             _checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
@@ -55,7 +55,7 @@ namespace SS14.Client.UserInterface.Components
             if (Value)
                 _checkboxCheck.Draw();
 
-            base.Render();
+            base.Draw();
         }
 
         /// <inheritdoc />

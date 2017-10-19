@@ -1,6 +1,4 @@
-﻿using SFML.Graphics;
-using SS14.Client.Graphics;
-using SS14.Client.UserInterface.Components;
+﻿using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface
@@ -8,20 +6,12 @@ namespace SS14.Client.UserInterface
     /// <summary>
     ///     UI Base screen that holds all of the other controls.
     /// </summary>
-    public class Screen : GuiComponent
+    public class Screen : Control
     {
-        /// <summary>
-        ///     Background sprite of the entire screen.
-        /// </summary>
-        public Sprite Background { get; set; }
-
-        /// <inheritdoc />
-        public override void Render()
+        public Screen()
         {
-            Background?.SetTransformToRect(_clientArea.Translated(_screenPos));
-            Background?.Draw();
-
-            base.Render();
+            // if this is disabled, you will prob see the gl clear color.
+            DrawBackground = true;
         }
 
         /// <inheritdoc />

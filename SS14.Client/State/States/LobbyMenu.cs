@@ -91,35 +91,35 @@ namespace SS14.Client.State.States
             };
 
             _lblServer = new Label("SERVER:", "MICROGME", ResourceCache);
-            _lblServer.Text.Color = new Color4(245, 245, 245, 255);
+            _lblServer.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceCache);
-            _lblServerInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblServerInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblServerInfo);
 
             _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceCache);
-            _lblMode.Text.Color = new Color4(245, 245, 245, 255);
+            _lblMode.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME", ResourceCache);
-            _lblModeInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblModeInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblModeInfo);
 
             _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceCache);
-            _lblPlayers.Text.Color = new Color4(245, 245, 245, 255);
+            _lblPlayers.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceCache);
-            _lblPlayersInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblPlayersInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPlayersInfo);
 
             _lblPort = new Label("PORT:", "MICROGME", ResourceCache);
-            _lblPort.Text.Color = new Color4(245, 245, 245, 255);
+            _lblPort.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPort);
 
             _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME", ResourceCache);
-            _lblPortInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblPortInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPortInfo);
 
             _tabs = new TabbedMenu
@@ -269,7 +269,7 @@ namespace SS14.Client.State.States
 
                 Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache);
                 newLabel.Position = new Vector2i(0, offY);
-                newLabel.TextColor = Color4.Black;
+                newLabel.ForegroundColor = Color4.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.Components.Add(newLabel);
@@ -337,10 +337,10 @@ namespace SS14.Client.State.States
             // This might be a hacky solution, but the button loses focus way too fast.
             _btnReady.Focus = true;
 
-            _lblServerInfo.Text.Text = _serverName;
-            _lblModeInfo.Text.Text = _gameType;
-            _lblPlayersInfo.Text.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
-            _lblPortInfo.Text.Text = _serverPort.ToString();
+            _lblServerInfo.Text = _serverName;
+            _lblModeInfo.Text = _gameType;
+            _lblPlayersInfo.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
+            _lblPortInfo.Text = _serverPort.ToString();
         }
 
         public void UpdateGUIPosition()

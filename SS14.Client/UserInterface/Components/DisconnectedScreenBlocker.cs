@@ -11,7 +11,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class DisconnectedScreenBlocker : GuiComponent
+    public class DisconnectedScreenBlocker : Control
     {
         private readonly Button _mainMenuButton;
         private readonly Label _message;
@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Components
             _mainMenuButton = new Button("Main Menu", _resourceCache);
             _mainMenuButton.Clicked += MainMenuButtonClicked;
             _mainMenuButton.Label.Color = new Color4(245, 245, 245, 255);
-            _message.Text.Color = new Color4(245, 245, 245, 255);
+            _message.ForegroundColor = new Color4(245, 245, 245, 255);
         }
 
         private void MainMenuButtonClicked(Button sender)
@@ -65,11 +65,11 @@ namespace SS14.Client.UserInterface.Components
             _mainMenuButton.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color4.Black);
-            _message.Render();
-            _mainMenuButton.Render();
+            _message.Draw();
+            _mainMenuButton.Draw();
         }
 
         public override void Dispose()

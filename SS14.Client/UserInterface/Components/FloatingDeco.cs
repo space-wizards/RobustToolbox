@@ -15,7 +15,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class FloatingDecoration : GuiComponent
+    internal class FloatingDecoration : Control
     {
         private readonly IResourceCache _resourceCache;
         private readonly UserInterfaceManager _uiMgr;
@@ -116,7 +116,7 @@ namespace SS14.Client.UserInterface.Components
             Position = new Vector2i((int) SpriteLocation.X, (int) SpriteLocation.Y);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             DrawSprite.Rotation = spriteRotation;
             DrawSprite.Position = (SpriteLocation + ParallaxOffset).Convert();

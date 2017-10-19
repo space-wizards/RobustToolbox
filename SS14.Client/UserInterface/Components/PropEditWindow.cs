@@ -69,11 +69,11 @@ namespace SS14.Client.UserInterface.Components
 
             ObjPropList.Clear();
             assigned = newObj;
-            title.Text.Text = "Object Properties : " + assigned;
+            title.Text = "Object Properties : " + assigned;
             BuildPropList();
         }
 
-        private GuiComponent CreateEditField(object o, FieldInfo field)
+        private Control CreateEditField(object o, FieldInfo field)
         {
             if (o is String || o is string)
             {
@@ -149,7 +149,7 @@ namespace SS14.Client.UserInterface.Components
         private void editEnum_ItemSelected(Label item, Listbox sender)
         {
             var field = (FieldInfo) sender.UserData;
-            object state = Enum.Parse(field.FieldType, item.Text.Text, true);
+            object state = Enum.Parse(field.FieldType, item.Text, true);
             if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, state);
         }
@@ -213,7 +213,7 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.LabelName.Clicked += LabelName_Clicked;
                         newEntry.LabelName.Update(0);
 
-                        newEntry.LabelName.Text.Text = item.ToString();
+                        newEntry.LabelName.Text = item.ToString();
                         newEntry.LabelName.Update(0);
                         pos += 5 + newEntry.LabelName.ClientArea.Height;
 
@@ -238,7 +238,7 @@ namespace SS14.Client.UserInterface.Components
                     newEntry.LabelName.Clicked += LabelName_Clicked;
                     newEntry.LabelName.Update(0);
 
-                    GuiComponent edit = CreateEditField(fieldVal, field);
+                    Control edit = CreateEditField(fieldVal, field);
                     if (edit != null && newEntry.CanEdit)
                     {
                         edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right + 5,
@@ -251,7 +251,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                     else
                     {
-                        newEntry.LabelName.Text.Text = field.Name + " = " +
+                        newEntry.LabelName.Text = field.Name + " = " +
                                                        (fieldVal == null ? "null" : fieldVal.ToString());
                         newEntry.LabelName.Update(0);
                         pos += 5 + newEntry.LabelName.ClientArea.Height;

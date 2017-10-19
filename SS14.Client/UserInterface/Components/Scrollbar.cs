@@ -13,7 +13,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class Scrollbar : GuiComponent
+    public class Scrollbar : Control
     {
         //IMPORTANT: With this implementation you are not guaranteed to get a step size of 1.
         //           If the Bar is shorter than the maximum value the step size will increase.
@@ -161,7 +161,7 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (!IsVisible()) return;
             if (drawBackground)

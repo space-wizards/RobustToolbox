@@ -10,7 +10,7 @@ using System;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class ImageButton : GuiComponent
+    public class ImageButton : Control
     {
         public delegate void ImageButtonPressHandler(ImageButton sender);
         
@@ -65,9 +65,9 @@ namespace SS14.Client.UserInterface.Components
         }
         
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
 
             if (_drawSprite == null)
                 return;

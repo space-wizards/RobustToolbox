@@ -14,7 +14,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Progress_Bar : GuiComponent
+    internal class Progress_Bar : Control
     {
         private readonly IResourceCache _resourceCache;
         protected Vector2i Size;
@@ -66,7 +66,7 @@ namespace SS14.Client.UserInterface.Components
             Value++;
         }
 
-        public override void Render()
+        public override void Draw()
         {
             percent = (val - min)/(max - min);
             float barWidth = Size.X*percent;

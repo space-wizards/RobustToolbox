@@ -118,65 +118,65 @@ namespace SS14.Client.State.States
         private void InitializeGui()
         {
             _uiScreen = new Screen();
-            _uiScreen.Background = ResourceCache.GetSprite("ss14_logo_background");
+            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             UserInterfaceManager.AddComponent(_uiScreen);
 
             _bgPanel = new Panel();
-            _bgPanel.Background = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
-            _bgPanel.Background.Color = new Color(128, 128, 128, 128);
+            _bgPanel.BackgroundImage = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
+            _bgPanel.BackgroundImage.Color = new Color(128, 128, 128, 128);
             _bgPanel.Alignment = Align.HCenter | Align.VCenter;
             _bgPanel.Layout += (sender, args) =>
             {
                 _bgPanel.Width = (int) (_uiScreen.Width * 0.85f);
                 _bgPanel.Height = (int) (_uiScreen.Height * 0.85f);
             };
-            _uiScreen.AddComponent(_bgPanel);
+            _uiScreen.AddControl(_bgPanel);
 
             _lblTitle = new Label("Options", "CALIBRI", 48, ResourceCache);
             _lblTitle.LocalPosition = new Vector2i(10, 10);
-            _bgPanel.AddComponent(_lblTitle);
+            _bgPanel.AddControl(_lblTitle);
 
             _lstResolution = new Listbox(250, 150, ResourceCache);
             _lstResolution.Alignment = Align.Bottom;
             _lstResolution.LocalPosition = new Vector2i(50, 50);
             _lstResolution.ItemSelected += _lstResolution_ItemSelected;
             PopulateAvailableVideoModes(_lstResolution);
-            _lblTitle.AddComponent(_lstResolution);
+            _lblTitle.AddControl(_lstResolution);
 
             _chkFullScreen = new Checkbox(ResourceCache);
             _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             _chkFullScreen.ValueChanged += _chkFullScreen_ValueChanged;
             _chkFullScreen.Alignment = Align.Bottom;
             _chkFullScreen.LocalPosition = new Vector2i(0, 50);
-            _lstResolution.AddComponent(_chkFullScreen);
+            _lstResolution.AddControl(_chkFullScreen);
 
             _lblFullScreen = new Label("Fullscreen", "CALIBRI", ResourceCache);
             _lblFullScreen.Alignment = Align.Right;
             _lblFullScreen.LocalPosition = new Vector2i(3, 0);
-            _chkFullScreen.AddComponent(_lblFullScreen);
+            _chkFullScreen.AddControl(_lblFullScreen);
 
             _chkVSync = new Checkbox(ResourceCache);
             _chkVSync.Value = ConfigurationManager.GetCVar<bool>("display.vsync");
             _chkVSync.ValueChanged += _chkVSync_ValueChanged;
             _chkVSync.Alignment = Align.Bottom;
             _chkVSync.LocalPosition = new Vector2i(0, 3);
-            _chkFullScreen.AddComponent(_chkVSync);
+            _chkFullScreen.AddControl(_chkVSync);
 
             _lblVSync = new Label("Vsync", "CALIBRI", ResourceCache);
             _lblVSync.Alignment = Align.Right;
             _lblVSync.LocalPosition = new Vector2i(3, 0);
-            _chkVSync.AddComponent(_lblVSync);
+            _chkVSync.AddControl(_lblVSync);
 
             _btnApply = new Button("Apply Settings", ResourceCache);
             _btnApply.Clicked += _btnApply_Clicked;
             _btnApply.Alignment = Align.Bottom | Align.Right;
             _btnApply.Resize += (sender, args) => { _btnApply.LocalPosition = new Vector2i(-10 + -_btnApply.ClientArea.Width, -10 + -_btnApply.ClientArea.Height); };
-            _bgPanel.AddComponent(_btnApply);
+            _bgPanel.AddControl(_btnApply);
 
             _btnBack = new Button("Back", ResourceCache);
             _btnBack.Clicked += _btnBack_Clicked;
             _btnBack.Resize += (sender, args) => { _btnBack.LocalPosition = new Vector2i(-10 + -_btnBack.ClientArea.Width, 0); };
-            _btnApply.AddComponent(_btnBack);
+            _btnApply.AddControl(_btnBack);
         }
 
         private void PopulateAvailableVideoModes(Listbox resListBox)
@@ -235,9 +235,9 @@ namespace SS14.Client.State.States
 
         private void _lstResolution_ItemSelected(Label item, Listbox sender)
         {
-            if (_videoModeList.ContainsKey(item.Text.Text))
+            if (_videoModeList.ContainsKey(item.Text))
             {
-                var sel = _videoModeList[item.Text.Text];
+                var sel = _videoModeList[item.Text];
                 ConfigurationManager.SetCVar("display.width", (int) sel.Width);
                 ConfigurationManager.SetCVar("display.height", (int) sel.Height);
 

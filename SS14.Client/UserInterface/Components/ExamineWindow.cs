@@ -37,9 +37,9 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
             if (_entitySprite == null) return;
 
             var bounds = _entitySprite.GetLocalBounds();

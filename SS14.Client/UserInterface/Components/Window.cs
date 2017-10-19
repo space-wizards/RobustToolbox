@@ -64,15 +64,15 @@ namespace SS14.Client.UserInterface.Components
             closeButton.Update(frameTime);
         }
 
-        public override void Render() // Renders the main window
+        public override void Draw() // Renders the main window
         {
             if (Disposing || !IsVisible()) return;
-            gradient.Render();
+            gradient.Draw();
 
             //TODO RenderTargetRectangle
-            base.Render();
-            title.Render();
-            if (closeButtonVisible) closeButton.Render();
+            base.Draw();
+            title.Draw();
+            if (closeButtonVisible) closeButton.Draw();
         }
 
         public override void Dispose()
@@ -134,7 +134,7 @@ namespace SS14.Client.UserInterface.Components
         }
     }
 
-    public class GradientBox : GuiComponent
+    public class GradientBox : Control
     {
         private readonly VertexTypeList.PositionDiffuse2DTexture1[] box =
             new VertexTypeList.PositionDiffuse2DTexture1[4];
@@ -178,7 +178,7 @@ namespace SS14.Client.UserInterface.Components
             throw new System.NotImplementedException();
         }
 
-        public override void Render()
+        public override void Draw()
         {
             //TODO Window Render
         }

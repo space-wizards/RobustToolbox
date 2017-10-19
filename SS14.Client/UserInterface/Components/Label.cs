@@ -9,42 +9,46 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Label : GuiComponent
+    internal class Label : Control
     {
         public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
-        
-        public Color4 BackgroundColor = Color4.Gray;
-        public Color4 BorderColor = Color4.Black;
-        public float BorderWidth = 2f;
-        public int FixedHeight = -1;
-        public int FixedWidth = -1;
-        public Color4 HighlightColor = Color4.Gray;
-        public TextSprite Text;
+
+        private const uint DefaultFontSize = 14;
+
+        public int FixedHeight { get; set; } = -1;
+        public int FixedWidth { get; set; } = -1;
+        public Color4 HighlightColor { get; set; } = Color4.Gray;
+        private TextSprite _text;
 
         public uint FontSize
         {
-            get => Text.FontSize;
-            set => Text.FontSize = value;
+            get => _text.FontSize;
+            set => _text.FontSize = value;
         }
 
-        public Color4 TextColor
+        public string Text
         {
-            get => Text.Color;
-            set => Text.Color = value;
+            get => _text.Text;
+            set => _text.Text = value;
         }
 
-        public bool DrawBorder { get; set; }
-        public bool DrawBackground { get; set; }
+        public override Color4 ForegroundColor
+        {
+            get => _text.Color;
+            set => _text.Color = value;
+        }
+        
         public bool DrawTextHighlight { get; set; }
+
+        public Label(string text, string font, IResourceCache resourceCache)
+            : this(text, font, DefaultFontSize, resourceCache) { }
 
         public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
-            Text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font, size) {Color = Color4.Black};
-        }
-
-        public Label(string text, string font, IResourceCache resourceCache)
-        {
-            Text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) {Color = Color4.Black};
+            _text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font, size)
+            {
+                Color = base.ForegroundColor
+            };
         }
 
         public event LabelPressHandler Clicked;
@@ -53,8 +57,8 @@ namespace SS14.Client.UserInterface.Components
         protected override void OnCalcRect()
         {
             _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(
-                FixedWidth == -1 ? Text.Width : FixedWidth,
-                FixedHeight == -1 ? Text.Height : FixedHeight));
+                FixedWidth == -1 ? _text.Width : FixedWidth,
+                FixedHeight == -1 ? _text.Height : FixedHeight));
         }
 
         /// <inheritdoc />
@@ -62,28 +66,24 @@ namespace SS14.Client.UserInterface.Components
         {
             base.OnCalcPosition();
 
-            Text.Position = _screenPos;
+            _text.Position = _screenPos;
         }
 
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
-            if (DrawBackground)
-                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BackgroundColor);
             if (DrawTextHighlight)
-                CluwneLib.drawRectangle(Text.Position.X + 3, Text.Position.Y + 4, Text.Width, Text.Height - 9, BackgroundColor);
-            if (DrawBorder)
-                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderWidth, BorderColor);
+                CluwneLib.drawRectangle(_text.Position.X + 3, _text.Position.Y + 4, _text.Width, _text.Height - 9, BackgroundColor);
+                
+            _text.Draw();
 
-            Text.Draw();
-
-            base.Render();
+            base.Draw();
         }
 
         /// <inheritdoc />
         public override void Dispose()
         {
-            Text = null;
+            _text = null;
             Clicked = null;
             base.Dispose();
             GC.SuppressFinalize(this);

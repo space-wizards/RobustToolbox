@@ -300,7 +300,7 @@
     <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />
     <Compile Include="UserInterface\Components\ExamineWindow.cs" />
     <Compile Include="UserInterface\Components\FloatingDeco.cs" />
-    <Compile Include="UserInterface\Components\GuiComponent.cs" />
+    <Compile Include="UserInterface\Components\Control.cs" />
     <Compile Include="UserInterface\Components\ImageButton.cs" />
     <Compile Include="UserInterface\Components\Label.cs" />
     <Compile Include="UserInterface\Components\Listbox.cs" />

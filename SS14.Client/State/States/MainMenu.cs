@@ -37,21 +37,21 @@ namespace SS14.Client.State.States
         public MainScreen(IDictionary<Type, object> managers) : base(managers)
         {
             _uiScreen = new Screen();
-            _uiScreen.Background = ResourceCache.GetSprite("ss14_logo_background");
+            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
 
             var imgTitle = new SimpleImage();
             imgTitle.Sprite = "ss14_logo";
             imgTitle.Alignment = Align.Right;
             imgTitle.LocalPosition = new Vector2i(-550, 100);
-            _uiScreen.AddComponent(imgTitle);
+            _uiScreen.AddControl(imgTitle);
 
             var txtConnect = new Textbox(100, ResourceCache);
             txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
             txtConnect.Alignment = Align.Left | Align.Bottom;
             txtConnect.LocalPosition = new Vector2i(10, 50);
             txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
-            imgTitle.AddComponent(txtConnect);
+            imgTitle.AddControl(txtConnect);
 
             var btnConnect = new ImageButton();
             btnConnect.ImageNormal = "connect_norm";
@@ -70,7 +70,7 @@ namespace SS14.Client.State.States
                     NetworkManager.ClientDisconnect("Client disconnected from game.");
                 }
             };
-            txtConnect.AddComponent(btnConnect);
+            txtConnect.AddControl(btnConnect);
 
             var btnOptions = new ImageButton();
             btnOptions.ImageNormal = "options_norm";
@@ -87,7 +87,7 @@ namespace SS14.Client.State.States
 
                 StateManager.RequestStateChange<OptionsMenu>();
             };
-            btnConnect.AddComponent(btnOptions);
+            btnConnect.AddControl(btnOptions);
 
             var btnExit = new ImageButton();
             btnExit.ImageNormal = "exit_norm";
@@ -95,14 +95,14 @@ namespace SS14.Client.State.States
             btnExit.Alignment = Align.Left | Align.Bottom;
             btnExit.LocalPosition = new Vector2i(0, 20);
             btnExit.Clicked += sender => CluwneLib.Stop();
-            btnOptions.AddComponent(btnExit);
+            btnOptions.AddControl(btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            lblVersion.TextColor = new Color4(245, 245, 245, 255);
+            lblVersion.ForegroundColor = new Color4(245, 245, 245, 255);
             lblVersion.Alignment = Align.Right | Align.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
-            _uiScreen.AddComponent(lblVersion);
+            _uiScreen.AddControl(lblVersion);
         }
 
         /// <inheritdoc />

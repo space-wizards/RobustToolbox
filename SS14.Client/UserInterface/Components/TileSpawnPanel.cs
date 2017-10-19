@@ -67,7 +67,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (Control curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).BackgroundColor = Color4.Gray;
         }
 
@@ -100,19 +100,19 @@ namespace SS14.Client.UserInterface.Components
                 if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
             }
 
-            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (Control curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).FixedWidth = maxWidth;
         }
 
         private void TileLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
+            foreach (Control curr in _tileList.Components.Where(curr => curr.GetType() == typeof (Label)))
                 ((Label) curr).BackgroundColor = Color4.Gray;
 
             var newObjInfo = new PlacementInformation
                                  {
                                      PlacementOption = "AlignTileAny",
-                                     TileType = IoCManager.Resolve<ITileDefinitionManager>()[sender.Text.Text].TileId,
+                                     TileType = IoCManager.Resolve<ITileDefinitionManager>()[sender.Text].TileId,
                                      Range = 400,
                                      IsTile = true
                                  };
@@ -128,10 +128,10 @@ namespace SS14.Client.UserInterface.Components
             base.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (Disposing || !IsVisible()) return;
-            base.Render();
+            base.Draw();
         }
 
         public override void Dispose()

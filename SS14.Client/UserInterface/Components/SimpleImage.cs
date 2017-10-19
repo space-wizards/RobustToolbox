@@ -13,7 +13,7 @@ namespace SS14.Client.UserInterface.Components
     /// <summary>
     ///     Displays an image on the screen.
     /// </summary>
-    public class SimpleImage : GuiComponent
+    public class SimpleImage : Control
     {
         private readonly IResourceCache _resourceCache;
 
@@ -45,9 +45,9 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
 
             _drawingSprite.Position = new Vector2f(_screenPos.X, _screenPos.Y);
             _drawingSprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));

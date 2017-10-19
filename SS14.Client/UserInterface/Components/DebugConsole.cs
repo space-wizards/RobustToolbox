@@ -62,7 +62,7 @@ namespace SS14.Client.UserInterface.Components
             Label newLabel = new Label(text, "CALIBRI", this.ResourceCache)
             {
                 Position = new Vector2i(5, last_y),
-                TextColor = color
+                ForegroundColor = color
             };
 
             newLabel.Update(0);
@@ -148,10 +148,10 @@ namespace SS14.Client.UserInterface.Components
             e.RawMessage.Position = 0;
         }
 
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
-            if (input != null) input.Render();
+            base.Draw();
+            if (input != null) input.Draw();
         }
 
         public override void Dispose()

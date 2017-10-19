@@ -14,7 +14,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Listbox : GuiComponent
+    internal class Listbox : Control
     {
         public delegate void ListboxPressHandler(Label item, Listbox sender);
 
@@ -42,19 +42,20 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
-                {Color = Color4.Black};
+            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            _selectedLabel.Color = Color4.Black;
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);
-            _dropDown.SetVisible(false);
+            _dropDown.Visible = true;
+            _dropDown.Alignment = Align.Bottom;
+            _dropDown.LocalPosition = new Vector2i();
+            _dropDown.Parent = this;
 
             if (initialOptions != null)
             {
                 _contentStrings = initialOptions;
                 RebuildList();
             }
-
-            Update(0);
         }
 
         /// <inheritdoc />
@@ -83,12 +84,10 @@ namespace SS14.Client.UserInterface.Components
             base.OnCalcPosition();
 
             _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, 0 + (int) (ClientArea.Height / 2f) - (int) (_selectedLabel.Height / 2f));
-
-            _dropDown.Position = Position + new Vector2i(ClientArea.Left + (int) ((ClientArea.Width - _dropDown.ClientArea.Width) / 2f), ClientArea.Bottom);
         }
 
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
             _listboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
             _listboxMain.SetTransformToRect(_clientAreaMain.Translated(Position));
@@ -100,10 +99,10 @@ namespace SS14.Client.UserInterface.Components
 
             _selectedLabel.Draw();
 
-            base.Render();
+            base.Draw();
 
             // drop down covers children, prob want a better way to do this
-            _dropDown.Render();
+            _dropDown.Draw();
         }
 
         /// <inheritdoc />
@@ -189,11 +188,12 @@ namespace SS14.Client.UserInterface.Components
         {
             str = str ?? "str";
 
-            var selLabel = (from a in _dropDown.Components
-                where a.GetType() == typeof(ListboxItem)
-                let b = (ListboxItem) a
-                where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
-                select b).FirstOrDefault();
+            var selLabel = _dropDown.Components
+                .Where(a => a.GetType() == typeof(ListboxItem))
+                .Select(a => new {a, b = (ListboxItem) a})
+                .Where(t => string.Equals(t.b.Text, str, StringComparison.InvariantCultureIgnoreCase))
+                .Select(t => t.b)
+                .FirstOrDefault();
 
             if (selLabel != null)
                 SetItem(selLabel, raiseEvent);
@@ -207,11 +207,12 @@ namespace SS14.Client.UserInterface.Components
             foreach (
                 var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceCache)))
             {
-                newEntry.Position = new Vector2i(0, offset);
-                newEntry.Update(0);
+                newEntry.LocalPosition = new Vector2i(0, offset);
+                newEntry.DoLayout();
+                //newEntry.Update(0);
                 newEntry.Clicked += NewEntryClicked;
                 _dropDown.Components.Add(newEntry);
-                offset += newEntry.Text.Height;
+                offset += newEntry.Height;
             }
         }
 
@@ -225,7 +226,7 @@ namespace SS14.Client.UserInterface.Components
             if (ItemSelected != null && raiseEvent) ItemSelected(toSet, this);
 
             CurrentlySelected = toSet;
-            _selectedLabel.Text = toSet.Text.Text;
+            _selectedLabel.Text = toSet.Text;
             _dropDown.SetVisible(false);
 
             ((ListboxItem) toSet).Selected = true;
@@ -245,22 +246,51 @@ namespace SS14.Client.UserInterface.Components
     /// </summary>
     internal class ListboxItem : Label
     {
-        private readonly int _width;
         public bool Selected;
 
-        public ListboxItem(string text, int width, IResourceCache resourceCache)
+        public ListboxItem(string text, int maxWidth, IResourceCache resourceCache)
             : base(text, "CALIBRI", resourceCache)
         {
-            _width = width;
+            FixedWidth = maxWidth;
             DrawBorder = true;
             DrawBackground = true;
         }
 
+        public override void MouseMove(MouseMoveEventArgs e)
+        {
+            base.MouseMove(e);
+
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
+            {
+                if (Selected)
+                    BackgroundColor = new Color4(47, 79, 79, 255);
+                else
+                    BackgroundColor = Color4.Gray;
+            }
+        }
+        
+        protected override void OnCalcRect()
+        {
+            //_clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(FixedWidth, Text.Height));
+
+            base.OnCalcRect();
+        }
+        
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+
+            //Text.Position = Position;
+        }
+        
         public override void Update(float frameTime)
         {
-            Text.Position = Position;
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i(_width, Text.Height));
-            BackgroundColor = Selected ? new Color4(47, 79, 79, 255) : Color4.Gray;
+            base.Update(frameTime);
+        }
+
+        public override void Draw()
+        {
+            base.Draw();
         }
     }
 }

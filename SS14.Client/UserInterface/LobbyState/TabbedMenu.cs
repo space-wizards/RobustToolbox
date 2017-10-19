@@ -13,7 +13,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class TabbedMenu : GuiComponent
+    internal class TabbedMenu : Control
     {
         private readonly IResourceCache _resourceCache;
 
@@ -135,14 +135,14 @@ namespace SS14.Client.UserInterface.Components
             ClientArea = Box2i.FromDimensions(Position, new Vector2i((int) size.X, (int) size.Y));
         }
 
-        public override void Render()
+        public override void Draw()
         {
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
                 Sprite currTabSprite = curr.Value.tabSprite;
 
-                curr.Key.Render();
+                curr.Key.Draw();
 
                 if (currTabSprite != null)
                 {
@@ -155,7 +155,7 @@ namespace SS14.Client.UserInterface.Components
             }
 
             if (_activeTab != null)
-                _activeTab.Render();
+                _activeTab.Draw();
         }
 
         public override void Dispose()

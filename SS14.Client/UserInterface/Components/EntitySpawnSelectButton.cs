@@ -13,7 +13,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class EntitySpawnSelectButton : GuiComponent
+    public class EntitySpawnSelectButton : Control
     {
         #region Delegates
 
@@ -104,7 +104,7 @@ namespace SS14.Client.UserInterface.Components
                                                 : ((int) name.Height + 5)) + 10));
         }
 
-        public override void Render()
+        public override void Draw()
         {
            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                        selected ? new Color4(34, 139, 34, 255) : new Color4(255, 250, 240, 255));

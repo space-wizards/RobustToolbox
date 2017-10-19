@@ -5,17 +5,16 @@ using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class ScrollableContainer : GuiComponent
+    public class ScrollableContainer : Control
     {
         private const float BorderSize = 1.0f;
 
-        public readonly List<GuiComponent> Components = new List<GuiComponent>();
+        public readonly List<Control> Components = new List<Control>();
         protected readonly IResourceCache ResourceCache;
         protected readonly Scrollbar ScrollbarH;
         protected readonly Scrollbar ScrollbarV;
@@ -26,7 +25,7 @@ namespace SS14.Client.UserInterface.Components
         protected bool DrawBorder = true;
 
         private RenderImage _clippingRi;
-        private GuiComponent _innerFocus;
+        private Control _innerFocus;
         private float _maxX;
         private float _maxY;
 
@@ -52,23 +51,21 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        protected override void OnCalcRect() { }
-
-        public override void Update(float frameTime)
+        protected override void OnCalcRect()
         {
-            if (Disposing || !IsVisible()) return;
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int) _clippingRi.Width, (int) _clippingRi.Height));
+            // ugh...
+            ScrollbarH.size = ScrollbarV.IsVisible() ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
+            ScrollbarV.size = ScrollbarH.IsVisible() ? Size.Y - ScrollbarH.ClientArea.Height : Size.Y;
 
-            if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
+            _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) _clippingRi.Width, (int) _clippingRi.Height));
+        }
 
+        protected override void OnCalcPosition()
+        {
             ScrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
             ScrollbarV.Position = new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
 
-            if (ScrollbarV.IsVisible()) ScrollbarH.size = Size.X - ScrollbarV.ClientArea.Width;
-            else ScrollbarH.size = Size.X;
-
-            if (ScrollbarH.IsVisible()) ScrollbarV.size = Size.Y - ScrollbarH.ClientArea.Height;
-            else ScrollbarV.size = Size.Y;
+            base.OnCalcPosition();
 
             _maxX = 0;
             _maxY = 0;
@@ -77,37 +74,58 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (component.Position.X + component.ClientArea.Width > _maxX)
                     _maxX = component.Position.X + component.ClientArea.Width;
+
                 if (component.Position.Y + component.ClientArea.Height > _maxY)
                     _maxY = component.Position.Y + component.ClientArea.Height;
             }
+        }
 
-            ScrollbarH.max = (int) _maxX - ClientArea.Width +
-                             (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
+        public override void DoLayout()
+        {
+            base.DoLayout();
+
+            /*
+            foreach (var component in Components)
+            {
+                component.Position = new Vector2i(component.Position.X - (int)ScrollbarH.Value, component.Position.Y - (int)ScrollbarV.Value);
+                component.Update(0);
+            }
+            */
+        }
+
+        public override void Update(float frameTime)
+        {
+            if (Disposing || !IsVisible()) return;
+
+            if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
+
+            ScrollbarH.max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
             ScrollbarH.SetVisible(_maxX > _clippingRi.Width);
 
-            ScrollbarV.max = (int) _maxY - ClientArea.Height +
-                             (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
+            ScrollbarV.max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
             ScrollbarV.SetVisible(_maxY > _clippingRi.Height);
 
             ScrollbarH.Update(frameTime);
             ScrollbarV.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (Disposing || !IsVisible()) return;
 
-            _clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
+            // the rectangle should always be completely covered with draws, no point clearing
+            //_clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
+
             _clippingRi.BeginDrawing();
 
             foreach (var component in Components)
             {
                 if (_innerFocus != null && component == _innerFocus) continue;
+
                 var oldPos = component.Position;
-                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value,
-                    component.Position.Y - (int) ScrollbarV.Value);
+                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
-                component.Render();
+                component.Draw();
 
                 component.Position = oldPos;
                 component.Update(0);
@@ -118,8 +136,9 @@ namespace SS14.Client.UserInterface.Components
                 var oldPos = _innerFocus.Position;
                 _innerFocus.Position = new Vector2i(_innerFocus.Position.X - (int) ScrollbarH.Value,
                     _innerFocus.Position.Y - (int) ScrollbarV.Value);
+
                 _innerFocus.Update(0); //2 Updates per frame D:
-                _innerFocus.Render();
+                _innerFocus.Draw();
                 _innerFocus.Position = oldPos;
                 _innerFocus.Update(0);
             }
@@ -127,12 +146,14 @@ namespace SS14.Client.UserInterface.Components
             _clippingRi.EndDrawing();
             _clippingRi.Blit(Position.X, Position.Y, _clippingRi.Height, _clippingRi.Width, Color.White, BlitterSizeMode.None);
 
-            ScrollbarH.Render();
-            ScrollbarV.Render();
+            ScrollbarH.Draw();
+            ScrollbarV.Draw();
 
             if (DrawBorder)
-                CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, BorderSize, Color4.Black);
-            _clippingRi.EndDrawing();
+            {
+                var screenRect = ClientArea.Translated(Position);
+                CluwneLib.drawHollowRectangle(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, BorderSize, Color4.Black);
+            }
         }
 
         public override void Dispose()
@@ -162,7 +183,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (ClientArea.Contains(e.X, e.Y))
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
             {
                 var mbe = new MouseButtonEvent();
                 mbe.X = e.X - Position.X + (int) ScrollbarH.Value;
@@ -269,7 +290,7 @@ namespace SS14.Client.UserInterface.Components
             if (ScrollbarV.IsVisible()) ScrollbarV.Value = 0;
         }
 
-        private void SetFocus(GuiComponent newFocus)
+        private void SetFocus(Control newFocus)
         {
             if (_innerFocus != null)
             {

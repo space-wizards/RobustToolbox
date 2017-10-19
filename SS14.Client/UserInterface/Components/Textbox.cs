@@ -15,7 +15,7 @@ using KeyEventArgs = SFML.Window.KeyEventArgs;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Textbox : GuiComponent
+    internal class Textbox : Control
     {
         public delegate void TextSubmitHandler(string text, Textbox sender);
 
@@ -119,7 +119,7 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
             if (drawColor != Color4.White)
             {
@@ -150,7 +150,7 @@ namespace SS14.Client.UserInterface.Components
 
             TextSprite.Draw();
 
-            base.Render();
+            base.Draw();
         }
 
         /// <inheritdoc />

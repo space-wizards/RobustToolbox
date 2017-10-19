@@ -12,7 +12,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class Showcase : GuiComponent
+    public class Showcase : Control
     {
         //TODO Make selection repond to mousewheel
 
@@ -159,7 +159,7 @@ namespace SS14.Client.UserInterface.Components
             _selectionGlow.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (_items.Count > 0)
             {
@@ -173,7 +173,7 @@ namespace SS14.Client.UserInterface.Components
                             new Vector2i(
                                 ClientArea.Left + (int) (ClientArea.Width/2f - _selectionGlow.ClientArea.Width/2f),
                                 ClientArea.Top + (int) (ClientArea.Height/2f - _selectionGlow.ClientArea.Height/2f));
-                        _selectionGlow.Render();
+                        _selectionGlow.Draw();
                     }
 
                     KeyValuePair<ImageButton, Object> selected = _items[Selected];
@@ -183,7 +183,7 @@ namespace SS14.Client.UserInterface.Components
                     if (FadeItems)
                         ctemp = Color4.White;
                     selected.Key.Color = ctemp;
-                    selected.Key.Render();
+                    selected.Key.Draw();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
                     int lastPosRight = selected.Key.ClientArea.Right + ItemSpacing;
@@ -208,7 +208,7 @@ namespace SS14.Client.UserInterface.Components
                                 ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedLeft.Key.Color = ctemp;
 
-                            selectedLeft.Key.Render();
+                            selectedLeft.Key.Draw();
                         }
 
                         //Right
@@ -225,7 +225,7 @@ namespace SS14.Client.UserInterface.Components
                             if (FadeItems)
                                 ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedRight.Key.Color = ctemp;
-                            selectedRight.Key.Render();
+                            selectedRight.Key.Draw();
                         }
                     }
                 }
@@ -233,8 +233,8 @@ namespace SS14.Client.UserInterface.Components
 
             if (ShowArrows)
             {
-                _buttonLeft.Render();
-                _buttonRight.Render();
+                _buttonLeft.Draw();
+                _buttonRight.Draw();
             }
         }
 

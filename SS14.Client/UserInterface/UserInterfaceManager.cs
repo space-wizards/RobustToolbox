@@ -32,19 +32,19 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///  List of iGuiComponents. Components in this list will recieve input, updates and net messages.
         /// </summary>
-        private readonly List<GuiComponent> _components = new List<GuiComponent>();
+        private readonly List<Control> _components = new List<Control>();
 
         [Dependency]
         private readonly IConfigurationManager _config;
         [Dependency]
         private readonly IResourceCache _resourceCache;
-        private GuiComponent _currentFocus;
+        private Control _currentFocus;
         private Sprite _cursorSprite;
         private DebugConsole _console;
 
         private Vector2i dragOffset = new Vector2i();
         private bool moveMode;
-        private GuiComponent movingComp;
+        private Control movingComp;
         private bool showCursor = true;
 
         public void PostInject()
@@ -79,7 +79,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void DisposeAllComponents()
         {
-            foreach (GuiComponent x in _components.ToList())
+            foreach (Control x in _components.ToList())
             {
                 x.Dispose();
             }
@@ -91,38 +91,26 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void DisposeAllComponents<T>()
         {
-            List<GuiComponent> componentsOfType = (from GuiComponent component in _components
+            List<Control> componentsOfType = (from Control component in _components
                                                     where component.GetType() == typeof(T)
                                                     select component).ToList();
 
-            foreach (GuiComponent current in componentsOfType)
+            foreach (Control current in componentsOfType)
             {
                 current.Dispose();
                 _components.Remove(current);
             }
         }
 
-        public void AddComponent(GuiComponent component)
+        public void AddComponent(Control component)
         {
             _components.Add(component);
         }
 
-        public void RemoveComponent(GuiComponent component)
+        public void RemoveComponent(Control component)
         {
             if (_components.Contains(component))
                 _components.Remove(component);
-        }
-
-        /// <summary>
-        ///  Calls the custom Update Method for Components. This allows components to update ui elements if they implement the the needed method.
-        /// </summary>
-        public void ComponentUpdate(GuiComponentType componentType, params object[] args)
-        {
-            GuiComponent firstOrDefault = (from GuiComponent comp in _components
-                                            where comp.ComponentClass == componentType
-                                            select comp).FirstOrDefault();
-            if (firstOrDefault != null)
-                firstOrDefault.ComponentUpdate(args);
         }
 
         /// <summary>
@@ -148,7 +136,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///  Sets focus for a component.
         /// </summary>
-        public void SetFocus(GuiComponent newFocus)
+        public void SetFocus(Control newFocus)
         {
             if (_currentFocus != null)
             {
@@ -173,7 +161,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///  Removes focus for given control if control has focus.
         /// </summary>
-        public void RemoveFocus(GuiComponent remFocus)
+        public void RemoveFocus(Control remFocus)
         {
             if (_currentFocus != remFocus)
                 return;
@@ -184,7 +172,7 @@ namespace SS14.Client.UserInterface
 
         public void ResizeComponents()
         {
-            foreach (GuiComponent guiComponent in _components)
+            foreach (Control guiComponent in _components)
             {
                 guiComponent.DoLayout();
             }
@@ -212,7 +200,7 @@ namespace SS14.Client.UserInterface
 
             if (moveMode)
             {
-                foreach (GuiComponent comp in _components)
+                foreach (Control comp in _components)
                 {
                     if (comp.ClientArea.Contains(e.X, e.Y))
                     {
@@ -226,7 +214,7 @@ namespace SS14.Client.UserInterface
             }
             else
             {
-                IOrderedEnumerable<GuiComponent> inputList = from GuiComponent comp in _components
+                IOrderedEnumerable<Control> inputList = from Control comp in _components
                                                               where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
@@ -234,7 +222,7 @@ namespace SS14.Client.UserInterface
                                                               orderby comp.Focus descending
                                                               select comp;
 
-                foreach (GuiComponent current in inputList)
+                foreach (Control current in inputList)
                     if (current.MouseDown(e))
                     {
                         SetFocus(current);
@@ -261,7 +249,7 @@ namespace SS14.Client.UserInterface
             }
             else
             {
-                IOrderedEnumerable<GuiComponent> inputList = from GuiComponent comp in _components
+                IOrderedEnumerable<Control> inputList = from Control comp in _components
                                                               where comp.ReceiveInput
                                                               orderby comp.ZDepth ascending
                                                               orderby comp.IsVisible() descending
@@ -293,12 +281,12 @@ namespace SS14.Client.UserInterface
                 _console.MouseMove(e);
             }
 
-            IOrderedEnumerable<GuiComponent> inputList = from GuiComponent comp in _components
+            IOrderedEnumerable<Control> inputList = from Control comp in _components
                                                           where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           select comp;
 
-            foreach (GuiComponent current in inputList)
+            foreach (Control current in inputList)
                 current.MouseMove(e);
         }
 
@@ -312,7 +300,7 @@ namespace SS14.Client.UserInterface
                 _console.MouseWheelMove(e);
             }
 
-            GuiComponent inputTo = (from GuiComponent comp in _components
+            Control inputTo = (from Control comp in _components
                                      where comp.ReceiveInput
                                      where comp.Focus
                                      select comp).FirstOrDefault();
@@ -352,7 +340,7 @@ namespace SS14.Client.UserInterface
                 if (_console.KeyDown(e)) return true;
             }
 
-            IOrderedEnumerable<GuiComponent> inputList = from GuiComponent comp in _components
+            IOrderedEnumerable<Control> inputList = from Control comp in _components
                                                           where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
@@ -370,7 +358,7 @@ namespace SS14.Client.UserInterface
                 if (_console.TextEntered(e)) return true;
             }
 
-            IOrderedEnumerable<GuiComponent> inputList = from GuiComponent comp in _components
+            IOrderedEnumerable<Control> inputList = from Control comp in _components
                                                           where comp.ReceiveInput
                                                           orderby comp.ZDepth ascending
                                                           orderby comp.IsVisible() descending
@@ -386,41 +374,11 @@ namespace SS14.Client.UserInterface
         #region Component retrieval
 
         /// <summary>
-        ///  Returns all components of given type.
-        /// </summary>
-        public IEnumerable<GuiComponent> GetComponentsByType(Type type)
-        {
-            return from GuiComponent comp in _components
-                   where comp.GetType() == type
-                   select comp;
-        }
-
-        /// <summary>
-        ///  Returns the first component with a matching Type or null if none.
-        /// </summary>
-        public GuiComponent GetSingleComponentByType(Type componentType)
-        {
-            return (from GuiComponent comp in _components
-                    where comp.GetType() == componentType
-                    select comp).FirstOrDefault();
-        }
-
-        /// <summary>
-        ///  Returns the first component with a matching GuiComponentType or null if none.
-        /// </summary>
-        public GuiComponent GetSingleComponentByGuiComponentType(GuiComponentType componentType)
-        {
-            return (from GuiComponent comp in _components
-                    where comp.ComponentClass == componentType
-                    select comp).FirstOrDefault();
-        }
-
-        /// <summary>
         ///  Returns all components with matching GuiComponentType.
         /// </summary>
-        public IEnumerable<GuiComponent> GetComponentsByGuiComponentType(GuiComponentType componentType)
+        public IEnumerable<Control> GetComponentsByGuiComponentType(GuiComponentType componentType)
         {
-            return from GuiComponent comp in _components
+            return from Control comp in _components
                    where comp.ComponentClass == componentType
                    select comp;
         }
@@ -441,8 +399,8 @@ namespace SS14.Client.UserInterface
         public void HandleComponentMessage(NetIncomingMessage msg)
         {
             var component = (GuiComponentType)msg.ReadByte();
-            IEnumerable<GuiComponent> targetComponents = GetComponentsByGuiComponentType(component);
-            foreach (GuiComponent current in targetComponents)
+            IEnumerable<Control> targetComponents = GetComponentsByGuiComponentType(component);
+            foreach (Control current in targetComponents)
                 current.HandleNetworkMessage(msg);
         }
 
@@ -460,7 +418,7 @@ namespace SS14.Client.UserInterface
             if (moveMode && movingComp != null)
                 movingComp.Position = (MousePos - dragOffset);
 
-            foreach (GuiComponent component in _components)
+            foreach (Control component in _components)
                 component.Update((float)e.Time);
         }
 
@@ -469,18 +427,18 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Render(FrameEventArgs e)
         {
-            IOrderedEnumerable<GuiComponent> renderList = from GuiComponent comp in _components
+            IOrderedEnumerable<Control> renderList = from Control comp in _components
                                                            where comp.IsVisible()
                                                            orderby comp.Focus ascending
                                                            orderby comp.ZDepth ascending
                                                            select comp;
 
-            foreach (GuiComponent component in renderList)
+            foreach (Control component in renderList)
             {
-                component.Render();
+                component.Draw();
             }
 
-            if (_console.IsVisible()) _console.Render();
+            if (_console.IsVisible()) _console.Draw();
 
             if (showCursor)
             {

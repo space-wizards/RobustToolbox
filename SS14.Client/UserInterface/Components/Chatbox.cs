@@ -183,12 +183,9 @@ namespace SS14.Client.UserInterface.Components
             {
                 var label = new Label(content, "CALIBRI", ResourceCache)
                 {
-                    Position = new Vector2i(5, last_y),
-                    Text =
-                    {
-                        Size = new Vector2i(ClientArea.Width - 10, lineHeight),
-                        Color = _chatColors[channel],
-                    }
+                    LocalPosition = new Vector2i(5, last_y),
+                    Size = new Vector2i(ClientArea.Width - 10, lineHeight),
+                    ForegroundColor = _chatColors[channel],
                 };
                 label.Update(0);
                 last_y = label.ClientArea.Bottom;
@@ -334,15 +331,15 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public override void Render()
+        public override void Draw()
         {
             if (_disposing || !IsVisible()) return;
             CluwneLib.BlendingMode = BlendingModes.Modulated;
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(0, 0, 0, 100));
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(211, 211, 211, 100));
             CluwneLib.BlendingMode = BlendingModes.None;
-            base.Render();
-            input.Render();
+            base.Draw();
+            input.Draw();
         }
     }
 }

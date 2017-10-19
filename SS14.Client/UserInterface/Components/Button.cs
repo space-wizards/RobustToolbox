@@ -13,7 +13,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-    internal class Button : GuiComponent
+    internal class Button : Control
     {
         public delegate void ButtonPressHandler(Button sender);
 
@@ -71,7 +71,7 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Render()
+        public override void Draw()
         {
             _buttonLeft.Color = _drawColor.Convert();
             _buttonMain.Color = _drawColor.Convert();
@@ -90,7 +90,7 @@ namespace SS14.Client.UserInterface.Components
 
             Label.Draw();
 
-            base.Render();
+            base.Draw();
         }
 
         /// <inheritdoc />

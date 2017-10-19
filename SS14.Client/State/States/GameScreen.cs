@@ -745,24 +745,6 @@ namespace SS14.Client.State.States
 
         #region Event Handlers
 
-        #region Buttons
-        private void menuButton_Clicked(ImageButton sender)
-        {
-            _menu.ToggleVisible();
-        }
-
-        private void statusButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 2);
-        }
-
-        private void inventoryButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
-        }
-
-        #endregion Buttons
-
         #region Messages
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)

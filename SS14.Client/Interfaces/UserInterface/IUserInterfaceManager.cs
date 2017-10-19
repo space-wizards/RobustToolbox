@@ -4,7 +4,6 @@ using OpenTK;
 using SFML.Window;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Components;
-using SS14.Shared;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -15,19 +14,18 @@ namespace SS14.Client.Interfaces.UserInterface
         IDebugConsole Console { get; }
         void Initialize();
 
-        void AddComponent(GuiComponent component);
-        void RemoveComponent(GuiComponent component);
-        void ComponentUpdate(GuiComponentType type, params object[] args);
+        void AddComponent(Control component);
+        void RemoveComponent(Control component);
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
-        void SetFocus(GuiComponent newFocus);
+        void SetFocus(Control newFocus);
         void RemoveFocus();
 
         /// <summary>
         ///     Remove focus, but only if the target is currently focused.
         /// </summary>
-        void RemoveFocus(GuiComponent target);
+        void RemoveFocus(Control target);
 
         void Update(FrameEventArgs e);
         void Render(FrameEventArgs e);

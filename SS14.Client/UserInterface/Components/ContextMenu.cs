@@ -18,7 +18,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface.Components
 {
-    public class ContextMenu : GuiComponent
+    public class ContextMenu : Control
     {
         private readonly Vector2 _buttonSize = new Vector2(150, 20);
         private readonly List<ContextMenuButton> _buttons = new List<ContextMenuButton>();
@@ -107,11 +107,11 @@ namespace SS14.Client.UserInterface.Components
                 button.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
             foreach (ContextMenuButton button in _buttons)
-                button.Render();
+                button.Draw();
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
                                                    Color4.Black);
         }
@@ -160,7 +160,7 @@ namespace SS14.Client.UserInterface.Components
         }
     }
 
-    public class ContextMenuButton : GuiComponent
+    public class ContextMenuButton : Control
     {
         #region Delegates
 
@@ -211,15 +211,15 @@ namespace SS14.Client.UserInterface.Components
             _textLabel.Update(frameTime);
         }
 
-        public override void Render()
+        public override void Draw()
         {
-            base.Render();
+            base.Draw();
             var bounds = _iconSprite.GetLocalBounds();
             var iconRect = Box2i.FromDimensions(ClientArea.Left + 3,
                                          ClientArea.Top + (int)(ClientArea.Height / 2f) - (int)(bounds.Height / 2f),
                                          (int)bounds.Width, (int)bounds.Height);
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, _currentColor);
-            _textLabel.Render();
+            _textLabel.Draw();
             _iconSprite.SetTransformToRect(iconRect);
             _iconSprite.Draw();
         }

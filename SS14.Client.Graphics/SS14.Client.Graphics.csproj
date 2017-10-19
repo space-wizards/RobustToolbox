@@ -109,6 +109,7 @@
     <Compile Include="Sprites\Sprite.cs" />
     <Compile Include="Sprites\Font.cs" />
     <Compile Include="Sprites\Shape.cs" />
+    <Compile Include="Sprites\Transformable.cs" />
     <Compile Include="Sprites\RectangleShape.cs" />
     <Compile Include="Sprites\TextSprite.cs" />
     <Compile Include="VertexData\VertexField.cs" />

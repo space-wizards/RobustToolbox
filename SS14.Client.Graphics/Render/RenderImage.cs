@@ -1,15 +1,13 @@
 ﻿using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics.Textures;
-using System;
-using System.Diagnostics;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
+using System;
+using System.Diagnostics;
 using Color = SS14.Shared.Maths.Color;
-using Vector2u = SS14.Shared.Maths.Vector2u;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Texture = SS14.Client.Graphics.Textures.Texture;
 using Sprite = SS14.Client.Graphics.Sprites.Sprite;
+using Texture = SS14.Client.Graphics.Textures.Texture;
+using Vector2i = SS14.Shared.Maths.Vector2i;
+using Vector2u = SS14.Shared.Maths.Vector2u;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -181,7 +179,7 @@ namespace SS14.Client.Graphics.Render
             }
         }
 
-        private void isStillDrawing()
+        private void IsStillDrawing()
         {
             if (DrawingToThis)
             {
@@ -336,10 +334,12 @@ namespace SS14.Client.Graphics.Render
         /// <param name="color"> Global color of object </param>
         public void Blit(Vector2 position, Vector2 size, Color color)
         {
-            isStillDrawing();
-            blitsprite = new Sprite(Texture);
-            blitsprite.Position = position;
-            blitsprite.Color = color;
+            IsStillDrawing();
+            blitsprite = new Sprite(Texture)
+            {
+                Position = position,
+                Color = color
+            };
             var bounds = blitsprite.LocalBounds;
 
             if (Mode == BlitterSizeMode.Scale)

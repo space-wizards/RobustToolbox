@@ -1,10 +1,10 @@
-using SS14.Client.Graphics.Render;
+﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Textures;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
-using STransformable = SFML.Graphics.Transformable;
-using SShape = SFML.Graphics.Shape;
 using SDrawable = SFML.Graphics.Drawable;
+using SShape = SFML.Graphics.Shape;
+using STransformable = SFML.Graphics.Transformable;
 
 namespace SS14.Client.Graphics.Sprites
 {

@@ -1,4 +1,4 @@
-using SS14.Client.Graphics.Utility;
+﻿using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
 using System;
 using STransformable = SFML.Graphics.Transformable;
@@ -34,6 +34,5 @@ namespace SS14.Client.Graphics.Sprites
             get => Angle.FromDegrees(SFMLTransformable.Rotation);
             set => SFMLTransformable.Rotation = (float)value.Degrees;
         }
-
     }
 }

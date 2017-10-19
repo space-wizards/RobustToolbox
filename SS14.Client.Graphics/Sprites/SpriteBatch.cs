@@ -1,18 +1,15 @@
 ﻿using SFML.Graphics;
 using SFML.System;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using SS14.Client.Graphics.Textures;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Utility;
-using Sprite = SS14.Client.Graphics.Sprites;
-using Texture = SS14.Client.Graphics.Textures.Texture;
 using BlendMode = SS14.Client.Graphics.Render.BlendMode;
 using RenderStates = SS14.Client.Graphics.Render.RenderStates;
-using SRenderStates = SFML.Graphics.RenderStates;
 using SBlendMode = SFML.Graphics.BlendMode;
+using SRenderStates = SFML.Graphics.RenderStates;
+using Texture = SS14.Client.Graphics.Textures.Texture;
 
 namespace SS14.Client.Graphics.Sprites
 {
@@ -22,7 +19,6 @@ namespace SS14.Client.Graphics.Sprites
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
     public class SpriteBatch : Drawable, IDrawable
     {
-
         private QueueItem activeItem;
         private List<QueueItem> QueuedTextures = new List<QueueItem>();
         private Queue<QueueItem> RecycleQueue = new Queue<QueueItem>();
@@ -68,7 +64,7 @@ namespace SS14.Client.Graphics.Sprites
         private void Using(Texture texture)
         {
             if (!Drawing)
-               throw new Exception("Call Begin first.");
+                throw new Exception("Call Begin first.");
 
             if (activeItem == null || activeItem.Texture != texture)
             {
@@ -79,7 +75,7 @@ namespace SS14.Client.Graphics.Sprites
                 }
                 else
                 {
-                   activeItem = new QueueItem(texture);
+                    activeItem = new QueueItem(texture);
                 }
                 QueuedTextures.Add(activeItem);
             }
@@ -112,26 +108,25 @@ namespace SS14.Client.Graphics.Sprites
             activeItem.Verticies.Append
                 (
                  new Vertex(
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top)
                             )
                );
 
-
             pX += Scale.X;
             activeItem.Verticies.Append
                 (
                 new Vertex(
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top)
                           )
@@ -141,11 +136,11 @@ namespace SS14.Client.Graphics.Sprites
             activeItem.Verticies.Append
                 (
                 new Vertex(
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             S.TextureRect.Left + S.TextureRect.Width,
                             S.TextureRect.Top + S.TextureRect.Height)
                          )
@@ -155,11 +150,11 @@ namespace SS14.Client.Graphics.Sprites
 
             activeItem.Verticies.Append(
                 new Vertex(
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             pX * cos - pY * sin + S.Position.X,
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
-                        new SFML.System.Vector2f(
+                        new Vector2f(
                             S.TextureRect.Left,
                             S.TextureRect.Top + S.TextureRect.Height)
                         )
@@ -168,8 +163,10 @@ namespace SS14.Client.Graphics.Sprites
 
         public void Draw(RenderTarget target, SRenderStates Renderstates)
         {
-            if (Drawing) throw new Exception("Call End first.");
-
+            if (Drawing)
+            {
+                throw new InvalidOperationException("Call End first.");
+            }
 
             foreach (var item in QueuedTextures)
             {
@@ -180,9 +177,20 @@ namespace SS14.Client.Graphics.Sprites
             }
         }
 
+        public void Draw()
+        {
+            Draw(CluwneLib.CurrentRenderTarget, CluwneLib.ShaderRenderState);
+        }
+
+        public void Draw(IRenderTarget target, RenderStates renderStates)
+        {
+            Draw(target.SFMLTarget, renderStates.SFMLRenderStates);
+        }
+
+        Drawable IDrawable.SFMLDrawable => this;
+
         public void Dispose()
         {
-
         }
 
         [DebuggerDisplay("[QueueItem] Name: {ID} | Texture: {Texture} | Verticies: {Verticies}")]
@@ -197,6 +205,5 @@ namespace SS14.Client.Graphics.Sprites
                 Verticies = new VertexArray(PrimitiveType.Quads);
             }
         }
-
     }
 }

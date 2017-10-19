@@ -1,11 +1,11 @@
-using OpenTK;
-using SS14.Shared.Maths;
+﻿using OpenTK;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Textures;
+using SS14.Client.Graphics.Utility;
+using SS14.Shared.Maths;
+using System;
 using SSprite = SFML.Graphics.Sprite;
 using STransformable = SFML.Graphics.Transformable;
-using SS14.Client.Graphics.Utility;
-using SS14.Client.Graphics.Render;
-using System;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Sprites
@@ -73,6 +73,12 @@ namespace SS14.Client.Graphics.Sprites
         public void Draw()
         {
             Draw(CluwneLib.CurrentRenderTarget, CluwneLib.ShaderRenderState);
+        }
+
+        public void SetTransformToRect(Box2i rect)
+        {
+            Scale = rect.Size / (Vector2)TextureRect.Size;
+            Position = rect.TopLeft;
         }
     }
 }

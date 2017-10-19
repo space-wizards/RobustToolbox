@@ -229,7 +229,7 @@ namespace SS14.Client.Graphics.Render
             _renderTexture.Draw(drawable);
         }
 
-        public void Draw(IDrawable drawable)
+        public void Memes(IDrawable drawable)
         {
             DrawSFML(drawable.SFMLDrawable);
         }

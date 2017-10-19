@@ -81,7 +81,7 @@ namespace SS14.Client.Graphics.Render
             SFMLWindow.Clear(color.Convert());
         }
 
-        public void Draw(IDrawable drawable)
+        public void Memes(IDrawable drawable)
         {
             DrawSFML(drawable.SFMLDrawable);
         }

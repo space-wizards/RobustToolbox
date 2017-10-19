@@ -17,8 +17,29 @@ namespace SS14.Client.Graphics.Sprites
     /// Provides optimized drawing of sprites
     /// </summary>
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
-    public class SpriteBatch : IDrawable, Drawable
+    public class SpriteBatch : IDrawable
     {
+        // If you use a class in another assembly, and any of its interfaces are from an unreferenced assembly
+        // The C# compiler effectively dies and refuses to treat the class as implementing *ANYTHING*.
+        // So if SpriteBatch class implements Drawable, it can't be passed to methods expecting IDrawable outside Client.Graphics.
+        // What. The. Fuck.
+        // So here's a dummy so I don't have to refactor all this IDrawable shit, which'd include more boiler plate.
+        // God damnit it's 1 AM and I've spent way too long on something with such a fucking awful error message.
+        // Can we just make rustc's error messages standard for every compiler?
+        private class SpriteBatchDrawableDummy : Drawable
+        {
+            public SpriteBatch Parent { get; }
+
+            public SpriteBatchDrawableDummy(SpriteBatch parent)
+            {
+                Parent = parent;
+            }
+
+            public void Draw(RenderTarget target, SRenderStates states)
+            {
+                Parent.Draw(target, states);
+            }
+        }
         private QueueItem activeItem;
         private List<QueueItem> QueuedTextures = new List<QueueItem>();
         private Queue<QueueItem> RecycleQueue = new Queue<QueueItem>();
@@ -37,6 +58,7 @@ namespace SS14.Client.Graphics.Sprites
         {
             Max = maxCapacity * 4;
             BlendingSettings = new BlendMode(BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusDstAlpha, BlendMode.Equation.Add, BlendMode.Factor.SrcAlpha, BlendMode.Factor.OneMinusSrcAlpha, BlendMode.Equation.Add);
+            drawableDummy = new SpriteBatchDrawableDummy(this);
         }
 
         public void BeginDrawing()
@@ -187,7 +209,8 @@ namespace SS14.Client.Graphics.Sprites
             Draw(target.SFMLTarget, renderStates.SFMLRenderStates);
         }
 
-        Drawable IDrawable.SFMLDrawable => this;
+        Drawable IDrawable.SFMLDrawable => drawableDummy;
+        private SpriteBatchDrawableDummy drawableDummy;
 
         public void Dispose()
         {

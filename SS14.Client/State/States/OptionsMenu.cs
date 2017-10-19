@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
@@ -42,8 +43,6 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             InitializeGui();
-
-            FormResize();
         }
 
         /// <inheritdoc />
@@ -123,7 +122,7 @@ namespace SS14.Client.State.States
 
             _bgPanel = new Panel();
             _bgPanel.BackgroundImage = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
-            _bgPanel.BackgroundImage.Color = new Color(128, 128, 128, 128);
+            _bgPanel.BackgroundColor = new Color4(128, 128, 128, 128);
             _bgPanel.Alignment = Align.HCenter | Align.VCenter;
             _bgPanel.Layout += (sender, args) =>
             {

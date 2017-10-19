@@ -123,7 +123,8 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <summary>
-        ///     Local position relative to parent control (modified by Alignment).
+        ///     Local position relative to parent control. This offsets the screen position
+        ///     after the alignment calculations.
         /// </summary>
         public virtual Vector2i LocalPosition
         {

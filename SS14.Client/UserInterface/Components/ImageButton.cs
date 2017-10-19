@@ -49,6 +49,7 @@ namespace SS14.Client.UserInterface.Components
             if (_buttonNormal != null)
             {
                 var bounds = _drawSprite.GetLocalBounds();
+                _size = new SS14.Shared.Maths.Vector2i((int)bounds.Width, (int)bounds.Height);
                 _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
             }
         }
@@ -60,7 +61,6 @@ namespace SS14.Client.UserInterface.Components
                 return;
             
             _drawSprite.Position = new Vector2f(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
-            
             _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 

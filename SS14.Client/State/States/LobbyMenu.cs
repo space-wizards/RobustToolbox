@@ -1,32 +1,24 @@
-﻿using Lidgren.Network;
+﻿using System;
+using System.Collections.Generic;
+using Lidgren.Network;
 using OpenTK;
 using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Player;
-using SS14.Client.Interfaces.State;
+using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using SS14.Shared.Network;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.State.States
 {
     public class Lobby : State
     {
-        #region Fields
-
-        private readonly Sprite _background;
+        private readonly Screen _uiScreen;
 
         private readonly SimpleImage _imgStatus;
 
@@ -41,28 +33,23 @@ namespace SS14.Client.State.States
         private readonly Label _lblServer;
         private readonly Label _lblServerInfo;
         private readonly SimpleImage _imgMainBg;
-        private SimpleImage _imgChatBg;
-        private ImageButton _btnReady;
-        private ImageButton _btnBack;
 
-        private readonly List<Label> _serverLabels = new List<Label>();
-
-        //Keep track of previous tick screen width and height for use in update.
-        private int _prevScreenWidth = 0;
-
-        private int _prevScreenHeight = 0;
+        //private readonly List<Label> _serverLabels = new List<Label>();
 
         private readonly TabContainer _tabCharacter;
         private readonly TabContainer _tabObserve;
         private readonly PlayerListTab _tabServer;
         private readonly TabbedMenu _tabs;
+        private readonly SimpleImage _imgChatBg;
+        private readonly ImageButton _btnReady;
+        private readonly ImageButton _btnBack;
 
-        private float _lastLblSpacing = 10;
-        //TODO Actually calculate this and adjust all labels accordingly. Make sure we compensate if labels longer than status line.
+        private readonly float _lastLblSpacing = 10;
 
+        private readonly Chatbox _lobbyChat;
+        private int _prevScreenWidth;
+        private int _prevScreenHeight;
         private Box2 _recStatus;
-
-        private Chatbox _lobbyChat;
 
         private string _serverName;
         private int _serverPort;
@@ -72,145 +59,222 @@ namespace SS14.Client.State.States
         private string _serverMapName;
         private string _gameType;
 
-        #endregion Fields
-
         public Lobby(IDictionary<Type, object> managers)
             : base(managers)
         {
-            _background = ResourceCache.GetSprite("mainbg");
-            _background.Texture.Smooth = true;
+            _uiScreen = new Screen();
+            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
+            // UI screen is added in startup
 
-            _imgMainBg = new SimpleImage
-            {
-                Sprite = "lobby_mainbg"
-            };
+            _imgMainBg = new SimpleImage();
+            _imgMainBg.Sprite = "lobby_mainbg";
+            _imgMainBg.Alignment = Align.HCenter | Align.VCenter;
+            _uiScreen.AddControl(_imgMainBg);
 
-            _imgStatus = new SimpleImage
-            {
-                Sprite = "lobby_statusbar"
-            };
+            _imgStatus = new SimpleImage();
+            _imgStatus.Sprite = "lobby_statusbar";
+            _imgStatus.LocalPosition = new Vector2i(10, 63);
+            _imgMainBg.AddControl(_imgStatus);
 
-            _lblServer = new Label("SERVER:", "MICROGME");
+            _lblServer = new Label("SERVER: ", "MICROGME");
             _lblServer.ForegroundColor = new Color4(245, 245, 245, 255);
-            _serverLabels.Add(_lblServer);
+            _lblServer.LocalPosition = new Vector2i(5, 2);
+            _imgStatus.AddControl(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME");
             _lblServerInfo.ForegroundColor = new Color4(139, 0, 0, 255);
-            _serverLabels.Add(_lblServerInfo);
+            _lblServerInfo.FixedWidth = 100;
+            _lblServerInfo.Alignment = Align.Right;
+            _lblServer.AddControl(_lblServerInfo);
 
-            _lblMode = new Label("GAMEMODE:", "MICROGME");
+            _lblMode = new Label("GAMEMODE: ", "MICROGME");
             _lblMode.ForegroundColor = new Color4(245, 245, 245, 255);
-            _serverLabels.Add(_lblMode);
+            _lblMode.Alignment = Align.Right;
+            _lblMode.LocalPosition = new Vector2i(10, 0);
+            _lblServerInfo.AddControl(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME");
             _lblModeInfo.ForegroundColor = new Color4(139, 0, 0, 255);
-            _serverLabels.Add(_lblModeInfo);
+            _lblModeInfo.FixedWidth = 90;
+            _lblModeInfo.Alignment = Align.Right;
+            _lblMode.AddControl(_lblModeInfo);
 
-            _lblPlayers = new Label("PLAYERS:", "MICROGME");
+            _lblPlayers = new Label("PLAYERS: ", "MICROGME");
             _lblPlayers.ForegroundColor = new Color4(245, 245, 245, 255);
-            _serverLabels.Add(_lblPlayers);
+            _lblPlayers.Alignment = Align.Right;
+            _lblPlayers.LocalPosition = new Vector2i(10, 0);
+            _lblModeInfo.AddControl(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME");
             _lblPlayersInfo.ForegroundColor = new Color4(139, 0, 0, 255);
-            _serverLabels.Add(_lblPlayersInfo);
+            _lblPlayersInfo.FixedWidth = 60;
+            _lblPlayersInfo.Alignment = Align.Right;
+            _lblPlayers.AddControl(_lblPlayersInfo);
 
-            _lblPort = new Label("PORT:", "MICROGME");
+            _lblPort = new Label("PORT: ", "MICROGME");
             _lblPort.ForegroundColor = new Color4(245, 245, 245, 255);
-            _serverLabels.Add(_lblPort);
+            _lblPort.Alignment = Align.Right;
+            _lblPort.LocalPosition = new Vector2i(10, 0);
+            _lblPlayersInfo.AddControl(_lblPort);
 
             _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
             _lblPortInfo.ForegroundColor = new Color4(139, 0, 0, 255);
-            _serverLabels.Add(_lblPortInfo);
+            _lblPortInfo.FixedWidth = 50;
+            _lblPortInfo.Alignment = Align.Right;
+            _lblPort.AddControl(_lblPortInfo);
+            
+            _tabs = new TabbedMenu();
+            _tabs.TopSprite = "lobby_tab_top";
+            _tabs.MidSprite = "lobby_tab_mid";
+            _tabs.BotSprite = "lobby_tab_bot";
+            _tabs.TabOffset = new Vector2i(-8, 300);
+            _tabs.LocalPosition = new Vector2i(5, 90);
+            _imgMainBg.AddControl(_tabs);
 
-            _tabs = new TabbedMenu
-            {
-                TopSprite = "lobby_tab_top",
-                MidSprite = "lobby_tab_mid",
-                BotSprite = "lobby_tab_bot",
-                TabOffset = new Vector2i(-8, 300),
-                ZDepth = 2
-            };
-
-            _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache)
-            {
-                tabSpriteName = "lobby_tab_person"
-            };
+            _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache);
+            _tabCharacter.tabSpriteName = "lobby_tab_person";
             _tabs.AddTab(_tabCharacter);
 
-            _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache)
-            {
-                tabSpriteName = "lobby_tab_eye"
-            };
+            _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache);
+            _tabObserve.tabSpriteName = "lobby_tab_eye";
             _tabs.AddTab(_tabObserve);
 
-            _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache)
-            {
-                tabSpriteName = "lobby_tab_info"
-            };
+            _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache);
+            _tabServer.tabSpriteName = "lobby_tab_info";
             _tabs.AddTab(_tabServer);
             _tabs.SelectTab(_tabServer);
 
+            _imgChatBg = new SimpleImage();
+            _imgChatBg.Sprite = "lobby_chatbg";
+            _imgChatBg.Alignment = Align.HCenter | Align.Bottom;
+            _imgChatBg.Resize += (sender, args) => { _imgChatBg.LocalPosition = new Vector2i(0, -9 + -_imgChatBg.Height); };
+            _imgMainBg.AddControl(_imgChatBg);
+
             _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceCache);
-            _lobbyChat.Update(0);
+            _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
+            _imgChatBg.AddControl(_lobbyChat);
 
-            _imgChatBg = new SimpleImage()
-            {
-                Sprite = "lobby_chatbg",
-            };
-
-            _lobbyChat.TextSubmitted += new Chatbox.TextSubmitHandler(_lobbyChat_TextSubmitted);
-
-            _btnReady = new ImageButton()
-            {
-                ImageNormal = "lobby_ready",
-                ImageHover = "lobby_ready_green",
-                ZDepth = 1
-            };
+            _btnReady = new ImageButton();
+            _btnReady.ImageNormal = "lobby_ready";
+            _btnReady.ImageHover = "lobby_ready_green";
+            _btnReady.Alignment = Align.Right;
+            _btnReady.Resize += (sender, args) => { _btnReady.LocalPosition = new Vector2i(-5 + -_btnReady.Width, -5 + -_btnReady.Height); };
+            _imgChatBg.AddControl(_btnReady);
             _btnReady.Clicked += _btnReady_Clicked;
-            _btnReady.Update(0);
-
-            _btnBack = new ImageButton()
-            {
-                ImageNormal = "lobby_back",
-                ImageHover = "lobby_back_green",
-                ZDepth = 1
-            };
+            
+            _btnBack = new ImageButton();
+            _btnBack.ImageNormal = "lobby_back";
+            _btnBack.ImageHover = "lobby_back_green";
+            _btnBack.Resize += (sender, args) => { _btnBack.LocalPosition = new Vector2i(-5 + -_btnBack.Width, 0); };
+            _btnReady.AddControl(_btnBack);
             _btnBack.Clicked += _btnBack_Clicked;
-            _btnBack.Update(0);
-
-            _lblServerInfo.FixedWidth = 100;
-            _lblModeInfo.FixedWidth = 90;
-            _lblPlayersInfo.FixedWidth = 60;
-            _lblPortInfo.FixedWidth = 50;
-
-            UpdateGUIPosition();
         }
 
-        private void _lobbyChat_TextSubmitted(Chatbox chatbox, string text)
+        public override void Startup()
         {
+            UserInterfaceManager.AddComponent(_uiScreen);
+
+            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
+
+            var message = NetworkManager.CreateMessage();
+            message.Write((byte) NetMessages.WelcomeMessageReq); //Request Welcome msg.
+            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
+
+            var playerListMsg = NetworkManager.CreateMessage();
+            playerListMsg.Write((byte) NetMessages.PlayerListReq); //Request Playerlist.
+            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
         }
 
-        #region Network
+        public override void Shutdown()
+        {
+            UserInterfaceManager.RemoveComponent(_uiScreen);
+
+            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
+        }
+
+        public override void Update(FrameEventArgs e)
+        {
+            // This might be a hacky solution, but the button loses focus way too fast.
+            //_btnReady.Focus = true;
+
+            _lblServerInfo.Text = _serverName;
+            _lblModeInfo.Text = _gameType;
+            _lblPlayersInfo.Text = _serverPlayers + " / " + _serverMaxPlayers;
+            _lblPortInfo.Text = _serverPort.ToString();
+        }
+
+        public override void FormResize()
+        {
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
+        }
+
+        public override void KeyDown(KeyEventArgs e)
+        {
+            UserInterfaceManager.KeyDown(e);
+        }
+        
+        public override void MouseUp(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseUp(e);
+        }
+
+        public override void MouseDown(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+        
+        public override void MousePressed(MouseButtonEventArgs e)
+        {
+            UserInterfaceManager.MouseDown(e);
+        }
+
+        public override void MouseMove(MouseMoveEventArgs e)
+        {
+            UserInterfaceManager.MouseMove(e);
+        }
+
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
+        {
+            UserInterfaceManager.MouseWheelMove(e);
+        }
+
+        public override void MouseEntered(EventArgs e)
+        {
+            UserInterfaceManager.MouseEntered(e);
+        }
+
+        public override void MouseLeft(EventArgs e)
+        {
+            UserInterfaceManager.MouseLeft(e);
+        }
+
+        public override void TextEntered(TextEventArgs e)
+        {
+            UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
+        }
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
-            NetIncomingMessage message = args.RawMessage;
+            var message = args.RawMessage;
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
+                    var statMsg = (NetConnectionStatus) message.ReadByte();
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
-                        string disconnectMessage = message.ReadString();
+                        var disconnectMessage = message.ReadString();
                         UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                                                                                        UserInterfaceManager,
-                                                                                        ResourceCache,
-                                                                                        disconnectMessage));
+                            UserInterfaceManager,
+                            ResourceCache,
+                            disconnectMessage));
                     }
                     break;
 
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
+                    var messageType = (NetMessages) message.ReadByte();
                     switch (messageType)
                     {
                         case NetMessages.LobbyChat:
@@ -249,25 +313,25 @@ namespace SS14.Client.State.States
 
         private void HandleChatMessage(NetIncomingMessage msg)
         {
-            var channel = (ChatChannel)msg.ReadByte();
-            string text = msg.ReadString();
-            string message = "[" + channel + "] " + text;
+            var channel = (ChatChannel) msg.ReadByte();
+            var text = msg.ReadString();
+            var message = "[" + channel + "] " + text;
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
         private void HandlePlayerList(NetIncomingMessage message)
         {
-            byte playerCount = message.ReadByte();
+            var playerCount = message.ReadByte();
             _serverPlayers = playerCount;
             _tabServer._scPlayerList.Components.Clear();
-            int offY = 0;
-            for (int i = 0; i < playerCount; i++)
+            var offY = 0;
+            for (var i = 0; i < playerCount; i++)
             {
-                string currName = message.ReadString();
-                var currStatus = (SessionStatus)message.ReadByte();
-                float currRoundtrip = message.ReadFloat();
+                var currName = message.ReadString();
+                var currStatus = (SessionStatus) message.ReadByte();
+                var currRoundtrip = message.ReadFloat();
 
-                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
+                var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
                 newLabel.Position = new Vector2i(0, offY);
                 newLabel.ForegroundColor = Color4.Black;
                 newLabel.Update(0);
@@ -281,217 +345,15 @@ namespace SS14.Client.State.States
             StateManager.RequestStateChange<GameScreen>();
         }
 
-        #endregion Network
-
-        #region Startup, Shutdown, Update
-
-        public override void Startup()
-        {
-            UserInterfaceManager.AddComponent(_imgMainBg);
-            UserInterfaceManager.AddComponent(_imgStatus);
-            UserInterfaceManager.AddComponent(_tabs);
-            UserInterfaceManager.AddComponent(_imgChatBg);
-            UserInterfaceManager.AddComponent(_lobbyChat);
-            UserInterfaceManager.AddComponent(_btnReady);
-            UserInterfaceManager.AddComponent(_btnBack);
-
-            foreach (Label curr in _serverLabels)
-                UserInterfaceManager.AddComponent(curr);
-
-            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
-
-            NetOutgoingMessage playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
-        }
-
-        public override void Shutdown()
-        {
-            UserInterfaceManager.RemoveComponent(_imgMainBg);
-            UserInterfaceManager.RemoveComponent(_imgStatus);
-            UserInterfaceManager.RemoveComponent(_tabs);
-            UserInterfaceManager.RemoveComponent(_imgChatBg);
-            UserInterfaceManager.RemoveComponent(_lobbyChat);
-            UserInterfaceManager.RemoveComponent(_btnReady);
-            UserInterfaceManager.RemoveComponent(_btnBack);
-
-            foreach (Label curr in _serverLabels)
-                UserInterfaceManager.RemoveComponent(curr);
-
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-        }
-
-        public override void Update(FrameEventArgs e)
-        {
-            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
-            {
-                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
-                UpdateGUIPosition();
-            }
-
-            // This might be a hacky solution, but the button loses focus way too fast.
-            _btnReady.Focus = true;
-
-            _lblServerInfo.Text = _serverName;
-            _lblModeInfo.Text = _gameType;
-            _lblPlayersInfo.Text = _serverPlayers.ToString() + " / " + _serverMaxPlayers.ToString();
-            _lblPortInfo.Text = _serverPort.ToString();
-        }
-
-        public void UpdateGUIPosition()
-        {
-            _imgMainBg.Position = new Vector2i(
-                (int)((CluwneLib.Window.Viewport.Size.X / 2f) - (_imgMainBg.ClientArea.Width / 2f)),
-                (int)((CluwneLib.Window.Viewport.Size.Y / 2f) - (_imgMainBg.ClientArea.Height / 2f)));
-            _imgMainBg.Update(0);
-
-            _recStatus = Box2.FromDimensions(_imgMainBg.Position.X + 10, _imgMainBg.Position.Y + 63, 785, 21);
-
-            _imgStatus.Position = new Vector2i((int)_recStatus.Left,
-                                               (int)_recStatus.Top);
-            _imgStatus.Update(0);
-
-            _lblServer.Position = new Vector2i((int)_recStatus.Left + 5,
-                                               (int)_recStatus.Top + 2);
-            _lblServer.Update(0);
-
-            _lblServerInfo.Position = new Vector2i(_lblServer.ClientArea.Right,
-                                                   _lblServer.ClientArea.Top);
-            _lblServerInfo.Update(0);
-
-            _lblMode.Position = new Vector2i(_lblServerInfo.ClientArea.Right + (int)_lastLblSpacing,
-                                             _lblServerInfo.ClientArea.Top);
-            _lblMode.Update(0);
-
-            _lblModeInfo.Position = new Vector2i(_lblMode.ClientArea.Right,
-                                                 _lblMode.ClientArea.Top);
-            _lblModeInfo.Update(0);
-
-            _lblPlayers.Position = new Vector2i(_lblModeInfo.ClientArea.Right + (int)_lastLblSpacing,
-                                                _lblModeInfo.ClientArea.Top);
-            _lblPlayers.Update(0);
-
-            _lblPlayersInfo.Position = new Vector2i(_lblPlayers.ClientArea.Right,
-                                                    _lblPlayers.ClientArea.Top);
-            _lblPlayersInfo.Update(0);
-
-            _lblPort.Position = new Vector2i(_lblPlayersInfo.ClientArea.Right + (int)_lastLblSpacing,
-                                             _lblPlayersInfo.ClientArea.Top);
-            _lblPort.Update(0);
-
-            _lblPortInfo.Position = new Vector2i(_lblPort.ClientArea.Right,
-                                                 _lblPort.ClientArea.Top);
-            _lblPortInfo.Update(0);
-
-            _tabs.Position = _imgMainBg.Position + new Vector2i(5, 90);
-            _tabs.Update(0);
-
-            _lobbyChat.Position = new Vector2i(_imgMainBg.ClientArea.Left + 12,
-                                               _imgMainBg.ClientArea.Bottom - _lobbyChat.ClientArea.Height - 12); //Wish the chat box wasnt such shit. Then i wouldnt have to do this here.
-            _lobbyChat.Update(0);
-
-            _imgChatBg.Position = new Vector2i(_lobbyChat.ClientArea.Left - 6,
-                                               _lobbyChat.ClientArea.Top - 9);
-            _imgChatBg.Update(0);
-
-            _btnReady.Position = new Vector2i(_lobbyChat.ClientArea.Right - _btnReady.ClientArea.Width - 5,
-                                              _lobbyChat.ClientArea.Top - _btnReady.ClientArea.Height - 8);
-            _btnReady.Update(0);
-
-            _btnBack.Position = new Vector2i(_lobbyChat.ClientArea.Left - _btnBack.ClientArea.Width - 20,
-                                             _lobbyChat.ClientArea.Bottom - _btnBack.ClientArea.Height);
-            _btnBack.Update(0);
-        }
-
         private void _btnReady_Clicked(ImageButton sender)
         {
-            var playerManager = IoCManager.Resolve<IPlayerManager>();
-            playerManager.SendVerb("joingame", 0);
+            IoCManager.Resolve<IPlayerManager>().SendVerb("joingame", 0);
         }
 
         private void _btnBack_Clicked(ImageButton sender)
         {
-            StateManager.RequestStateChange<MainScreen>();
-
             NetworkManager.ClientDisconnect("Client left the lobby.");
+            StateManager.RequestStateChange<MainScreen>();
         }
-
-        #endregion Startup, Shutdown, Update
-
-        #region IState Members
-
-        public override void Render(FrameEventArgs e)
-        {
-            _background.Draw();
-            UserInterfaceManager.Render(e);
-        }
-
-        public override void FormResize()
-        {
-        }
-
-        #endregion IState Members
-
-        #region Input
-
-        public override void KeyDown(KeyEventArgs e)
-        {
-            UserInterfaceManager.KeyDown(e);
-        }
-
-        public override void KeyUp(KeyEventArgs e)
-        {
-        }
-
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseUp(e);
-        }
-
-        public override void MouseDown(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-
-        public override void MouseMoved(MouseMoveEventArgs e)
-        {
-        }
-
-        public override void MousePressed(MouseButtonEventArgs e)
-        {
-            UserInterfaceManager.MouseDown(e);
-        }
-
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            UserInterfaceManager.MouseMove(e);
-        }
-
-        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
-        {
-            UserInterfaceManager.MouseWheelMove(e);
-        }
-
-        public override void MouseEntered(EventArgs e)
-        {
-            UserInterfaceManager.MouseEntered(e);
-        }
-
-        public override void MouseLeft(EventArgs e)
-        {
-            UserInterfaceManager.MouseLeft(e);
-        }
-
-        public override void TextEntered(TextEventArgs e)
-        {
-            UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
-        }
-
-        #endregion Input
     }
 }

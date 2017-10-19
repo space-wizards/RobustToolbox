@@ -335,8 +335,9 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_disposing || !IsVisible()) return;
             CluwneLib.BlendingMode = BlendingModes.Modulated;
-            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(0, 0, 0, 100));
-            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(211, 211, 211, 100));
+            var clientRect = ClientArea.Translated(Position);
+            CluwneLib.drawRectangle(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height, new Color4(0, 0, 0, 100));
+            CluwneLib.drawRectangle(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height, new Color4(211, 211, 211, 100));
             CluwneLib.BlendingMode = BlendingModes.None;
             base.Draw();
             input.Draw();

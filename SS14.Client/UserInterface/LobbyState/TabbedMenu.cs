@@ -110,7 +110,7 @@ namespace SS14.Client.UserInterface.Components
 
         protected override void OnCalcRect()
         {
-            throw new NotImplementedException();
+
         }
 
         public override void Update(float frameTime)

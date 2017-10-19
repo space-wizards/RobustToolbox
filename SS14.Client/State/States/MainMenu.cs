@@ -175,7 +175,6 @@ namespace SS14.Client.State.States
             NetworkManager.Connected += OnConnected;
 
             UserInterfaceManager.AddComponent(_uiScreen);
-            FormResize();
         }
 
         /// <inheritdoc />

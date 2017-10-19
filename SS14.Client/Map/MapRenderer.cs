@@ -66,21 +66,25 @@ namespace SS14.Client.Map
         //What was this supposed to do?
         public static void RenderPosOffset(ITileDefinition def, float x, float y, int tileSpacing, Vector2 lightPosition)
         {
+            //TODO: Figure out what to do with this
         }
 
         //What was this supposed to do?
         public static void DrawDecals(ITileDefinition def, float xTopLeft, float yTopLeft, int tileSpacing, SpriteBatch decalBatch)
         {
+            //TODO: Figure out what to do with this
         }
 
         //What was this supposed to do?
         public static void RenderGas(ITileDefinition def, float xTopLeft, float yTopLeft, uint tileSpacing, SpriteBatch gasBatch)
         {
+            //TODO: Figure out what to do with this
         }
 
         //What was this supposed to do?
         public static void RenderTop(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch wallTopsBatch)
         {
+            //TODO: Figure out what to do with this
         }
     }
 }

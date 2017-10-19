@@ -488,6 +488,7 @@ namespace SS14.Client.State.States
         #region Keyboard
         public void KeyPressed(KeyEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void KeyDown(KeyEventArgs e)
@@ -674,10 +675,12 @@ namespace SS14.Client.State.States
 
         public void MouseMoved(MouseMoveEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void MousePressed(MouseButtonEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void MouseWheelMove(MouseWheelScrollEventArgs e)

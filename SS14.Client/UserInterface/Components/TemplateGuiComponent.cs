@@ -12,30 +12,10 @@ namespace SS14.Client.UserInterface.Components
             ComponentClass = GuiComponentType.Undefined;
         }
 
-        public override void ComponentUpdate(params object[] args)
-        {
-        }
-
-        public override void Update(float frameTime)
-        {
-        }
-
-        public override void Render()
-        {
-        }
-
-        public override void Resize()
-        {
-        }
-
         public override void Dispose()
         {
             base.Dispose();
             GC.SuppressFinalize(this);
-        }
-
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -54,10 +34,6 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
             return false;
-        }
-
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
         }
 
         public override bool MouseWheelMove(MouseWheelScrollEventArgs e)

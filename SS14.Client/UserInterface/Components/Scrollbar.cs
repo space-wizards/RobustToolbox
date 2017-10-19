@@ -81,10 +81,6 @@ namespace SS14.Client.UserInterface.Components
 
         public event ScrollbarChangedHandler ValueChanged;
 
-        public override void HandleNetworkMessage(NetIncomingMessage message)
-        {
-        }
-
         public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (!IsVisible()) return false;

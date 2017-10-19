@@ -29,7 +29,11 @@ namespace SS14.Client.Graphics.Shader
             return _techniqueList[ShaderName];
         }
 
-        public GLSLShader this[string key] => _techniqueList[key.ToLowerInvariant()];
+        public GLSLShader this[string key]
+        {
+            get => _techniqueList[key.ToLowerInvariant()];
+            set => _techniqueList[key.ToLowerInvariant()] = value;
+        }
 
         public Dictionary<string, GLSLShader> Dictonary => _techniqueList;
 

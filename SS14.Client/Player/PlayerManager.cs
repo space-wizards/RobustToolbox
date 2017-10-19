@@ -92,10 +92,12 @@ namespace SS14.Client.Player
 
         public void KeyDown(Keyboard.Key key)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void KeyUp(Keyboard.Key key)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void ApplyPlayerStates(List<PlayerState> list)

@@ -39,6 +39,7 @@ namespace SS14.Server.GameObjects
         /// <param name="list">List of parameter objects</param>
         public void SendEntityNetworkMessage(IEntity sendingEntity, EntityMessage type, params object[] list)
         {
+            throw new NotImplementedException();
         }
 
         public void SendComponentNetworkMessage(IEntity sendingEntity, uint netID,

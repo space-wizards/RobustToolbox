@@ -215,6 +215,7 @@ namespace SS14.Client.State.States
 
         public void FormResize()
         {
+            //TODO: Figure out what to do with this
         }
 
         #endregion IState Members
@@ -228,6 +229,7 @@ namespace SS14.Client.State.States
 
         public void KeyUp(KeyEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void MouseUp(MouseButtonEventArgs e)
@@ -242,6 +244,7 @@ namespace SS14.Client.State.States
 
         public void MouseMoved(MouseMoveEventArgs e)
         {
+            //TODO: Figure out what to do with this
         }
         public void MousePressed(MouseButtonEventArgs e)
         {

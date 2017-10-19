@@ -214,6 +214,7 @@ namespace SS14.Client.Graphics.Sprites
 
         public void Dispose()
         {
+            throw new NotImplementedException();
         }
 
         [DebuggerDisplay("[QueueItem] Name: {ID} | Texture: {Texture} | Verticies: {Verticies}")]

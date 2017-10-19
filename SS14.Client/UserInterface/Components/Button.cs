@@ -1,21 +1,20 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using OpenTK.Graphics;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared.Maths;
-using System;
 using SS14.Client.ResourceManagement;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
 {
     internal class Button : Control
     {
         public delegate void ButtonPressHandler(Button sender);
+
+        public Color4 MouseOverColor = Color4.White;
 
         private Sprite _buttonLeft;
         private Sprite _buttonMain;
@@ -26,25 +25,20 @@ namespace SS14.Client.UserInterface.Components
         private Box2i _clientAreaRight;
 
         private Color4 _drawColor = Color4.White;
-        public Color4 MouseOverColor = Color4.White;
-
-        public Button(string buttonText, IResourceCache resourceCache)
-        {
-            _buttonLeft = resourceCache.GetSprite("button_left");
-            _buttonMain = resourceCache.GetSprite("button_middle");
-            _buttonRight = resourceCache.GetSprite("button_right");
-
-            Label = new TextSprite(buttonText, resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
-                        {
-                            Color = Color4.Black
-                        };
-
-            Update(0);
-        }
 
         public TextSprite Label { get; private set; }
 
-        public event ButtonPressHandler Clicked;
+        public Button(string buttonText)
+        {
+            _buttonLeft = _resourceCache.GetSprite("button_left");
+            _buttonMain = _resourceCache.GetSprite("button_middle");
+            _buttonRight = _resourceCache.GetSprite("button_right");
+
+            Label = new TextSprite(buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
+            {
+                Color = Color4.Black
+            };
+        }
 
         /// <inheritdoc />
         protected override void OnCalcRect()
@@ -53,9 +47,9 @@ namespace SS14.Client.UserInterface.Components
             var boundsMain = _buttonMain.GetLocalBounds();
             var boundsRight = _buttonRight.GetLocalBounds();
 
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Label.Width, (int)boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int)boundsRight.Width, (int)boundsRight.Height);
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Label.Width, (int) boundsMain.Height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, (int) boundsRight.Height);
 
             _clientArea = Box2i.FromDimensions(new Vector2i(),
                 new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
@@ -67,11 +61,11 @@ namespace SS14.Client.UserInterface.Components
         {
             base.OnCalcPosition();
 
-            Label.Position = Position + new Vector2i(_clientAreaLeft.Right, (int)(_clientArea.Height / 2f) - (int)(Label.Height / 2f));
+            Label.Position = Position + new Vector2i(_clientAreaLeft.Right, (int) (_clientArea.Height / 2f) - (int) (Label.Height / 2f));
         }
 
         /// <inheritdoc />
-        public override void Draw()
+        protected override void DrawContents()
         {
             _buttonLeft.Color = _drawColor.Convert();
             _buttonMain.Color = _drawColor.Convert();
@@ -89,8 +83,6 @@ namespace SS14.Client.UserInterface.Components
             _buttonRight.Color = Color.White;
 
             Label.Draw();
-
-            base.Draw();
         }
 
         /// <inheritdoc />
@@ -129,5 +121,7 @@ namespace SS14.Client.UserInterface.Components
             }
             return false;
         }
+
+        public event ButtonPressHandler Clicked;
     }
 }

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using OpenTK.Graphics;
 using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Utility;
+using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
@@ -14,16 +14,17 @@ using SS14.Shared.Maths;
 namespace SS14.Client.UserInterface.Components
 {
     /// <summary>
-    /// Base GUI class that all other controls inherit from.
+    ///     Base GUI class that all other controls inherit from.
     /// </summary>
-    public abstract class Control
+    public abstract class Control : IDisposable
     {
-        private static readonly Color4 DebugColor = Color4.Red;
+        private static readonly Color4 DebugColor = new Color4(255, 0, 0, 32);
+        protected static IResourceCache _resourceCache;
 
         protected readonly List<Control> _children = new List<Control>();
+
         public object UserData;
         protected Align _align;
-        protected Anchor _anchors;
         protected Box2i _clientArea;
         protected Box2i _localBounds;
         protected Vector2i _localPos;
@@ -31,11 +32,28 @@ namespace SS14.Client.UserInterface.Components
         protected Control _parent;
         protected Vector2i _screenPos;
         protected Vector2i _size;
+        private Sprite _backgroundImage;
 
         /// <summary>
         ///     Image that is stretched to fit the background of the control. This is optional.
         /// </summary>
-        public Sprite BackgroundImage { get; set; }
+        public Sprite BackgroundImage
+        {
+            get => _backgroundImage;
+            set
+            {
+                if (value != null)
+                {
+                    _backgroundImage?.Dispose();
+                    _backgroundImage = new Sprite(value);
+                }
+                else
+                {
+                    _backgroundImage?.Dispose();
+                    _backgroundImage = null;
+                }
+            }
+        }
 
         /// <summary>
         ///     Color of the background of the control. This will be blended with the BackgroundImage if it
@@ -54,7 +72,7 @@ namespace SS14.Client.UserInterface.Components
         public Color4 BorderColor { get; set; } = Color4.Gray;
 
         /// <summary>
-        /// Width of the border lines of the control in px.
+        ///     Width of the border lines of the control in px.
         /// </summary>
         public int BorderWidth { get; set; } = 2;
 
@@ -137,12 +155,6 @@ namespace SS14.Client.UserInterface.Components
             set => _align = value;
         }
 
-        public Anchor Anchors
-        {
-            get => _anchors;
-            set => _anchors = value;
-        }
-
         /// <summary>
         ///     Absolute screen position of control.
         /// </summary>
@@ -162,19 +174,34 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <summary>
-        /// Draws debugging info over the control.
+        ///     Draws debugging info over the control.
         /// </summary>
         public bool DebugEnabled { get; set; } = false;
 
-
         /// <summary>
-        /// Does the control accept input events? If false, children also don't get input.
+        ///     Does the control accept input events? If false, children also don't get input.
         /// </summary>
         public bool ReceiveInput { get; set; } = true;
 
         public GuiComponentType ComponentClass { get; protected set; }
         public int ZDepth { get; set; }
         public virtual bool Focus { get; set; }
+
+        protected Control()
+        {
+            _resourceCache = IoCManager.Resolve<IResourceCache>();
+        }
+
+        /// <inheritdoc />
+        public virtual void Dispose()
+        {
+            IoCManager.Resolve<IUserInterfaceManager>().RemoveComponent(this);
+
+            // this disposes it
+            BackgroundImage = null;
+
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         ///     called every frame, used to poll things.
@@ -194,8 +221,7 @@ namespace SS14.Client.UserInterface.Components
         {
             var rect = _clientArea.Translated(Position);
 
-            if(DrawBackground)
-            {
+            if (DrawBackground)
                 if (BackgroundImage != null)
                 {
                     BackgroundImage.SetTransformToRect(_clientArea.Translated(_screenPos));
@@ -206,19 +232,14 @@ namespace SS14.Client.UserInterface.Components
                 {
                     CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, BackgroundColor);
                 }
-            }
 
             if (DrawBorder)
-            {
                 CluwneLib.drawHollowRectangle(rect.Left, rect.Top, rect.Width, rect.Height, BorderWidth, BorderColor);
-            }
 
             DrawContents();
 
             if (DebugEnabled)
-            {
-                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, new Color4(255, 0, 0, 32));
-            }
+                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, DebugColor);
 
             // draw each of the children.
             // todo: need ordered batching
@@ -229,7 +250,7 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <summary>
-        ///     Draws the contents of this control to the screen. This is called after the bg and border is drawn, 
+        ///     Draws the contents of this control to the screen. This is called after the bg and border is drawn,
         ///     but before child components are drawn. This is where you render text and such for this control.
         /// </summary>
         protected virtual void DrawContents() { }
@@ -276,19 +297,6 @@ namespace SS14.Client.UserInterface.Components
         {
             return Visible;
         }
-
-        /// <summary>
-        ///     Cleans up any resources.
-        /// </summary>
-        public virtual void Dispose()
-        {
-            var _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-            _userInterfaceManager.RemoveComponent(this);
-            GC.SuppressFinalize(this);
-        }
-
-        [Obsolete("Really, UI accepting raw packets? Really?")]
-        public virtual void HandleNetworkMessage(NetIncomingMessage message) { }
 
         /// <summary>
         ///     A mouse button was pressed.

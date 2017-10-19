@@ -35,7 +35,7 @@ namespace SS14.Client.UserInterface.Components
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
-            search = new Textbox(150, resourceCache);
+            search = new Textbox(150);
             search.Position = new Vector2i(5, 5);
             search.OnSubmit += search_OnSubmit;
             search.ClearOnSubmit = true;
@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (o is String || o is string)
             {
-                var editStr = new Textbox(100, ResourceCache);
+                var editStr = new Textbox(100);
                 editStr.ClearOnSubmit = false;
                 editStr.UserData = field;
                 editStr.Text = ((string) o);
@@ -86,7 +86,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is Enum)
             {
-                var editEnum = new Listbox(100, 100, ResourceCache, Enum.GetNames(o.GetType()).ToList());
+                var editEnum = new Listbox(100, 100, Enum.GetNames(o.GetType()).ToList());
                 editEnum.UserData = field;
                 editEnum.SelectItem(o.ToString());
                 editEnum.ItemSelected += editEnum_ItemSelected;
@@ -95,7 +95,7 @@ namespace SS14.Client.UserInterface.Components
             else if (o is float || o is int || o is Int16 || o is Int32 || o is Int64 || o is double || o is Double ||
                      o is decimal || o is Decimal || o is Single)
             {
-                var editNum = new Textbox(100, ResourceCache);
+                var editNum = new Textbox(100);
                 editNum.ClearOnSubmit = false;
                 editNum.UserData = field;
                 editNum.Text = o.ToString();
@@ -104,7 +104,7 @@ namespace SS14.Client.UserInterface.Components
             }
             else if (o is bool || o is Boolean)
             {
-                var editBool = new Checkbox(ResourceCache);
+                var editBool = new Checkbox();
                 editBool.UserData = field;
                 editBool.Value = ((Boolean) o);
                 editBool.ValueChanged += editBool_ValueChanged;
@@ -177,8 +177,7 @@ namespace SS14.Client.UserInterface.Components
                 if (fieldVal != null && fieldVal is ICollection)
                 {
                     newEntry.VarName = field.Name;
-                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   ResourceCache);
+                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI");
                     newEntry.CanEdit = false;
                     newEntry.IsListItem = false;
 
@@ -204,7 +203,7 @@ namespace SS14.Client.UserInterface.Components
                         newEntry.IsListItem = true;
                         newEntry.ListItem = item;
 
-                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI", ResourceCache);
+                        newEntry.LabelName = new Label(item.ToString(), "CALIBRI");
                         newEntry.LabelName.Position = new Vector2i(15, pos);
                         newEntry.LabelName.DrawBorder = true;
                         newEntry.LabelName.BorderColor = new Color4(0, 191, 255, 255);
@@ -228,8 +227,7 @@ namespace SS14.Client.UserInterface.Components
                     newEntry.CanEdit = !(field.IsInitOnly || field.IsLiteral);
                     newEntry.IsListItem = false;
 
-                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI",
-                                                   ResourceCache);
+                    newEntry.LabelName = new Label(field.Name + " = " + (fieldVal == null ? "null" : ""), "CALIBRI");
                     newEntry.LabelName.Position = new Vector2i(5, pos);
                     newEntry.LabelName.DrawBorder = true;
                     newEntry.LabelName.BorderColor = newEntry.CanEdit ? new Color4(127, 255, 0, 255) : new Color4(205, 92, 92, 255);

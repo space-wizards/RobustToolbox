@@ -36,11 +36,11 @@ namespace SS14.Client.UserInterface.Components
 
         public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
         {
-            input = new Textbox(size.X, resourceCache)
+            input = new Textbox(size.X)
             {
                 ClearFocusOnSubmit = false,
-                drawColor = new Color4(64, 64, 64, 100),
-                textColor = new Color4(255, 250, 240, 255)
+                BackgroundColor = new Color4(64, 64, 64, 100),
+                ForegroundColor = new Color4(255, 250, 240, 255)
             };
             input.OnSubmit += input_OnSubmit;
             this.BackgroundColor = new Color4(64, 64, 64, 200);
@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface.Components
         public void AddLine(string text, Color4 color)
         {
             bool atBottom = ScrollbarV.Value >= ScrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI", this.ResourceCache)
+            Label newLabel = new Label(text, "CALIBRI")
             {
                 Position = new Vector2i(5, last_y),
                 ForegroundColor = color

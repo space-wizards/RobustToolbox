@@ -1,27 +1,21 @@
-﻿using SFML.Graphics;
+﻿using System;
+using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
-using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
     internal class Checkbox : Control
     {
-        public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
+        public delegate void CheckboxChangedHandler(bool newValue, Checkbox sender);
 
         private Sprite _checkbox;
         private Sprite _checkboxCheck;
 
         private bool _value;
-        
-        public Checkbox(IResourceCache resourceCache)
-        {
-            _checkbox = resourceCache.GetSprite("checkbox0");
-            _checkboxCheck = resourceCache.GetSprite("checkbox1");
-        }
 
         public bool Value
         {
@@ -33,29 +27,30 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public event CheckboxChangedHandler ValueChanged;
+        public Checkbox()
+        {
+            _checkbox = _resourceCache.GetSprite("checkbox0");
+            _checkboxCheck = _resourceCache.GetSprite("checkbox1");
+        }
 
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
             var bounds = _checkbox.GetLocalBounds();
-            _clientArea = Box2i.FromDimensions(new Vector2i(0, 0), new Vector2i((int)bounds.Width, (int)bounds.Height));
-
+            _clientArea = Box2i.FromDimensions(new Vector2i(0, 0), new Vector2i((int) bounds.Width, (int) bounds.Height));
         }
-        
+
         /// <inheritdoc />
-        public override void Draw()
+        protected override void DrawContents()
         {
             // TODO: Move this to OnCalcPosition once the ResourceCache we stop sharing sprites between controls.
-            _checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
-            _checkboxCheck.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            _checkbox.Position = new Vector2f(Position.X, Position.Y);
+            _checkboxCheck.Position = new Vector2f(Position.X, Position.Y);
 
             _checkbox.Draw();
 
             if (Value)
                 _checkboxCheck.Draw();
-
-            base.Draw();
         }
 
         /// <inheritdoc />
@@ -81,5 +76,7 @@ namespace SS14.Client.UserInterface.Components
             }
             return false;
         }
+
+        public event CheckboxChangedHandler ValueChanged;
     }
 }

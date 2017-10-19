@@ -182,7 +182,7 @@ namespace SS14.Client.UserInterface.Components
             UserData = entry.ComponentMessage;
             Size = size;
             _iconSprite = _resourceCache.GetSprite(entry.IconName);
-            _textLabel = new Label(entry.EntryName, "CALIBRI", _resourceCache);
+            _textLabel = new Label(entry.EntryName, "CALIBRI");
             _textLabel.Update(0);
         }
 

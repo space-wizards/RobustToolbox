@@ -85,10 +85,10 @@ namespace SS14.Client.UserInterface.Components
 
             Position = new Vector2i((int)CluwneLib.Window.Viewport.Width - (int)Size.X - 10, 10);
 
-            input = new Textbox(Size.X, resourceCache)
+            input = new Textbox(Size.X)
             {
-                drawColor = new Color4(128, 128, 128, 100),
-                textColor = new Color4(255, 250, 240, 255)
+                BackgroundColor = new Color4(128, 128, 128, 100),
+                ForegroundColor = new Color4(255, 250, 240, 255)
             };
             input.OnSubmit += new Textbox.TextSubmitHandler(input_OnSubmit);
 
@@ -115,7 +115,7 @@ namespace SS14.Client.UserInterface.Components
         {
             var lineList = new List<string>();
 
-            var text = input.TextSprite;
+            var text = input;
             if (text.MeasureLine(message) < MaxLinePixelLength)
             {
                 lineList.Add(message);
@@ -181,7 +181,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "CALIBRI", ResourceCache)
+                var label = new Label(content, "CALIBRI")
                 {
                     LocalPosition = new Vector2i(5, last_y),
                     Size = new Vector2i(ClientArea.Width - 10, lineHeight),
@@ -207,7 +207,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void CheckAndSetLine(string line)
         {
-            var text = input.TextSprite;
+            var text = input;
 
             // TODO: Refactor to use dynamic input box size.
             // Magic number is pixel width of chatbox input rectangle at

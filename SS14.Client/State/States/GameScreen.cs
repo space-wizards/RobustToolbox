@@ -774,9 +774,6 @@ namespace SS14.Client.State.States
                         case NetMessages.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
-                        case NetMessages.PlayerUiMessage:
-                            UserInterfaceManager.HandleNetMessage(message);
-                            break;
                         case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;

@@ -33,19 +33,19 @@ namespace SS14.Client.UserInterface.Components
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
 
-            button_entity = new Button("Spawn Entities", _resMgr);
+            button_entity = new Button("Spawn Entities");
             button_entity.Clicked += button_entity_Clicked;
             button_entity.Position = new Vector2i(5, 5);
             button_entity.Update(0);
             Components.Add(button_entity);
 
-            button_tile = new Button("Spawn Tiles", _resMgr);
+            button_tile = new Button("Spawn Tiles");
             button_tile.Clicked += button_tile_Clicked;
             button_tile.Position = new Vector2i(5, button_entity.ClientArea.Bottom + 5);
             button_tile.Update(0);
             Components.Add(button_tile);
 
-            button_quit = new Button("Quit", _resMgr);
+            button_quit = new Button("Quit");
             button_quit.Clicked += button_quit_Clicked;
             button_quit.Position = new Vector2i(5, button_tile.ClientArea.Bottom + 20);
             button_quit.Update(0);

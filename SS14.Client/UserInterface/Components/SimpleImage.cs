@@ -1,72 +1,30 @@
-﻿using System;
-using SFML.Graphics;
-using SFML.System;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared.IoC;
+﻿using SFML.Graphics;
 using SS14.Shared.Maths;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
     /// <summary>
-    ///     Displays an image on the screen.
+    ///     Displays an image on the screen. This is the same as a Screen, except this shrinks to fit
+    ///     an image, where as a Screen stretches to fit an image.
     /// </summary>
-    public class SimpleImage : Control
+    public class SimpleImage : Screen
     {
-        private readonly IResourceCache _resourceCache;
-
-        private Sprite _drawingSprite;
-
         /// <summary>
         ///     Sprite to draw inside of this control.
         /// </summary>
         public string Sprite
         {
-            set => _drawingSprite = _resourceCache.GetSprite(value);
-        }
-
-        /// <summary>
-        ///     Color to mix the sprite with.
-        /// </summary>
-        public Color Color
-        {
-            get => _drawingSprite?.Color ?? Color.White;
-            set => _drawingSprite.Color = value;
-        }
-
-        /// <summary>
-        ///     Constructs an instance of this class.
-        /// </summary>
-        public SimpleImage()
-        {
-            _resourceCache = IoCManager.Resolve<IResourceCache>();
-        }
-
-        /// <inheritdoc />
-        public override void Draw()
-        {
-            base.Draw();
-
-            _drawingSprite.Position = new Vector2f(_screenPos.X, _screenPos.Y);
-            _drawingSprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
-        }
-
-        /// <inheritdoc />
-        public override void Dispose()
-        {
-            _drawingSprite = null;
-            base.Dispose();
-            GC.SuppressFinalize(this);
+            set => BackgroundImage = new Sprite(_resourceCache.GetSprite(value));
         }
 
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            var fr = _drawingSprite.GetLocalBounds().Convert();
-            _size = new Vector2i((int)fr.Width, (int)fr.Height);
-            _clientArea = Box2i.FromDimensions(0, 0, _size.X, _size.Y);
+            // shrink to fit image size
+            var fr = BackgroundImage.GetLocalBounds();
+            _size = new Vector2i((int) fr.Width, (int) fr.Height);
+
+            _clientArea = new Box2i(new Vector2i(), _size);
         }
     }
 }

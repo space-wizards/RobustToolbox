@@ -6,7 +6,6 @@ using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
 using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
@@ -21,6 +20,15 @@ namespace SS14.Client.UserInterface.Components
 
         private const float CaretHeight = 12;
         private const float CaretWidth = 2;
+
+        public bool ClearFocusOnSubmit = true;
+        public bool ClearOnSubmit = true;
+        
+        // Terrible hack to get around TextEntered AND KeyDown firing at once.
+        // Set to true after handling a KeyDown that produces a character to this.
+        public bool ignoreNextText;
+
+        public int MaxCharacters = 255;
         private int _caretIndex;
         private float _caretPos;
 
@@ -37,22 +45,8 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _textboxRight;
 
         private float blinkCount;
-
-        public bool ClearFocusOnSubmit = true;
-        public bool ClearOnSubmit = true;
-
-        public Color4 drawColor = Color4.White;
-
-        // Terrible hack to get around TextEntered AND KeyDown firing at once.
-        // Set to true after handling a KeyDown that produces a character to this.
-        public bool ignoreNextText;
-
-        public int MaxCharacters = 255;
-        public Color4 textColor = Color4.Black;
-
-        public TextSprite TextSprite { get; private set; }
-        public int Width;
-
+        
+        private TextSprite _textSprite;
         public bool AllowEmptySubmit { get; set; } = true;
 
         public string Text
@@ -65,20 +59,21 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        public Textbox(int width, IResourceCache resourceCache)
+        public int MeasureLine(string text)
         {
-            _textboxLeft = resourceCache.GetSprite("text_left");
-            _textboxMain = resourceCache.GetSprite("text_middle");
-            _textboxRight = resourceCache.GetSprite("text_right");
-
-            Width = width;
-
-            TextSprite = new TextSprite("", resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) {Color = Color4.Black};
-
-            Update(0);
+            return _textSprite.MeasureLine(text);
         }
 
-        public event TextSubmitHandler OnSubmit;
+        public Textbox(int width)
+        {
+            _textboxLeft = new Sprite(_resourceCache.GetSprite("text_left"));
+            _textboxMain = new Sprite(_resourceCache.GetSprite("text_middle"));
+            _textboxRight = new Sprite(_resourceCache.GetSprite("text_right"));
+
+            _textSprite = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF"));
+
+            Width = width;
+        }
 
         /// <inheritdoc />
         public override void Update(float frameTime)
@@ -115,17 +110,17 @@ namespace SS14.Client.UserInterface.Components
             base.OnCalcPosition();
 
             SetVisibleText();
-            TextSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int) (_clientArea.Height / 2f) - (int) (TextSprite.Height / 2f));
+            _textSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int) (_clientArea.Height / 2f) - (int) (_textSprite.Height / 2f));
         }
 
         /// <inheritdoc />
         public override void Draw()
         {
-            if (drawColor != Color4.White)
+            if (BackgroundColor != Color4.White)
             {
-                _textboxLeft.Color = drawColor.Convert();
-                _textboxMain.Color = drawColor.Convert();
-                _textboxRight.Color = drawColor.Convert();
+                _textboxLeft.Color = BackgroundColor.Convert();
+                _textboxMain.Color = BackgroundColor.Convert();
+                _textboxRight.Color = BackgroundColor.Convert();
             }
 
             _textboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
@@ -136,19 +131,12 @@ namespace SS14.Client.UserInterface.Components
             _textboxRight.Draw();
 
             if (Focus && blinkCount <= 0.25f)
-                CluwneLib.drawRectangle(TextSprite.Position.X + _caretPos - CaretWidth, TextSprite.Position.Y + TextSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
+                CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
-            if (drawColor != Color4.White)
-            {
-                _textboxLeft.Color = Color.White;
-                _textboxMain.Color = Color.White;
-                _textboxRight.Color = Color.White;
-            }
+            _textSprite.Color = base.ForegroundColor;
+            _textSprite.Text = _displayText;
 
-            TextSprite.Color = textColor;
-            TextSprite.Text = _displayText;
-
-            TextSprite.Draw();
+            _textSprite.Draw();
 
             base.Draw();
         }
@@ -156,13 +144,13 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         public override void Dispose()
         {
-            TextSprite = null;
+            _textSprite = null;
             _textboxLeft = null;
             _textboxMain = null;
             _textboxRight = null;
             OnSubmit = null;
+
             base.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />
@@ -271,11 +259,13 @@ namespace SS14.Client.UserInterface.Components
             return true;
         }
 
+        public event TextSubmitHandler OnSubmit;
+
         private void SetVisibleText()
         {
             _displayText = "";
 
-            if (TextSprite.MeasureLine(_text) >= _clientAreaMain.Width) //Text wider than box.
+            if (_textSprite.MeasureLine(_text) >= _clientAreaMain.Width) //Text wider than box.
             {
                 if (_caretIndex < _displayIndex)
                     //Caret outside to the left. Move display text to the left by setting its index to the caret.
@@ -284,7 +274,7 @@ namespace SS14.Client.UserInterface.Components
                 var glyphCount = 0;
 
                 while (_displayIndex + glyphCount + 1 < _text.Length &&
-                       TextSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
+                       _textSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) < _clientAreaMain.Width)
                 {
                     glyphCount++; //How many glyphs we could/would draw with the current index.
                 }
@@ -298,7 +288,7 @@ namespace SS14.Client.UserInterface.Components
                         glyphCount = 0; //Update glyphcount with new index.
 
                         while (_displayIndex + glyphCount + 1 < _text.Length &&
-                               TextSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) <
+                               _textSprite.MeasureLine(Text.Substring(_displayIndex + 1, glyphCount + 1)) <
                                _clientAreaMain.Width)
                         {
                             glyphCount++;
@@ -306,7 +296,7 @@ namespace SS14.Client.UserInterface.Components
                     }
                 _displayText = Text.Substring(_displayIndex + 1, glyphCount);
 
-                _caretPos = TextSprite.Position.X + TextSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                _caretPos = _textSprite.Position.X + _textSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
             else //Text fits completely inside box.
             {
@@ -316,7 +306,7 @@ namespace SS14.Client.UserInterface.Components
                 if (Text.Length <= _caretIndex - 1)
                     _caretIndex = Text.Length;
 
-                _caretPos = TextSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
+                _caretPos = _textSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
         }
 

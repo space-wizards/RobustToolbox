@@ -6,7 +6,6 @@ using SFML.Graphics;
 using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprite;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
@@ -19,7 +18,6 @@ namespace SS14.Client.UserInterface.Components
         public delegate void ListboxPressHandler(Label item, Listbox sender);
 
         private readonly List<string> _contentStrings = new List<string>();
-        private readonly IResourceCache _resourceCache;
         private readonly int _width;
         private Box2i _clientAreaLeft;
         private Box2i _clientAreaMain;
@@ -33,10 +31,8 @@ namespace SS14.Client.UserInterface.Components
 
         public Label CurrentlySelected { get; private set; }
 
-        public Listbox(int dropDownLength, int width, IResourceCache resourceCache, List<string> initialOptions = null)
+        public Listbox(int dropDownLength, int width, List<string> initialOptions = null)
         {
-            _resourceCache = resourceCache;
-
             _width = width;
             _listboxLeft = _resourceCache.GetSprite("button_left");
             _listboxMain = _resourceCache.GetSprite("button_middle");
@@ -116,8 +112,8 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain = null;
             _listboxRight = null;
             ItemSelected = null;
+
             base.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />
@@ -130,11 +126,10 @@ namespace SS14.Client.UserInterface.Components
                 return true;
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-                //change to clientAreaRight when there is a proper skin with an arrow to the right.
             {
-                _dropDown.ToggleVisible();
+                _dropDown.Visible = !_dropDown.Visible;
 
-                if (_dropDown.IsVisible())
+                if (_dropDown.Visible)
                     IoCManager.Resolve<IUserInterfaceManager>().SetFocus(_dropDown);
 
                 return true;
@@ -205,7 +200,7 @@ namespace SS14.Client.UserInterface.Components
             _dropDown.Components.Clear();
             var offset = 0;
             foreach (
-                var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width, _resourceCache)))
+                var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
                 newEntry.LocalPosition = new Vector2i(0, offset);
                 newEntry.DoLayout();
@@ -227,7 +222,7 @@ namespace SS14.Client.UserInterface.Components
 
             CurrentlySelected = toSet;
             _selectedLabel.Text = toSet.Text;
-            _dropDown.SetVisible(false);
+            _dropDown.Visible = false;
 
             ((ListboxItem) toSet).Selected = true;
             var notSelected = _dropDown.Components
@@ -248,8 +243,8 @@ namespace SS14.Client.UserInterface.Components
     {
         public bool Selected;
 
-        public ListboxItem(string text, int maxWidth, IResourceCache resourceCache)
-            : base(text, "CALIBRI", resourceCache)
+        public ListboxItem(string text, int maxWidth)
+            : base(text, "CALIBRI")
         {
             FixedWidth = maxWidth;
             DrawBorder = true;
@@ -261,28 +256,26 @@ namespace SS14.Client.UserInterface.Components
             base.MouseMove(e);
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-            {
                 if (Selected)
                     BackgroundColor = new Color4(47, 79, 79, 255);
                 else
                     BackgroundColor = Color4.Gray;
-            }
         }
-        
+
         protected override void OnCalcRect()
         {
             //_clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(FixedWidth, Text.Height));
 
             base.OnCalcRect();
         }
-        
+
         protected override void OnCalcPosition()
         {
             base.OnCalcPosition();
 
             //Text.Position = Position;
         }
-        
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

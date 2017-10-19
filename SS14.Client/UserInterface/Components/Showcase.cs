@@ -182,7 +182,7 @@ namespace SS14.Client.UserInterface.Components
                                   ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
                     if (FadeItems)
                         ctemp = Color4.White;
-                    selected.Key.Color = ctemp;
+                    selected.Key.ForegroundColor = ctemp;
                     selected.Key.Draw();
 
                     int lastPosLeft = selected.Key.ClientArea.Left - ItemSpacing;
@@ -206,7 +206,7 @@ namespace SS14.Client.UserInterface.Components
 
                             if (FadeItems)
                                 ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
-                            selectedLeft.Key.Color = ctemp;
+                            selectedLeft.Key.ForegroundColor = ctemp;
 
                             selectedLeft.Key.Draw();
                         }
@@ -224,7 +224,7 @@ namespace SS14.Client.UserInterface.Components
 
                             if (FadeItems)
                                 ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
-                            selectedRight.Key.Color = ctemp;
+                            selectedRight.Key.ForegroundColor = ctemp;
                             selectedRight.Key.Draw();
                         }
                     }

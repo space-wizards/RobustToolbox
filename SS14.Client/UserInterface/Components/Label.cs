@@ -40,12 +40,9 @@ namespace SS14.Client.UserInterface.Components
         
         public bool DrawTextHighlight { get; set; }
 
-        public Label(string text, string font, IResourceCache resourceCache)
-            : this(text, font, DefaultFontSize, resourceCache) { }
-
-        public Label(string text, string font, uint size, IResourceCache resourceCache)
+        public Label(string text, string font, uint size = DefaultFontSize)
         {
-            _text = new TextSprite(text, resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font, size)
+            _text = new TextSprite(text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF"), size)
             {
                 Color = base.ForegroundColor
             };

@@ -90,35 +90,35 @@ namespace SS14.Client.State.States
                 Sprite = "lobby_statusbar"
             };
 
-            _lblServer = new Label("SERVER:", "MICROGME", ResourceCache);
+            _lblServer = new Label("SERVER:", "MICROGME");
             _lblServer.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblServer);
 
-            _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceCache);
+            _lblServerInfo = new Label("LLJK#1", "MICROGME");
             _lblServerInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblServerInfo);
 
-            _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceCache);
+            _lblMode = new Label("GAMEMODE:", "MICROGME");
             _lblMode.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblMode);
 
-            _lblModeInfo = new Label("SECRET", "MICROGME", ResourceCache);
+            _lblModeInfo = new Label("SECRET", "MICROGME");
             _lblModeInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblModeInfo);
 
-            _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceCache);
+            _lblPlayers = new Label("PLAYERS:", "MICROGME");
             _lblPlayers.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPlayers);
 
-            _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceCache);
+            _lblPlayersInfo = new Label("17/32", "MICROGME");
             _lblPlayersInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPlayersInfo);
 
-            _lblPort = new Label("PORT:", "MICROGME", ResourceCache);
+            _lblPort = new Label("PORT:", "MICROGME");
             _lblPort.ForegroundColor = new Color4(245, 245, 245, 255);
             _serverLabels.Add(_lblPort);
 
-            _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME", ResourceCache);
+            _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
             _lblPortInfo.ForegroundColor = new Color4(139, 0, 0, 255);
             _serverLabels.Add(_lblPortInfo);
 
@@ -267,7 +267,7 @@ namespace SS14.Client.State.States
                 var currStatus = (SessionStatus)message.ReadByte();
                 float currRoundtrip = message.ReadFloat();
 
-                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache);
+                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
                 newLabel.Position = new Vector2i(0, offY);
                 newLabel.ForegroundColor = Color4.Black;
                 newLabel.Update(0);

@@ -35,21 +35,21 @@ namespace SS14.Client.UserInterface.Components
             { Position = new Vector2i(5, 5) };
             Components.Add(_entityList);
 
-            var searchLabel = new Label("Entity Search:", "CALIBRI", ResourceCache) { Position = new Vector2i(210, 0) };
+            var searchLabel = new Label("Entity Search:", "CALIBRI") { Position = new Vector2i(210, 0) };
             Components.Add(searchLabel);
 
-            _entSearchTextbox = new Textbox(125, ResourceCache) { Position = new Vector2i(210, 20) };
+            _entSearchTextbox = new Textbox(125) { Position = new Vector2i(210, 20) };
             _entSearchTextbox.OnSubmit += entSearchTextbox_OnSubmit;
             Components.Add(_entSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", ResourceCache)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI")
             {
                 DrawBackground = true,
                 DrawBorder = true,
                 Position = new Vector2i(210, 55)
             };
 
-            _overLabel = new Label("Override Placement:", "CALIBRI", ResourceCache)
+            _overLabel = new Label("Override Placement:", "CALIBRI")
             {
                 Position = _clearLabel.Position + new Vector2i(0, _clearLabel.ClientArea.Height + 15)
             };
@@ -72,7 +72,7 @@ namespace SS14.Client.UserInterface.Components
                                       "AlignWall",
                                   });
 
-            _lstOverride = new Listbox(140, 125, resourceCache, initOpts);
+            _lstOverride = new Listbox(140, 125, initOpts);
             _lstOverride.SelectItem("PlaceFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
             _lstOverride.Position = _overLabel.Position + new Vector2i(0, _overLabel.ClientArea.Height);
@@ -229,7 +229,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Draw()
         {
             if (Disposing || !IsVisible()) return;
-            _eraserButton.Color = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
+            _eraserButton.ForegroundColor = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
             base.Draw();
         }
 

@@ -13,6 +13,6 @@ namespace SS14.Client.UserInterface
 
         VCenter = Top | Bottom,
         HCenter = Left | Right,
-        All = HCenter | VCenter,
+        All = HCenter | VCenter
     }
 }

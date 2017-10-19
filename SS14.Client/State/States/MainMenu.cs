@@ -46,7 +46,7 @@ namespace SS14.Client.State.States
             imgTitle.LocalPosition = new Vector2i(-550, 100);
             _uiScreen.AddControl(imgTitle);
 
-            var txtConnect = new Textbox(100, ResourceCache);
+            var txtConnect = new Textbox(100);
             txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
             txtConnect.Alignment = Align.Left | Align.Bottom;
             txtConnect.LocalPosition = new Vector2i(10, 50);
@@ -98,7 +98,7 @@ namespace SS14.Client.State.States
             btnOptions.AddControl(btnExit);
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
+            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
             lblVersion.ForegroundColor = new Color4(245, 245, 245, 255);
             lblVersion.Alignment = Align.Right | Align.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };

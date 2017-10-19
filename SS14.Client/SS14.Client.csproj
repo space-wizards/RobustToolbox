@@ -230,11 +230,8 @@
     <Compile Include="ResourceManagement\SpriteResource.cs" />
     <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="UserInterface\Align.cs" />
-    <Compile Include="UserInterface\Anchor.cs" />
     <Compile Include="UserInterface\Components\Panel.cs" />
-    <Compile Include="UserInterface\Input.cs" />
     <Compile Include="UserInterface\Components\Screen.cs" />
-    <Compile Include="UserInterface\Rectangle.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />

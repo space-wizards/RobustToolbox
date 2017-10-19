@@ -27,8 +27,8 @@ namespace SS14.Client.UserInterface.Components
             _userInterfaceManager = userInterfaceManager;
             _userInterfaceManager.DisposeAllComponents();
 
-            _message = new Label(message, "CALIBRI", _resourceCache);
-            _mainMenuButton = new Button("Main Menu", _resourceCache);
+            _message = new Label(message, "CALIBRI");
+            _mainMenuButton = new Button("Main Menu");
             _mainMenuButton.Clicked += MainMenuButtonClicked;
             _mainMenuButton.Label.Color = new Color4(245, 245, 245, 255);
             _message.ForegroundColor = new Color4(245, 245, 245, 255);

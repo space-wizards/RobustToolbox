@@ -14,45 +14,35 @@ namespace SS14.Client.UserInterface.Components
     {
         public delegate void ImageButtonPressHandler(ImageButton sender);
         
-        private readonly IResourceCache _resourceCache;
         private Sprite _buttonClick;
         private Sprite _buttonHover;
         private Sprite _buttonNormal;
+
         private Sprite _drawSprite;
-
-        public ImageButton()
-        {
-            _resourceCache = IoCManager.Resolve<IResourceCache>();
-            Color = Color4.White;
-        }
-
-        public Color4 Color { get; set; }
-
+        
         public string ImageNormal
         {
             set
             {
-                _buttonNormal = _resourceCache.GetSprite(value);
+                _buttonNormal = new Sprite(_resourceCache.GetSprite(value));
 
                 if (_drawSprite == null)
                     _drawSprite = _buttonNormal;
-
-                OnCalcPosition();
             }
         }
 
         public string ImageHover
         {
-            set => _buttonHover = _resourceCache.GetSprite(value);
+            set => _buttonHover = new Sprite(_resourceCache.GetSprite(value));
         }
 
         public string ImageClick
         {
-            set => _buttonClick = _resourceCache.GetSprite(value);
+            set => _buttonClick = new Sprite(_resourceCache.GetSprite(value));
         }
 
         public event ImageButtonPressHandler Clicked;
-
+        
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
@@ -61,20 +51,16 @@ namespace SS14.Client.UserInterface.Components
                 var bounds = _drawSprite.GetLocalBounds();
                 _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
             }
-
         }
         
         /// <inheritdoc />
-        public override void Draw()
+        protected override void DrawContents()
         {
-            base.Draw();
-
             if (_drawSprite == null)
                 return;
-
-            _drawSprite.Color = Color.Convert();
+            
             _drawSprite.Position = new Vector2f(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
-            _drawSprite.Texture.Smooth = true;
+            
             _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 
@@ -85,8 +71,8 @@ namespace SS14.Client.UserInterface.Components
             _buttonHover = null;
             _buttonClick = null;
             Clicked = null;
+
             base.Dispose();
-            GC.SuppressFinalize(this);
         }
 
         public override void MouseMove(MouseMoveEventArgs e)

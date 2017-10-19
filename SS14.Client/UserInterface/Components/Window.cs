@@ -34,7 +34,7 @@ namespace SS14.Client.UserInterface.Components
             };
 
             closeButton.Clicked += CloseButtonClicked;
-            title = new Label(windowTitle, "CALIBRI", ResourceCache);
+            title = new Label(windowTitle, "CALIBRI");
             gradient = new GradientBox();
             DrawBackground = true;
             Update(0);

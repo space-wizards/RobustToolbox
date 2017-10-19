@@ -18,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
         public ExamineWindow(Vector2i size, IEntity entity, IResourceCache resourceCache)
             : base(entity.Name, size, resourceCache)
         {
-            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI", ResourceCache);
+            _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI");
 
             Components.Add(_entityDescription);
 

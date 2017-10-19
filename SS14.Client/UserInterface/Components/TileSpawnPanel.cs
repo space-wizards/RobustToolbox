@@ -29,14 +29,14 @@ namespace SS14.Client.UserInterface.Components
                             {Position = new Vector2i(5, 5)};
             Components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", ResourceCache) {Position = new Vector2i(210, 0)};
+            var searchLabel = new Label("Tile Search:", "CALIBRI") {Position = new Vector2i(210, 0)};
             Components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, ResourceCache) {Position = new Vector2i(210, 20)};
+            _tileSearchTextbox = new Textbox(125) {Position = new Vector2i(210, 20)};
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             Components.Add(_tileSearchTextbox);
 
-            _clearLabel = new Label("[Clear Filter]", "CALIBRI", ResourceCache)
+            _clearLabel = new Label("[Clear Filter]", "CALIBRI")
                               {
                                   DrawBackground = true,
                                   DrawBorder = true,
@@ -89,7 +89,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (string entry in tileDefs)
             {
-                var tileLabel = new Label(entry, "CALIBRI", ResourceCache);
+                var tileLabel = new Label(entry, "CALIBRI");
                 _tileList.Components.Add(tileLabel);
                 tileLabel.Position = new Vector2i(5, yOffset);
                 tileLabel.DrawBackground = true;

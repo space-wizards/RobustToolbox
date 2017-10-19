@@ -17,7 +17,7 @@ namespace SS14.Client.Graphics.Sprites
     /// Provides optimized drawing of sprites
     /// </summary>
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
-    public class SpriteBatch : Drawable, IDrawable
+    public class SpriteBatch : IDrawable, Drawable
     {
         private QueueItem activeItem;
         private List<QueueItem> QueuedTextures = new List<QueueItem>();

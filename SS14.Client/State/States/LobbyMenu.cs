@@ -1,15 +1,19 @@
 ﻿using Lidgren.Network;
+using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.Client.State.States
 {
@@ -82,35 +86,35 @@ namespace SS14.Client.State.States
             };
 
             _lblServer = new Label("SERVER:", "MICROGME", ResourceCache);
-            _lblServer.Text.Color = new Color4(245, 245, 245, 255);
+            _lblServer.Text.FillColor = new Color(245, 245, 245);
             _serverLabels.Add(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME", ResourceCache);
-            _lblServerInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblServerInfo.Text.FillColor = new Color(139, 0, 0);
             _serverLabels.Add(_lblServerInfo);
 
             _lblMode = new Label("GAMEMODE:", "MICROGME", ResourceCache);
-            _lblMode.Text.Color = new Color4(245, 245, 245, 255);
+            _lblMode.Text.FillColor = new Color(245, 245, 245);
             _serverLabels.Add(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME", ResourceCache);
-            _lblModeInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblModeInfo.Text.FillColor = new Color(139, 0, 0);
             _serverLabels.Add(_lblModeInfo);
 
             _lblPlayers = new Label("PLAYERS:", "MICROGME", ResourceCache);
-            _lblPlayers.Text.Color = new Color4(245, 245, 245, 255);
+            _lblPlayers.Text.FillColor = new Color(245, 245, 245);
             _serverLabels.Add(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME", ResourceCache);
-            _lblPlayersInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblPlayersInfo.Text.FillColor = new Color(139, 0, 0);
             _serverLabels.Add(_lblPlayersInfo);
 
             _lblPort = new Label("PORT:", "MICROGME", ResourceCache);
-            _lblPort.Text.Color = new Color4(245, 245, 245, 255);
+            _lblPort.Text.FillColor = new Color(245, 245, 245);
             _serverLabels.Add(_lblPort);
 
             _lblPortInfo = new Label(MainScreen.DEFAULT_PORT.ToString(), "MICROGME", ResourceCache);
-            _lblPortInfo.Text.Color = new Color4(139, 0, 0, 255);
+            _lblPortInfo.Text.FillColor = new Color(139, 0, 0);
             _serverLabels.Add(_lblPortInfo);
 
             _tabs = new TabbedMenu
@@ -258,9 +262,11 @@ namespace SS14.Client.State.States
                 var currStatus = (SessionStatus)message.ReadByte();
                 float currRoundtrip = message.ReadFloat();
 
-                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache);
-                newLabel.Position = new Vector2i(0, offY);
-                newLabel.TextColor = Color4.Black;
+                Label newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE", ResourceCache)
+                {
+                    Position = new Vector2i(0, offY),
+                    TextColor = Color.Black
+                };
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.components.Add(newLabel);

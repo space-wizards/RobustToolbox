@@ -1,5 +1,6 @@
-using SS14.Client.Graphics.Shader;
+﻿using SS14.Client.Graphics.Shader;
 using SRenderStates = SFML.Graphics.RenderStates;
+using SBlendMode = SFML.Graphics.BlendMode;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -13,6 +14,10 @@ namespace SS14.Client.Graphics.Render
         }
 
         public RenderStates(GLSLShader shader) : this(new SRenderStates(shader.SFMLShader))
+        {
+        }
+
+        public RenderStates(BlendMode mode) : this(new SRenderStates((SBlendMode)mode))
         {
         }
 

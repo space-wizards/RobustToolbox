@@ -1,7 +1,4 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
@@ -10,6 +7,7 @@ using SS14.Shared.Maths;
 using System.Linq;
 using SS14.Client.ResourceManagement;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -20,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
         public delegate void EntitySpawnSelectPress(
             EntitySpawnSelectButton sender, EntityPrototype template, string templateName);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceCache _resourceCache;
         private readonly EntityPrototype associatedTemplate;
@@ -52,9 +50,11 @@ namespace SS14.Client.UserInterface.Components
             objectSprite = _resourceCache.GetSprite(SpriteName);
 
             font = _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font;
-            name = new TextSprite("Label" + SpriteName, "Name", font);
-            name.Color = Color4.Black;
-            name.Text = ObjectName;
+            name = new TextSprite("Name", font)
+            {
+                FillColor = Color.Black,
+                Text = ObjectName
+            };
         }
 
         public event EntitySpawnSelectPress Clicked;
@@ -77,23 +77,23 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            objectSprite.Position = new Vector2f(Position.X + 5, Position.Y + 5);
-            var bounds = objectSprite.GetLocalBounds();
+            objectSprite.Position = Position + 5;
+            var bounds = objectSprite.LocalBounds;
             name.Position = new Vector2i((int)(objectSprite.Position.X + bounds.Width + 5), (int)objectSprite.Position.Y);
             ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(
                                            fixed_width != -1
                                                ? fixed_width
-                                               : ((int)bounds.Width + (int) name.Width + 15),
-                                           ((int)bounds.Height > (int) name.Height
+                                               : ((int)bounds.Width + (int)name.Width + 15),
+                                           ((int)bounds.Height > (int)name.Height
                                                 ? (int)bounds.Height
-                                                : ((int) name.Height + 5)) + 10));
+                                                : ((int)name.Height + 5)) + 10));
         }
 
         public override void Render()
         {
-           CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
-                                                       selected ? new Color4(34, 139, 34, 255) : new Color4(255, 250, 240, 255));
+            CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height,
+                                                        selected ? new Color4(34, 139, 34, 255) : new Color4(255, 250, 240, 255));
 
             objectSprite.Draw();
             name.Draw();

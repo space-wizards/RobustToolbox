@@ -1,6 +1,4 @@
 ﻿using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Placement;
@@ -10,6 +8,7 @@ using SS14.Shared.IoC;
 using System;
 using System.Linq;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -26,22 +25,22 @@ namespace SS14.Client.UserInterface.Components
             _placementManager = placementManager;
 
             _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceCache)
-                            {Position = new Vector2i(5, 5)};
+            { Position = new Vector2i(5, 5) };
             components.Add(_tileList);
 
-            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceCache) {Position = new Vector2i(210, 0)};
+            var searchLabel = new Label("Tile Search:", "CALIBRI", _resourceCache) { Position = new Vector2i(210, 0) };
             components.Add(searchLabel);
 
-            _tileSearchTextbox = new Textbox(125, _resourceCache) {Position = new Vector2i(210, 20)};
+            _tileSearchTextbox = new Textbox(125, _resourceCache) { Position = new Vector2i(210, 20) };
             _tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             components.Add(_tileSearchTextbox);
 
             _clearLabel = new Label("[Clear Filter]", "CALIBRI", _resourceCache)
-                              {
-                                  DrawBackground = true,
-                                  DrawBorder = true,
-                                  Position = new Vector2i(210, 55)
-                              };
+            {
+                DrawBackground = true,
+                DrawBorder = true,
+                Position = new Vector2i(210, 55)
+            };
 
             _clearLabel.Clicked += ClearLabelClicked;
             _clearLabel.BackgroundColor = Color4.Gray;
@@ -49,8 +48,8 @@ namespace SS14.Client.UserInterface.Components
 
             BuildTileList();
 
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 
@@ -67,8 +66,8 @@ namespace SS14.Client.UserInterface.Components
 
         private void PlacementManagerPlacementCanceled(object sender, EventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
-                ((Label) curr).BackgroundColor = Color4.Gray;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
+                ((Label)curr).BackgroundColor = Color4.Gray;
         }
 
         private void BuildTileList(string searchStr = null)
@@ -100,22 +99,22 @@ namespace SS14.Client.UserInterface.Components
                 if (tileLabel.ClientArea.Width > maxWidth) maxWidth = tileLabel.ClientArea.Width;
             }
 
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
-                ((Label) curr).FixedWidth = maxWidth;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
+                ((Label)curr).FixedWidth = maxWidth;
         }
 
         private void TileLabelClicked(Label sender, MouseButtonEventArgs e)
         {
-            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof (Label)))
-                ((Label) curr).BackgroundColor = Color4.Gray;
+            foreach (GuiComponent curr in _tileList.components.Where(curr => curr.GetType() == typeof(Label)))
+                ((Label)curr).BackgroundColor = Color4.Gray;
 
             var newObjInfo = new PlacementInformation
-                                 {
-                                     PlacementOption = "AlignTileAny",
-                                     TileType = IoCManager.Resolve<ITileDefinitionManager>()[sender.Text.Text].TileId,
-                                     Range = 400,
-                                     IsTile = true
-                                 };
+            {
+                PlacementOption = "AlignTileAny",
+                TileType = IoCManager.Resolve<ITileDefinitionManager>()[sender.Text.Text].TileId,
+                Range = 400,
+                IsTile = true
+            };
 
             _placementManager.BeginPlacing(newObjInfo);
 
@@ -162,7 +161,7 @@ namespace SS14.Client.UserInterface.Components
             base.MouseMove(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (_tileList.MouseWheelMove(e)) return true;
             if (base.MouseWheelMove(e)) return true;
@@ -171,7 +170,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == Keyboard.Key.Escape)
+            if (e.Key == Keyboard.Key.Escape)
             {
                 Dispose();
                 return true;

@@ -8,6 +8,8 @@ using System.Linq;
 using Label = SS14.Client.UserInterface.Components.Label;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.State.States
 {
@@ -127,7 +129,7 @@ namespace SS14.Client.State.States
         {
             _lstResolution.ClearItems();
             vmList.Clear();
-            IOrderedEnumerable<VideoMode> modes = from v in SFML.Window.VideoMode.FullscreenModes
+            IOrderedEnumerable<VideoMode> modes = from v in VideoMode.FullscreenModes
                                                   where (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
                                                   orderby v.Height * v.Width ascending
                                                   select v;

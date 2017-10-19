@@ -224,7 +224,7 @@ namespace SS14.Client.Graphics.Render
 
         #region Drawing Methods
 
-        public void Draw(Drawable drawable)
+        public void DrawSFML(Drawable drawable)
         {
             _renderTexture.Draw(drawable);
         }

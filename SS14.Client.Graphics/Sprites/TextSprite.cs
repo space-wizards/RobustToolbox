@@ -55,7 +55,7 @@ namespace SS14.Client.Graphics.Sprites
         /// <param name="Label"> Label of TextSprite </param>
         /// <param name="text"> Text to display </param>
         /// <param name="font"> Font to use when displaying Text </param>
-        public TextSprite(string text, Font font) : this(text, font, 14) {}
+        public TextSprite(string text, Font font) : this(text, font, 14) { }
 
         /// <summary>
         /// Draws the TextSprite to the CurrentRenderTarget
@@ -112,6 +112,10 @@ namespace SS14.Client.Graphics.Sprites
         #endregion Methods
 
         #region Accessors
+
+        public Color ShadowColor { get; set; }
+        public bool Shadowed { get; set; } = false;
+        public Vector2 ShadowOffset { get; set; }
 
         public Color FillColor
         {

@@ -1,6 +1,5 @@
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+﻿using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -24,7 +23,6 @@ namespace SS14.Client.UserInterface.Components
 
         public virtual void Activated() //Called when tab is selected.
         {
-
         }
 
         public override void Update(float frameTime)

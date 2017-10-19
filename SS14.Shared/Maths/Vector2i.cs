@@ -7,6 +7,8 @@ namespace SS14.Shared.Maths
     [StructLayout(LayoutKind.Sequential)]
     public struct Vector2i : IEquatable<Vector2i>
     {
+        public static readonly Vector2i Zero = new Vector2i(0, 0);
+
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>
@@ -46,7 +48,7 @@ namespace SS14.Shared.Maths
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Vector2i && Equals((Vector2i) obj);
+            return obj is Vector2i && Equals((Vector2i)obj);
         }
 
         /// <summary>
@@ -66,9 +68,19 @@ namespace SS14.Shared.Maths
             return new Vector2i(a.X - b.X, a.Y - b.Y);
         }
 
+        public static Vector2i operator -(Vector2i a, int b)
+        {
+            return new Vector2i(a.X - b, a.Y - b);
+        }
+
         public static Vector2i operator +(Vector2i a, Vector2i b)
         {
             return new Vector2i(a.X + b.X, a.Y + b.Y);
+        }
+
+        public static Vector2i operator +(Vector2i a, int b)
+        {
+            return new Vector2i(a.X + b, a.Y + b);
         }
 
         public static Vector2i operator *(Vector2i a, Vector2i b)

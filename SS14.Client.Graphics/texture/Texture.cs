@@ -42,6 +42,12 @@ namespace SS14.Client.Graphics.Textures
             SFMLTexture = sfmlTexture;
         }
 
+        public bool Smooth
+        {
+            get => SFMLTexture.Smooth;
+            set => SFMLTexture.Smooth = value;
+        }
+
         public void Dispose() => SFMLTexture.Dispose();
     }
 }

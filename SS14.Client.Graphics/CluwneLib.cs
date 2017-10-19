@@ -18,6 +18,7 @@ using GraphicsContext = OpenTK.Graphics.GraphicsContext;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using VideoMode = SS14.Client.Graphics.Render.VideoMode;
+using Font = SS14.Client.Graphics.Sprites.Font;
 
 namespace SS14.Client.Graphics
 {
@@ -217,7 +218,7 @@ namespace SS14.Client.Graphics
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
             rectangle.FillColor = Color.Convert();
 
-            CurrentRenderTarget.Draw(rectangle);
+            CurrentRenderTarget.DrawSFML(rectangle);
         }
 
         /// <summary>
@@ -235,7 +236,7 @@ namespace SS14.Client.Graphics
             rectangle.Size = new SFML.System.Vector2f(WidthX, HeightY);
             rectangle.FillColor = Color.Convert();
 
-            CurrentRenderTarget.Draw(rectangle);
+            CurrentRenderTarget.DrawSFML(rectangle);
         }
 
         /// <summary>
@@ -256,7 +257,7 @@ namespace SS14.Client.Graphics
             HollowRect.OutlineThickness = OutlineThickness;
             HollowRect.OutlineColor = OutlineColor.Convert();
 
-            CurrentRenderTarget.Draw(HollowRect);
+            CurrentRenderTarget.DrawSFML(HollowRect);
         }
         #endregion Rectangle
 
@@ -275,7 +276,7 @@ namespace SS14.Client.Graphics
             Circle.Radius = radius;
             Circle.FillColor = color.Convert();
 
-            CurrentRenderTarget.Draw(Circle);
+            CurrentRenderTarget.DrawSFML(Circle);
         }
         /// <summary>
         /// Draws a Hollow Circle to the CurrentRenderTarget
@@ -294,7 +295,7 @@ namespace SS14.Client.Graphics
             Circle.OutlineThickness = OutlineThickness;
             Circle.OutlineColor = OutlineColor.Convert();
 
-            CurrentRenderTarget.Draw(Circle);
+            CurrentRenderTarget.DrawSFML(Circle);
         }
 
         #endregion Circle
@@ -313,7 +314,7 @@ namespace SS14.Client.Graphics
             Point.Size = new Vector2f(1, 1);
             Point.FillColor = color.Convert();
 
-            CurrentRenderTarget.Draw(Point);
+            CurrentRenderTarget.DrawSFML(Point);
         }
 
         /// <summary>
@@ -331,7 +332,7 @@ namespace SS14.Client.Graphics
             hollowPoint.OutlineThickness = .6f;
             hollowPoint.OutlineColor = OutlineColor.Convert();
 
-            CurrentRenderTarget.Draw(hollowPoint);
+            CurrentRenderTarget.DrawSFML(hollowPoint);
         }
 
         #endregion Point
@@ -355,7 +356,7 @@ namespace SS14.Client.Graphics
             line.FillColor = Color.Convert();
             line.OutlineColor = Color.Convert();
 
-            CurrentRenderTarget.Draw(line);
+            CurrentRenderTarget.DrawSFML(line);
         }
 
         #endregion Line
@@ -371,12 +372,12 @@ namespace SS14.Client.Graphics
         /// <param name="textColor"> Color of the text </param>
         public static void drawText(float posX, float posY, string text, uint size, Color textColor, Font font)
         {
-            Text _text = new Text(text, font);
+            Text _text = new Text(text, font.SFMLFont);
             _text.Position = new SFML.System.Vector2f(posX, posY);
             _text.FillColor = textColor.Convert();
             _text.CharacterSize = size;
 
-            CurrentRenderTarget.Draw(_text);
+            CurrentRenderTarget.DrawSFML(_text);
         }
         #endregion Text
 

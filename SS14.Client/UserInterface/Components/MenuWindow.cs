@@ -1,7 +1,5 @@
-﻿using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Network;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -10,7 +8,6 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
@@ -30,8 +27,8 @@ namespace SS14.Client.UserInterface.Components
 
         public MenuWindow() : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceCache>())
         {
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
 
             button_entity = new Button("Spawn Entities", _resMgr);
             button_entity.Clicked += button_entity_Clicked;
@@ -75,7 +72,6 @@ namespace SS14.Client.UserInterface.Components
             //Create a new one.
             ToggleVisible();
             _userInterfaceManager.RemoveFocus(this);
-
         }
 
         override protected void CloseButtonClicked(ImageButton sender)
@@ -85,7 +81,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == Keyboard.Key.Escape)
+            if (e.Key == Keyboard.Key.Escape)
             {
                 if (IsVisible())
                 {

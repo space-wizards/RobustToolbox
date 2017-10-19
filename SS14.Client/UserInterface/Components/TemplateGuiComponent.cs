@@ -1,5 +1,5 @@
-using Lidgren.Network;
-using SFML.Window;
+﻿using Lidgren.Network;
+using SS14.Client.Graphics.Input;
 using SS14.Shared;
 using System;
 
@@ -60,7 +60,7 @@ namespace SS14.Client.UserInterface.Components
         {
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             return false;
         }

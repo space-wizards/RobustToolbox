@@ -75,7 +75,7 @@ namespace SS14.Client.State.States
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            _lblVersion.Text.Color = new Color(245, 245, 245);
+            _lblVersion.Text.FillColor = new Color(245, 245, 245);
 
             _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
                                              _Height - _lblVersion.ClientArea.Height - 3);

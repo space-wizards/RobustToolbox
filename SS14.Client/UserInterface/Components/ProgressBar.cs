@@ -1,16 +1,13 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -32,11 +29,13 @@ namespace SS14.Client.UserInterface.Components
         public Progress_Bar(Vector2i size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("ProgressBarText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            Text.Color = Color4.Black;
-            Text.ShadowColor = new Color4(105, 105, 105, 255);
-            Text.ShadowOffset = new Vector2(1, 1);
-            Text.Shadowed = true;
+            Text = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
+            {
+                FillColor = Color.Black,
+                ShadowColor = new Color(105, 105, 105),
+                ShadowOffset = new Vector2(1, 1),
+                Shadowed = true
+            };
 
             Size = size;
 
@@ -53,20 +52,20 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            Text.Text = Math.Round(percent*100).ToString() + "%";
-            Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
-                                         Position.Y + (int)(Size.Y/2f - Text.Height/2f));
+            Text.Text = Math.Round(percent * 100).ToString() + "%";
+            Text.Position = new Vector2i(Position.X + (int)(Size.X / 2f - Text.Width / 2f),
+                                         Position.Y + (int)(Size.Y / 2f - Text.Height / 2f));
             ClientArea = Box2i.FromDimensions(Position, Size);
             Value++;
         }
 
         public override void Render()
         {
-            percent = (val - min)/(max - min);
-            float barWidth = Size.X*percent;
+            percent = (val - min) / (max - min);
+            float barWidth = Size.X * percent;
 
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, backgroundColor);
-            CluwneLib.drawHollowRectangle (ClientArea.Left, ClientArea.Top, ClientArea.Width,ClientArea.Height, barWidth, barColor);
+            CluwneLib.drawHollowRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, barWidth, barColor);
             CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, borderColor);
 
             Text.Draw();

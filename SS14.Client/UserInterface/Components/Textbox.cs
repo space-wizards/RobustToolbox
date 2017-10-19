@@ -1,8 +1,6 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
@@ -66,7 +64,7 @@ namespace SS14.Client.UserInterface.Components
 
             Width = width;
 
-            Label = new TextSprite("Textbox", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color4.Black };
+            Label = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { FillColor = Color.Black };
 
             Update(0);
         }
@@ -85,9 +83,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            var boundsLeft = _textboxLeft.GetLocalBounds();
-            var boundsMain = _textboxMain.GetLocalBounds();
-            var boundsRight = _textboxRight.GetLocalBounds();
+            var boundsLeft = _textboxLeft.LocalBounds;
+            var boundsMain = _textboxMain.LocalBounds;
+            var boundsRight = _textboxRight.LocalBounds;
             _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
 
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
@@ -112,9 +110,9 @@ namespace SS14.Client.UserInterface.Components
         {
             if (drawColor != Color4.White)
             {
-                _textboxLeft.Color = drawColor.Convert();
-                _textboxMain.Color = drawColor.Convert();
-                _textboxRight.Color = drawColor.Convert();
+                _textboxLeft.Color = drawColor;
+                _textboxMain.Color = drawColor;
+                _textboxRight.Color = drawColor;
             }
 
             _textboxLeft.SetTransformToRect(_clientAreaLeft);
@@ -134,7 +132,7 @@ namespace SS14.Client.UserInterface.Components
                 _textboxRight.Color = Color.White;
             }
 
-            Label.Color = textColor;
+            Label.FillColor = textColor;
             Label.Text = _displayText;
             Label.Draw();
         }
@@ -169,7 +167,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (!Focus) return false;
 
-            if (e.Control && e.Code == Keyboard.Key.V)
+            if (e.Control && e.Key == Keyboard.Key.V)
             {
                 string ret = System.Windows.Forms.Clipboard.GetText();
                 Text = Text.Insert(_caretIndex, ret);
@@ -179,7 +177,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (e.Control && e.Code == Keyboard.Key.C)
+            if (e.Control && e.Key == Keyboard.Key.C)
             {
                 System.Windows.Forms.Clipboard.SetText(Text);
                 ignoreNextText = true;
@@ -187,33 +185,33 @@ namespace SS14.Client.UserInterface.Components
             }
 
             // Control + Backspace to delete all text
-            if (e.Control && e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
+            if (e.Control && e.Key == Keyboard.Key.BackSpace && Text.Length >= 1)
             {
                 Clear();
                 ignoreNextText = true;
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Left)
+            if (e.Key == Keyboard.Key.Left)
             {
                 if (_caretIndex > 0) _caretIndex--;
                 SetVisibleText();
                 return true;
             }
-            else if (e.Code == Keyboard.Key.Right)
+            else if (e.Key == Keyboard.Key.Right)
             {
                 if (_caretIndex < _text.Length) _caretIndex++;
                 SetVisibleText();
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Return && (AllowEmptySubmit || Text.Length >= 1))
+            if (e.Key == Keyboard.Key.Return && (AllowEmptySubmit || Text.Length >= 1))
             {
                 Submit();
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
+            if (e.Key == Keyboard.Key.BackSpace && Text.Length >= 1)
             {
                 if (_caretIndex == 0) return true;
 
@@ -223,7 +221,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Delete && Text.Length >= 1)
+            if (e.Key == Keyboard.Key.Delete && Text.Length >= 1)
             {
                 if (_caretIndex >= Text.Length) return true;
                 Text = Text.Remove(_caretIndex, 1);
@@ -236,7 +234,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool TextEntered(TextEventArgs e)
         {
-            if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Unicode))
+            if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Text))
                 return false;
 
             if (ignoreNextText)
@@ -245,7 +243,7 @@ namespace SS14.Client.UserInterface.Components
                 return false;
             }
 
-            Text = Text.Insert(_caretIndex, e.Unicode);
+            Text = Text.Insert(_caretIndex, e.Text);
             if (_caretIndex < _text.Length) _caretIndex++;
             SetVisibleText();
             return true;

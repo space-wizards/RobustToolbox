@@ -1,14 +1,14 @@
 ﻿using NUnit.Framework;
-using SFML.Graphics;
-using SFML.System;
-using OpenTK;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Resource;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Helpers;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Interfaces.Configuration;
-using System;
+using SS14.Shared.Maths;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.UnitTesting.Client.Helpers
 {
@@ -43,50 +43,37 @@ namespace SS14.UnitTesting.Client.Helpers
             clock = base.GetClock;
         }
 
-
         [Test]
         public void GaussianBlurRadius11_ShouldBlur()
         {
-
             preblur = new RenderImage("testGaussianBlur", 1280, 768);
             _gaussianBlur = new GaussianBlur(_resourceCache);
 
-
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
-
-
+            _gaussianBlur.SetSize(preblur.Size);
 
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Window.DispatchEvents();
 
-
                 preblur.BeginDrawing(); // set temp as CRT (Current Render Target)
                 //preblur.Clear();       //Clear
                 sprite = _resourceCache.GetSprite("flashlight_mask");
-                sprite.Position = new Vector2f();
+                sprite.Position = Vector2.Zero;
                 sprite.Draw();
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
-
-
                 //_gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
 
-
-                preblur.Blit(0,0, preblur.Width, preblur.Height,Color.White, BlitterSizeMode.Crop ); // draw blurred nosprite logo
-
-
+                preblur.Blit(0, 0, preblur.Width, preblur.Height, Color.White, BlitterSizeMode.Crop); // draw blurred nosprite logo
 
                 CluwneLib.Window.Graphics.Display();
-
             }
-
         }
 
         [Test]
@@ -100,35 +87,25 @@ namespace SS14.UnitTesting.Client.Helpers
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
-
-
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Window.DispatchEvents();
-
 
                 preblur.BeginDrawing(); // set temp as CRT
                 preblur.Clear();       //Clear
                 _resourceCache.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
-
-
                 _gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
-
 
                 preblur.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
-
-
                 CluwneLib.Window.Graphics.Display();
-
             }
-
         }
 
         [Test]
@@ -142,35 +119,25 @@ namespace SS14.UnitTesting.Client.Helpers
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
-
-
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Window.DispatchEvents();
-
 
                 preblur.BeginDrawing(); // set temp as CRT
                 preblur.Clear();       //Clear
                 _resourceCache.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
-
-
                 _gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
-
 
                 preblur.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
-
-
                 CluwneLib.Window.Graphics.Display();
-
             }
-
         }
 
         [Test]
@@ -184,35 +151,25 @@ namespace SS14.UnitTesting.Client.Helpers
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
-
-
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Window.DispatchEvents();
-
 
                 preblur.BeginDrawing(); // set temp as CRT
                 preblur.Clear();       //Clear
                 _resourceCache.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
-
-
                 _gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
-
 
                 preblur.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
-
-
                 CluwneLib.Window.Graphics.Display();
-
             }
-
         }
 
         [Test]
@@ -226,37 +183,25 @@ namespace SS14.UnitTesting.Client.Helpers
             _gaussianBlur.SetAmount(2);
             _gaussianBlur.SetSize(new Vector2(preblur.Width, preblur.Height));
 
-
-
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);
                 CluwneLib.Window.DispatchEvents();
-
 
                 preblur.BeginDrawing(); // set temp as CRT
                 preblur.Clear();       //Clear
                 _resourceCache.GetSprite("flashlight_mask").Draw(); //Draw NoSpritelogo
                 preblur.EndDrawing();  // set previous rendertarget as CRT (screen in this case)
 
-
-
                 _gaussianBlur.PerformGaussianBlur(preblur); // blur rendertarget
-
 
                 preblur.Blit(0, 0, 1280, 768); // draw blurred nosprite logo
 
-
-
                 CluwneLib.Window.Graphics.Display();
-
             }
-
         }
-
     }
-
 }

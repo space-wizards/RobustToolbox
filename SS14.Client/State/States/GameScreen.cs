@@ -453,7 +453,7 @@ namespace SS14.Client.State.States
                 var mousepos = CluwneLib.ScreenToCoordinates(MousePosScreen);
                 Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
-                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color4.White, font);
+                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White, font);
                 CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White, font);
                 CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
                 CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
@@ -1020,7 +1020,7 @@ namespace SS14.Client.State.States
         {
             if (bFullVision)
             {
-                playerOcclusionTarget.Clear(new SFML.Graphics.Color(211, 211, 211));
+                playerOcclusionTarget.Clear(new Color(211, 211, 211));
                 return;
             }
             if (bPlayerVision)

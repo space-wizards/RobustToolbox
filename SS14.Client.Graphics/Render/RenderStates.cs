@@ -13,8 +13,16 @@ namespace SS14.Client.Graphics.Render
             SFMLRenderStates = states;
         }
 
-        public RenderStates(GLSLShader shader) : this(new SRenderStates(shader.SFMLShader))
+        public RenderStates(GLSLShader shader)
         {
+            if (shader == null)
+            {
+                SFMLRenderStates = Default.SFMLRenderStates;
+            }
+            else
+            {
+                SFMLRenderStates = new SRenderStates(shader.SFMLShader);
+            }
         }
 
         public RenderStates(BlendMode mode) : this(new SRenderStates((SBlendMode)mode))

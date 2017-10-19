@@ -64,6 +64,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clock.cs" />
     <Compile Include="CluwneLib.cs" />
     <Compile Include="Collection\AnimationCollection.cs" />
     <Compile Include="Collection\BaseCollection.cs" />

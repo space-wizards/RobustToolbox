@@ -152,8 +152,8 @@ namespace SS14.Client.Graphics.Render
         public RenderImage(string key, uint width, uint height, ImageBufferFormats IBF)
         {
             _renderTexture = new RenderTexture(width, height);
-            CheckIfKeyIsNull(Key);
-            Key = Key;
+            CheckIfKeyIsNull(key);
+            Key = key;
             BlendSettings = BlendMode.Alpha;
         }
 
@@ -237,6 +237,11 @@ namespace SS14.Client.Graphics.Render
         public void Clear(Color color)
         {
             _renderTexture.Clear(color.Convert());
+        }
+
+        public void Clear()
+        {
+            Clear(Color.Black);
         }
 
         /// <summary>

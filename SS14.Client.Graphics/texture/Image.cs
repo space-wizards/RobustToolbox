@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Maths;
@@ -39,6 +39,7 @@ namespace SS14.Client.Graphics.Textures
             {
                 throw new ArgumentException("Must be able to seek and read from stream.", nameof(stream));
             }
+            SFMLImage = new SImage(stream);
         }
 
         public void Dispose() => SFMLImage.Dispose();

@@ -83,7 +83,7 @@ namespace SS14.Client.Graphics.Render
 
         public void Draw(IDrawable drawable)
         {
-            Draw(drawable.SFMLDrawable);
+            DrawSFML(drawable.SFMLDrawable);
         }
 
         public void DrawSFML(Drawable drawable)

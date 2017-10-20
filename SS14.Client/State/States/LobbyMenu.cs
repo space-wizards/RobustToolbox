@@ -6,6 +6,7 @@ using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.IoC;

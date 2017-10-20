@@ -1,15 +1,17 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Resource;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using OpenTK.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces.Resource;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     internal struct PropWindowStruct
     {

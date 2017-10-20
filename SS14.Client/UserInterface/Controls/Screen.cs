@@ -1,7 +1,7 @@
 ﻿using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     /// <summary>
     ///     UI Base screen that holds all of the other controls.

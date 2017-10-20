@@ -276,10 +276,10 @@
     <Compile Include="UserInterface\DragDropInfo.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
-    <Compile Include="UserInterface\Controls\Chatbox.cs" />
+    <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="UserInterface\Controls\Checkbox.cs" />
     <Compile Include="UserInterface\Controls\ContextMenu.cs" />
-    <Compile Include="UserInterface\Controls\DebugConsole.cs" />
+    <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
     <Compile Include="UserInterface\Controls\EntitySpawnPanel.cs" />
     <Compile Include="UserInterface\Controls\EntitySpawnSelectButton.cs" />
@@ -289,9 +289,9 @@
     <Compile Include="UserInterface\Controls\ImageButton.cs" />
     <Compile Include="UserInterface\Controls\Label.cs" />
     <Compile Include="UserInterface\Controls\Listbox.cs" />
-    <Compile Include="UserInterface\Controls\MenuWindow.cs" />
+    <Compile Include="UserInterface\CustomControls\MenuWindow.cs" />
     <Compile Include="UserInterface\Controls\ProgressBar.cs" />
-    <Compile Include="UserInterface\Controls\PropEditWindow.cs" />
+    <Compile Include="UserInterface\CustomControls\PropEditWindow.cs" />
     <Compile Include="UserInterface\Controls\ScrollableContainer.cs" />
     <Compile Include="UserInterface\Controls\Scrollbar.cs" />
     <Compile Include="UserInterface\Controls\Showcase.cs" />

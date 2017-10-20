@@ -11,6 +11,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.UserInterface.Controls;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components

@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Input;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.UserInterface.Components
 {

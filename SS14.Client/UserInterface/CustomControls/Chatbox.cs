@@ -1,17 +1,19 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     public class Chatbox : ScrollableContainer
     {

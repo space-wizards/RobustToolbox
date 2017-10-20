@@ -10,7 +10,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using KeyEventArgs = SS14.Client.Graphics.Input.KeyEventArgs;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.Controls
 {
     internal class Textbox : Control
     {

@@ -12,6 +12,7 @@ using System.Linq;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Sprites;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.UserInterface.Components
 {

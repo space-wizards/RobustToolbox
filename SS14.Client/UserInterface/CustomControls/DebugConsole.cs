@@ -1,8 +1,12 @@
-﻿using Lidgren.Network;
+﻿using System;
+using System.Collections.Generic;
+using Lidgren.Network;
 using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
@@ -10,11 +14,9 @@ using SS14.Shared.IoC;
 using SS14.Shared.Network;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {

@@ -7,6 +7,7 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States

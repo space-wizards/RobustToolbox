@@ -36,6 +36,8 @@ using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Textures;
 using SS14.Client.Interfaces;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client.State.States

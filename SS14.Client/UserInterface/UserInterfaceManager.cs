@@ -17,6 +17,8 @@ using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 

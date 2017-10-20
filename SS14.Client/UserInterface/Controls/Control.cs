@@ -4,14 +4,13 @@ using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.Controls
 {
     /// <summary>
     ///     Base GUI class that all other controls inherit from.

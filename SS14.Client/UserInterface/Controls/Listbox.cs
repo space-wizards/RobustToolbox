@@ -9,6 +9,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Input;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.UserInterface.Components
 {

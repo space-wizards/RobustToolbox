@@ -1,4 +1,4 @@
-﻿namespace SS14.Client.UserInterface
+﻿namespace SS14.Client.UserInterface.Controls
 {
     /// <summary>
     ///     A container for other controls.

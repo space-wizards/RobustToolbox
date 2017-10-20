@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Windows.Forms;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using KeyEventArgs = SFML.Window.KeyEventArgs;
+using KeyEventArgs = SS14.Client.Graphics.Input.KeyEventArgs;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -90,9 +88,9 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            var boundsLeft = _textboxLeft.GetLocalBounds();
-            var boundsMain = _textboxMain.GetLocalBounds();
-            var boundsRight = _textboxRight.GetLocalBounds();
+            var boundsLeft = _textboxLeft.LocalBounds;
+            var boundsMain = _textboxMain.LocalBounds;
+            var boundsRight = _textboxRight.LocalBounds;
 
             _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Width, (int) boundsMain.Height);
@@ -118,9 +116,9 @@ namespace SS14.Client.UserInterface.Components
         {
             if (BackgroundColor != Color4.White)
             {
-                _textboxLeft.Color = BackgroundColor.Convert();
-                _textboxMain.Color = BackgroundColor.Convert();
-                _textboxRight.Color = BackgroundColor.Convert();
+                _textboxLeft.Color = BackgroundColor;
+                _textboxMain.Color = BackgroundColor;
+                _textboxRight.Color = BackgroundColor;
             }
 
             _textboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
@@ -133,7 +131,7 @@ namespace SS14.Client.UserInterface.Components
             if (Focus && blinkCount <= 0.25f)
                 CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
-            _textSprite.Color = base.ForegroundColor;
+            _textSprite.FillColor = base.ForegroundColor;
             _textSprite.Text = _displayText;
 
             _textSprite.Draw();
@@ -172,7 +170,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (!Focus) return false;
 
-            if (e.Control && e.Code == Keyboard.Key.V)
+            if (e.Control && e.Key == Keyboard.Key.V)
             {
                 var ret = Clipboard.GetText();
                 Text = Text.Insert(_caretIndex, ret);
@@ -182,7 +180,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (e.Control && e.Code == Keyboard.Key.C)
+            if (e.Control && e.Key == Keyboard.Key.C)
             {
                 Clipboard.SetText(Text);
                 ignoreNextText = true;
@@ -190,33 +188,33 @@ namespace SS14.Client.UserInterface.Components
             }
 
             // Control + Backspace to delete all text
-            if (e.Control && e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
+            if (e.Control && e.Key == Keyboard.Key.BackSpace && Text.Length >= 1)
             {
                 Clear();
                 ignoreNextText = true;
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Left)
+            if (e.Key == Keyboard.Key.Left)
             {
                 if (_caretIndex > 0) _caretIndex--;
                 SetVisibleText();
                 return true;
             }
-            if (e.Code == Keyboard.Key.Right)
+            if (e.Key == Keyboard.Key.Right)
             {
                 if (_caretIndex < _text.Length) _caretIndex++;
                 SetVisibleText();
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Return && (AllowEmptySubmit || Text.Length >= 1))
+            if (e.Key == Keyboard.Key.Return && (AllowEmptySubmit || Text.Length >= 1))
             {
                 Submit();
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.BackSpace && Text.Length >= 1)
+            if (e.Key == Keyboard.Key.BackSpace && Text.Length >= 1)
             {
                 if (_caretIndex == 0) return true;
 
@@ -226,7 +224,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Delete && Text.Length >= 1)
+            if (e.Key == Keyboard.Key.Delete && Text.Length >= 1)
             {
                 if (_caretIndex >= Text.Length) return true;
                 Text = Text.Remove(_caretIndex, 1);
@@ -244,7 +242,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (!Focus) return false;
 
-            if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Unicode))
+            if (Text.Length >= MaxCharacters || "\b\n\u001b\r".Contains(e.Text))
                 return false;
 
             if (ignoreNextText)
@@ -253,7 +251,7 @@ namespace SS14.Client.UserInterface.Components
                 return false;
             }
 
-            Text = Text.Insert(_caretIndex, e.Unicode);
+            Text = Text.Insert(_caretIndex, e.Text);
             if (_caretIndex < _text.Length) _caretIndex++;
             SetVisibleText();
             return true;

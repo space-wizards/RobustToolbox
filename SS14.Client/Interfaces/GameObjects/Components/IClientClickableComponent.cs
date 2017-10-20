@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using SFML.System;
 using SS14.Client.State.States;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;

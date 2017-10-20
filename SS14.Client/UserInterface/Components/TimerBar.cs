@@ -1,6 +1,4 @@
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+﻿using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
@@ -17,7 +15,7 @@ namespace SS14.Client.UserInterface.Components
             : base(size, resourceCache)
         {
             stopwatch = new Stopwatch();
-            max = (float) Math.Round(countdownTime.TotalSeconds);
+            max = (float)Math.Round(countdownTime.TotalSeconds);
             stopwatch.Restart();
             Update(0);
         }
@@ -40,8 +38,8 @@ namespace SS14.Client.UserInterface.Components
                     DateTime.Now.AddSeconds(max - stopwatch.Elapsed.Seconds).Subtract(DateTime.Now).ToString(@"mm\:ss");
             }
 
-            Text.Position = new Vector2i(Position.X + (int)(Size.X/2f - Text.Width/2f),
-                                         Position.Y + (int)(Size.Y/2f - Text.Height/2f));
+            Text.Position = new Vector2i(Position.X + (int)(Size.X / 2f - Text.Width / 2f),
+                                         Position.Y + (int)(Size.Y / 2f - Text.Height / 2f));
             ClientArea = Box2i.FromDimensions(Position, Size);
         }
 

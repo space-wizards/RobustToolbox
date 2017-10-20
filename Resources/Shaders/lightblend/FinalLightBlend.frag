@@ -11,7 +11,7 @@ uniform vec4 MaskProps;
 vec4 LightBlendPS(vec2 TexCoord)
 {
 	vec4 a = AmbientLight;
-	vec4 l = texture2D(LightTexture, TexCoord); //Sample light/shadows
+	vec4 l = texture2D(LightTexture, vec2(TexCoord.x, 1.0 - TexCoord.y)); //Sample light/shadows
 	l = max(l,a); // Set a minimum level of light
 	vec4 c = texture2D(SceneTexture, TexCoord); //Sample scene color
 	vec4 pv = texture2D(PlayerViewTexture, TexCoord); // Sample player view

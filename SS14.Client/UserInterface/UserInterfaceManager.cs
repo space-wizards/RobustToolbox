@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenTK;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -15,7 +14,11 @@ using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface
 {
@@ -61,7 +64,7 @@ namespace SS14.Client.UserInterface
         #region Component retrieval
 
         /// <summary>
-        ///     Returns all components with matching GuiComponentType.
+        ///     Returns all Components with matching GuiComponentType.
         /// </summary>
         public IEnumerable<Control> GetComponentsByGuiComponentType(GuiComponentType componentType)
         {
@@ -87,7 +90,7 @@ namespace SS14.Client.UserInterface
         }
 
         /// <summary>
-        ///     Disposes all components and clears component list. Components need to implement their own Dispose method.
+        ///     Disposes all Components and clears component list. Components need to implement their own Dispose method.
         /// </summary>
         public void DisposeAllComponents()
         {
@@ -99,7 +102,7 @@ namespace SS14.Client.UserInterface
         }
 
         /// <summary>
-        ///     Disposes all components of the given type.
+        ///     Disposes all Components of the given type.
         /// </summary>
         public void DisposeAllComponents<T>()
         {
@@ -178,7 +181,7 @@ namespace SS14.Client.UserInterface
         //Maybe this should be handled in the main methods for input. But then the state wouldnt have power over
         //this and things like the chat might get difficult.
         //Other Notes: When a component returns true to an input event the loop stops and so only that control recieves the input.
-        //             That way we don't have all components reacting to one event.
+        //             That way we don't have all Components reacting to one event.
 
         /// <summary>
         ///     Handles MouseDown event. Returns true if a component accepted and handled the event.
@@ -206,7 +209,7 @@ namespace SS14.Client.UserInterface
                 where comp.ReceiveInput
                 orderby comp.ZDepth
                 orderby comp.IsVisible() descending
-                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
                 orderby comp.Focus descending
                 select comp;
 
@@ -238,7 +241,7 @@ namespace SS14.Client.UserInterface
                 where comp.ReceiveInput
                 orderby comp.ZDepth
                 orderby comp.IsVisible() descending
-                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
                 orderby comp.Focus descending
                 select comp;
 
@@ -252,7 +255,7 @@ namespace SS14.Client.UserInterface
         }
 
         /// <summary>
-        ///     Handles MouseMove event. Sent to all visible components.
+        ///     Handles MouseMove event. Sent to all visible Components.
         /// </summary>
         public virtual void MouseMove(MouseMoveEventArgs e)
         {
@@ -309,7 +312,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
+            if (e.Key == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
                 _console.ToggleVisible();
                 return true;
@@ -322,7 +325,7 @@ namespace SS14.Client.UserInterface
                 where comp.ReceiveInput
                 orderby comp.ZDepth
                 orderby comp.IsVisible() descending
-                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
                 orderby comp.Focus descending
                 select comp;
 
@@ -338,7 +341,7 @@ namespace SS14.Client.UserInterface
                 where comp.ReceiveInput
                 orderby comp.ZDepth
                 orderby comp.IsVisible() descending
-                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable components.
+                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
                 orderby comp.Focus descending
                 select comp;
 
@@ -352,23 +355,21 @@ namespace SS14.Client.UserInterface
         //These methods are called directly from the main loop to allow for cross-state ui elements. (Console maybe)
 
         /// <summary>
-        ///     Updates the logic of UI components.
+        ///     Updates the logic of UI Components.
         /// </summary>
         public void Update(FrameEventArgs e)
         {
-            if (_console.IsVisible()) _console.Update((float) e.Time);
+            if (_console.IsVisible()) _console.Update(e.Elapsed);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = MousePos - dragOffset;
 
             foreach (var component in _components)
-            {
-                component.Update((float) e.Time);
-            }
+                component.Update(e.Elapsed);
         }
 
         /// <summary>
-        ///     Renders UI components to screen.
+        ///     Renders UI Components to screen.
         /// </summary>
         public void Render(FrameEventArgs e)
         {
@@ -391,7 +392,7 @@ namespace SS14.Client.UserInterface
                     ? DragInfo.DragSprite
                     : _resourceCache.GetSprite("cursor");
 
-                _cursorSprite.Position = ((Vector2) MousePos).Convert();
+                _cursorSprite.Position = MousePos;
                 _cursorSprite.Draw();
             }
         }

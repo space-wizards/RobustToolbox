@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Lidgren.Network;
-using OpenTK;
-using OpenTK.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.State.States
 {
@@ -99,7 +98,7 @@ namespace SS14.Client.State.States
 
             var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
             var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
-            lblVersion.ForegroundColor = new Color4(245, 245, 245, 255);
+            lblVersion.ForegroundColor = new Color(245, 245, 245);
             lblVersion.Alignment = Align.Right | Align.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
             _uiScreen.AddControl(lblVersion);

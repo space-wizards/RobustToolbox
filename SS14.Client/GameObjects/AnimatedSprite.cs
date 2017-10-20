@@ -1,5 +1,5 @@
-﻿using SFML.Graphics;
-using OpenTK;
+﻿using OpenTK;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.States;
 using SS14.Client.Graphics.Utility;
@@ -10,8 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Shared.Maths;
 using OpenTK.Graphics;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.Client.Graphics.Sprite
+namespace SS14.Client.Graphics.Sprites
 {
     public class AnimatedSprite
     {
@@ -38,7 +39,7 @@ namespace SS14.Client.Graphics.Sprite
             get { return _direction; }
             set
             {
-                if(_direction != value)
+                if (_direction != value)
                 {
                     _direction = value;
                     UpdateDirection();
@@ -61,32 +62,32 @@ namespace SS14.Client.Graphics.Sprite
         /// <summary>
         ///     Sub-rectangle of the texture to use as the sprite. This is NOT the local bounds of the sprite.
         /// </summary>
-        public Box2i TextureRect => _currentSprite?.TextureRect.Convert() ?? new Box2i();
+        public Box2i TextureRect => _currentSprite?.TextureRect ?? new Box2i();
 
         /// <summary>
         ///     Local bounding box of the sprite, with the origin at the top left.
         /// </summary>
-        public Box2 LocalAABB => _currentSprite?.GetLocalBounds().Convert() ?? new Box2();
+        public Box2 LocalAABB => _currentSprite?.LocalBounds ?? new Box2();
 
         public bool HorizontalFlip { get; set; }
 
-        #endregion
+        #endregion Sprite passthrough methods
 
-        #endregion
+        #endregion Public Properties
 
         #region Variables
 
         /// <summary>
         /// Dictionary of animation names to directional sprite set
         /// </summary>
-        private readonly Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, SFML.Graphics.Sprite[]>>();
+        private readonly Dictionary<string, Dictionary<Direction, Sprite[]>> _sprites = new Dictionary<string, Dictionary<Direction, Sprite[]>>();
 
         private readonly Dictionary<string, Dictionary<Direction, Box2>> _averageAABBs = new Dictionary<string, Dictionary<Direction, Box2>>();
-        private SFML.Graphics.Sprite _currentSprite;
+        private Sprite _currentSprite;
 
         private Direction _direction = Direction.South;
 
-        #endregion
+        #endregion Variables
 
         #region Methods
 
@@ -97,7 +98,7 @@ namespace SS14.Client.Graphics.Sprite
             int t = 0;
             foreach (var info in collection.Animations)
             {
-                _sprites.Add(info.Name, new Dictionary<Direction, SFML.Graphics.Sprite[]>());
+                _sprites.Add(info.Name, new Dictionary<Direction, Sprite[]>());
 
                 //Because we have a shitload of frames, we're going to store the average size as the AABB for each direction and each animation
                 _averageAABBs.Add(info.Name, new Dictionary<Direction, Box2>());
@@ -107,14 +108,14 @@ namespace SS14.Client.Graphics.Sprite
                 AnimationStates.Add(info.Name, new AnimationState(info));
                 foreach (var dir in Enum.GetValues(typeof(Direction)).Cast<Direction>())
                 {
-                    sprites.Add(dir, new SFML.Graphics.Sprite[info.Frames]);
+                    sprites.Add(dir, new Sprite[info.Frames]);
                     var thisDirSprites = sprites[dir];
                     for (var i = 0; i < info.Frames; i++)
                     {
                         var spritename = collection.Name.ToLowerInvariant() + "_" + info.Name.ToLowerInvariant() + "_"
                                          + DirectionToUriComponent(dir) + "_" + i;
                         thisDirSprites[i] = resourceCache.GetSprite(spritename);
-                        var bounds = thisDirSprites[i].GetLocalBounds();
+                        var bounds = thisDirSprites[i].LocalBounds;
                         x += bounds.Left;
                         y += bounds.Top;
                         w += bounds.Width;
@@ -131,22 +132,22 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        public SFML.Graphics.Sprite GetCurrentSprite()
+        public Sprite GetCurrentSprite()
         {
             return _currentSprite;
         }
 
-        public void Draw(Color4 Color)
+        public void Draw(Color Color)
         {
-            _currentSprite.Scale = new SFML.System.Vector2f(HorizontalFlip ? -1 : 1, 1);
-            _currentSprite.Color = Color.Convert();
+            _currentSprite.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
+            _currentSprite.Color = Color;
             _currentSprite.Draw();
-            _currentSprite.Color = Color4.White.Convert();
+            _currentSprite.Color = Color.White;
         }
 
         public void SetPosition(float x, float y)
         {
-            _currentSprite.Position = new SFML.System.Vector2f(x, y);
+            _currentSprite.Position = new Vector2(x, y);
         }
 
         private void UpdateDirection()
@@ -226,7 +227,7 @@ namespace SS14.Client.Graphics.Sprite
             }
         }
 
-        #endregion
+        #endregion Methods
 
         #region Constructor
 
@@ -243,6 +244,6 @@ namespace SS14.Client.Graphics.Sprite
             //IoCManager.Resolve<IResourceCache>().
         }
 
-        #endregion
+        #endregion Constructor
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Lidgren.Network;
-using SFML.System;
-using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
@@ -20,7 +19,7 @@ namespace SS14.Client.UserInterface.Components
             DrawBorder = false;
 
             _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceCache);
-            _scPlayerList.Position = new Vector2i(5,10);
+            _scPlayerList.Position = new Vector2i(5, 10);
             Components.Add(_scPlayerList);
         }
 

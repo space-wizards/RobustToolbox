@@ -1,8 +1,6 @@
 ﻿using System;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -36,7 +34,7 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            var bounds = _checkbox.GetLocalBounds();
+            var bounds = _checkbox.LocalBounds;
             _clientArea = Box2i.FromDimensions(new Vector2i(0, 0), new Vector2i((int) bounds.Width, (int) bounds.Height));
         }
 
@@ -44,8 +42,8 @@ namespace SS14.Client.UserInterface.Components
         protected override void DrawContents()
         {
             // TODO: Move this to OnCalcPosition once the ResourceCache we stop sharing sprites between controls.
-            _checkbox.Position = new Vector2f(Position.X, Position.Y);
-            _checkboxCheck.Position = new Vector2f(Position.X, Position.Y);
+            _checkbox.Position = new Vector2(Position.X, Position.Y);
+            _checkboxCheck.Position = new Vector2(Position.X, Position.Y);
 
             _checkbox.Draw();
 

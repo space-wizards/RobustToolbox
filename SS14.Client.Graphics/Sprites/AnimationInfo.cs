@@ -1,6 +1,6 @@
 using System;
 
-namespace SS14.Client.Graphics.Sprite
+namespace SS14.Client.Graphics.Sprites
 {
     [Serializable]
     public class AnimationInfo

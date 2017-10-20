@@ -1,14 +1,12 @@
 ﻿using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
-using SS14.Shared.Maths;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Client.Graphics.Input;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components

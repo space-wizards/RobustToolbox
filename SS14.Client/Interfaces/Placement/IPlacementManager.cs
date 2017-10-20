@@ -1,5 +1,4 @@
 ﻿using Lidgren.Network;
-using SFML.System;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;

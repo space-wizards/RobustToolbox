@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -39,7 +38,7 @@ namespace SS14.Client.UserInterface.Components
             _listboxRight = _resourceCache.GetSprite("button_right");
 
             _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            _selectedLabel.Color = Color4.Black;
+            _selectedLabel.FillColor = Color4.Black;
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);
             _dropDown.Visible = true;
@@ -63,9 +62,9 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            var listboxLeftBounds = _listboxLeft.GetLocalBounds();
-            var listboxMainBounds = _listboxMain.GetLocalBounds();
-            var listboxRightBounds = _listboxRight.GetLocalBounds();
+            var listboxLeftBounds = _listboxLeft.LocalBounds;
+            var listboxMainBounds = _listboxMain.LocalBounds;
+            var listboxRightBounds = _listboxRight.LocalBounds;
 
             _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) listboxLeftBounds.Width, (int) listboxLeftBounds.Height));
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int) listboxMainBounds.Height);
@@ -224,7 +223,7 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel.Text = toSet.Text;
             _dropDown.Visible = false;
 
-            ((ListboxItem) toSet).Selected = true;
+            ((ListboxItem)toSet).Selected = true;
             var notSelected = _dropDown.Components
                 .Cast<ListboxItem>()
                 .Where(item => item != toSet);

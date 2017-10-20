@@ -1,12 +1,12 @@
 ﻿using System;
 using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
 {
@@ -15,7 +15,7 @@ namespace SS14.Client.GameObjects
         // no client side collision support for now
         private bool collisionEnabled;
 
-        public Color4 DebugColor { get; } = Color4.Red;
+        public Color DebugColor { get; } = Color.Red;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -109,7 +109,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (CollidableComponentState) state;
+            var newState = (CollidableComponentState)state;
 
             // edge triggered
             if (newState.CollisionEnabled == collisionEnabled)

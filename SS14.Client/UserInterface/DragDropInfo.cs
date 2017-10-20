@@ -1,9 +1,9 @@
-using SFML.Graphics;
-using SS14.Client.Interfaces.Placement;
+﻿using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Helpers;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.UserInterface
 {

@@ -1,22 +1,20 @@
 ﻿using Lidgren.Network;
-using SFML.Window;
-using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Network;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Player.PostProcessing;
 using SS14.Client.State.States;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Player
 {
@@ -94,10 +92,12 @@ namespace SS14.Client.Player
 
         public void KeyDown(Keyboard.Key key)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void KeyUp(Keyboard.Key key)
         {
+            //TODO: Figure out what to do with this
         }
 
         public void ApplyPlayerStates(List<PlayerState> list)

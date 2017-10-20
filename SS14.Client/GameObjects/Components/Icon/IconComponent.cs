@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+﻿using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;

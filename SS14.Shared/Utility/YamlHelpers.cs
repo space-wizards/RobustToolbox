@@ -91,12 +91,12 @@ namespace SS14.Shared.Utility
 
         public static T AsEnum<T>(this YamlNode node)
         {
-            return (T) Enum.Parse(typeof (T), node.AsString(), true);
+            return (T)Enum.Parse(typeof(T), node.AsString(), true);
         }
 
-        public static Color4 AsHexColor(this YamlNode node, Color4? fallback = null)
+        public static Color AsHexColor(this YamlNode node, Color4? fallback = null)
         {
-            return ColorUtils.FromHex(node.AsString(), fallback);
+            return Color.FromHex(node.AsString(), fallback);
         }
 
         // Mapping specific helpers.
@@ -116,7 +116,7 @@ namespace SS14.Shared.Utility
         /// </exception>
         /// <seealso cref="GetNode" />
         /// <seealso cref="TryGetNode{T}" />
-        public static T GetNode<T>(this YamlMappingNode mapping, string key) where T: YamlNode
+        public static T GetNode<T>(this YamlMappingNode mapping, string key) where T : YamlNode
         {
             return (T)mapping[new YamlScalarNode(key)];
         }
@@ -148,7 +148,7 @@ namespace SS14.Shared.Utility
         /// Thrown if the node could be found, but was the wrong type.
         /// This is intentional, as this most of the time means user error in the prototype definition.
         /// </exception>
-        public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, out T returnNode) where T: YamlNode
+        public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, out T returnNode) where T : YamlNode
         {
             var dummy = new YamlScalarNode(key);
             if (mapping.Children.TryGetValue(dummy, out var node))

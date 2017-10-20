@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using SFML.Graphics;
+using SS14.Client.Graphics.Textures;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 

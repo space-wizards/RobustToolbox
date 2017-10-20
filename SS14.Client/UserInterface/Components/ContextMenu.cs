@@ -1,11 +1,7 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
@@ -15,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -87,16 +84,8 @@ namespace SS14.Client.UserInterface.Components
             }
         }
 
-        /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            throw new System.NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
         }
 
         public override void Update(float frameTime)
@@ -188,22 +177,12 @@ namespace SS14.Client.UserInterface.Components
 
         public event ContextPressHandler Selected;
 
-        /// <inheritdoc />
-        protected override void OnCalcRect()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
-        }
+        protected override void OnCalcRect() { }
 
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            var bounds = _iconSprite.GetLocalBounds();
+            var bounds = _iconSprite.LocalBounds;
             ClientArea = Box2i.FromDimensions(Position.X, Position.Y, (int)Size.X, (int)Size.Y);
             _textLabel.Position = new Vector2i(ClientArea.Left + (int)bounds.Width + 6,
                                             ClientArea.Top + (int)(ClientArea.Height / 2f) -
@@ -214,7 +193,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Draw()
         {
             base.Draw();
-            var bounds = _iconSprite.GetLocalBounds();
+            var bounds = _iconSprite.LocalBounds;
             var iconRect = Box2i.FromDimensions(ClientArea.Left + 3,
                                          ClientArea.Top + (int)(ClientArea.Height / 2f) - (int)(bounds.Height / 2f),
                                          (int)bounds.Width, (int)bounds.Height);

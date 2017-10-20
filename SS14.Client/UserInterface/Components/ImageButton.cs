@@ -1,12 +1,7 @@
-﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics.Utility;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared.IoC;
+﻿using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Maths;
-using System;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -48,7 +43,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_buttonNormal != null)
             {
-                var bounds = _drawSprite.GetLocalBounds();
+                var bounds = _drawSprite.LocalBounds;
                 _size = new SS14.Shared.Maths.Vector2i((int)bounds.Width, (int)bounds.Height);
                 _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
             }
@@ -60,7 +55,7 @@ namespace SS14.Client.UserInterface.Components
             if (_drawSprite == null)
                 return;
             
-            _drawSprite.Position = new Vector2f(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
+            _drawSprite.Position = new Vector2(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
             _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 

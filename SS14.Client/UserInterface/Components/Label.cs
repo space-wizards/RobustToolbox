@@ -1,8 +1,8 @@
 ﻿using System;
 using OpenTK.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
@@ -34,8 +34,8 @@ namespace SS14.Client.UserInterface.Components
 
         public override Color4 ForegroundColor
         {
-            get => _text.Color;
-            set => _text.Color = value;
+            get => _text.FillColor;
+            set => _text.FillColor = value;
         }
         
         public bool DrawTextHighlight { get; set; }
@@ -44,7 +44,7 @@ namespace SS14.Client.UserInterface.Components
         {
             _text = new TextSprite(text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF"), size)
             {
-                Color = base.ForegroundColor
+                FillColor = base.ForegroundColor
             };
         }
 

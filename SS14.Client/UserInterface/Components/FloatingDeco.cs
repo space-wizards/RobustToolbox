@@ -1,7 +1,4 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
@@ -12,6 +9,8 @@ using SS14.Shared.Maths;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -35,9 +34,9 @@ namespace SS14.Client.UserInterface.Components
         public Vector2 SpriteLocation;
         //Have to have a separate one because i made the ui compo pos a Point. Can't change to Vector2 unless i fix 235+ errors. Do this later.
 
-        #pragma warning disable CS0649
+#pragma warning disable CS0649
         public Vector2 Velocity; //Direction and speed this is moving in.
-        #pragma warning restore CS0649
+#pragma warning restore CS0649
 
         private float spriteRotation;
 
@@ -46,7 +45,7 @@ namespace SS14.Client.UserInterface.Components
             _resourceCache = resourceCache;
             DrawSprite = _resourceCache.GetSprite(spriteName);
 
-            _uiMgr = (UserInterfaceManager) IoCManager.Resolve<IUserInterfaceManager>();
+            _uiMgr = (UserInterfaceManager)IoCManager.Resolve<IUserInterfaceManager>();
 
             Update(0);
         }
@@ -66,20 +65,20 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            SpriteLocation = new Vector2(SpriteLocation.X + (Velocity.X*frameTime),
-                                          SpriteLocation.Y + (Velocity.Y*frameTime));
-            spriteRotation += RotationSpeed*frameTime;
+            SpriteLocation = new Vector2(SpriteLocation.X + (Velocity.X * frameTime),
+                                          SpriteLocation.Y + (Velocity.Y * frameTime));
+            spriteRotation += RotationSpeed * frameTime;
 
             if (BounceRotate && Math.Abs(spriteRotation) > BounceRotateAngle)
                 RotationSpeed = -RotationSpeed;
 
-            var bounds = DrawSprite.GetLocalBounds();
+            var bounds = DrawSprite.LocalBounds;
 
-            ClientArea = Box2i.FromDimensions((int) SpriteLocation.X, (int) SpriteLocation.Y,
+            ClientArea = Box2i.FromDimensions((int)SpriteLocation.X, (int)SpriteLocation.Y,
                                        (int)bounds.Width, (int)bounds.Height);
 
             //Outside screen. Does not respect rotation. FIX.
-            if (ClientArea.Left >CluwneLib.Window.Viewport.Size.X)
+            if (ClientArea.Left > CluwneLib.Window.Viewport.Size.X)
                 SpriteLocation = new Vector2((0 - bounds.Width), SpriteLocation.Y);
             else if (ClientArea.Left < (0 - bounds.Width))
                 SpriteLocation = new Vector2(CluwneLib.Window.Viewport.Size.X, SpriteLocation.Y);
@@ -113,13 +112,13 @@ namespace SS14.Client.UserInterface.Components
                 ParallaxOffset = new Vector2();
             }
 
-            Position = new Vector2i((int) SpriteLocation.X, (int) SpriteLocation.Y);
+            Position = new Vector2i((int)SpriteLocation.X, (int)SpriteLocation.Y);
         }
 
         public override void Draw()
         {
             DrawSprite.Rotation = spriteRotation;
-            DrawSprite.Position = (SpriteLocation + ParallaxOffset).Convert();
+            DrawSprite.Position = (SpriteLocation + ParallaxOffset);
             DrawSprite.Draw();
         }
 

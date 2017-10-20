@@ -12,7 +12,7 @@ namespace SS14.Client.Graphics.Utility
     /// <summary>
     /// Provides compatibility extensions to convert between SFML and OpenTK types.
     /// </summary>
-    public static class SfmlCompatibility
+    internal static class SfmlCompatibility
     {
         /// <summary>
         /// Converts a OpenTK Vector2 to a SFML Vector2.
@@ -104,15 +104,14 @@ namespace SS14.Client.Graphics.Utility
             return new Vector2(vector.X, vector.Y);
         }
 
-        public static Color Convert(this Color4 color)
+        public static SFML.Graphics.Color Convert(this Shared.Maths.Color color)
         {
-            var bcolor = (System.Drawing.Color)color;
-            return new Color(bcolor.R, bcolor.G, bcolor.B, bcolor.A);
+            return new SFML.Graphics.Color(color.RByte, color.GByte, color.BByte, color.AByte);
         }
 
-        public static Color4 Convert(this Color color)
+        public static Shared.Maths.Color Convert(this SFML.Graphics.Color color)
         {
-            return new Color4(color.R, color.G, color.B, color.A);
+            return new Shared.Maths.Color(color.R, color.G, color.B, color.A);
         }
     }
 }

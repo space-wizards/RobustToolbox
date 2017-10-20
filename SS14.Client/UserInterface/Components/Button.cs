@@ -1,12 +1,12 @@
 ﻿using System;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.ResourceManagement;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
+using System;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -36,16 +36,16 @@ namespace SS14.Client.UserInterface.Components
 
             Label = new TextSprite(buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
             {
-                Color = Color4.Black
+                FillColor = Color4.Black
             };
         }
 
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
-            var boundsLeft = _buttonLeft.GetLocalBounds();
-            var boundsMain = _buttonMain.GetLocalBounds();
-            var boundsRight = _buttonRight.GetLocalBounds();
+            var boundsLeft = _buttonLeft.LocalBounds;
+            var boundsMain = _buttonMain.LocalBounds;
+            var boundsRight = _buttonRight.LocalBounds;
 
             _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Label.Width, (int) boundsMain.Height);
@@ -67,9 +67,9 @@ namespace SS14.Client.UserInterface.Components
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            _buttonLeft.Color = _drawColor.Convert();
-            _buttonMain.Color = _drawColor.Convert();
-            _buttonRight.Color = _drawColor.Convert();
+            _buttonLeft.Color = _drawColor;
+            _buttonMain.Color = _drawColor;
+            _buttonRight.Color = _drawColor;
 
             _buttonLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
             _buttonMain.SetTransformToRect(_clientAreaMain.Translated(Position));

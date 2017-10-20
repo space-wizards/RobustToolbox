@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using Lidgren.Network;
 using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
@@ -13,6 +11,7 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.Client.State.States
 {
@@ -77,48 +76,48 @@ namespace SS14.Client.State.States
             _imgMainBg.AddControl(_imgStatus);
 
             _lblServer = new Label("SERVER: ", "MICROGME");
-            _lblServer.ForegroundColor = new Color4(245, 245, 245, 255);
+            _lblServer.ForegroundColor = new Color(245, 245, 245, 255);
             _lblServer.LocalPosition = new Vector2i(5, 2);
             _imgStatus.AddControl(_lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME");
-            _lblServerInfo.ForegroundColor = new Color4(139, 0, 0, 255);
+            _lblServerInfo.ForegroundColor = new Color(139, 0, 0, 255);
             _lblServerInfo.FixedWidth = 100;
             _lblServerInfo.Alignment = Align.Right;
             _lblServer.AddControl(_lblServerInfo);
 
             _lblMode = new Label("GAMEMODE: ", "MICROGME");
-            _lblMode.ForegroundColor = new Color4(245, 245, 245, 255);
+            _lblMode.ForegroundColor = new Color(245, 245, 245, 255);
             _lblMode.Alignment = Align.Right;
             _lblMode.LocalPosition = new Vector2i(10, 0);
             _lblServerInfo.AddControl(_lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME");
-            _lblModeInfo.ForegroundColor = new Color4(139, 0, 0, 255);
+            _lblModeInfo.ForegroundColor = new Color(139, 0, 0, 255);
             _lblModeInfo.FixedWidth = 90;
             _lblModeInfo.Alignment = Align.Right;
             _lblMode.AddControl(_lblModeInfo);
 
             _lblPlayers = new Label("PLAYERS: ", "MICROGME");
-            _lblPlayers.ForegroundColor = new Color4(245, 245, 245, 255);
+            _lblPlayers.ForegroundColor = new Color(245, 245, 245, 255);
             _lblPlayers.Alignment = Align.Right;
             _lblPlayers.LocalPosition = new Vector2i(10, 0);
             _lblModeInfo.AddControl(_lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME");
-            _lblPlayersInfo.ForegroundColor = new Color4(139, 0, 0, 255);
+            _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0, 255);
             _lblPlayersInfo.FixedWidth = 60;
             _lblPlayersInfo.Alignment = Align.Right;
             _lblPlayers.AddControl(_lblPlayersInfo);
 
             _lblPort = new Label("PORT: ", "MICROGME");
-            _lblPort.ForegroundColor = new Color4(245, 245, 245, 255);
+            _lblPort.ForegroundColor = new Color(245, 245, 245, 255);
             _lblPort.Alignment = Align.Right;
             _lblPort.LocalPosition = new Vector2i(10, 0);
             _lblPlayersInfo.AddControl(_lblPort);
 
             _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
-            _lblPortInfo.ForegroundColor = new Color4(139, 0, 0, 255);
+            _lblPortInfo.ForegroundColor = new Color(139, 0, 0, 255);
             _lblPortInfo.FixedWidth = 50;
             _lblPortInfo.Alignment = Align.Right;
             _lblPort.AddControl(_lblPortInfo);
@@ -333,7 +332,7 @@ namespace SS14.Client.State.States
 
                 var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
                 newLabel.Position = new Vector2i(0, offY);
-                newLabel.ForegroundColor = Color4.Black;
+                newLabel.ForegroundColor = Color.Black;
                 newLabel.Update(0);
                 offY += newLabel.ClientArea.Height;
                 _tabServer._scPlayerList.Components.Add(newLabel);

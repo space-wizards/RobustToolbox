@@ -1,7 +1,5 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
@@ -13,7 +11,7 @@ namespace SS14.Client.UserInterface.Components
     public class LobbyShowcase : Showcase
     {
         protected int ScrollOffset = 0;
-        public Vector2i ItemOffsets = new Vector2i(0,0);
+        public Vector2i ItemOffsets = new Vector2i(0, 0);
 
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
@@ -67,7 +65,7 @@ namespace SS14.Client.UserInterface.Components
         {
             ClientArea = Box2i.FromDimensions(Position, Size);
 
-            _buttonRight.Position = new Vector2i(ClientArea.Right - _buttonRight.ClientArea.Width, ClientArea.Top + (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
+            _buttonRight.Position = new Vector2i(ClientArea.Right - _buttonRight.ClientArea.Width, ClientArea.Top + (int)(ClientArea.Height / 2f - _buttonRight.ClientArea.Height / 2f));
             _buttonRight.Update(frameTime);
 
             _buttonLeft.Position = new Vector2i(_buttonRight.ClientArea.Left - _buttonRight.ClientArea.Width - _buttonLeft.ClientArea.Width, _buttonRight.ClientArea.Top);
@@ -110,14 +108,14 @@ namespace SS14.Client.UserInterface.Components
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
-                        float alphaAdj = 1 + AdditionalColumns - (AdditionalColumns/(float) i);
+                        float alphaAdj = 1 + AdditionalColumns - (AdditionalColumns / (float)i);
                         const float baseAlpha = 200;
 
                         //Left
                         if ((ScrollOffset - i) >= 0 && (ScrollOffset - i) <= _items.Count - 1)
                         {
                             KeyValuePair<ImageButton, Object> currLeft = _items[(ScrollOffset - i)];
-                            currLeft.Key.Position = new Vector2i(lastPosLeft - currLeft.Key.ClientArea.Width,ClientArea.Top + (int)(ClientArea.Height / 2f - currLeft.Key.ClientArea.Height / 2f));
+                            currLeft.Key.Position = new Vector2i(lastPosLeft - currLeft.Key.ClientArea.Width, ClientArea.Top + (int)(ClientArea.Height / 2f - currLeft.Key.ClientArea.Height / 2f));
                             lastPosLeft = currLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (_selectionGlow != null && (ScrollOffset - i) == Selected)
@@ -127,7 +125,7 @@ namespace SS14.Client.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currLeft.Key.ForegroundColor = Color4.White.WithAlpha(baseAlpha / alphaAdj);
+                                currLeft.Key.ForegroundColor = Color.White.WithAlpha(baseAlpha / alphaAdj);
 
                             currLeft.Key.Draw();
                         }
@@ -146,7 +144,7 @@ namespace SS14.Client.UserInterface.Components
                             }
 
                             if (FadeItems)
-                                currRight.Key.ForegroundColor = Color4.White.WithAlpha(baseAlpha / alphaAdj);
+                                currRight.Key.ForegroundColor = Color.White.WithAlpha(baseAlpha / alphaAdj);
 
                             currRight.Key.Draw();
                         }
@@ -173,7 +171,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (ScrollingNeeded())
                 {
-                    if (e.Delta> 0)
+                    if (e.Delta > 0)
                     {
                         if (ScrollOffset + 1 <= _items.Count - 1) ScrollOffset++;
                         return true;
@@ -206,7 +204,6 @@ namespace SS14.Client.UserInterface.Components
         {
             if (ClientArea.Contains(e.X, e.Y))
             {
-
                 if (ShowArrows && ScrollingNeeded())
                 {
                     if (_buttonLeft.MouseDown(e)) return true;

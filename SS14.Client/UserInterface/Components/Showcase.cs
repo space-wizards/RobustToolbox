@@ -1,7 +1,5 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.IoC;
@@ -20,7 +18,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void ShowcaseSelectionChangedHandler(ImageButton sender, Object associatedData);
 
-        #endregion
+        #endregion Delegates
 
         protected readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
         protected readonly IResourceCache _resourceCache;
@@ -100,7 +98,7 @@ namespace SS14.Client.UserInterface.Components
                 button.Clicked += button_Clicked;
             }
 
-            Selected = (int) Math.Floor(_items.Count/2f); //start in the middle. cosmetic thing only.
+            Selected = (int)Math.Floor(_items.Count / 2f); //start in the middle. cosmetic thing only.
         }
 
         protected virtual void button_Clicked(ImageButton sender)
@@ -143,12 +141,12 @@ namespace SS14.Client.UserInterface.Components
 
             _buttonLeft.Position = new Vector2i(ClientArea.Left,
                                              ClientArea.Top +
-                                             (int) (ClientArea.Height/2f - _buttonLeft.ClientArea.Height/2f));
+                                             (int)(ClientArea.Height / 2f - _buttonLeft.ClientArea.Height / 2f));
             _buttonLeft.Update(frameTime);
 
             _buttonRight.Position = new Vector2i(ClientArea.Right - _buttonRight.ClientArea.Width,
                                               ClientArea.Top +
-                                              (int) (ClientArea.Height/2f - _buttonRight.ClientArea.Height/2f));
+                                              (int)(ClientArea.Height / 2f - _buttonRight.ClientArea.Height / 2f));
             _buttonRight.Update(frameTime);
 
             foreach (var curr in _items)
@@ -171,15 +169,15 @@ namespace SS14.Client.UserInterface.Components
                     {
                         _selectionGlow.Position =
                             new Vector2i(
-                                ClientArea.Left + (int) (ClientArea.Width/2f - _selectionGlow.ClientArea.Width/2f),
-                                ClientArea.Top + (int) (ClientArea.Height/2f - _selectionGlow.ClientArea.Height/2f));
+                                ClientArea.Left + (int)(ClientArea.Width / 2f - _selectionGlow.ClientArea.Width / 2f),
+                                ClientArea.Top + (int)(ClientArea.Height / 2f - _selectionGlow.ClientArea.Height / 2f));
                         _selectionGlow.Draw();
                     }
 
                     KeyValuePair<ImageButton, Object> selected = _items[Selected];
                     selected.Key.Position =
-                        new Vector2i(ClientArea.Left + (int) (ClientArea.Width/2f - selected.Key.ClientArea.Width/2f),
-                                  ClientArea.Top + (int) (ClientArea.Height/2f - selected.Key.ClientArea.Height/2f));
+                        new Vector2i(ClientArea.Left + (int)(ClientArea.Width / 2f - selected.Key.ClientArea.Width / 2f),
+                                  ClientArea.Top + (int)(ClientArea.Height / 2f - selected.Key.ClientArea.Height / 2f));
                     if (FadeItems)
                         ctemp = Color4.White;
                     selected.Key.ForegroundColor = ctemp;
@@ -190,7 +188,7 @@ namespace SS14.Client.UserInterface.Components
 
                     for (int i = 1; i <= AdditionalColumns; i++)
                     {
-                        float alphaAdj = 1 + AdditionalColumns - (AdditionalColumns/(float) i);
+                        float alphaAdj = 1 + AdditionalColumns - (AdditionalColumns / (float)i);
                         const float baseAlpha = 200;
 
                         //Left
@@ -200,12 +198,12 @@ namespace SS14.Client.UserInterface.Components
                             selectedLeft.Key.Position = new Vector2i(lastPosLeft - selectedLeft.Key.ClientArea.Width,
                                                                   ClientArea.Top +
                                                                   (int)
-                                                                  (ClientArea.Height/2f -
-                                                                   selectedLeft.Key.ClientArea.Height/2f));
+                                                                  (ClientArea.Height / 2f -
+                                                                   selectedLeft.Key.ClientArea.Height / 2f));
                             lastPosLeft = selectedLeft.Key.ClientArea.Left - ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
+                                ctemp = Color.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedLeft.Key.ForegroundColor = ctemp;
 
                             selectedLeft.Key.Draw();
@@ -218,12 +216,12 @@ namespace SS14.Client.UserInterface.Components
                             selectedRight.Key.Position = new Vector2i(lastPosRight,
                                                                    ClientArea.Top +
                                                                    (int)
-                                                                   (ClientArea.Height/2f -
-                                                                    selectedRight.Key.ClientArea.Height/2f));
+                                                                   (ClientArea.Height / 2f -
+                                                                    selectedRight.Key.ClientArea.Height / 2f));
                             lastPosRight = selectedRight.Key.ClientArea.Right + ItemSpacing;
 
                             if (FadeItems)
-                                ctemp = Color4.White.WithAlpha(baseAlpha / alphaAdj);
+                                ctemp = Color.White.WithAlpha(baseAlpha / alphaAdj);
                             selectedRight.Key.ForegroundColor = ctemp;
                             selectedRight.Key.Draw();
                         }
@@ -283,7 +281,6 @@ namespace SS14.Client.UserInterface.Components
         {
             if (ClientArea.Contains(e.X, e.Y))
             {
-
                 if (ShowArrows)
                 {
                     if (_buttonLeft.MouseDown(e)) return true;

@@ -1,26 +1,30 @@
-﻿using SFML.Graphics;
+﻿using SFML.System;
+using SFML.Graphics;
 using SS14.Shared.Maths;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Utility;
 
 namespace SS14.Client.Graphics.View
 {
     public class Camera
     {
-        private Viewport _view;
-        private readonly RenderWindow _viewport;
+        public readonly CluwneWindow Window;
 
-        public Camera(Viewport viewport) { }
-
-        public Camera(RenderWindow viewport)
+        public Camera(CluwneWindow window)
         {
-            _viewport = viewport;
+            Window = window;
+            window.Resized += WindowResized;
         }
 
         public int PixelsPerMeter { get; } = 32;
         public Vector2 Position { get; set; }
 
-        public void SetView(SFML.Graphics.View view)
+        private void WindowResized(object sender, SizeEventArgs args)
         {
-            _viewport.SetView(view);
+            Window.SFMLTarget.SetView(new SFML.Graphics.View(
+                new Vector2f(args.Width / 2, args.Height / 2),
+                new Vector2f(args.Width, args.Height)
+            ));
         }
     }
 }

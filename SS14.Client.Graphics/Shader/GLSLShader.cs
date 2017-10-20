@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SFML.System;
 using SFML.Graphics.Glsl;
 using SS14.Client.Graphics.Render;
@@ -10,35 +10,35 @@ using System.IO;
 using System.Linq;
 using ShaderClass = SFML.Graphics.Shader;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using System; //TODO: Remove when all NotImplementedExcpetions are removed
 
 
 namespace SS14.Client.Graphics.Shader
 {
     [DebuggerDisplay("[GLSLShader] ResourceName = {_resourceName} | availible? {isAvalible}")]
-    public class GLSLShader : ShaderClass
+    public class GLSLShader : IDisposable
     {
+        public ShaderClass SFMLShader { get; }
 
-        private string _resourceName;
-
-
+        /// <summary>
+        /// Class used to trick C# into calling a different overload.
+        /// </summary>
+        public class CurrentTextureType { }
+        public static readonly CurrentTextureType CurrentTexture = null;
 
         public GLSLShader(string vertexShaderFilename, string fragmentShaderFilename)
-            : base(vertexShaderFilename, null, fragmentShaderFilename)
         {
-
+            SFMLShader = new ShaderClass(vertexShaderFilename, null, fragmentShaderFilename);
         }
 
         public GLSLShader(Stream vertexShaderStream, Stream fragmentShaderStream)
-            : base(vertexShaderStream, null, fragmentShaderStream)
         {
-
+            SFMLShader = new ShaderClass(vertexShaderStream, null, fragmentShaderStream);
         }
 
-        public string ResourceName
-        {
-            get { return _resourceName; }
-            set { _resourceName = value; }
-        }
+        public void Dispose() => SFMLShader.Dispose();
+
+        public string ResourceName { get; set; }
 
         public void setAsCurrentShader()
         {
@@ -52,62 +52,87 @@ namespace SS14.Client.Graphics.Shader
 
         public void setDuration(float duration)
         {
+            throw new NotImplementedException();
+        }
 
+        public void SetUniform(string Parameter, CurrentTextureType dummy)
+        {
+            SFMLShader.SetUniform(Parameter, ShaderClass.CurrentTexture);
+        }
+
+        public void SetUniform(string Parameter, float x)
+        {
+            SFMLShader.SetUniform(Parameter, x);
+        }
+
+        public void SetUniform(string Parameter, int x)
+        {
+            SFMLShader.SetUniform(Parameter, x);
+        }
+
+        public void SetUniform(string Parameter, bool x)
+        {
+            SFMLShader.SetUniform(Parameter, x);
+        }
+
+        public void SetUniform(string Parameter, Textures.Texture texture)
+        {
+            SFMLShader.SetUniform(Parameter, texture.SFMLTexture);
         }
 
         public void SetUniform(string Parameter, RenderImage Image)
         {
-            base.SetUniform(Parameter, Image.Texture);
+            SFMLShader.SetUniform(Parameter, Image.Texture.SFMLTexture);
         }
 
-        public void SetUniform(string Parameter, Vector2f vec2)
+        internal void SetUniform(string Parameter, Vector2f vec2)
         {
-            base.SetUniform(Parameter, vec2);
+            SFMLShader.SetUniform(Parameter, vec2);
         }
 
         public void SetUniform(string Parameter, Vector2 vec2)
         {
-            base.SetUniform(Parameter, vec2.Convert());
+            SFMLShader.SetUniform(Parameter, vec2.Convert());
         }
 
-        public void SetUniform(string Parameter, Vector3f vec3)
+        internal void SetUniform(string Parameter, Vector3f vec3)
         {
-            base.SetUniform(Parameter, vec3);
+            SFMLShader.SetUniform(Parameter, vec3);
         }
 
         public void SetUniform(string Parameter, Vector3 vec3)
         {
-            base.SetUniform(Parameter, vec3.Convert());
+            SFMLShader.SetUniform(Parameter, vec3.Convert());
         }
 
         public void SetUniform(string Parameter, Vector4 vec4)
         {
-            base.SetUniform(Parameter, new Vec4(vec4.X, vec4.Y, vec4.Z, vec4.W));
+            SFMLShader.SetUniform(Parameter, new Vec4(vec4.X, vec4.Y, vec4.Z, vec4.W));
         }
 
-        public void SetUniformArray(string Parameter, Vector2f[] vec2array)
+        internal void SetUniformArray(string Parameter, Vector2f[] vec2array)
         {
-            SetUniformArray(Parameter, vec2array.Select(v => (Vec2)v).ToArray());
+            SFMLShader.SetUniformArray(Parameter, vec2array.Select(v => (Vec2)v).ToArray());
         }
 
-        public void SetUniformArray(string Parameter, Vector3f[] vec3array)
+        internal void SetUniformArray(string Parameter, Vector3f[] vec3array)
         {
-            SetUniformArray(Parameter, vec3array.Select(v => (Vec3)v).ToArray());
+            SFMLShader.SetUniformArray(Parameter, vec3array.Select(v => (Vec3)v).ToArray());
         }
 
         public void SetUniformArray(string Parameter, Vector4[] vec4array)
         {
-            SetUniformArray(Parameter, vec4array.Select(v => new Vec4(v.X, v.Y, v.Z, v.W)).ToArray());
+            SFMLShader.SetUniformArray(Parameter, vec4array.Select(v => new Vec4(v.X, v.Y, v.Z, v.W)).ToArray());
         }
 
         public void SetUniformArray(string Parameter, Vector2[] vec2array)
         {
-            SetUniformArray(Parameter, vec2array.Select(v => new Vec2(v.X, v.Y)).ToArray());
+            SFMLShader.SetUniformArray(Parameter, vec2array.Select(v => new Vec2(v.X, v.Y)).ToArray());
         }
 
         public void SetUniformArray(string Parameter, Vector3[] vec3array)
         {
-            SetUniformArray(Parameter, vec3array.Select(v => new Vec3(v.X, v.Y, v.Z)).ToArray());
+            SFMLShader.SetUniformArray(Parameter, vec3array.Select(v => new Vec3(v.X, v.Y, v.Z)).ToArray());
         }
     }
 }

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
@@ -185,12 +184,10 @@ namespace SS14.Client.UserInterface.Components
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
             {
-                var mbe = new MouseButtonEvent();
-                mbe.X = e.X - Position.X + (int) ScrollbarH.Value;
-                mbe.Y = e.Y - Position.Y + (int) ScrollbarV.Value;
-                mbe.Button = e.Button;
+                var pos = new Vector2i(e.X - Position.X + (int)ScrollbarH.Value,
+                    e.Y - Position.Y + (int)ScrollbarV.Value);
 
-                var modArgs = new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (var component in Components)
                 {
@@ -214,12 +211,10 @@ namespace SS14.Client.UserInterface.Components
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                var mbe = new MouseButtonEvent();
-                mbe.X = e.X - (Position.X + (int) ScrollbarH.Value);
-                mbe.Y = e.Y - (Position.Y + (int) ScrollbarV.Value);
-                mbe.Button = e.Button;
+                var pos = new Vector2i(e.X - (Position.X + (int)ScrollbarH.Value),
+                    e.Y - (Position.Y + (int)ScrollbarV.Value));
 
-                var modArgs = new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (var component in Components)
                 {
@@ -235,10 +230,9 @@ namespace SS14.Client.UserInterface.Components
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
-            var mme = new MouseMoveEvent();
-            mme.X = e.X - (Position.X + (int) ScrollbarH.Value);
-            mme.Y = e.Y - (Position.Y + (int) ScrollbarV.Value);
-            var modArgs = new MouseMoveEventArgs(mme);
+            var pos = new Vector2i(e.X - (Position.X + (int)ScrollbarH.Value),
+                e.Y - (Position.Y + (int)ScrollbarV.Value));
+            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(pos);
 
             foreach (var component in Components)
             {

@@ -1,9 +1,9 @@
 ﻿using System;
 using Lidgren.Network;
-using OpenTK;
-using SFML.Window;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Components;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Interfaces.UserInterface
 {

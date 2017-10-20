@@ -1,4 +1,4 @@
-﻿using SFML.Graphics;
+﻿using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Components
@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.Components
         protected override void OnCalcRect()
         {
             // shrink to fit image size
-            var fr = BackgroundImage.GetLocalBounds();
+            var fr = BackgroundImage.LocalBounds;
             _size = new Vector2i((int) fr.Width, (int) fr.Height);
 
             _clientArea = new Box2i(new Vector2i(), _size);

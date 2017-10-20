@@ -1,5 +1,4 @@
 using OpenTK.Graphics;
-using SFML.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GameObjects;
@@ -10,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Console
 {
@@ -96,6 +96,19 @@ namespace SS14.Client.Console
                 console.AddLine($"No registration found for '{args[0]}'", Color4.Red);
             }
 
+            return false;
+        }
+    }
+
+    class ShowFPSCommand : IConsoleCommand
+    {
+        public string Command => "fps";
+        public string Help => "Toggles showing FPS.";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            CluwneLib.Debug.ToggleFPSDebug();
             return false;
         }
     }

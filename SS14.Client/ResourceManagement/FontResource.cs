@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using SFML.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 
 namespace SS14.Client.ResourceManagement

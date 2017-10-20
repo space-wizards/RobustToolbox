@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
@@ -226,7 +226,7 @@ namespace SS14.Client.UserInterface.Components
                 if (BackgroundImage != null)
                 {
                     BackgroundImage.SetTransformToRect(_clientArea.Translated(_screenPos));
-                    BackgroundImage.Color = BackgroundColor.Convert();
+                    BackgroundImage.Color = BackgroundColor;
                     BackgroundImage.Draw();
                 }
                 else
@@ -252,7 +252,7 @@ namespace SS14.Client.UserInterface.Components
 
         /// <summary>
         ///     Draws the contents of this control to the screen. This is called after the bg and border is drawn,
-        ///     but before child components are drawn. This is where you render text and such for this control.
+        ///     but before child Components are drawn. This is where you render text and such for this control.
         /// </summary>
         protected virtual void DrawContents() { }
 

@@ -3,6 +3,9 @@ using OpenTK;
 
 namespace SS14.Shared.Maths
 {
+    /// <summary>
+    ///     A representation of an angle, in radians.
+    /// </summary>
     [Serializable]
     public struct Angle
     {
@@ -12,11 +15,12 @@ namespace SS14.Shared.Maths
         public static Angle Zero = new Angle();
 
         public readonly double Theta;
+        public double Degrees => MathHelper.RadiansToDegrees(Theta);
 
         /// <summary>
         ///     Constructs an instance of an Angle.
         /// </summary>
-        /// <param name="theta"></param>
+        /// <param name="theta">The angle in radians.</param>
         public Angle(double theta)
         {
             Theta = theta;
@@ -41,6 +45,15 @@ namespace SS14.Shared.Maths
                 ang += 2 * (float) Math.PI;
 
             return (Direction) Math.Floor((ang + Offset) / Segment);
+        }
+
+        /// <summary>
+        ///     Constructs a new angle, from degrees instead of radians.
+        /// </summary>
+        /// <param name="degrees">The angle in degrees.</param>
+        public static Angle FromDegrees(double degrees)
+        {
+            return new Angle(MathHelper.DegreesToRadians(degrees));
         }
 
         /// <summary>

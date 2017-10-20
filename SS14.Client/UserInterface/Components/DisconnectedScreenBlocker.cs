@@ -1,7 +1,6 @@
 ﻿using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
@@ -30,8 +29,8 @@ namespace SS14.Client.UserInterface.Components
             _message = new Label(message, "CALIBRI");
             _mainMenuButton = new Button("Main Menu");
             _mainMenuButton.Clicked += MainMenuButtonClicked;
-            _mainMenuButton.Label.Color = new Color4(245, 245, 245, 255);
-            _message.ForegroundColor = new Color4(245, 245, 245, 255);
+            _mainMenuButton.Label.FillColor = new Color(245, 245, 245);
+            _message.ForegroundColor = new Color(245, 245, 245);
         }
 
         private void MainMenuButtonClicked(Button sender)
@@ -39,35 +38,26 @@ namespace SS14.Client.UserInterface.Components
             _stateManager.RequestStateChange<MainScreen>();
         }
 
-
-        /// <inheritdoc />
         protected override void OnCalcRect()
         {
             throw new System.NotImplementedException();
         }
 
-        /// <inheritdoc />
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
-        }
-
-
         public override void Update(float frameTime)
         {
-            _message.Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
-                                          (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f - _message.ClientArea.Height/2f) -
+            _message.Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f - _message.ClientArea.Width / 2f),
+                                          (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f - _message.ClientArea.Height / 2f) -
                                           50);
             _message.Update(frameTime);
             _mainMenuButton.Position =
-                new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f - _message.ClientArea.Width/2f),
+                new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f - _message.ClientArea.Width / 2f),
                           _message.ClientArea.Bottom + 20);
             _mainMenuButton.Update(frameTime);
         }
 
         public override void Draw()
         {
-            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X,  (int)CluwneLib.CurrentRenderTarget.Size.Y, Color4.Black);
+            CluwneLib.drawRectangle(0, 0, (int)CluwneLib.CurrentRenderTarget.Size.X, (int)CluwneLib.CurrentRenderTarget.Size.Y, Color4.Black);
             _message.Draw();
             _mainMenuButton.Draw();
         }

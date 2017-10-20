@@ -1,16 +1,13 @@
-﻿using System;
-using OpenTK;
-using SFML.Window;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using System;
 
 namespace SS14.Client.Interfaces.State
 {
     public interface IStateManager
     {
         Client.State.State CurrentState { get; }
-
-        void RequestStateChange<T>()
-            where T : Client.State.State;
-
+        void RequestStateChange<T>() where T : Client.State.State;
         void Update(FrameEventArgs e);
         void Render(FrameEventArgs e);
         void KeyDown(KeyEventArgs e);

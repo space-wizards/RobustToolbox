@@ -1,14 +1,10 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +13,6 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
-
     public class Chatbox : ScrollableContainer
     {
         #region Delegates
@@ -186,8 +181,7 @@ namespace SS14.Client.UserInterface.Components
                     Position = new Vector2i(5, last_y),
                     Text =
                     {
-                        Size = new Vector2i(ClientArea.Width - 10, lineHeight),
-                        Color = _chatColors[channel],
+                        FillColor = _chatColors[channel],
                     }
                 };
                 label.Update(0);
@@ -226,7 +220,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == Keyboard.Key.T && !Focus)
+            if (e.Key == Keyboard.Key.T && !Focus)
             {
                 Focus = true;
                 ignoreFirstText = true;
@@ -238,13 +232,13 @@ namespace SS14.Client.UserInterface.Components
                 return false;
             }
 
-            if (e.Code == Keyboard.Key.Escape)
+            if (e.Key == Keyboard.Key.Escape)
             {
                 Focus = false;
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Up)
+            if (e.Key == Keyboard.Key.Up)
             {
                 if (_inputIndex == -1 && _inputHistory.Any())
                 {
@@ -264,7 +258,7 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (e.Code == Keyboard.Key.Down)
+            if (e.Key == Keyboard.Key.Down)
             {
                 if (_inputIndex == 0)
                 {

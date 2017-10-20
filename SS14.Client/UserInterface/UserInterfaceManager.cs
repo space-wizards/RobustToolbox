@@ -1,25 +1,20 @@
 ﻿using Lidgren.Network;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.IoC;
+using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
-using SS14.Shared.Maths;
-using SS14.Shared.Utility;
+using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Configuration;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.UserInterface
 {
@@ -305,7 +300,7 @@ namespace SS14.Client.UserInterface
         /// <summary>
         ///  Handles MouseWheelMove event. Sent to Focused component.  Returns true if component accepted and handled the event.
         /// </summary>
-        public virtual void MouseWheelMove(MouseWheelEventArgs e)
+        public virtual void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (_console.IsVisible())
             {
@@ -341,7 +336,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool KeyDown(KeyEventArgs e)
         {
-            if (e.Code == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
+            if (e.Key == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
                 _console.ToggleVisible();
                 return true;
@@ -455,13 +450,13 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Update(FrameEventArgs e)
         {
-            if (_console.IsVisible()) _console.Update((float)e.Time);
+            if (_console.IsVisible()) _console.Update(e.Elapsed);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = (MousePos - dragOffset);
 
             foreach (IGuiComponent component in _components)
-                component.Update((float)e.Time);
+                component.Update(e.Elapsed);
         }
 
         /// <summary>
@@ -488,7 +483,7 @@ namespace SS14.Client.UserInterface
                                     ? DragInfo.DragSprite
                                     : _resourceCache.GetSprite("cursor");
 
-                _cursorSprite.Position = ((Vector2)MousePos).Convert();
+                _cursorSprite.Position = MousePos;
                 _cursorSprite.Draw();
             }
         }

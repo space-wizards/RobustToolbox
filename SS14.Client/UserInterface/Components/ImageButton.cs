@@ -1,7 +1,7 @@
-using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+﻿using OpenTK.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -17,7 +17,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void ImageButtonPressHandler(ImageButton sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceCache _resourceCache;
         private Sprite _buttonClick;
@@ -59,8 +59,8 @@ namespace SS14.Client.UserInterface.Components
 
             if (_drawSprite != null)
             {
-                _drawSprite.Position = new Vector2f( Position.X,Position.Y);
-                var bounds = _drawSprite.GetLocalBounds();
+                _drawSprite.Position = Position;
+                var bounds = _drawSprite.LocalBounds;
                 ClientArea = Box2i.FromDimensions(Position,
                                            new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
@@ -70,11 +70,11 @@ namespace SS14.Client.UserInterface.Components
         {
             if (_drawSprite != null)
             {
-                _drawSprite.Color = Color.Convert();
-                _drawSprite.Position = new Vector2f(Position.X,Position.Y);
+                _drawSprite.Color = Color;
+                _drawSprite.Position = Position;
                 _drawSprite.Texture.Smooth = true;
                 _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
-                _drawSprite.Color = Color.Convert();
+                _drawSprite.Color = Color;
             }
         }
 

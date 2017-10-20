@@ -1,6 +1,6 @@
-﻿using SFML.Graphics;
-using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Sprite;
+﻿using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Textures;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using System.Collections.Generic;

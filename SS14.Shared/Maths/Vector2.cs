@@ -65,13 +65,23 @@ namespace SS14.Shared.Maths
         }
 
         /// <summary>
-        ///     Substracts a vector from another, returning a new vector.
+        ///     Subtracts a vector from another, returning a new vector.
         /// </summary>
-        /// <param name="a">Vector to substract from.</param>
-        /// <param name="b">Vector to substract with.</param>
+        /// <param name="a">Vector to subtract from.</param>
+        /// <param name="b">Vector to subtract with.</param>
         public static Vector2 operator -(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X - b.X, a.Y - b.Y);
+        }
+
+        /// <summary>
+        ///     Subtracts a scalar with each component of a vector, returning a new vecotr..
+        /// </summary>
+        /// <param name="a">Vector to subtract from.</param>
+        /// <param name="b">Scalar to subtract with.</param>
+        public static Vector2 operator -(Vector2 a, float b)
+        {
+            return new Vector2(a.X - b, a.Y - b);
         }
 
         /// <summary>
@@ -88,6 +98,14 @@ namespace SS14.Shared.Maths
         public static Vector2 operator +(Vector2 a, Vector2 b)
         {
             return new Vector2(a.X + b.X, a.Y + b.Y);
+        }
+
+        /// <summary>
+        ///     Adds a scalar to each component of a vector, returning a new vector.
+        /// </summary>
+        public static Vector2 operator +(Vector2 a, float b)
+        {
+            return new Vector2(a.X + b, a.Y + b);
         }
 
         /// <summary>

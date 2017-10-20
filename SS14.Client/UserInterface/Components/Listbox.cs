@@ -1,9 +1,6 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
@@ -13,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.ResourceManagement;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -22,7 +20,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void ListboxPressHandler(Label item, Listbox sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly List<string> _contentStrings = new List<string>();
         private readonly IResourceCache _resourceCache;
@@ -47,8 +45,8 @@ namespace SS14.Client.UserInterface.Components
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("ListboxLabel", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
-                                 {Color = Color4.Black};
+            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
+            { FillColor = Color4.Black };
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);
             _dropDown.SetVisible(false);
@@ -74,7 +72,8 @@ namespace SS14.Client.UserInterface.Components
         /// <summary>
         /// Removes all items from the listbox
         /// </summary>
-        public void ClearItems() {
+        public void ClearItems()
+        {
             _contentStrings.Clear();
             RebuildList();
         }
@@ -92,8 +91,8 @@ namespace SS14.Client.UserInterface.Components
             str = str ?? "str";
 
             ListboxItem selLabel = (from a in _dropDown.components
-                                    where a.GetType() == typeof (ListboxItem)
-                                    let b = (ListboxItem) a
+                                    where a.GetType() == typeof(ListboxItem)
+                                    let b = (ListboxItem)a
                                     where b.Text.Text.ToLowerInvariant() == str.ToLowerInvariant()
                                     select b).FirstOrDefault();
 
@@ -115,7 +114,7 @@ namespace SS14.Client.UserInterface.Components
                 newEntry.Update(0);
                 newEntry.Clicked += NewEntryClicked;
                 _dropDown.components.Add(newEntry);
-                offset += (int) newEntry.Text.Height;
+                offset += (int)newEntry.Text.Height;
             }
         }
 
@@ -132,7 +131,7 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel.Text = toSet.Text.Text;
             _dropDown.SetVisible(false);
 
-            ((ListboxItem) toSet).Selected = true;
+            ((ListboxItem)toSet).Selected = true;
             IEnumerable<ListboxItem> notSelected = from ListboxItem item in _dropDown.components
                                                    where item != toSet
                                                    select item;
@@ -141,9 +140,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            var listboxLeftBounds = _listboxLeft.GetLocalBounds();
-            var listboxMainBounds = _listboxMain.GetLocalBounds();
-            var listboxRightBounds = _listboxRight.GetLocalBounds();
+            var listboxLeftBounds = _listboxLeft.LocalBounds;
+            var listboxMainBounds = _listboxMain.LocalBounds;
+            var listboxRightBounds = _listboxRight.LocalBounds;
             _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
                                           _width, (int)listboxMainBounds.Height);
@@ -154,9 +153,9 @@ namespace SS14.Client.UserInterface.Components
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
                                                          _clientAreaMain.Height)));
             _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right,
-                                                Position.Y + (int) (ClientArea.Height/2f) -
-                                                (int) (_selectedLabel.Height/2f));
-            _dropDown.Position = new Vector2i(ClientArea.Left + (int) ((ClientArea.Width - _dropDown.ClientArea.Width)/2f),
+                                                Position.Y + (int)(ClientArea.Height / 2f) -
+                                                (int)(_selectedLabel.Height / 2f));
+            _dropDown.Position = new Vector2i(ClientArea.Left + (int)((ClientArea.Width - _dropDown.ClientArea.Width) / 2f),
                                            ClientArea.Bottom);
             _dropDown.Update(frameTime);
         }
@@ -190,7 +189,7 @@ namespace SS14.Client.UserInterface.Components
         public override bool MouseDown(MouseButtonEventArgs e)
         {
             if (ClientArea.Contains(e.X, e.Y))
-                //change to clientAreaRight when theres a proper skin with an arrow to the right.
+            //change to clientAreaRight when theres a proper skin with an arrow to the right.
             {
                 var UiMgr = IoCManager.Resolve<IUserInterfaceManager>();
                 _dropDown.ToggleVisible();
@@ -228,7 +227,7 @@ namespace SS14.Client.UserInterface.Components
         public override void Update(float frameTime)
         {
             Text.Position = Position;
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i(_width, (int) Text.Height));
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i(_width, (int)Text.Height));
             BackgroundColor = Selected ? new Color4(47, 79, 79, 255) : Color4.Gray;
         }
     }

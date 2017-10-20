@@ -1,15 +1,14 @@
-﻿using SFMLTexture = SFML.Graphics.Texture;
-using SFML.Graphics;
+﻿using SS14.Client.Graphics.Textures;
 using System.Collections.Generic;
 
 namespace SS14.Client.Graphics.TexHelpers
 {
     public class TextureInfo
     {
-        public SFMLTexture Texture;
+        public Texture Texture;
         public Image Image;
 
-        public TextureInfo(SFMLTexture tex, Image img)
+        public TextureInfo(Texture tex, Image img)
         {
             Texture = tex;
             Image = img;

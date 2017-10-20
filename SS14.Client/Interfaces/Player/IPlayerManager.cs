@@ -7,7 +7,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
-using KeyboardKeys = SFML.Window.Keyboard.Key;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.Interfaces.Player
 {
@@ -21,8 +21,8 @@ namespace SS14.Client.Interfaces.Player
         void Attach(IEntity newEntity);
         void Detach();
         void SendVerb(string verb, int uid);
-        void KeyDown(KeyboardKeys key);
-        void KeyUp(KeyboardKeys key);
+        void KeyDown(Keyboard.Key key);
+        void KeyUp(Keyboard.Key key);
         void HandleNetworkMessage(NetIncomingMessage message);
         void Update(float frameTime);
         void ApplyEffects(RenderImage image);

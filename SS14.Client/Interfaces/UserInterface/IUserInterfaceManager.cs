@@ -1,11 +1,11 @@
 ﻿using Lidgren.Network;
-using OpenTK;
-using SFML.Window;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -34,7 +34,7 @@ namespace SS14.Client.Interfaces.UserInterface
         void ToggleMoveMode();
 
         bool KeyDown(KeyEventArgs e);
-        void MouseWheelMove(MouseWheelEventArgs e);
+        void MouseWheelMove(MouseWheelScrollEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
         bool MouseUp(MouseButtonEventArgs e);
         bool MouseDown(MouseButtonEventArgs e);

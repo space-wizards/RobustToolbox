@@ -1,11 +1,11 @@
 ﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
@@ -47,10 +47,10 @@ namespace SS14.Client.Placement
                 spriteToDraw = new Sprite(spriteToDraw);
             }
 
-            var bounds = spriteToDraw.GetLocalBounds().Convert();
+            var bounds = spriteToDraw.LocalBounds;
             spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-            spriteToDraw.Position = new Vector2f(mouseScreen.X - (bounds.Width / 2f),
-                                                 mouseScreen.Y - (bounds.Height / 2f));
+            spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width / 2f),
+                                                mouseScreen.Y - (bounds.Height / 2f));
             //Centering the sprite on the cursor.
             spriteToDraw.Draw();
         }
@@ -87,7 +87,7 @@ namespace SS14.Client.Placement
         public bool CheckCollision()
         {
             var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
-            var bounds = drawsprite.GetLocalBounds();
+            var bounds = drawsprite.LocalBounds;
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
             var spriteRectWorld = Box2.FromDimensions(mouseCoords.X - (spriteSize.X / 2f),
                                                  mouseCoords.Y - (spriteSize.Y / 2f),

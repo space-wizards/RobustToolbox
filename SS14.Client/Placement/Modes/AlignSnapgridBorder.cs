@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using SFML.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
@@ -58,7 +57,7 @@ namespace SS14.Client.Placement.Modes
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
                 (float)Math.Round((mouseCoords.X / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize,
                 (float)Math.Round((mouseCoords.Y / (double)snapsize), MidpointRounding.AwayFromZero) * snapsize);
-            
+
             //Convert back to original world and screen coordinates after applying offset
             mouseCoords = new LocalCoordinates(mouselocal + new Vector2(pManager.CurrentPrototype.PlacementOffset.X, pManager.CurrentPrototype.PlacementOffset.Y), mouseCoords.Grid);
             mouseScreen = CluwneLib.WorldToScreen(mouseCoords);

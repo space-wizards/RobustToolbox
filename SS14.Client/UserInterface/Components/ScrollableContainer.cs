@@ -1,8 +1,6 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
@@ -19,7 +17,7 @@ namespace SS14.Client.UserInterface.Components
     {
         protected readonly IResourceCache _resourceCache;
 
-        public Color4 BackgroundColor = new Color4(169, 169, 169, 255);
+        public Color BackgroundColor = new Color(169, 169, 169);
         public bool DrawBackground = false;
         public bool DrawBorder = true;
         public float BorderSize = 1.0f;
@@ -109,7 +107,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (disposing || !IsVisible()) return;
 
-            clippingRI.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
+            clippingRI.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
             clippingRI.BeginDrawing();
 
             foreach (GuiComponent component in components)
@@ -200,12 +198,10 @@ namespace SS14.Client.UserInterface.Components
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe = new MouseButtonEvent();
-                mbe.X = e.X - Position.X + (int)scrollbarH.Value;
-                mbe.Y = e.Y - Position.Y + (int)scrollbarV.Value;
-                mbe.Button = e.Button;
+                var pos = new Vector2i(e.X - Position.X + (int)scrollbarH.Value,
+                                       e.Y - Position.Y + (int)scrollbarV.Value);
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (GuiComponent component in components)
                 {
@@ -229,12 +225,10 @@ namespace SS14.Client.UserInterface.Components
 
             if (ClientArea.Contains(e.X, e.Y))
             {
-                MouseButtonEvent mbe = new MouseButtonEvent();
-                mbe.X = e.X - (Position.X + (int)scrollbarH.Value);
-                mbe.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
-                mbe.Button = e.Button;
+                var pos = new Vector2i(e.X - (Position.X + (int)scrollbarH.Value),
+                                       e.Y - (Position.Y + (int)scrollbarV.Value));
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(mbe);
+                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (GuiComponent component in components)
                 {
@@ -250,10 +244,9 @@ namespace SS14.Client.UserInterface.Components
             scrollbarH.MouseMove(e);
             scrollbarV.MouseMove(e);
 
-            MouseMoveEvent mme = new MouseMoveEvent();
-            mme.X = e.X - (Position.X + (int)scrollbarH.Value);
-            mme.Y = e.Y - (Position.Y + (int)scrollbarV.Value);
-            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(mme);
+            var pos = new Vector2i(e.X - (Position.X + (int)scrollbarH.Value),
+                                   e.Y - (Position.Y + (int)scrollbarV.Value));
+            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(pos);
 
             foreach (GuiComponent component in components)
                 component.MouseMove(modArgs);
@@ -261,7 +254,7 @@ namespace SS14.Client.UserInterface.Components
             return;
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             if (inner_focus != null)
             {

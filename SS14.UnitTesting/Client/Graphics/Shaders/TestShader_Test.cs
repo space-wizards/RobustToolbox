@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
-using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Client.Graphics.Shaders
 {
@@ -17,29 +17,26 @@ namespace SS14.UnitTesting.Client.Graphics.Shaders
 
         private IResourceCache resources;
         private RenderImage testRenderImage;
-        private SFML.Graphics.Sprite testsprite;
+        private SS14.Client.Graphics.Sprites.Sprite testsprite;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            base.InitializeCluwneLib(1280,720,false,60);
+            base.InitializeCluwneLib(1280, 720, false, 60);
 
             resources = base.GetResourceCache;
-            testRenderImage = new RenderImage("TestShaders",1280,720);
+            testRenderImage = new RenderImage("TestShaders", 1280, 720);
             testsprite = resources.GetSprite("flashlight_mask");
 
             SS14UnitTest.InjectedMethod += LoadTestShader_ShouldDrawAllRed;
 
             base.StartCluwneLibLoop();
-
         }
 
         [Test]
         public void LoadTestShader_ShouldDrawAllRed()
         {
-
             testRenderImage.BeginDrawing();
-
 
             GLSLShader currshader = resources.GetShader("RedShader");
             currshader.SetUniform("TextureUnit0", testsprite.Texture);
@@ -50,12 +47,6 @@ namespace SS14.UnitTesting.Client.Graphics.Shaders
             testRenderImage.Blit(0, 0, 1280, 720, Color.White, BlitterSizeMode.Crop);
 
             resources.GetSprite("flashlight_mask").Draw();
-
-
         }
-
-
-
     }
 }
-

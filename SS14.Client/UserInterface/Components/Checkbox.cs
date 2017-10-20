@@ -1,6 +1,5 @@
-using SFML.Graphics;
-using SFML.Window;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
@@ -14,7 +13,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void CheckboxChangedHandler(Boolean newValue, Checkbox sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceCache _resourceCache;
 
@@ -23,7 +22,6 @@ namespace SS14.Client.UserInterface.Components
 
         private bool value;
 
-
         public Checkbox(IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
@@ -31,9 +29,8 @@ namespace SS14.Client.UserInterface.Components
             checkboxCheck = _resourceCache.GetSprite("checkbox1");
 
             ClientArea = Box2i.FromDimensions(Position,
-                new Vector2i((int)checkbox.GetLocalBounds().Width, (int)checkbox.GetLocalBounds().Height));
+                new Vector2i((int)checkbox.LocalBounds.Width, (int)checkbox.LocalBounds.Height));
             Update(0);
-
         }
 
         public bool Value
@@ -50,7 +47,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Update(float frameTime)
         {
-            checkbox.Position = new SFML.System.Vector2f(Position.X, Position.Y);
+            checkbox.Position = Position;
         }
 
         public override void Render()

@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using SFML.Graphics;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
@@ -52,11 +51,11 @@ namespace SS14.Client.Placement.Modes
 
             mouseScreen = mouseS;
             mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
-            
+
             var snapsize = mouseCoords.Grid.SnapSize; //Find snap size.
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float)(Math.Round((mouseCoords.Position.X / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize, 
+                (float)(Math.Round((mouseCoords.Position.X / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize,
                 (float)(Math.Round((mouseCoords.Position.Y / (double)snapsize-0.5), MidpointRounding.AwayFromZero)+0.5) * snapsize);
 
             //Adjust mouseCoords to new calculated position

@@ -1,13 +1,9 @@
 ﻿using Lidgren.Network;
 using OpenTK;
-using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Sprite;
 using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
@@ -33,10 +29,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.Graphics.Lighting;
-using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2u = SS14.Shared.Maths.Vector2u;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Input;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Textures;
 
 namespace SS14.Client.State.States
 {
@@ -67,8 +65,8 @@ namespace SS14.Client.State.States
         private SpriteBatch _decalBatch;
 
         #region Mouse/Camera stuff
-        public ScreenCoordinates MousePosScreen = new ScreenCoordinates(0,0,0);
-        public LocalCoordinates MousePosWorld = new LocalCoordinates(0,0,0,0);
+        public ScreenCoordinates MousePosScreen = new ScreenCoordinates(0, 0, 0);
+        public LocalCoordinates MousePosWorld = new LocalCoordinates(0, 0, 0, 0);
         #endregion Mouse/Camera stuff
 
         #region UI Variables
@@ -287,9 +285,9 @@ namespace SS14.Client.State.States
             Lightmap = resourceCache.GetShader("lightmap");
 
             playerVision = lightManager.CreateLight();
-            playerVision.Color = Color4.Blue;
+            playerVision.Color = Color.Blue;
             playerVision.Radius = 1024;
-            playerVision.Coordinates = new LocalCoordinates(0,0,0,0);
+            playerVision.Coordinates = new LocalCoordinates(0, 0, 0, 0);
 
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
@@ -306,10 +304,10 @@ namespace SS14.Client.State.States
                 UpdateGUIPosition();
             }
 
-            _componentManager.Update((float)e.Time);
-            _entityManager.Update((float)e.Time);
+            _componentManager.Update(e.Elapsed);
+            _entityManager.Update(e.Elapsed);
             PlacementManager.Update(MousePosScreen);
-            PlayerManager.Update((float)e.Time);
+            PlayerManager.Update(e.Elapsed);
 
             if (PlayerManager.ControlledEntity != null)
             {
@@ -346,7 +344,7 @@ namespace SS14.Client.State.States
                 //PreOcclusion
                 RenderTiles();
 
-                RenderComponents((float)e.Time, vp, map);
+                RenderComponents(e.Elapsed, vp, map);
 
                 RenderOverlay();
 
@@ -378,7 +376,7 @@ namespace SS14.Client.State.States
 
                 if (_floorBatch.Count > 0)
                 {
-                    _tilesTarget.Draw(_floorBatch);
+                    _tilesTarget.Memes(_floorBatch);
                 }
 
                 _tilesTarget.EndDrawing();
@@ -398,10 +396,10 @@ namespace SS14.Client.State.States
                 // Render decal batch
 
                 if (_decalBatch.Count > 0)
-                    _overlayTarget.Draw(_decalBatch);
+                    _overlayTarget.Memes(_decalBatch);
 
                 if (_gasBatch.Count > 0)
-                    _overlayTarget.Draw(_gasBatch);
+                    _overlayTarget.Memes(_gasBatch);
 
                 _redrawOverlay = false;
                 _overlayTarget.EndDrawing();
@@ -437,29 +435,29 @@ namespace SS14.Client.State.States
                 int startX = 10;
                 int startY = 10;
                 CluwneLib.drawRectangle(startX, startY, 200, 300,
-                        Color4.Blue.WithAlpha(64));
+                        Color.Blue.WithAlpha(64));
 
                 // Player position debug
                 Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
                 Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                 Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
                 var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
-                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color4.White, font);
-                CluwneLib.drawText(15, 30, "Character Pos", 14, Color4.White, font);
-                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color4.White, font);
-                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color4.White, font);
-                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color4.White, font);
+                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White, font);
+                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White, font);
+                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White, font);
 
                 // Mouse position debug
                 Vector2i mouseScreenPos = (Vector2i)MousePosScreen.Position;
                 var mousepos = CluwneLib.ScreenToCoordinates(MousePosScreen);
                 Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
                 Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
-                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color4.White, font);
-                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color4.White, font);
-                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color4.White, font);
-                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color4.White, font);
-                CluwneLib.drawText(15, 180, String.Format("Grid, Map: {0} / {1}", mousepos.GridID, mousepos.MapID), 14, Color4.White, font);
+                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White, font);
+                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
+                CluwneLib.drawText(15, 180, String.Format("Grid, Map: {0} / {1}", mousepos.GridID, mousepos.MapID), 14, Color.White, font);
             }
         }
 
@@ -498,71 +496,71 @@ namespace SS14.Client.State.States
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
                 return;
 
-            if (e.Code == Keyboard.Key.F1)
+            if (e.Key == Keyboard.Key.F1)
             {
                 //TODO FrameStats
                 CluwneLib.FrameStatsVisible = !CluwneLib.FrameStatsVisible;
             }
-            if (e.Code == Keyboard.Key.F2)
+            if (e.Key == Keyboard.Key.F2)
             {
                 _showDebug = !_showDebug;
                 CluwneLib.Debug.ToggleWallDebug();
                 CluwneLib.Debug.ToggleAABBDebug();
                 CluwneLib.Debug.ToggleGridDisplayDebug();
             }
-            if (e.Code == Keyboard.Key.F3)
+            if (e.Key == Keyboard.Key.F3)
             {
                 ToggleOccluderDebug();
             }
-            if (e.Code == Keyboard.Key.F4)
+            if (e.Key == Keyboard.Key.F4)
             {
                 debugHitboxes = !debugHitboxes;
             }
-            if (e.Code == Keyboard.Key.F5)
+            if (e.Key == Keyboard.Key.F5)
             {
                 PlayerManager.SendVerb("save", 0);
             }
-            if (e.Code == Keyboard.Key.F6)
+            if (e.Key == Keyboard.Key.F6)
             {
                 bFullVision = !bFullVision;
             }
-            if (e.Code == Keyboard.Key.F7)
+            if (e.Key == Keyboard.Key.F7)
             {
                 bPlayerVision = !bPlayerVision;
             }
-            if (e.Code == Keyboard.Key.F8)
+            if (e.Key == Keyboard.Key.F8)
             {
                 NetOutgoingMessage message = NetworkManager.CreateMessage();
                 message.Write((byte)NetMessages.ForceRestart);
                 NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
             }
-            if (e.Code == Keyboard.Key.Escape)
+            if (e.Key == Keyboard.Key.Escape)
             {
                 _menu.ToggleVisible();
             }
-            if (e.Code == Keyboard.Key.F9)
+            if (e.Key == Keyboard.Key.F9)
             {
                 UserInterfaceManager.ToggleMoveMode();
             }
-            if (e.Code == Keyboard.Key.F10)
+            if (e.Key == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                      PlacementManager)); //Create a new one.
             }
-            if (e.Code == Keyboard.Key.F11)
+            if (e.Key == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceCache,
                                                                        PlacementManager)); //Create a new one.
             }
 
-            PlayerManager.KeyDown(e.Code);
+            PlayerManager.KeyDown(e.Key);
         }
 
         public void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Code);
+            PlayerManager.KeyUp(e.Key);
         }
 
         public void TextEntered(TextEventArgs e)
@@ -641,7 +639,7 @@ namespace SS14.Client.State.States
             float checkDistance = 1.5f;
             if (!PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
                 return;
-            
+
             var clickable = entToClick.GetComponent<IClientClickableComponent>();
             switch (e.Button)
             {
@@ -663,13 +661,13 @@ namespace SS14.Client.State.States
 
         public void MouseMove(MouseMoveEventArgs e)
         {
-            if(PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
+            if (PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
-                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), transform.MapID);
+                MousePosScreen = new ScreenCoordinates(e.NewPosition, transform.MapID);
             }
             else
             {
-                MousePosScreen = new ScreenCoordinates(new Vector2i(e.X, e.Y), Shared.Map.MapManager.NULLSPACE);
+                MousePosScreen = new ScreenCoordinates(e.NewPosition, Shared.Map.MapManager.NULLSPACE);
             }
             MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
@@ -685,7 +683,7 @@ namespace SS14.Client.State.States
             //TODO: Figure out what to do with this
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -1025,7 +1023,7 @@ namespace SS14.Client.State.States
         {
             if (bFullVision)
             {
-                playerOcclusionTarget.Clear(new SFML.Graphics.Color(211, 211, 211));
+                playerOcclusionTarget.Clear(new Color(211, 211, 211));
                 return;
             }
             if (bPlayerVision)
@@ -1105,7 +1103,6 @@ namespace SS14.Client.State.States
                 MapRenderer.RenderPos(t, pos.X, pos.Y);
             }
         }
-
 
         private void BlurPlayerVision()
         {

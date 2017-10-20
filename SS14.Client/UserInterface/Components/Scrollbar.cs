@@ -1,10 +1,8 @@
 ﻿using Lidgren.Network;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
@@ -59,10 +57,12 @@ namespace SS14.Client.UserInterface.Components
             if (Horizontal) scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
             else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
 
-            DEBUG = new TextSprite("DEBUGSLIDER", "Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            DEBUG.Color = new Color4(255, 128, 0, 255);
-            DEBUG.ShadowColor = new Color4(0, 0, 128, 255);
-            DEBUG.Shadowed = true;
+            DEBUG = new TextSprite("Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
+            {
+                FillColor = new Color(255, 128, 0),
+                ShadowColor = new Color(0, 0, 128),
+                Shadowed = true
+            };
             Update(0);
         }
 
@@ -112,15 +112,15 @@ namespace SS14.Client.UserInterface.Components
             if (dragging)
             {
                 if (Horizontal)
-                    currentPos = (int)e.X - ClientArea.Left - (int)(scrollbarButton.GetLocalBounds().Width / 2f);
-                else currentPos = (int)e.Y - ClientArea.Top - (int)(scrollbarButton.GetLocalBounds().Height / 2f);
+                    currentPos = (int)e.X - ClientArea.Left - (int)(scrollbarButton.LocalBounds.Width / 2f);
+                else currentPos = (int)e.Y - ClientArea.Top - (int)(scrollbarButton.LocalBounds.Height / 2f);
                 currentPos = Math.Min(currentPos, actualSize);
                 currentPos = Math.Max(currentPos, 0);
                 RaiseEvent = true;
             }
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             Value += (e.Delta * -1) * Math.Max((max / 20), 1) * multipler;
             return true;
@@ -130,7 +130,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (!IsVisible()) return;
             base.Update(frameTime);
-            var bounds = scrollbarButton.GetLocalBounds();
+            var bounds = scrollbarButton.LocalBounds;
             if (Horizontal)
             {
                 ClientArea = Box2i.FromDimensions(Position, new Vector2i(size, (int)bounds.Height));

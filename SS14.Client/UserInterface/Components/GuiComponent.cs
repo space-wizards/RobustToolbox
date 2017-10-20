@@ -1,7 +1,5 @@
 ﻿using Lidgren.Network;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
@@ -97,7 +95,7 @@ namespace SS14.Client.UserInterface.Components
             //TODO: Figure out what to do with this
         }
 
-        public virtual bool MouseWheelMove(MouseWheelEventArgs e)
+        public virtual bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             return false;
         }

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
@@ -11,6 +10,7 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Network
 {
@@ -41,8 +41,8 @@ namespace SS14.Client.Network
 
         public void Initialize()
         {
-            _textSprite = new TextSprite("NetGraphText", "", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            _textSprite.Color = Color4.WhiteSmoke;
+            _textSprite = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            _textSprite.FillColor = Color.WhiteSmoke;
         }
 
         public void Toggle()
@@ -102,7 +102,7 @@ namespace SS14.Client.Network
                     2,
                     (int)(_dataPoints[i].SentBytes * 0.2f),
                     new Color4(0, 128, 0, 255));
-                
+
                 CluwneLib.drawRectangle((int) CluwneLib.CurrentRenderTarget.Size.X - 2 * (MaxDataPoints - i),
                     (int) CluwneLib.CurrentRenderTarget.Size.Y - (int) (_dataPoints[i].ReceivedBytes * 0.1f),
                     2,
@@ -112,31 +112,31 @@ namespace SS14.Client.Network
             }
 
             _textSprite.Text = string.Format("Up: {0:0.00} kb/s", Math.Round(totalSentBytes / totalMilliseconds, 2));
-            _textSprite.Position = new Vector2i((int) CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int) CluwneLib.CurrentRenderTarget.Size.Y - 4 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int) CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int) CluwneLib.CurrentRenderTarget.Size.Y - 4 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("Down: {0:0.00} kb/s", Math.Round(totalRecBytes / totalMilliseconds, 2));
-            _textSprite.Position = new Vector2i((int) CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int) CluwneLib.CurrentRenderTarget.Size.Y - 3 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int) CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int) CluwneLib.CurrentRenderTarget.Size.Y - 3 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("Out: {0} pkts", Math.Round(totalSentPkts / (totalMilliseconds / 1000)));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int)CluwneLib.CurrentRenderTarget.Size.Y - 2 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int)CluwneLib.CurrentRenderTarget.Size.Y - 2 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("In: {0} pkts", Math.Round(totalRecPkts / (totalMilliseconds / 1000)));
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int)CluwneLib.CurrentRenderTarget.Size.Y - 1 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 125, (int)CluwneLib.CurrentRenderTarget.Size.Y - 1 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("Ping: {0}ms", _networkManager.ServerChannel?.Ping ?? -1);
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 4 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 4 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("Frame Time: {0:0.00}ms ({1:0.00}FPS)", _timing.RealFrameTimeAvg.TotalMilliseconds, 1 / _timing.RealFrameTimeAvg.TotalSeconds);
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 3 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 3 * _textSprite.Height - 5);
             _textSprite.Draw();
 
             _textSprite.Text = string.Format("Frame SD: {0:0.00}ms", _timing.RealFrameTimeStdDev.TotalMilliseconds);
-            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 2 * _textSprite.Height - 5).Convert();
+            _textSprite.Position = new Vector2i((int)CluwneLib.CurrentRenderTarget.Size.X - 4 * MaxDataPoints - 0, (int)CluwneLib.CurrentRenderTarget.Size.Y - 2 * _textSprite.Height - 5);
             _textSprite.Draw();
         }
 

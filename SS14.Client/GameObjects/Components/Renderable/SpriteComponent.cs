@@ -1,9 +1,8 @@
 ﻿using Lidgren.Network;
 using OpenTK;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.TexHelpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
@@ -16,7 +15,6 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Client.Graphics.Sprite;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -44,7 +42,7 @@ namespace SS14.Client.GameObjects
         protected Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
-        public Color4 Color { get; set; } = Color4.White;
+        public Color Color { get; set; } = Color.White;
         public int MapID { get; private set; }
 
         public override Type StateType => typeof(SpriteComponentState);
@@ -54,7 +52,7 @@ namespace SS14.Client.GameObjects
             get
             {
                 return Owner.GetComponent<ITransformComponent>().WorldPosition.Y +
-                       (GetActiveDirectionalSprite().GetLocalBounds().Height / 2);
+                       (GetActiveDirectionalSprite().LocalBounds.Height / 2);
             }
         }
 
@@ -68,7 +66,7 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                var bounds = GetActiveDirectionalSprite().GetLocalBounds();
+                var bounds = GetActiveDirectionalSprite().LocalBounds;
                 return Box2.FromDimensions(0, 0, bounds.Width, bounds.Height);
             }
         }
@@ -262,7 +260,7 @@ namespace SS14.Client.GameObjects
             var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
 
             // local screen bounds
-            var localBounds = spriteToCheck.GetLocalBounds().Convert();
+            var localBounds = spriteToCheck.LocalBounds;
 
             // local world bounds
             var worldBounds = localBounds.Scale(1.0f / screenScale);
@@ -300,7 +298,7 @@ namespace SS14.Client.GameObjects
                 throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
 
             // Check if the clicked pixel is transparent enough in the Image
-            return texInfo.Image.GetPixel((uint)pixelPos.X, (uint)pixelPos.Y).A >= Limits.ClickthroughLimit;
+            return texInfo.Image[(uint)pixelPos.X, (uint)pixelPos.Y].AByte >= Limits.ClickthroughLimit;
         }
 
         public bool SpriteExists(string key)
@@ -360,7 +358,7 @@ namespace SS14.Client.GameObjects
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
             ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
-            var bounds = spriteToRender.GetLocalBounds();
+            var bounds = spriteToRender.LocalBounds;
             SetSpriteCenter(spriteToRender, renderPos.Position);
 
             if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
@@ -369,10 +367,10 @@ namespace SS14.Client.GameObjects
                 || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
                 return;
 
-            spriteToRender.Scale = new Vector2f(HorizontalFlip ? -1 : 1, 1);
-            spriteToRender.Color = this.Color.Convert();
+            spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
+            spriteToRender.Color = this.Color;
             spriteToRender.Draw();
-            spriteToRender.Color = Color4.White.Convert();
+            spriteToRender.Color = Color.White;
 
             //Render slaves above
             IEnumerable<SpriteComponent> renderablesAbove = from SpriteComponent c in slaves
@@ -399,9 +397,9 @@ namespace SS14.Client.GameObjects
 
         public void SetSpriteCenter(Sprite sprite, Vector2 center)
         {
-            var bounds = GetActiveDirectionalSprite().GetLocalBounds();
-            sprite.Position = new SFML.System.Vector2f(center.X - (bounds.Width / 2),
-                                                       center.Y - (bounds.Height / 2));
+            var bounds = GetActiveDirectionalSprite().LocalBounds;
+            sprite.Position = new Vector2(center.X - (bounds.Width / 2),
+                                          center.Y - (bounds.Height / 2));
         }
 
         public void SetSpriteCenter(Sprite sprite, LocalCoordinates worldPos)

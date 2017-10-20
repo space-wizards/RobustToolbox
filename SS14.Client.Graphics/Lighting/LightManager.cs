@@ -5,6 +5,7 @@ using OpenTK;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -21,7 +22,7 @@ namespace SS14.Client.Graphics.Lighting
                     p => typeof(LightMode).IsAssignableFrom(p) && !p.IsInterface).ToList();
         }
 
-        public SFML.Graphics.Sprite LightMask { get; set; }
+        public Sprite LightMask { get; set; }
 
         public void SetLightMode(LightModeClass? mode, ILight light)
         {

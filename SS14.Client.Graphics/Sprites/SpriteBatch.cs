@@ -52,7 +52,7 @@ namespace SS14.Client.Graphics.Sprites
             get { return count; }
         }
 
-        public BlendMode BlendingSettings { get; set; }
+        public BlendMode BlendingSettings;
 
         public SpriteBatch(uint maxCapacity = 100000)
         {

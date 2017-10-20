@@ -35,6 +35,8 @@ using SS14.Client.Graphics.Input;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Textures;
+using SS14.Client.Interfaces;
+using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client.State.States
 {
@@ -458,6 +460,19 @@ namespace SS14.Client.State.States
                 CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
                 CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
                 CluwneLib.drawText(15, 180, String.Format("Grid, Map: {0} / {1}", mousepos.GridID, mousepos.MapID), 14, Color.White, font);
+            }
+
+            if (CluwneLib.Debug.DebugFPS)
+            {
+                var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
+                var fps = Math.Round(IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg, 2);
+                int startY = 10;
+                if (CluwneLib.Debug.DebugGridDisplay)
+                {
+                    startY += 300;
+                }
+
+                CluwneLib.drawText(10, startY, $"FPS: {fps}", 14, Color.White, font);
             }
         }
 

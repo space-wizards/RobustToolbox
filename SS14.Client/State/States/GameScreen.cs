@@ -376,7 +376,7 @@ namespace SS14.Client.State.States
 
                 if (_floorBatch.Count > 0)
                 {
-                    _tilesTarget.Memes(_floorBatch);
+                    _tilesTarget.Draw(_floorBatch);
                 }
 
                 _tilesTarget.EndDrawing();
@@ -396,10 +396,10 @@ namespace SS14.Client.State.States
                 // Render decal batch
 
                 if (_decalBatch.Count > 0)
-                    _overlayTarget.Memes(_decalBatch);
+                    _overlayTarget.Draw(_decalBatch);
 
                 if (_gasBatch.Count > 0)
-                    _overlayTarget.Memes(_gasBatch);
+                    _overlayTarget.Draw(_gasBatch);
 
                 _redrawOverlay = false;
                 _overlayTarget.EndDrawing();

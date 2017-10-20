@@ -15,7 +15,7 @@ namespace SS14.Client.Graphics.Render
         uint Height { get; }
 
         void Clear(Color color);
-        void Memes(IDrawable drawable);
+        void Draw(IDrawable drawable);
         // This has to have its own name vs overload
         // Because the C# overload detector refuses to resolve anything
         // if a single overload can't potentially be resolved due to unreferenced assemblies

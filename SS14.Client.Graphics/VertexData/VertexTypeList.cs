@@ -27,14 +27,14 @@ namespace SS14.Client.Graphics.VertexData
                 => unchecked((uint)(
                     (color.RByte << 16)
                     | (color.GByte << 8)
-                    | (color.BByte << 0)
+                    | (color.BByte)
                     | (color.AByte << 24)));
 
             private static Color IntToColor(uint color)
                 => unchecked(new Color(
                     (byte)(color >> 16),
                     (byte)(color >> 8),
-                    (byte)(color >> 0),
+                    (byte)(color),
                     (byte)(color >> 24)));
 
             #region Variables.

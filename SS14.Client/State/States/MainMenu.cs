@@ -4,11 +4,10 @@ using System.Diagnostics;
 using System.Reflection;
 using Lidgren.Network;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.State.States
 {
@@ -22,9 +21,10 @@ namespace SS14.Client.State.States
         ///     Default port that the client tries to connect to if no other port is specified.
         /// </summary>
         public const ushort DefaultPort = 1212;
+
         public const float ConnectTimeOut = 5000.0f;
 
-        private readonly Screen _uiScreen;
+        private Screen _uiScreen;
 
         private DateTime _connectTime;
         private bool _isConnecting;
@@ -33,7 +33,10 @@ namespace SS14.Client.State.States
         ///     Constructs an instance of this object.
         /// </summary>
         /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
-        public MainScreen(IDictionary<Type, object> managers) : base(managers)
+        public MainScreen(IDictionary<Type, object> managers) : base(managers) { }
+
+        /// <inheritdoc />
+        public override void InitializeGUI()
         {
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");

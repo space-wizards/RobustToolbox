@@ -156,6 +156,7 @@ namespace SS14.Client.State
                 var parameters = new object[] { _managers };
                 newState = (T)Activator.CreateInstance(typeof(T), parameters);
                 _loadedStates.Add(typeof(T), newState);
+                newState.InitializeGUI();
             }
 
             if (CurrentState != null) CurrentState.Shutdown();

@@ -43,9 +43,6 @@ namespace SS14.Client.State.States
     public class GameScreen : State
     {
         #region Variables
-        public DateTime LastUpdate;
-        public DateTime Now;
-
         private bool _recalculateScene = true;
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
@@ -134,9 +131,6 @@ namespace SS14.Client.State.States
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
             manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
-
-            LastUpdate = DateTime.Now;
-            Now = DateTime.Now;
 
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
@@ -237,12 +231,12 @@ namespace SS14.Client.State.States
             _gameChat.Position = new Vector2i((int)CluwneLib.Window.Viewport.Size.X - _gameChatSize.X - 10, 10);
         }
 
-        private void InitializeGUI()
+        public override void InitializeGUI()
         {
             // Setup the ESC Menu
             _menu = new MenuWindow();
             UserInterfaceManager.AddComponent(_menu);
-            _menu.SetVisible(false);
+            _menu.Visible = false;
 
             //Init GUI components
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
@@ -294,20 +288,26 @@ namespace SS14.Client.State.States
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
 
+        public override void FormResize()
+        {
+            _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
+            _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
+
+            UserInterfaceManager.ResizeComponents();
+
+            ResetRendertargets();
+            IoCManager.Resolve<ILightManager>().RecalculateLights();
+            RecalculateScene();
+
+            UpdateGUIPosition();
+
+            base.FormResize();
+        }
+
         public override void Update(FrameEventArgs e)
         {
             base.Update(e);
-
-            LastUpdate = Now;
-            Now = DateTime.Now;
-
-            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
-            {
-                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
-                UpdateGUIPosition();
-            }
-
+            
             _componentManager.Update(e.Elapsed);
             _entityManager.Update(e.Elapsed);
             PlacementManager.Update(MousePosScreen);
@@ -322,8 +322,6 @@ namespace SS14.Client.State.States
 
         public override void Render(FrameEventArgs e)
         {
-            base.Render(e);
-
             CluwneLib.Window.Graphics.Clear(Color.Black);
 
             CalculateAllLights();
@@ -801,19 +799,7 @@ namespace SS14.Client.State.States
         }
 
         #endregion Messages
-
-        #region State
-
-        public void FormResize()
-        {
-            UserInterfaceManager.ResizeComponents();
-            ResetRendertargets();
-            IoCManager.Resolve<ILightManager>().RecalculateLights();
-            RecalculateScene();
-        }
-
-        #endregion State
-
+        
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {
             //Recalculate scene batches for drawing.

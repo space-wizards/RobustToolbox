@@ -43,6 +43,12 @@ namespace SS14.Client.State
         }
 
         /// <summary>
+        ///     Called the first time this state is constructed. It is called automatically. You should build your
+        ///     UI elements in here.
+        /// </summary>
+        public abstract void InitializeGUI();
+
+        /// <summary>
         ///     Screen is being (re)enabled.
         /// </summary>
         public abstract void Startup();
@@ -115,7 +121,7 @@ namespace SS14.Client.State
         public virtual void MouseLeft(EventArgs e) { }
 
         /// <summary>
-        ///     The screen has changed size, usually from resizing window.
+        ///     The screen has changed size, usually from resizing window. This is called automatically right after Startup.
         /// </summary>
         public virtual void FormResize() { }
 

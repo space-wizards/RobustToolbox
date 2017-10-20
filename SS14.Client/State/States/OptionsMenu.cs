@@ -1,16 +1,13 @@
-﻿using SS14.Client.Graphics;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Render;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Label = SS14.Client.UserInterface.Components.Label;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.State.States
 {
@@ -44,7 +41,7 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            InitializeGui();
+            UserInterfaceManager.AddComponent(_uiScreen);
         }
 
         /// <inheritdoc />
@@ -116,11 +113,11 @@ namespace SS14.Client.State.States
             UserInterfaceManager.TextEntered(e);
         }
 
-        private void InitializeGui()
+        public override void InitializeGUI()
         {
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
-            UserInterfaceManager.AddComponent(_uiScreen);
+            // added to interface manager in startup
 
             _bgPanel = new Panel();
             _bgPanel.BackgroundImage = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");

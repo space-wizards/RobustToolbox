@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Lidgren.Network;
-using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Player;
@@ -11,44 +10,22 @@ using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
-using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.Client.State.States
 {
     public class Lobby : State
     {
-        private readonly Screen _uiScreen;
+        private Screen _uiScreen;
 
-        private readonly SimpleImage _imgStatus;
+        private Label _lblModeInfo;
+        private Label _lblPlayersInfo;
+        private Label _lblPortInfo;
+        private Label _lblServerInfo;
 
-        private readonly Label _lblMode;
-        private readonly Label _lblModeInfo;
+        private PlayerListTab _tabServer;
+        private TabbedMenu _tabs;
 
-        private readonly Label _lblPlayers;
-        private readonly Label _lblPlayersInfo;
-
-        private readonly Label _lblPort;
-        private readonly Label _lblPortInfo;
-        private readonly Label _lblServer;
-        private readonly Label _lblServerInfo;
-        private readonly SimpleImage _imgMainBg;
-
-        //private readonly List<Label> _serverLabels = new List<Label>();
-
-        private readonly TabContainer _tabCharacter;
-        private readonly TabContainer _tabObserve;
-        private readonly PlayerListTab _tabServer;
-        private readonly TabbedMenu _tabs;
-        private readonly SimpleImage _imgChatBg;
-        private readonly ImageButton _btnReady;
-        private readonly ImageButton _btnBack;
-
-        private readonly float _lastLblSpacing = 10;
-
-        private readonly Chatbox _lobbyChat;
-        private int _prevScreenWidth;
-        private int _prevScreenHeight;
-        private Box2 _recStatus;
+        private Chatbox _lobbyChat;
 
         private string _serverName;
         private int _serverPort;
@@ -59,114 +36,116 @@ namespace SS14.Client.State.States
         private string _gameType;
 
         public Lobby(IDictionary<Type, object> managers)
-            : base(managers)
+            : base(managers) { }
+
+        public override void InitializeGUI()
         {
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
 
-            _imgMainBg = new SimpleImage();
-            _imgMainBg.Sprite = "lobby_mainbg";
-            _imgMainBg.Alignment = Align.HCenter | Align.VCenter;
-            _uiScreen.AddControl(_imgMainBg);
+            var imgMainBg = new SimpleImage();
+            imgMainBg.Sprite = "lobby_mainbg";
+            imgMainBg.Alignment = Align.HCenter | Align.VCenter;
+            _uiScreen.AddControl(imgMainBg);
 
-            _imgStatus = new SimpleImage();
-            _imgStatus.Sprite = "lobby_statusbar";
-            _imgStatus.LocalPosition = new Vector2i(10, 63);
-            _imgMainBg.AddControl(_imgStatus);
+            var imgStatus = new SimpleImage();
+            imgStatus.Sprite = "lobby_statusbar";
+            imgStatus.LocalPosition = new Vector2i(10, 63);
+            imgMainBg.AddControl(imgStatus);
 
-            _lblServer = new Label("SERVER: ", "MICROGME");
-            _lblServer.ForegroundColor = new Color(245, 245, 245, 255);
-            _lblServer.LocalPosition = new Vector2i(5, 2);
-            _imgStatus.AddControl(_lblServer);
+            var lblServer = new Label("SERVER: ", "MICROGME");
+            lblServer.ForegroundColor = new Color(245, 245, 245);
+            lblServer.LocalPosition = new Vector2i(5, 2);
+            imgStatus.AddControl(lblServer);
 
             _lblServerInfo = new Label("LLJK#1", "MICROGME");
-            _lblServerInfo.ForegroundColor = new Color(139, 0, 0, 255);
+            _lblServerInfo.ForegroundColor = new Color(139, 0, 0);
             _lblServerInfo.FixedWidth = 100;
             _lblServerInfo.Alignment = Align.Right;
-            _lblServer.AddControl(_lblServerInfo);
+            lblServer.AddControl(_lblServerInfo);
 
-            _lblMode = new Label("GAMEMODE: ", "MICROGME");
-            _lblMode.ForegroundColor = new Color(245, 245, 245, 255);
-            _lblMode.Alignment = Align.Right;
-            _lblMode.LocalPosition = new Vector2i(10, 0);
-            _lblServerInfo.AddControl(_lblMode);
+            var lblMode = new Label("GAMEMODE: ", "MICROGME");
+            lblMode.ForegroundColor = new Color(245, 245, 245);
+            lblMode.Alignment = Align.Right;
+            lblMode.LocalPosition = new Vector2i(10, 0);
+            _lblServerInfo.AddControl(lblMode);
 
             _lblModeInfo = new Label("SECRET", "MICROGME");
-            _lblModeInfo.ForegroundColor = new Color(139, 0, 0, 255);
+            _lblModeInfo.ForegroundColor = new Color(139, 0, 0);
             _lblModeInfo.FixedWidth = 90;
             _lblModeInfo.Alignment = Align.Right;
-            _lblMode.AddControl(_lblModeInfo);
+            lblMode.AddControl(_lblModeInfo);
 
-            _lblPlayers = new Label("PLAYERS: ", "MICROGME");
-            _lblPlayers.ForegroundColor = new Color(245, 245, 245, 255);
-            _lblPlayers.Alignment = Align.Right;
-            _lblPlayers.LocalPosition = new Vector2i(10, 0);
-            _lblModeInfo.AddControl(_lblPlayers);
+            var lblPlayers = new Label("PLAYERS: ", "MICROGME");
+            lblPlayers.ForegroundColor = new Color(245, 245, 245);
+            lblPlayers.Alignment = Align.Right;
+            lblPlayers.LocalPosition = new Vector2i(10, 0);
+            _lblModeInfo.AddControl(lblPlayers);
 
             _lblPlayersInfo = new Label("17/32", "MICROGME");
-            _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0, 255);
+            _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPlayersInfo.FixedWidth = 60;
             _lblPlayersInfo.Alignment = Align.Right;
-            _lblPlayers.AddControl(_lblPlayersInfo);
+            lblPlayers.AddControl(_lblPlayersInfo);
 
-            _lblPort = new Label("PORT: ", "MICROGME");
-            _lblPort.ForegroundColor = new Color(245, 245, 245, 255);
-            _lblPort.Alignment = Align.Right;
-            _lblPort.LocalPosition = new Vector2i(10, 0);
-            _lblPlayersInfo.AddControl(_lblPort);
+            var lblPort = new Label("PORT: ", "MICROGME");
+            lblPort.ForegroundColor = new Color(245, 245, 245);
+            lblPort.Alignment = Align.Right;
+            lblPort.LocalPosition = new Vector2i(10, 0);
+            _lblPlayersInfo.AddControl(lblPort);
 
             _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
-            _lblPortInfo.ForegroundColor = new Color(139, 0, 0, 255);
+            _lblPortInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPortInfo.FixedWidth = 50;
             _lblPortInfo.Alignment = Align.Right;
-            _lblPort.AddControl(_lblPortInfo);
-            
+            lblPort.AddControl(_lblPortInfo);
+
             _tabs = new TabbedMenu();
             _tabs.TopSprite = "lobby_tab_top";
             _tabs.MidSprite = "lobby_tab_mid";
             _tabs.BotSprite = "lobby_tab_bot";
             _tabs.TabOffset = new Vector2i(-8, 300);
             _tabs.LocalPosition = new Vector2i(5, 90);
-            _imgMainBg.AddControl(_tabs);
+            imgMainBg.AddControl(_tabs);
 
-            _tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache);
-            _tabCharacter.tabSpriteName = "lobby_tab_person";
-            _tabs.AddTab(_tabCharacter);
+            var tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache);
+            tabCharacter.tabSpriteName = "lobby_tab_person";
+            _tabs.AddTab(tabCharacter);
 
-            _tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache);
-            _tabObserve.tabSpriteName = "lobby_tab_eye";
-            _tabs.AddTab(_tabObserve);
+            var tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache);
+            tabObserve.tabSpriteName = "lobby_tab_eye";
+            _tabs.AddTab(tabObserve);
 
-            _tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache);
-            _tabServer.tabSpriteName = "lobby_tab_info";
-            _tabs.AddTab(_tabServer);
-            _tabs.SelectTab(_tabServer);
+            var tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache);
+            tabServer.tabSpriteName = "lobby_tab_info";
+            _tabs.AddTab(tabServer);
+            _tabs.SelectTab(tabServer);
 
-            _imgChatBg = new SimpleImage();
-            _imgChatBg.Sprite = "lobby_chatbg";
-            _imgChatBg.Alignment = Align.HCenter | Align.Bottom;
-            _imgChatBg.Resize += (sender, args) => { _imgChatBg.LocalPosition = new Vector2i(0, -9 + -_imgChatBg.Height); };
-            _imgMainBg.AddControl(_imgChatBg);
+            var imgChatBg = new SimpleImage();
+            imgChatBg.Sprite = "lobby_chatbg";
+            imgChatBg.Alignment = Align.HCenter | Align.Bottom;
+            imgChatBg.Resize += (sender, args) => { imgChatBg.LocalPosition = new Vector2i(0, -9 + -imgChatBg.Height); };
+            imgMainBg.AddControl(imgChatBg);
 
             _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceCache);
             _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
-            _imgChatBg.AddControl(_lobbyChat);
+            imgChatBg.AddControl(_lobbyChat);
 
-            _btnReady = new ImageButton();
-            _btnReady.ImageNormal = "lobby_ready";
-            _btnReady.ImageHover = "lobby_ready_green";
-            _btnReady.Alignment = Align.Right;
-            _btnReady.Resize += (sender, args) => { _btnReady.LocalPosition = new Vector2i(-5 + -_btnReady.Width, -5 + -_btnReady.Height); };
-            _imgChatBg.AddControl(_btnReady);
-            _btnReady.Clicked += _btnReady_Clicked;
-            
-            _btnBack = new ImageButton();
-            _btnBack.ImageNormal = "lobby_back";
-            _btnBack.ImageHover = "lobby_back_green";
-            _btnBack.Resize += (sender, args) => { _btnBack.LocalPosition = new Vector2i(-5 + -_btnBack.Width, 0); };
-            _btnReady.AddControl(_btnBack);
-            _btnBack.Clicked += _btnBack_Clicked;
+            var btnReady = new ImageButton();
+            btnReady.ImageNormal = "lobby_ready";
+            btnReady.ImageHover = "lobby_ready_green";
+            btnReady.Alignment = Align.Right;
+            btnReady.Resize += (sender, args) => { btnReady.LocalPosition = new Vector2i(-5 + -btnReady.Width, -5 + -btnReady.Height); };
+            imgChatBg.AddControl(btnReady);
+            btnReady.Clicked += _btnReady_Clicked;
+
+            var btnBack = new ImageButton();
+            btnBack.ImageNormal = "lobby_back";
+            btnBack.ImageHover = "lobby_back_green";
+            btnBack.Resize += (sender, args) => { btnBack.LocalPosition = new Vector2i(-5 + -btnBack.Width, 0); };
+            btnReady.AddControl(btnBack);
+            btnBack.Clicked += _btnBack_Clicked;
         }
 
         public override void Startup()
@@ -204,8 +183,8 @@ namespace SS14.Client.State.States
 
         public override void FormResize()
         {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -214,7 +193,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.KeyDown(e);
         }
-        
+
         public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
@@ -224,7 +203,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.MouseDown(e);
         }
-        
+
         public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
@@ -252,7 +231,7 @@ namespace SS14.Client.State.States
 
         public override void TextEntered(TextEventArgs e)
         {
-            UserInterfaceManager.TextEntered(e); //KeyDown returns true if the click is handled by the ui component.
+            UserInterfaceManager.TextEntered(e);
         }
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
@@ -320,9 +299,14 @@ namespace SS14.Client.State.States
 
         private void HandlePlayerList(NetIncomingMessage message)
         {
+            //TODO: Race between getting InitializeGUI setup before we receive PlayerList message
+            //TODO: Move all netcode to a new class.
+            if(_tabServer == null)
+                return;
+
             var playerCount = message.ReadByte();
             _serverPlayers = playerCount;
-            _tabServer._scPlayerList.Components.Clear();
+            _tabServer?._scPlayerList.Components.Clear();
             var offY = 0;
             for (var i = 0; i < playerCount; i++)
             {

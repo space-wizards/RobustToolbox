@@ -1,12 +1,12 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics.Input;
-using SS14.Shared;
-using SS14.Shared.Maths;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using OpenTK.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.UserInterface.Components;
+using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     public class LobbyShowcase : Showcase
     {

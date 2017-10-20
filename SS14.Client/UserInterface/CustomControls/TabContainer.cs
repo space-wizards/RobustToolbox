@@ -1,9 +1,10 @@
 ﻿using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.UserInterface.Components;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     internal class TabContainer : ScrollableContainer
     {

@@ -218,8 +218,8 @@
     <Compile Include="ResourceManagement\SpriteResource.cs" />
     <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="UserInterface\Align.cs" />
-    <Compile Include="UserInterface\Components\Panel.cs" />
-    <Compile Include="UserInterface\Components\Screen.cs" />
+    <Compile Include="UserInterface\Controls\Panel.cs" />
+    <Compile Include="UserInterface\Controls\Screen.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />
@@ -275,35 +275,35 @@
     <Compile Include="State\States\OptionsMenu.cs" />
     <Compile Include="UserInterface\DragDropInfo.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
-    <Compile Include="UserInterface\Components\Button.cs" />
-    <Compile Include="UserInterface\Components\Chatbox.cs" />
-    <Compile Include="UserInterface\Components\Checkbox.cs" />
-    <Compile Include="UserInterface\Components\ContextMenu.cs" />
-    <Compile Include="UserInterface\Components\DebugConsole.cs" />
-    <Compile Include="UserInterface\Components\DisconnectedScreenBlocker.cs" />
-    <Compile Include="UserInterface\Components\EntitySpawnPanel.cs" />
-    <Compile Include="UserInterface\Components\EntitySpawnSelectButton.cs" />
-    <Compile Include="UserInterface\Components\ExamineWindow.cs" />
-    <Compile Include="UserInterface\Components\FloatingDeco.cs" />
-    <Compile Include="UserInterface\Components\Control.cs" />
-    <Compile Include="UserInterface\Components\ImageButton.cs" />
-    <Compile Include="UserInterface\Components\Label.cs" />
-    <Compile Include="UserInterface\Components\Listbox.cs" />
-    <Compile Include="UserInterface\Components\MenuWindow.cs" />
-    <Compile Include="UserInterface\Components\ProgressBar.cs" />
-    <Compile Include="UserInterface\Components\PropEditWindow.cs" />
-    <Compile Include="UserInterface\Components\ScrollableContainer.cs" />
-    <Compile Include="UserInterface\Components\Scrollbar.cs" />
-    <Compile Include="UserInterface\Components\Showcase.cs" />
-    <Compile Include="UserInterface\Components\SimpleImage.cs" />
-    <Compile Include="UserInterface\Components\Textbox.cs" />
-    <Compile Include="UserInterface\Components\TileSpawnPanel.cs" />
-    <Compile Include="UserInterface\Components\TimerBar.cs" />
-    <Compile Include="UserInterface\Components\Window.cs" />
-    <Compile Include="UserInterface\LobbyState\LobbyShowcase.cs" />
-    <Compile Include="UserInterface\LobbyState\PlayerLstTab.cs" />
-    <Compile Include="UserInterface\LobbyState\TabContainer.cs" />
-    <Compile Include="UserInterface\LobbyState\TabbedMenu.cs" />
+    <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\Chatbox.cs" />
+    <Compile Include="UserInterface\Controls\Checkbox.cs" />
+    <Compile Include="UserInterface\Controls\ContextMenu.cs" />
+    <Compile Include="UserInterface\Controls\DebugConsole.cs" />
+    <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
+    <Compile Include="UserInterface\Controls\EntitySpawnPanel.cs" />
+    <Compile Include="UserInterface\Controls\EntitySpawnSelectButton.cs" />
+    <Compile Include="UserInterface\Controls\ExamineWindow.cs" />
+    <Compile Include="UserInterface\Controls\FloatingDeco.cs" />
+    <Compile Include="UserInterface\Controls\Control.cs" />
+    <Compile Include="UserInterface\Controls\ImageButton.cs" />
+    <Compile Include="UserInterface\Controls\Label.cs" />
+    <Compile Include="UserInterface\Controls\Listbox.cs" />
+    <Compile Include="UserInterface\Controls\MenuWindow.cs" />
+    <Compile Include="UserInterface\Controls\ProgressBar.cs" />
+    <Compile Include="UserInterface\Controls\PropEditWindow.cs" />
+    <Compile Include="UserInterface\Controls\ScrollableContainer.cs" />
+    <Compile Include="UserInterface\Controls\Scrollbar.cs" />
+    <Compile Include="UserInterface\Controls\Showcase.cs" />
+    <Compile Include="UserInterface\Controls\SimpleImage.cs" />
+    <Compile Include="UserInterface\Controls\Textbox.cs" />
+    <Compile Include="UserInterface\Controls\TileSpawnPanel.cs" />
+    <Compile Include="UserInterface\Controls\TimerBar.cs" />
+    <Compile Include="UserInterface\Controls\Window.cs" />
+    <Compile Include="UserInterface\CustomControls\LobbyShowcase.cs" />
+    <Compile Include="UserInterface\CustomControls\PlayerLstTab.cs" />
+    <Compile Include="UserInterface\CustomControls\TabContainer.cs" />
+    <Compile Include="UserInterface\CustomControls\TabbedMenu.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetOS)' == 'MacOS'">
     <!-- HAVE to do a deep copy, because framework bundles are directories. -->
@@ -316,6 +316,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\MSBuild\SS14.Engine.targets" />
   <PropertyGroup>

@@ -24,7 +24,7 @@ namespace SS14.Client.Graphics.Sprites
         public enum Styles
         {
             None = 0,
-            Bold = 1 << 0,
+            Bold = 1,
             Italic = 1 << 1,
             Underlined = 1 << 2,
             StrikeThrough = 1 << 3,

@@ -19,7 +19,7 @@ namespace SS14.Client.Graphics.Textures
 
         public Texture(Stream stream)
         {
-            if (!stream.CanSeek || !stream.CanSeek)
+            if (!stream.CanSeek || !stream.CanRead)
             {
                 throw new ArgumentException("Stream must be read and seekable.", nameof(stream));
             }

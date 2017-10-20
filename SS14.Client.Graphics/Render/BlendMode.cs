@@ -177,22 +177,22 @@ namespace SS14.Client.Graphics.Render
         }
 
         /// <summary>Source blending factor for the color channels</summary>
-        public Factor ColorSrcFactor;
+        public Factor ColorSrcFactor { get; set; }
 
         /// <summary>Destination blending factor for the color channels</summary>
-        public Factor ColorDstFactor;
+        public Factor ColorDstFactor { get; set; }
 
         /// <summary>Blending equation for the color channels</summary>
-        public Equation ColorEquation;
+        public Equation ColorEquation { get; set; }
 
         /// <summary>Source blending factor for the alpha channel</summary>
-        public Factor AlphaSrcFactor;
+        public Factor AlphaSrcFactor { get; set; }
 
         /// <summary>Destination blending factor for the alpha channel</summary>
-        public Factor AlphaDstFactor;
+        public Factor AlphaDstFactor { get; set; }
 
         /// <summary>Blending equation for the alpha channel</summary>
-        public Equation AlphaEquation;
+        public Equation AlphaEquation { get; set; }
 
         public static explicit operator SBlendMode(BlendMode mode)
         {

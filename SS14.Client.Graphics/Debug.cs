@@ -11,6 +11,7 @@ namespace SS14.Client.Graphics
         public bool DebugSprite    { get; private set; }
         public bool DebugColliders { get; private set; }
         public bool DebugGridDisplay { get; private set; }
+        public bool DebugFPS { get; private set; }
 
         public Debug()
         {
@@ -49,6 +50,11 @@ namespace SS14.Client.Graphics
         public void ToggleAABBDebug()
         {
             DebugColliders = !DebugColliders;
+        }
+
+        public void ToggleFPSDebug()
+        {
+            DebugFPS = !DebugFPS;
         }
     }
 }

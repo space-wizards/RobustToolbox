@@ -1,5 +1,4 @@
-﻿using SFML.System;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;

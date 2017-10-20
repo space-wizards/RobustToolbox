@@ -1,14 +1,10 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
-using SS14.Client.ResourceManagement;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
@@ -19,7 +15,7 @@ namespace SS14.Client.UserInterface.Components
 
         public delegate void ButtonPressHandler(Button sender);
 
-        #endregion
+        #endregion Delegates
 
         private readonly IResourceCache _resourceCache;
 
@@ -41,10 +37,10 @@ namespace SS14.Client.UserInterface.Components
             _buttonMain = _resourceCache.GetSprite("button_middle");
             _buttonRight = _resourceCache.GetSprite("button_right");
 
-            Label = new TextSprite("ButtonLabel" + buttonText, buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
-                        {
-                            Color = Color4.Black
-                        };
+            Label = new TextSprite(buttonText, _resourceCache.GetResource<FontResource>("Fonts/CALIBRI.TTF").Font)
+            {
+                FillColor = Color4.Black
+            };
 
             Update(0);
         }
@@ -55,26 +51,26 @@ namespace SS14.Client.UserInterface.Components
 
         public override sealed void Update(float frameTime)
         {
-            var boundsLeft = _buttonLeft.GetLocalBounds();
-            var boundsMain = _buttonMain.GetLocalBounds();
-            var boundsRight = _buttonRight.GetLocalBounds();
+            var boundsLeft = _buttonLeft.LocalBounds;
+            var boundsMain = _buttonMain.LocalBounds;
+            var boundsRight = _buttonRight.LocalBounds;
             _clientAreaLeft = Box2i.FromDimensions(Position, new Vector2i((int)boundsLeft.Width, (int)boundsLeft.Height));
             _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, Position.Y,
-                                            (int) Label.Width, (int)boundsMain.Height);
+                                            (int)Label.Width, (int)boundsMain.Height);
             _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, Position.Y,
                                              (int)boundsRight.Width, (int)boundsRight.Height);
             ClientArea = Box2i.FromDimensions(Position,
                                        new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
                                                 Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
             Label.Position = new Vector2i(_clientAreaLeft.Right,
-                                       Position.Y + (int) (ClientArea.Height/2f) - (int) (Label.Height/2f));
+                                       Position.Y + (int)(ClientArea.Height / 2f) - (int)(Label.Height / 2f));
         }
 
         public override void Render()
         {
-            _buttonLeft.Color = drawColor.Convert();
-            _buttonMain.Color = drawColor.Convert();
-            _buttonRight.Color = drawColor.Convert();
+            _buttonLeft.Color = drawColor;
+            _buttonMain.Color = drawColor;
+            _buttonRight.Color = drawColor;
 
             _buttonLeft.SetTransformToRect(_clientAreaLeft);
             _buttonMain.SetTransformToRect(_clientAreaMain);

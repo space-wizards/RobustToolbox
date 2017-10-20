@@ -1,8 +1,6 @@
 ﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.GameObjects;
@@ -605,11 +603,11 @@ namespace SS14.Client.GameObjects
             return new Vector4(x, y, z, w);
         }
 
-        private SFML.Graphics.Color ToColor(Vector4 color)
+        private Color ToColor(Vector4 color)
         {
             color = Limit(color);
 
-            return new SFML.Graphics.Color((byte)color.W, (byte)color.X, (byte)color.Y, (byte)color.Z);
+            return new Color((byte)color.W, (byte)color.X, (byte)color.Y, (byte)color.Z);
         }
 
         public void Start()
@@ -785,9 +783,9 @@ namespace SS14.Client.GameObjects
             foreach (var particle in LiveParticles)
             {
                 ParticleSprite.Color = ToColor(particle.Color);
-                ParticleSprite.Position = particle.Position.Convert();
+                ParticleSprite.Position = particle.Position;
                 ParticleSprite.Rotation = (float)(180f / Math.PI) * particle.Spin;
-                ParticleSprite.Scale = new Vector2f(particle.Size, particle.Size);
+                ParticleSprite.Scale = new Vector2(particle.Size, particle.Size);
                 ParticleSprite.Draw();
             }
         }

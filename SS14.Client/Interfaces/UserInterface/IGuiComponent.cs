@@ -1,7 +1,5 @@
 using Lidgren.Network;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
+using SS14.Client.Graphics.Input;
 using SS14.Shared;
 using SS14.Shared.Maths;
 using System;
@@ -41,7 +39,7 @@ namespace SS14.Client.Interfaces.UserInterface
         bool MouseDown(MouseButtonEventArgs e);
         bool MouseUp(MouseButtonEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
-        bool MouseWheelMove(MouseWheelEventArgs e);
+        bool MouseWheelMove(MouseWheelScrollEventArgs e);
         bool KeyDown(KeyEventArgs e);
         bool TextEntered(TextEventArgs e);
 

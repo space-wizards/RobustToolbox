@@ -1,13 +1,14 @@
 ﻿using OpenTK;
-using SFML.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Render;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using Color = SS14.Shared.Maths.Color;
 
 namespace SS14.Client.Graphics.Lighting
 {
     public class LightArea : ILightArea
     {
-        public LightArea(ShadowmapSize shadowmapSize, SFML.Graphics.Sprite mask)
+        public LightArea(ShadowmapSize shadowmapSize, Sprite mask)
         {
             var baseSize = 2 << (int) shadowmapSize;
             LightAreaSize = new Vector2(baseSize, baseSize);
@@ -16,7 +17,7 @@ namespace SS14.Client.Graphics.Lighting
         }
 
         public RenderImage RenderTarget { get; }
-        public SFML.Graphics.Sprite Mask { get; set; }
+        public Sprite Mask { get; set; }
         public bool MaskFlipX { get; set; }
         public bool MaskFlipY { get; set; }
         public bool Rot90 { get; set; }
@@ -68,7 +69,7 @@ namespace SS14.Client.Graphics.Lighting
             RenderTarget.EndDrawing();
         }
 
-        public void SetMask(SFML.Graphics.Sprite mask)
+        public void SetMask(Sprite mask)
         {
             Mask = mask;
         }

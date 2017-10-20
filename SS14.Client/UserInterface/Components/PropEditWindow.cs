@@ -1,7 +1,6 @@
 ﻿using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Maths;
 using System;
@@ -32,8 +31,8 @@ namespace SS14.Client.UserInterface.Components
         public PropEditWindow(Vector2i size, IResourceCache resourceCache, Object obj)
             : base("Object Properties : " + obj, size, resourceCache)
         {
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+                                 (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
 
             search = new Textbox(150, resourceCache);
             search.Position = new Vector2i(5, 5);
@@ -80,7 +79,7 @@ namespace SS14.Client.UserInterface.Components
                 var editStr = new Textbox(100, _resourceCache);
                 editStr.ClearOnSubmit = false;
                 editStr.UserData = field;
-                editStr.Text = ((string) o);
+                editStr.Text = ((string)o);
                 editStr.OnSubmit += editStr_OnSubmit;
                 return editStr;
             }
@@ -106,7 +105,7 @@ namespace SS14.Client.UserInterface.Components
             {
                 var editBool = new Checkbox(_resourceCache);
                 editBool.UserData = field;
-                editBool.Value = ((Boolean) o);
+                editBool.Value = ((Boolean)o);
                 editBool.ValueChanged += editBool_ValueChanged;
                 return editBool;
             }
@@ -117,14 +116,14 @@ namespace SS14.Client.UserInterface.Components
 
         private void editBool_ValueChanged(bool newValue, Checkbox sender)
         {
-            var field = (FieldInfo) sender.UserData;
+            var field = (FieldInfo)sender.UserData;
             if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, newValue);
         }
 
         private void editNum_OnSubmit(string text, Textbox sender)
         {
-            var field = (FieldInfo) sender.UserData;
+            var field = (FieldInfo)sender.UserData;
             object set = null;
 
             if (field.GetValue(assigned) is float)
@@ -148,7 +147,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void editEnum_ItemSelected(Label item, Listbox sender)
         {
-            var field = (FieldInfo) sender.UserData;
+            var field = (FieldInfo)sender.UserData;
             object state = Enum.Parse(field.FieldType, item.Text.Text, true);
             if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, state);
@@ -156,7 +155,7 @@ namespace SS14.Client.UserInterface.Components
 
         private void editStr_OnSubmit(string text, Textbox sender)
         {
-            var field = (FieldInfo) sender.UserData;
+            var field = (FieldInfo)sender.UserData;
             if (field.IsInitOnly || field.IsLiteral) return;
             field.SetValue(assigned, text);
         }
@@ -196,7 +195,7 @@ namespace SS14.Client.UserInterface.Components
 
                     newEntry = new PropWindowStruct();
 
-                    foreach (object item in (ICollection) fieldVal)
+                    foreach (object item in (ICollection)fieldVal)
                     {
                         newEntry.VarName = item.ToString();
 

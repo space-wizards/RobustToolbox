@@ -1,7 +1,6 @@
-using OpenTK;
-using SFML.Window;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using System;
-
 
 namespace SS14.Client.Interfaces.State
 {
@@ -18,7 +17,7 @@ namespace SS14.Client.Interfaces.State
         void MouseDown(MouseButtonEventArgs e);
         void MouseMoved(MouseMoveEventArgs e);
         void MouseMove(MouseMoveEventArgs e);
-        void MouseWheelMove(MouseWheelEventArgs e);
+        void MouseWheelMove(MouseWheelScrollEventArgs e);
         void MouseEntered(EventArgs e);
         void MouseLeft(EventArgs e);
         void FormResize();

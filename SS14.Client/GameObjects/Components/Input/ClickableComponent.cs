@@ -1,6 +1,5 @@
 ﻿using OpenTK;
 using Lidgren.Network;
-using SFML.System;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;

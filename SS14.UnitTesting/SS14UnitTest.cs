@@ -1,7 +1,4 @@
 ﻿using NUnit.Framework;
-using SFML.Graphics;
-using SFML.System;
-using OpenTK;
 using OpenTK.Graphics;
 using SS14.Client;
 using SS14.Client.GameObjects;
@@ -70,6 +67,8 @@ using SS14.Shared.Physics;
 using SS14.Shared.Timing;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Maps;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting
 {
@@ -304,7 +303,7 @@ namespace SS14.UnitTesting
         {
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = GetClock.ElapsedTime.AsSeconds();
+                var lastFrameTime = GetClock.ElapsedTimeAsSeconds();
                 GetClock.Restart();
                 frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);

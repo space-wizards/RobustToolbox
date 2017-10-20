@@ -78,7 +78,7 @@ namespace SS14.UnitTesting.Shared.Prototypes
             Assert.That(componentData["vec2i"].AsVector2i(), Is.EqualTo(new Vector2i(1, 1)));
             Assert.That(componentData["vec3"].AsVector3(), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
             Assert.That(componentData["vec4"].AsVector4(), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color4(0xAA, 0xBB, 0xCC, 0xFF)));
+            Assert.That(componentData["color"].AsHexColor(), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
             Assert.That(componentData["enumf"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Foo));
             Assert.That(componentData["enumb"].AsEnum<YamlTestEnum>(), Is.EqualTo(YamlTestEnum.Bar));
         }

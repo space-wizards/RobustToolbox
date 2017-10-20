@@ -1,6 +1,4 @@
 ﻿using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Helpers;
@@ -61,7 +59,7 @@ namespace SS14.Client.Placement.Modes
                 if (closestEntity.TryGetComponent<ISpriteRenderableComponent>(out var component))
                 {
                     var closestSprite = component.GetCurrentSprite();
-                    var closestBounds = closestSprite.GetLocalBounds();
+                    var closestBounds = closestSprite.LocalBounds;
 
                     var closestRect =
                         Box2.FromDimensions(

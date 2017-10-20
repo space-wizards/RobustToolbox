@@ -1,26 +1,17 @@
 ﻿using Lidgren.Network;
 using OpenTK.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Network;
-using SS14.Client.Interfaces.Player;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.Resource;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
+using SS14.Shared.Network;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using SFML.Graphics;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components

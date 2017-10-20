@@ -1,12 +1,11 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
 using System;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -39,7 +38,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (drawingSprite != null)
             {
-                var bounds = drawingSprite.GetLocalBounds();
+                var bounds = drawingSprite.LocalBounds;
                 ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)bounds.Width, (int)bounds.Height));
             }
         }
@@ -56,22 +55,25 @@ namespace SS14.Client.UserInterface.Components
             GC.SuppressFinalize(this);
         }
 
-        public override Box2i ClientArea {
-            get {
-                var fr = drawingSprite.GetLocalBounds().Convert();
+        public override Box2i ClientArea
+        {
+            get
+            {
+                var fr = drawingSprite.LocalBounds;
                 return Box2i.FromDimensions((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y, (int)fr.Width, (int)fr.Height);
             }
         }
 
-        public override Vector2i Position {
-            get {
+        public override Vector2i Position
+        {
+            get
+            {
                 if (drawingSprite == null)
-                    return new Vector2i(0, 0);
-                return new Vector2i((int)drawingSprite.Position.X, (int)drawingSprite.Position.Y);
+                    return Vector2i.Zero;
+                return (Vector2i)drawingSprite.Position;
             }
-            set { drawingSprite.Position = new Vector2f(value.X, value.Y); }
+            set => drawingSprite.Position = value;
         }
-
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {

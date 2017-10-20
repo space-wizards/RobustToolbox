@@ -1,11 +1,10 @@
 ﻿using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenTK;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.Graphics.Collection;
 using SS14.Client.Graphics.Shader;
-using SS14.Client.Graphics.Sprite;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Textures;
 using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -310,7 +309,7 @@ namespace SS14.Client.Resources
                 return TextureCache.Textures[name].Texture;
             }
 
-            Image img = new Image(stream);
+            var img = new Image(stream);
             var texture = new Texture(img);
             TextureInfo tmp = new TextureInfo(texture, img);
             TextureCache.Add(name, tmp);
@@ -492,7 +491,7 @@ namespace SS14.Client.Resources
                 if (!_spriteInfos.ContainsKey(originalName)) _spriteInfos.Add(originalName, info);
 
                 loadedSprites.Add(new KeyValuePair<string, Sprite>(originalName,
-                    new Sprite(atlasTex, new SFML.Graphics.IntRect((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
+                    new Sprite(atlasTex, Box2i.FromDimensions((int)info.Offsets.X, (int)info.Offsets.Y, (int)info.Size.X, (int)info.Size.Y))));
             }
 
             return loadedSprites;
@@ -525,7 +524,7 @@ namespace SS14.Client.Resources
             {
                 Name = name,
                 Offsets = new Vector2(0, 0),
-                Size = texture.Size.Convertf(),
+                Size = texture.Size,
             };
 
             var sprite = new Sprite(texture);

@@ -1,14 +1,11 @@
 ﻿using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
 using SS14.Client.Graphics;
-using SS14.Client.Graphics.Sprite;
-using SS14.Client.Graphics.Utility;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
-using SS14.Client.ResourceManagement;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
@@ -33,14 +30,14 @@ namespace SS14.Client.UserInterface.Components
         public Label(string text, string font, uint size, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { Color = Color4.Black };
+            Text = new TextSprite(text, _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font) { FillColor = Color.Black };
             Update(0);
         }
 
         public Label(string text, string font, IResourceCache resourceCache)
         {
             _resourceCache = resourceCache;
-            Text = new TextSprite("Label" + text, text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) { Color = Color4.Black };
+            Text = new TextSprite(text, _resourceCache.GetResource<FontResource>($"Fonts/{font}.TTF").Font) { FillColor = Color.Black };
             Update(0);
         }
 
@@ -50,10 +47,10 @@ namespace SS14.Client.UserInterface.Components
             set => Text.FontSize = value;
         }
 
-        public Color4 TextColor
+        public Color TextColor
         {
-            get => Text.Color;
-            set => Text.Color = value;
+            get => Text.FillColor;
+            set => Text.FillColor = value;
         }
 
         public bool DrawBorder { get; set; }
@@ -92,7 +89,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (ClientArea.Contains(e.X, e.Y))
             {
-                if (Clicked != null) Clicked(this, e);
+                Clicked?.Invoke(this, e);
                 return true;
             }
             return false;

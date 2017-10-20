@@ -1,10 +1,8 @@
 ﻿using NUnit.Framework;
-using SFML.System;
-using OpenTK;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
-using System;
+using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 
 namespace SS14.UnitTesting.Client.Helpers
 {
@@ -32,7 +30,7 @@ namespace SS14.UnitTesting.Client.Helpers
 
             while (CluwneLib.IsRunning)
             {
-                var lastFrameTime = clock.ElapsedTime.AsSeconds();
+                var lastFrameTime = clock.ElapsedTimeAsSeconds();
                 clock.Restart();
                 _frameEvent = new FrameEventArgs(lastFrameTime);
                 CluwneLib.ClearCurrentRendertarget(Color4.Black);

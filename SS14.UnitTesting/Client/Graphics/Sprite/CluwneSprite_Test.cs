@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
-using SFML.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Maths;
 
 namespace SS14.UnitTesting.Client.Graphics.Sprite
 {
@@ -27,7 +27,6 @@ namespace SS14.UnitTesting.Client.Graphics.Sprite
             SS14UnitTest.InjectedMethod += DefaultDrawMethod_ShouldDrawToScreen;
             test = new RenderImage("testtst", 1280, 720);
             base.StartCluwneLibLoop();
-
         }
 
         [Test]

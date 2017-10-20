@@ -1,6 +1,6 @@
-using OpenTK;
+using SS14.Shared.Maths;
 
-namespace SS14.Client.Graphics.Sprite
+namespace SS14.Client.Graphics.Sprites
 {
     public static class Limits
     {

@@ -1,10 +1,9 @@
 ﻿using Lidgren.Network;
 using OpenTK;
 using OpenTK.Graphics;
-using SFML.Graphics;
-using SFML.System;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Network;

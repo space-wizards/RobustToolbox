@@ -1,7 +1,4 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.IoC;
@@ -10,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -25,9 +24,9 @@ namespace SS14.Client.UserInterface.Components
         private string botSprite;
         private string midSprite;
 
-        #pragma warning disable CS0649
+#pragma warning disable CS0649
         public Vector2 size;
-        #pragma warning restore CS0649
+#pragma warning restore CS0649
 
         private string topSprite;
 
@@ -127,7 +126,7 @@ namespace SS14.Client.UserInterface.Components
             if (_activeTab != null)
                 _activeTab.Update(frameTime);
 
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int) size.X, (int) size.Y));
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)size.X, (int)size.Y));
         }
 
         public override void Render()
@@ -141,10 +140,10 @@ namespace SS14.Client.UserInterface.Components
 
                 if (currTabSprite != null)
                 {
-                    var bounds = currTabSprite.GetLocalBounds();
+                    var bounds = currTabSprite.LocalBounds;
                     currTabSprite.Position =
-                        new Vector2f(curr.Key.Position.X + (curr.Key.ClientArea.Width/2f - bounds.Width/2f),
-                                     curr.Key.Position.Y + (curr.Key.ClientArea.Height/2f - bounds.Height/2f));
+                        new Vector2(curr.Key.Position.X + (curr.Key.ClientArea.Width / 2f - bounds.Width / 2f),
+                                    curr.Key.Position.Y + (curr.Key.ClientArea.Height / 2f - bounds.Height / 2f));
                     currTabSprite.Draw();
                 }
             }
@@ -175,7 +174,7 @@ namespace SS14.Client.UserInterface.Components
             return base.KeyDown(e);
         }
 
-        public override bool MouseWheelMove(MouseWheelEventArgs e)
+        public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             foreach (var curr in _tabs)
             {

@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Maths;
+﻿using SS14.Client.Graphics.Sprites;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -11,6 +12,6 @@ namespace SS14.Client.Graphics.Lighting
         void BeginDrawingShadowCasters();
         void EndDrawingShadowCasters();
 
-        void SetMask(SFML.Graphics.Sprite mask);
+        void SetMask(Sprite mask);
     }
 }

@@ -1,17 +1,15 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using SFML.Window;
-using OpenTK;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Interfaces.State;
 using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using KeyEventArgs = SFML.Window.KeyEventArgs;
 using Label = SS14.Client.UserInterface.Components.Label;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.State.States
 {
@@ -39,11 +37,7 @@ namespace SS14.Client.State.States
 
         private Box2i _boundingArea = new Box2i();
 
-        #endregion
-
-        #region Properties
-
-        #endregion
+        #endregion Fields
 
         public OptionsMenu(IDictionary<Type, object> managers)
             : base(managers)
@@ -103,7 +97,6 @@ namespace SS14.Client.State.States
             const int OPTION_PADDING = 10;
             const int LABEL_PADDING = 3;
 
-
             _lblTitle.Position = new Vector2i(_boundingArea.Left + 10, _boundingArea.Top + 10);
             _lblTitle.Update(0);
 
@@ -136,7 +129,7 @@ namespace SS14.Client.State.States
         {
             _lstResolution.ClearItems();
             vmList.Clear();
-            IOrderedEnumerable<VideoMode> modes = from v in SFML.Window.VideoMode.FullscreenModes
+            IOrderedEnumerable<VideoMode> modes = from v in VideoMode.FullscreenModes
                                                   where (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
                                                   orderby v.Height * v.Width ascending
                                                   select v;
@@ -187,7 +180,6 @@ namespace SS14.Client.State.States
             InitalizeGUI();
         }
 
-
         public void Shutdown()
         {
             UserInterfaceManager.DisposeAllComponents();
@@ -207,13 +199,13 @@ namespace SS14.Client.State.States
             UserInterfaceManager.Update(e);
         }
 
-        #endregion
+        #endregion Startup, Shutdown, Update
 
         #region IState Members
 
         public void Render(FrameEventArgs e)
         {
-            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Window.Viewport.Size.X, (int) CluwneLib.Window.Viewport.Size.Y));
+            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Window.Viewport.Size.X, (int)CluwneLib.Window.Viewport.Size.Y));
             _background.Draw();
 
             _ticketBg.SetTransformToRect(_boundingArea);
@@ -226,7 +218,7 @@ namespace SS14.Client.State.States
             //TODO: Figure out what to do with this
         }
 
-        #endregion
+        #endregion IState Members
 
         #region Input
 
@@ -250,11 +242,11 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved( MouseMoveEventArgs e )
+        public void MouseMoved(MouseMoveEventArgs e)
         {
             //TODO: Figure out what to do with this
         }
-        public void MousePressed( MouseButtonEventArgs e )
+        public void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
@@ -263,7 +255,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelEventArgs e)
+        public void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
@@ -281,14 +273,12 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion
+        #endregion Input
 
         private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
         {
             ConfigurationManager.SetCVar("display.vsync", newValue);
         }
-
-
 
         private void _chkfullscreen_ValueChanged(bool newValue, Checkbox sender)
         {
@@ -297,7 +287,7 @@ namespace SS14.Client.State.States
 
         private void ApplyVideoMode()
         {
-          CluwneLib.UpdateVideoSettings();
+            CluwneLib.UpdateVideoSettings();
         }
 
         private void _reslistbox_ItemSelected(Label item, Listbox sender)

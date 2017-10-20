@@ -2,9 +2,8 @@
 
 namespace SS14.Client.Graphics.Shader
 {
-
     /// <para>
-    /// With the transition from FX to GLSL, GLSL shaders cannot do multiple techniques per shader, 
+    /// With the transition from FX to GLSL, GLSL shaders cannot do multiple techniques per shader,
     /// to fix that, each Technique has been converted into a standalone shader.
     /// This class combines those individual shaders into a technique list.
     /// </para>
@@ -13,12 +12,11 @@ namespace SS14.Client.Graphics.Shader
     /// </summary>
     public class TechniqueList
     {
-        private Dictionary<string, GLSLShader> _techniqueList; 
-        private string _name;
+        private Dictionary<string, GLSLShader> _techniqueList;
 
         public TechniqueList()
         {
-            _techniqueList = new Dictionary<string,GLSLShader>();
+            _techniqueList = new Dictionary<string, GLSLShader>();
         }
 
         public void Add(GLSLShader Shader)
@@ -33,22 +31,12 @@ namespace SS14.Client.Graphics.Shader
 
         public GLSLShader this[string key]
         {
-
-            get { return _techniqueList[key.ToLowerInvariant()]; }
-            private set{ _techniqueList[key.ToLowerInvariant()] = value; }
+            get => _techniqueList[key.ToLowerInvariant()];
+            set => _techniqueList[key.ToLowerInvariant()] = value;
         }
 
-        public Dictionary<string, GLSLShader> Dictonary
-        {
-            get { return _techniqueList; }
-            private set { _techniqueList = value; }
-        }
+        public Dictionary<string, GLSLShader> Dictonary => _techniqueList;
 
-        public string Name
-        {
-            get { return _name; }
-            set { _name = value; }
-        }
-
+        public string Name { get; set; }
     }
 }

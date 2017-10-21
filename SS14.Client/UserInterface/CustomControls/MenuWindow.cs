@@ -14,6 +14,9 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
+    /// <summary>
+    /// The main menu UI window that opens up when ESC is pressed while ingame.
+    /// </summary>
     internal class MenuWindow : Window
     {
         private readonly IClientNetManager _netMgr = IoCManager.Resolve<IClientNetManager>();

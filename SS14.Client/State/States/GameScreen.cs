@@ -36,6 +36,7 @@ using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Textures;
 using SS14.Client.Interfaces;
+using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Interfaces.Timing;
@@ -71,6 +72,9 @@ namespace SS14.Client.State.States
         #endregion Mouse/Camera stuff
 
         #region UI Variables
+
+        private Screen _uiScreen;
+
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
@@ -136,9 +140,9 @@ namespace SS14.Client.State.States
 
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
-
-            UserInterfaceManager.DisposeAllComponents();
-
+            
+            UserInterfaceManager.AddComponent(_uiScreen);
+            
             //Init serializer
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
@@ -165,7 +169,6 @@ namespace SS14.Client.State.States
             InitializeRenderTargets();
             InitializeSpriteBatches();
             InitalizeLighting();
-            InitializeGUI();
         }
 
         private void InitializeRenderTargets()
@@ -228,22 +231,26 @@ namespace SS14.Client.State.States
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
 
-        private void UpdateGUIPosition()
-        {
-            _gameChat.Position = new Vector2i((int)CluwneLib.Window.Viewport.Size.X - _gameChatSize.X - 10, 10);
-        }
-
+        /// <inheritdoc />
         public override void InitializeGUI()
         {
+            _uiScreen = new Screen();
+            _uiScreen.DrawBackground = false;
+            _uiScreen.DrawBorder = false;
+
             // Setup the ESC Menu
             _menu = new MenuWindow();
-            UserInterfaceManager.AddComponent(_menu);
+            _menu.Alignment = Align.HCenter | Align.VCenter;
             _menu.Visible = false;
+            _uiScreen.AddControl(_menu);
 
             //Init GUI components
             _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
+            _gameChat.Alignment = Align.Right;
+            _gameChat.Size = new Vector2i(475, 175);
+            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10);};
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
-            UserInterfaceManager.AddComponent(_gameChat);
+            _uiScreen.AddControl(_gameChat);
         }
 
         private void InitalizeLighting()
@@ -290,22 +297,22 @@ namespace SS14.Client.State.States
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
 
+        /// <inheritdoc />
         public override void FormResize()
         {
-            _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
-            _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
-
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+            
             UserInterfaceManager.ResizeComponents();
 
             ResetRendertargets();
             IoCManager.Resolve<ILightManager>().RecalculateLights();
             RecalculateScene();
-
-            UpdateGUIPosition();
-
+            
             base.FormResize();
         }
 
+        /// <inheritdoc />
         public override void Update(FrameEventArgs e)
         {
             base.Update(e);
@@ -322,6 +329,7 @@ namespace SS14.Client.State.States
             }
         }
 
+        /// <inheritdoc />
         public override void Render(FrameEventArgs e)
         {
             CluwneLib.Window.Graphics.Clear(Color.Black);
@@ -480,8 +488,11 @@ namespace SS14.Client.State.States
             }
         }
 
+        /// <inheritdoc />
         public override void Shutdown()
         {
+            UserInterfaceManager.RemoveComponent(_uiScreen);
+
             IoCManager.Resolve<IPlayerManager>().Detach();
 
             _cleanupSpriteList.ForEach(s => s.Texture = null);

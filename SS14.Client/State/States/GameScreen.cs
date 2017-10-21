@@ -117,6 +117,8 @@ namespace SS14.Client.State.States
 
         #endregion Lighting
 
+        private GameScreenDebug DebugManager;
+
         #endregion Variables
 
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
@@ -170,6 +172,8 @@ namespace SS14.Client.State.States
             InitializeSpriteBatches();
             InitalizeLighting();
             InitializeGUI();
+
+            DebugManager = new GameScreenDebug(this);
         }
 
         private void InitializeRenderTargets()
@@ -361,7 +365,7 @@ namespace SS14.Client.State.States
                 else
                     LightScene();
 
-                RenderDebug(vp, map);
+                DebugManager.RenderDebug(vp, map);
 
                 //Render the placement manager shit
                 PlacementManager.Render();
@@ -408,72 +412,6 @@ namespace SS14.Client.State.States
             }
 
             _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
-        }
-
-        private void RenderDebug(Box2 viewport, int argMap)
-        {
-            if (debugWallOccluders || debugPlayerShadowMap)
-                _occluderDebugTarget.Blit(0, 0, _occluderDebugTarget.Width / 4, _occluderDebugTarget.Height / 4, Color.White, BlitterSizeMode.Scale);
-
-            if (CluwneLib.Debug.DebugColliders)
-            {
-                var collidables =
-                    _componentManager.GetComponents<CollidableComponent>()
-                    .Where(c => c.MapID == argMap)
-                    .Select(c => new { Color = c.DebugColor, AABB = c.Owner.GetComponent<BoundingBoxComponent>().WorldAABB })
-                    .Where(c => !c.AABB.IsEmpty() && c.AABB.Intersects(viewport));
-
-                foreach (var bounds in collidables)
-                {
-                    var box = CluwneLib.WorldToScreen(bounds.AABB);
-                    CluwneLib.drawRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height,
-                        bounds.Color.WithAlpha(64));
-                    CluwneLib.drawHollowRectangle((int)box.Left, (int)box.Top, (int)box.Width, (int)box.Height, 1f,
-                        bounds.Color.WithAlpha(128));
-                }
-            }
-            if (CluwneLib.Debug.DebugGridDisplay)
-            {
-                int startX = 10;
-                int startY = 10;
-                CluwneLib.drawRectangle(startX, startY, 200, 300,
-                        Color.Blue.WithAlpha(64));
-
-                // Player position debug
-                Vector2 playerWorldOffset = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
-                Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
-                Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
-                var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
-                CluwneLib.drawText(15, 15, "Postioning Debug", 14, Color.White, font);
-                CluwneLib.drawText(15, 30, "Character Pos", 14, Color.White, font);
-                CluwneLib.drawText(15, 45, String.Format("Pixel: {0} / {1}", playerWorldOffset.X, playerWorldOffset.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 60, String.Format("World: {0} / {1}", playerTile.X, playerTile.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 75, String.Format("Screen: {0} / {1}", playerScreen.X, playerScreen.Y), 14, Color.White, font);
-
-                // Mouse position debug
-                Vector2i mouseScreenPos = (Vector2i)MousePosScreen.Position;
-                var mousepos = CluwneLib.ScreenToCoordinates(MousePosScreen);
-                Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
-                Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
-                CluwneLib.drawText(15, 120, "Mouse Pos", 14, Color.White, font);
-                CluwneLib.drawText(15, 135, String.Format("Pixel: {0} / {1}", mouseWorldOffset.X, mouseWorldOffset.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 150, String.Format("World: {0} / {1}", mouseTile.X, mouseTile.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 165, String.Format("Screen: {0} / {1}", mouseScreenPos.X, mouseScreenPos.Y), 14, Color.White, font);
-                CluwneLib.drawText(15, 180, String.Format("Grid, Map: {0} / {1}", mousepos.GridID, mousepos.MapID), 14, Color.White, font);
-            }
-
-            if (CluwneLib.Debug.DebugFPS)
-            {
-                var font = ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
-                var fps = Math.Round(IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg, 2);
-                int startY = 10;
-                if (CluwneLib.Debug.DebugGridDisplay)
-                {
-                    startY += 300;
-                }
-
-                CluwneLib.drawText(10, startY, $"FPS: {fps}", 14, Color.White, font);
-            }
         }
 
         public void Shutdown()
@@ -1352,5 +1290,118 @@ namespace SS14.Client.State.States
         }
 
         #endregion Nested type: ClickData
+
+        class GameScreenDebug
+        {
+            public readonly GameScreen Parent;
+            private RectangleShape DebugDisplayBackground;
+            private RectangleShape ColliderDebug;
+            private TextSprite PositionDebugText;
+            private TextSprite FPSText;
+
+            public GameScreenDebug(GameScreen parent)
+            {
+                Parent = parent;
+                DebugDisplayBackground = new RectangleShape()
+                {
+                    Position = new Vector2(10, 10),
+                    Size = new Vector2(180, 180),
+                    FillColor = Color.Blue.WithAlpha(64),
+                };
+
+                ColliderDebug = new RectangleShape()
+                {
+                    OutlineThickness = 1f,
+                };
+
+                var font = Parent.ResourceCache.GetResource<FontResource>(@"Fonts/bluehigh.ttf").Font;
+                PositionDebugText = new TextSprite("", font, 14)
+                {
+                    Position = new Vector2(15, 15),
+                    FillColor = Color.White,
+                    Shadowed = true,
+                };
+
+                FPSText = new TextSprite("", font, 14)
+                {
+                    FillColor = Color.White,
+                    Shadowed = true,
+                };
+            }
+
+            public void RenderDebug(Box2 viewport, int argMap)
+            {
+                if (CluwneLib.Debug.DebugColliders)
+                {
+                    Color lastColor = default(Color);
+                    foreach (var component in Parent._componentManager.GetComponents<CollidableComponent>())
+                    {
+                        if (component.MapID != argMap)
+                        {
+                            continue;
+                        }
+                        var bounds = component.Owner.GetComponent<BoundingBoxComponent>();
+                        if (bounds.WorldAABB.IsEmpty() || !bounds.WorldAABB.Intersects(viewport))
+                        {
+                            continue;
+                        }
+                        var box = CluwneLib.WorldToScreen(bounds.WorldAABB);
+                        ColliderDebug.Position = new Vector2(box.Left, box.Top);
+                        ColliderDebug.Size = new Vector2(box.Width, box.Height);
+                        if (lastColor != component.DebugColor)
+                        {
+                            lastColor = component.DebugColor;
+                            ColliderDebug.FillColor = lastColor.WithAlpha(64);
+                            ColliderDebug.OutlineColor = lastColor.WithAlpha(128);
+                        }
+                        ColliderDebug.Draw();
+                    }
+
+                }
+                if (CluwneLib.Debug.DebugGridDisplay)
+                {
+                    DebugDisplayBackground.Draw();
+
+                    // Player position debug
+                    Vector2 playerWorldOffset = Parent.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                    Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
+                    Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
+
+                    Vector2i mouseScreenPos = (Vector2i)Parent.MousePosScreen.Position;
+                    var mousepos = CluwneLib.ScreenToCoordinates(Parent.MousePosScreen);
+                    Vector2 mouseWorldOffset = mousepos.ToWorld().Position;
+                    Vector2 mouseTile = CluwneLib.WorldToTile(mouseWorldOffset);
+
+                    PositionDebugText.Text = $@"Positioning Debug:
+Character Pos:
+    Pixel: {playerWorldOffset.X} / {playerWorldOffset.Y}
+    World: {playerTile.X} / {playerTile.Y}
+    Screen: {playerScreen.X} / {playerScreen.Y}
+
+Mouse Pos:
+    Pixel: {mouseWorldOffset.X} / {mouseWorldOffset.Y}
+    World: {mouseTile.X} / {mouseTile.Y}
+    Screen: {mouseScreenPos.X} / {mouseScreenPos.Y}
+    Grid: {mousepos.GridID}
+    Map: {mousepos.MapID}";
+
+                    PositionDebugText.Draw();
+                }
+
+                if (CluwneLib.Debug.DebugFPS)
+                {
+                    var fps = Math.Round(IoCManager.Resolve<IGameTiming>().FramesPerSecondAvg, 2);
+                    int startY = 10;
+                    if (CluwneLib.Debug.DebugGridDisplay)
+                    {
+                        startY += (int)DebugDisplayBackground.Size.Y;
+                    }
+
+                    FPSText.Text = $"FPS: {fps}";
+                    FPSText.Position = new Vector2(10, startY);
+                    FPSText.Draw();
+                }
+            }
+        }
     }
 }

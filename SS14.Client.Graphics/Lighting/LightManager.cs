@@ -24,10 +24,6 @@ namespace SS14.Client.Graphics.Lighting
         public void Initialize()
         {
             LightModes.AddRange(reflectionManager.GetAllChildren<LightMode>());
-            foreach (var t in LightModes)
-            {
-                Console.WriteLine(t);
-            }
         }
 
         public Sprite LightMask { get; set; }

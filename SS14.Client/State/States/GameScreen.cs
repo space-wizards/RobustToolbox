@@ -1381,7 +1381,7 @@ Character Pos:
 Mouse Pos:
     Pixel: {mouseWorldOffset.X} / {mouseWorldOffset.Y}
     World: {mouseTile.X} / {mouseTile.Y}
-    Screen: {mouseScreenPos.X} / {mouseScreenPos.Y},
+    Screen: {mouseScreenPos.X} / {mouseScreenPos.Y}
     Grid: {mousepos.GridID}
     Map: {mousepos.MapID}";
 

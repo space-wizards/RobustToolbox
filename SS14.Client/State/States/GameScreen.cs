@@ -424,7 +424,6 @@ namespace SS14.Client.State.States
             _cleanupList.Clear();
 
             shadowMapResolver.Dispose();
-            _gaussianBlur.Dispose();
             _entityManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents();
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;

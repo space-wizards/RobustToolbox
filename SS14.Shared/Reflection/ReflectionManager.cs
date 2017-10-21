@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SS14.Shared.Log;
 
 namespace SS14.Shared.Reflection
 {
@@ -24,12 +25,30 @@ namespace SS14.Shared.Reflection
 
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive=false)
         {
-            return Assemblies.SelectMany(t => t.GetTypes())
-                             .Where(t => typeof(T).IsAssignableFrom(t)
-                                      && !t.IsAbstract
-                                      && ((Attribute.GetCustomAttribute(t, typeof(ReflectAttribute)) as ReflectAttribute)
-                                          ?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE)
-                                      && (inclusive || typeof(T) != t));
+            try
+            {
+                // There's very little assemblies, so storing these temporarily is cheap.
+                // We need to do it ahead of time so that we can catch ReflectionTypeLoadException HERE,
+                // so whoever is using us doesn't have to handle them.
+                var TypeLists = new List<Type[]>(Assemblies.Count);
+                TypeLists.AddRange(Assemblies.Select(t => t.GetTypes()));
+
+                return TypeLists.SelectMany(t => t)
+                                .Where(t => typeof(T).IsAssignableFrom(t)
+                                    && !t.IsAbstract
+                                    && ((Attribute.GetCustomAttribute(t, typeof(ReflectAttribute)) as ReflectAttribute)
+                                        ?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE)
+                                    && (inclusive || typeof(T) != t));
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                Logger.Error("Caught ReflectionTypeLoadException! Dumping child exceptions:");
+                foreach (var inner in e.LoaderExceptions)
+                {
+                    Logger.Error(inner.ToString());
+                }
+                throw;
+            }
         }
 
         public void LoadAssemblies(params Assembly[] args) => LoadAssemblies(args.AsEnumerable());

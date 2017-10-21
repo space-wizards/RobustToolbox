@@ -114,6 +114,7 @@ namespace SS14.Client
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("SS14.Shared"),
+                AppDomain.CurrentDomain.GetAssemblyByName("SS14.Client.Graphics"),
                 Assembly.GetExecutingAssembly()
             });
         }

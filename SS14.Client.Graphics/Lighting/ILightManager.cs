@@ -15,5 +15,6 @@ namespace SS14.Client.Graphics.Lighting
         ILight[] LightsIntersectingRect(Box2 rect);
         ILight[] GetLights();
         void SetLightMode(LightModeClass? mode, ILight light);
+        void Initialize();
     }
 }

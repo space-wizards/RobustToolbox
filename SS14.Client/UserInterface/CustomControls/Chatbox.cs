@@ -180,19 +180,29 @@ namespace SS14.Client.UserInterface.CustomControls
             base.Dispose();
         }
 
+        public override void DoLayout()
+        {
+            base.DoLayout();
+            _input?.DoLayout();
+        }
+
+        protected override void OnCalcPosition()
+        {
+            base.OnCalcPosition();
+
+            if (_input != null)
+                _input.LocalPosition = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom);
+        }
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if (_input != null)
-            {
-                _input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom);
-                _input.Update(frameTime);
-            }
+            _input?.Update(frameTime);
         }
 
         public override void Draw()
         {
-            if (_disposing || !IsVisible()) return;
+            if (_disposing || !Visible) return;
             CluwneLib.BlendingMode = BlendingModes.Modulated;
             var clientRect = ClientArea.Translated(Position);
             CluwneLib.drawRectangle(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height, new Color4(0, 0, 0, 100));

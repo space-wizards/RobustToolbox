@@ -18,11 +18,8 @@ namespace SS14.Client.UserInterface.Components
         protected readonly IResourceCache ResourceCache;
         protected readonly Scrollbar ScrollbarH;
         protected readonly Scrollbar ScrollbarV;
-
-        protected Color4 BackgroundColor = new Color4(169, 169, 169, 255);
+        
         protected bool Disposing;
-        protected bool DrawBackground = false;
-        protected bool DrawBorder = true;
 
         private RenderImage _clippingRi;
         private Control _innerFocus;
@@ -33,6 +30,10 @@ namespace SS14.Client.UserInterface.Components
         {
             ResourceCache = resourceCache;
             Size = size;
+
+            BackgroundColor = new Color4(169, 169, 169, 255);
+            DrawBackground = false;
+            DrawBorder = true;
 
             _clippingRi = new RenderImage(uniqueName, (uint) Size.X, (uint) Size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -54,8 +55,8 @@ namespace SS14.Client.UserInterface.Components
         protected override void OnCalcRect()
         {
             // ugh...
-            ScrollbarH.size = ScrollbarV.IsVisible() ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
-            ScrollbarV.size = ScrollbarH.IsVisible() ? Size.Y - ScrollbarH.ClientArea.Height : Size.Y;
+            ScrollbarH.size = ScrollbarV.Visible ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
+            ScrollbarV.size = ScrollbarH.Visible ? Size.Y - ScrollbarH.ClientArea.Height : Size.Y;
 
             _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) _clippingRi.Width, (int) _clippingRi.Height));
         }
@@ -82,28 +83,29 @@ namespace SS14.Client.UserInterface.Components
 
         public override void DoLayout()
         {
-            base.DoLayout();
 
-            /*
+            
             foreach (var component in Components)
             {
+                component.DoLayout();
                 component.Position = new Vector2i(component.Position.X - (int)ScrollbarH.Value, component.Position.Y - (int)ScrollbarV.Value);
                 component.Update(0);
             }
-            */
+
+            base.DoLayout();
         }
 
         public override void Update(float frameTime)
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
 
             if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
 
             ScrollbarH.max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
-            ScrollbarH.SetVisible(_maxX > _clippingRi.Width);
+            ScrollbarH.Visible = (_maxX > _clippingRi.Width);
 
             ScrollbarV.max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
-            ScrollbarV.SetVisible(_maxY > _clippingRi.Height);
+            ScrollbarV.Visible = (_maxY > _clippingRi.Height);
 
             ScrollbarH.Update(frameTime);
             ScrollbarV.Update(frameTime);
@@ -111,7 +113,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Draw()
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
+
+            base.Draw();
 
             // the rectangle should always be completely covered with draws, no point clearing
             //_clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
@@ -122,13 +126,13 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (_innerFocus != null && component == _innerFocus) continue;
 
-                var oldPos = component.Position;
-                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
+                //var oldPos = component.Position;
+                //component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
                 component.Update(0); //2 Updates per frame D:
                 component.Draw();
 
-                component.Position = oldPos;
-                component.Update(0);
+                //component.Position = oldPos;
+                //component.Update(0);
             }
 
             if (_innerFocus != null)
@@ -149,11 +153,13 @@ namespace SS14.Client.UserInterface.Components
             ScrollbarH.Draw();
             ScrollbarV.Draw();
 
+            /*
             if (DrawBorder)
             {
                 var screenRect = ClientArea.Translated(Position);
                 CluwneLib.drawHollowRectangle(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, BorderSize, Color4.Black);
             }
+            */
         }
 
         public override void Dispose()
@@ -170,7 +176,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (Disposing || !IsVisible()) return false;
+            if (Disposing || !Visible) return false;
 
             if (ScrollbarH.MouseDown(e))
             {
@@ -206,7 +212,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (Disposing || !IsVisible()) return false;
+            if (Disposing || !Visible) return false;
             if (ScrollbarH.MouseUp(e)) return true;
             if (ScrollbarV.MouseUp(e)) return true;
 
@@ -227,7 +233,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
@@ -247,13 +253,13 @@ namespace SS14.Client.UserInterface.Components
             {
                 if (_innerFocus.MouseWheelMove(e))
                     return true;
-                if (ScrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
+                if (ScrollbarV.Visible && ClientArea.Contains(e.X, e.Y))
                 {
                     ScrollbarV.MouseWheelMove(e);
                     return true;
                 }
             }
-            else if (ScrollbarV.IsVisible() && ClientArea.Contains(e.X, e.Y))
+            else if (ScrollbarV.Visible && ClientArea.Contains(e.X, e.Y))
             {
                 ScrollbarV.MouseWheelMove(e);
                 return true;
@@ -281,8 +287,8 @@ namespace SS14.Client.UserInterface.Components
 
         public void ResetScrollbars()
         {
-            if (ScrollbarH.IsVisible()) ScrollbarH.Value = 0;
-            if (ScrollbarV.IsVisible()) ScrollbarV.Value = 0;
+            if (ScrollbarH.Visible) ScrollbarH.Value = 0;
+            if (ScrollbarV.Visible) ScrollbarV.Value = 0;
         }
 
         private void SetFocus(Control newFocus)

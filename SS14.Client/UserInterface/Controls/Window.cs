@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics.Input;
+﻿using OpenTK.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.VertexData;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.UserInterface.Controls;
@@ -34,7 +35,13 @@ namespace SS14.Client.UserInterface.Components
             closeButton.Clicked += CloseButtonClicked;
             title = new Label(windowTitle, "CALIBRI");
             gradient = new GradientBox();
+
+            BackgroundColor = new Color4(169, 169, 169, 255);
+            BorderColor = Color4.Black;
             DrawBackground = true;
+            DrawBorder = true;
+            BorderWidth = 1;
+
             Update(0);
         }
 
@@ -43,18 +50,27 @@ namespace SS14.Client.UserInterface.Components
             Dispose();
         }
 
+        public override void DoLayout()
+        {
+            base.DoLayout();
+        }
+
         public override void Update(float frameTime)
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
             base.Update(frameTime);
             if (title == null || gradient == null) return;
+            
             int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
-            title.Position = new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
+            title.LocalPosition = Position + new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
             titleArea = Box2i.FromDimensions(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
+            title.DoLayout();
             title.Update(frameTime);
-            closeButton.Position = new Vector2i(titleArea.Right - 5 - closeButton.ClientArea.Width,
+
+            closeButton.LocalPosition = Position + new Vector2i(titleArea.Right - 5 - closeButton.ClientArea.Width,
                                              titleArea.Top + (int)(titleArea.Height / 2f) -
                                              (int)(closeButton.ClientArea.Height / 2f));
+            closeButton.DoLayout();
             gradient.ClientArea = titleArea;
             gradient.Color1 = TitleColor1;
             gradient.Color2 = TitleColor2;
@@ -64,7 +80,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override void Draw() // Renders the main window
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
             gradient.Draw();
 
             //TODO RenderTargetRectangle

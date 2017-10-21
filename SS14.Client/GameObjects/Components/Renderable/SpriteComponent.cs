@@ -383,11 +383,6 @@ namespace SS14.Client.GameObjects
             {
                 component.Render(topLeft, bottomRight);
             }
-
-            //Draw AABB
-            var aabb = LocalAABB;
-            if (CluwneLib.Debug.DebugColliders)
-                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

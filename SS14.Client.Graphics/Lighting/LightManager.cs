@@ -6,6 +6,10 @@ using SS14.Shared;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Sprites;
+using System.Reflection;
+using SS14.Shared.Log;
+using SS14.Shared.IoC;
+using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -14,12 +18,16 @@ namespace SS14.Client.Graphics.Lighting
         private readonly List<ILight> _lights = new List<ILight>();
         private readonly List<Type> LightModes = new List<Type>();
 
-        public LightManager()
+        [Dependency]
+        private readonly IReflectionManager reflectionManager;
+
+        public void Initialize()
         {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            LightModes =
-                assemblies.SelectMany(t => t.GetTypes()).Where(
-                    p => typeof(LightMode).IsAssignableFrom(p) && !p.IsInterface).ToList();
+            LightModes.AddRange(reflectionManager.GetAllChildren<LightMode>());
+            foreach (var t in LightModes)
+            {
+                Console.WriteLine(t);
+            }
         }
 
         public Sprite LightMask { get; set; }

@@ -286,13 +286,6 @@ namespace SS14.Client.GameObjects
             {
                 component.Render(topLeft, bottomRight);
             }
-
-            //Draw AABB
-            var aabb = LocalAABB;
-
-            if (_speechBubble != null)
-                _speechBubble.Draw(CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().WorldPosition),
-                                   new Vector2(), aabb);
         }
 
         /// <inheritdoc />

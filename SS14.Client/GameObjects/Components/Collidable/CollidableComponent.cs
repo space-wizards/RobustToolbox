@@ -6,6 +6,8 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects
@@ -15,7 +17,7 @@ namespace SS14.Client.GameObjects
         // no client side collision support for now
         private bool collisionEnabled;
 
-        public Color DebugColor { get; } = Color.Red;
+        public Color DebugColor { get; private set; } = Color.Red;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -146,6 +148,16 @@ namespace SS14.Client.GameObjects
             collisionEnabled = false;
             var cm = IoCManager.Resolve<ICollisionManager>();
             cm.RemoveCollidable(this);
+        }
+
+        public override void LoadParameters(YamlMappingNode mapping)
+        {
+            base.LoadParameters(mapping);
+
+            if (mapping.TryGetNode("DebugColor", out var node))
+            {
+                DebugColor = node.AsHexColor();
+            }
         }
     }
 }

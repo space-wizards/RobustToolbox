@@ -22,5 +22,11 @@ namespace SS14.Client.Graphics.Sprites
         {
             Texture = shape.Texture;
         }
+
+        public Vector2 Size
+        {
+            get => SFMLRectangleShape.Size.Convert();
+            set => SFMLRectangleShape.Size = value.Convert();
+        }
     }
 }

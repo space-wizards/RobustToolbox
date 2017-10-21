@@ -68,8 +68,16 @@ namespace SS14.Client.Graphics.Sprites
 
         public void Draw(IRenderTarget target, RenderStates states)
         {
-            SFMLTextSprite.Position = new Vector2f(Position.X, Position.Y);
-            SFMLTextSprite.FillColor = FillColor.Convert();
+            if (Shadowed)
+            {
+                var oldPos = SFMLTextSprite.Position;
+                var oldColor = SFMLTextSprite.FillColor;
+                SFMLTextSprite.Position += ShadowOffset.Convert();
+                SFMLTextSprite.FillColor = ShadowColor.Convert();
+                SFMLTextSprite.Draw(target.SFMLTarget, states.SFMLRenderStates);
+                SFMLTextSprite.Position = oldPos;
+                SFMLTextSprite.FillColor = oldColor;
+            }
             SFMLTextSprite.Draw(target.SFMLTarget, states.SFMLRenderStates);
 
             if (CluwneLib.Debug.DebugTextboxes)
@@ -113,9 +121,9 @@ namespace SS14.Client.Graphics.Sprites
 
         #region Accessors
 
-        public Color ShadowColor { get; set; }
+        public Color ShadowColor { get; set; } = Color.Black;
         public bool Shadowed { get; set; } = false;
-        public Vector2 ShadowOffset { get; set; }
+        public Vector2 ShadowOffset { get; set; } = new Vector2(1, 1);
 
         public Color FillColor
         {

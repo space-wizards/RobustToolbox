@@ -14,7 +14,7 @@
     sizeX: 0.9
     sizeY: 0.9
     offsetY: 0.6
-    
+
   - type: ParticleSystem
   - type: Physics
     mass: 5

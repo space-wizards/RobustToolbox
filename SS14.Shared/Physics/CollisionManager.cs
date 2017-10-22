@@ -71,7 +71,7 @@ namespace SS14.Shared.Physics
             //try all of the AABBs against the target rect.
             var collided = false;
             foreach (var aabb in aabBs.Where(aabb => aabb.Collidable.AABB.Intersects(collider)))
-                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
+                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
                     collided = true;
 
             //TODO: This needs multi-grid support.
@@ -130,7 +130,7 @@ namespace SS14.Shared.Physics
             var collided = false;
             foreach (var aabb in bounds)
             {
-                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
+                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
                     collided = true;
 
                 if (bump) aabb.Collidable.Bump(entity);

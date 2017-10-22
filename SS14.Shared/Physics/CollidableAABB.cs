@@ -10,13 +10,11 @@ namespace SS14.Shared.Physics
     internal struct CollidableAABB
     {
         public ICollidable Collidable;
-        public bool IsHardCollider;
         public CollidablePoint[] Points;
 
         public CollidableAABB(ICollidable collidable)
         {
             Collidable = collidable;
-            IsHardCollider = Collidable.IsHardCollidable;
             Points = new CollidablePoint[4];
             float top = Collidable.AABB.Top;
             float bottom = Collidable.AABB.Bottom;

@@ -16,7 +16,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    internal class EntitySpawnPanel : Window
+    internal class EntitySpawnWindow : Window
     {
         private readonly Label _clearLabel;
         private readonly Textbox _entSearchTextbox;
@@ -25,7 +25,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly Listbox _lstOverride;
         private readonly Label _overLabel;
         private readonly IPlacementManager _placementManager;
-        public EntitySpawnPanel(Vector2i size)
+        public EntitySpawnWindow(Vector2i size)
             : base("Entity Spawn Panel", size)
         {
             _placementManager = IoCManager.Resolve<IPlacementManager>();

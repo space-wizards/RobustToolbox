@@ -67,17 +67,21 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void button_tile_Clicked(Button sender)
         {
-            _userInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-            _userInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410)));
-            //Create a new one.
+            _userInterfaceManager.DisposeAllComponents<TileSpawnWindow>(); //Remove old ones.
+
+            var tileSpawnPanel = new TileSpawnWindow(new Vector2i(350, 410));
+            _userInterfaceManager.AddComponent(tileSpawnPanel);
+            tileSpawnPanel.DoLayout();
+
+            // hide me
             Visible = !Visible;
             _userInterfaceManager.RemoveFocus(this);
         }
 
         private void button_entity_Clicked(Button sender)
         {
-            _userInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-            _userInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410)));
+            _userInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
+            _userInterfaceManager.AddComponent(new EntitySpawnWindow(new Vector2i(350, 410)));
             //Create a new one.
             Visible = !Visible;
             _userInterfaceManager.RemoveFocus(this);

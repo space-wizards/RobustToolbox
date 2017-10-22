@@ -281,7 +281,7 @@
     <Compile Include="UserInterface\Controls\ContextMenu.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
-    <Compile Include="UserInterface\CustomControls\EntitySpawnPanel.cs" />
+    <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\Controls\EntitySpawnSelectButton.cs" />
     <Compile Include="UserInterface\Controls\ExamineWindow.cs" />
     <Compile Include="UserInterface\Controls\FloatingDeco.cs" />
@@ -297,7 +297,7 @@
     <Compile Include="UserInterface\Controls\Showcase.cs" />
     <Compile Include="UserInterface\Controls\SimpleImage.cs" />
     <Compile Include="UserInterface\Controls\Textbox.cs" />
-    <Compile Include="UserInterface\CustomControls\TileSpawnPanel.cs" />
+    <Compile Include="UserInterface\CustomControls\TileSpawnWindow.cs" />
     <Compile Include="UserInterface\Controls\TimerBar.cs" />
     <Compile Include="UserInterface\Controls\Window.cs" />
     <Compile Include="UserInterface\CustomControls\LobbyShowcase.cs" />

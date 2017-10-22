@@ -1,11 +1,9 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.VertexData;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -15,11 +13,11 @@ namespace SS14.Client.UserInterface.Components
 
         public Color TitleColor1 = new Color(112, 128, 144);
         public Color TitleColor2 = new Color(47, 79, 79);
+        public bool closeButtonVisible = true;
 
         protected ImageButton closeButton;
-        public bool closeButtonVisible = true;
-        protected bool dragging = false;
-        protected Vector2 draggingOffset = new Vector2();
+        protected bool dragging;
+        protected Vector2 draggingOffset;
         protected GradientBox gradient;
         protected Label title;
         protected Box2i titleArea;
@@ -45,11 +43,6 @@ namespace SS14.Client.UserInterface.Components
             Update(0);
         }
 
-        virtual protected void CloseButtonClicked(ImageButton sender)
-        {
-            Dispose();
-        }
-
         public override void DoLayout()
         {
             base.DoLayout();
@@ -60,16 +53,16 @@ namespace SS14.Client.UserInterface.Components
             if (Disposing || !Visible) return;
             base.Update(frameTime);
             if (title == null || gradient == null) return;
-            
-            int y_pos = ClientArea.Top - (2 * titleBuffer) - title.ClientArea.Height + 1;
+
+            var y_pos = ClientArea.Top - 2 * titleBuffer - title.ClientArea.Height + 1;
             title.LocalPosition = Position + new Vector2i(ClientArea.Left + 3, y_pos + titleBuffer);
-            titleArea = Box2i.FromDimensions(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + (2 * titleBuffer));
+            titleArea = Box2i.FromDimensions(ClientArea.Left, y_pos, ClientArea.Width, title.ClientArea.Height + 2 * titleBuffer);
             title.DoLayout();
             title.Update(frameTime);
 
             closeButton.LocalPosition = Position + new Vector2i(titleArea.Right - 5 - closeButton.ClientArea.Width,
-                                             titleArea.Top + (int)(titleArea.Height / 2f) -
-                                             (int)(closeButton.ClientArea.Height / 2f));
+                                            titleArea.Top + (int) (titleArea.Height / 2f) -
+                                            (int) (closeButton.ClientArea.Height / 2f));
             closeButton.DoLayout();
             gradient.ClientArea = titleArea;
             gradient.Color1 = TitleColor1;
@@ -78,7 +71,7 @@ namespace SS14.Client.UserInterface.Components
             closeButton.Update(frameTime);
         }
 
-        public override void Draw() // Renders the main window
+        public override void Draw()
         {
             if (Disposing || !Visible) return;
             gradient.Draw();
@@ -103,7 +96,7 @@ namespace SS14.Client.UserInterface.Components
 
             if (base.MouseDown(e)) return true;
 
-            if (titleArea.Contains((int)e.X, (int)e.Y))
+            if (titleArea.Translated(Position).Contains(e.X, e.Y))
             {
                 draggingOffset = new Vector2(e.X, e.Y) - Position;
                 dragging = true;
@@ -126,13 +119,9 @@ namespace SS14.Client.UserInterface.Components
         {
             if (Disposing || !IsVisible()) return;
             if (dragging)
-            {
-                Position = new Vector2i((int)e.X - (int)draggingOffset.X,
-                                     (int)e.Y - (int)draggingOffset.Y);
-            }
+                Position = new Vector2i(e.X - (int) draggingOffset.X,
+                    e.Y - (int) draggingOffset.Y);
             base.MouseMove(e);
-
-            return;
         }
 
         public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
@@ -145,6 +134,11 @@ namespace SS14.Client.UserInterface.Components
         {
             if (base.KeyDown(e)) return true;
             return false;
+        }
+
+        protected virtual void CloseButtonClicked(ImageButton sender)
+        {
+            Dispose();
         }
     }
 
@@ -185,7 +179,7 @@ namespace SS14.Client.UserInterface.Components
 
         protected override void OnCalcRect()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override void Draw()

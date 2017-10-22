@@ -507,13 +507,13 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.F10)
             {
-                UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410))); //Create a new one.
+                UserInterfaceManager.DisposeAllComponents<TileSpawnWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new TileSpawnWindow(new Vector2i(350, 410))); //Create a new one.
             }
             if (e.Key == Keyboard.Key.F11)
             {
-                UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410))); //Create a new one.
+                UserInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new EntitySpawnWindow(new Vector2i(350, 410))); //Create a new one.
             }
 
             PlayerManager.KeyDown(e.Key);

@@ -4,10 +4,10 @@ using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
-using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.Components;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.Controls
 {
     public class ScrollableContainer : Control
     {
@@ -19,12 +19,12 @@ namespace SS14.Client.UserInterface.Components
 
         protected bool Disposing;
 
-        public Screen Container { get; }
-
         private RenderImage _clippingRi;
         private Control _innerFocus;
         private float _maxX;
         private float _maxY;
+
+        public Screen Container { get; }
 
         public ScrollableContainer(string uniqueName, Vector2i size)
         {
@@ -34,8 +34,8 @@ namespace SS14.Client.UserInterface.Components
             BackgroundColor = new Color4(169, 169, 169, 255);
             DrawBackground = true;
             DrawBorder = true;
-            
-            _clippingRi = new RenderImage(uniqueName, (uint)size.X, (uint)size.Y);
+
+            _clippingRi = new RenderImage(uniqueName, (uint) size.X, (uint) size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -52,7 +52,7 @@ namespace SS14.Client.UserInterface.Components
             Container.DrawBackground = false;
             Container.DrawBorder = false;
             // AddControl(Container); // this needs to always be at screenPos {0,0}, setting a parent breaks that
-            
+
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
 

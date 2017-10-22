@@ -68,12 +68,12 @@ namespace SS14.Client.UserInterface.Controls
         /// <summary>
         ///     Color of the border around the control.
         /// </summary>
-        public Color4 BorderColor { get; set; } = Color4.Gray;
+        public Color4 BorderColor { get; set; } = Color4.Black;
 
         /// <summary>
         ///     Width of the border lines of the control in px.
         /// </summary>
-        public int BorderWidth { get; set; } = 2;
+        public int BorderWidth { get; set; } = 1;
 
         /// <summary>
         ///     Should the border of the control be drawn?

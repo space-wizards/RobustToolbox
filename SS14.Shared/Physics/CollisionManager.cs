@@ -181,6 +181,12 @@ namespace SS14.Shared.Physics
             AddCollidable(collidable);
         }
 
+        public void UpdateIsHardCollidable(ICollidable collidable)
+        {
+            var ourAABB = _aabbs.First(a => a.Key.Collidable == collidable).Key;
+            ourAABB.IsHardCollider = collidable.IsHardCollidable;
+        }
+
         /// <summary>
         ///     Adds an AABB point to a buckets
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -14,6 +15,8 @@ namespace SS14.Server.GameObjects
     public class CollidableComponent : Component, ICollidableComponent
     {
         private readonly bool _collisionEnabled = true;
+
+        public event EventHandler<BumpEventArgs> OnBumped;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
@@ -50,13 +53,27 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
+
+        private bool isHardCollidable;
         /// <inheritdoc />
-        public bool IsHardCollidable { get; } = true;
+        public bool IsHardCollidable
+        {
+            get => isHardCollidable;
+            set
+            {
+                if (value == isHardCollidable)
+                {
+                    return;
+                }
+                isHardCollidable = value;
+                IoCManager.Resolve<ICollisionManager>().UpdateCollidable(this);
+            }
+        }
 
         /// <inheritdoc />
         void ICollidable.Bump(IEntity ent)
         {
-            // do nothing atm
+            OnBumped?.Invoke(this, new BumpEventArgs(this.Owner, ent));
         }
 
         /// <summary>

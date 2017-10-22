@@ -42,7 +42,7 @@ namespace SS14.Client.GameObjects
         /// </summary>
         void ICollidable.Bump(IEntity ent)
         {
-            OnBump?.Invoke(this, new EventArgs());
+            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
 
             Owner.SendMessage(this, ComponentMessageType.Bumped, ent);
         }
@@ -128,7 +128,7 @@ namespace SS14.Client.GameObjects
             return IoCManager.Resolve<ICollisionManager>().TryCollide(Owner, offset, bump);
         }
 
-        public event EventHandler OnBump;
+        public event EventHandler<BumpEventArgs> OnBump;
 
         /// <summary>
         ///     Enables collidable

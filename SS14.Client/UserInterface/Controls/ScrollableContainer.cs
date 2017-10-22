@@ -11,7 +11,9 @@ namespace SS14.Client.UserInterface.Components
 {
     public class ScrollableContainer : Control
     {
+        [Obsolete("Parent the control to the Container instead.")]
         public readonly List<Control> Components = new List<Control>();
+
         protected readonly Scrollbar ScrollbarH;
         protected readonly Scrollbar ScrollbarV;
 

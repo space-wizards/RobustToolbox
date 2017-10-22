@@ -1,17 +1,17 @@
-﻿using OpenTK.Graphics;
-using SS14.Client.Graphics;
-using SS14.Shared.Interfaces.Map;
-using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Resource;
-using SS14.Shared;
-using SS14.Shared.IoC;
-using System;
+﻿using System;
 using System.Linq;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using OpenTK.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces.Placement;
+using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
+using SS14.Shared;
+using SS14.Shared.Interfaces.Map;
+using SS14.Shared.IoC;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     internal class TileSpawnPanel : Window
     {
@@ -49,8 +49,9 @@ namespace SS14.Client.UserInterface.Components
 
             BuildTileList();
 
-            Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
+            _screenPos = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
                                  (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));
+
             _placementManager.PlacementCanceled += PlacementManagerPlacementCanceled;
         }
 

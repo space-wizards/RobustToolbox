@@ -1,20 +1,20 @@
-﻿using OpenTK.Graphics;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.Placement;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SS14.Client.UserInterface.Controls;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
-namespace SS14.Client.UserInterface.Components
+namespace SS14.Client.UserInterface.CustomControls
 {
     internal class EntitySpawnPanel : Window
     {

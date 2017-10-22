@@ -5,6 +5,7 @@ using SS14.Client.Graphics.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using BlendMode = SS14.Client.Graphics.Render.BlendMode;
 using RenderStates = SS14.Client.Graphics.Render.RenderStates;
 using SBlendMode = SFML.Graphics.BlendMode;
@@ -17,7 +18,7 @@ namespace SS14.Client.Graphics.Sprites
     /// Provides optimized drawing of sprites
     /// </summary>
     [DebuggerDisplay("[SpriteBatch] IsDrawing: {Drawing} | ")]
-    public class SpriteBatch : IDrawable
+    public class SpriteBatch : IDrawable, IDisposable
     {
         // If you use a class in another assembly, and any of its interfaces are from an unreferenced assembly
         // The C# compiler effectively dies and refuses to treat the class as implementing *ANYTHING*.
@@ -212,9 +213,28 @@ namespace SS14.Client.Graphics.Sprites
         Drawable IDrawable.SFMLDrawable => drawableDummy;
         private SpriteBatchDrawableDummy drawableDummy;
 
+        ~SpriteBatch()
+        {
+            Dispose(false);
+        }
+
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                foreach (var item in QueuedTextures.Union(RecycleQueue))
+                {
+                    item.Verticies.Dispose();
+                }
+                QueuedTextures.Clear();
+                RecycleQueue.Clear();
+            }
         }
 
         [DebuggerDisplay("[QueueItem] Name: {ID} | Texture: {Texture} | Verticies: {Verticies}")]

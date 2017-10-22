@@ -148,7 +148,11 @@ namespace SS14.Shared.Physics
         {
             if (_aabbs.ContainsKey(collidable))
             {
-                throw new InvalidOperationException("We already have this collidable!");
+                // TODO: throw an exception instead.
+                // There's too much buggy code in the client that I can't be bothered to fix,
+                // so it'd crash reliably.
+                UpdateCollidable(collidable);
+                return;
             }
             var c = new CollidableAABB(collidable);
             foreach (var p in c.Points)

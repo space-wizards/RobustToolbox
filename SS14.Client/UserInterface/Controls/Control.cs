@@ -488,14 +488,21 @@ namespace SS14.Client.UserInterface.Controls
             child.OnCalcPosition();
         }
 
-        public void Destroy()
+        /// <summary>
+        ///     Removes all child controls from this control.
+        /// </summary>
+        public void RemoveAllControls()
         {
-            var children = new List<Control>(_children);
+            var children = new List<Control>(_children); // must cache list because children modify it
             foreach (var child in children)
             {
                 child.Destroy();
             }
+        }
 
+        public void Destroy()
+        {
+            RemoveAllControls();
             Parent?.RemoveControl(this);
         }
 

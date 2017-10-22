@@ -198,14 +198,17 @@ namespace SS14.Client.UserInterface.Components
         {
             CurrentlySelected = null;
             _dropDown.Components.Clear();
-            var offset = 0;
+            _dropDown.Container.RemoveAllControls();
+
+            Control lastItem = _dropDown.Container; 
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
-                newEntry.LocalPosition = new Vector2i(0, offset);
-                newEntry.DoLayout();
+                newEntry.Parent = lastItem;
+                lastItem = newEntry;
+                lastItem.Alignment = Align.Bottom;
+
                 newEntry.Clicked += NewEntryClicked;
-                _dropDown.Components.Add(newEntry);
-                offset += newEntry.Height;
+                //_dropDown.Components.Add(newEntry);
             }
         }
 
@@ -239,6 +242,7 @@ namespace SS14.Client.UserInterface.Components
     /// </summary>
     internal class ListboxItem : Label
     {
+        // TODO: Make selections work
         public bool Selected;
 
         public ListboxItem(string text, int maxWidth)
@@ -253,35 +257,11 @@ namespace SS14.Client.UserInterface.Components
         {
             base.MouseMove(e);
 
+            // mouseover color
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-                if (Selected)
-                    BackgroundColor = new Color4(47, 79, 79, 255);
-                else
-                    BackgroundColor = Color4.Gray;
-        }
-
-        protected override void OnCalcRect()
-        {
-            //_clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(FixedWidth, Text.Height));
-
-            base.OnCalcRect();
-        }
-
-        protected override void OnCalcPosition()
-        {
-            base.OnCalcPosition();
-
-            //Text.Position = Position;
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
-
-        public override void Draw()
-        {
-            base.Draw();
+                BackgroundColor = new Color4(47, 79, 79, 255);
+            else
+                BackgroundColor = Color4.Gray;
         }
     }
 }

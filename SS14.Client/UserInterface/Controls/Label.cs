@@ -68,14 +68,14 @@ namespace SS14.Client.UserInterface.Components
         }
 
         /// <inheritdoc />
-        public override void Draw()
+        protected override void DrawContents()
         {
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle(_text.Position.X + 3, _text.Position.Y + 4, _text.Width, _text.Height - 9, BackgroundColor);
                 
             _text.Draw();
 
-            base.Draw();
+            base.DrawContents();
         }
 
         /// <inheritdoc />

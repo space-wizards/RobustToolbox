@@ -30,9 +30,9 @@ namespace SS14.Client.UserInterface.Components
             Size = size;
 
             BackgroundColor = new Color4(169, 169, 169, 255);
-            DrawBackground = false;
+            DrawBackground = true;
             DrawBorder = true;
-
+            
             _clippingRi = new RenderImage(uniqueName, (uint)size.X, (uint)size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
@@ -44,9 +44,15 @@ namespace SS14.Client.UserInterface.Components
             ScrollbarV.size = Size.Y;
 
             Container = new Screen();
-            Container.Size = size;
+            // Container.Size = size; // using this as a list
+            Container.Position = Vector2i.Zero; //this must always be 0 to work with RT
+            Container.BackgroundColor = Color4.Magenta;
             Container.DrawBackground = false;
             Container.DrawBorder = false;
+            // AddControl(Container); // this needs to always be at screenPos {0,0}
+
+            // only calling this for the CalcClientRect
+            //Container.DoLayout();
 
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
@@ -86,6 +92,8 @@ namespace SS14.Client.UserInterface.Components
 
         public override void DoLayout()
         {
+            Container.DoLayout();
+
             foreach (var component in Components)
             {
                 component.DoLayout();
@@ -128,6 +136,7 @@ namespace SS14.Client.UserInterface.Components
             // draw the inner container screen
             Container.Draw();
 
+            /*
             foreach (var component in Components)
             {
                 if (_innerFocus != null && component == _innerFocus) continue;
@@ -152,7 +161,7 @@ namespace SS14.Client.UserInterface.Components
                 _innerFocus.Position = oldPos;
                 _innerFocus.Update(0);
             }
-
+            */
             _clippingRi.EndDrawing();
             _clippingRi.Blit(Position.X, Position.Y, _clippingRi.Height, _clippingRi.Width, Color.White, BlitterSizeMode.None);
 
@@ -176,7 +185,6 @@ namespace SS14.Client.UserInterface.Components
         {
             if (Disposing || !Visible) return false;
 
-
             if (ScrollbarH.MouseDown(e))
             {
                 SetFocus(ScrollbarH);
@@ -188,7 +196,10 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
-            if (Container.MouseDown(e))
+            // since the RT is constructed at {0,0}, and then blitted to an offset position
+            // we have to offset the mouse screen pos by the blit offset.
+            var rtArgs = new MouseButtonEventArgs(e.Button, e.Position - Position);
+            if (Container.MouseDown(rtArgs))
                 return true;
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
@@ -218,7 +229,10 @@ namespace SS14.Client.UserInterface.Components
             if (ScrollbarH.MouseUp(e)) return true;
             if (ScrollbarV.MouseUp(e)) return true;
 
-            if (Container.MouseUp(e))
+            // since the RT is constructed at {0,0}, and then blitted to an offset position
+            // we have to offset the mouse screen pos by the blit offset.
+            var rtArgs = new MouseButtonEventArgs(e.Button, e.Position - Position);
+            if (Container.MouseUp(rtArgs))
                 return true;
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
@@ -243,7 +257,10 @@ namespace SS14.Client.UserInterface.Components
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
-            Container.MouseMove(e);
+            // since the RT is constructed at {0,0}, and then blitted to an offset position
+            // we have to offset the mouse screen pos by the blit offset.
+            var rtArgs = new MouseMoveEventArgs(e.NewPosition - Position);
+            Container.MouseMove(rtArgs);
 
             var pos = new Vector2i(e.X - (Position.X + (int) ScrollbarH.Value),
                 e.Y - (Position.Y + (int) ScrollbarV.Value));

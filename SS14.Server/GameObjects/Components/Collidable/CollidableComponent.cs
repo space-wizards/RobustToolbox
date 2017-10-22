@@ -54,7 +54,7 @@ namespace SS14.Server.GameObjects
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
 
-        private bool isHardCollidable;
+        private bool isHardCollidable = true;
         /// <inheritdoc />
         public bool IsHardCollidable
         {

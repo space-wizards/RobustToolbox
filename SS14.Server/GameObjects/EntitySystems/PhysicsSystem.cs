@@ -52,8 +52,8 @@ namespace SS14.Server.GameObjects.EntitySystems
                 var collided = collider.TryCollision(movement);
                 if (collided)
                 {
-                    var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
-                    var yBlocked = collider.TryCollision(new Vector2(0, movement.Y));
+                    var xBlocked = collider.TryCollision(new Vector2(movement.X, 0), true);
+                    var yBlocked = collider.TryCollision(new Vector2(0, movement.Y), true);
                     var v = velocity.Velocity;
                     velocity.Velocity = new Vector2(xBlocked ? 0 : v.X, yBlocked ? 0 : v.Y);
                     movement = velocity.Velocity * frameTime;

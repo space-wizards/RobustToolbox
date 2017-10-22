@@ -495,7 +495,8 @@ namespace SS14.Client.State.States
 
             IoCManager.Resolve<IPlayerManager>().Detach();
 
-            _cleanupSpriteList.ForEach(s => s.Texture = null);
+            //TODO: Are these lists actually needed?
+            //_cleanupSpriteList.ForEach(s => s.Dispose());
             _cleanupSpriteList.Clear();
             _cleanupList.ForEach(t => { t.Dispose(); });
             _cleanupList.Clear();
@@ -570,14 +571,12 @@ namespace SS14.Client.State.States
             if (e.Key == Keyboard.Key.F10)
             {
                 UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceCache,
-                                                                     PlacementManager)); //Create a new one.
+                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410))); //Create a new one.
             }
             if (e.Key == Keyboard.Key.F11)
             {
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceCache,
-                                                                       PlacementManager)); //Create a new one.
+                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410))); //Create a new one.
             }
 
             PlayerManager.KeyDown(e.Key);

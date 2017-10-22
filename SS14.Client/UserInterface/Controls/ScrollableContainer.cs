@@ -49,11 +49,8 @@ namespace SS14.Client.UserInterface.Components
             Container.BackgroundColor = Color4.Magenta;
             Container.DrawBackground = false;
             Container.DrawBorder = false;
-            // AddControl(Container); // this needs to always be at screenPos {0,0}
-
-            // only calling this for the CalcClientRect
-            //Container.DoLayout();
-
+            // AddControl(Container); // this needs to always be at screenPos {0,0}, setting a parent breaks that
+            
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
 

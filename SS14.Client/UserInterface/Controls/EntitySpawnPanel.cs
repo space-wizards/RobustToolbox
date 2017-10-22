@@ -25,10 +25,10 @@ namespace SS14.Client.UserInterface.Components
         private readonly Listbox _lstOverride;
         private readonly Label _overLabel;
         private readonly IPlacementManager _placementManager;
-        public EntitySpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
+        public EntitySpawnPanel(Vector2i size)
             : base("Entity Spawn Panel", size)
         {
-            _placementManager = placementManager;
+            _placementManager = IoCManager.Resolve<IPlacementManager>();
 
             _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400))
             { Position = new Vector2i(5, 5) };

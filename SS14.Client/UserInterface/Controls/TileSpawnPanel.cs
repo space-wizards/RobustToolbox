@@ -20,10 +20,10 @@ namespace SS14.Client.UserInterface.Components
         private readonly ScrollableContainer _tileList;
         private readonly Textbox _tileSearchTextbox;
 
-        public TileSpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
+        public TileSpawnPanel(Vector2i size)
             : base("Tile Spawn Panel", size)
         {
-            _placementManager = placementManager;
+            _placementManager = IoCManager.Resolve<IPlacementManager>();
 
             _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400))
             { Position = new Vector2i(5, 5) };

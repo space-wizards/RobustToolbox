@@ -30,7 +30,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly Button button_quit;
         private readonly Button button_tile;
 
-        public MenuWindow() : base("Menu", new Vector2i(140, 130), IoCManager.Resolve<IResourceCache>())
+        public MenuWindow() : base("Menu", new Vector2i(140, 130))
         {
             Position = new Vector2i((int)(CluwneLib.CurrentRenderTarget.Size.X / 2f) - (int)(ClientArea.Width / 2f),
                                  (int)(CluwneLib.CurrentRenderTarget.Size.Y / 2f) - (int)(ClientArea.Height / 2f));

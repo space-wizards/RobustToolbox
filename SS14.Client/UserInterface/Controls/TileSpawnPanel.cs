@@ -21,11 +21,11 @@ namespace SS14.Client.UserInterface.Components
         private readonly Textbox _tileSearchTextbox;
 
         public TileSpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
-            : base("Tile Spawn Panel", size, resourceCache)
+            : base("Tile Spawn Panel", size)
         {
             _placementManager = placementManager;
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400), _resourceCache)
+            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400))
             { Position = new Vector2i(5, 5) };
             Components.Add(_tileList);
 

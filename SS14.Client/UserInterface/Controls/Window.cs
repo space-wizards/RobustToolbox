@@ -24,8 +24,8 @@ namespace SS14.Client.UserInterface.Components
         protected Label title;
         protected Box2i titleArea;
 
-        public Window(string windowTitle, Vector2i size, IResourceCache resourceCache)
-            : base(windowTitle, size, resourceCache)
+        public Window(string windowTitle, Vector2i size)
+            : base(windowTitle, size)
         {
             closeButton = new ImageButton
             {

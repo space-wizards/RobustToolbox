@@ -30,7 +30,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private FieldInfo[] fields;
 
         public PropEditWindow(Vector2i size, IResourceCache resourceCache, Object obj)
-            : base("Object Properties : " + obj, size, resourceCache)
+            : base("Object Properties : " + obj, size)
         {
             Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
                                  (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));

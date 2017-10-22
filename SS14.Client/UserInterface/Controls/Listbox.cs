@@ -41,7 +41,7 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             _selectedLabel.FillColor = Color4.Black;
 
-            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength), _resourceCache);
+            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength));
             _dropDown.Visible = true;
             _dropDown.Alignment = Align.Bottom;
             _dropDown.LocalPosition = new Vector2i();
@@ -199,12 +199,10 @@ namespace SS14.Client.UserInterface.Components
             CurrentlySelected = null;
             _dropDown.Components.Clear();
             var offset = 0;
-            foreach (
-                var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
+            foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
                 newEntry.LocalPosition = new Vector2i(0, offset);
                 newEntry.DoLayout();
-                //newEntry.Update(0);
                 newEntry.Clicked += NewEntryClicked;
                 _dropDown.Components.Add(newEntry);
                 offset += newEntry.Height;

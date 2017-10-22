@@ -26,11 +26,11 @@ namespace SS14.Client.UserInterface.Components
         private readonly Label _overLabel;
         private readonly IPlacementManager _placementManager;
         public EntitySpawnPanel(Vector2i size, IResourceCache resourceCache, IPlacementManager placementManager)
-            : base("Entity Spawn Panel", size, resourceCache)
+            : base("Entity Spawn Panel", size)
         {
             _placementManager = placementManager;
 
-            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400), ResourceCache)
+            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400))
             { Position = new Vector2i(5, 5) };
             Components.Add(_entityList);
 
@@ -170,7 +170,7 @@ namespace SS14.Client.UserInterface.Components
 
             foreach (
                 EntitySpawnSelectButton newButton in
-                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, ResourceCache)))
+                    templates.Select(entry => new EntitySpawnSelectButton(entry.Value, entry.Key, _resourceCache)))
             {
                 _entityList.Components.Add(newButton);
                 newButton.Position = new Vector2i(5, yOffset);

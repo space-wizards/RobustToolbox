@@ -18,7 +18,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             DrawBorder = false;
 
-            _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346), resourceCache);
+            _scPlayerList = new ScrollableContainer("scplayerlist", new Vector2i(784, 346));
             _scPlayerList.Position = new Vector2i(5, 10);
             Components.Add(_scPlayerList);
         }

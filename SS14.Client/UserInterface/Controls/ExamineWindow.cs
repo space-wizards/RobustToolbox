@@ -13,7 +13,7 @@ namespace SS14.Client.UserInterface.Components
         private Sprite _entitySprite;
 
         public ExamineWindow(Vector2i size, IEntity entity, IResourceCache resourceCache)
-            : base(entity.Name, size, resourceCache)
+            : base(entity.Name, size)
         {
             _entityDescription = new Label(entity.GetDescriptionString(), "CALIBRI");
 

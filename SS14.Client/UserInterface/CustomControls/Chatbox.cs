@@ -69,7 +69,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
+        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size)
         {
             ScrollbarH.Visible = false;
 

@@ -4,7 +4,6 @@ using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Maths;
 
@@ -12,38 +11,42 @@ namespace SS14.Client.UserInterface.Components
 {
     public class ScrollableContainer : Control
     {
-        private const float BorderSize = 1.0f;
-
         public readonly List<Control> Components = new List<Control>();
-        protected readonly IResourceCache ResourceCache;
         protected readonly Scrollbar ScrollbarH;
         protected readonly Scrollbar ScrollbarV;
-        
+
         protected bool Disposing;
+
+        public Screen Container { get; }
 
         private RenderImage _clippingRi;
         private Control _innerFocus;
         private float _maxX;
         private float _maxY;
 
-        public ScrollableContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
+        public ScrollableContainer(string uniqueName, Vector2i size)
         {
-            ResourceCache = resourceCache;
+            // the controls stars out with the same size as container
             Size = size;
 
             BackgroundColor = new Color4(169, 169, 169, 255);
             DrawBackground = false;
             DrawBorder = true;
 
-            _clippingRi = new RenderImage(uniqueName, (uint) Size.X, (uint) Size.Y);
+            _clippingRi = new RenderImage(uniqueName, (uint)size.X, (uint)size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            ScrollbarH = new Scrollbar(true, ResourceCache);
-            ScrollbarV = new Scrollbar(false, ResourceCache);
+            ScrollbarH = new Scrollbar(true, _resourceCache);
+            ScrollbarV = new Scrollbar(false, _resourceCache);
             ScrollbarV.size = Size.Y;
+
+            Container = new Screen();
+            Container.Size = size;
+            Container.DrawBackground = false;
+            Container.DrawBorder = false;
 
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
@@ -83,12 +86,10 @@ namespace SS14.Client.UserInterface.Components
 
         public override void DoLayout()
         {
-
-            
             foreach (var component in Components)
             {
                 component.DoLayout();
-                component.Position = new Vector2i(component.Position.X - (int)ScrollbarH.Value, component.Position.Y - (int)ScrollbarV.Value);
+                component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
                 component.Update(0);
             }
 
@@ -99,13 +100,15 @@ namespace SS14.Client.UserInterface.Components
         {
             if (Disposing || !Visible) return;
 
+            Container.Update(frameTime);
+
             if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
 
             ScrollbarH.max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
-            ScrollbarH.Visible = (_maxX > _clippingRi.Width);
+            ScrollbarH.Visible = _maxX > _clippingRi.Width;
 
             ScrollbarV.max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
-            ScrollbarV.Visible = (_maxY > _clippingRi.Height);
+            ScrollbarV.Visible = _maxY > _clippingRi.Height;
 
             ScrollbarH.Update(frameTime);
             ScrollbarV.Update(frameTime);
@@ -121,6 +124,9 @@ namespace SS14.Client.UserInterface.Components
             //_clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
 
             _clippingRi.BeginDrawing();
+
+            // draw the inner container screen
+            Container.Draw();
 
             foreach (var component in Components)
             {
@@ -152,14 +158,6 @@ namespace SS14.Client.UserInterface.Components
 
             ScrollbarH.Draw();
             ScrollbarV.Draw();
-
-            /*
-            if (DrawBorder)
-            {
-                var screenRect = ClientArea.Translated(Position);
-                CluwneLib.drawHollowRectangle(screenRect.Left, screenRect.Top, screenRect.Width, screenRect.Height, BorderSize, Color4.Black);
-            }
-            */
         }
 
         public override void Dispose()
@@ -178,6 +176,7 @@ namespace SS14.Client.UserInterface.Components
         {
             if (Disposing || !Visible) return false;
 
+
             if (ScrollbarH.MouseDown(e))
             {
                 SetFocus(ScrollbarH);
@@ -189,12 +188,15 @@ namespace SS14.Client.UserInterface.Components
                 return true;
             }
 
+            if (Container.MouseDown(e))
+                return true;
+
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
             {
-                var pos = new Vector2i(e.X - Position.X + (int)ScrollbarH.Value,
-                    e.Y - Position.Y + (int)ScrollbarV.Value);
+                var pos = new Vector2i(e.X - Position.X + (int) ScrollbarH.Value,
+                    e.Y - Position.Y + (int) ScrollbarV.Value);
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
+                var modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (var component in Components)
                 {
@@ -216,12 +218,15 @@ namespace SS14.Client.UserInterface.Components
             if (ScrollbarH.MouseUp(e)) return true;
             if (ScrollbarV.MouseUp(e)) return true;
 
-            if (ClientArea.Contains(e.X, e.Y))
-            {
-                var pos = new Vector2i(e.X - (Position.X + (int)ScrollbarH.Value),
-                    e.Y - (Position.Y + (int)ScrollbarV.Value));
+            if (Container.MouseUp(e))
+                return true;
 
-                MouseButtonEventArgs modArgs = new MouseButtonEventArgs(e.Button, pos);
+            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
+            {
+                var pos = new Vector2i(e.X - (Position.X + (int) ScrollbarH.Value),
+                    e.Y - (Position.Y + (int) ScrollbarV.Value));
+
+                var modArgs = new MouseButtonEventArgs(e.Button, pos);
 
                 foreach (var component in Components)
                 {
@@ -234,12 +239,15 @@ namespace SS14.Client.UserInterface.Components
         public override void MouseMove(MouseMoveEventArgs e)
         {
             if (Disposing || !Visible) return;
+
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
-            var pos = new Vector2i(e.X - (Position.X + (int)ScrollbarH.Value),
-                e.Y - (Position.Y + (int)ScrollbarV.Value));
-            MouseMoveEventArgs modArgs = new MouseMoveEventArgs(pos);
+            Container.MouseMove(e);
+
+            var pos = new Vector2i(e.X - (Position.X + (int) ScrollbarH.Value),
+                e.Y - (Position.Y + (int) ScrollbarV.Value));
+            var modArgs = new MouseMoveEventArgs(pos);
 
             foreach (var component in Components)
             {

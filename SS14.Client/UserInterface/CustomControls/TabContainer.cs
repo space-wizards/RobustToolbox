@@ -12,14 +12,14 @@ namespace SS14.Client.UserInterface.CustomControls
         public Sprite tabSprite = null;
 
         public TabContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
-            : base(uniqueName, size, resourceCache)
+            : base(uniqueName, size)
         {
             DrawBorder = false;
         }
 
         public string tabSpriteName
         {
-            set { tabSprite = ResourceCache.GetSprite(value); }
+            set { tabSprite = _resourceCache.GetSprite(value); }
         }
 
         public virtual void Activated() //Called when tab is selected.

@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public IDictionary<string, IConsoleCommand> Commands => commands;
 
-        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size, resourceCache)
+        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size)
         {
             input = new Textbox(size.X)
             {

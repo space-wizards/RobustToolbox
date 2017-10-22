@@ -22,7 +22,7 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
 
     public interface ICollidableComponent : IComponent, ICollidable
     {
-        event EventHandler<BumpEventArgs> OnBumped;
+        event EventHandler<BumpEventArgs> OnBump;
         bool TryCollision(Vector2 offset, bool bump = false);
     }
 }

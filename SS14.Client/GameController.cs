@@ -31,6 +31,7 @@ using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Maths;
+using SS14.Client.Graphics.Lighting;
 
 namespace SS14.Client
 {
@@ -85,6 +86,8 @@ namespace SS14.Client
 
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameClient>("Client");
+
+            IoCManager.Resolve<ILightManager>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);

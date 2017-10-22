@@ -136,7 +136,7 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        /// Attempts to fetch a node like <See cref="GetNode{T}" />,
+        /// Attempts to fetch a node like <see cref="GetNode{T}" />,
         /// but does not throw a <c>KeyNotFoundException</c> if the node doesn't exist.
         /// Instead it returns whether the node was successfully found.
         /// </summary>
@@ -162,7 +162,7 @@ namespace SS14.Shared.Utility
         }
 
         /// <summary>
-        /// Attempts to fetch a node like <See cref="GetNode" />,
+        /// Attempts to fetch a node like <see cref="GetNode" />,
         /// but does not throw a <c>KeyNotFoundException</c> if the node doesn't exist.
         /// Instead it returns whether the node was successfully found.
         /// </summary>

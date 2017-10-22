@@ -83,11 +83,6 @@ namespace SS14.Client.Helpers
 
         public Vector2 Size { get; private set; }
 
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
         public void SetAmount(float amount)
         {
             Amount = amount;

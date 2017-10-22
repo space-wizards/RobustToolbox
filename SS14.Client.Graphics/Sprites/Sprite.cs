@@ -18,7 +18,7 @@ namespace SS14.Client.Graphics.Sprites
             get => _texture;
             set
             {
-                SFMLSprite.Texture = value.SFMLTexture;
+                SFMLSprite.Texture = value?.SFMLTexture;
                 _texture = value;
             }
         }

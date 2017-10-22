@@ -47,11 +47,13 @@ namespace SS14.Client.GameObjects
 
         public override Type StateType => typeof(SpriteComponentState);
 
+        private ITransformComponent transform;
+
         public float Bottom
         {
             get
             {
-                return Owner.GetComponent<ITransformComponent>().WorldPosition.Y +
+                return transform.WorldPosition.Y +
                        (GetActiveDirectionalSprite().LocalBounds.Height / 2);
             }
         }
@@ -105,21 +107,31 @@ namespace SS14.Client.GameObjects
         public void AddSprite(string spriteKey)
         {
             if (sprites.ContainsKey(spriteKey))
-                throw new Exception("That sprite is already added.");
-            if (IoCManager.Resolve<IResourceCache>().SpriteExists(spriteKey))
-                AddSprite(spriteKey, IoCManager.Resolve<IResourceCache>().GetSprite(spriteKey));
+            {
+                throw new InvalidOperationException("That sprite is already added.");
+            }
+
+            var manager = IoCManager.Resolve<IResourceCache>();
+            if (manager.SpriteExists(spriteKey))
+            {
+                AddSprite(spriteKey, manager.GetSprite(spriteKey));
+            }
 
             //If there's only one sprite, and the current sprite is explicitly not set, then lets go ahead and set our sprite.
             if (sprites.Count == 1)
+            {
                 SetSpriteByKey(sprites.Keys.First());
+            }
 
             BuildDirectionalSprites();
         }
 
         public void AddSprite(string key, Sprite spritetoadd)
         {
-            if (spritetoadd != null && key != "")
+            if (spritetoadd != null && !String.IsNullOrEmpty(key))
+            {
                 sprites.Add(key, spritetoadd);
+            }
             BuildDirectionalSprites();
         }
 
@@ -156,15 +168,15 @@ namespace SS14.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            var transform = Owner.GetComponent<ITransformComponent>();
+            transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove += OnMove;
             MapID = transform.MapID;
         }
 
         public override void Shutdown()
         {
-            var transform = Owner.GetComponent<ITransformComponent>();
             transform.OnMove -= OnMove;
+            transform = null;
             base.Shutdown();
         }
 
@@ -237,7 +249,7 @@ namespace SS14.Client.GameObjects
 
             string dirName =
                 (currentBaseSpriteKey + "_" +
-                 Owner.GetComponent<TransformComponent>().Rotation.GetDir().ToString()).
+                 transform.Rotation.GetDir().ToString()).
                     ToLowerInvariant();
 
             if (dirSprites.ContainsKey(dirName))
@@ -269,7 +281,7 @@ namespace SS14.Client.GameObjects
             worldBounds = worldBounds.Translated(new Vector2(-worldBounds.Width / 2, -worldBounds.Height / 2));
 
             // absolute world bounds
-            worldBounds = worldBounds.Translated(Owner.GetComponent<ITransformComponent>().WorldPosition);
+            worldBounds = worldBounds.Translated(transform.WorldPosition);
 
             // check if clicked inside of the rectangle
             if (!worldBounds.Contains(worldPos.ToWorld().Position))
@@ -357,14 +369,14 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(Owner.GetComponent<ITransformComponent>().LocalPosition);
+            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(transform.LocalPosition);
             var bounds = spriteToRender.LocalBounds;
             SetSpriteCenter(spriteToRender, renderPos.Position);
 
-            if (Owner.GetComponent<ITransformComponent>().WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.X > bottomRight.X
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
-                || Owner.GetComponent<ITransformComponent>().WorldPosition.Y > bottomRight.Y)
+            if (transform.WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
+                || transform.WorldPosition.X > bottomRight.X
+                || transform.WorldPosition.Y + bounds.Top + bounds.Height < topLeft.Y
+                || transform.WorldPosition.Y > bottomRight.Y)
                 return;
 
             spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
@@ -383,11 +395,6 @@ namespace SS14.Client.GameObjects
             {
                 component.Render(topLeft, bottomRight);
             }
-
-            //Draw AABB
-            var aabb = LocalAABB;
-            if (CluwneLib.Debug.DebugColliders)
-                CluwneLib.drawRectangle((int)(renderPos.X - aabb.Width / 2), (int)(renderPos.Y - aabb.Height / 2), aabb.Width, aabb.Height, Color4.Blue);
         }
 
         public void SetSpriteCenter(string sprite, Vector2 center)

@@ -19,5 +19,6 @@ namespace SS14.Shared.Interfaces.Physics
         void AddCollidable(ICollidable collidable);
         void RemoveCollidable(ICollidable collidable);
         void UpdateCollidable(ICollidable collidable);
+        void UpdateIsHardCollidable(ICollidable collidable);
     }
 }

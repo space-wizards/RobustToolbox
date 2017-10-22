@@ -66,7 +66,7 @@ namespace SS14.Server.GameObjects
                     return;
                 }
                 isHardCollidable = value;
-                IoCManager.Resolve<ICollisionManager>().UpdateCollidable(this);
+                IoCManager.Resolve<ICollisionManager>().UpdateIsHardCollidable(this);
             }
         }
 

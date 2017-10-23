@@ -169,7 +169,12 @@ namespace SS14.Server
             LoadSettings();
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
-            netMan.Initialize(true);
+            try {
+                netMan.Initialize(true);
+            } catch (Exception e) {
+                Logger.Log("Unable to setup networking manager, shutting down...", LogLevel.Fatal);
+                Environment.exit(1);
+            }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
             netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));

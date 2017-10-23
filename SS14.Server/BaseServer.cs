@@ -169,11 +169,20 @@ namespace SS14.Server
             LoadSettings();
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
-            try {
+            try
+            {
                 netMan.Initialize(true);
-            } catch (Exception e) {
-                Logger.Log("Unable to setup networking manager, shutting down...", LogLevel.Fatal);
-                Environment.exit(1);
+            }
+            catch (System.Net.Sockets.SocketException e)
+            {
+                var port = netMan.Port;
+                Logger.Log($"Unable to setup networking manager. Check port {port} is not already in use!, shutting down...", LogLevel.Fatal);
+                Environment.Exit(1);
+            }
+            catch (Exception e)
+            {
+                Logger.Log($"Unable to setup networking manager. Unknown exception: {e}, shutting down...", LogLevel.Fatal);
+                Environment.Exit(1);
             }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.

@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenTK.Graphics;
-using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Client.Graphics.Input;
-using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.UserInterface.Components
 {
@@ -42,7 +41,7 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel.FillColor = Color4.Black;
 
             _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength));
-            _dropDown.Visible = true;
+            _dropDown.Visible = false;
             _dropDown.Alignment = Align.Bottom;
             _dropDown.LocalPosition = new Vector2i();
             _dropDown.Parent = this;
@@ -79,7 +78,7 @@ namespace SS14.Client.UserInterface.Components
         {
             base.OnCalcPosition();
 
-            _selectedLabel.Position = new Vector2i(_clientAreaLeft.Right, 0 + (int) (ClientArea.Height / 2f) - (int) (_selectedLabel.Height / 2f));
+            _selectedLabel.Position = Position + new Vector2i(_clientAreaLeft.Right, 0 + (int) (ClientArea.Height / 2f) - (int) (_selectedLabel.Height / 2f));
         }
 
         /// <inheritdoc />
@@ -197,18 +196,16 @@ namespace SS14.Client.UserInterface.Components
         private void RebuildList()
         {
             CurrentlySelected = null;
-            _dropDown.Components.Clear();
             _dropDown.Container.RemoveAllControls();
 
-            Control lastItem = _dropDown.Container; 
+            Control lastItem = _dropDown.Container;
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
                 newEntry.Parent = lastItem;
                 lastItem = newEntry;
-                lastItem.Alignment = Align.Bottom;
 
+                newEntry.Alignment = Align.Bottom;
                 newEntry.Clicked += NewEntryClicked;
-                //_dropDown.Components.Add(newEntry);
             }
         }
 
@@ -225,8 +222,8 @@ namespace SS14.Client.UserInterface.Components
             _selectedLabel.Text = toSet.Text;
             _dropDown.Visible = false;
 
-            ((ListboxItem)toSet).Selected = true;
-            var notSelected = _dropDown.Components
+            ((ListboxItem) toSet).Selected = true;
+            var notSelected = _dropDown.Container.Children
                 .Cast<ListboxItem>()
                 .Where(item => item != toSet);
 

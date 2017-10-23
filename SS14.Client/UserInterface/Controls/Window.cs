@@ -90,7 +90,7 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (Disposing || !IsVisible()) return false;
+            if (Disposing || !Visible) return false;
 
             if (closeButton.MouseDown(e)) return true;
 

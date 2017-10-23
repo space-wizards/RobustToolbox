@@ -128,39 +128,13 @@ namespace SS14.Client.UserInterface.Controls
             base.Draw();
 
             // the rectangle should always be completely covered with draws, no point clearing
-            //_clippingRi.Clear((DrawBackground ? BackgroundColor : Color4.Transparent).Convert());
+            _clippingRi.Clear(DrawBackground ? BackgroundColor : Color4.Transparent);
 
             _clippingRi.BeginDrawing();
-
             // draw the inner container screen
-            Container.Draw();
-
-            /*
-            foreach (var component in Components)
             {
-                if (_innerFocus != null && component == _innerFocus) continue;
-
-                //var oldPos = component.Position;
-                //component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
-                component.Update(0); //2 Updates per frame D:
-                component.Draw();
-
-                //component.Position = oldPos;
-                //component.Update(0);
+                Container.Draw();
             }
-
-            if (_innerFocus != null)
-            {
-                var oldPos = _innerFocus.Position;
-                _innerFocus.Position = new Vector2i(_innerFocus.Position.X - (int) ScrollbarH.Value,
-                    _innerFocus.Position.Y - (int) ScrollbarV.Value);
-
-                _innerFocus.Update(0); //2 Updates per frame D:
-                _innerFocus.Draw();
-                _innerFocus.Position = oldPos;
-                _innerFocus.Update(0);
-            }
-            */
             _clippingRi.EndDrawing();
             _clippingRi.Blit(Position.X, Position.Y, _clippingRi.Height, _clippingRi.Width, Color.White, BlitterSizeMode.None);
 

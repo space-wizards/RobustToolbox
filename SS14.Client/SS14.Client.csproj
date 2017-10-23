@@ -282,7 +282,7 @@
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
     <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
-    <Compile Include="UserInterface\Controls\EntitySpawnSelectButton.cs" />
+    <Compile Include="UserInterface\CustomControls\EntitySpawnSelectButton.cs" />
     <Compile Include="UserInterface\Controls\ExamineWindow.cs" />
     <Compile Include="UserInterface\Controls\FloatingDeco.cs" />
     <Compile Include="UserInterface\Controls\Control.cs" />

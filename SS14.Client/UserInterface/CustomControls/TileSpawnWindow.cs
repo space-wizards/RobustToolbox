@@ -36,7 +36,6 @@ namespace SS14.Client.UserInterface.CustomControls
 
             var tileSearchTextbox = new Textbox(125);
             tileSearchTextbox.LocalPosition = new Vector2i(210, 20);
-            tileSearchTextbox.Alignment = Align.Bottom;
             tileSearchTextbox.OnSubmit += tileSearchTextbox_OnSubmit;
             Container.AddControl(tileSearchTextbox);
 

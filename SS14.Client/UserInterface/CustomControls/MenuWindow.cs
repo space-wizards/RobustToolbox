@@ -81,7 +81,11 @@ namespace SS14.Client.UserInterface.CustomControls
         private void button_entity_Clicked(Button sender)
         {
             _userInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
-            _userInterfaceManager.AddComponent(new EntitySpawnWindow(new Vector2i(350, 410)));
+
+            var entitySpawnWindow = new EntitySpawnWindow(new Vector2i(350, 410));
+            _userInterfaceManager.AddComponent(entitySpawnWindow);
+            entitySpawnWindow.DoLayout();
+
             //Create a new one.
             Visible = !Visible;
             _userInterfaceManager.RemoveFocus(this);

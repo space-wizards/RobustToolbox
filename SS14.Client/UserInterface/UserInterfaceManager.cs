@@ -59,8 +59,8 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Window.Viewport.Size.X, 400), _resourceCache);
-            _console.SetVisible(false);
+            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Window.Viewport.Size.X, 400));
+            _console.Visible = true;
         }
 
         #region Component retrieval
@@ -169,6 +169,8 @@ namespace SS14.Client.UserInterface
 
         public void ResizeComponents()
         {
+            _console.DoLayout();
+
             foreach (var guiComponent in _components)
             {
                 guiComponent.DoLayout();
@@ -316,11 +318,11 @@ namespace SS14.Client.UserInterface
         {
             if (e.Key == _config.GetCVar<Keyboard.Key>("key.keyboard.console"))
             {
-                _console.ToggleVisible();
+                _console.Visible = !_console.Visible;
                 return true;
             }
 
-            if (_console.IsVisible())
+            if (_console.Visible)
                 if (_console.KeyDown(e)) return true;
 
             var inputList = from Control comp in _components
@@ -386,7 +388,7 @@ namespace SS14.Client.UserInterface
                 component.Draw();
             }
 
-            if (_console.IsVisible()) _console.Draw();
+            if (_console.Visible) _console.Draw();
 
             if (showCursor)
             {

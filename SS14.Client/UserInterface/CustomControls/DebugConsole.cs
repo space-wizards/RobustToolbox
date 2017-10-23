@@ -4,55 +4,75 @@ using Lidgren.Network;
 using OpenTK.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {
-        private Textbox input;
-        private int last_y = 0;
-        private Dictionary<string, IConsoleCommand> commands = new Dictionary<string, IConsoleCommand>();
-        private bool sentCommandRequestToServer = false;
+        private readonly Textbox _txtInput;
+        private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
 
-        public IDictionary<string, IConsoleCommand> Commands => commands;
+        private int last_y;
+        private bool sentCommandRequestToServer;
 
-        public DebugConsole(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size)
+        public override bool Visible
         {
-            input = new Textbox(size.X)
+            get => base.Visible;
+            set
+            {
+                base.Visible = value;
+
+                var netMgr = IoCManager.Resolve<IClientNetManager>();
+                if (value)
+                {
+                    // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
+                    // Though TextBox does like focus for the caret and passing KeyDown.
+                    _txtInput.Focus = true;
+                    netMgr.MessageArrived += NetMgr_MessageArrived;
+                    if (netMgr.IsConnected && !sentCommandRequestToServer)
+                        SendServerCommandRequest();
+                }
+                else
+                {
+                    _txtInput.Focus = false;
+                    netMgr.MessageArrived -= NetMgr_MessageArrived;
+                }
+            }
+        }
+
+        public DebugConsole(string uniqueName, Vector2i size)
+            : base(uniqueName, size)
+        {
+            _txtInput = new Textbox(size.X)
             {
                 ClearFocusOnSubmit = false,
                 BackgroundColor = new Color4(64, 64, 64, 100),
                 ForegroundColor = new Color4(255, 250, 240, 255)
             };
-            input.OnSubmit += input_OnSubmit;
-            this.BackgroundColor = new Color4(64, 64, 64, 200);
-            this.DrawBackground = true;
-            this.DrawBorder = true;
+            _txtInput.OnSubmit += TxtInputOnSubmit;
+            BackgroundColor = new Color4(64, 64, 64, 200);
+            DrawBackground = true;
+            DrawBorder = true;
 
             InitializeCommands();
         }
 
-        private void input_OnSubmit(string text, Textbox sender)
-        {
-            AddLine("> " + text, new Color4(255, 250, 240, 255));
-            ProcessCommand(text);
-        }
+        public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
         public void AddLine(string text, Color4 color)
         {
-            bool atBottom = ScrollbarV.Value >= ScrollbarV.max;
-            Label newLabel = new Label(text, "CALIBRI")
+            var atBottom = ScrollbarV.Value >= ScrollbarV.max;
+            var newLabel = new Label(text, "CALIBRI")
             {
                 Position = new Vector2i(5, last_y),
                 ForegroundColor = color
@@ -68,36 +88,80 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
+        public void Clear()
+        {
+            Components.Clear();
+            last_y = 0;
+            ScrollbarV.Value = 0;
+        }
+
+        public override void DoLayout()
+        {
+            base.DoLayout();
+
+            _txtInput.LocalPosition = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom);
+            _txtInput.DoLayout();
+        }
+        
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            if (input != null)
-            {
-                input.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom);
-                input.Update(frameTime);
-            }
+            _txtInput.Update(frameTime);
         }
 
-        public override void ToggleVisible()
+        public override void Draw()
         {
-            var netMgr = IoCManager.Resolve<IClientNetManager>();
-            base.ToggleVisible();
-            if (IsVisible())
-            {
-                // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-                // Though TextBox does like focus for the caret and passing KeyDown.
-                input.Focus = true;
-                netMgr.MessageArrived += NetMgr_MessageArrived;
-                if (netMgr.IsConnected && !sentCommandRequestToServer)
-                {
-                    SendServerCommandRequest();
-                }
-            }
-            else
-            {
-                input.Focus = false;
-                netMgr.MessageArrived -= NetMgr_MessageArrived;
-            }
+            base.Draw();
+            _txtInput.Draw();
+        }
+
+        public override void Dispose()
+        {
+            _txtInput.Dispose();
+            base.Dispose();
+        }
+
+        public override bool MouseDown(MouseButtonEventArgs e)
+        {
+            if (!base.MouseDown(e))
+                if (_txtInput.MouseDown(e))
+                    return true;
+            return false;
+        }
+
+        public override bool MouseUp(MouseButtonEventArgs e)
+        {
+            if (!base.MouseUp(e))
+                return _txtInput.MouseUp(e);
+            return false;
+        }
+
+        public override void MouseMove(MouseMoveEventArgs e)
+        {
+            base.MouseMove(e);
+            _txtInput.MouseMove(e);
+        }
+
+        public override bool KeyDown(KeyEventArgs e)
+        {
+            if (!base.KeyDown(e))
+                return _txtInput.KeyDown(e);
+            return false;
+        }
+
+        public override bool TextEntered(TextEventArgs e)
+        {
+            if (!base.TextEntered(e))
+                return _txtInput.TextEntered(e);
+            return false;
+        }
+
+        private void TxtInputOnSubmit(string text, Textbox sender)
+        {
+            AddLine("> " + text, new Color4(255, 250, 240, 255));
+
+            if(!string.IsNullOrWhiteSpace(text))
+                ProcessCommand(text);
         }
 
         private void NetMgr_MessageArrived(object sender, NetMessageArgs e)
@@ -109,7 +173,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (e.RawMessage.MessageType != NetIncomingMessageType.Data)
                 return;
 
-            switch ((NetMessages)e.RawMessage.PeekByte())
+            switch ((NetMessages) e.RawMessage.PeekByte())
             {
                 case NetMessages.ConsoleCommandReply:
                     e.RawMessage.ReadByte();
@@ -118,21 +182,21 @@ namespace SS14.Client.UserInterface.CustomControls
 
                 case NetMessages.ConsoleCommandRegister:
                     e.RawMessage.ReadByte();
-                    for (ushort amount = e.RawMessage.ReadUInt16(); amount > 0; amount--)
+                    for (var amount = e.RawMessage.ReadUInt16(); amount > 0; amount--)
                     {
-                        string commandName = e.RawMessage.ReadString();
+                        var commandName = e.RawMessage.ReadString();
                         // Do not do duplicate commands.
-                        if (commands.ContainsKey(commandName))
+                        if (_commands.ContainsKey(commandName))
                         {
                             AddLine("Server sent console command {0}, but we already have one with the same name. Ignoring." + commandName, Color4.White);
                             continue;
                         }
 
-                        string description = e.RawMessage.ReadString();
-                        string help = e.RawMessage.ReadString();
+                        var description = e.RawMessage.ReadString();
+                        var help = e.RawMessage.ReadString();
 
                         var command = new ServerDummyCommand(commandName, help, description);
-                        commands[commandName] = command;
+                        _commands[commandName] = command;
                     }
                     break;
             }
@@ -141,58 +205,8 @@ namespace SS14.Client.UserInterface.CustomControls
             e.RawMessage.Position = 0;
         }
 
-        public override void Draw()
-        {
-            base.Draw();
-            if (input != null) input.Draw();
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            input.Dispose();
-        }
-
-        public override bool MouseDown(MouseButtonEventArgs e)
-        {
-            if (!base.MouseDown(e))
-                if (input.MouseDown(e))
-                {
-                    // Focus doesn't matter because UserInterfaceManager is hardcoded to go to console when it's visible.
-                    return true;
-                }
-            return false;
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
-            if (!base.MouseUp(e))
-                return input.MouseUp(e);
-            else return false;
-        }
-
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            base.MouseMove(e);
-            input.MouseMove(e);
-        }
-
-        public override bool KeyDown(KeyEventArgs e)
-        {
-            if (!base.KeyDown(e))
-                return input.KeyDown(e);
-            else return false;
-        }
-
-        public override bool TextEntered(TextEventArgs e)
-        {
-            if (!base.TextEntered(e))
-                return input.TextEntered(e);
-            else return false;
-        }
-
         /// <summary>
-        /// Processes commands (chat messages starting with /)
+        ///     Processes commands (chat messages starting with /)
         /// </summary>
         /// <param name="text">input text</param>
         private void ProcessCommand(string text)
@@ -202,12 +216,12 @@ namespace SS14.Client.UserInterface.CustomControls
 
             CommandParsing.ParseArguments(text, args);
 
-            string commandname = args[0];
+            var commandname = args[0];
 
-            bool forward = true;
-            if (commands.ContainsKey(commandname))
+            var forward = true;
+            if (_commands.ContainsKey(commandname))
             {
-                IConsoleCommand command = commands[commandname];
+                var command = _commands[commandname];
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
@@ -218,21 +232,19 @@ namespace SS14.Client.UserInterface.CustomControls
             }
 
             if (forward)
-            {
                 SendServerConsoleCommand(text);
-            }
         }
 
         private void InitializeCommands()
         {
             var manager = IoCManager.Resolve<IReflectionManager>();
-            foreach (Type t in manager.GetAllChildren<IConsoleCommand>())
+            foreach (var t in manager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = Activator.CreateInstance(t, null) as IConsoleCommand;
-                if (commands.ContainsKey(instance.Command))
+                if (_commands.ContainsKey(instance.Command))
                     throw new Exception(string.Format("Command already registered: {0}", instance.Command));
 
-                commands[instance.Command] = instance;
+                _commands[instance.Command] = instance;
             }
         }
 
@@ -241,8 +253,8 @@ namespace SS14.Client.UserInterface.CustomControls
             var netMgr = IoCManager.Resolve<IClientNetManager>();
             if (netMgr != null && netMgr.IsConnected)
             {
-                NetOutgoingMessage outMsg = netMgr.CreateMessage();
-                outMsg.Write((byte)NetMessages.ConsoleCommand);
+                var outMsg = netMgr.CreateMessage();
+                outMsg.Write((byte) NetMessages.ConsoleCommand);
                 outMsg.Write(text);
                 netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
             }
@@ -254,40 +266,31 @@ namespace SS14.Client.UserInterface.CustomControls
             if (!netMgr.IsConnected)
                 return;
 
-            NetOutgoingMessage outMsg = netMgr.CreateMessage();
-            outMsg.Write((byte)NetMessages.ConsoleCommandRegister);
-            netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
+            // client request is empty
+            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
             sentCommandRequestToServer = true;
-        }
-
-        public void Clear()
-        {
-            Components.Clear();
-            last_y = 0;
-            ScrollbarV.Value = 0;
         }
     }
 
     /// <summary>
-    /// These dummies are made purely so list and help can list server-side commands.
+    ///     These dummies are made purely so list and help can list server-side commands.
     /// </summary>
     [Reflect(false)]
-    class ServerDummyCommand : IConsoleCommand
+    internal class ServerDummyCommand : IConsoleCommand
     {
-        readonly string command;
-        readonly string help;
-        readonly string description;
-
-        public string Command => command;
-        public string Help => help;
-        public string Description => description;
-
         internal ServerDummyCommand(string command, string help, string description)
         {
-            this.command = command;
-            this.help = help;
-            this.description = description;
+            Command = command;
+            Help = help;
+            Description = description;
         }
+
+        public string Command { get; }
+
+        public string Help { get; }
+
+        public string Description { get; }
 
         // Always forward to server.
         public bool Execute(IDebugConsole console, params string[] args)

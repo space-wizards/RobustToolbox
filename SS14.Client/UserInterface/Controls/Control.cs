@@ -88,7 +88,7 @@ namespace SS14.Client.UserInterface.Controls
         /// <summary>
         ///     If a control is not visible, it is not drawn to screen, and does not accept input.
         /// </summary>
-        public bool Visible { get; set; } = true;
+        public virtual bool Visible { get; set; } = true;
 
         /// <summary>
         ///     Total width of the control.

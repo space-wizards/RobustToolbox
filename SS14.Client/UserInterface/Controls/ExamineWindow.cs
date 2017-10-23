@@ -1,6 +1,7 @@
 ﻿using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Resource;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;

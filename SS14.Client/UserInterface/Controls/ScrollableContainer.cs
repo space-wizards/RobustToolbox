@@ -55,8 +55,6 @@ namespace SS14.Client.UserInterface.Controls
 
             ScrollbarH.Update(0);
             ScrollbarV.Update(0);
-
-            Update(0);
         }
 
         /// <inheritdoc />

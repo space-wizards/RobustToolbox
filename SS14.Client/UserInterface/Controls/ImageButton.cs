@@ -1,4 +1,5 @@
-﻿using SS14.Client.Graphics.Input;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Maths;
@@ -8,13 +9,13 @@ namespace SS14.Client.UserInterface.Controls
     public class ImageButton : Control
     {
         public delegate void ImageButtonPressHandler(ImageButton sender);
-        
+
         private Sprite _buttonClick;
         private Sprite _buttonHover;
         private Sprite _buttonNormal;
 
         private Sprite _drawSprite;
-        
+
         public string ImageNormal
         {
             set
@@ -36,27 +37,25 @@ namespace SS14.Client.UserInterface.Controls
             set => _buttonClick = new Sprite(_resourceCache.GetSprite(value));
         }
 
-        public event ImageButtonPressHandler Clicked;
-        
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
             if (_buttonNormal != null)
             {
                 var bounds = _drawSprite.LocalBounds;
-                _size = new SS14.Shared.Maths.Vector2i((int)bounds.Width, (int)bounds.Height);
-                _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
+                _size = new Vector2i((int) bounds.Width, (int) bounds.Height);
+                _clientArea = new Box2i(0, 0, (int) bounds.Width, (int) bounds.Height);
             }
         }
-        
+
         /// <inheritdoc />
         protected override void DrawContents()
         {
             if (_drawSprite == null)
                 return;
-            
+
             _drawSprite.Position = new Vector2(Position.X, Position.Y); // mouse events swap _drawSprite at any time, need to be kept in sync here
-            _drawSprite.Draw(Graphics.CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
+            _drawSprite.Draw(CluwneLib.CurrentRenderTarget, new RenderStates(BlendMode.Alpha));
         }
 
         /// <inheritdoc />
@@ -103,12 +102,14 @@ namespace SS14.Client.UserInterface.Controls
             if (_drawSprite == _buttonClick)
                 if (_buttonHover != null)
                     _drawSprite = ClientArea.Translated(_screenPos).Contains(e.X, e.Y)
-                                      ? _buttonHover
-                                      : _buttonNormal;
+                        ? _buttonHover
+                        : _buttonNormal;
                 else
                     _drawSprite = _buttonNormal;
 
             return base.MouseUp(e);
         }
+
+        public event ImageButtonPressHandler Clicked;
     }
 }

@@ -17,18 +17,18 @@ namespace SS14.Client.UserInterface.Controls
     /// </summary>
     public abstract class Control : IDisposable
     {
-        private static readonly Color4 DebugColor = new Color4(255, 0, 0, 32);
+        private static readonly Color4 _debugColor = new Color4(255, 0, 0, 32);
         protected static IResourceCache _resourceCache;
 
-        protected readonly List<Control> _children = new List<Control>();
+        private readonly List<Control> _children = new List<Control>();
 
         public object UserData;
-        protected Align _align;
+        private Align _align;
         protected Box2i _clientArea;
         protected Box2i _localBounds;
-        protected Vector2i _localPos;
-        protected Box2i _margins;
-        protected Control _parent;
+        private Vector2i _localPos;
+        private Box2i _margins;
+        private Control _parent;
         protected Vector2i _screenPos;
         protected Vector2i _size;
         private Sprite _backgroundImage;
@@ -239,7 +239,7 @@ namespace SS14.Client.UserInterface.Controls
             DrawContents();
 
             if (DebugEnabled)
-                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, DebugColor);
+                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, _debugColor);
 
             // draw each of the children.
             // todo: need ordered batching

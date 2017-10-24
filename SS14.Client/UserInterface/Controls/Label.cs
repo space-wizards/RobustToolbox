@@ -13,11 +13,11 @@ namespace SS14.Client.UserInterface.Controls
         public delegate void LabelPressHandler(Label sender, MouseButtonEventArgs e);
 
         private const uint DefaultFontSize = 14;
+        private TextSprite _text;
 
         public int FixedHeight { get; set; } = -1;
         public int FixedWidth { get; set; } = -1;
         public Color4 HighlightColor { get; set; } = Color4.Gray;
-        private TextSprite _text;
 
         public uint FontSize
         {
@@ -36,7 +36,7 @@ namespace SS14.Client.UserInterface.Controls
             get => _text.FillColor;
             set => _text.FillColor = value;
         }
-        
+
         public bool DrawTextHighlight { get; set; }
 
         public Label(string text, string font, uint size = DefaultFontSize)
@@ -46,8 +46,6 @@ namespace SS14.Client.UserInterface.Controls
                 FillColor = base.ForegroundColor
             };
         }
-
-        public event LabelPressHandler Clicked;
 
         /// <inheritdoc />
         protected override void OnCalcRect()
@@ -70,7 +68,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (DrawTextHighlight)
                 CluwneLib.drawRectangle(_text.Position.X + 3, _text.Position.Y + 4, _text.Width, _text.Height - 9, BackgroundColor);
-                
+
             _text.Draw();
 
             base.DrawContents();
@@ -98,5 +96,7 @@ namespace SS14.Client.UserInterface.Controls
             }
             return false;
         }
+
+        public event LabelPressHandler Clicked;
     }
 }

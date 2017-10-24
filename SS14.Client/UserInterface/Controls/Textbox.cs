@@ -21,7 +21,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public bool ClearFocusOnSubmit = true;
         public bool ClearOnSubmit = true;
-        
+
         // Terrible hack to get around TextEntered AND KeyDown firing at once.
         // Set to true after handling a KeyDown that produces a character to this.
         public bool ignoreNextText;
@@ -43,7 +43,7 @@ namespace SS14.Client.UserInterface.Controls
         private Sprite _textboxRight;
 
         private float blinkCount;
-        
+
         private TextSprite _textSprite;
         public bool AllowEmptySubmit { get; set; } = true;
 
@@ -55,11 +55,6 @@ namespace SS14.Client.UserInterface.Controls
                 _text = value;
                 SetVisibleText();
             }
-        }
-
-        public int MeasureLine(string text)
-        {
-            return _textSprite.MeasureLine(text);
         }
 
         public Textbox(int width)
@@ -131,7 +126,7 @@ namespace SS14.Client.UserInterface.Controls
             if (Focus && blinkCount <= 0.25f)
                 CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
-            _textSprite.FillColor = base.ForegroundColor;
+            _textSprite.FillColor = ForegroundColor;
             _textSprite.Text = _displayText;
 
             _textSprite.Draw();
@@ -255,6 +250,11 @@ namespace SS14.Client.UserInterface.Controls
             if (_caretIndex < _text.Length) _caretIndex++;
             SetVisibleText();
             return true;
+        }
+
+        public int MeasureLine(string text)
+        {
+            return _textSprite.MeasureLine(text);
         }
 
         public event TextSubmitHandler OnSubmit;

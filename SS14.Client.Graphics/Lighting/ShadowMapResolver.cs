@@ -5,6 +5,7 @@ using SS14.Client.Graphics.Shader;
 using SS14.Client.Graphics.Textures;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using System.Collections.Generic;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -26,11 +27,13 @@ namespace SS14.Client.Graphics.Lighting
         private RenderImage shadowMap;
         private RenderImage shadowsRT;
 
+        private Dictionary<Vector2u, RenderImage> BlankRenderImages = new Dictionary<Vector2u, RenderImage>();
+
         public ShadowMapResolver(ShadowmapSize maxShadowmapSize, ShadowmapSize maxDepthBufferSize)
         {
-            reductionChainCount = (int) maxShadowmapSize;
+            reductionChainCount = (int)maxShadowmapSize;
             baseSize = 2 << reductionChainCount;
-            depthBufferSize = 2 << (int) maxDepthBufferSize;
+            depthBufferSize = 2 << (int)maxDepthBufferSize;
         }
 
         public void Dispose()
@@ -89,7 +92,14 @@ namespace SS14.Client.Graphics.Lighting
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
 
             var maskSize = MaskTexture.Size;
-            var MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
+            // I have TRIED to get this to work without this blank one.
+            // I give the hell up.
+            // I'll just cache them so they're not being recreated constantly.
+            if (!BlankRenderImages.TryGetValue(maskSize, out var MaskTarget))
+            {
+                MaskTarget = new RenderImage("MaskTarget", maskSize.X, maskSize.Y);
+                BlankRenderImages[maskSize] = MaskTarget;
+            }
             ExecuteTechnique(MaskTarget, Result, "DrawShadows", shadowMap);
 
             resolveShadowsEffectTechnique["DrawShadows"].ResetCurrentShader();

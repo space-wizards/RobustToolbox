@@ -13,6 +13,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.GameObjects;
 
 namespace SS14.Client.Map
 {
@@ -50,16 +51,16 @@ namespace SS14.Client.Map
         /// <summary>
         ///     Renders a shadow cast from the object
         /// </summary>
-        /// <param name="def">The definition of the tile to use.</param>
+        /// <param name="occluder">The occluder component to use.</param>
         /// <param name="x">X position in world coordinates.</param>
         /// <param name="y">Y position in world coordinates.</param>
-        public static void RenderPos(IEntity entity, float x, float y)
+        public static void RenderPos(Box2 bounds, float x, float y)
         {
-            var tileSprite = entity.GetComponent<ISpriteComponent>().GetCurrentSprite();
-            var bounds = tileSprite.LocalBounds;
-            var shape = new RectangleShape(new Vector2(bounds.Width, bounds.Height));
-            shape.FillColor = Color.Red;
-            shape.Position = new Vector2(x - bounds.Width / 2, y - bounds.Height / 2);
+            var shape = new RectangleShape(new Vector2(bounds.Width, bounds.Height))
+            {
+                FillColor = Color.Red,
+                Position = new Vector2(x - bounds.Width / 2 + bounds.Left, y - bounds.Height / 2 + bounds.Top)
+            };
             shape.Draw(CluwneLib.CurrentRenderTarget, RenderStates.Default);
         }
 

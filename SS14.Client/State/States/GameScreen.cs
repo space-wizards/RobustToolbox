@@ -1049,10 +1049,15 @@ namespace SS14.Client.State.States
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
 
-            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea).Where(t => t.Name == "Wall")) //TODO: Replace with component or variable
+            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea))
             {
-                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(t.GetComponent<ITransformComponent>().WorldPosition));
-                MapRenderer.RenderPos(t, pos.X, pos.Y);
+                if (!t.TryGetComponent<OccluderComponent>(out var occluder))
+                {
+                    continue;
+                }
+                var transform = t.GetComponent<ITransformComponent>().WorldPosition;
+                Vector2 pos = area.ToRelativePosition(CluwneLib.WorldToScreen(transform));
+                MapRenderer.RenderPos(occluder.BoundingBox, pos.X, pos.Y);
             }
         }
 
@@ -1355,7 +1360,6 @@ namespace SS14.Client.State.States
                         }
                         ColliderDebug.Draw();
                     }
-
                 }
                 if (CluwneLib.Debug.DebugGridDisplay)
                 {

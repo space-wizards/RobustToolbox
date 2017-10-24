@@ -10,6 +10,7 @@ namespace SS14.Server.GameObjects
         public ServerComponentFactory()
         {
             RegisterIgnore("Icon");
+            RegisterIgnore("Occluder");
 
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();

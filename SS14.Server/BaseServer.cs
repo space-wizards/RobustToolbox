@@ -489,6 +489,12 @@ namespace SS14.Server
         private void DisposeForRestart()
         {
             IoCManager.Resolve<IPlayerManager>().DetachAll();
+            if(Level == RunLevel.Game)
+            {
+                var mapMgr = IoCManager.Resolve<IMapManager>();
+
+                mapMgr.UnregisterMap(1);
+            }
             _entities.Shutdown();
             GC.Collect();
         }

@@ -24,7 +24,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             _placementManager = IoCManager.Resolve<IPlacementManager>();
 
-            _tileList = new ScrollableContainer("tilespawnlist", new Vector2i(200, 400));
+            _tileList = new ScrollableContainer(new Vector2i(200, 400));
             _tileList.LocalPosition = new Vector2i(5, 5);
             _tileList.BorderColor = Color4.Black;
             _tileList.BackgroundColor = Color4.White;
@@ -121,8 +121,10 @@ namespace SS14.Client.UserInterface.CustomControls
                 var tileLabel = new Label(entry, "CALIBRI");
                 tileLabel.Parent = lastControl;
 
-                if(!(lastControl is Label)) // if first loop
+                if (!(lastControl is Label)) // if first loop
                     tileLabel.LocalPosition = new Vector2i(5, 0);
+                else
+                    tileLabel.LocalPosition = new Vector2i(0, 5);
 
                 lastControl = tileLabel;
                 tileLabel.Alignment = Align.Bottom;
@@ -131,6 +133,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 tileLabel.DrawBackground = true;
                 tileLabel.DrawBorder = true;
                 tileLabel.Update(0);
+                tileLabel.DoLayout();
                 tileLabel.Clicked += TileLabelClicked;
 
                 if (tileLabel.ClientArea.Width > maxWidth)

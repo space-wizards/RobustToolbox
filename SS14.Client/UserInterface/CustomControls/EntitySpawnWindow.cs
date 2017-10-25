@@ -29,7 +29,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             _placementManager = IoCManager.Resolve<IPlacementManager>();
 
-            _entityList = new ScrollableContainer("entspawnlist", new Vector2i(200, 400));
+            _entityList = new ScrollableContainer(new Vector2i(200, 400));
             _entityList.LocalPosition = new Vector2i(5, 5);
             Container.AddControl(_entityList);
 

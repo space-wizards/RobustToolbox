@@ -13,7 +13,7 @@ namespace SS14.Client.UserInterface.CustomControls
         public Sprite tabSprite = null;
 
         public TabContainer(string uniqueName, Vector2i size, IResourceCache resourceCache)
-            : base(uniqueName, size)
+            : base(size)
         {
             DrawBorder = false;
         }

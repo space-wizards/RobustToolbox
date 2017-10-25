@@ -22,7 +22,7 @@ namespace SS14.Client.UserInterface.Controls
         protected Box2i titleArea;
 
         public Window(string windowTitle, Vector2i size)
-            : base(windowTitle, size)
+            : base(size)
         {
             closeButton = new ImageButton
             {

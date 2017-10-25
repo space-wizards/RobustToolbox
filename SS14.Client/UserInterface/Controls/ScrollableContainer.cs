@@ -24,9 +24,13 @@ namespace SS14.Client.UserInterface.Controls
         private float _maxX;
         private float _maxY;
 
-        public Screen Container { get; }
+        public UiAnchor Container { get; }
 
-        public ScrollableContainer(string uniqueName, Vector2i size)
+        /// <summary>
+        /// A panel thats displays a subsection of a larger internal screen.
+        /// </summary>
+        /// <param name="size">Size of the internal screen.</param>
+        public ScrollableContainer(Vector2i size)
         {
             // the controls stars out with the same size as container
             Size = size;
@@ -35,20 +39,19 @@ namespace SS14.Client.UserInterface.Controls
             DrawBackground = true;
             DrawBorder = true;
 
-            _clippingRi = new RenderImage(uniqueName, (uint) size.X, (uint) size.Y);
+            _clippingRi = new RenderImage("UI_SCR_CONTAINER", (uint) size.X, (uint) size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            ScrollbarH = new Scrollbar(true, _resourceCache);
-            ScrollbarV = new Scrollbar(false, _resourceCache);
-            ScrollbarV.size = Size.Y;
-
-            Container = new Screen();
+            ScrollbarH = new Scrollbar(true);
+            ScrollbarV = new Scrollbar(false);
+            
+            Container = new UiAnchor();
             // Container.Size = size; // using this as a list
             Container.Position = Vector2i.Zero; //this must always be 0 to work with RT
-            Container.BackgroundColor = Color4.Magenta;
+            //Container.BackgroundColor = Color4.Magenta;
             Container.DrawBackground = false;
             Container.DrawBorder = false;
             // AddControl(Container); // this needs to always be at screenPos {0,0}, setting a parent breaks that
@@ -61,19 +64,22 @@ namespace SS14.Client.UserInterface.Controls
         protected override void OnCalcRect()
         {
             // ugh...
-            ScrollbarH.size = ScrollbarV.Visible ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
-            ScrollbarV.size = ScrollbarH.Visible ? Size.Y - ScrollbarH.ClientArea.Height : Size.Y;
+            ScrollbarH.BarLength = ScrollbarV.Visible ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
+            ScrollbarV.BarLength = ScrollbarH.Visible ? Size.Y - ScrollbarH.ClientArea.Height : Size.Y;
+            ScrollbarH.BarLength = ScrollbarV.Visible ? Size.X - ScrollbarV.ClientArea.Width : Size.X;
 
-            _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) _clippingRi.Width, (int) _clippingRi.Height));
+            ClientArea = Box2i.FromDimensions(new Vector2i(), Size);
         }
 
         protected override void OnCalcPosition()
         {
-            ScrollbarH.Position = new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
-            ScrollbarV.Position = new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
+            ScrollbarH.Position = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
+            ScrollbarV.Position = Position + new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
 
             base.OnCalcPosition();
 
+
+            /*
             _maxX = 0;
             _maxY = 0;
 
@@ -85,19 +91,21 @@ namespace SS14.Client.UserInterface.Controls
                 if (component.Position.Y + component.ClientArea.Height > _maxY)
                     _maxY = component.Position.Y + component.ClientArea.Height;
             }
+            */
         }
 
         public override void DoLayout()
         {
             Container.DoLayout();
 
+            /*
             foreach (var component in Components)
             {
                 component.DoLayout();
                 component.Position = new Vector2i(component.Position.X - (int) ScrollbarH.Value, component.Position.Y - (int) ScrollbarV.Value);
                 component.Update(0);
             }
-
+            */
             base.DoLayout();
         }
 
@@ -106,35 +114,51 @@ namespace SS14.Client.UserInterface.Controls
             if (Disposing || !Visible) return;
 
             Container.Update(frameTime);
-
+            /*
             if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
+            */
+            var bounds = Container.GetShrinkBounds(false);
+            
+            bounds = new Box2i(Container.Position, bounds.BottomRight); // screen to local size
+            _maxX = bounds.Width;
+            _maxY = bounds.Height;
 
-            ScrollbarH.max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
+            ScrollbarH.Max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
             ScrollbarH.Visible = _maxX > _clippingRi.Width;
 
-            ScrollbarV.max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
+            ScrollbarV.Max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
             ScrollbarV.Visible = _maxY > _clippingRi.Height;
 
             ScrollbarH.Update(frameTime);
             ScrollbarV.Update(frameTime);
+
+            var xOff = ScrollbarH.Visible ? ScrollbarH.Value * -1 : 0;
+            var yOff = ScrollbarV.Visible ? ScrollbarV.Value * -1 : 0;
+
+            Container.ScrollOffset = new Vector2i((int) xOff, (int) yOff);
         }
 
-        public override void Draw()
+        protected override void DrawContents()
         {
-            if (Disposing || !Visible) return;
-
-            base.Draw();
+            base.DrawContents();
 
             // the rectangle should always be completely covered with draws, no point clearing
             _clippingRi.Clear(DrawBackground ? BackgroundColor : Color4.Transparent);
-
+            
             _clippingRi.BeginDrawing();
             // draw the inner container screen
             {
                 Container.Draw();
             }
             _clippingRi.EndDrawing();
-            _clippingRi.Blit(Position.X, Position.Y, _clippingRi.Height, _clippingRi.Width, Color.White, BlitterSizeMode.None);
+            _clippingRi.Blit(Position.X + ClientArea.Left, Position.Y + ClientArea.Top, (uint)ClientArea.Height, (uint)ClientArea.Width, Color.White, BlitterSizeMode.None);
+        }
+
+        public override void Draw()
+        {
+            if (Disposing || !Visible) return;
+            
+            base.Draw();
 
             ScrollbarH.Draw();
             ScrollbarV.Draw();
@@ -144,8 +168,10 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (Disposing) return;
             Disposing = true;
+            /*
             Components.ForEach(c => c.Dispose());
             Components.Clear();
+            */
             _clippingRi.Dispose();
             _clippingRi = null;
             base.Dispose();
@@ -224,7 +250,6 @@ namespace SS14.Client.UserInterface.Controls
         public override void MouseMove(MouseMoveEventArgs e)
         {
             if (Disposing || !Visible) return;
-
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
@@ -308,6 +333,37 @@ namespace SS14.Client.UserInterface.Controls
             {
                 _innerFocus.Focus = false;
                 _innerFocus = null;
+            }
+        }
+
+        public class UiAnchor : Screen
+        {
+            private Vector2i _layoutScrPos = Vector2i.Zero;
+            private Vector2i _scrollScrOffset = Vector2i.Zero;
+
+            /// <summary>
+            ///     Offset in px of screen position.
+            /// </summary>
+            public Vector2i ScrollOffset
+            {
+                get => _scrollScrOffset;
+                set
+                {
+                    _scrollScrOffset = value;
+                    Position = _layoutScrPos + _scrollScrOffset;
+                    foreach (var control in Children)
+                    {
+                        control.DoLayout();
+                    }
+                }
+            }
+
+            protected override void OnCalcPosition()
+            {
+                base.OnCalcPosition();
+
+                _layoutScrPos = Position;
+                Position += ScrollOffset;
             }
         }
     }

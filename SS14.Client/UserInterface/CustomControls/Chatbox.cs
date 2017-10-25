@@ -6,7 +6,6 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.IoC;
@@ -69,7 +68,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(uniqueName, size)
+        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(size)
         {
             ScrollbarH.Visible = false;
 
@@ -280,7 +279,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
             var lineHeight = 12;
 
-            var atBottom = ScrollbarV.Value >= ScrollbarV.max;
+            var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
 
             foreach (var content in CheckInboundMessage(message))
             {
@@ -302,7 +301,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (atBottom)
             {
                 Update(0);
-                ScrollbarV.Value = ScrollbarV.max;
+                ScrollbarV.Value = ScrollbarV.Max;
             }
         }
 

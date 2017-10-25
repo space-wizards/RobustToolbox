@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ServiceModel.Channels;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
@@ -9,6 +10,7 @@ using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using Debug = System.Diagnostics.Debug;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -89,7 +91,7 @@ namespace SS14.Client.UserInterface.Controls
         ///     If a control is not visible, it is not drawn to screen, and does not accept input.
         /// </summary>
         public virtual bool Visible { get; set; } = true;
-
+        
         /// <summary>
         ///     Total width of the control.
         /// </summary>
@@ -219,6 +221,8 @@ namespace SS14.Client.UserInterface.Controls
         /// </summary>
         public virtual void Draw()
         {
+            if(!Visible) return;
+
             var rect = _clientArea.Translated(Position);
 
             if (DrawBackground)
@@ -498,6 +502,41 @@ namespace SS14.Client.UserInterface.Controls
             {
                 child.Destroy();
             }
+        }
+        
+        /// <summary>
+        ///     Calculates a box that contains all of the children of this control.
+        /// </summary>
+        internal Box2i GetShrinkBounds(bool includeMe = true)
+        {
+            var bounds = new Box2i();
+
+            foreach (var control in Children)
+            {
+                bounds = Union(bounds, control.GetShrinkBounds());
+            }
+
+            return includeMe ? Union(bounds, ClientArea.Translated(Position)) : bounds;
+        }
+
+        /// <summary>
+        ///     Calculates the union of two AABB's.
+        /// </summary>
+        private Box2i Union(Box2i a, Box2i b)
+        {
+            Debug.Assert(a.Top <= a.Bottom);
+            Debug.Assert(a.Left <= a.Right);
+
+            Debug.Assert(b.Top <= b.Bottom);
+            Debug.Assert(b.Left <= b.Right);
+
+            var left = Math.Min(a.Left, b.Left);
+            var right = Math.Max(a.Right, b.Right);
+
+            var top = Math.Min(a.Top, b.Top);
+            var bottom = Math.Max(a.Bottom, b.Bottom);
+
+            return new Box2i(left, top, right, bottom);
         }
 
         public void Destroy()

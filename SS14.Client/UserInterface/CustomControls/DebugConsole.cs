@@ -51,7 +51,7 @@ namespace SS14.Client.UserInterface.CustomControls
         }
 
         public DebugConsole(string uniqueName, Vector2i size)
-            : base(uniqueName, size)
+            : base(size)
         {
             _txtInput = new Textbox(size.X)
             {
@@ -71,7 +71,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddLine(string text, Color4 color)
         {
-            var atBottom = ScrollbarV.Value >= ScrollbarV.max;
+            var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
             var newLabel = new Label(text, "CALIBRI")
             {
                 Position = new Vector2i(5, last_y),
@@ -84,7 +84,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (atBottom)
             {
                 Update(0);
-                ScrollbarV.Value = ScrollbarV.max;
+                ScrollbarV.Value = ScrollbarV.Max;
             }
         }
 

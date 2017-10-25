@@ -18,81 +18,84 @@ namespace SS14.Client.UserInterface.Components
         //           If the Bar is longer than the maximum value the step size will decrease.
         //           The latter leads to actual 1 increment steps even though the step size will be below 1.
         //           Additionally the Min value is a fixed 0 right now.
-
-        #region Delegates
-
+        
         public delegate void ScrollbarChangedHandler(int newValue);
+        
+        private readonly TextSprite _debugText;
+        private readonly Sprite _scrollbarButton;
+        
+        public bool Horizontal { get; }
+        private bool _raiseEvent;
 
-        #endregion Delegates
+        private int _actualSize; //Actual max value of bar.
 
-        private readonly TextSprite DEBUG;
-        private readonly IResourceCache _resourceCache;
-        private readonly Sprite scrollbarButton;
-        private bool DRAW_DEBUG = false;
-
-        public bool Horizontal = false;
-        private bool RaiseEvent;
-
-        private int actualSize; //Actual max value of bar.
-
-        private float actualVal; //The actual value of the current button position.
-        private Box2i clientAreaButton;
-        private int currentPos; //The current button position in relation to location of scrollbar.
-        private bool dragging; //Currently dragging the button?
-        public bool drawBackground = true;
-        public int max = 100; //Maximum value of the bar.
+        private float _actualVal; //The actual value of the current button position.
+        private Box2i _clientAreaButton;
+        private int _currentPos; //The current button position in relation to location of scrollbar.
+        private bool _dragging; //Currently dragging the button?
+        public int Max = 100; //Maximum value of the bar.
 
         /// <summary>
         /// Multiplier added to the scroll delta, to increase scrolling speed.
         /// </summary>
-        public int multipler = 10;
+        private const int Multipler = 10;
 
-        public int size = 300; //Graphical length of the bar.
+        /// <summary>
+        /// Graphical total length of the bar in px.
+        /// </summary>
+        public int BarLength { get; set; } = 300;
 
-        public Scrollbar(bool horizontal, IResourceCache resourceCache)
+        public Scrollbar(bool horizontal)
         {
-            _resourceCache = resourceCache;
-
             Horizontal = horizontal;
-            if (Horizontal) scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
-            else scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
+            if (Horizontal)
+            {
+                _scrollbarButton = _resourceCache.GetSprite("scrollbutton_h");
+                BarLength = (int) _scrollbarButton.LocalBounds.Width;
+            }
+            else
+            {
+                _scrollbarButton = _resourceCache.GetSprite("scrollbutton_v");
+                BarLength = (int)_scrollbarButton.LocalBounds.Height;
+            }
 
-            DEBUG = new TextSprite("Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            DEBUG.FillColor = new Color4(255, 128, 0, 255);
-            DEBUG.ShadowColor = new Color4(0, 0, 128, 255);
-            DEBUG.Shadowed = true;
+            _debugText = new TextSprite("Position:", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
+            _debugText.FillColor = new Color4(255, 128, 0, 255);
+            _debugText.ShadowColor = new Color4(0, 0, 128, 255);
+            _debugText.Shadowed = true;
+
+            BackgroundColor = new Color4(47, 79, 79, 255);
+            DrawBackground = true;
+
             Update(0);
         }
 
-        public float stepSize { private set; get; }
+        public float StepSize { private set; get; }
 
         public float Value
         {
-            get { return actualVal; }
+            get => _actualVal;
             set
             {
-                actualVal = Math.Max(0, Math.Min(value, max));
-                currentPos = (int)Math.Max(Math.Round(actualVal / stepSize), 0);
-                RaiseEvent = true;
+                _actualVal = Math.Max(0, Math.Min(value, Max));
+                _currentPos = (int)Math.Max(Math.Round(_actualVal / StepSize), 0);
+                _raiseEvent = true;
             }
         }
 
         public event ScrollbarChangedHandler ValueChanged;
 
-        protected override void OnCalcRect()
-        {
-            
-        }
+        protected override void OnCalcRect() { }
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
-            if (!IsVisible()) return false;
-            if (clientAreaButton.Contains((int)e.X, (int)e.Y))
+            if (!Visible) return false;
+            if (_clientAreaButton.Contains(e.X, e.Y))
             {
-                dragging = true;
+                _dragging = true;
                 return true;
             }
-            else if (ClientArea.Contains((int)e.X, (int)e.Y))
+            if (ClientArea.Contains(e.X, e.Y))
             {
                 return true;
             }
@@ -101,9 +104,9 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
-            if (dragging)
+            if (_dragging)
             {
-                dragging = false;
+                _dragging = false;
                 return true;
             }
             return false;
@@ -111,64 +114,69 @@ namespace SS14.Client.UserInterface.Components
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (!IsVisible()) return;
-            if (dragging)
-            {
-                if (Horizontal)
-                    currentPos = (int)e.X - ClientArea.Left - (int)(scrollbarButton.LocalBounds.Width / 2f);
-                else currentPos = (int)e.Y - ClientArea.Top - (int)(scrollbarButton.LocalBounds.Height / 2f);
-                currentPos = Math.Min(currentPos, actualSize);
-                currentPos = Math.Max(currentPos, 0);
-                RaiseEvent = true;
-            }
+            if (!Visible) return;
+            if (!_dragging) return;
+
+            if (Horizontal)
+                _currentPos = e.X - Position.X - ClientArea.Left - (int) (_scrollbarButton.LocalBounds.Width / 2f);
+            else
+                _currentPos = e.Y - Position.Y - ClientArea.Top - (int) (_scrollbarButton.LocalBounds.Height / 2f);
+
+            _currentPos = Math.Min(_currentPos, _actualSize);
+            _currentPos = Math.Max(_currentPos, 0);
+            _raiseEvent = true;
         }
 
         public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
-            Value += (e.Delta * -1) * Math.Max((max / 20), 1) * multipler;
+            Value += (e.Delta * -1) * Math.Max((Max / 20), 1) * Multipler;
             return true;
         }
 
         public override void Update(float frameTime)
         {
-            if (!IsVisible()) return;
+            if (!Visible) return;
             base.Update(frameTime);
-            var bounds = scrollbarButton.LocalBounds;
+            var bounds = _scrollbarButton.LocalBounds;
             if (Horizontal)
             {
-                ClientArea = Box2i.FromDimensions(Position, new Vector2i(size, (int)bounds.Height));
-                clientAreaButton = Box2i.FromDimensions(Position.X + currentPos, Position.Y,
-                                                 (int)bounds.Width, (int)bounds.Height);
-                actualSize = size - (int)bounds.Width;
+                ClientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(BarLength, (int) bounds.Height));
+                _clientAreaButton = Box2i.FromDimensions(Position.X + _currentPos, Position.Y,
+                    (int) bounds.Width, (int) bounds.Height);
+                _actualSize = BarLength - (int) bounds.Width;
             }
             else
             {
-                ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)bounds.Width, size));
-                clientAreaButton = Box2i.FromDimensions(Position.X, Position.Y + currentPos,
-                                                 (int)bounds.Width, (int)bounds.Height);
-                actualSize = size - (int)bounds.Height;
+                ClientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) bounds.Width, BarLength));
+                _clientAreaButton = Box2i.FromDimensions(Position.X, Position.Y + _currentPos,
+                    (int) bounds.Width, (int) bounds.Height);
+                _actualSize = BarLength - (int) bounds.Height;
             }
 
-            stepSize = (float)max / actualSize;
-            actualVal = Math.Max(0, Math.Min((int)Math.Round(currentPos * stepSize), max));
+            StepSize = (float) Max / _actualSize;
+            _actualVal = Math.Max(0, Math.Min((int) Math.Round(_currentPos * StepSize), Max));
 
-            if (ValueChanged != null && RaiseEvent) //This is a bit ugly.
+            if (ValueChanged != null && _raiseEvent) //This is a bit ugly.
             {
-                RaiseEvent = false;
-                ValueChanged((int)actualVal);
+                _raiseEvent = false;
+                ValueChanged((int) _actualVal);
             }
         }
 
-        public override void Draw()
+        /// <inheritdoc />
+        protected override void DrawContents()
         {
-            if (!IsVisible()) return;
-            if (drawBackground)
-                CluwneLib.drawRectangle(ClientArea.Left, ClientArea.Top, ClientArea.Width, ClientArea.Height, new Color4(47, 79, 79, 255));
-            scrollbarButton.SetTransformToRect(clientAreaButton);
-            scrollbarButton.Draw();
-            DEBUG.Position = new Vector2i(ClientArea.Left + 20, ClientArea.Top + 20);
-            DEBUG.Text = "current: " + actualVal.ToString();
-            if (DRAW_DEBUG) DEBUG.Draw();
+            base.DrawContents();
+
+            _scrollbarButton.SetTransformToRect(_clientAreaButton);
+            _scrollbarButton.Draw();
+
+            if (DebugEnabled)
+            {
+                _debugText.Text = "current: " + _actualVal;
+                _debugText.Position = new Vector2i(_clientAreaButton.Left - 20, _clientAreaButton.Top);
+                _debugText.Draw();
+            }
         }
     }
 }

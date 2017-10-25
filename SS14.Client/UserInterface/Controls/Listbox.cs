@@ -39,7 +39,7 @@ namespace SS14.Client.UserInterface.Controls
             _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             _selectedLabel.FillColor = Color4.Black;
 
-            _dropDown = new ScrollableContainer("ListboxContents", new Vector2i(width, dropDownLength));
+            _dropDown = new ScrollableContainer(new Vector2i(width, dropDownLength));
             _dropDown.Visible = false;
             _dropDown.Alignment = Align.Bottom;
             _dropDown.LocalPosition = new Vector2i();

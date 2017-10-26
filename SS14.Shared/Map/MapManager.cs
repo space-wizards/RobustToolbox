@@ -57,6 +57,18 @@ namespace SS14.Shared.Map
         /// </summary>
         private readonly Dictionary<int, Map> _Maps = new Dictionary<int, Map>();
 
+        public void UnregisterMap(int mapID)
+        {
+            if (_Maps.ContainsKey(mapID))
+            {
+                _Maps.Remove(mapID);
+            }
+            else
+            {
+                Logger.Warning("Attempted to unregister nonexistent map");
+            }
+        }
+
         public IMap CreateMap(int mapID)
         {
             var newMap = new Map(this, mapID);

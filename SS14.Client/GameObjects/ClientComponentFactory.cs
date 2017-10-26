@@ -53,6 +53,8 @@ namespace SS14.Client.GameObjects
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClientClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
+
+            Register<OccluderComponent>();
         }
     }
 }

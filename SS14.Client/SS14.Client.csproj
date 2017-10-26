@@ -151,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameController.cs" />
+    <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Map\MapRenderer.cs" />

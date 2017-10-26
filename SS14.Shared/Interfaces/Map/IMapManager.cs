@@ -20,6 +20,8 @@ namespace SS14.Shared.Interfaces.Map
     /// </summary>
     public interface IMapManager
     {
+        void UnregisterMap(int mapID);
+
         IMap CreateMap(int mapID);
 
         IMap GetMap(int mapID);

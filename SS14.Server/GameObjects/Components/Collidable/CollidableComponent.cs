@@ -53,22 +53,8 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
-
-        private bool isHardCollidable = true;
         /// <inheritdoc />
-        public bool IsHardCollidable
-        {
-            get => isHardCollidable;
-            set
-            {
-                if (value == isHardCollidable)
-                {
-                    return;
-                }
-                isHardCollidable = value;
-                IoCManager.Resolve<ICollisionManager>().UpdateIsHardCollidable(this);
-            }
-        }
+        public bool IsHardCollidable { get; set; } = true;
 
         /// <inheritdoc />
         void ICollidable.Bump(IEntity ent)

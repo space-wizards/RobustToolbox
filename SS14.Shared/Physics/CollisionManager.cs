@@ -22,7 +22,7 @@ namespace SS14.Shared.Physics
     public class CollisionManager : ICollisionManager
     {
         private const int BucketSize = 256;
-        private readonly Dictionary<CollidableAABB, IEntity> _aabbs;
+        private readonly Dictionary<ICollidable, (CollidableAABB aabb, IEntity owner)> _aabbs;
 
         private readonly Dictionary<Vector2i, int> _bucketIndex;
         //Indexed in 256-pixel blocks - 0 = 0, 1 = 256, 2 = 512 etc
@@ -39,7 +39,7 @@ namespace SS14.Shared.Physics
         {
             _bucketIndex = new Dictionary<Vector2i, int>();
             _buckets = new Dictionary<int, CollidableBucket>();
-            _aabbs = new Dictionary<CollidableAABB, IEntity>();
+            _aabbs = new Dictionary<ICollidable, (CollidableAABB aabb, IEntity owner)>();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace SS14.Shared.Physics
             //try all of the AABBs against the target rect.
             var collided = false;
             foreach (var aabb in aabBs.Where(aabb => aabb.Collidable.AABB.Intersects(collider)))
-                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
+                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
                     collided = true;
 
             //TODO: This needs multi-grid support.
@@ -130,7 +130,7 @@ namespace SS14.Shared.Physics
             var collided = false;
             foreach (var aabb in bounds)
             {
-                if (aabb.IsHardCollider) //If the collider is supposed to prevent movement
+                if (aabb.Collidable.IsHardCollidable) //If the collider is supposed to prevent movement
                     collided = true;
 
                 if (bump) aabb.Collidable.Bump(entity);
@@ -146,13 +146,21 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void AddCollidable(ICollidable collidable)
         {
+            if (_aabbs.ContainsKey(collidable))
+            {
+                // TODO: throw an exception instead.
+                // There's too much buggy code in the client that I can't be bothered to fix,
+                // so it'd crash reliably.
+                UpdateCollidable(collidable);
+                return;
+            }
             var c = new CollidableAABB(collidable);
             foreach (var p in c.Points)
+            {
                 AddPoint(p);
-            if (collidable is IComponent comp)
-                _aabbs.Add(c, comp.Owner);
-            else
-                _aabbs.Add(c, null);
+            }
+            var comp = collidable as IComponent;
+            _aabbs.Add(collidable, (aabb: c, owner: comp?.Owner));
         }
 
         /// <summary>
@@ -161,14 +169,13 @@ namespace SS14.Shared.Physics
         /// <param name="collidable"></param>
         public void RemoveCollidable(ICollidable collidable)
         {
-            var ourAABB = _aabbs.FirstOrDefault(a => a.Key.Collidable == collidable);
+            var ourAABB = _aabbs[collidable].aabb;
 
-            if (ourAABB.Key.Collidable == null)
-                return;
-
-            foreach (var p in ourAABB.Key.Points)
+            foreach (var p in ourAABB.Points)
+            {
                 RemovePoint(p);
-            _aabbs.Remove(ourAABB.Key);
+            }
+            _aabbs.Remove(collidable);
         }
 
         /// <summary>
@@ -179,12 +186,6 @@ namespace SS14.Shared.Physics
         {
             RemoveCollidable(collidable);
             AddCollidable(collidable);
-        }
-
-        public void UpdateIsHardCollidable(ICollidable collidable)
-        {
-            var ourAABB = _aabbs.First(a => a.Key.Collidable == collidable).Key;
-            ourAABB.IsHardCollider = collidable.IsHardCollidable;
         }
 
         /// <summary>

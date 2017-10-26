@@ -37,9 +37,17 @@ namespace SS14.Client.Map
                     lastDef = tileReference.TileDef;
                     sprite = cache.GetSprite(lastDef.SpriteName);
                 }
-                sprite.Position = new Vector2(tileReference.X, tileReference.Y);
-                var point = new Vector2(tileReference.X, tileReference.Y) * ppm;
-                floorBatch.Draw(sprite);
+                sprite.Position = new Vector2(tileReference.X, tileReference.Y) * ppm;
+                if (tileReference.X != 0)
+                {
+                    floorBatch.Draw(sprite);
+                }
+                else
+                {
+                    sprite.Color = Color.Red;
+                    sprite.Draw();
+                    sprite.Color = Color.White;
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using SS14.Shared.Maths;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Utility;
 using SView = SFML.Graphics.View;
+using System;
 
 namespace SS14.Client.Graphics.View
 {
@@ -21,7 +22,17 @@ namespace SS14.Client.Graphics.View
         }
 
         public int PixelsPerMeter { get; } = 32;
-        public Vector2 Position { get; set; } = Vector2.Zero;
+        private Vector2 position;
+        public Vector2 Position
+        {
+            get => position;
+            set
+            {
+                position = value;
+                view.Center = value.Convert() * PixelsPerMeter;
+                UpdateView();
+            }
+        }
 
         private void WindowResized(object sender, SizeEventArgs args)
         {

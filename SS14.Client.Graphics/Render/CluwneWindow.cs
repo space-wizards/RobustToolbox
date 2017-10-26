@@ -23,7 +23,7 @@ namespace SS14.Client.Graphics.Render
             get => camera;
             set
             {
-                camera = Camera;
+                camera = value;
                 SFMLTarget.SetView(camera.view);
             }
         }

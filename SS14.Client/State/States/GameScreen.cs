@@ -328,6 +328,7 @@ namespace SS14.Client.State.States
         public void Render(FrameEventArgs e)
         {
             CluwneLib.Window.Graphics.Clear(Color.Black);
+            CluwneLib.drawRectangle(-10, 10, 10, 10, Color.White);
 
             CalculateAllLights();
 
@@ -338,6 +339,7 @@ namespace SS14.Client.State.States
 
             // vp is the rectangle in which we can render in world space.
             var vp = CluwneLib.WorldViewport;
+            System.Console.WriteLine(vp);
             var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
 
             if (!bFullVision)

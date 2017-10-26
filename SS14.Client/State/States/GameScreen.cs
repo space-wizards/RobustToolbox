@@ -499,7 +499,7 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.Escape)
             {
-                _menu.ToggleVisible();
+                _menu.Visible = !_menu.Visible;
             }
             if (e.Key == Keyboard.Key.F9)
             {

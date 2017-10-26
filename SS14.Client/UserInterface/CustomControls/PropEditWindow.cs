@@ -61,8 +61,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void RebuildPropList(object newObj)
         {
-            if (ScrollbarH.IsVisible()) ScrollbarH.Value = 0;
-            if (ScrollbarV.IsVisible()) ScrollbarV.Value = 0;
+            if (ScrollbarH.Visible) ScrollbarH.Value = 0;
+            if (ScrollbarV.Visible) ScrollbarV.Value = 0;
 
             Components.Clear();
             Components.Add(search);

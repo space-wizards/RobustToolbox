@@ -108,7 +108,7 @@ namespace SS14.Client.UserInterface.Controls
         public override bool MouseUp(MouseButtonEventArgs e)
         {
             if (dragging) dragging = false;
-            if (Disposing || !IsVisible()) return false;
+            if (Disposing || !Visible) return false;
             if (base.MouseUp(e)) return true;
 
             return false;
@@ -116,7 +116,7 @@ namespace SS14.Client.UserInterface.Controls
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
             if (dragging)
                 Position = new Vector2i(e.X - (int) draggingOffset.X,
                     e.Y - (int) draggingOffset.Y);

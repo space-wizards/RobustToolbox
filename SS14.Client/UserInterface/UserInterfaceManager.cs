@@ -9,7 +9,6 @@ using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Components;
-using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
@@ -62,21 +61,7 @@ namespace SS14.Client.UserInterface
             _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Window.Viewport.Size.X, 400));
             _console.Visible = false;
         }
-
-        #region Component retrieval
-
-        /// <summary>
-        ///     Returns all Components with matching GuiComponentType.
-        /// </summary>
-        public IEnumerable<Control> GetComponentsByGuiComponentType(GuiComponentType componentType)
-        {
-            return from Control comp in _components
-                where comp.ComponentClass == componentType
-                select comp;
-        }
-
-        #endregion Component retrieval
-
+        
         #region IUserInterfaceManager Members
 
         public IDragDropInfo DragInfo { get; } = new DragDropInfo();
@@ -130,17 +115,24 @@ namespace SS14.Client.UserInterface
                 _components.Remove(component);
         }
 
-        //TODO Holy shit make this not complete crap. Oh man.
+        /// <summary>
+        ///     Check if the given control currently has focus.
+        /// </summary>
+        public bool HasFocus(Control control)
+        {
+            return control == _currentFocus;
+        }
 
         /// <summary>
         ///     Sets focus for a component.
         /// </summary>
         public void SetFocus(Control newFocus)
         {
-            if (_currentFocus != null)
-                RemoveFocus();
+            if(!newFocus.Visible || newFocus.Disposed /* || newFocus.Disabled */ )
+                return;
+            
+            RemoveFocus();
             _currentFocus = newFocus;
-            newFocus.Focus = true;
         }
 
         /// <summary>
@@ -148,10 +140,6 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void RemoveFocus()
         {
-            if (_currentFocus == null)
-                return;
-
-            _currentFocus.Focus = false;
             _currentFocus = null;
         }
 
@@ -162,8 +150,7 @@ namespace SS14.Client.UserInterface
         {
             if (_currentFocus != remFocus)
                 return;
-
-            _currentFocus.Focus = false;
+            
             _currentFocus = null;
         }
 
@@ -192,14 +179,14 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool MouseDown(MouseButtonEventArgs e)
         {
-            if (_console.IsVisible())
-                if (_console.MouseDown(e)) return true;
+            if (_console.Visible && _console.MouseDown(e))
+                return true;
 
             if (moveMode)
             {
                 foreach (var comp in _components)
                 {
-                    if (comp.ClientArea.Contains(e.X, e.Y))
+                    if (comp.ClientArea.Translated(comp.Position).Contains(e.X, e.Y))
                     {
                         movingComp = comp;
                         dragOffset = new Vector2i(e.X, e.Y) -
@@ -209,23 +196,8 @@ namespace SS14.Client.UserInterface
                 }
                 return true;
             }
-            var inputList = from Control comp in _components
-                where comp.ReceiveInput
-                orderby comp.ZDepth
-                orderby comp.IsVisible() descending
-                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
-                orderby comp.Focus descending
-                select comp;
 
-            foreach (var current in inputList)
-            {
-                if (current.MouseDown(e))
-                {
-                    SetFocus(current);
-                    return true;
-                }
-            }
-            return false;
+            return _components.Any(current => current.MouseDown(e));
         }
 
         /// <summary>
@@ -233,23 +205,16 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual bool MouseUp(MouseButtonEventArgs e)
         {
-            if (_console.IsVisible())
-                if (_console.MouseUp(e)) return true;
+            if (_console.Visible && _console.MouseUp(e))
+                return true;
 
             if (moveMode)
             {
-                if (movingComp != null) movingComp = null;
+                movingComp = null;
                 return true;
             }
-            var inputList = from Control comp in _components
-                where comp.ReceiveInput
-                orderby comp.ZDepth
-                orderby comp.IsVisible() descending
-                //Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
-                orderby comp.Focus descending
-                select comp;
 
-            if (inputList.Any(current => current.MouseUp(e)))
+            if (_components.Any(current => current.MouseUp(e)))
                 return true;
 
             if (DragInfo.IsActive) //Drag & dropped into nothing or invalid. Remove dragged obj.
@@ -265,15 +230,10 @@ namespace SS14.Client.UserInterface
         {
             MousePos = new Vector2i(e.X, e.Y);
 
-            if (_console.IsVisible())
+            if (_console.Visible)
                 _console.MouseMove(e);
-
-            var inputList = from Control comp in _components
-                where comp.ReceiveInput
-                orderby comp.ZDepth
-                select comp;
-
-            foreach (var current in inputList)
+            
+            foreach (var current in _components)
             {
                 current.MouseMove(e);
             }
@@ -284,15 +244,13 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public virtual void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
-            if (_console.IsVisible())
+            if (_console.Visible)
                 _console.MouseWheelMove(e);
 
-            var inputTo = (from Control comp in _components
-                where comp.ReceiveInput
-                where comp.Focus
-                select comp).FirstOrDefault();
-
-            if (inputTo != null) inputTo.MouseWheelMove(e);
+            foreach (var control in _components)
+            {
+                control.MouseWheelMove(e);
+            }
         }
 
         /// <summary>
@@ -322,34 +280,18 @@ namespace SS14.Client.UserInterface
                 return true;
             }
 
-            if (_console.Visible)
-                if (_console.KeyDown(e)) return true;
+            if (_console.Visible && _console.KeyDown(e))
+                return true;
 
-            var inputList = from Control comp in _components
-                where comp.ReceiveInput
-                orderby comp.ZDepth
-                orderby comp.IsVisible() descending
-                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
-                orderby comp.Focus descending
-                select comp;
-
-            return inputList.Any(current => current.KeyDown(e));
+            return _components.Any(control => control.KeyDown(e));
         }
 
         public virtual bool TextEntered(TextEventArgs e)
         {
-            if (_console.IsVisible())
-                if (_console.TextEntered(e)) return true;
+            if (_console.Visible && _console.TextEntered(e))
+                return true;
 
-            var inputList = from Control comp in _components
-                where comp.ReceiveInput
-                orderby comp.ZDepth
-                orderby comp.IsVisible() descending
-                // Invisible controls still recieve input but after everyone else. This is mostly for the inventory and other toggleable Components.
-                orderby comp.Focus descending
-                select comp;
-
-            return inputList.Any(current => current.TextEntered(e));
+            return _components.Any(control => control.TextEntered(e));
         }
 
         #endregion Input
@@ -363,7 +305,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Update(FrameEventArgs e)
         {
-            if (_console.IsVisible()) _console.Update(e.Elapsed);
+            if (_console.Visible) _console.Update(e.Elapsed);
 
             if (moveMode && movingComp != null)
                 movingComp.Position = MousePos - dragOffset;
@@ -377,13 +319,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Render(FrameEventArgs e)
         {
-            var renderList = from Control comp in _components
-                where comp.IsVisible()
-                orderby comp.Focus
-                orderby comp.ZDepth
-                select comp;
-
-            foreach (var component in renderList)
+            foreach (var component in _components)
             {
                 component.Draw();
             }

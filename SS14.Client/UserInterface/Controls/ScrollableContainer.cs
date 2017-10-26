@@ -20,7 +20,6 @@ namespace SS14.Client.UserInterface.Controls
         protected bool Disposing;
 
         private RenderImage _clippingRi;
-        private Control _innerFocus;
         private float _maxX;
         private float _maxY;
 
@@ -168,10 +167,6 @@ namespace SS14.Client.UserInterface.Controls
         {
             if (Disposing) return;
             Disposing = true;
-            /*
-            Components.ForEach(c => c.Dispose());
-            Components.Clear();
-            */
             _clippingRi.Dispose();
             _clippingRi = null;
             base.Dispose();
@@ -180,76 +175,45 @@ namespace SS14.Client.UserInterface.Controls
 
         public override bool MouseDown(MouseButtonEventArgs e)
         {
+            if (base.MouseDown(e))
+                return true;
+
             if (Disposing || !Visible) return false;
 
             if (ScrollbarH.MouseDown(e))
-            {
-                SetFocus(ScrollbarH);
                 return true;
-            }
+
             if (ScrollbarV.MouseDown(e))
-            {
-                SetFocus(ScrollbarV);
                 return true;
-            }
 
             // since the RT is constructed at {0,0}, and then blitted to an offset position
             // we have to offset the mouse screen pos by the blit offset.
             var rtArgs = new MouseButtonEventArgs(e.Button, e.Position - Position);
-            if (Container.MouseDown(rtArgs))
-                return true;
-
-            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-            {
-                var pos = new Vector2i(e.X - Position.X + (int) ScrollbarH.Value,
-                    e.Y - Position.Y + (int) ScrollbarV.Value);
-
-                var modArgs = new MouseButtonEventArgs(e.Button, pos);
-
-                foreach (var component in Components)
-                {
-                    if (component.MouseDown(modArgs))
-                    {
-                        SetFocus(component);
-                        return true;
-                    }
-                }
-                return true;
-            }
-
-            return false;
+            return Container.MouseDown(rtArgs);
         }
 
         public override bool MouseUp(MouseButtonEventArgs e)
         {
+            if (base.MouseUp(e))
+                return true;
+
             if (Disposing || !Visible) return false;
+
             if (ScrollbarH.MouseUp(e)) return true;
             if (ScrollbarV.MouseUp(e)) return true;
 
             // since the RT is constructed at {0,0}, and then blitted to an offset position
             // we have to offset the mouse screen pos by the blit offset.
             var rtArgs = new MouseButtonEventArgs(e.Button, e.Position - Position);
-            if (Container.MouseUp(rtArgs))
-                return true;
-
-            if (ClientArea.Translated(Position).Contains(e.X, e.Y))
-            {
-                var pos = new Vector2i(e.X - (Position.X + (int) ScrollbarH.Value),
-                    e.Y - (Position.Y + (int) ScrollbarV.Value));
-
-                var modArgs = new MouseButtonEventArgs(e.Button, pos);
-
-                foreach (var component in Components)
-                {
-                    component.MouseUp(modArgs);
-                }
-            }
-            return false;
+            return Container.MouseUp(rtArgs);
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
+            base.MouseMove(e);
+
             if (Disposing || !Visible) return;
+
             ScrollbarH.MouseMove(e);
             ScrollbarV.MouseMove(e);
 
@@ -257,19 +221,20 @@ namespace SS14.Client.UserInterface.Controls
             // we have to offset the mouse screen pos by the blit offset.
             var rtArgs = new MouseMoveEventArgs(e.NewPosition - Position);
             Container.MouseMove(rtArgs);
-
-            var pos = new Vector2i(e.X - (Position.X + (int) ScrollbarH.Value),
-                e.Y - (Position.Y + (int) ScrollbarV.Value));
-            var modArgs = new MouseMoveEventArgs(pos);
-
-            foreach (var component in Components)
-            {
-                component.MouseMove(modArgs);
-            }
         }
 
         public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
+            if (base.MouseWheelMove(e))
+                return true;
+
+            if (Disposing || !Visible) return false;
+
+            if (Container.MouseWheelMove(e))
+                return true;
+
+            //TODO: Think about how to re-implement this
+            /*
             if (_innerFocus != null)
             {
                 if (_innerFocus.MouseWheelMove(e))
@@ -285,55 +250,24 @@ namespace SS14.Client.UserInterface.Controls
                 ScrollbarV.MouseWheelMove(e);
                 return true;
             }
+            */
             return false;
         }
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            foreach (var component in Components)
-            {
-                if (component.KeyDown(e)) return true;
-            }
-            return false;
+            return base.KeyDown(e) || Container.KeyDown(e);
         }
 
         public override bool TextEntered(TextEventArgs e)
         {
-            foreach (var component in Components)
-            {
-                if (component.TextEntered(e)) return true;
-            }
-            return false;
+            return base.TextEntered(e) || Container.TextEntered(e);
         }
 
         public void ResetScrollbars()
         {
             if (ScrollbarH.Visible) ScrollbarH.Value = 0;
             if (ScrollbarV.Visible) ScrollbarV.Value = 0;
-        }
-
-        private void SetFocus(Control newFocus)
-        {
-            if (_innerFocus != null)
-            {
-                _innerFocus.Focus = false;
-                _innerFocus = newFocus;
-                newFocus.Focus = true;
-            }
-            else
-            {
-                _innerFocus = newFocus;
-                newFocus.Focus = true;
-            }
-        }
-
-        private void ClearFocus()
-        {
-            if (_innerFocus != null)
-            {
-                _innerFocus.Focus = false;
-                _innerFocus = null;
-            }
         }
 
         public class UiAnchor : Screen

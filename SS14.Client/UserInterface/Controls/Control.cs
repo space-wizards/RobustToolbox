@@ -7,7 +7,6 @@ using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using Debug = System.Diagnostics.Debug;
@@ -19,8 +18,13 @@ namespace SS14.Client.UserInterface.Controls
     /// </summary>
     public abstract class Control : IDisposable
     {
-        private static readonly Color4 _debugColor = new Color4(255, 0, 0, 32);
+        private static readonly Color4 _dbgBoundColor = new Color4(255, 0, 0, 32);
+        private static readonly Color4 _dbgFocusColor = new Color4(0, 0, 255, 32);
+
+        public static bool GlobalDebug { get; set; } = true;
+
         protected static IResourceCache _resourceCache;
+        protected static IUserInterfaceManager UiManager;
 
         private readonly List<Control> _children = new List<Control>();
 
@@ -185,18 +189,40 @@ namespace SS14.Client.UserInterface.Controls
         /// </summary>
         public bool ReceiveInput { get; set; } = true;
 
-        public GuiComponentType ComponentClass { get; protected set; }
+        [Obsolete("Controls are in a real tree structure now.")]
         public int ZDepth { get; set; }
-        public virtual bool Focus { get; set; }
+
+        /// <summary>
+        ///     True if this control is the one receiving keyboard input. Only one control can have focus
+        ///     at a time in the GUI.
+        /// </summary>
+        public virtual bool Focus
+        {
+            get => UiManager.HasFocus(this);
+            set
+            {
+                if(value)
+                    UiManager.SetFocus(this);
+                else
+                    UiManager.RemoveFocus(this);
+            }
+        }
+
+        /// <summary>
+        ///     If this control is currently disposed.
+        /// </summary>
+        public bool Disposed { get; private set; } = false;
 
         protected Control()
         {
             _resourceCache = IoCManager.Resolve<IResourceCache>();
+            UiManager = IoCManager.Resolve<IUserInterfaceManager>();
         }
 
         /// <inheritdoc />
         public virtual void Dispose()
         {
+            Disposed = true;
             IoCManager.Resolve<IUserInterfaceManager>().RemoveComponent(this);
 
             // this disposes it
@@ -242,8 +268,10 @@ namespace SS14.Client.UserInterface.Controls
 
             DrawContents();
 
-            if (DebugEnabled)
-                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, _debugColor);
+            if (DebugEnabled || GlobalDebug)
+            {
+                CluwneLib.drawRectangle(rect.Left, rect.Top, rect.Width, rect.Height, Focus ? _dbgFocusColor : _dbgBoundColor);
+            }
 
             // draw each of the children.
             // todo: need ordered batching
@@ -282,24 +310,6 @@ namespace SS14.Client.UserInterface.Controls
             {
                 child.DoLayout();
             }
-        }
-
-        [Obsolete("Use the Visible property.(Visible = !Visible)")]
-        public virtual void ToggleVisible()
-        {
-            Visible = !Visible;
-        }
-
-        [Obsolete("Use the Visible property.")]
-        public virtual void SetVisible(bool vis)
-        {
-            Visible = vis;
-        }
-
-        [Obsolete("Use the Visible property.")]
-        public bool IsVisible()
-        {
-            return Visible;
         }
 
         /// <summary>
@@ -522,7 +532,7 @@ namespace SS14.Client.UserInterface.Controls
         /// <summary>
         ///     Calculates the union of two AABB's.
         /// </summary>
-        private Box2i Union(Box2i a, Box2i b)
+        private static Box2i Union(Box2i a, Box2i b)
         {
             Debug.Assert(a.Top <= a.Bottom);
             Debug.Assert(a.Left <= a.Right);

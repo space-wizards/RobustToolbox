@@ -153,7 +153,10 @@ namespace SS14.Client.UserInterface.Controls
                 return true;
 
             if (ClientArea.Translated(Position).Contains(e.X, e.Y))
+            {
+                Focus = true;
                 return true;
+            }
 
             return false;
         }

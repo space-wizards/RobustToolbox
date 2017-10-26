@@ -84,6 +84,9 @@ namespace SS14.Client.State.States
         private Sprite _lightTargetSprite;
 
         private bool bPlayerVision = false;
+        /// <summary>
+        ///     True if lighting is disabled.
+        /// </summary>
         private bool bFullVision = false;
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
@@ -328,48 +331,51 @@ namespace SS14.Client.State.States
 
             CalculateAllLights();
 
-            if (PlayerManager.ControlledEntity != null)
+            if (PlayerManager.ControlledEntity == null)
             {
-                var vp = CluwneLib.WorldViewport;
-                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-
-                if (!bFullVision)
-                {
-                    ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
-
-                    // Render the lightmap
-                    RenderLightsIntoMap(lights);
-                }
-
-                CalculateSceneBatches(vp);
-
-                //Draw all rendertargets to the scenetarget
-                _sceneTarget.BeginDrawing();
-                _sceneTarget.Clear(Color.Black);
-
-                //PreOcclusion
-                RenderTiles();
-
-                RenderComponents(e.Elapsed, vp, map);
-
-                RenderOverlay();
-
-                _sceneTarget.EndDrawing();
-                _sceneTarget.ResetCurrentRenderTarget();
-                //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
-
-                //Debug.DebugRendertarget(_sceneTarget);
-
-                if (bFullVision)
-                    _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
-                else
-                    LightScene();
-
-                DebugManager.RenderDebug(vp, map);
-
-                //Render the placement manager shit
-                PlacementManager.Render();
+                return;
             }
+
+            // vp is the rectangle in which we can render in world space.
+            var vp = CluwneLib.WorldViewport;
+            var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+
+            if (!bFullVision)
+            {
+                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+
+                // Render the lightmap
+                RenderLightsIntoMap(lights);
+            }
+
+            CalculateSceneBatches(vp);
+
+            //Draw all rendertargets to the scenetarget
+            _sceneTarget.BeginDrawing();
+            _sceneTarget.Clear(Color.Black);
+
+            //PreOcclusion
+            RenderTiles();
+
+            RenderComponents(e.Elapsed, vp, map);
+
+            RenderOverlay();
+
+            _sceneTarget.EndDrawing();
+            _sceneTarget.ResetCurrentRenderTarget();
+            //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
+
+            //Debug.DebugRendertarget(_sceneTarget);
+
+            if (bFullVision)
+                _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
+            else
+                LightScene();
+
+            DebugManager.RenderDebug(vp, map);
+
+            //Render the placement manager shit
+            PlacementManager.Render();
         }
 
         private void RenderTiles()

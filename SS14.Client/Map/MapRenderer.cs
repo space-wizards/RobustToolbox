@@ -14,6 +14,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.View;
 
 namespace SS14.Client.Map
 {
@@ -25,27 +26,21 @@ namespace SS14.Client.Map
     {
         public static void DrawTiles(IEnumerable<TileRef> tileRefs, SpriteBatch floorBatch, SpriteBatch gasBatch)
         {
+            var cache = IoCManager.Resolve<IResourceCache>();
+            Sprite sprite = null;
+            ITileDefinition lastDef = null;
+            var ppm = CluwneLib.CurrentRenderTarget.Camera.PixelsPerMeter;
             foreach (var tileReference in tileRefs)
             {
-                var tileType = tileReference.TileDef;
-                var point = CluwneLib.WorldToScreen(new Vector2(tileReference.X, tileReference.Y));
-                RenderTile(tileType, point.X, point.Y, floorBatch);
-                RenderGas(tileType, point.X, point.Y, tileReference.TileSize, gasBatch);
+                if (tileReference.TileDef != lastDef)
+                {
+                    lastDef = tileReference.TileDef;
+                    sprite = cache.GetSprite(lastDef.SpriteName);
+                }
+                sprite.Position = new Vector2(tileReference.X, tileReference.Y);
+                var point = new Vector2(tileReference.X, tileReference.Y) * ppm;
+                floorBatch.Draw(sprite);
             }
-        }
-
-        /// <summary>
-        ///     Render a textured instance of a tile at the given coordinates.
-        /// </summary>
-        /// <param name="def">The definition of the tile to use.</param>
-        /// <param name="xTopLeft"></param>
-        /// <param name="yTopLeft"></param>
-        /// <param name="batch">The SpriteBatch to queue into.</param>
-        public static void RenderTile(ITileDefinition def, float xTopLeft, float yTopLeft, SpriteBatch batch)
-        {
-            var tileSprite = IoCManager.Resolve<IResourceCache>().GetSprite(def.SpriteName);
-            tileSprite.Position = new Vector2(xTopLeft, yTopLeft);
-            batch.Draw(tileSprite);
         }
 
         /// <summary>

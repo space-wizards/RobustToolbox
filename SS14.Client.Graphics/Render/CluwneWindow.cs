@@ -17,7 +17,16 @@ namespace SS14.Client.Graphics.Render
         private readonly VideoSettings _settings;
         public Viewport Viewport { get; }
         public GraphicsContext Graphics { get; }
-        public Camera Camera { get; }
+        private Camera camera;
+        public Camera Camera
+        {
+            get => camera;
+            set
+            {
+                camera = Camera;
+                SFMLTarget.SetView(camera.view);
+            }
+        }
 
         public event EventHandler<EventArgs> Closed;
         public event EventHandler<SizeEventArgs> Resized;

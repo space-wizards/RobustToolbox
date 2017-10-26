@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SS14.Client.Graphics.View;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -13,6 +14,8 @@ namespace SS14.Client.Graphics.Render
         Vector2u Size { get; }
         uint Width { get; }
         uint Height { get; }
+
+        Camera Camera { get; set; }
 
         void Clear(Color color);
         void Draw(IDrawable drawable);

@@ -8,6 +8,7 @@ using Sprite = SS14.Client.Graphics.Sprites.Sprite;
 using Texture = SS14.Client.Graphics.Textures.Texture;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using SS14.Client.Graphics.View;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -86,6 +87,17 @@ namespace SS14.Client.Graphics.Render
         }
 
         public RenderTarget SFMLTarget => _renderTexture;
+
+        private Camera camera;
+        public Camera Camera
+        {
+            get => camera;
+            set
+            {
+                camera = Camera;
+                SFMLTarget.SetView(camera.view);
+            }
+        }
 
         #endregion Accessors
 

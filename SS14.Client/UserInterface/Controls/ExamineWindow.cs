@@ -20,7 +20,7 @@ namespace SS14.Client.UserInterface.Components
 
             Components.Add(_entityDescription);
 
-            SetVisible(true);
+            Visible = true;
 
             if (entity.TryGetComponent<ISpriteRenderableComponent>(out var component))
             {

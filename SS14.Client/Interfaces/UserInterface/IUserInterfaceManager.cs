@@ -1,9 +1,7 @@
 ﻿using System;
-using Lidgren.Network;
-using SS14.Client.Interfaces.Console;
-using SS14.Client.UserInterface.Components;
-using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.Interfaces.UserInterface
@@ -20,8 +18,10 @@ namespace SS14.Client.Interfaces.UserInterface
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
+
         void SetFocus(Control newFocus);
         void RemoveFocus();
+        bool HasFocus(Control control);
 
         /// <summary>
         ///     Remove focus, but only if the target is currently focused.

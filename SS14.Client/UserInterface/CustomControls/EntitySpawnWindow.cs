@@ -99,7 +99,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override void Draw()
         {
-            if (Disposing || !IsVisible()) return;
+            if (Disposing || !Visible) return;
             _eraserButton.ForegroundColor = _placementManager.Eraser ? new Color4(255, 99, 71, 255) : Color4.White;
             base.Draw();
         }

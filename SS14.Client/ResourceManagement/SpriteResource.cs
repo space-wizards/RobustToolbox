@@ -31,12 +31,6 @@ namespace SS14.Client.ResourceManagement
             Sprite = new Sprite(res.Texture);
         }
 
-        /// <inheritdoc />
-        public override void Dispose()
-        {
-            Sprite.Dispose();
-        }
-
         public static implicit operator Sprite(SpriteResource res)
         {
             return res.Sprite;

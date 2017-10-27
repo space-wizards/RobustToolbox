@@ -1,11 +1,11 @@
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.Console
 {
     public interface IDebugConsole
     {
-        IDictionary<string, IConsoleCommand> Commands { get; }
+        IReadOnlyDictionary<string, IConsoleCommand> Commands { get; }
 
         /// <summary>
         /// Write a line with a specific color to the console window.

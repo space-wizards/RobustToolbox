@@ -1,4 +1,4 @@
-using OpenTK;
+﻿using OpenTK;
 using SS14.Shared.Utility;
 using System;
 
@@ -65,6 +65,12 @@ namespace SS14.Shared.Maths
                 (point.Y > Top != point.Y >= Bottom);
 
             return xOK && yOK;
+        }
+
+        /// <summary>Returns a Box2 translated by the given amount.</summary>
+        public Box2i Translated(Vector2i point)
+        {
+            return new Box2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
         // override object.Equals

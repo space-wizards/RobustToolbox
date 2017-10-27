@@ -1,33 +1,33 @@
-﻿using Lidgren.Network;
-using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared;
-using SS14.Shared.IoC;
-using System;
-using SS14.Client.Graphics.Input;
+﻿using System;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces.Console;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        void Initialize();
         IDragDropInfo DragInfo { get; }
 
         IDebugConsole Console { get; }
+        void Initialize();
 
-        void AddComponent(IGuiComponent component);
-        void RemoveComponent(IGuiComponent component);
-        void ComponentUpdate(GuiComponentType type, params object[] args);
+        void AddComponent(Control component);
+        void RemoveComponent(Control component);
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
-        void SetFocus(IGuiComponent newFocus);
+
+        void SetFocus(Control newFocus);
         void RemoveFocus();
+        bool HasFocus(Control control);
+
         /// <summary>
-        /// Remove focus, but only if the target is currently focused.
+        ///     Remove focus, but only if the target is currently focused.
         /// </summary>
-        void RemoveFocus(IGuiComponent target);
+        void RemoveFocus(Control target);
+
         void Update(FrameEventArgs e);
         void Render(FrameEventArgs e);
 
@@ -41,7 +41,5 @@ namespace SS14.Client.Interfaces.UserInterface
         void MouseEntered(EventArgs e);
         void MouseLeft(EventArgs e);
         bool TextEntered(TextEventArgs e);
-
-        void HandleNetMessage(NetIncomingMessage msg);
     }
 }

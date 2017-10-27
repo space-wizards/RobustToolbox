@@ -28,5 +28,10 @@ namespace SS14.Client.ResourceManagement
             Font.Dispose();
             Font = null;
         }
+
+        public static implicit operator Font(FontResource res)
+        {
+            return res.Font;
+        }
     }
 }

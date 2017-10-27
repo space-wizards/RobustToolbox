@@ -322,11 +322,6 @@ namespace SS14.Client
 
         #region EventHandlers
 
-        private void MainWindowLoad(object sender, EventArgs e)
-        {
-            _stateManager.RequestStateChange<MainScreen>();
-        }
-
         private void MainWindowResizeEnd(object sender, SizeEventArgs e)
         {
             _stateManager.FormResize();

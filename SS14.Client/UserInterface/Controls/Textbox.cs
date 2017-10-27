@@ -166,6 +166,12 @@ namespace SS14.Client.UserInterface.Controls
             if (base.KeyDown(e))
                 return true;
 
+            if (Focus && e.Key == Keyboard.Key.Escape)
+            {
+                Focus = false;
+                return true;
+            }
+
             if (!Focus) return false;
 
             if (e.Control && e.Key == Keyboard.Key.V)

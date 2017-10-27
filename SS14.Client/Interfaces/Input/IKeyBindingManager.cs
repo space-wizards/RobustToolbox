@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.IoC;
 using System;
+using SS14.Client.Graphics.Input;
 
 namespace SS14.Client.Interfaces.Input
 {
@@ -9,6 +10,10 @@ namespace SS14.Client.Interfaces.Input
         bool Enabled { get; set; }
 
         void Initialize();
+
+        void KeyDown(KeyEventArgs e);
+        void KeyUp(KeyEventArgs e);
+
         event EventHandler<BoundKeyEventArgs> BoundKeyDown;
         event EventHandler<BoundKeyEventArgs> BoundKeyUp;
     }

@@ -457,7 +457,10 @@ namespace SS14.Client.State.States
         public override void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
-                return;
+                return; // UI consumes key
+
+            // pass key to game
+            KeyBindingManager.KeyDown(e);
 
             if (e.Key == Keyboard.Key.F1)
             {
@@ -515,13 +518,11 @@ namespace SS14.Client.State.States
                 UserInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
                 UserInterfaceManager.AddComponent(new EntitySpawnWindow(new Vector2i(350, 410))); //Create a new one.
             }
-
-            PlayerManager.KeyDown(e.Key);
         }
 
         public override void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Key);
+            KeyBindingManager.KeyUp(e);
         }
 
         public override void TextEntered(TextEventArgs e)

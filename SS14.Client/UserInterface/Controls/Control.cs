@@ -222,8 +222,14 @@ namespace SS14.Client.UserInterface.Controls
         /// <inheritdoc />
         public virtual void Dispose()
         {
+            if (Disposed)
+                return;
+
             Disposed = true;
             IoCManager.Resolve<IUserInterfaceManager>().RemoveComponent(this);
+
+            DisposeAllChildren();
+            Parent?.RemoveControl(this);
 
             // this disposes it
             BackgroundImage = null;
@@ -499,18 +505,17 @@ namespace SS14.Client.UserInterface.Controls
 
             _children.Remove(child);
             child._parent = null;
-            child.OnCalcPosition();
         }
 
         /// <summary>
         ///     Removes all child controls from this control.
         /// </summary>
-        public void RemoveAllControls()
+        public void DisposeAllChildren()
         {
             var children = new List<Control>(_children); // must cache list because children modify it
             foreach (var child in children)
             {
-                child.Destroy();
+                child.Dispose();
             }
         }
         
@@ -548,13 +553,7 @@ namespace SS14.Client.UserInterface.Controls
 
             return new Box2i(left, top, right, bottom);
         }
-
-        public void Destroy()
-        {
-            RemoveAllControls();
-            Parent?.RemoveControl(this);
-        }
-
+        
         public class ResizeEventArgs : EventArgs
         {
             public bool Consumed { get; set; } = false;

@@ -48,7 +48,7 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Shutdown()
         {
-            UserInterfaceManager.DisposeAllComponents();
+            UserInterfaceManager.RemoveComponent(_uiScreen);
         }
 
         /// <inheritdoc />
@@ -114,6 +114,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.TextEntered(e);
         }
 
+        /// <inheritdoc />
         public override void InitializeGUI()
         {
             _uiScreen = new Screen();

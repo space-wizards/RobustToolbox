@@ -47,6 +47,7 @@ namespace SS14.Client.Graphics.Sprites
         public TextSprite(string text, Font font, uint size)
         {
             SFMLTextSprite = new Text(text, font.SFMLFont, size);
+            CalculateOrigin();
         }
 
         /// <summary>
@@ -140,28 +141,34 @@ namespace SS14.Client.Graphics.Sprites
         public string Text
         {
             get => SFMLTextSprite.DisplayedString;
-            set => SFMLTextSprite.DisplayedString = value;
+            set
+            {
+                SFMLTextSprite.DisplayedString = value;
+                CalculateOrigin();
+            }
         }
 
         public Styles Style
         {
             get => (Styles)SFMLTextSprite.Style;
-            set => SFMLTextSprite.Style = (SFML.Graphics.Text.Styles)value;
+            set => SFMLTextSprite.Style = (Text.Styles)value;
         }
 
-        public int Width
-        {
-            get
-            {
-                var a = SFMLTextSprite;
-                var b = a.GetLocalBounds();
-                var c = b.Width;
-                var d = (int)c;
-                return d;
-            }
-        }
+        public int Width => (int)SFMLTextSprite.GetLocalBounds().Width;
+
         // FIXME take into account newlines.
-        public int Height => (int)SFMLTextSprite.CharacterSize;
+        public int Height => (int)SFMLTextSprite.GetLocalBounds().Height;
+
+        /// <summary>
+        ///     Sets up positioning so that top left bounds are the origin of the text, instead of the left end of the font baseline.
+        ///     This needs to be recalculated whenever the text changes. Keep in mind this will change the origin of rotation.
+        /// </summary>
+        private void CalculateOrigin()
+        {
+            var bounds = SFMLTextSprite.GetLocalBounds();
+            SFMLTextSprite.Origin = new Vector2f(bounds.Left, bounds.Top);
+        }
+
         #endregion Accessors
     }
 }

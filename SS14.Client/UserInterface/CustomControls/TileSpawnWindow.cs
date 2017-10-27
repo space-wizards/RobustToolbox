@@ -103,7 +103,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void BuildTileList(string searchStr = null)
         {
-            _tileList.Container.RemoveAllControls();
+            _tileList.Container.DisposeAllChildren();
             _tileList.ResetScrollbars();
 
             var tileDefs = IoCManager.Resolve<ITileDefinitionManager>().Select(td => td.Name);

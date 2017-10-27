@@ -195,7 +195,7 @@ namespace SS14.Client.UserInterface.Controls
         private void RebuildList()
         {
             CurrentlySelected = null;
-            _dropDown.Container.RemoveAllControls();
+            _dropDown.Container.DisposeAllChildren();
 
             Control lastItem = _dropDown.Container;
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))

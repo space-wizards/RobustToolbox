@@ -172,7 +172,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void BuildEntityList(string searchStr = null)
         {
-            _entityList.Container.RemoveAllControls();
+            _entityList.Container.DisposeAllChildren();
             _entityList.ResetScrollbars();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();

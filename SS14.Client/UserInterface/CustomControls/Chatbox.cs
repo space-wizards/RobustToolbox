@@ -42,38 +42,16 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private int _lastY;
 
-        private bool _focus;
-
-        private bool _keyBindingsEnabled;
-
         public override bool Focus
         {
-            get => _focus;
-            set
-            {
-                _focus = value;
-                _input.Focus = value;
-                KeyBindingsEnabled = !value;
-            }
+            get => _input.Focus;
+            set => _input.Focus = value;
         }
-
-        public bool KeyBindingsEnabled
-        {
-            get => _keyBindingsEnabled;
-            set
-            {
-                //TODO: Disables all game input so that the chatbox can accept keys? wut?
-                IoCManager.Resolve<IKeyBindingManager>().Enabled = value;
-                _keyBindingsEnabled = value;
-            }
-        }
-
+        
         public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(size)
         {
             ScrollbarH.Visible = false;
-
-            //Position = new Vector2i((int) CluwneLib.Window.Viewport.Width - Size.X - 10, 10);
-
+            
             _input = new Textbox(Size.X)
             {
                 BackgroundColor = new Color4(128, 128, 128, 100),
@@ -102,7 +80,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override bool KeyDown(KeyEventArgs e)
         {
-            if (e.Key == Keyboard.Key.T && !Focus)
+            if (e.Key == Keyboard.Key.T && !Focus && UiManager.HasFocus(null))
             {
                 Focus = true;
                 _ignoreFirstText = true;

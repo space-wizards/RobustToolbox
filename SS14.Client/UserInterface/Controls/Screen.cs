@@ -1,4 +1,5 @@
-﻿using SS14.Shared.Maths;
+﻿using SS14.Client.Graphics.Input;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.Controls
 {
@@ -17,6 +18,18 @@ namespace SS14.Client.UserInterface.Controls
         protected override void OnCalcRect()
         {
             _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
+        }
+
+        public override bool MouseDown(MouseButtonEventArgs e)
+        {
+            // clicking on the screen removes ui focus to restore game controls.
+            if (!base.MouseDown(e))
+            {
+                UiManager.RemoveFocus();
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -116,7 +116,8 @@ namespace SS14.Client.UserInterface
         }
 
         /// <summary>
-        ///     Check if the given control currently has focus.
+        ///     Check if the given control currently has focus. It is valid to pass null to
+        ///     see if *any* control has focus.
         /// </summary>
         public bool HasFocus(Control control)
         {

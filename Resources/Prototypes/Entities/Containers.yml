@@ -1,6 +1,6 @@
 - type: entity
-  id: Toolbox
-  name: Toolbox
+  id: __engine_toolbox
+  name: "[engine] toolbox"
   components:
   - type: Transform
   - type: Clickable

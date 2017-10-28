@@ -17,6 +17,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private readonly List<string> _contentStrings = new List<string>();
         private readonly int _width;
+        private readonly int _dropMaxHeight;
         private Box2i _clientAreaLeft;
         private Box2i _clientAreaMain;
         private Box2i _clientAreaRight;
@@ -32,6 +33,7 @@ namespace SS14.Client.UserInterface.Controls
         public Listbox(int dropDownLength, int width, List<string> initialOptions = null)
         {
             _width = width;
+            _dropMaxHeight = dropDownLength;
             _listboxLeft = _resourceCache.GetSprite("button_left");
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
@@ -204,8 +206,15 @@ namespace SS14.Client.UserInterface.Controls
                 lastItem = newEntry;
 
                 newEntry.Alignment = Align.Bottom;
+                newEntry.DoLayout();
                 newEntry.Clicked += NewEntryClicked;
             }
+
+            // shrink _dropDown to fit the contents.
+            _dropDown.Container.DoLayout();
+            var size = _dropDown.Container.GetShrinkBounds();
+            _dropDown.Height = Math.Min(size.Height, _dropMaxHeight);
+            _dropDown.DoLayout();
         }
 
         private void NewEntryClicked(Label sender, MouseButtonEventArgs e)

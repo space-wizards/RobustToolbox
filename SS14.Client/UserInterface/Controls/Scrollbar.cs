@@ -129,8 +129,14 @@ namespace SS14.Client.UserInterface.Components
 
         public override bool MouseWheelMove(MouseWheelScrollEventArgs e)
         {
+            if (base.MouseWheelMove(e))
+                return true;
+
+            if (!Visible || Disposed)
+                return false;
+            
             Value += (e.Delta * -1) * Math.Max((Max / 20), 1) * Multipler;
-            return true;
+            return true; // always consume scroll events
         }
 
         public override void Update(float frameTime)

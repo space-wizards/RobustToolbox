@@ -103,7 +103,6 @@ namespace SS14.Client.UserInterface.Controls
             base.OnCalcPosition();
 
             SetVisibleText();
-            _textSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int) (_clientArea.Height / 2f) - (int) (_textSprite.Height / 2f));
         }
 
         /// <inheritdoc />
@@ -127,7 +126,6 @@ namespace SS14.Client.UserInterface.Controls
                 CluwneLib.drawRectangle(_textSprite.Position.X + _caretPos - CaretWidth, _textSprite.Position.Y + _textSprite.Height / 2f - CaretHeight / 2f, CaretWidth, CaretHeight, new Color4(255, 255, 250, 255));
 
             _textSprite.FillColor = ForegroundColor;
-            _textSprite.Text = _displayText;
 
             _textSprite.Draw();
 
@@ -161,6 +159,7 @@ namespace SS14.Client.UserInterface.Controls
             return false;
         }
 
+        /// <inheritdoc />
         public override bool KeyDown(KeyEventArgs e)
         {
             if (base.KeyDown(e))
@@ -239,6 +238,7 @@ namespace SS14.Client.UserInterface.Controls
             return true;
         }
 
+        /// <inheritdoc />
         public override bool TextEntered(TextEventArgs e)
         {
             if (base.TextEntered(e))
@@ -315,6 +315,9 @@ namespace SS14.Client.UserInterface.Controls
 
                 _caretPos = _textSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
+            
+            _textSprite.Text = _displayText;
+            _textSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int)(_clientArea.Height / 2f) - (int)(_textSprite.Height / 2f));
         }
 
         private void Submit()

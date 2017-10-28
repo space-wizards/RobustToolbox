@@ -35,7 +35,7 @@ namespace SS14.Client.UserInterface.Controls
             Size = size;
 
             BackgroundColor = new Color4(169, 169, 169, 255);
-            DrawBackground = true;
+            DrawBackground = false;
             DrawBorder = true;
 
             _clippingRi = new RenderImage("UI_SCR_CONTAINER", (uint) size.X, (uint) size.Y);
@@ -142,15 +142,18 @@ namespace SS14.Client.UserInterface.Controls
             base.DrawContents();
 
             // the rectangle should always be completely covered with draws, no point clearing
-            _clippingRi.Clear(DrawBackground ? BackgroundColor : Color4.Transparent);
-            
+            if(DebugEnabled)
+                _clippingRi.Clear(Color.Aqua);
+            else
+                _clippingRi.Clear(DrawBackground ? BackgroundColor : Color4.Transparent);
+
             _clippingRi.BeginDrawing();
             // draw the inner container screen
             {
                 Container.Draw();
             }
             _clippingRi.EndDrawing();
-            _clippingRi.Blit(Position.X + ClientArea.Left, Position.Y + ClientArea.Top, (uint)ClientArea.Height, (uint)ClientArea.Width, Color.White, BlitterSizeMode.None);
+            _clippingRi.Blit(Position.X + ClientArea.Left, Position.Y + ClientArea.Top, (uint)ClientArea.Width, (uint)ClientArea.Height, Color.White, BlitterSizeMode.None);
         }
 
         public override void Draw()
@@ -230,27 +233,18 @@ namespace SS14.Client.UserInterface.Controls
 
             if (Disposing || !Visible) return false;
 
-            if (Container.MouseWheelMove(e))
+            // since the RT is constructed at {0,0}, and then blitted to an offset position
+            // we have to offset the mouse screen pos by the blit offset.
+            var rtArgs = new MouseWheelScrollEventArgs(e.Position - Position, e.Wheel, e.Delta);
+            if (Container.MouseWheelMove(rtArgs))
                 return true;
+            
+            if (ScrollbarV.Visible && ClientArea.Translated(Position).Contains(e.X, e.Y))
+            {
+                if(ScrollbarV.MouseWheelMove(e))
+                    return true;
+            }
 
-            //TODO: Think about how to re-implement this
-            /*
-            if (_innerFocus != null)
-            {
-                if (_innerFocus.MouseWheelMove(e))
-                    return true;
-                if (ScrollbarV.Visible && ClientArea.Contains(e.X, e.Y))
-                {
-                    ScrollbarV.MouseWheelMove(e);
-                    return true;
-                }
-            }
-            else if (ScrollbarV.Visible && ClientArea.Contains(e.X, e.Y))
-            {
-                ScrollbarV.MouseWheelMove(e);
-                return true;
-            }
-            */
             return false;
         }
 

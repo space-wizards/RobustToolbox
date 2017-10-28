@@ -163,14 +163,14 @@ namespace SS14.Client.GameObjects
 
             base.Render(topLeft, bottomRight);
 
-            _speechBubble?.Draw(CluwneLib.WorldToScreen(position),
+            _speechBubble?.Draw(position * CluwneLib.Camera.PixelsPerMeter,
                                 new Vector2(), currentBaseSprite);
         }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (SpriteComponentState) state;
+            var newState = (SpriteComponentState)state;
             base.HandleComponentState(state);
 
             if (newState.BaseName == null || _basename == newState.BaseName) return;

@@ -1,10 +1,5 @@
-﻿using SS14.Shared.Maths;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SS14.Client.Graphics.View;
+﻿using SS14.Client.Graphics.Views;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -15,7 +10,7 @@ namespace SS14.Client.Graphics.Render
         uint Width { get; }
         uint Height { get; }
 
-        Camera Camera { get; set; }
+        View View { get; set; }
 
         void Clear(Color color);
         void Draw(IDrawable drawable);

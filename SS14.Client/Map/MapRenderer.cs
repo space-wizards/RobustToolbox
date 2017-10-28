@@ -1,20 +1,14 @@
-﻿using System.Collections.Generic;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
-using SS14.Shared.Interfaces.Map;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Player;
-using SS14.Shared.Interfaces.GameObjects.Components;
+using System.Collections.Generic;
 using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.GameObjects;
-using SS14.Client.Graphics.View;
 
 namespace SS14.Client.Map
 {
@@ -29,7 +23,7 @@ namespace SS14.Client.Map
             var cache = IoCManager.Resolve<IResourceCache>();
             Sprite sprite = null;
             ITileDefinition lastDef = null;
-            var ppm = CluwneLib.CurrentRenderTarget.Camera.PixelsPerMeter;
+            var ppm = CluwneLib.Camera.PixelsPerMeter;
             foreach (var tileReference in tileRefs)
             {
                 if (tileReference.TileDef != lastDef)
@@ -38,16 +32,7 @@ namespace SS14.Client.Map
                     sprite = cache.GetSprite(lastDef.SpriteName);
                 }
                 sprite.Position = new Vector2(tileReference.X, tileReference.Y) * ppm;
-                if (tileReference.X != 0)
-                {
-                    floorBatch.Draw(sprite);
-                }
-                else
-                {
-                    sprite.Color = Color.Red;
-                    sprite.Draw();
-                    sprite.Color = Color.White;
-                }
+                floorBatch.Draw(sprite);
             }
         }
 

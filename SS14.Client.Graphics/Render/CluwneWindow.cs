@@ -1,12 +1,12 @@
 ﻿using SFML.Graphics;
-using SFML.Window;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Settings;
 using SS14.Client.Graphics.Utility;
-using SS14.Client.Graphics.View;
+using SS14.Client.Graphics.Views;
 using SS14.Shared.Maths;
 using System;
 using Color = SS14.Shared.Maths.Color;
+using View = SS14.Client.Graphics.Views.View;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -17,15 +17,11 @@ namespace SS14.Client.Graphics.Render
         private readonly VideoSettings _settings;
         public Viewport Viewport { get; }
         public GraphicsContext Graphics { get; }
-        private Camera camera;
-        public Camera Camera
+        public View View
         {
-            get => camera;
-            set
-            {
-                camera = value;
-                SFMLTarget.SetView(camera.view);
-            }
+            // SFML makes a new view on fetch so this isn't managed by anything else.
+            get => new View(SFMLTarget.GetView());
+            set => SFMLTarget.SetView(value.SFMLView);
         }
 
         public event EventHandler<EventArgs> Closed;
@@ -40,7 +36,7 @@ namespace SS14.Client.Graphics.Render
             SFMLWindow = window;
             _settings = settings;
             Graphics = new GraphicsContext(SFMLWindow);
-            Camera = new Camera(this);
+            View = new View(SFMLTarget.GetView());
             Viewport = new Viewport(0, 0, SFMLWindow.Size.X, SFMLWindow.Size.Y);
 
             CluwneLib.Input = new InputEvents(this);

@@ -1,6 +1,6 @@
 - type: entity
-  id: Janitor_Suit
-  name: Janitor Jumpsuit
+  id: __engine_janitor_suit
+  name: "[engine] Janitor Jumpsuit"
   components:
   - type: Transform
   - type: Clickable
@@ -16,8 +16,8 @@
     mass: 5
 
 - type: entity
-  id: Shoes
-  name: Shoes
+  id: __engine_shoes
+  name: "[engine] shoes"
   components:
   - type: Transform
   - type: Clickable

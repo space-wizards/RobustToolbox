@@ -1,6 +1,6 @@
 - type: entity
-  id: Wall
-  name: Wall
+  id: __engine_wall
+  name: "[engine] Wall"
   components:
   - type: Transform
   - type: Clickable

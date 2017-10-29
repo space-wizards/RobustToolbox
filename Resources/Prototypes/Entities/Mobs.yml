@@ -1,6 +1,7 @@
 ﻿- type: entity
-  id: HumanMob
-  name: Urist McHuman
+  id: __engine_human
+  name: "[engine] Urist McHuman"
+  save: false
   components:
   - type: Transform
   - type: Clickable

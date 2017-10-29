@@ -35,6 +35,8 @@ namespace SS14.Server.Player
         /// </summary>
         public IBaseServer Server;
 
+        public string PlayerPrototypeName { get; set; } = "__engine_human";
+
         private readonly Dictionary<int, PlayerSession> _sessions;
 
         [Dependency]
@@ -99,13 +101,7 @@ namespace SS14.Server.Player
         /// <param name="session"></param>
         public void SpawnPlayerMob(IPlayerSession session)
         {
-            // TODO: There's probably a much better place to do this.
-            var prototype = "HumanMob";
-            if (_prototypeManager.HasIndex<EntityPrototype>("HumanMob_Content"))
-            {
-                prototype = "HumanMob_Content";
-            }
-            IEntity entity = _entityManager.ForceSpawnEntityAt(prototype, new Vector2(0, 0), 1); //TODO: Fix this
+            IEntity entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, new Vector2(0, 0), 1); //TODO: Fix this
             session.AttachToEntity(entity);
         }
 
@@ -208,7 +204,6 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetPlayersInRange(LocalCoordinates position, int range)
         {
-
             //TODO: This needs to be moved to the PVS system.
             return
                 _sessions.Values.Where(x =>
@@ -252,6 +247,6 @@ namespace SS14.Server.Player
                 .ToList();
         }
 
-#endregion IPlayerManager Members
+        #endregion IPlayerManager Members
     }
 }

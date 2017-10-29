@@ -23,6 +23,22 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <summary>
+        ///     Levels at which point the content assemblies are getting updates.
+        /// </summary>
+        public enum UpdateLevel
+        {
+            /// <summary>
+            ///     This update is called before the main state manager.
+            /// </summary>
+            PreEngine,
+
+            /// <summary>
+            ///     This update is called after the main state manager.
+            /// </summary>
+            PostEngine,
+        }
+
+        /// <summary>
         ///     Loaded assemblies.
         /// </summary>
         private static readonly List<ModInfo> _mods = new List<ModInfo>();
@@ -114,6 +130,14 @@ namespace SS14.Shared.ContentPack
                             break;
                     }
                 }
+            }
+        }
+
+        public static void BroadcastUpdate(UpdateLevel level, float frameTime)
+        {
+            foreach (var entrypoint in _mods.SelectMany(m => m.EntryPoints))
+            {
+                entrypoint.Update(level, frameTime);
             }
         }
 

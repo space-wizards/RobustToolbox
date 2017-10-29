@@ -8,5 +8,10 @@
         public virtual void Init()
         {
         }
+
+        public virtual void Update(AssemblyLoader.UpdateLevel level, float frameTime)
+        {
+            System.Console.WriteLine($"{level}, {frameTime}");
+        }
     }
 }

@@ -116,18 +116,20 @@ namespace SS14.Client.Graphics.Sprites
         {
             count++;
             Using(S.Texture);
-            Vector2f Scale = new Vector2f(S.Scale.X, S.Scale.Y);
+            // Scale is the offset of the other vertices.
+            var Scale = new Vector2f(S.Scale.X, S.Scale.Y);
+            Scale.X *= S.TextureRect.Width;
+            Scale.Y *= S.TextureRect.Height;
             float sin = 0, cos = 1;
 
-            S.Rotation = S.Rotation / 180 * (float)Math.PI;
-            sin = (float)Math.Sin(S.Rotation);
-            cos = (float)Math.Cos(S.Rotation);
+            var rads = OpenTK.MathHelper.DegreesToRadians(S.Rotation);
+            sin = (float)Math.Sin(rads);
+            cos = (float)Math.Cos(rads);
 
             var pX = -S.Origin.X * S.Scale.X;
             var pY = -S.Origin.Y * S.Scale.Y;
-            Scale.X *= S.TextureRect.Width;
-            Scale.Y *= S.TextureRect.Height;
 
+            // Top left
             activeItem.Verticies.Append
                 (
                  new Vertex(
@@ -141,6 +143,7 @@ namespace SS14.Client.Graphics.Sprites
                             )
                );
 
+            // Top right
             pX += Scale.X;
             activeItem.Verticies.Append
                 (
@@ -150,11 +153,12 @@ namespace SS14.Client.Graphics.Sprites
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
                         new Vector2f(
-                            S.TextureRect.Left + S.TextureRect.Width,
+                            S.TextureRect.Right,
                             S.TextureRect.Top)
                           )
                 );
 
+            // Bottom right.
             pY += Scale.Y;
             activeItem.Verticies.Append
                 (
@@ -164,13 +168,14 @@ namespace SS14.Client.Graphics.Sprites
                             pX * sin + pY * cos + S.Position.Y),
                             S.Color.Convert(),
                         new Vector2f(
-                            S.TextureRect.Left + S.TextureRect.Width,
-                            S.TextureRect.Top + S.TextureRect.Height)
+                            S.TextureRect.Right,
+                            S.TextureRect.Bottom)
                          )
                 );
 
             pX -= Scale.X;
 
+            // Bottom left.
             activeItem.Verticies.Append(
                 new Vertex(
                         new Vector2f(
@@ -179,7 +184,7 @@ namespace SS14.Client.Graphics.Sprites
                             S.Color.Convert(),
                         new Vector2f(
                             S.TextureRect.Left,
-                            S.TextureRect.Top + S.TextureRect.Height)
+                            S.TextureRect.Bottom)
                         )
                 );
         }

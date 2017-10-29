@@ -21,6 +21,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.Graphics.Utility;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.GameObjects
 {
@@ -61,8 +62,6 @@ namespace SS14.Client.GameObjects
         #region ISpriteComponent Members
 
         public Box2 AverageAABB => LocalAABB;
-
-
 
         public Box2 LocalAABB
         {
@@ -269,7 +268,7 @@ namespace SS14.Client.GameObjects
 
             if (spriteToCheck == null || !visible) return false;
 
-            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+            var screenScale = CluwneLib.Camera.PixelsPerMeter;
 
             // local screen bounds
             var localBounds = spriteToCheck.LocalBounds;
@@ -369,9 +368,9 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            ScreenCoordinates renderPos = CluwneLib.WorldToScreen(transform.LocalPosition);
+            var renderPos = transform.WorldPosition * CluwneLib.Camera.PixelsPerMeter;
             var bounds = spriteToRender.LocalBounds;
-            SetSpriteCenter(spriteToRender, renderPos.Position);
+            SetSpriteCenter(spriteToRender, renderPos);
 
             if (transform.WorldPosition.X + bounds.Left + bounds.Width < topLeft.X
                 || transform.WorldPosition.X > bottomRight.X
@@ -454,7 +453,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (SpriteComponentState) state;
+            var newState = (SpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
 
             if (newState.SpriteKey != null && sprites.ContainsKey(newState.SpriteKey) &&

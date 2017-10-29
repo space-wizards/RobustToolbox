@@ -286,7 +286,7 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public Indices WorldToTile(LocalCoordinates posWorld)
         {
-            var local = posWorld.ConvertToGrid(this); 
+            var local = posWorld.ConvertToGrid(this);
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new Indices(x, y);

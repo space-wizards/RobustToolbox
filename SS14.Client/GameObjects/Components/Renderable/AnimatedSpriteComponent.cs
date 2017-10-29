@@ -169,7 +169,7 @@ namespace SS14.Client.GameObjects
 
             var spriteToCheck = GetCurrentSprite();
 
-            var screenScale = CluwneLib.Window.Camera.PixelsPerMeter;
+            var screenScale = CluwneLib.Camera.PixelsPerMeter;
 
             // local screen bounds
             var localBounds = spriteToCheck.LocalBounds;
@@ -191,7 +191,7 @@ namespace SS14.Client.GameObjects
             var texRect = spriteToCheck.TextureRect;
 
             // Get the clicked position relative to the texture (World to Texture)
-            var pixelPos = new Vector2i((int) ((worldPos.X - worldBounds.Left) * screenScale), (int) ((worldPos.Y - worldBounds.Top) * screenScale));
+            var pixelPos = new Vector2i((int)((worldPos.X - worldBounds.Left) * screenScale), (int)((worldPos.Y - worldBounds.Top) * screenScale));
 
             // offset pos by texture sub-rectangle
             pixelPos = pixelPos + new Vector2i(texRect.Left, texRect.Top);
@@ -206,11 +206,11 @@ namespace SS14.Client.GameObjects
                 throw new InvalidOperationException("Trying to look up a texture that does not exist in the ResourceCache.");
 
             // use the texture key to fetch the Image of the sprite
-            if(!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
+            if (!TextureCache.Textures.TryGetValue(textureKey, out TextureInfo texInfo))
                 throw new InvalidOperationException("The texture exists in the ResourceCache, but not in the CluwneLib TextureCache?");
 
             // Check if the clicked pixel is transparent enough in the Image
-            return texInfo.Image[(uint) pixelPos.X, (uint) pixelPos.Y].AByte >= Limits.ClickthroughLimit;
+            return texInfo.Image[(uint)pixelPos.X, (uint)pixelPos.Y].AByte >= Limits.ClickthroughLimit;
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -260,10 +260,9 @@ namespace SS14.Client.GameObjects
             if (!visible) return;
             if (sprite == null) return;
 
-            var ownerPos = Owner.GetComponent<ITransformComponent>().LocalPosition;
+            var ownerPos = Owner.GetComponent<ITransformComponent>().WorldPosition;
 
-            var renderPos = CluwneLib.WorldToScreen(ownerPos);
-            SetSpriteCenter(renderPos.Position);
+            SetSpriteCenter(ownerPos * CluwneLib.Camera.PixelsPerMeter);
             var bounds = sprite.TextureRect;
 
             if (ownerPos.X + bounds.Left + bounds.Width < topLeft.X
@@ -401,7 +400,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState state)
         {
-            var newState = (AnimatedSpriteComponentState) state;
+            var newState = (AnimatedSpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
             visible = newState.Visible;
             if (sprite.Name != newState.Name)

@@ -117,8 +117,9 @@
     <Compile Include="VertexData\VertexType.cs" />
     <Compile Include="VertexData\VertexTypeList.cs" />
     <Compile Include="Settings\VideoSettings.cs" />
-    <Compile Include="View\Camera.cs" />
-    <Compile Include="View\Viewport.cs" />
+    <Compile Include="Views\Camera.cs" />
+    <Compile Include="Views\View.cs" />
+    <Compile Include="Views\Viewport.cs" />
     <Compile Include="Utility\SfmlExt.cs" />
     <Compile Include="Utility\SfmlCompatibility.cs" />
   </ItemGroup>

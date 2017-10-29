@@ -19,6 +19,7 @@ using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 using Font = SS14.Client.Graphics.Sprites.Font;
+using SS14.Client.Graphics.Views;
 
 namespace SS14.Client.Graphics
 {
@@ -43,6 +44,7 @@ namespace SS14.Client.Graphics
         public static VideoSettings Video { get; }
         public static Debug Debug { get; }
         public static GLSLShader CurrentShader { get; internal set; }
+        public static Camera Camera { get; } = new Camera();
 
         public static BlendingModes BlendingMode { get; set; }
         public static Render.RenderStates ShaderRenderState => new Render.RenderStates(CurrentShader);
@@ -390,13 +392,13 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static ScreenCoordinates WorldToScreen(LocalCoordinates point)
         {
-            return new ScreenCoordinates(((point.Position - Window.Camera.Position) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2), point.MapID);
+            return new ScreenCoordinates(((point.Position - Camera.Position) * Camera.PixelsPerMeter + Window.Viewport.Size / 2), point.MapID);
         }
 
         public static Vector2 WorldToScreen(Vector2 point)
         {
-            var center = Window.Camera.Position;
-            return (point - center) * Window.Camera.PixelsPerMeter + Window.Viewport.Size / 2;
+            var center = Camera.Position;
+            return (point - center) * Camera.PixelsPerMeter + Window.Viewport.Size / 2;
         }
 
         /// <summary>
@@ -433,7 +435,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static LocalCoordinates ScreenToCoordinates(ScreenCoordinates point)
         {
-            var pos = (point.Position - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
+            var pos = (point.Position - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
             var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
             return new LocalCoordinates(pos, grid);
         }
@@ -443,10 +445,10 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static Box2 ScreenToWorld(Box2i rect)
         {
-            var center = Window.Camera.Position;
+            var center = Camera.Position;
             return new Box2(
-                ((Vector2)rect.TopLeft - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center,
-                ((Vector2)rect.BottomRight - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + center
+                ((Vector2)rect.TopLeft - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + center,
+                ((Vector2)rect.BottomRight - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + center
             );
         }
 
@@ -455,7 +457,7 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static LocalCoordinates ScreenToWorld(Vector2i point, int argMap)
         {
-            var pos = ((Vector2)point - Window.Viewport.Size / 2) / Window.Camera.PixelsPerMeter + Window.Camera.Position;
+            var pos = ((Vector2)point - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
             var grid = IoCManager.Resolve<IMapManager>().GetMap(argMap).FindGridAt(pos);
             return new LocalCoordinates(pos, grid);
         }
@@ -467,7 +469,7 @@ namespace SS14.Client.Graphics
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {
-            return vec / Window.Camera.PixelsPerMeter;
+            return vec / Camera.PixelsPerMeter;
         }
 
         #endregion Client Window Data

@@ -74,6 +74,12 @@
     <Reference Include="Nett, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\Nett.0.7.0\lib\Net40\Nett.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NJsonSchema, Version=9.9.17.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
+      <HintPath>..\packages\NJsonSchema.9.9.17\lib\net45\NJsonSchema.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
     </Reference>
@@ -90,6 +96,8 @@
       <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms">
       <Name>System.Windows.Forms</Name>
     </Reference>
@@ -231,6 +239,7 @@
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
+    <Compile Include="Resources\RSI.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />

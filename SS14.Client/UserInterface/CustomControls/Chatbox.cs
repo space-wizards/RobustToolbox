@@ -2,13 +2,9 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics;
-using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Input;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -22,8 +18,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly Dictionary<ChatChannel, Color4> _chatColors;
 
         private readonly IList<string> _inputHistory = new List<string>();
-
-        private bool _disposing;
 
         // To prevent the TextEntered from the key toggling chat being registered.
         private bool _ignoreFirstText;
@@ -47,14 +41,14 @@ namespace SS14.Client.UserInterface.CustomControls
             get => _input.Focus;
             set => _input.Focus = value;
         }
-        
-        public Chatbox(string uniqueName, Vector2i size, IResourceCache resourceCache) : base(size)
+
+        public Chatbox(Vector2i size) : base(size)
         {
             ScrollbarH.Visible = false;
-            
+
             _input = new Textbox(Size.X)
             {
-                BackgroundColor = new Color4(128, 128, 128, 100),
+                BackgroundColor = new Color4(128, 128, 128, 128),
                 ForegroundColor = new Color4(255, 250, 240, 255)
             };
             _input.OnSubmit += input_OnSubmit;
@@ -73,9 +67,18 @@ namespace SS14.Client.UserInterface.CustomControls
                 [ChatChannel.Visual] = Color4.Yellow,
             };
 
-            BackgroundColor = new Color4(128, 128, 128, 100);
+            BackgroundColor = new Color4(128, 128, 128, 128);
+            BorderColor = new Color4(0, 0, 0, 128);
             DrawBackground = true;
             DrawBorder = true;
+        }
+
+        public override bool MouseDown(MouseButtonEventArgs e)
+        {
+            if (base.MouseDown(e))
+                return true;
+
+            return _input.MouseDown(e);
         }
 
         public override bool KeyDown(KeyEventArgs e)
@@ -149,12 +152,12 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override void Dispose()
         {
-            _disposing = true;
+            base.Dispose();
+
             TextSubmitted = null;
             _input.Clear();
             _input = null;
             _chatColors.Clear();
-            base.Dispose();
         }
 
         public override void DoLayout()
@@ -168,7 +171,7 @@ namespace SS14.Client.UserInterface.CustomControls
             base.OnCalcPosition();
 
             if (_input != null)
-                _input.LocalPosition = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom);
+                _input.LocalPosition = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom + 1);
         }
 
         public override void Update(float frameTime)
@@ -179,12 +182,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public override void Draw()
         {
-            if (_disposing || !Visible) return;
-            CluwneLib.BlendingMode = BlendingModes.Modulated;
-            var clientRect = ClientArea.Translated(Position);
-            CluwneLib.drawRectangle(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height, new Color4(0, 0, 0, 100));
-            CluwneLib.drawRectangle(clientRect.Left, clientRect.Top, clientRect.Width, clientRect.Height, new Color4(211, 211, 211, 100));
-            CluwneLib.BlendingMode = BlendingModes.None;
+            if (Disposed || !Visible) return;
             base.Draw();
             _input.Draw();
         }
@@ -253,7 +251,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void AddLine(string message, ChatChannel channel)
         {
-            if (_disposing) return;
+            if (Disposed) return;
 
             var lineHeight = 12;
 
@@ -301,7 +299,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
-                TextSubmitted(this, text);
+                TextSubmitted?.Invoke(this, text);
                 _inputHistory.Insert(0, text);
             }
 

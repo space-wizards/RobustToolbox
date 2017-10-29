@@ -249,7 +249,7 @@ namespace SS14.Client.State.States
             _uiScreen.AddControl(_menu);
 
             //Init GUI components
-            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
+            _gameChat = new Chatbox(_gameChatSize);
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10);};

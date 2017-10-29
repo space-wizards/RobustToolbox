@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ServiceModel.Channels;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
@@ -21,7 +20,7 @@ namespace SS14.Client.UserInterface.Controls
         private static readonly Color4 _dbgBoundColor = new Color4(255, 0, 0, 32);
         private static readonly Color4 _dbgFocusColor = new Color4(0, 0, 255, 32);
 
-        public static bool GlobalDebug { get; set; } = true;
+        public static bool GlobalDebug { get; set; } = false;
 
         protected static IResourceCache _resourceCache;
         protected static IUserInterfaceManager UiManager;

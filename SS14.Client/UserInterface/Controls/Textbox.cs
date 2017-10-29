@@ -83,18 +83,25 @@ namespace SS14.Client.UserInterface.Controls
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
+            // assume width already set.
+            var totalSize = Size;
+            
             var boundsLeft = _textboxLeft.LocalBounds;
             var boundsMain = _textboxMain.LocalBounds;
             var boundsRight = _textboxRight.LocalBounds;
+            
+            var height = totalSize.Y;
+            height = (int) Math.Max(height, boundsLeft.Height);
+            height = (int) Math.Max(height, boundsMain.Height);
+            height = (int) Math.Max(height, boundsRight.Height);
 
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) boundsLeft.Width, (int) boundsLeft.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, Width, (int) boundsMain.Height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, (int) boundsRight.Height);
+            Height = height;
 
-            _clientArea = Box2i.FromDimensions(new Vector2i(),
-                new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width,
-                    Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height),
-                        _clientAreaMain.Height)));
+            _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
+
+            _clientAreaLeft = Box2i.FromDimensions(0,0, (int) boundsLeft.Width, height);
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, (int) (Width - boundsLeft.Width - boundsRight.Width), height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, height);
         }
 
         /// <inheritdoc />
@@ -106,7 +113,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         /// <inheritdoc />
-        public override void Draw()
+        protected override void DrawContents()
         {
             if (BackgroundColor != Color4.White)
             {
@@ -118,6 +125,7 @@ namespace SS14.Client.UserInterface.Controls
             _textboxLeft.SetTransformToRect(_clientAreaLeft.Translated(Position));
             _textboxMain.SetTransformToRect(_clientAreaMain.Translated(Position));
             _textboxRight.SetTransformToRect(_clientAreaRight.Translated(Position));
+
             _textboxLeft.Draw();
             _textboxMain.Draw();
             _textboxRight.Draw();
@@ -128,10 +136,8 @@ namespace SS14.Client.UserInterface.Controls
             _textSprite.FillColor = ForegroundColor;
 
             _textSprite.Draw();
-
-            base.Draw();
         }
-
+        
         /// <inheritdoc />
         public override void Dispose()
         {

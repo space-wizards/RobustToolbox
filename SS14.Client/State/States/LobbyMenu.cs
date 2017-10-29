@@ -130,7 +130,7 @@ namespace SS14.Client.State.States
             imgChatBg.Resize += (sender, args) => { imgChatBg.LocalPosition = new Vector2i(0, -9 + -imgChatBg.Height); };
             imgMainBg.AddControl(imgChatBg);
 
-            _lobbyChat = new Chatbox("lobbychat", new Vector2i(780, 225), ResourceCache);
+            _lobbyChat = new Chatbox(new Vector2i(780, 225));
             _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
             imgChatBg.AddControl(_lobbyChat);
 

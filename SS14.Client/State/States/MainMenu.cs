@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define uiDev
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -8,6 +10,7 @@ using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States
@@ -106,6 +109,13 @@ namespace SS14.Client.State.States
             lblVersion.Alignment = Align.Right | Align.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
             _uiScreen.AddControl(lblVersion);
+
+#if uiDev
+            var chat = new Chatbox(new Vector2i(400, 200));
+            chat.LocalPosition = new Vector2i(25, 25);
+            _uiScreen.AddControl(chat);
+
+#endif
         }
 
         /// <inheritdoc />

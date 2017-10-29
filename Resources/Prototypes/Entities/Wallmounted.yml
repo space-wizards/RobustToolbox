@@ -1,6 +1,6 @@
 - type: entity
-  id: Extinguisher
-  name: Extinguisher Cabinet
+  id: __engine_extinguisher
+  name: "[engine] Extinguisher Cabinet"
   components:
   - type: Transform
   - type: Clickable
@@ -19,8 +19,8 @@
     - Wallmount
 
 - type: entity
-  id: FireAlarm
-  name: Fire Alarm
+  id: __engine_fire_alarm
+  name: "[engine] Fire Alarm"
   components:
   - type: Transform
   - type: Clickable
@@ -42,8 +42,8 @@
     - Wallmount
 
 - type: entity
-  id: MedCabinet
-  name: Medical Cabinet
+  id: __engine_med_cabinet
+  name: "[engine] Medical Cabinet"
   components:
   - type: Transform
   - type: Clickable

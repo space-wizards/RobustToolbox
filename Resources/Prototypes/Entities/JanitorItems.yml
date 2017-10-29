@@ -1,6 +1,6 @@
 - type: entity
-  id: Mop
-  name: Mop
+  id: __engine_mop
+  name: "[engine] mop"
   components:
   - type: Transform
   - type: Clickable

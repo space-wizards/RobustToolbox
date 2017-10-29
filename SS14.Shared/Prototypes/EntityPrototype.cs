@@ -1,18 +1,14 @@
 ﻿using OpenTK;
-using SS14.Shared.IoC;
-using SS14.Shared.IoC.Exceptions;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.Reflection;
+using SS14.Shared.IoC;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using YamlDotNet.RepresentationModel;
-using SS14.Shared.Log;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Shared.GameObjects
@@ -46,24 +42,15 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
-        public string PlacementMode
-        {
-            get { return placementMode; }
-            protected set { placementMode = value; }
-        }
-        private string placementMode = "PlaceNearby";
+        public string PlacementMode { get; protected set; } = "PlaceNearby";
+
         private bool placementmodeoverriden = false;
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
-        public int PlacementRange
-        {
-            get { return placementRange; }
-            protected set { placementRange = value; }
-        }
+        public int PlacementRange { get; protected set; } = DEFAULT_RANGE;
         private const int DEFAULT_RANGE = 200;
-        private int placementRange = DEFAULT_RANGE;
 
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
@@ -76,6 +63,11 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public Vector2i PlacementOffset { get; protected set; }
         private bool placementoverriden = false;
+
+        /// <summary>
+        /// True if this entity will be saved by the map loader.
+        /// </summary>
+        public bool MapSavable { get; protected set; } = true;
 
         /// <summary>
         /// The prototype we inherit from.
@@ -145,6 +137,12 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode<YamlMappingNode>("placement", out var placementMapping))
             {
                 ReadPlacementProperties(placementMapping);
+            }
+
+            // SAVING
+            if (mapping.TryGetNode("save", out node))
+            {
+                MapSavable = node.AsBool();
             }
         }
 
@@ -245,28 +243,28 @@ namespace SS14.Shared.GameObjects
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
             }
-            
-            if(!target.placementoverriden)
+
+            if (!target.placementoverriden)
             {
                 target.PlacementMode = source.PlacementMode;
             }
 
-            if(!target.placementoverriden)
+            if (!target.placementoverriden)
             {
                 target.PlacementOffset = source.PlacementOffset;
             }
 
-            if(target.MountingPoints == null && source.MountingPoints != null)
+            if (target.MountingPoints == null && source.MountingPoints != null)
             {
                 target.MountingPoints = new List<int>(source.MountingPoints);
             }
 
-            if(target.PlacementRange == DEFAULT_RANGE)
+            if (target.PlacementRange == DEFAULT_RANGE)
             {
                 target.PlacementRange = source.PlacementRange;
             }
 
-            if(!target.snapoverriden)
+            if (!target.snapoverriden)
             {
                 foreach (var flag in source.SnapFlags)
                 {
@@ -330,7 +328,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public bool CanSpawnAt(IMapGrid grid, Vector2 position)
         {
-            if(!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
+            if (!grid.OnSnapCenter(position) && !grid.OnSnapBorder(position)) //We only check snap position logic at this time, extensible for other behavior
             {
                 return true;
             }

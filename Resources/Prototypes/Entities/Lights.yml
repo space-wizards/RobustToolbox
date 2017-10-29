@@ -1,6 +1,6 @@
 - type: entity
-  id: WallLight
-  name: Wall Light
+  id: __engine_wall_light
+  name: "[engine] Wall Light"
   components:
   - type: Transform
   - type: Clickable

@@ -29,6 +29,7 @@ using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Interfaces.Reflection;
 
 namespace SS14.Client.Placement
 {
@@ -42,6 +43,8 @@ namespace SS14.Client.Placement
         public readonly IPlayerManager PlayerManager;
         [Dependency]
         public readonly IResourceCache ResourceCache;
+        [Dependency]
+        public readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
         public Sprite CurrentBaseSprite;
@@ -54,18 +57,19 @@ namespace SS14.Client.Placement
 
         public PlacementManager()
         {
-            Type type = typeof(PlacementMode);
-            List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            List<Type> types = assemblies.SelectMany(t => t.GetTypes()).Where(p => type.IsAssignableFrom(p)).ToList();
-
-            _modeDictionary.Clear();
-            foreach (Type t in types)
-                _modeDictionary.Add(t.Name, t);
-
             Clear();
         }
 
         #region IPlacementManager Members
+
+        public void Initialize()
+        {
+            _modeDictionary.Clear();
+            foreach (var type in ReflectionManager.GetAllChildren<PlacementMode>())
+            {
+                _modeDictionary.Add(type.Name, type);
+            }
+        }
 
         public bool IsActive { get; private set; }
         public bool Eraser { get; private set; }

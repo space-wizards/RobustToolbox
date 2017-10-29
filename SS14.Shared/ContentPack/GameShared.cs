@@ -8,5 +8,9 @@
         public virtual void Init()
         {
         }
+
+        public virtual void Update(AssemblyLoader.UpdateLevel level, float frameTime)
+        {
+        }
     }
 }

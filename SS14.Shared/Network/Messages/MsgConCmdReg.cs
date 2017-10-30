@@ -29,7 +29,9 @@ namespace SS14.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            for (ushort i = buffer.ReadUInt16(); i > 0; i--)
+            var cmdCount = buffer.ReadUInt16();
+            Commands = new Command[cmdCount];
+            for (var i = 0; i < cmdCount; i++)
             {
                 Commands[i] = new Command()
                 {
@@ -42,6 +44,9 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
+            if(Commands == null) // client leaves comands as null to request from server
+                Commands = new Command[0];
+
             buffer.Write((UInt16)Commands.Length);
             foreach (var command in Commands)
             {

@@ -219,6 +219,7 @@
     <Compile Include="ResourceManagement\SpriteResource.cs" />
     <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="UserInterface\Align.cs" />
+    <Compile Include="UserInterface\Controls\ListPanel.cs" />
     <Compile Include="UserInterface\Controls\Panel.cs" />
     <Compile Include="UserInterface\Controls\Screen.cs" />
     <Compile Include="Utility\Rand.cs" />

@@ -199,14 +199,13 @@ namespace SS14.Client.UserInterface.Controls
             CurrentlySelected = null;
             _dropDown.Container.DisposeAllChildren();
 
-            Control lastItem = _dropDown.Container;
+            var list = new ListPanel();
+            list.DrawBackground = false;
+            _dropDown.Container.AddControl(list);
+            
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
-                newEntry.Parent = lastItem;
-                lastItem = newEntry;
-
-                newEntry.Alignment = Align.Bottom;
-                newEntry.DoLayout();
+                newEntry.Parent = list;
                 newEntry.Clicked += NewEntryClicked;
             }
 

@@ -115,6 +115,16 @@ namespace SS14.Client.State.States
             chat.LocalPosition = new Vector2i(25, 25);
             _uiScreen.AddControl(chat);
 
+            var listPanel = new ListPanel();
+            listPanel.Size = new Vector2i(200, 200);
+            listPanel.LocalPosition = new Vector2i(450, 250);
+            _uiScreen.AddControl(listPanel);
+
+            for (var i = 0; i < 5; i++)
+            {
+                var label = new Label($"Label: {i}", "CALIBRI");
+                listPanel.AddControl(label);
+            }
 #endif
         }
 

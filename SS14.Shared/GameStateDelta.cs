@@ -33,7 +33,10 @@ namespace SS14.Shared
         {
             Sequence = toState.Sequence;
             FromSequence = fromState.Sequence;
-            deltaBytes = Bsdiff.Bsdiff.GenerateBzip2Diff(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer());
+            using (var stream = Bsdiff.Bsdiff.GenerateBzip2Diff(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer()))
+            {
+                deltaBytes = stream.ToArray();
+            }
         }
 
         public GameState Apply(GameState fromState)
@@ -41,9 +44,11 @@ namespace SS14.Shared
             if (fromState.Sequence != FromSequence)
                 throw new Exception("Cannot apply GameStateDelta. Sequence incorrect.");
             byte[] fromBuffer = fromState.GetSerializedDataStream().ToArray();
-            var newBytes = Bsdiff.Bsdiff.ApplyBzip2Patch(fromBuffer, deltaBytes);
-            var serializer = IoCManager.Resolve<ISS14Serializer>();
-            return serializer.Deserialize<GameState>(new MemoryStream(newBytes));
+            using (var newBytes = Bsdiff.Bsdiff.ApplyBzip2Patch(fromBuffer, deltaBytes))
+            {
+                var serializer = IoCManager.Resolve<ISS14Serializer>();
+                return serializer.Deserialize<GameState>(newBytes);
+            }
         }
     }
 }

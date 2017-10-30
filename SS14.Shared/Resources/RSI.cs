@@ -18,7 +18,16 @@ namespace SS14.Shared.Resources
         public Vector2u Size { get; private set; }
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
 
-        
+        public State this[StateId key]
+        {
+            get => States[key];
+            set => States[key] = value;
+        }
+
+        public State AddState(StateId stateId)
+        {
+
+        }
 
         [Flags]
         public enum Selectors
@@ -28,6 +37,7 @@ namespace SS14.Shared.Resources
 
         public class State
         {
+            public Vector2u Size { get; private set; }
 
         }
 
@@ -48,6 +58,11 @@ namespace SS14.Shared.Resources
             public override string ToString()
             {
                 return Name;
+            }
+
+            public static implicit operator StateId(string key)
+            {
+                return new StateId(key, Selectors.None);
             }
         }
     }

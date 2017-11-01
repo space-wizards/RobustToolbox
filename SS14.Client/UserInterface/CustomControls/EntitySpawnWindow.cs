@@ -155,7 +155,7 @@ namespace SS14.Client.UserInterface.CustomControls
             BuildEntityList();
         }
 
-        private void entSearchTextbox_OnSubmit(string text, Textbox sender)
+        private void entSearchTextbox_OnSubmit(Textbox sender, string text)
         {
             BuildEntityList(text);
         }

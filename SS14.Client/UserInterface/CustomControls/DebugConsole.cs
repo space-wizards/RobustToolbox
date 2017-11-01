@@ -156,7 +156,7 @@ namespace SS14.Client.UserInterface.CustomControls
             return false;
         }
 
-        private void TxtInputOnSubmit(string text, Textbox sender)
+        private void TxtInputOnSubmit(Textbox sender, string text)
         {
             AddLine("> " + text, new Color4(255, 250, 240, 255));
 

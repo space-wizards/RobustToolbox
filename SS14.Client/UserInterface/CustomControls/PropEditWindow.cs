@@ -48,7 +48,7 @@ namespace SS14.Client.UserInterface.CustomControls
             Update(0);
         }
 
-        private void search_OnSubmit(string text, Textbox sender)
+        private void search_OnSubmit(Textbox sender, string text)
         {
             foreach (PropWindowStruct struc in ObjPropList)
             {
@@ -122,7 +122,7 @@ namespace SS14.Client.UserInterface.CustomControls
             field.SetValue(assigned, newValue);
         }
 
-        private void editNum_OnSubmit(string text, Textbox sender)
+        private void editNum_OnSubmit(Textbox sender, string text)
         {
             var field = (FieldInfo) sender.UserData;
             object set = null;
@@ -154,7 +154,7 @@ namespace SS14.Client.UserInterface.CustomControls
             field.SetValue(assigned, state);
         }
 
-        private void editStr_OnSubmit(string text, Textbox sender)
+        private void editStr_OnSubmit(Textbox sender, string text)
         {
             var field = (FieldInfo) sender.UserData;
             if (field.IsInitOnly || field.IsLiteral) return;

@@ -56,7 +56,7 @@ namespace SS14.Client.State.States
             txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
             txtConnect.Alignment = Align.Left | Align.Bottom;
             txtConnect.LocalPosition = new Vector2i(10, 50);
-            txtConnect.OnSubmit += (text, sender) => { StartConnect(text); };
+            txtConnect.OnSubmit += (sender, text) => { StartConnect(text); };
             imgTitle.AddControl(txtConnect);
 
             var btnConnect = new ImageButton();

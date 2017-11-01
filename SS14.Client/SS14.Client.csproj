@@ -221,7 +221,9 @@
     <Compile Include="UserInterface\Align.cs" />
     <Compile Include="UserInterface\Controls\ListPanel.cs" />
     <Compile Include="UserInterface\Controls\Panel.cs" />
+    <Compile Include="UserInterface\Controls\RichTextPanel.cs" />
     <Compile Include="UserInterface\Controls\Screen.cs" />
+    <Compile Include="UserInterface\Style.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\HelpCommands.cs" />

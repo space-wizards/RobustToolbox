@@ -9,7 +9,7 @@ using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
-    public class Chatbox : ScrollableContainer
+    public class Chatbox : Panel
     {
         public delegate void TextSubmitHandler(Chatbox chatbox, string text);
 
@@ -19,7 +19,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private readonly IList<string> _inputHistory = new List<string>();
 
-        // To prevent the TextEntered from the key toggling chat being registered.
+        /// <summary>
+        ///     To prevent the TextEntered from the key toggling chat being registered.
+        /// </summary>
         private bool _ignoreFirstText;
 
         /// <summary>
@@ -32,7 +34,8 @@ namespace SS14.Client.UserInterface.CustomControls
         /// </summary>
         private string _inputTemp;
 
-        private Textbox _input;
+        private readonly Textbox _input;
+        private readonly ScrollableContainer _historyBox;
 
         private int _lastY;
 
@@ -42,16 +45,24 @@ namespace SS14.Client.UserInterface.CustomControls
             set => _input.Focus = value;
         }
 
-        public Chatbox(Vector2i size) : base(size)
+        public Chatbox(Vector2i size)
         {
-            ScrollbarH.Visible = false;
+            BackgroundColor = new Color4(128, 128, 128, 128);
+            BorderColor = new Color4(0, 0, 0, 128);
+            DrawBackground = true;
+            DrawBorder = true;
+
+            Size = size;
+
+            _historyBox = new ScrollableContainer(size);
+            AddControl(_historyBox);
 
             _input = new Textbox(Size.X)
             {
                 BackgroundColor = new Color4(128, 128, 128, 128),
                 ForegroundColor = new Color4(255, 250, 240, 255)
             };
-            _input.OnSubmit += input_OnSubmit;
+            _input.OnSubmit += (sender, text) => input_OnSubmit(sender, text);
 
             _chatColors = new Dictionary<ChatChannel, Color4>
             {
@@ -66,11 +77,6 @@ namespace SS14.Client.UserInterface.CustomControls
                 [ChatChannel.Emote] = Color4.Cyan,
                 [ChatChannel.Visual] = Color4.Yellow,
             };
-
-            BackgroundColor = new Color4(128, 128, 128, 128);
-            BorderColor = new Color4(0, 0, 0, 128);
-            DrawBackground = true;
-            DrawBorder = true;
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -155,15 +161,15 @@ namespace SS14.Client.UserInterface.CustomControls
             base.Dispose();
 
             TextSubmitted = null;
-            _input.Clear();
-            _input = null;
+            _input.Dispose();
             _chatColors.Clear();
         }
 
         public override void DoLayout()
         {
             base.DoLayout();
-            _input?.DoLayout();
+            _input.Width = ClientArea.Width;
+            _input.DoLayout();
         }
 
         protected override void OnCalcPosition()
@@ -177,7 +183,7 @@ namespace SS14.Client.UserInterface.CustomControls
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            _input?.Update(frameTime);
+            _input.Update(frameTime);
         }
 
         public override void Draw()
@@ -253,6 +259,8 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Disposed) return;
 
+            /*
+
             var lineHeight = 12;
 
             var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
@@ -279,6 +287,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 Update(0);
                 ScrollbarV.Value = ScrollbarV.Max;
             }
+
+            */
+
         }
 
         private void CheckAndSetLine(string line)
@@ -295,7 +306,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 text.Text = line;
         }
 
-        private void input_OnSubmit(string text, Textbox sender)
+        private void input_OnSubmit(Textbox sender, string text)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {

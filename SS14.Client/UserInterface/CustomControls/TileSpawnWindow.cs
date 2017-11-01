@@ -88,7 +88,7 @@ namespace SS14.Client.UserInterface.CustomControls
             BuildTileList();
         }
 
-        private void tileSearchTextbox_OnSubmit(string text, Textbox sender)
+        private void tileSearchTextbox_OnSubmit(Textbox sender, string text)
         {
             BuildTileList(text);
         }

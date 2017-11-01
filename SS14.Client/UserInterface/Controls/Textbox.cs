@@ -14,7 +14,7 @@ namespace SS14.Client.UserInterface.Controls
 {
     internal class Textbox : Control
     {
-        public delegate void TextSubmitHandler(string text, Textbox sender);
+        public delegate void TextSubmitHandler(Textbox sender, string text);
 
         private const float CaretHeight = 12;
         private const float CaretWidth = 2;
@@ -328,7 +328,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private void Submit()
         {
-            OnSubmit?.Invoke(Text, this);
+            OnSubmit?.Invoke(this, Text);
 
             if (ClearOnSubmit)
                 Clear();

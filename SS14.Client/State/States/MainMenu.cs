@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Lidgren.Network;
+using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface;
@@ -125,6 +126,19 @@ namespace SS14.Client.State.States
                 var label = new Label($"Label: {i}", "CALIBRI");
                 listPanel.AddControl(label);
             }
+            var rtp = new RichTextPanel();
+            rtp.Size = new Vector2i(400, 200);
+            rtp.LocalPosition = new Vector2i(25, 250);
+            rtp.BackgroundColor = Color4.DarkGray;
+            rtp.ForegroundColor = new Color4(230, 230, 230, 255);
+            rtp.DrawBorder = true;
+            rtp.DrawBackground = true;
+            _uiScreen.AddControl(rtp);
+            
+            rtp.Text.Append("Textbox says, \"Oh, my, God Becky, look at the image.\"\n");
+            rtp.Text.Append("Textbox says, \"It is so big, it looks like, one of those buttons' girlfriends.\"\n");
+            rtp.Text.Append("Textbox says, \"I mean, the image, is just so big. I can't believe it's just so square, it's like out there.\"\n");
+            rtp.Text.Append("Textbox says, \"I mean gross, look. It's just so, black!\"\n");
 #endif
         }
 

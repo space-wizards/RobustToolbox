@@ -12,6 +12,7 @@ using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Network.Messages;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.Components
@@ -252,9 +253,10 @@ namespace SS14.Client.UserInterface.Components
             if (!netMgr.IsConnected)
                 return;
 
-            NetOutgoingMessage outMsg = netMgr.CreateMessage();
-            outMsg.Write((byte)NetMessages.ConsoleCommandRegister);
-            netMgr.ClientSendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
+            // empty message to request commands
+            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            
             sentCommandRequestToServer = true;
         }
 

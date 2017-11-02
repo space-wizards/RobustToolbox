@@ -1,6 +1,6 @@
 - type: entity
-  id: Door
-  name: Door
+  id: __engine_door
+  name: "[engine] Real Fake Door"
   components:
   - type: Transform
   - type: Clickable

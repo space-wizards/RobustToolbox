@@ -1,31 +1,23 @@
-﻿using SS14.Server.Interfaces.Maps;
+﻿using SS14.Server.Interfaces.GameObjects;
+using SS14.Server.Interfaces.Maps;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
-using SS14.Server.Interfaces.GameObjects;
-using System.Xml;
-using System.Xml.Linq;
-using System.IO;
-using System;
-using System.Globalization;
-using SS14.Shared.Maths;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Map;
-using System.Collections.Generic;
-using SS14.Shared.GameObjects;
-using SS14.Shared.Prototypes;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
+using SS14.Shared.Prototypes;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Xml.Linq;
 
 namespace SS14.Server.Maps
 {
     public class MapLoader : IMapLoader
     {
-        private static HashSet<string> ForbiddenPrototypeNames = new HashSet<string>()
-        {
-            "HumanMob",
-            "HumanMob_Content",
-        };
-
         [Dependency]
         private IResourceManager resourceManager;
 
@@ -83,7 +75,7 @@ namespace SS14.Server.Maps
             foreach (var entity in entityManager.GetEntities(new AllEntityQuery()))
             {
                 var transform = entity.GetComponent<IServerTransformComponent>();
-                if (transform.MapID != map.Index || ForbiddenPrototypeNames.Contains(entity.Prototype.ID))
+                if (transform.MapID != map.Index || !entity.Prototype.MapSavable)
                 {
                     continue;
                 }

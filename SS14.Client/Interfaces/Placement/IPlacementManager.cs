@@ -11,6 +11,7 @@ namespace SS14.Client.Interfaces.Placement
 {
     public interface IPlacementManager
     {
+        void Initialize();
         bool IsActive { get; }
         bool Eraser { get; }
 

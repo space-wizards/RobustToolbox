@@ -1,6 +1,6 @@
 ﻿using SS14.Shared.Maths;
 
-namespace SS14.Client.Graphics.View
+namespace SS14.Client.Graphics.Views
 {
     public class Viewport
     {

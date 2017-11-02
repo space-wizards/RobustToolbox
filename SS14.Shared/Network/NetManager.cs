@@ -359,9 +359,9 @@ namespace SS14.Shared.Network
             {
                 instance.ReadFromBuffer(msg);
             }
-            catch (NetException e)
+            catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.Warning($"[NET] {address}: Failed to deserialize packet: {e.Message}");
+                Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
 
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))

@@ -8,6 +8,7 @@ using Sprite = SS14.Client.Graphics.Sprites.Sprite;
 using Texture = SS14.Client.Graphics.Textures.Texture;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2u = SS14.Shared.Maths.Vector2u;
+using View = SS14.Client.Graphics.Views.View;
 
 namespace SS14.Client.Graphics.Render
 {
@@ -86,6 +87,13 @@ namespace SS14.Client.Graphics.Render
         }
 
         public RenderTarget SFMLTarget => _renderTexture;
+
+        public View View
+        {
+            // SFML makes a new view on fetch so this isn't managed by anything else.
+            get => new View(SFMLTarget.GetView());
+            set => SFMLTarget.SetView(value.SFMLView);
+        }
 
         #endregion Accessors
 
@@ -364,12 +372,17 @@ namespace SS14.Client.Graphics.Render
                 blitsprite.TextureRect = crop;
             }
 
-            if (CluwneLib.CurrentRenderTarget == this)
+            var target = CluwneLib.CurrentRenderTarget;
+            if (target == this)
             {
                 return;
             }
 
+            // Change view to default so blitting ignores the camera and such.
+            var oldview = target.SFMLTarget.GetView();
+            target.SFMLTarget.SetView(target.SFMLTarget.DefaultView);
             blitsprite.Draw();
+            target.SFMLTarget.SetView(oldview);
         }
 
         #endregion Drawing Methods

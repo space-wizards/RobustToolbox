@@ -520,6 +520,7 @@ namespace SS14.Server
         {
             IoCManager.Resolve<IServerNetManager>().ProcessPackets();
 
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);
             switch (Level)
             {
                 case RunLevel.Game:
@@ -545,6 +546,7 @@ namespace SS14.Server
                         StartGame();
                     break;
             }
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             SendGameStateUpdate();
             IoCManager.Resolve<IConsoleManager>().Update();

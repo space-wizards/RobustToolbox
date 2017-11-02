@@ -1,6 +1,6 @@
 ﻿- type: entity
-  id: Worktop
-  name: Worktop
+  id: __engine_worktop
+  name: "[engine] worktop"
   components:
   - type: Transform
   - type: Clickable

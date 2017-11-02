@@ -20,6 +20,7 @@ namespace SS14.Server.Interfaces.Player
 
         int PlayerCount { get; }
 
+        string PlayerPrototypeName { get; set; }
         void SpawnPlayerMob(IPlayerSession session);
 
         [Obsolete("Use GetSessionById")]

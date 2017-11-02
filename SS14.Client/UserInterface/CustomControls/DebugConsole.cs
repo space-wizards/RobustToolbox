@@ -14,6 +14,10 @@ using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using SS14.Shared.Network.Messages;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -267,8 +271,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 return;
 
             var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
-            // client request is empty
+            // empty message to request commands
             netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            
             sentCommandRequestToServer = true;
         }
     }

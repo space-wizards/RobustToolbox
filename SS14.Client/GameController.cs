@@ -32,6 +32,7 @@ using VideoMode = SS14.Client.Graphics.Render.VideoMode;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Maths;
 using SS14.Client.Graphics.Lighting;
+using SS14.Client.Interfaces.Placement;
 
 namespace SS14.Client
 {
@@ -61,6 +62,8 @@ namespace SS14.Client
         private readonly IResourceManager _resourceManager;
         [Dependency]
         private readonly IMapManager _mapManager;
+        [Dependency]
+        private readonly IPlacementManager _placementManager;
 
         #endregion Fields
 
@@ -107,6 +110,7 @@ namespace SS14.Client
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
             _mapManager.Initialize();
+            _placementManager.Initialize();
 
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
@@ -243,7 +247,9 @@ namespace SS14.Client
         {
             _networkManager.ProcessPackets();
             CluwneLib.RunIdle(this, e);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, e.Elapsed);
             _stateManager.Update(e);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, e.Elapsed);
         }
 
         /// <summary>

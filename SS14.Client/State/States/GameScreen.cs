@@ -2,14 +2,18 @@
 using OpenTK;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Input;
+using SS14.Client.Graphics.Lighting;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Shader;
+using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Textures;
+using SS14.Client.Graphics.Views;
 using SS14.Client.Helpers;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.State;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Components;
@@ -21,6 +25,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -28,18 +33,12 @@ using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Client.Graphics.Lighting;
-using Vector2i = SS14.Shared.Maths.Vector2i;
-using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.Graphics.Input;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
-using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Textures;
-using SS14.Client.Interfaces;
+using Vector2 = SS14.Shared.Maths.Vector2;
+using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Shared.Interfaces.Timing;
 
 namespace SS14.Client.State.States
 {
@@ -69,6 +68,7 @@ namespace SS14.Client.State.States
         #region Mouse/Camera stuff
         public ScreenCoordinates MousePosScreen = new ScreenCoordinates(0, 0, 0);
         public LocalCoordinates MousePosWorld = new LocalCoordinates(0, 0, 0, 0);
+        private View view;
         #endregion Mouse/Camera stuff
 
         #region UI Variables
@@ -87,6 +87,9 @@ namespace SS14.Client.State.States
         private Sprite _lightTargetSprite;
 
         private bool bPlayerVision = false;
+        /// <summary>
+        ///     True if lighting is disabled.
+        /// </summary>
         private bool bFullVision = false;
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
@@ -179,15 +182,22 @@ namespace SS14.Client.State.States
         {
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
+            view = new View(Vector2.Zero, new Vector2(width, height));
             _baseTarget = new RenderImage("baseTarget", width, height, true);
             _cleanupList.Add(_baseTarget);
 
             _baseTargetSprite = new Sprite(_baseTarget.Texture);
             _cleanupSpriteList.Add(_baseTargetSprite);
 
-            _sceneTarget = new RenderImage("sceneTarget", width, height, true);
+            _sceneTarget = new RenderImage("sceneTarget", width, height, true)
+            {
+                View = view
+            };
             _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage("tilesTarget", width, height, true);
+            _tilesTarget = new RenderImage("tilesTarget", width, height, true)
+            {
+                View = view
+            };
             _cleanupList.Add(_tilesTarget);
 
             _overlayTarget = new RenderImage("OverlayTarget", width, height, true);
@@ -328,7 +338,14 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.ControlledEntity != null)
             {
-                CluwneLib.Window.Camera.Position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                var newpos = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                if (CluwneLib.Camera.Position != newpos)
+                {
+                    CluwneLib.Camera.Position = newpos;
+                    view.Center = newpos * CluwneLib.Camera.PixelsPerMeter;
+                    _sceneTarget.View = view;
+                    _tilesTarget.View = view;
+                }
                 MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
             }
         }
@@ -340,48 +357,52 @@ namespace SS14.Client.State.States
 
             CalculateAllLights();
 
-            if (PlayerManager.ControlledEntity != null)
+            if (PlayerManager.ControlledEntity == null)
             {
-                var vp = CluwneLib.WorldViewport;
-                var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
-
-                if (!bFullVision)
-                {
-                    ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
-
-                    // Render the lightmap
-                    RenderLightsIntoMap(lights);
-                }
-
-                CalculateSceneBatches(vp);
-
-                //Draw all rendertargets to the scenetarget
-                _sceneTarget.BeginDrawing();
-                _sceneTarget.Clear(Color.Black);
-
-                //PreOcclusion
-                RenderTiles();
-
-                RenderComponents(e.Elapsed, vp, map);
-
-                RenderOverlay();
-
-                _sceneTarget.EndDrawing();
-                _sceneTarget.ResetCurrentRenderTarget();
-                //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
-
-                //Debug.DebugRendertarget(_sceneTarget);
-
-                if (bFullVision)
-                    _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
-                else
-                    LightScene();
-
-                DebugManager.RenderDebug(vp, map);
-
-                //Render the placement manager shit
-                PlacementManager.Render();
+                return;
             }
+
+            // vp is the rectangle in which we can render in world space.
+            var vp = CluwneLib.WorldViewport;
+            var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+
+            if (!bFullVision)
+            {
+                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+
+                // Render the lightmap
+                RenderLightsIntoMap(lights);
+            }
+
+            CalculateSceneBatches(vp);
+
+            //Draw all rendertargets to the scenetarget
+            _sceneTarget.BeginDrawing();
+            _sceneTarget.Clear(Color.Black);
+
+            //PreOcclusion
+            RenderTiles();
+
+            _sceneTarget.View = view;
+            RenderComponents(e.Elapsed, vp, map);
+
+            RenderOverlay();
+
+            _sceneTarget.EndDrawing();
+            _sceneTarget.ResetCurrentRenderTarget();
+            //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
+
+            //Debug.DebugRendertarget(_sceneTarget);
+
+            if (bFullVision)
+                _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
+            else
+                LightScene();
+
+            DebugManager.RenderDebug(vp, map);
+
+            //Render the placement manager shit
+            PlacementManager.Render();
         }
 
         private void RenderTiles()

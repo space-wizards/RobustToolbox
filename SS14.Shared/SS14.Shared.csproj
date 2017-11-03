@@ -240,6 +240,7 @@
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
     <Compile Include="Resources\RSI.cs" />
+    <Compile Include="Resources\RSIState.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
@@ -315,6 +316,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
+    <EmbeddedResource Include="Resources\RSISchema.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

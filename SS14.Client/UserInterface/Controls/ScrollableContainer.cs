@@ -14,8 +14,8 @@ namespace SS14.Client.UserInterface.Controls
         [Obsolete("Parent the control to the Container instead.")]
         public readonly List<Control> Components = new List<Control>();
 
-        protected readonly Scrollbar ScrollbarH;
-        protected readonly Scrollbar ScrollbarV;
+        public readonly Scrollbar ScrollbarH;
+        public readonly Scrollbar ScrollbarV;
 
         protected bool Disposing;
 

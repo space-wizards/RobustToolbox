@@ -9,14 +9,10 @@ using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using SS14.Shared.Network.Messages;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -24,6 +20,7 @@ namespace SS14.Client.UserInterface.CustomControls
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {
         private readonly Textbox _txtInput;
+        private readonly ListPanel _historyList;
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
 
         private int last_y;
@@ -64,6 +61,10 @@ namespace SS14.Client.UserInterface.CustomControls
                 ForegroundColor = new Color4(255, 250, 240, 255)
             };
             _txtInput.OnSubmit += TxtInputOnSubmit;
+
+            _historyList = new ListPanel();
+            Container.AddControl(_historyList);
+
             BackgroundColor = new Color4(64, 64, 64, 200);
             DrawBackground = true;
             DrawBorder = true;
@@ -81,10 +82,12 @@ namespace SS14.Client.UserInterface.CustomControls
                 Position = new Vector2i(5, last_y),
                 ForegroundColor = color
             };
-
-            newLabel.Update(0);
+            
             last_y = newLabel.ClientArea.Bottom;
-            Components.Add(newLabel);
+            _historyList.AddControl(newLabel);
+            _historyList.DoLayout();
+
+
             if (atBottom)
             {
                 Update(0);
@@ -94,7 +97,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public void Clear()
         {
-            Components.Clear();
+            _historyList.DisposeAllChildren();
+            _historyList.DoLayout();
             last_y = 0;
             ScrollbarV.Value = 0;
         }

@@ -36,6 +36,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private readonly Textbox _input;
         private readonly ScrollableContainer _historyBox;
+        private readonly ListPanel _chatHistoryList;
 
         public override bool Focus
         {
@@ -54,6 +55,9 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _historyBox = new ScrollableContainer(size);
             AddControl(_historyBox);
+
+            _chatHistoryList = new ListPanel();
+            _historyBox.Container.AddControl(_chatHistoryList);
 
             _input = new Textbox(Size.X)
             {
@@ -257,37 +261,29 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             if (Disposed) return;
 
-            /*
+            //TODO: LineHeight should be from the Font, not hard coded.
+            const int lineHeight = 12;
 
-            var lineHeight = 12;
-
-            var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
+            var scrollbarV = _historyBox.ScrollbarV;
+            var atBottom = scrollbarV.Value >= scrollbarV.Max;
 
             foreach (var content in CheckInboundMessage(message))
             {
-                var label = new Label(content, "CALIBRI")
+                _chatHistoryList.AddControl(new Label(content, "CALIBRI")
                 {
-                    LocalPosition = new Vector2i(5, _lastY),
                     Size = new Vector2i(ClientArea.Width - 10, lineHeight),
                     ForegroundColor = _chatColors[channel],
-                };
-                label.Update(0);
-                _lastY = label.ClientArea.Bottom;
-                Components.Add(label);
-
-                // If the message had newlines adjust the bottom to fix the extra lines
-                if (message.Split('\n').Length > 0)
-                    _lastY += lineHeight * (message.Split('\n').Length - 1);
+                });
             }
+
+            // always layout the control after changing things
+            _historyBox.DoLayout();
 
             if (atBottom)
             {
                 Update(0);
-                ScrollbarV.Value = ScrollbarV.Max;
+                scrollbarV.Value = scrollbarV.Max;
             }
-
-            */
-
         }
 
         private void CheckAndSetLine(string line)

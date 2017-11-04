@@ -10,8 +10,10 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.State.States
 {
@@ -42,6 +44,12 @@ namespace SS14.Client.State.States
 
         public override void InitializeGUI()
         {
+            //TODO: This needs to go in BaseClient
+            NetworkManager.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, message =>
+                Logger.Error($"[SRV] Unhandled NetMessage type: {message.MsgId}"));
+
+            NetworkManager.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandlePlayerList);
+
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
@@ -111,16 +119,16 @@ namespace SS14.Client.State.States
             _tabs.LocalPosition = new Vector2i(5, 90);
             imgMainBg.AddControl(_tabs);
 
-            var tabCharacter = new TabContainer("lobbyTabCharacter", new Vector2i(793, 450), ResourceCache);
-            tabCharacter.tabSpriteName = "lobby_tab_person";
+            var tabCharacter = new TabContainer(new Vector2i(793, 350));
+            tabCharacter.TabSpriteName = "lobby_tab_person";
             _tabs.AddTab(tabCharacter);
 
-            var tabObserve = new TabContainer("lobbyTabObserve", new Vector2i(793, 450), ResourceCache);
-            tabObserve.tabSpriteName = "lobby_tab_eye";
+            var tabObserve = new TabContainer(new Vector2i(793, 350));
+            tabObserve.TabSpriteName = "lobby_tab_eye";
             _tabs.AddTab(tabObserve);
 
-            var tabServer = new PlayerListTab("lobbyTabServer", new Vector2i(793, 450), ResourceCache);
-            tabServer.tabSpriteName = "lobby_tab_info";
+            var tabServer = new PlayerListTab(new Vector2i(793, 350));
+            tabServer.TabSpriteName = "lobby_tab_info";
             _tabs.AddTab(tabServer);
             _tabs.SelectTab(tabServer);
 
@@ -174,9 +182,6 @@ namespace SS14.Client.State.States
 
         public override void Update(FrameEventArgs e)
         {
-            // This might be a hacky solution, but the button loses focus way too fast.
-            //_btnReady.Focus = true;
-
             _lblServerInfo.Text = _serverName;
             _lblModeInfo.Text = _gameType;
             _lblPlayersInfo.Text = _serverPlayers + " / " + _serverMaxPlayers;
@@ -260,11 +265,7 @@ namespace SS14.Client.State.States
                         case NetMessages.LobbyChat:
                             //TODO: Send player messages to a lobby chat
                             break;
-
-                        case NetMessages.PlayerList:
-                            HandlePlayerList(message);
-                            break;
-
+                            
                         case NetMessages.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
@@ -299,29 +300,35 @@ namespace SS14.Client.State.States
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
-        private void HandlePlayerList(NetIncomingMessage message)
+        private void HandlePlayerList(NetMessage message)
         {
             //TODO: Race between getting InitializeGUI setup before we receive PlayerList message
             //TODO: Move all netcode to a new class.
             if(_tabServer == null)
                 return;
 
-            var playerCount = message.ReadByte();
+            var playerList = (MsgPlayerList) message;
+
+            var playerCount = playerList.PlyCount;
             _serverPlayers = playerCount;
-            _tabServer?._scPlayerList.Components.Clear();
+           // _tabServer?.PlayerList.Components.Clear();
+           _tabServer.PlayerList.DisposeAllChildren();
             var offY = 0;
             for (var i = 0; i < playerCount; i++)
             {
-                var currName = message.ReadString();
-                var currStatus = (SessionStatus) message.ReadByte();
-                var currRoundtrip = message.ReadFloat();
+                var plyr = playerList.Plyrs[i];
+
+                var currName = plyr.Name;
+                var currStatus = (SessionStatus) plyr.Status;
+                var currRoundtrip = plyr.Ping;
 
                 var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
                 newLabel.Position = new Vector2i(0, offY);
                 newLabel.ForegroundColor = Color.Black;
-                newLabel.Update(0);
+                newLabel.DoLayout();
                 offY += newLabel.ClientArea.Height;
-                _tabServer._scPlayerList.Components.Add(newLabel);
+                //_tabServer.PlayerList.Components.Add(newLabel);
+                _tabServer.PlayerList.AddControl(newLabel);
             }
         }
 

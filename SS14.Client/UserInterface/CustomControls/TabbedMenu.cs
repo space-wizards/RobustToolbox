@@ -14,8 +14,6 @@ namespace SS14.Client.UserInterface.CustomControls
 {
     internal class TabbedMenu : Control
     {
-        private readonly IResourceCache _resourceCache;
-
         private readonly List<KeyValuePair<ImageButton, TabContainer>> _tabs =
             new List<KeyValuePair<ImageButton, TabContainer>>();
 
@@ -23,11 +21,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private TabContainer _activeTab;
         private string botSprite;
         private string midSprite;
-
-#pragma warning disable CS0649
-        public Vector2 size;
-#pragma warning restore CS0649
-
         private string topSprite;
 
         public TabbedMenu()
@@ -109,13 +102,20 @@ namespace SS14.Client.UserInterface.CustomControls
 
         protected override void OnCalcRect()
         {
+            ClientArea = Box2i.FromDimensions(Position, new Vector2i(Size.X, Size.Y));
 
+            foreach (var kvTab in _tabs)
+            {
+                kvTab.Key.DoLayout();
+                kvTab.Value.DoLayout();
+            }
         }
-
+        
         public override void Update(float frameTime)
         {
             int prevHeight = 0;
 
+            // update the image buttons
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
@@ -128,10 +128,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 curr.Key.Update(frameTime);
             }
 
-            if (_activeTab != null)
-                _activeTab.Update(frameTime);
-
-            ClientArea = Box2i.FromDimensions(Position, new Vector2i((int)size.X, (int)size.Y));
+            _activeTab?.Update(frameTime);
         }
 
         public override void Draw()
@@ -139,7 +136,7 @@ namespace SS14.Client.UserInterface.CustomControls
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
                 KeyValuePair<ImageButton, TabContainer> curr = _tabs[i];
-                Sprite currTabSprite = curr.Value.tabSprite;
+                Sprite currTabSprite = curr.Value.TabSprite;
 
                 curr.Key.Draw();
 
@@ -152,9 +149,12 @@ namespace SS14.Client.UserInterface.CustomControls
                     currTabSprite.Draw();
                 }
             }
-
+        
             if (_activeTab != null)
+            {
+                _activeTab.DrawBorder = true;
                 _activeTab.Draw();
+            }
         }
 
         public override void Dispose()

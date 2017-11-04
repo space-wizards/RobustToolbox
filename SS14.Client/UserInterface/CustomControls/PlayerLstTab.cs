@@ -6,65 +6,42 @@ using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Network.Messages;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     internal class PlayerListTab : TabContainer
     {
-        public ScrollableContainer _scPlayerList;
+        public ListPanel PlayerList { get; }
 
-        public PlayerListTab(string uniqueName, Vector2i size, IResourceCache resourceCache)
-            : base(uniqueName, size, resourceCache)
+        public PlayerListTab(Vector2i size)
+            : base(size)
         {
-            DrawBorder = false;
+            //PlayerList = new ScrollableContainer(new Vector2i(784, 346));
+            //PlayerList.Position = new Vector2i(5, 10);
+            //Components.Add(PlayerList);
 
-            _scPlayerList = new ScrollableContainer(new Vector2i(784, 346));
-            _scPlayerList.Position = new Vector2i(5, 10);
-            Components.Add(_scPlayerList);
+            PlayerList = new ListPanel();
+            Container.AddControl(PlayerList);
         }
 
-        public override void Activated() //Called when tab is selected.
+        /// <inheritdoc />
+        public override void Activated()
         {
-            getPlayerList();
-        }
+            /*TODO: race condition where this is sending a message before the StringTable can be set up.
+             * TODO: Move all netcode to ClientBase class.
 
-        public void getPlayerList()
-        {
             var netManager = IoCManager.Resolve<IClientNetManager>();
-            NetOutgoingMessage playerListMsg = netManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            netManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
-        }
+            //NetOutgoingMessage playerListMsg = netManager.CreateMessage();
+            //playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
+            //netManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
 
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-        }
+            var msg = netManager.CreateNetMessage<MsgPlayerListReq>();
+            // msg is empty
+            netManager.ClientSendMessage(msg, NetDeliveryMethod.ReliableOrdered);
 
-        public override void Draw()
-        {
-            base.Draw();
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
-
-        public override bool MouseDown(MouseButtonEventArgs e)
-        {
-            return base.MouseDown(e);
-        }
-
-        public override bool MouseUp(MouseButtonEventArgs e)
-        {
-            return base.MouseUp(e);
-        }
-
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            base.MouseMove(e);
+            */
         }
     }
 }

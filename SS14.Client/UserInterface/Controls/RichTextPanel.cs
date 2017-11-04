@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
-using OpenTK.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
@@ -14,15 +9,13 @@ namespace SS14.Client.UserInterface.Controls
     /// <summary>
     ///     Panel that displays read-only rich text
     /// </summary>
-    class RichTextPanel : Panel
+    internal class RichTextPanel : Panel
     {
-        public Font Font { get; set; }
-
         public FormattedTextStream Text { get; }
 
         public RichTextPanel()
         {
-            var font = _resourceCache.GetResource<FontResource>(String.Empty);
+            var font = _resourceCache.GetResource<FontResource>(string.Empty);
             Text = new FormattedTextStream(font);
         }
 
@@ -41,13 +34,13 @@ namespace SS14.Client.UserInterface.Controls
             // recalculate size & line endings
             Text.Width = Width;
             Text.Height = Height;
-            Text.RecalculateLineBreaks();
         }
 
         internal class FormattedTextStream
         {
             // guesstimate of some buffer sizes
             private const int maxLineChars = 80;
+
             private const int maxLines = 24;
             private const int maxCapacity = 80 * 24;
 
@@ -55,20 +48,19 @@ namespace SS14.Client.UserInterface.Controls
 
             private readonly List<char> _charBuffer;
             private readonly List<int> _lineBreaks;
-
-            private int _scrOffX;
-            private int _scrOffY;
             private readonly uint _fntSize;
 
             private readonly TextSprite _textSprite;
             private readonly StringBuilder _sb;
 
+            private int _scrOffX;
+            private int _scrOffY;
+
             public int MaxCapacity { get; }
 
             public int Width { get; set; }
             public int Height { get; set; }
-            public int LineOffset { get; set; }
-            
+
             public FormattedTextStream(Font font)
             {
                 _font = font;
@@ -77,24 +69,9 @@ namespace SS14.Client.UserInterface.Controls
                 _charBuffer = new List<char>(maxCapacity);
                 _lineBreaks = new List<int>(maxLines);
 
-                _textSprite = new TextSprite(String.Empty, _font, _fntSize);
+                _textSprite = new TextSprite(string.Empty, _font, _fntSize);
 
                 _sb = new StringBuilder(maxLineChars);
-            }
-
-            public int GetLineSpacing()
-            {
-               return (int) _font.GetLineSpacing((uint)_fntSize);
-            }
-
-            public Box2 GetGlyphBounds(char glyph, bool bold, float outline)
-            {
-                return _font.GetGlyph(glyph, _fntSize, bold, outline).Bounds;
-            }
-
-            public void Append(char character)
-            {
-                
             }
 
             public void Append(string str)
@@ -113,16 +90,6 @@ namespace SS14.Client.UserInterface.Controls
                     _charBuffer.AddRange(line);
                     _lineBreaks.Add(_charBuffer.Count);
                 }
-            }
-
-            public void Append(TextSprite.Styles style)
-            {
-                
-            }
-
-            public void Append(Color4 color)
-            {
-                
             }
 
             public void Draw(int scrX, int scrY)
@@ -185,18 +152,15 @@ namespace SS14.Client.UserInterface.Controls
 
                     // end of buffer
                     if (i == length - 1)
-                    {
                         DrawString(blockX, curY, _sb.ToString());
-                    }
                 }
 
                 _sb.Clear();
-
             }
 
-            public void RecalculateLineBreaks()
+            private int GetLineSpacing()
             {
-                
+                return (int) _font.GetLineSpacing(_fntSize);
             }
 
             private void AddLine(ref int x, ref int y)
@@ -208,7 +172,7 @@ namespace SS14.Client.UserInterface.Controls
             private void DrawString(int x, int y, string str)
             {
                 _textSprite.Text = str;
-                _textSprite.Position = new Shared.Maths.Vector2(x + _scrOffX, y + _scrOffY);
+                _textSprite.Position = new Vector2(x + _scrOffX, y + _scrOffY);
                 _textSprite.FillColor = Color.DarkSlateBlue;
                 _textSprite.Draw();
             }
@@ -216,11 +180,6 @@ namespace SS14.Client.UserInterface.Controls
             private int ChrWidth(char chr)
             {
                 return (int) _font.GetGlyph(chr, _fntSize, false, 0).Advance;
-            }
-
-            private struct FormattingMark
-            {
-                
             }
         }
     }

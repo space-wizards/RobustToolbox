@@ -37,8 +37,6 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly Textbox _input;
         private readonly ScrollableContainer _historyBox;
 
-        private int _lastY;
-
         public override bool Focus
         {
             get => _input.Focus;

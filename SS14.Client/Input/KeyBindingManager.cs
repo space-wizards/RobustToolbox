@@ -16,9 +16,7 @@ namespace SS14.Client.Input
     public class KeyBindingManager : IKeyBindingManager
     {
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;
-
-        #region IKeyBindingManager Members
-
+        
         public bool Enabled { get; set; }
 
         public event EventHandler<BoundKeyEventArgs> BoundKeyDown;
@@ -27,34 +25,21 @@ namespace SS14.Client.Input
         public void Initialize()
         {
             Enabled = true;
-            CluwneLib.Input.KeyPressed += KeyDown;
-            CluwneLib.Input.KeyReleased += KeyUp;
             LoadKeys();
         }
-
-        #endregion
-
-        /// <summary>
-        /// Destructor -- unbinds from the keyboard input
-        /// </summary>
-        ~KeyBindingManager()
-        {
-            CluwneLib.Input.KeyPressed  -= KeyDown;
-            CluwneLib.Input.KeyReleased -= KeyUp;
-        }
-
-        private void KeyDown(object sender, KeyEventArgs e)
+        
+        public void KeyDown(KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyDown != null)
-                BoundKeyDown(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
+            if (Enabled && _boundKeys.Keys.Contains(e.Key))
+                BoundKeyDown?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
         }
 
-        private void KeyUp(object sender, KeyEventArgs e)
+        public void KeyUp(KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Key) && BoundKeyUp != null)
-                BoundKeyUp(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));
+            if (Enabled && _boundKeys.Keys.Contains(e.Key))
+                BoundKeyUp?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));
         }
 
         private void LoadKeys()

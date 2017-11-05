@@ -1,247 +1,237 @@
-﻿using Lidgren.Network;
-using SS14.Client.Graphics;
-using SS14.Client.Interfaces.State;
-using SS14.Client.UserInterface.Components;
-using SS14.Shared.Maths;
+﻿#define uiDev
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using Lidgren.Network;
+using OpenTK.Graphics;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
+using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States
 {
-    public class MainScreen : State, IState
+    /// <summary>
+    ///     Main menu screen that is the first screen to be displayed when the game starts.
+    /// </summary>
+    // Instantiated dynamically through the StateManager.
+    public class MainScreen : State
     {
-        #region Fields
-
         /// <summary>
-        /// Default port that the client tries to connect to if no other port is specified.
+        ///     Default port that the client tries to connect to if no other port is specified.
         /// </summary>
-        public const ushort DEFAULT_PORT = 1212;
-        private const float ConnectTimeOut = 5000.0f;
-        private readonly List<FloatingDecoration> DecoFloats = new List<FloatingDecoration>();
+        public const ushort DefaultPort = 1212;
 
-        private readonly Sprite _background;
-        private readonly ImageButton _btnConnect;
-        private readonly ImageButton _btnExit;
-        private readonly ImageButton _btnOptions;
-        private readonly Textbox _txtConnect;
-        private readonly Label _lblVersion;
-        private readonly SimpleImage _imgTitle;
+        public const float ConnectTimeOut = 5000.0f;
+
+        private Screen _uiScreen;
 
         private DateTime _connectTime;
         private bool _isConnecting;
 
-        private int _Width;
-        private int _Height;
+        /// <summary>
+        ///     Constructs an instance of this object.
+        /// </summary>
+        /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
+        public MainScreen(IDictionary<Type, object> managers) : base(managers) { }
 
-        #endregion Fields
-
-        public MainScreen(IDictionary<Type, object> managers) : base(managers)
+        /// <inheritdoc />
+        public override void InitializeGUI()
         {
-            _Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            _background = ResourceCache.GetSprite("ss14_logo_background");
+            _uiScreen = new Screen();
+            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
+            // UI screen is added in startup
 
-            _btnConnect = new ImageButton
+            var imgTitle = new SimpleImage();
+            imgTitle.Sprite = "ss14_logo";
+            imgTitle.Alignment = Align.Right;
+            imgTitle.LocalPosition = new Vector2i(-550, 100);
+            _uiScreen.AddControl(imgTitle);
+
+            var txtConnect = new Textbox(100);
+            txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
+            txtConnect.Alignment = Align.Left | Align.Bottom;
+            txtConnect.LocalPosition = new Vector2i(10, 50);
+            txtConnect.OnSubmit += (sender, text) => { StartConnect(text); };
+            imgTitle.AddControl(txtConnect);
+
+            var btnConnect = new ImageButton();
+            btnConnect.ImageNormal = "connect_norm";
+            btnConnect.ImageHover = "connect_hover";
+            btnConnect.Alignment = Align.Left | Align.Bottom;
+            btnConnect.LocalPosition = new Vector2i(0, 20);
+            btnConnect.Clicked += sender =>
             {
-                ImageNormal = "connect_norm",
-                ImageHover = "connect_hover"
+                if (!_isConnecting)
+                {
+                    StartConnect(txtConnect.Text);
+                }
+                else
+                {
+                    _isConnecting = false;
+                    NetworkManager.ClientDisconnect("Client disconnected from game.");
+                }
             };
-            _btnConnect.Clicked += _buttConnect_Clicked;
+            txtConnect.AddControl(btnConnect);
 
-            _btnOptions = new ImageButton
+            var btnOptions = new ImageButton();
+            btnOptions.ImageNormal = "options_norm";
+            btnOptions.ImageHover = "options_hover";
+            btnOptions.Alignment = Align.Left | Align.Bottom;
+            btnOptions.LocalPosition = new Vector2i(0, 20);
+            btnOptions.Clicked += sender =>
             {
-                ImageNormal = "options_norm",
-                ImageHover = "options_hover"
-            };
-            _btnOptions.Clicked += _buttOptions_Clicked;
+                if (_isConnecting)
+                {
+                    _isConnecting = false;
+                    NetworkManager.ClientDisconnect("Client disconnected from game.");
+                }
 
-            _btnExit = new ImageButton
+                StateManager.RequestStateChange<OptionsMenu>();
+            };
+            btnConnect.AddControl(btnOptions);
+
+            var btnExit = new ImageButton();
+            btnExit.ImageNormal = "exit_norm";
+            btnExit.ImageHover = "exit_hover";
+            btnExit.Alignment = Align.Left | Align.Bottom;
+            btnExit.LocalPosition = new Vector2i(0, 20);
+            btnExit.Clicked += sender => CluwneLib.Stop();
+            btnOptions.AddControl(btnExit);
+
+            var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
+            lblVersion.ForegroundColor = new Color(245, 245, 245);
+            lblVersion.Alignment = Align.Right | Align.Bottom;
+            lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
+            _uiScreen.AddControl(lblVersion);
+
+#if uiDev
+            var chat = new Chatbox(new Vector2i(400, 200));
+            chat.LocalPosition = new Vector2i(25, 25);
+            _uiScreen.AddControl(chat);
+
+            var listPanel = new ListPanel();
+            listPanel.Size = new Vector2i(200, 200);
+            listPanel.LocalPosition = new Vector2i(450, 250);
+            _uiScreen.AddControl(listPanel);
+
+            for (var i = 0; i < 5; i++)
             {
-                ImageNormal = "exit_norm",
-                ImageHover = "exit_hover"
-            };
-            _btnExit.Clicked += _buttExit_Clicked;
-
-            _txtConnect = new Textbox(100, ResourceCache) { Text = ConfigurationManager.GetCVar<string>("net.server") };
-            _txtConnect.Position = new Vector2i(_Width / 3, _Height / 2);
-            _txtConnect.OnSubmit += ConnectTextboxOnSubmit;
-
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-
-            _lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI", ResourceCache);
-            _lblVersion.Text.FillColor = new Color(245, 245, 245);
-
-            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
-                                             _Height - _lblVersion.ClientArea.Height - 3);
-
-            _imgTitle = new SimpleImage
-            {
-                Sprite = "ss14_logo",
-            };
-
-            FormResize();
+                var label = new Label($"Label: {i}", "CALIBRI");
+                listPanel.AddControl(label);
+            }
+            var rtp = new RichTextPanel();
+            rtp.Size = new Vector2i(400, 200);
+            rtp.LocalPosition = new Vector2i(25, 250);
+            rtp.BackgroundColor = Color4.DarkGray;
+            rtp.ForegroundColor = new Color4(230, 230, 230, 255);
+            rtp.DrawBorder = true;
+            rtp.DrawBackground = true;
+            _uiScreen.AddControl(rtp);
+            
+            rtp.Text.Append("Textbox says, \"Oh, my, God Becky, look at the image.\"\n");
+            rtp.Text.Append("Textbox says, \"It is so big, it looks like, one of those buttons' girlfriends.\"\n");
+            rtp.Text.Append("Textbox says, \"I mean, the image, is just so big. I can't believe it's just so square, it's like out there.\"\n");
+            rtp.Text.Append("Textbox says, \"I mean gross, look. It's just so, black!\"\n");
+#endif
         }
 
-        #region IState Members
-
-        public void Render(FrameEventArgs e)
+        /// <inheritdoc />
+        public override void FormResize()
         {
-            _background.Draw();
+            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
         }
 
-        public void FormResize()
-        {
-            _Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            _background.Scale = new Vector2((float)_Width / _background.TextureRect.Width, (float)_Height / _background.TextureRect.Height);
-            _lblVersion.Position = new Vector2i(_Width - _lblVersion.ClientArea.Width - 3,
-                                                _Height - _lblVersion.ClientArea.Height - 3);
-            _lblVersion.Update(0);
-            _imgTitle.Position = new Vector2i(_Width - 550, 100);
-            _imgTitle.Update(0);
-            _txtConnect.Position = new Vector2i(_imgTitle.ClientArea.Left + 10, _imgTitle.ClientArea.Bottom + 50);
-            _txtConnect.Update(0);
-            _btnConnect.Position = new Vector2i(_txtConnect.Position.X, _txtConnect.ClientArea.Bottom + 20);
-            _btnConnect.Update(0);
-            _btnOptions.Position = new Vector2i(_btnConnect.Position.X, _btnConnect.ClientArea.Bottom + 20);
-            _btnOptions.Update(0);
-            _btnExit.Position = new Vector2i(_btnOptions.Position.X, _btnOptions.ClientArea.Bottom + 20);
-            _btnExit.Update(0);
-        }
-        #endregion IState Members
-
-        #region Input
-        public void KeyDown(KeyEventArgs e)
+        /// <inheritdoc />
+        public override void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyEventArgs e)
-        {
-            //TODO: Figure out what to do with this
-        }
-
-        public void MouseUp(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
-        {
-            //TODO: Figure out what to do with this
-        }
-        public void MousePressed(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove(MouseMoveEventArgs e)
+
+        /// <inheritdoc />
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelScrollEventArgs e)
+        /// <inheritdoc />
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        /// <inheritdoc />
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
-        public void MouseLeft(EventArgs e)
+
+        /// <inheritdoc />
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
 
-        public void TextEntered(TextEventArgs e)
+        /// <inheritdoc />
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion Input
 
-        private void _buttExit_Clicked(ImageButton sender)
-        {
-            CluwneLib.Stop();
-        }
-
-        private void _buttOptions_Clicked(ImageButton sender)
-        {
-            if (_isConnecting)
-            {
-                _isConnecting = false;
-                NetworkManager.ClientDisconnect("Client disconnected from game.");
-            }
-
-            StateManager.RequestStateChange<OptionsMenu>();
-        }
-
-        private void _buttConnect_Clicked(ImageButton sender)
-        {
-            if (!_isConnecting)
-                StartConnect(_txtConnect.Text);
-            else
-            {
-                _isConnecting = false;
-                NetworkManager.ClientDisconnect("Client disconnected from game.");
-            }
-        }
-
-        private void ConnectTextboxOnSubmit(string text, Textbox sender)
-        {
-            StartConnect(text);
-        }
-
-        #region Startup, Shutdown, Update
-
-        public void Startup()
+        /// <inheritdoc />
+        public override void Startup()
         {
             NetworkManager.ClientDisconnect("Client disconnected from game.");
             NetworkManager.Connected += OnConnected;
 
-            foreach (FloatingDecoration floatingDeco in DecoFloats)
-                UserInterfaceManager.AddComponent(floatingDeco);
-
-            UserInterfaceManager.AddComponent(_txtConnect);
-            UserInterfaceManager.AddComponent(_btnConnect);
-            UserInterfaceManager.AddComponent(_btnOptions);
-            UserInterfaceManager.AddComponent(_btnExit);
-            UserInterfaceManager.AddComponent(_imgTitle);
-            UserInterfaceManager.AddComponent(_lblVersion);
+            UserInterfaceManager.AddComponent(_uiScreen);
         }
 
-        public void Shutdown()
+        /// <inheritdoc />
+        public override void Shutdown()
         {
             NetworkManager.Connected -= OnConnected;
 
-            UserInterfaceManager.RemoveComponent(_txtConnect);
-            UserInterfaceManager.RemoveComponent(_btnConnect);
-            UserInterfaceManager.RemoveComponent(_btnOptions);
-            UserInterfaceManager.RemoveComponent(_btnExit);
-            UserInterfaceManager.RemoveComponent(_imgTitle);
-            UserInterfaceManager.RemoveComponent(_lblVersion);
+            UserInterfaceManager.RemoveComponent(_uiScreen);
 
-            foreach (FloatingDecoration floatingDeco in DecoFloats)
-                UserInterfaceManager.RemoveComponent(floatingDeco);
-
-            DecoFloats.Clear();
+            // There is no way to actually destroy a screen.
+            //_uiScreen.Destroy();
+            //_uiScreen = null;
         }
 
-        public void Update(FrameEventArgs e)
+        /// <inheritdoc />
+        public override void Update(FrameEventArgs e)
         {
             if (_isConnecting)
             {
-                TimeSpan dif = DateTime.Now - _connectTime;
+                var dif = DateTime.Now - _connectTime;
                 if (dif.TotalMilliseconds > ConnectTimeOut)
                 {
                     _isConnecting = false;
@@ -256,43 +246,32 @@ namespace SS14.Client.State.States
             StateManager.RequestStateChange<Lobby>();
         }
 
-        public void StartConnect(string address)
+        private void StartConnect(string address)
         {
             if (_isConnecting)
-            {
                 return;
-            }
 
             // See if the IP includes a port.
             var split = address.Split(':');
-            string ip = address;
-            ushort port = DEFAULT_PORT;
+            var ip = address;
+            var port = DefaultPort;
             if (split.Length > 2)
-            {
-                // Multiple colons?
                 throw new InvalidOperationException("Not a valid Address.");
-            }
 
             // IP:port format.
             if (split.Length == 2)
             {
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
-                {
                     throw new InvalidOperationException("Not a valid port.");
-                }
             }
 
             if (NetUtility.Resolve(ip, port) == null)
-            {
                 throw new InvalidOperationException("Not a valid Address.");
-            }
 
             _connectTime = DateTime.Now;
             _isConnecting = true;
             NetworkManager.ClientConnect(ip, port);
         }
-
-        #endregion Startup, Shutdown, Update
     }
 }

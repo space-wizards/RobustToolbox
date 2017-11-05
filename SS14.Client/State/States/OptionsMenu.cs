@@ -1,316 +1,262 @@
-﻿using SS14.Client.Graphics;
-using SS14.Client.Interfaces.State;
-using SS14.Client.UserInterface.Components;
-using SS14.Shared.Maths;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Label = SS14.Client.UserInterface.Components.Label;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Render;
+using SS14.Client.ResourceManagement;
+using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States
 {
-    public class OptionsMenu : State, IState
+    /// <summary>
+    ///     Options screen that displays all in-game options that can be changed.
+    /// </summary>
+    // Instantiated dynamically through the StateManager.
+    public class OptionsMenu : State
     {
-        #region Fields
+        private readonly Dictionary<string, VideoMode> _videoModeList = new Dictionary<string, VideoMode>();
+        private Panel _bgPanel;
 
-        private Sprite _background;
-        private Sprite _ticketBg;
-
-        private Checkbox _chkFullscreen;
-        private Checkbox _chkVsync;
-
-        private Label _lblTitle;
-        private Label _lblFullscreen;
-        private Label _lblVsync;
-        private Button _btnBack;
         private Button _btnApply;
+        private Button _btnBack;
 
+        private Checkbox _chkFullScreen;
+        private Checkbox _chkVSync;
+        private Label _lblFullScreen;
+        private Label _lblTitle;
+        private Label _lblVSync;
         private Listbox _lstResolution;
+        private Screen _uiScreen;
 
-        private Dictionary<string, VideoMode> vmList = new Dictionary<string, VideoMode>();
-        private int _prevScreenHeight;
-        private int _prevScreenWidth;
-
-        private Box2i _boundingArea = new Box2i();
-
-        #endregion Fields
-
+        /// <summary>
+        ///     Constructs an instance of this object.
+        /// </summary>
+        /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
         public OptionsMenu(IDictionary<Type, object> managers)
-            : base(managers)
+            : base(managers) { }
+
+        /// <inheritdoc />
+        public override void Startup()
         {
-            UpdateBounds();
+            UserInterfaceManager.AddComponent(_uiScreen);
         }
 
-        private void UpdateBounds()
+        /// <inheritdoc />
+        public override void Shutdown()
         {
-            var top = (int)(CluwneLib.Window.Viewport.Size.Y / 2f) - (int)(_boundingArea.Height / 2f);
-            _boundingArea = Box2i.FromDimensions(0, top, 1000, 600);
+            UserInterfaceManager.RemoveComponent(_uiScreen);
         }
 
-        private void InitalizeGUI()
+        /// <inheritdoc />
+        public override void FormResize()
         {
-            _background = ResourceCache.GetSprite("mainbg");
-            _ticketBg = ResourceCache.GetSprite("ticketoverlay");
+            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
 
-            _lblTitle = new Label("Options", "CALIBRI", 48, ResourceCache);
-            UserInterfaceManager.AddComponent(_lblTitle);
-
-            _lblFullscreen = new Label("Fullscreen", "CALIBRI", ResourceCache);
-            UserInterfaceManager.AddComponent(_lblFullscreen);
-
-            _chkFullscreen = new Checkbox(ResourceCache);
-            _chkFullscreen.ValueChanged += _chkfullscreen_ValueChanged;
-            _chkfullscreen_ValueChanged(ConfigurationManager.GetCVar<bool>("display.fullscreen"), _chkFullscreen);
-            UserInterfaceManager.AddComponent(_chkFullscreen);
-
-            _lblVsync = new Label("Vsync", "CALIBRI", ResourceCache);
-            UserInterfaceManager.AddComponent(_lblVsync);
-
-            _chkVsync = new Checkbox(ResourceCache);
-            _chkVsync.ValueChanged += _chkvsync_ValueChanged;
-            _chkvsync_ValueChanged(ConfigurationManager.GetCVar<bool>("display.vsync"), _chkVsync);
-            UserInterfaceManager.AddComponent(_chkVsync);
-
-            _lstResolution = new Listbox(250, 150, ResourceCache);
-            _lstResolution.ItemSelected += _reslistbox_ItemSelected;
-            PopulateAvailableVideoModes();
-            UserInterfaceManager.AddComponent(_lstResolution);
-
-            _btnBack = new Button("Back", ResourceCache);
-            _btnBack.Clicked += _backBtn_Clicked;
-            UserInterfaceManager.AddComponent(_btnBack);
-
-            _btnApply = new Button("Apply Settings", ResourceCache);
-            _btnApply.Clicked += _applybtt_Clicked;
-            UserInterfaceManager.AddComponent(_btnApply);
-
-            UpdateGUIPosition();
+            UserInterfaceManager.ResizeComponents();
         }
 
-        private void UpdateGUIPosition()
-        {
-            const int SECTION_PADDING = 50;
-            const int OPTION_PADDING = 10;
-            const int LABEL_PADDING = 3;
-
-            _lblTitle.Position = new Vector2i(_boundingArea.Left + 10, _boundingArea.Top + 10);
-            _lblTitle.Update(0);
-
-            _lstResolution.Position = new Vector2i(_boundingArea.Left + SECTION_PADDING,
-                _lblTitle.Position.Y + _lblTitle.ClientArea.Height + SECTION_PADDING);
-            _lstResolution.Update(0);
-
-            _chkFullscreen.Position = new Vector2i(_lstResolution.Position.X,
-                _lstResolution.Position.Y + _lstResolution.ClientArea.Height + SECTION_PADDING);
-            _chkFullscreen.Update(0);
-            _lblFullscreen.Position = new Vector2i(_chkFullscreen.Position.X + _chkFullscreen.ClientArea.Width + LABEL_PADDING,
-                _chkFullscreen.Position.Y);
-            _lblFullscreen.Update(0);
-
-            _chkVsync.Position = new Vector2i(_lblFullscreen.Position.X,
-                _lblFullscreen.Position.Y + _lblFullscreen.ClientArea.Height + OPTION_PADDING);
-            _chkVsync.Update(0);
-            _lblVsync.Position = new Vector2i(_chkVsync.Position.X + _chkVsync.ClientArea.Width + LABEL_PADDING,
-                _chkVsync.Position.Y);
-            _lblVsync.Update(0);
-
-            _btnApply.Position = new Vector2i((_boundingArea.Left + _boundingArea.Width) - (_btnApply.ClientArea.Width + SECTION_PADDING),
-                                                (_boundingArea.Top + _boundingArea.Height) - (_btnApply.ClientArea.Height + SECTION_PADDING));
-            _btnApply.Update(0);
-            _btnBack.Position = new Vector2i(_btnApply.Position.X - (_btnBack.ClientArea.Width + OPTION_PADDING), _btnApply.Position.Y);
-            _btnBack.Update(0);
-        }
-
-        private void PopulateAvailableVideoModes()
-        {
-            _lstResolution.ClearItems();
-            vmList.Clear();
-            IOrderedEnumerable<VideoMode> modes = from v in VideoMode.FullscreenModes
-                                                  where (v.Height > 748 && v.Width > 1024) //GOSH I HOPE NOONES USING 16 BIT COLORS. OR RUNNING AT LESS THAN 59 hz
-                                                  orderby v.Height * v.Width ascending
-                                                  select v;
-
-            if (!modes.Any())
-                throw new Exception("No available video modes");
-
-            foreach (VideoMode vm in modes)
-            {
-                if (!vmList.ContainsKey(GetVmString(vm)))
-                {
-                    vmList.Add(GetVmString(vm), vm);
-                    _lstResolution.AddItem(GetVmString(vm));
-                }
-            }
-
-            if (
-                 vmList.Any(
-                    x =>
-                    x.Value.Width == CluwneLib.Window.Viewport.Size.X && x.Value.Height == CluwneLib.Window.Viewport.Size.Y))
-
-            {
-                KeyValuePair<string, VideoMode> curr =
-                    vmList.FirstOrDefault(
-                        x =>
-                        x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
-                        x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
-
-                _lstResolution.SelectItem(curr.Key, false);
-            }
-            else
-            {
-                //No match due to different refresh rate in windowed mode. Just pick first resolution based on size only.
-                KeyValuePair<string, VideoMode> curr =
-                    vmList.FirstOrDefault(
-                        x =>
-                        x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
-                        x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
-                _lstResolution.SelectItem(curr.Key, false);
-            }
-        }
-
-        #region Startup, Shutdown, Update
-
-        public void Startup()
-        {
-            NetworkManager.ClientDisconnect("Client killed old session."); //TODO: Is this really needed here?
-            InitalizeGUI();
-        }
-
-        public void Shutdown()
-        {
-            UserInterfaceManager.DisposeAllComponents();
-        }
-
-        public void Update(FrameEventArgs e)
-        {
-            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
-            {
-                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
-                UpdateBounds();
-                UpdateGUIPosition();
-            }
-
-            _chkFullscreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
-            UserInterfaceManager.Update(e);
-        }
-
-        #endregion Startup, Shutdown, Update
-
-        #region IState Members
-
-        public void Render(FrameEventArgs e)
-        {
-            _background.SetTransformToRect(Box2i.FromDimensions(0, 0, (int)CluwneLib.Window.Viewport.Size.X, (int)CluwneLib.Window.Viewport.Size.Y));
-            _background.Draw();
-
-            _ticketBg.SetTransformToRect(_boundingArea);
-            _ticketBg.Draw();
-            UserInterfaceManager.Render(e);
-        }
-
-        public void FormResize()
-        {
-            //TODO: Figure out what to do with this
-        }
-
-        #endregion IState Members
-
-        #region Input
-
-        public void KeyDown(KeyEventArgs e)
+        /// <inheritdoc />
+        public override void KeyDown(KeyEventArgs e)
         {
             UserInterfaceManager.KeyDown(e);
         }
 
-        public void KeyUp(KeyEventArgs e)
-        {
-            //TODO: Figure out what to do with this
-        }
-
-        public void MouseUp(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
-        {
-            //TODO: Figure out what to do with this
-        }
-        public void MousePressed(MouseButtonEventArgs e)
+        /// <inheritdoc />
+        public override void MousePressed(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseDown(e);
         }
-        public void MouseMove(MouseMoveEventArgs e)
+
+        /// <inheritdoc />
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseWheelMove(MouseWheelScrollEventArgs e)
+        /// <inheritdoc />
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        /// <inheritdoc />
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
-        public void MouseLeft(EventArgs e)
+
+        /// <inheritdoc />
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
 
-        public void TextEntered(TextEventArgs e)
+        /// <inheritdoc />
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
-        #endregion Input
 
-        private void _chkvsync_ValueChanged(bool newValue, Checkbox sender)
+        /// <inheritdoc />
+        public override void InitializeGUI()
+        {
+            _uiScreen = new Screen();
+            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
+            // added to interface manager in startup
+
+            _bgPanel = new Panel();
+            _bgPanel.BackgroundImage = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
+            _bgPanel.BackgroundColor = new Color(128, 128, 128, 128);
+            _bgPanel.Alignment = Align.HCenter | Align.VCenter;
+            _bgPanel.Layout += (sender, args) =>
+            {
+                _bgPanel.Width = (int) (_uiScreen.Width * 0.85f);
+                _bgPanel.Height = (int) (_uiScreen.Height * 0.85f);
+            };
+            _uiScreen.AddControl(_bgPanel);
+
+            _lblTitle = new Label("Options", "CALIBRI", 48);
+            _lblTitle.LocalPosition = new Vector2i(10, 10);
+            _bgPanel.AddControl(_lblTitle);
+
+            _lstResolution = new Listbox(250, 150);
+            _lstResolution.Alignment = Align.Bottom;
+            _lstResolution.LocalPosition = new Vector2i(50, 50);
+            _lstResolution.ItemSelected += _lstResolution_ItemSelected;
+            PopulateAvailableVideoModes(_lstResolution);
+            _lblTitle.AddControl(_lstResolution);
+
+            _chkFullScreen = new Checkbox();
+            _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
+            _chkFullScreen.ValueChanged += _chkFullScreen_ValueChanged;
+            _chkFullScreen.Alignment = Align.Bottom;
+            _chkFullScreen.LocalPosition = new Vector2i(0, 50);
+            _lstResolution.AddControl(_chkFullScreen);
+
+            _lblFullScreen = new Label("Fullscreen", "CALIBRI");
+            _lblFullScreen.Alignment = Align.Right;
+            _lblFullScreen.LocalPosition = new Vector2i(3, 0);
+            _chkFullScreen.AddControl(_lblFullScreen);
+
+            _chkVSync = new Checkbox();
+            _chkVSync.Value = ConfigurationManager.GetCVar<bool>("display.vsync");
+            _chkVSync.ValueChanged += _chkVSync_ValueChanged;
+            _chkVSync.Alignment = Align.Bottom;
+            _chkVSync.LocalPosition = new Vector2i(0, 3);
+            _chkFullScreen.AddControl(_chkVSync);
+
+            _lblVSync = new Label("Vsync", "CALIBRI");
+            _lblVSync.Alignment = Align.Right;
+            _lblVSync.LocalPosition = new Vector2i(3, 0);
+            _chkVSync.AddControl(_lblVSync);
+
+            _btnApply = new Button("Apply Settings");
+            _btnApply.Clicked += _btnApply_Clicked;
+            _btnApply.Alignment = Align.Bottom | Align.Right;
+            _btnApply.Resize += (sender, args) => { _btnApply.LocalPosition = new Vector2i(-10 + -_btnApply.ClientArea.Width, -10 + -_btnApply.ClientArea.Height); };
+            _bgPanel.AddControl(_btnApply);
+
+            _btnBack = new Button("Back");
+            _btnBack.Clicked += _btnBack_Clicked;
+            _btnBack.Resize += (sender, args) => { _btnBack.LocalPosition = new Vector2i(-10 + -_btnBack.ClientArea.Width, 0); };
+            _btnApply.AddControl(_btnBack);
+        }
+
+        private void PopulateAvailableVideoModes(Listbox resListBox)
+        {
+            resListBox.ClearItems();
+            _videoModeList.Clear();
+
+            var modes = VideoMode.FullscreenModes
+                .Where(v => v.Height > 748 && v.Width > 1024)
+                .OrderBy(v => v.Height * v.Width)
+                .ToList();
+
+            if (!modes.Any())
+                throw new InvalidOperationException("No available video modes");
+
+            foreach (var vm in modes)
+            {
+                if (!_videoModeList.ContainsKey(GetVmString(vm)))
+                {
+                    _videoModeList.Add(GetVmString(vm), vm);
+                    resListBox.AddItem(GetVmString(vm));
+                }
+            }
+
+            if (_videoModeList.Any(x =>
+                x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                x.Value.Height == CluwneLib.Window.Viewport.Size.Y))
+            {
+                var currentMode = _videoModeList.FirstOrDefault(x =>
+                    x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                    x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
+
+                resListBox.SelectItem(currentMode.Key);
+            }
+            else
+            {
+                //No match due to different refresh rate in windowed mode. Just pick first resolution based on size only.
+                var currentMode =
+                    _videoModeList.FirstOrDefault(
+                        x =>
+                            x.Value.Width == CluwneLib.Window.Viewport.Size.X &&
+                            x.Value.Height == CluwneLib.Window.Viewport.Size.Y);
+                resListBox.SelectItem(currentMode.Key);
+            }
+        }
+
+        private void _chkVSync_ValueChanged(bool newValue, Checkbox sender)
         {
             ConfigurationManager.SetCVar("display.vsync", newValue);
         }
 
-        private void _chkfullscreen_ValueChanged(bool newValue, Checkbox sender)
+        private void _chkFullScreen_ValueChanged(bool newValue, Checkbox sender)
         {
             ConfigurationManager.SetCVar("display.fullscreen", newValue);
         }
 
-        private void ApplyVideoMode()
+        private void _lstResolution_ItemSelected(Label item, Listbox sender)
         {
-            CluwneLib.UpdateVideoSettings();
-        }
-
-        private void _reslistbox_ItemSelected(Label item, Listbox sender)
-        {
-            if (vmList.ContainsKey(item.Text.Text))
+            if (_videoModeList.ContainsKey(item.Text))
             {
-                VideoMode sel = vmList[item.Text.Text];
-                ConfigurationManager.SetCVar("display.width", (int)sel.Width);
-                ConfigurationManager.SetCVar("display.height", (int)sel.Height);
+                var sel = _videoModeList[item.Text];
+                ConfigurationManager.SetCVar("display.width", (int) sel.Width);
+                ConfigurationManager.SetCVar("display.height", (int) sel.Height);
+
+                CluwneLib.UpdateVideoSettings();
+                FormResize();
             }
         }
 
         private string GetVmString(VideoMode vm)
         {
-            return string.Format(" - {0} x {1} @ {2}hz", vm.Width.ToString(), vm.Height.ToString(), vm.BitsPerPixel);
+            return $"{vm.Width} x {vm.Height} @ {vm.BitsPerPixel}bpp";
         }
 
-        private void _applybtt_Clicked(Button sender)
+        private void _btnApply_Clicked(Button sender)
         {
-            ApplyVideoMode();
+            CluwneLib.UpdateVideoSettings();
         }
 
-        private void _backBtn_Clicked(Button sender)
+        private void _btnBack_Clicked(Button sender)
         {
             StateManager.RequestStateChange<MainScreen>();
         }

@@ -14,7 +14,6 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
-using SS14.Client.Interfaces.State;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
 using SS14.Client.UserInterface.Components;
@@ -37,15 +36,15 @@ using System.Linq;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 
 namespace SS14.Client.State.States
 {
-    public class GameScreen : State, IState
+    public class GameScreen : State
     {
         #region Variables
-        public DateTime LastUpdate;
-        public DateTime Now;
-
         private bool _recalculateScene = true;
         private bool _redrawOverlay = true;
         private bool _redrawTiles = true;
@@ -73,6 +72,9 @@ namespace SS14.Client.State.States
         #endregion Mouse/Camera stuff
 
         #region UI Variables
+
+        private Screen _uiScreen;
+
         private int _prevScreenWidth = 0;
         private int _prevScreenHeight = 0;
 
@@ -136,19 +138,16 @@ namespace SS14.Client.State.States
 
         #region IState Members
 
-        public void Startup()
+        public override void Startup()
         {
             var manager = IoCManager.Resolve<IConfigurationManager>();
             manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
-            LastUpdate = DateTime.Now;
-            Now = DateTime.Now;
-
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
-
-            UserInterfaceManager.DisposeAllComponents();
-
+            
+            UserInterfaceManager.AddComponent(_uiScreen);
+            
             //Init serializer
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
@@ -175,7 +174,6 @@ namespace SS14.Client.State.States
             InitializeRenderTargets();
             InitializeSpriteBatches();
             InitalizeLighting();
-            InitializeGUI();
 
             DebugManager = new GameScreenDebug(this);
         }
@@ -247,22 +245,26 @@ namespace SS14.Client.State.States
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
 
-        private void UpdateGUIPosition()
+        /// <inheritdoc />
+        public override void InitializeGUI()
         {
-            _gameChat.Position = new Vector2i((int)CluwneLib.Window.Viewport.Size.X - _gameChatSize.X - 10, 10);
-        }
+            _uiScreen = new Screen();
+            _uiScreen.DrawBackground = false;
+            _uiScreen.DrawBorder = false;
 
-        private void InitializeGUI()
-        {
             // Setup the ESC Menu
             _menu = new MenuWindow();
-            UserInterfaceManager.AddComponent(_menu);
-            _menu.SetVisible(false);
+            _menu.Alignment = Align.HCenter | Align.VCenter;
+            _menu.Visible = false;
+            _uiScreen.AddControl(_menu);
 
             //Init GUI components
-            _gameChat = new Chatbox("gamechat", _gameChatSize, ResourceCache);
+            _gameChat = new Chatbox(_gameChatSize);
+            _gameChat.Alignment = Align.Right;
+            _gameChat.Size = new Vector2i(475, 175);
+            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10);};
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
-            UserInterfaceManager.AddComponent(_gameChat);
+            _uiScreen.AddControl(_gameChat);
         }
 
         private void InitalizeLighting()
@@ -309,18 +311,26 @@ namespace SS14.Client.State.States
             _occluderDebugTarget = new RenderImage("debug", width, height);
         }
 
-        public void Update(FrameEventArgs e)
+        /// <inheritdoc />
+        public override void FormResize()
         {
-            LastUpdate = Now;
-            Now = DateTime.Now;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+            
+            UserInterfaceManager.ResizeComponents();
 
-            if (CluwneLib.Window.Viewport.Size.X != _prevScreenWidth || CluwneLib.Window.Viewport.Size.Y != _prevScreenHeight)
-            {
-                _prevScreenHeight = (int)CluwneLib.Window.Viewport.Size.Y;
-                _prevScreenWidth = (int)CluwneLib.Window.Viewport.Size.X;
-                UpdateGUIPosition();
-            }
+            ResetRendertargets();
+            IoCManager.Resolve<ILightManager>().RecalculateLights();
+            RecalculateScene();
+            
+            base.FormResize();
+        }
 
+        /// <inheritdoc />
+        public override void Update(FrameEventArgs e)
+        {
+            base.Update(e);
+            
             _componentManager.Update(e.Elapsed);
             _entityManager.Update(e.Elapsed);
             PlacementManager.Update(MousePosScreen);
@@ -340,7 +350,8 @@ namespace SS14.Client.State.States
             }
         }
 
-        public void Render(FrameEventArgs e)
+        /// <inheritdoc />
+        public override void Render(FrameEventArgs e)
         {
             CluwneLib.Window.Graphics.Clear(Color.Black);
 
@@ -436,11 +447,15 @@ namespace SS14.Client.State.States
             _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
-        public void Shutdown()
+        /// <inheritdoc />
+        public override void Shutdown()
         {
+            UserInterfaceManager.RemoveComponent(_uiScreen);
+
             IoCManager.Resolve<IPlayerManager>().Detach();
 
-            _cleanupSpriteList.ForEach(s => s.Texture = null);
+            //TODO: Are these lists actually needed?
+            //_cleanupSpriteList.ForEach(s => s.Dispose());
             _cleanupSpriteList.Clear();
             _cleanupList.ForEach(t => { t.Dispose(); });
             _cleanupList.Clear();
@@ -460,15 +475,13 @@ namespace SS14.Client.State.States
         #region Input
 
         #region Keyboard
-        public void KeyPressed(KeyEventArgs e)
-        {
-            //TODO: Figure out what to do with this
-        }
-
-        public void KeyDown(KeyEventArgs e)
+        public override void KeyDown(KeyEventArgs e)
         {
             if (UserInterfaceManager.KeyDown(e)) //KeyDown returns true if the click is handled by the ui component.
-                return;
+                return; // UI consumes key
+
+            // pass key to game
+            KeyBindingManager.KeyDown(e);
 
             if (e.Key == Keyboard.Key.F1)
             {
@@ -510,7 +523,7 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.Escape)
             {
-                _menu.ToggleVisible();
+                _menu.Visible = !_menu.Visible;
             }
             if (e.Key == Keyboard.Key.F9)
             {
@@ -518,38 +531,34 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.F10)
             {
-                UserInterfaceManager.DisposeAllComponents<TileSpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new TileSpawnPanel(new Vector2i(350, 410), ResourceCache,
-                                                                     PlacementManager)); //Create a new one.
+                UserInterfaceManager.DisposeAllComponents<TileSpawnWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new TileSpawnWindow(new Vector2i(350, 410))); //Create a new one.
             }
             if (e.Key == Keyboard.Key.F11)
             {
-                UserInterfaceManager.DisposeAllComponents<EntitySpawnPanel>(); //Remove old ones.
-                UserInterfaceManager.AddComponent(new EntitySpawnPanel(new Vector2i(350, 410), ResourceCache,
-                                                                       PlacementManager)); //Create a new one.
+                UserInterfaceManager.DisposeAllComponents<EntitySpawnWindow>(); //Remove old ones.
+                UserInterfaceManager.AddComponent(new EntitySpawnWindow(new Vector2i(350, 410))); //Create a new one.
             }
-
-            PlayerManager.KeyDown(e.Key);
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public override void KeyUp(KeyEventArgs e)
         {
-            PlayerManager.KeyUp(e.Key);
+            KeyBindingManager.KeyUp(e);
         }
 
-        public void TextEntered(TextEventArgs e)
+        public override void TextEntered(TextEventArgs e)
         {
             UserInterfaceManager.TextEntered(e);
         }
         #endregion Keyboard
 
         #region Mouse
-        public void MouseUp(MouseButtonEventArgs e)
+        public override void MouseUp(MouseButtonEventArgs e)
         {
             UserInterfaceManager.MouseUp(e);
         }
 
-        public void MouseDown(MouseButtonEventArgs e)
+        public override void MouseDown(MouseButtonEventArgs e)
         {
             if (PlayerManager.ControlledEntity == null)
                 return;
@@ -633,7 +642,7 @@ namespace SS14.Client.State.States
             #endregion Object clicking
         }
 
-        public void MouseMove(MouseMoveEventArgs e)
+        public override void MouseMove(MouseMoveEventArgs e)
         {
             if (PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
@@ -647,27 +656,27 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseMove(e);
         }
 
-        public void MouseMoved(MouseMoveEventArgs e)
+        public override void MouseMoved(MouseMoveEventArgs e)
         {
             //TODO: Figure out what to do with this
         }
 
-        public void MousePressed(MouseButtonEventArgs e)
+        public override void MousePressed(MouseButtonEventArgs e)
         {
             //TODO: Figure out what to do with this
         }
 
-        public void MouseWheelMove(MouseWheelScrollEventArgs e)
+        public override void MouseWheelMove(MouseWheelScrollEventArgs e)
         {
             UserInterfaceManager.MouseWheelMove(e);
         }
 
-        public void MouseEntered(EventArgs e)
+        public override void MouseEntered(EventArgs e)
         {
             UserInterfaceManager.MouseEntered(e);
         }
 
-        public void MouseLeft(EventArgs e)
+        public override void MouseLeft(EventArgs e)
         {
             UserInterfaceManager.MouseLeft(e);
         }
@@ -720,24 +729,6 @@ namespace SS14.Client.State.States
 
         #region Event Handlers
 
-        #region Buttons
-        private void menuButton_Clicked(ImageButton sender)
-        {
-            _menu.ToggleVisible();
-        }
-
-        private void statusButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 2);
-        }
-
-        private void inventoryButton_Clicked(ImageButton sender)
-        {
-            UserInterfaceManager.ComponentUpdate(GuiComponentType.ComboGui, ComboGuiMessage.ToggleShowPage, 1);
-        }
-
-        #endregion Buttons
-
         #region Messages
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
@@ -767,9 +758,6 @@ namespace SS14.Client.State.States
                         case NetMessages.PlayerSessionMessage:
                             PlayerManager.HandleNetworkMessage(message);
                             break;
-                        case NetMessages.PlayerUiMessage:
-                            UserInterfaceManager.HandleNetMessage(message);
-                            break;
                         case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
@@ -782,19 +770,7 @@ namespace SS14.Client.State.States
         }
 
         #endregion Messages
-
-        #region State
-
-        public void FormResize()
-        {
-            UserInterfaceManager.ResizeComponents();
-            ResetRendertargets();
-            IoCManager.Resolve<ILightManager>().RecalculateLights();
-            RecalculateScene();
-        }
-
-        #endregion State
-
+        
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {
             //Recalculate scene batches for drawing.

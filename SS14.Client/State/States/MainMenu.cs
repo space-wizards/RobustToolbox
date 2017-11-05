@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Lidgren.Network;
-using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces;
 using SS14.Client.UserInterface;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
-using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.State.States
@@ -20,12 +18,7 @@ namespace SS14.Client.State.States
     // Instantiated dynamically through the StateManager.
     public class MainScreen : State
     {
-        /// <summary>
-        ///     Default port that the client tries to connect to if no other port is specified.
-        /// </summary>
-        public const ushort DefaultPort = 1212;
-
-        public const float ConnectTimeOut = 5000.0f;
+        private IBaseClient _client;
 
         private Screen _uiScreen;
 
@@ -41,6 +34,8 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void InitializeGUI()
         {
+            _client = IoCManager.Resolve<IBaseClient>();
+
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
@@ -55,7 +50,13 @@ namespace SS14.Client.State.States
             txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
             txtConnect.Alignment = Align.Left | Align.Bottom;
             txtConnect.LocalPosition = new Vector2i(10, 50);
-            txtConnect.OnSubmit += (sender, text) => { StartConnect(text); };
+            txtConnect.OnSubmit += (sender, text) =>
+            {
+                if (_client.RunLevel == ClientRunLevel.Initialize)
+                    if (TryParseAddress(text, out var ip, out var port))
+                        _client.ConnectToServer(ip, port);
+                    //TODO: Else notify user that textbox address is not valid
+            };
             imgTitle.AddControl(txtConnect);
 
             var btnConnect = new ImageButton();
@@ -65,13 +66,14 @@ namespace SS14.Client.State.States
             btnConnect.LocalPosition = new Vector2i(0, 20);
             btnConnect.Clicked += sender =>
             {
-                if (!_isConnecting)
+                if (_client.RunLevel == ClientRunLevel.Initialize)
                 {
-                    StartConnect(txtConnect.Text);
+                    if (TryParseAddress(txtConnect.Text, out var ip, out var port))
+                        _client.ConnectToServer(ip, port);
+                    //TODO: Else notify user that textbox address is not valid
                 }
                 else
                 {
-                    _isConnecting = false;
                     NetworkManager.ClientDisconnect("Client disconnected from game.");
                 }
             };
@@ -176,8 +178,7 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            NetworkManager.ClientDisconnect("Client disconnected from game.");
-            NetworkManager.Connected += OnConnected;
+            _client.RunLevelChanged += RunLevelChanged;
 
             UserInterfaceManager.AddComponent(_uiScreen);
         }
@@ -185,7 +186,7 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Shutdown()
         {
-            NetworkManager.Connected -= OnConnected;
+            _client.RunLevelChanged -= RunLevelChanged;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
 
@@ -193,53 +194,32 @@ namespace SS14.Client.State.States
             //_uiScreen.Destroy();
             //_uiScreen = null;
         }
-
-        /// <inheritdoc />
-        public override void Update(FrameEventArgs e)
+        
+        private void RunLevelChanged(object obj, RunLevelChangedEvent args)
         {
-            if (_isConnecting)
-            {
-                var dif = DateTime.Now - _connectTime;
-                if (dif.TotalMilliseconds > ConnectTimeOut)
-                {
-                    _isConnecting = false;
-                    NetworkManager.ClientDisconnect("Client timed out.");
-                }
-            }
+            if (args.NewLevel == ClientRunLevel.Lobby)
+                StateManager.RequestStateChange<Lobby>();
         }
 
-        private void OnConnected(object sender, EventArgs e)
+        private bool TryParseAddress(string address, out string ip, out ushort port)
         {
-            _isConnecting = false;
-            StateManager.RequestStateChange<Lobby>();
-        }
-
-        private void StartConnect(string address)
-        {
-            if (_isConnecting)
-                return;
-
             // See if the IP includes a port.
             var split = address.Split(':');
-            var ip = address;
-            var port = DefaultPort;
+            ip = address;
+            port = _client.DefaultPort;
             if (split.Length > 2)
-                throw new InvalidOperationException("Not a valid Address.");
+                return false;
+                //throw new InvalidOperationException("Not a valid Address.");
 
             // IP:port format.
             if (split.Length == 2)
             {
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
-                    throw new InvalidOperationException("Not a valid port.");
+                    return false;
+                    //throw new InvalidOperationException("Not a valid port.");
             }
-
-            if (NetUtility.Resolve(ip, port) == null)
-                throw new InvalidOperationException("Not a valid Address.");
-
-            _connectTime = DateTime.Now;
-            _isConnecting = true;
-            NetworkManager.ClientConnect(ip, port);
+            return true;
         }
     }
 }

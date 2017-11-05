@@ -69,7 +69,7 @@ namespace SS14.Client.State.States
             lblServer.LocalPosition = new Vector2i(5, 2);
             imgStatus.AddControl(lblServer);
 
-            _lblServerInfo = new Label("LLJK#1", "MICROGME");
+            _lblServerInfo = new Label("------", "MICROGME");
             _lblServerInfo.ForegroundColor = new Color(139, 0, 0);
             _lblServerInfo.FixedWidth = 100;
             _lblServerInfo.Alignment = Align.Right;
@@ -81,7 +81,7 @@ namespace SS14.Client.State.States
             lblMode.LocalPosition = new Vector2i(10, 0);
             _lblServerInfo.AddControl(lblMode);
 
-            _lblModeInfo = new Label("SECRET", "MICROGME");
+            _lblModeInfo = new Label("------", "MICROGME");
             _lblModeInfo.ForegroundColor = new Color(139, 0, 0);
             _lblModeInfo.FixedWidth = 90;
             _lblModeInfo.Alignment = Align.Right;
@@ -93,7 +93,7 @@ namespace SS14.Client.State.States
             lblPlayers.LocalPosition = new Vector2i(10, 0);
             _lblModeInfo.AddControl(lblPlayers);
 
-            _lblPlayersInfo = new Label("17/32", "MICROGME");
+            _lblPlayersInfo = new Label("--/--", "MICROGME");
             _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPlayersInfo.FixedWidth = 60;
             _lblPlayersInfo.Alignment = Align.Right;
@@ -105,7 +105,7 @@ namespace SS14.Client.State.States
             lblPort.LocalPosition = new Vector2i(10, 0);
             _lblPlayersInfo.AddControl(lblPort);
 
-            _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
+            _lblPortInfo = new Label("----", "MICROGME");
             _lblPortInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPortInfo.FixedWidth = 50;
             _lblPortInfo.Alignment = Align.Right;

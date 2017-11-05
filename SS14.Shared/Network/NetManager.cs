@@ -193,6 +193,7 @@ namespace SS14.Shared.Network
         {
             Debug.Assert(_netPeer != null);
             Debug.Assert(!IsServer, "Should never be called on the server.");
+            Debug.Assert(!IsConnected);
 
             if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");

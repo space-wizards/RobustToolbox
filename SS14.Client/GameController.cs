@@ -64,6 +64,8 @@ namespace SS14.Client
         private readonly IMapManager _mapManager;
         [Dependency]
         private readonly IPlacementManager _placementManager;
+        [Dependency]
+        private readonly IBaseClient _client;
 
         #endregion Fields
 
@@ -115,6 +117,8 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
+
+            _client.Initialize();
 
             _stateManager.RequestStateChange<MainScreen>();
 

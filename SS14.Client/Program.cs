@@ -104,6 +104,7 @@ namespace SS14.Client
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
+            IoCManager.Register<IBaseClient, BaseClient>();
 
             IoCManager.BuildGraph();
         }

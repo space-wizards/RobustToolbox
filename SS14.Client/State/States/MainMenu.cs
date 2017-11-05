@@ -1,6 +1,4 @@
-﻿#define uiDev
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -110,36 +108,6 @@ namespace SS14.Client.State.States
             lblVersion.Alignment = Align.Right | Align.Bottom;
             lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
             _uiScreen.AddControl(lblVersion);
-
-#if uiDev
-            var chat = new Chatbox(new Vector2i(400, 200));
-            chat.LocalPosition = new Vector2i(25, 25);
-            _uiScreen.AddControl(chat);
-
-            var listPanel = new ListPanel();
-            listPanel.Size = new Vector2i(200, 200);
-            listPanel.LocalPosition = new Vector2i(450, 250);
-            _uiScreen.AddControl(listPanel);
-
-            for (var i = 0; i < 5; i++)
-            {
-                var label = new Label($"Label: {i}", "CALIBRI");
-                listPanel.AddControl(label);
-            }
-            var rtp = new RichTextPanel();
-            rtp.Size = new Vector2i(400, 200);
-            rtp.LocalPosition = new Vector2i(25, 250);
-            rtp.BackgroundColor = Color4.DarkGray;
-            rtp.ForegroundColor = new Color4(230, 230, 230, 255);
-            rtp.DrawBorder = true;
-            rtp.DrawBackground = true;
-            _uiScreen.AddControl(rtp);
-            
-            rtp.Text.Append("Textbox says, \"Oh, my, God Becky, look at the image.\"\n");
-            rtp.Text.Append("Textbox says, \"It is so big, it looks like, one of those buttons' girlfriends.\"\n");
-            rtp.Text.Append("Textbox says, \"I mean, the image, is just so big. I can't believe it's just so square, it's like out there.\"\n");
-            rtp.Text.Append("Textbox says, \"I mean gross, look. It's just so, black!\"\n");
-#endif
         }
 
         /// <inheritdoc />

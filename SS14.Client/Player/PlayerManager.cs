@@ -89,17 +89,7 @@ namespace SS14.Client.Player
             }
             ControlledEntity = null;
         }
-
-        public void KeyDown(Keyboard.Key key)
-        {
-            //TODO: Figure out what to do with this
-        }
-
-        public void KeyUp(Keyboard.Key key)
-        {
-            //TODO: Figure out what to do with this
-        }
-
+        
         public void ApplyPlayerStates(List<PlayerState> list)
         {
             PlayerState myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.Peer.UniqueIdentifier);

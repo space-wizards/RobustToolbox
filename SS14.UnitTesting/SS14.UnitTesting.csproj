@@ -49,6 +49,9 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(SolutionDir)packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
@@ -85,6 +88,7 @@
     <Compile Include="Server\GameObjects\Container_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />
+    <Compile Include="Shared\Maths\Vector2u_Test.cs" />
     <Compile Include="Shared\Maths\Vector2_Test.cs" />
     <Compile Include="Shared\Maths\Direction_Test.cs" />
     <Compile Include="Shared\Prototypes\PrototypeManager_Test.cs" />

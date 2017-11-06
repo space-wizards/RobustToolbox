@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Client.Interfaces
 {
-    interface IBaseClient
+    public interface IBaseClient : IDisposable
     {
         ushort DefaultPort { get; }
 
@@ -15,6 +11,10 @@ namespace SS14.Client.Interfaces
         event EventHandler<RunLevelChangedEvent> RunLevelChanged;
 
         void Initialize();
+
+        void Update();
+
+        void Tick();
 
         void ConnectToServer(string ip, ushort port);
 

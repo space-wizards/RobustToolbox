@@ -19,11 +19,7 @@ namespace SS14.Client.State.States
     public class MainScreen : State
     {
         private IBaseClient _client;
-
         private Screen _uiScreen;
-
-        private DateTime _connectTime;
-        private bool _isConnecting;
 
         /// <summary>
         ///     Constructs an instance of this object.
@@ -55,7 +51,7 @@ namespace SS14.Client.State.States
                 if (_client.RunLevel == ClientRunLevel.Initialize)
                     if (TryParseAddress(text, out var ip, out var port))
                         _client.ConnectToServer(ip, port);
-                    //TODO: Else notify user that textbox address is not valid
+                //TODO: Else notify user that textbox address is not valid
             };
             imgTitle.AddControl(txtConnect);
 
@@ -67,15 +63,8 @@ namespace SS14.Client.State.States
             btnConnect.Clicked += sender =>
             {
                 if (_client.RunLevel == ClientRunLevel.Initialize)
-                {
                     if (TryParseAddress(txtConnect.Text, out var ip, out var port))
                         _client.ConnectToServer(ip, port);
-                    //TODO: Else notify user that textbox address is not valid
-                }
-                else
-                {
-                    NetworkManager.ClientDisconnect("Client disconnected from game.");
-                }
             };
             txtConnect.AddControl(btnConnect);
 
@@ -86,13 +75,8 @@ namespace SS14.Client.State.States
             btnOptions.LocalPosition = new Vector2i(0, 20);
             btnOptions.Clicked += sender =>
             {
-                if (_isConnecting)
-                {
-                    _isConnecting = false;
-                    NetworkManager.ClientDisconnect("Client disconnected from game.");
-                }
-
-                StateManager.RequestStateChange<OptionsMenu>();
+                if (_client.RunLevel <= ClientRunLevel.Initialize)
+                    StateManager.RequestStateChange<OptionsMenu>();
             };
             btnConnect.AddControl(btnOptions);
 
@@ -194,7 +178,7 @@ namespace SS14.Client.State.States
             //_uiScreen.Destroy();
             //_uiScreen = null;
         }
-        
+
         private void RunLevelChanged(object obj, RunLevelChangedEvent args)
         {
             if (args.NewLevel == ClientRunLevel.Lobby)
@@ -209,7 +193,7 @@ namespace SS14.Client.State.States
             port = _client.DefaultPort;
             if (split.Length > 2)
                 return false;
-                //throw new InvalidOperationException("Not a valid Address.");
+            //throw new InvalidOperationException("Not a valid Address.");
 
             // IP:port format.
             if (split.Length == 2)
@@ -217,7 +201,7 @@ namespace SS14.Client.State.States
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
                     return false;
-                    //throw new InvalidOperationException("Not a valid port.");
+                //throw new InvalidOperationException("Not a valid port.");
             }
             return true;
         }

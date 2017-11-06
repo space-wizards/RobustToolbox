@@ -148,7 +148,7 @@ namespace SS14.Client
                     // announce we are falling behind
                     if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
                     {
-                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
+                        Logger.Warning("[ENG] MainLoop: Cannot keep up!");
                         _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }

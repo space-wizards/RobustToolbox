@@ -251,6 +251,11 @@ namespace SS14.Shared.Network
                 case NetConnectionStatus.Disconnected:
                     if (_channels.ContainsKey(sender))
                         HandleDisconnect(msg);
+                    else if(sender.RemoteUniqueIdentifier == 0) // is this the best way to detect an unsuccessful connect?
+                    {
+                        Logger.Info($"[NET] {sender.RemoteEndPoint}: Failed to connect");
+                        OnConnectFailed();
+                    }
                     break;
             }
         }
@@ -474,6 +479,12 @@ namespace SS14.Shared.Network
             return !args.Deny;
         }
 
+        protected virtual void OnConnectFailed()
+        {
+            var args = new NetConnectFailArgs();
+            ConnectFailed?.Invoke(this, args);
+        }
+
         protected virtual void OnConnected(INetChannel channel)
         {
             Connected?.Invoke(this, new NetChannelArgs(channel));
@@ -491,6 +502,9 @@ namespace SS14.Shared.Network
 
         /// <inheritdoc />
         public event EventHandler<NetConnectingArgs> Connecting;
+
+        /// <inheritdoc />
+        public event EventHandler<NetConnectFailArgs> ConnectFailed; 
 
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Connected;

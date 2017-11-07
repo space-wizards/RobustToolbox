@@ -121,7 +121,10 @@ namespace SS14.Shared.Network
 
             _netPeer.Start();
 
-            _strings.Initialize(this);
+            _strings.Initialize(this, () =>
+            {
+                OnConnected(ServerChannel);
+            });
         }
 
         /// <inheritdoc />
@@ -287,7 +290,9 @@ namespace SS14.Shared.Network
 
             Logger.Info($"[NET] {channel.RemoteAddress}: Connected");
 
-            OnConnected(channel);
+            // client is connected after string packet get received
+            if(IsServer)
+                OnConnected(channel);
         }
 
         private void HandleDisconnect(NetIncomingMessage message)
@@ -323,8 +328,11 @@ namespace SS14.Shared.Network
             string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
 
             if (msg.LengthBytes < 1)
+            {
                 Logger.Warning($"[NET] {address}: Received empty packet.");
-
+                return;
+            }
+            
             var id = msg.ReadByte();
 
             if (!_strings.TryGetString(id, out string name))
@@ -369,6 +377,8 @@ namespace SS14.Shared.Network
             {
                 Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
+
+            DebugIn(instance);
 
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
                 return;
@@ -439,6 +449,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendMessage(NetMessage message, INetChannel recipient)
         {
+            DebugOut(message);
             var packet = BuildMessage(message);
             ServerSendMessage(packet, recipient.Connection);
         }
@@ -465,10 +476,26 @@ namespace SS14.Shared.Network
             // not connected to a server, so a message cannot be sent to it.
             if(ServerChannel == null)
                 return;
-
+            
             _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
         }
         #endregion NetMessages
+
+        #region NetDebug
+
+        [Conditional("DEBUG")]
+        private void DebugOut(NetMessage msg)
+        {
+            Logger.Debug($"[NET] OUT: {msg.MsgName}");
+        }
+
+        [Conditional("DEBUG")]
+        private void DebugIn(NetMessage msg)
+        {
+            Logger.Debug($"[NET]  IN: {msg.MsgName}");
+        }
+
+        #endregion NetDebug
 
         #region Events
 

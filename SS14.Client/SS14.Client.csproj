@@ -159,6 +159,8 @@
     <Compile Include="Map\MapRenderer.cs" />
     <Compile Include="Placement\Modes\AlignSnapgridCenter.cs" />
     <Compile Include="Placement\Modes\AlignSnapgridBorder.cs" />
+    <Compile Include="Player\LocalPlayer.cs" />
+    <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="ss14.ico" />

@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client
 {
@@ -20,14 +21,18 @@ namespace SS14.Client
 
         public ClientRunLevel RunLevel { get; private set; }
 
+        public ServerInfo GameInfo { get; private set; }
+
         public void Initialize()
         {
-            _net.Connected += OnNetConnected;
+            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
+            
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
             Reset();
         }
+
 
         public void Update() { }
 
@@ -59,13 +64,7 @@ namespace SS14.Client
         {
             OnRunLevelChanged(ClientRunLevel.Initialize);
         }
-
-        private void OnNetConnected(object sender, NetChannelArgs args)
-        {
-            Debug.Assert(RunLevel < ClientRunLevel.Lobby);
-            OnRunLevelChanged(ClientRunLevel.Lobby);
-        }
-
+        
         private void OnConnectFailed(object sender, NetConnectFailArgs args)
         {
             Debug.Assert(RunLevel == ClientRunLevel.Connect);
@@ -76,6 +75,15 @@ namespace SS14.Client
         {
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
             Reset();
+        }
+
+        private void HandleServerInfo(NetMessage message)
+        {
+            // Server info is the first message to be sent by the server.
+            // Receiving this message asserts that the connection was successful.
+
+            Debug.Assert(RunLevel < ClientRunLevel.Lobby);
+            OnRunLevelChanged(ClientRunLevel.Lobby);
         }
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
@@ -106,5 +114,16 @@ namespace SS14.Client
             OldLevel = oldLevel;
             NewLevel = newLevel;
         }
+    }
+
+    public class ServerInfo
+    {
+        public string ServerName { get; set; }
+        public int ServerPort { get; set; }
+        public string ServerWelcomeMessage { get; set; }
+        public int ServerMaxPlayers { get; set; }
+        public string ServerMapName { get; set; }
+        public string GameMode { get; set; }
+        public int ServerPlayerCount { get; set; }
     }
 }

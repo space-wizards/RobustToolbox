@@ -79,7 +79,7 @@ namespace SS14.Client.Placement
             if (!rangerequired)
                 return true;
             var range = pManager.CurrentPermission.Range;
-            if (range > 0 && !pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(mouseCoords, range))
+            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(mouseCoords, range))
                     return false;
             return true;
         }

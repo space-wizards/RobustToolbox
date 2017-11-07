@@ -7,7 +7,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.ForceRestart;
-        public static readonly MsgGroups GROUP = MsgGroups.Core;
+        public static readonly MsgGroups GROUP = MsgGroups.Command;
 
         public static readonly string NAME = ID.ToString();
         public MsgRestartReq(INetChannel channel) : base(NAME, GROUP, ID) { }

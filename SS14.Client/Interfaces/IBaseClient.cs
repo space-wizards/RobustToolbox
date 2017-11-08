@@ -8,6 +8,8 @@ namespace SS14.Client.Interfaces
 
         ClientRunLevel RunLevel { get; }
 
+        ServerInfo GameInfo { get; }
+
         event EventHandler<RunLevelChangedEvent> RunLevelChanged;
 
         void Initialize();

@@ -1,10 +1,10 @@
-﻿using System;
-using SS14.Client.GameObjects;
+﻿using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using System;
 
 namespace SS14.Client.Player
 {
@@ -13,7 +13,8 @@ namespace SS14.Client.Player
         public EventHandler EntityAttached;
         public EventHandler EntityDetatched;
 
-        public EventHandler<MoveEventArgs> EntityMoved;
+        public event EventHandler<MoveEventArgs> EntityMoved;
+        public event EventHandler<StatusEventArgs> StatusChanged;
 
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player
@@ -77,6 +78,25 @@ namespace SS14.Client.Player
         private void OnPlayerMoved(object sender, MoveEventArgs args)
         {
             EntityMoved?.Invoke(sender, args);
+        }
+
+        public void SwitchState(SessionStatus newStatus)
+        {
+            var args = new StatusEventArgs(Session.Status, newStatus);
+            Session.Status = newStatus;
+            StatusChanged?.Invoke(this, args);
+        }
+    }
+
+    public class StatusEventArgs : EventArgs
+    {
+        public SessionStatus OldStatus { get; }
+        public SessionStatus NewStatus { get; }
+
+        public StatusEventArgs(SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            OldStatus = oldStatus;
+            NewStatus = newStatus;
         }
     }
 }

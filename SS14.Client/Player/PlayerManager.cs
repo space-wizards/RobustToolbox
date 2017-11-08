@@ -6,12 +6,14 @@ using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Player.PostProcessing;
-using SS14.Client.State.States;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.Player
 {
@@ -24,24 +26,39 @@ namespace SS14.Client.Player
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
 
         [Dependency]
-        private readonly IClientNetManager _networkManager;
+        private readonly IClientNetManager _network;
 
-        private SessionStatus status = SessionStatus.Zombie;
+        [Dependency]
+        private readonly IBaseClient _client;
 
-        public event EventHandler<TypeEventArgs> RequestedStateSwitch;
-
-        private IBaseClient _client;
         private Dictionary<int, PlayerSession> _sessions;
         public int PlayerCount => _sessions.Count;
-        public int MaxPlayers { get; set; }
+        public int MaxPlayers => _client.GameInfo.ServerMaxPlayers;
         public LocalPlayer LocalPlayer { get; private set; }
+        public IEnumerable<PlayerSession> Sessions => _sessions.Values;
+        public IReadOnlyDictionary<int, PlayerSession> SessionsDict => _sessions;
+        public event EventHandler PlayerListUpdated;
 
         public void Initialize()
         {
             _sessions = new Dictionary<int, PlayerSession>();
 
-            _client = IoCManager.Resolve<IBaseClient>();
-            var netMan = IoCManager.Resolve<IClientNetManager>();
+            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int) MsgPlayerListReq.ID, message =>
+                Logger.Error($"[SRV] Unhandled NetMessage type: {message.MsgId}"));
+
+            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandlePlayerList);
+        }
+
+        public void Startup(INetChannel channel)
+        {
+            // build a temporary client-side session
+            var session = new PlayerSession(this, channel.NetworkId, channel.ConnectionId);
+            _sessions.Add(channel.NetworkId, session);
+            LocalPlayer = new LocalPlayer(session);
+
+            var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
+            // message is empty
+            _network.ClientSendMessage(msgList, NetDeliveryMethod.ReliableOrdered);
         }
 
         public void Update(float frameTime)
@@ -51,7 +68,15 @@ namespace SS14.Client.Player
                 e.Update(frameTime);
             }
         }
-        
+
+        public void Shutdown()
+        {
+            LocalPlayer = null;
+            _sessions.Clear();
+        }
+
+        public void Destroy() { }
+
         public void ApplyEffects(RenderImage image)
         {
             foreach (var e in _effects)
@@ -62,7 +87,7 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-            var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _networkManager.Peer.UniqueIdentifier);
+            var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _network.Peer.UniqueIdentifier);
             if (myState == null)
                 return;
             if (myState.ControlledEntity != null &&
@@ -71,8 +96,8 @@ namespace SS14.Client.Player
                 LocalPlayer.AttachEntity(
                     IoCManager.Resolve<IEntityManager>().GetEntity((int) myState.ControlledEntity));
 
-            if (status != myState.Status)
-                SwitchState(myState.Status);
+            if (LocalPlayer.Session.Status != myState.Status)
+                LocalPlayer.SwitchState(myState.Status);
         }
 
         public void HandleNetworkMessage(NetIncomingMessage message)
@@ -100,12 +125,49 @@ namespace SS14.Client.Player
         /// <param name="uid">a target entity's Uid</param>
         public void SendVerb(string verb, int uid)
         {
-            var message = _networkManager.CreateMessage();
+            var message = _network.CreateMessage();
             message.Write((byte) NetMessages.PlayerSessionMessage);
             message.Write((byte) PlayerSessionMessage.Verb);
             message.Write(verb);
             message.Write(uid);
-            _networkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
+            _network.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        // Player list came in from the server.
+        private void HandlePlayerList(NetMessage netMessage)
+        {
+            //update sessions with player info
+            var msg = (MsgPlayerList) netMessage;
+
+            // diff the sessions to the Plyers
+            var sessions = Sessions; // we modify the collection, so it must be cached
+            foreach (var session in sessions)
+            {
+                // should these be mapped NetId -> PlyInfo?
+                var info = msg.Plyrs.FirstOrDefault(plyr => plyr.NetId == session.NetID);
+
+                // slot already occupied
+                if (info != null)
+                {
+                    if (info.Uuid != session.Uuid) // not the same player
+                    {
+                        
+                    }
+                    else // same player, update info
+                    {
+                        session.Name = info.Name;
+                        session.Status = (SessionStatus) info.Status;
+                        session.Ping = info.Ping;
+                    }
+                }
+                else // could not find it, which means it was removed.
+                {
+                    _sessions.Remove(session.NetID);
+                }
+            }
+
+            //raise event
+            PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void AddEffect(PostProcessingEffectType type, float duration)
@@ -131,16 +193,6 @@ namespace SS14.Client.Player
             effect.OnExpired -= EffectExpired;
             if (_effects.Contains(effect))
                 _effects.Remove(effect);
-        }
-
-        private void SwitchState(SessionStatus newStatus)
-        {
-            status = newStatus;
-            if (status == SessionStatus.InLobby && RequestedStateSwitch != null)
-            {
-                RequestedStateSwitch(this, new TypeEventArgs(typeof(Lobby)));
-                LocalPlayer.DetatchEntity();
-            }
         }
     }
 }

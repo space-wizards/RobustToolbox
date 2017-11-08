@@ -666,9 +666,11 @@ namespace SS14.Server
             {
                 var info = new MsgPlayerList.PlyInfo
                 {
+                    NetId = client.ConnectedClient.NetworkId,
+                    Uuid = client.ConnectedClient.ConnectionId,
                     Name = client.Name,
                     Status = (byte)client.Status,
-                    Ping = client.ConnectedClient.Connection.AverageRoundtripTime
+                    Ping = client.ConnectedClient.Ping
                 };
                 list.Add(info);
             }

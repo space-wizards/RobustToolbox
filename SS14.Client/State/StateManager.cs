@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics;
+using SS14.Client.Player;
+using SS14.Client.State.States;
 
 namespace SS14.Client.State
 {
@@ -55,8 +57,6 @@ namespace SS14.Client.State
             _managers[typeof(IKeyBindingManager)] = keyBindingManager;
             _managers[typeof(IConfigurationManager)] = configurationManager;
             _managers[typeof(IStateManager)] = this;
-
-            playerManager.RequestedStateSwitch += HandleStateChange;
         }
 
         #region Input
@@ -194,15 +194,7 @@ namespace SS14.Client.State
             CurrentState = newState;
             CurrentState.Startup();
         }
-
-        private void HandleStateChange(object sender, TypeEventArgs args)
-        {
-            if (args.Type.GetInterface("IState") != null)
-            {
-                RequestStateChange(args.Type);
-            }
-        }
-
+        
         #endregion Updates & Statechanges
     }
 }

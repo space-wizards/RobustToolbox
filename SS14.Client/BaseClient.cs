@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using Lidgren.Network;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Player;
+using SS14.Client.Interfaces.State;
+using SS14.Client.State.States;
+using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -14,6 +19,9 @@ namespace SS14.Client
         [Dependency]
         private readonly IClientNetManager _net;
 
+        [Dependency]
+        private readonly IPlayerManager _playMan;
+
         /// <summary>
         ///     Default port that the client tries to connect to if no other port is specified.
         /// </summary>
@@ -26,13 +34,35 @@ namespace SS14.Client
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
-            
+
+            _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
+
+            _playMan.Initialize();
 
             Reset();
         }
 
+        private void OnConnected(object sender, NetChannelArgs args)
+        {
+            // request base info about the server
+            var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
+            // message is empty
+            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
+
+            // start up player management
+            _playMan.Startup(args.Channel);
+
+            _playMan.LocalPlayer.StatusChanged += (obj, eventArgs) =>
+            {
+                if (eventArgs.NewStatus == SessionStatus.InLobby)
+                {
+                    var stateMan = IoCManager.Resolve<IStateManager>();
+                    stateMan.RequestStateChange<Lobby>();
+                }
+            };
+        }
 
         public void Update() { }
 
@@ -74,14 +104,30 @@ namespace SS14.Client
         private void OnNetDisconnect(object sender, NetChannelArgs args)
         {
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
+
+            _playMan.Shutdown();
+
             Reset();
         }
 
         private void HandleServerInfo(NetMessage message)
         {
+            if (GameInfo == null)
+                GameInfo = new ServerInfo();
+
+            var msg = (MsgServerInfo) message;
+            var info = GameInfo;
+
+            info.ServerName = msg.ServerName;
+            info.ServerPort = msg.ServerPort;
+            info.ServerWelcomeMessage = msg.ServerWelcomeMessage;
+            info.ServerMaxPlayers = msg.ServerMaxPlayers;
+            info.ServerMapName = msg.ServerMapName;
+            info.GameMode = msg.GameMode;
+            info.ServerPlayerCount = msg.ServerPlayerCount;
+
             // Server info is the first message to be sent by the server.
             // Receiving this message asserts that the connection was successful.
-
             Debug.Assert(RunLevel < ClientRunLevel.Lobby);
             OnRunLevelChanged(ClientRunLevel.Lobby);
         }

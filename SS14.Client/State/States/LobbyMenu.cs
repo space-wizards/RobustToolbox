@@ -1,24 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
+using SS14.Client.Player;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Network;
-using SS14.Shared.Network.Messages;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.State.States
 {
     public class Lobby : State
     {
+        private IPlayerManager _plyrMan;
+
         private Screen _uiScreen;
 
         private Label _lblModeInfo;
@@ -30,26 +32,12 @@ namespace SS14.Client.State.States
         private TabbedMenu _tabs;
 
         private Chatbox _lobbyChat;
-
-        private string _serverName;
-        private int _serverPort;
-        private string _welcomeString;
-        private int _serverMaxPlayers;
-        private int _serverPlayers;
-        private string _serverMapName;
-        private string _gameType;
-
+        
         public Lobby(IDictionary<Type, object> managers)
             : base(managers) { }
 
         public override void InitializeGUI()
         {
-            //TODO: This needs to go in BaseClient
-            NetworkManager.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, message =>
-                Logger.Error($"[SRV] Unhandled NetMessage type: {message.MsgId}"));
-
-            NetworkManager.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandlePlayerList);
-
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
@@ -127,10 +115,10 @@ namespace SS14.Client.State.States
             tabObserve.TabSpriteName = "lobby_tab_eye";
             _tabs.AddTab(tabObserve);
 
-            var tabServer = new PlayerListTab(new Vector2i(793, 350));
-            tabServer.TabSpriteName = "lobby_tab_info";
-            _tabs.AddTab(tabServer);
-            _tabs.SelectTab(tabServer);
+            _tabServer = new PlayerListTab(new Vector2i(793, 350));
+            _tabServer.TabSpriteName = "lobby_tab_info";
+            _tabs.AddTab(_tabServer);
+            _tabs.SelectTab(_tabServer);
 
             var imgChatBg = new SimpleImage();
             imgChatBg.Sprite = "lobby_chatbg";
@@ -160,8 +148,12 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
+            _plyrMan = IoCManager.Resolve<IPlayerManager>();
+            _plyrMan.PlayerListUpdated += HandlePlayerList;
+
             UserInterfaceManager.AddComponent(_uiScreen);
 
+#if _delme
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             var message = NetworkManager.CreateMessage();
@@ -171,21 +163,22 @@ namespace SS14.Client.State.States
             var playerListMsg = NetworkManager.CreateMessage();
             playerListMsg.Write((byte) NetMessages.PlayerListReq); //Request Playerlist.
             NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+#endif
         }
 
         public override void Shutdown()
         {
-            UserInterfaceManager.RemoveComponent(_uiScreen);
+            _plyrMan = IoCManager.Resolve<IPlayerManager>();
+            _plyrMan.PlayerListUpdated -= HandlePlayerList;
 
+            UserInterfaceManager.RemoveComponent(_uiScreen);
+#if _delme
             NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
+#endif
         }
 
         public override void Update(FrameEventArgs e)
         {
-            _lblServerInfo.Text = _serverName;
-            _lblModeInfo.Text = _gameType;
-            _lblPlayersInfo.Text = _serverPlayers + " / " + _serverMaxPlayers;
-            _lblPortInfo.Text = _serverPort.ToString();
         }
 
         public override void FormResize()
@@ -241,6 +234,47 @@ namespace SS14.Client.State.States
             UserInterfaceManager.TextEntered(e);
         }
 
+        /// <summary>
+        ///     Updates the visual player list in the tab.
+        /// </summary>
+        private void UpdatePlayerList(IReadOnlyDictionary<int, PlayerSession> sessions)
+        {
+            var playerCount = _plyrMan.MaxPlayers;
+            
+            _tabServer.PlayerList.DisposeAllChildren();
+            var offY = 0;
+            for (var i = 0; i < playerCount; i++)
+            {
+                var labelText = $"[{i+1}]";
+                if (sessions.TryGetValue(i, out var session))
+                {
+                    labelText = labelText + $" {session.Name}\t\tStatus: {session.Status}\t\tLatency: {session.Ping} ms";
+                }
+                else
+                {
+                    labelText = labelText + $" <EMPTY>";
+                }
+
+                var newLabel = new Label(labelText, "MICROGBE");
+                newLabel.Position = new Vector2i(0, offY);
+                newLabel.ForegroundColor = Color.Black;
+                newLabel.DoLayout();
+                offY += newLabel.ClientArea.Height;
+                _tabServer.PlayerList.AddControl(newLabel);
+            }
+        }
+
+        /// <summary>
+        ///     Updates the visual server info at the top of the lobby.
+        /// </summary>
+        private void UpdateServerInfo(ServerInfo info)
+        {
+            _lblServerInfo.Text = info.ServerName;
+            _lblModeInfo.Text = info.GameMode;
+            _lblPlayersInfo.Text = info.ServerPlayerCount + " / " + info.ServerMaxPlayers;
+            _lblPortInfo.Text = info.ServerPort.ToString();
+        }
+
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
             var message = args.RawMessage;
@@ -266,10 +300,6 @@ namespace SS14.Client.State.States
                             //TODO: Send player messages to a lobby chat
                             break;
                             
-                        case NetMessages.WelcomeMessage:
-                            HandleWelcomeMessage(message);
-                            break;
-
                         case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
@@ -281,17 +311,7 @@ namespace SS14.Client.State.States
                     break;
             }
         }
-
-        private void HandleWelcomeMessage(NetIncomingMessage msg)
-        {
-            _serverName = msg.ReadString();
-            _serverPort = msg.ReadInt32();
-            _welcomeString = msg.ReadString();
-            _serverMaxPlayers = msg.ReadInt32();
-            _serverMapName = msg.ReadString();
-            _gameType = msg.ReadString();
-        }
-
+        
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             var channel = (ChatChannel) msg.ReadByte();
@@ -300,36 +320,13 @@ namespace SS14.Client.State.States
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
         }
 
-        private void HandlePlayerList(NetMessage message)
+        private void HandlePlayerList(object sender, EventArgs args)
         {
-            //TODO: Race between getting InitializeGUI setup before we receive PlayerList message
-            //TODO: Move all netcode to a new class.
-            if(_tabServer == null)
-                return;
+            var man = (IPlayerManager) sender;
+            UpdatePlayerList(man.SessionsDict);
 
-            var playerList = (MsgPlayerList) message;
-
-            var playerCount = playerList.PlyCount;
-            _serverPlayers = playerCount;
-           // _tabServer?.PlayerList.Components.Clear();
-           _tabServer.PlayerList.DisposeAllChildren();
-            var offY = 0;
-            for (var i = 0; i < playerCount; i++)
-            {
-                var plyr = playerList.Plyrs[i];
-
-                var currName = plyr.Name;
-                var currStatus = (SessionStatus) plyr.Status;
-                var currRoundtrip = plyr.Ping;
-
-                var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
-                newLabel.Position = new Vector2i(0, offY);
-                newLabel.ForegroundColor = Color.Black;
-                newLabel.DoLayout();
-                offY += newLabel.ClientArea.Height;
-                //_tabServer.PlayerList.Components.Add(newLabel);
-                _tabServer.PlayerList.AddControl(newLabel);
-            }
+            var clBase = IoCManager.Resolve<IBaseClient>();
+            UpdateServerInfo(clBase.GameInfo);
         }
 
         private void HandleJoinGame()

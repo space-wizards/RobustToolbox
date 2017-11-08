@@ -38,7 +38,7 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.
         /// </summary>
-        int Ping { get; }
+        short Ping { get; }
 
         /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.

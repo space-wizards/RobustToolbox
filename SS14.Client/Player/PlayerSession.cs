@@ -6,12 +6,19 @@ namespace SS14.Client.Player
     public class PlayerSession
     {
         private PlayerManager _manager;
-        private INetChannel _netChannel;
 
-        public SessionStatus Status { get; }
+        public SessionStatus Status { get; set; } = SessionStatus.Zombie;
         public int NetID { get; }
-        public string Name { get; }
+        public long Uuid { get; }
+        public string Name { get; set; } = "<Unknown>";
+        public short Ping { get; set; }
 
-        public PlayerSession(PlayerManager manager, INetChannel channel) { }
+        public PlayerSession(PlayerManager manager, int netId, long uuid)
+        {
+            _manager = manager;
+            NetID = netId;
+            Uuid = uuid;
+        }
+
     }
 }

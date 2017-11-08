@@ -3,22 +3,33 @@ using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Player;
-using SS14.Shared;
 using SS14.Shared.GameStates;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Client.Interfaces.Player
 {
     public interface IPlayerManager
     {
+        IEnumerable<PlayerSession> Sessions { get; }
+        IReadOnlyDictionary<int, PlayerSession> SessionsDict { get; }
+
         LocalPlayer LocalPlayer { get; }
 
-        event EventHandler<TypeEventArgs> RequestedStateSwitch;
+        int PlayerCount { get; }
+        int MaxPlayers { get; }
+        event EventHandler PlayerListUpdated;
 
-        void SendVerb(string verb, int uid);
-        void HandleNetworkMessage(NetIncomingMessage message);
+        void Initialize();
+        void Startup(INetChannel channel);
         void Update(float frameTime);
-        void ApplyEffects(RenderImage image);
+        void Shutdown();
+        void Destroy();
 
+        //TODO: Move to console system
+        void SendVerb(string verb, int uid);
+
+        void HandleNetworkMessage(NetIncomingMessage message);
+        void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(List<PlayerState> list);
     }
 }

@@ -3,6 +3,7 @@ using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
+using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.UserInterface
 {
@@ -18,6 +19,10 @@ namespace SS14.Client.Interfaces.UserInterface
         void DisposeAllComponents();
         void DisposeAllComponents<T>();
         void ResizeComponents();
+        IEnumerable<T> GetAllComponents<T>() where T: Control;
+        IEnumerable<Control> GetAllComponents(Type type);
+        T GetSingleComponents<T>() where T : Control;
+        Control GetSingleComponent(Type type);
 
         void SetFocus(Control newFocus);
         void RemoveFocus();

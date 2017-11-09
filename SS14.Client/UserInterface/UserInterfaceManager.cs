@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using OpenTK;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.UserInterface.Components;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Client.UserInterface.Controls;
-using SS14.Client.UserInterface.CustomControls;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -336,6 +330,26 @@ namespace SS14.Client.UserInterface
                 _cursorSprite.Position = MousePos;
                 _cursorSprite.Draw();
             }
+        }
+
+        public IEnumerable<T> GetAllComponents<T>() where T : Control
+        {
+            return GetAllComponents(typeof(T)).Cast<T>();
+        }
+
+        public IEnumerable<Control> GetAllComponents(Type type)
+        {
+            return _components.Where(c => type.IsAssignableFrom(c.GetType()));
+        }
+
+        public T GetSingleComponents<T>() where T : Control
+        {
+            return (T)GetSingleComponent(typeof(T));
+        }
+
+        public Control GetSingleComponent(Type type)
+        {
+            return GetAllComponents(type).First();
         }
 
         #endregion Update & Render

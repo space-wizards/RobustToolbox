@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
@@ -15,6 +16,7 @@ namespace SS14.Shared.Network
     /// </summary>
     public class StringTable
     {
+        private bool _initialized = false;
         private INetManager _network;
         private readonly Dictionary<int, string> _strings;
         private int _lastStringIndex;
@@ -38,6 +40,8 @@ namespace SS14.Shared.Network
         /// </summary>
         public void Initialize(INetManager network, InitCallback callback = null)
         {
+            Debug.Assert(!_initialized);
+
             _callback = callback;
             _network = network;
             _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, (int)MsgStringTableEntries.ID, message =>
@@ -76,14 +80,23 @@ namespace SS14.Shared.Network
                 if (callback == null)
                     return;
 
-                if (_network.IsClient)
-                    _callback();
-
-                _callback = null;
+                if (_network.IsClient && !_initialized)
+                    _callback?.Invoke();
             });
 
+            Reset();
+        }
+
+        /// <summary>
+        ///     Resets the string table to the state right after calling Initialize().
+        /// </summary>
+        public void Reset()
+        {
+            _strings.Clear();
+            _initialized = false;
+
             // manually register the id on the client so it can bootstrap itself with incoming table entries
-            if (_network.IsClient && !TryFindStringId(MsgStringTableEntries.NAME, out int msgId))
+            if (!TryFindStringId(MsgStringTableEntries.NAME, out int msgId))
             {
                 _strings.Add((int)MsgStringTableEntries.ID, MsgStringTableEntries.NAME);
             }
@@ -128,6 +141,8 @@ namespace SS14.Shared.Network
         /// <returns>The ID of the added string.</returns>
         public void AddStringFixed(int id, string str)
         {
+            Debug.Assert(_network != null, "You need to call Initialize.");
+
             // The client should receive the table from the server, not add their own.
             if (_network.IsClient)
                 return;
@@ -188,6 +203,9 @@ namespace SS14.Shared.Network
         private void BroadcastTableUpdate(int id, string str)
         {
             if (_network.IsClient)
+                return;
+
+            if(!_network.IsRunning)
                 return;
 
             var message = _network.CreateNetMessage<MsgStringTableEntries>();

@@ -172,6 +172,7 @@ namespace SS14.Server
             try
             {
                 netMan.Initialize(true);
+                netMan.Startup();
             }
             catch (System.Net.Sockets.SocketException e)
             {

@@ -75,6 +75,8 @@ namespace SS14.Client
             Debug.Assert(RunLevel < ClientRunLevel.Connect);
             Debug.Assert(!_net.IsConnected);
 
+            _net.Startup();
+
             OnRunLevelChanged(ClientRunLevel.Connect);
             _net.ClientConnect(ip, port);
         }
@@ -85,6 +87,7 @@ namespace SS14.Client
             Debug.Assert(_net.IsConnected);
 
             // runlevel changed in OnNetDisconnect()
+            // are both of these *really* needed?
             _net.ClientDisconnect(reason);
         }
 

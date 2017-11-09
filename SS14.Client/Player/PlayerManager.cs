@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Lidgren.Network;
 using SS14.Client.Graphics.Render;
@@ -87,6 +88,8 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
+            Debug.Assert(LocalPlayer != null, "Call Startup()");
+
             var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _network.Peer.UniqueIdentifier);
             if (myState == null)
                 return;
@@ -140,7 +143,7 @@ namespace SS14.Client.Player
             var msg = (MsgPlayerList) netMessage;
 
             // diff the sessions to the Plyers
-            var sessions = Sessions; // we modify the collection, so it must be cached
+            var sessions = Sessions.ToList(); // we modify the collection, so it must be cached
             foreach (var session in sessions)
             {
                 // should these be mapped NetId -> PlyInfo?
@@ -151,7 +154,12 @@ namespace SS14.Client.Player
                 {
                     if (info.Uuid != session.Uuid) // not the same player
                     {
-                        
+                        _sessions.Remove(info.NetId);
+                        var newSession = new PlayerSession(this, info.NetId, info.Uuid);
+                        newSession.Name = info.Name;
+                        newSession.Status = (SessionStatus) info.Status;
+                        newSession.Ping = info.Ping;
+                        _sessions.Add(info.NetId, newSession);
                     }
                     else // same player, update info
                     {

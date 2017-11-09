@@ -352,6 +352,18 @@ namespace SS14.Client.UserInterface
             return GetAllComponents(type).First();
         }
 
+        public bool TryGetSingleComponent<T>(out T control) where T : Control
+        {
+            control = GetAllComponents<T>().FirstOrDefault();
+            return control != null;
+        }
+
+        public bool TryGetSingleComponent(Type type, out Control control)
+        {
+            control = GetAllComponents(type).FirstOrDefault();
+            return control != null;
+        }
+
         #endregion Update & Render
     }
 }

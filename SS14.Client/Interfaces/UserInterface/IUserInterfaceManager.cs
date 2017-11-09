@@ -23,6 +23,8 @@ namespace SS14.Client.Interfaces.UserInterface
         IEnumerable<Control> GetAllComponents(Type type);
         T GetSingleComponents<T>() where T : Control;
         Control GetSingleComponent(Type type);
+        bool TryGetSingleComponent<T>(out T control) where T : Control;
+        bool TryGetSingleComponent(Type type, out Control control);
 
         void SetFocus(Control newFocus);
         void RemoveFocus();

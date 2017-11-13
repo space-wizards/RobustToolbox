@@ -37,14 +37,31 @@ namespace SS14.Client.UserInterface.Controls
             set => _buttonClick = new Sprite(_resourceCache.GetSprite(value));
         }
 
+        public override Color ForegroundColor
+        {
+            set
+            {
+                base.ForegroundColor = value;
+                _buttonNormal.Color = value;
+                if (_buttonClick != null)
+                {
+                    _buttonClick.Color = value;
+                }
+                if (_buttonHover != null)
+                {
+                    _buttonHover.Color = value;
+                }
+            }
+        }
+
         /// <inheritdoc />
         protected override void OnCalcRect()
         {
             if (_buttonNormal != null)
             {
                 var bounds = _drawSprite.LocalBounds;
-                _size = new Vector2i((int) bounds.Width, (int) bounds.Height);
-                _clientArea = new Box2i(0, 0, (int) bounds.Width, (int) bounds.Height);
+                _size = new Vector2i((int)bounds.Width, (int)bounds.Height);
+                _clientArea = new Box2i(0, 0, (int)bounds.Width, (int)bounds.Height);
             }
         }
 

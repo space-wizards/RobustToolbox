@@ -63,17 +63,17 @@ namespace SS14.Client.UserInterface.Controls
         ///     Color of the background of the control. This will be blended with the BackgroundImage if it
         ///     is set.
         /// </summary>
-        public Color4 BackgroundColor { get; set; } = Color4.White;
+        public Color BackgroundColor { get; set; } = Color.White;
 
         /// <summary>
         ///     Color of the foreground of the control. This is usually the text.
         /// </summary>
-        public virtual Color4 ForegroundColor { get; set; } = Color4.Black;
+        public virtual Color ForegroundColor { get; set; } = Color.Black;
 
         /// <summary>
         ///     Color of the border around the control.
         /// </summary>
-        public Color4 BorderColor { get; set; } = Color4.Black;
+        public Color BorderColor { get; set; } = Color.Black;
 
         /// <summary>
         ///     Width of the border lines of the control in px.
@@ -94,7 +94,7 @@ namespace SS14.Client.UserInterface.Controls
         ///     If a control is not visible, it is not drawn to screen, and does not accept input.
         /// </summary>
         public virtual bool Visible { get; set; } = true;
-        
+
         /// <summary>
         ///     Total width of the control.
         /// </summary>
@@ -200,7 +200,7 @@ namespace SS14.Client.UserInterface.Controls
             get => UiManager.HasFocus(this);
             set
             {
-                if(value)
+                if (value)
                     UiManager.SetFocus(this);
                 else
                     UiManager.RemoveFocus(this);
@@ -252,7 +252,7 @@ namespace SS14.Client.UserInterface.Controls
         /// </summary>
         public virtual void Draw()
         {
-            if(!Visible) return;
+            if (!Visible) return;
 
             var rect = _clientArea.Translated(Position);
 
@@ -454,10 +454,8 @@ namespace SS14.Client.UserInterface.Controls
                 int scrX;
                 if ((Alignment & Align.HCenter) == Align.HCenter)
                     scrX = parentRect.Width / 2 - Width / 2;
-
                 else if ((Alignment & Align.Right) == Align.Right)
                     scrX = parentRect.Width + _localPos.X;
-
                 else // aligning left = not aligning
                     scrX = _localPos.X;
 
@@ -465,10 +463,8 @@ namespace SS14.Client.UserInterface.Controls
                 int scrY;
                 if ((Alignment & Align.VCenter) == Align.VCenter)
                     scrY = parentRect.Height / 2 - Height / 2;
-
                 else if ((Alignment & Align.Bottom) == Align.Bottom)
                     scrY = parentRect.Height + _localPos.Y;
-
                 else // aligning top == not aligning
                     scrY = _localPos.Y;
 
@@ -530,7 +526,7 @@ namespace SS14.Client.UserInterface.Controls
                 child.Dispose();
             }
         }
-        
+
         /// <summary>
         ///     Calculates a box that contains all of the children of this control.
         /// </summary>
@@ -565,7 +561,7 @@ namespace SS14.Client.UserInterface.Controls
 
             return new Box2i(left, top, right, bottom);
         }
-        
+
         public class ResizeEventArgs : EventArgs
         {
             public bool Consumed { get; set; } = false;

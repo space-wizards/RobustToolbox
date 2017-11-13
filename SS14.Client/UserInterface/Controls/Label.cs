@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Controls
             set => _text.Text = value;
         }
 
-        public override Color4 ForegroundColor
+        public override Color ForegroundColor
         {
             get => _text.FillColor;
             set => _text.FillColor = value;

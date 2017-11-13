@@ -163,7 +163,6 @@ namespace SS14.Client.State
 
             CurrentState = newState;
             CurrentState.Startup();
-            CurrentState.FormResize();
         }
 
         private void RequestStateChange(Type type)

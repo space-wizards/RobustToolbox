@@ -380,7 +380,7 @@ namespace SS14.Client.Graphics.Render
 
             // Change view to default so blitting ignores the camera and such.
             var oldview = target.SFMLTarget.GetView();
-            target.SFMLTarget.SetView(target.SFMLTarget.DefaultView);
+            target.SFMLTarget.SetView(new SFML.Graphics.View(new FloatRect(0, 0, target.Width, target.Height)));
             blitsprite.Draw();
             target.SFMLTarget.SetView(oldview);
         }

@@ -85,23 +85,23 @@ namespace SS14.Client.UserInterface.Controls
         {
             // assume width already set.
             var totalSize = Size;
-            
+
             var boundsLeft = _textboxLeft.LocalBounds;
             var boundsMain = _textboxMain.LocalBounds;
             var boundsRight = _textboxRight.LocalBounds;
-            
+
             var height = totalSize.Y;
-            height = (int) Math.Max(height, boundsLeft.Height);
-            height = (int) Math.Max(height, boundsMain.Height);
-            height = (int) Math.Max(height, boundsRight.Height);
+            height = (int)Math.Max(height, boundsLeft.Height);
+            height = (int)Math.Max(height, boundsMain.Height);
+            height = (int)Math.Max(height, boundsRight.Height);
 
             Height = height;
 
             _clientArea = Box2i.FromDimensions(0, 0, Width, Height);
 
-            _clientAreaLeft = Box2i.FromDimensions(0,0, (int) boundsLeft.Width, height);
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, (int) (Width - boundsLeft.Width - boundsRight.Width), height);
-            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int) boundsRight.Width, height);
+            _clientAreaLeft = Box2i.FromDimensions(0, 0, (int)boundsLeft.Width, height);
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, (int)(Width - boundsLeft.Width - boundsRight.Width), height);
+            _clientAreaRight = Box2i.FromDimensions(_clientAreaMain.Right, 0, (int)boundsRight.Width, height);
         }
 
         /// <inheritdoc />
@@ -115,7 +115,7 @@ namespace SS14.Client.UserInterface.Controls
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            if (BackgroundColor != Color4.White)
+            if (BackgroundColor != Color.White)
             {
                 _textboxLeft.Color = BackgroundColor;
                 _textboxMain.Color = BackgroundColor;
@@ -137,7 +137,7 @@ namespace SS14.Client.UserInterface.Controls
 
             _textSprite.Draw();
         }
-        
+
         /// <inheritdoc />
         public override void Dispose()
         {
@@ -321,7 +321,7 @@ namespace SS14.Client.UserInterface.Controls
 
                 _caretPos = _textSprite.MeasureLine(Text.Substring(_displayIndex, _caretIndex - _displayIndex));
             }
-            
+
             _textSprite.Text = _displayText;
             _textSprite.Position = Position + new Vector2i(_clientAreaMain.Left, (int)(_clientArea.Height / 2f) - (int)(_textSprite.Height / 2f));
         }

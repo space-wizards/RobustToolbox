@@ -22,6 +22,7 @@ namespace SS14.Client.UserInterface.Controls
         private Box2i _clientAreaMain;
         private Box2i _clientAreaRight;
         private ScrollableContainer _dropDown;
+        private ListPanel _listPanel;
 
         private Sprite _listboxLeft;
         private Sprite _listboxMain;
@@ -67,9 +68,9 @@ namespace SS14.Client.UserInterface.Controls
             var listboxMainBounds = _listboxMain.LocalBounds;
             var listboxRightBounds = _listboxRight.LocalBounds;
 
-            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int) listboxLeftBounds.Width, (int) listboxLeftBounds.Height));
-            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int) listboxMainBounds.Height);
-            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, 0), new Vector2i((int) listboxRightBounds.Width, (int) listboxRightBounds.Height));
+            _clientAreaLeft = Box2i.FromDimensions(new Vector2i(), new Vector2i((int)listboxLeftBounds.Width, (int)listboxLeftBounds.Height));
+            _clientAreaMain = Box2i.FromDimensions(_clientAreaLeft.Right, 0, _width, (int)listboxMainBounds.Height);
+            _clientAreaRight = Box2i.FromDimensions(new Vector2i(_clientAreaMain.Right, 0), new Vector2i((int)listboxRightBounds.Width, (int)listboxRightBounds.Height));
 
             _clientArea = Box2i.FromDimensions(new Vector2i(), new Vector2i(_clientAreaLeft.Width + _clientAreaMain.Width + _clientAreaRight.Width, Math.Max(Math.Max(_clientAreaLeft.Height, _clientAreaRight.Height), _clientAreaMain.Height)));
         }
@@ -79,7 +80,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             base.OnCalcPosition();
 
-            _selectedLabel.Position = Position + new Vector2i(_clientAreaLeft.Right, 0 + (int) (ClientArea.Height / 2f) - (int) (_selectedLabel.Height / 2f));
+            _selectedLabel.Position = Position + new Vector2i(_clientAreaLeft.Right, 0 + (int)(ClientArea.Height / 2f) - (int)(_selectedLabel.Height / 2f));
         }
 
         /// <inheritdoc />
@@ -185,7 +186,7 @@ namespace SS14.Client.UserInterface.Controls
 
             var selLabel = _dropDown.Components
                 .Where(a => a.GetType() == typeof(ListboxItem))
-                .Select(a => new {a, b = (ListboxItem) a})
+                .Select(a => new { a, b = (ListboxItem)a })
                 .Where(t => string.Equals(t.b.Text, str, StringComparison.InvariantCultureIgnoreCase))
                 .Select(t => t.b)
                 .FirstOrDefault();
@@ -199,13 +200,13 @@ namespace SS14.Client.UserInterface.Controls
             CurrentlySelected = null;
             _dropDown.Container.DisposeAllChildren();
 
-            var list = new ListPanel();
-            list.DrawBackground = false;
-            _dropDown.Container.AddControl(list);
-            
+            _listPanel = new ListPanel();
+            _listPanel.DrawBackground = false;
+            _dropDown.Container.AddControl(_listPanel);
+
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))
             {
-                newEntry.Parent = list;
+                newEntry.Parent = _listPanel;
                 newEntry.Clicked += NewEntryClicked;
             }
 
@@ -229,8 +230,8 @@ namespace SS14.Client.UserInterface.Controls
             _selectedLabel.Text = toSet.Text;
             _dropDown.Visible = false;
 
-            ((ListboxItem) toSet).Selected = true;
-            var notSelected = _dropDown.Container.Children
+            ((ListboxItem)toSet).Selected = true;
+            var notSelected = _listPanel.Children
                 .Cast<ListboxItem>()
                 .Where(item => item != toSet);
 

@@ -38,7 +38,7 @@ namespace SS14.Client.UserInterface.Controls
             DrawBackground = false;
             DrawBorder = true;
 
-            _clippingRi = new RenderImage("UI_SCR_CONTAINER", (uint) size.X, (uint) size.Y);
+            _clippingRi = new RenderImage("UI_SCR_CONTAINER", (uint)size.X, (uint)size.Y);
             _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
@@ -46,7 +46,7 @@ namespace SS14.Client.UserInterface.Controls
 
             ScrollbarH = new Scrollbar(true);
             ScrollbarV = new Scrollbar(false);
-            
+
             Container = new UiAnchor();
             // Container.Size = size; // using this as a list
             Container.Position = Vector2i.Zero; //this must always be 0 to work with RT
@@ -76,7 +76,6 @@ namespace SS14.Client.UserInterface.Controls
             ScrollbarV.Position = Position + new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
 
             base.OnCalcPosition();
-
 
             /*
             _maxX = 0;
@@ -117,15 +116,15 @@ namespace SS14.Client.UserInterface.Controls
             if (_innerFocus != null && !Components.Contains(_innerFocus)) ClearFocus();
             */
             var bounds = Container.GetShrinkBounds(false);
-            
+
             bounds = new Box2i(Container.Position, bounds.BottomRight); // screen to local size
             _maxX = bounds.Width;
             _maxY = bounds.Height;
 
-            ScrollbarH.Max = (int) _maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
+            ScrollbarH.Max = (int)_maxX - ClientArea.Width + (_maxY > _clippingRi.Height ? ScrollbarV.ClientArea.Width : 0);
             ScrollbarH.Visible = _maxX > _clippingRi.Width;
 
-            ScrollbarV.Max = (int) _maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
+            ScrollbarV.Max = (int)_maxY - ClientArea.Height + (_maxX > _clippingRi.Height ? ScrollbarH.ClientArea.Height : 0);
             ScrollbarV.Visible = _maxY > _clippingRi.Height;
 
             ScrollbarH.Update(frameTime);
@@ -134,7 +133,7 @@ namespace SS14.Client.UserInterface.Controls
             var xOff = ScrollbarH.Visible ? ScrollbarH.Value * -1 : 0;
             var yOff = ScrollbarV.Visible ? ScrollbarV.Value * -1 : 0;
 
-            Container.ScrollOffset = new Vector2i((int) xOff, (int) yOff);
+            Container.ScrollOffset = new Vector2i((int)xOff, (int)yOff);
         }
 
         protected override void DrawContents()
@@ -142,10 +141,10 @@ namespace SS14.Client.UserInterface.Controls
             base.DrawContents();
 
             // the rectangle should always be completely covered with draws, no point clearing
-            if(DebugEnabled)
+            if (DebugEnabled)
                 _clippingRi.Clear(Color.Aqua);
             else
-                _clippingRi.Clear(DrawBackground ? BackgroundColor : Color4.Transparent);
+                _clippingRi.Clear(DrawBackground ? BackgroundColor : Color.Transparent);
 
             _clippingRi.BeginDrawing();
             // draw the inner container screen
@@ -159,7 +158,7 @@ namespace SS14.Client.UserInterface.Controls
         public override void Draw()
         {
             if (Disposing || !Visible) return;
-            
+
             base.Draw();
 
             ScrollbarH.Draw();
@@ -238,10 +237,10 @@ namespace SS14.Client.UserInterface.Controls
             var rtArgs = new MouseWheelScrollEventArgs(e.Position - Position, e.Wheel, e.Delta);
             if (Container.MouseWheelMove(rtArgs))
                 return true;
-            
+
             if (ScrollbarV.Visible && ClientArea.Translated(Position).Contains(e.X, e.Y))
             {
-                if(ScrollbarV.MouseWheelMove(e))
+                if (ScrollbarV.MouseWheelMove(e))
                     return true;
             }
 

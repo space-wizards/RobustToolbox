@@ -22,9 +22,10 @@ namespace SS14.Server.Player
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
-        public PlayerSession(INetChannel client, PlayerManager playerManager)
+        public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerIndex index)
         {
             _playerManager = playerManager;
+            Index = index;
 
             PlayerState = new PlayerState()
             {
@@ -42,9 +43,7 @@ namespace SS14.Server.Player
 
             UpdatePlayerState();
         }
-
-        #region IPlayerSession Members
-
+        
         public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
@@ -57,10 +56,11 @@ namespace SS14.Server.Player
             set => _name = value;
         }
 
-
         public SessionStatus Status { get; set; }
 
         public DateTime ConnectedTime { get; private set; }
+
+        public PlayerIndex Index { get; }
 
         public void AttachToEntity(IEntity a)
         {
@@ -147,9 +147,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-
-        #endregion IPlayerSession Members
-
+        
         private void SendAttachMessage()
         {
             if (attachedEntity == null)
@@ -169,7 +167,7 @@ namespace SS14.Server.Player
             DispatchVerb(message.Verb, message.Uid);
         }
 
-        public void DispatchVerb(string verb, int uid)
+        private void DispatchVerb(string verb, int uid)
         {
             //Handle global verbs
             Logger.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);
@@ -246,6 +244,24 @@ namespace SS14.Server.Player
                 PlayerState.ControlledEntity = null;
             else
                 PlayerState.ControlledEntity = attachedEntity.Uid;
+        }
+    }
+
+    public struct PlayerIndex
+    {
+        /// <summary>
+        ///     Zero indexed position in the PlayerSession array.
+        /// </summary>
+        public int Index { get; }
+
+        internal PlayerIndex(int index)
+        {
+            Index = index;
+        }
+
+        public static implicit operator int(PlayerIndex index)
+        {
+            return index.Index;
         }
     }
 }

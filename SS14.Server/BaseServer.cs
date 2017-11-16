@@ -214,7 +214,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
             IoCManager.Resolve<IChatManager>().Initialize();
-            IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
             IoCManager.Resolve<IMapManager>().Initialize();
 
             // Set up the VFS
@@ -665,9 +665,12 @@ namespace SS14.Server
             var list = new List<MsgPlayerList.PlyInfo>();
             foreach (var client in players)
             {
+                if(client == null)
+                    continue;
+
                 var info = new MsgPlayerList.PlyInfo
                 {
-                    NetId = client.ConnectedClient.NetworkId,
+                    NetId = client.Index,
                     Uuid = client.ConnectedClient.ConnectionId,
                     Name = client.Name,
                     Status = (byte)client.Status,
@@ -682,11 +685,12 @@ namespace SS14.Server
 
         private static void HandleClientGreet(MsgClGreet msg)
         {
+            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
+
             var fixedName = msg.PlyName.Trim();
             if (fixedName.Length < 3)
-                fixedName = $"Player {msg.MsgChannel.NetworkId}";
+                fixedName = $"Player {p.Index}";
 
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             p.SetName(fixedName);
         }
 
@@ -708,7 +712,7 @@ namespace SS14.Server
 
             // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(
-                IoCManager.Resolve<IPlayerManager>().GetSessionById(client.NetworkId)); //SPAWN PLAYER
+                IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(client)); //SPAWN PLAYER
         }
 
         #endregion MessageProcessing

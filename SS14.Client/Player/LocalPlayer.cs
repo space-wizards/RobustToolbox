@@ -22,13 +22,8 @@ namespace SS14.Client.Player
         /// </summary>
         public IEntity ControlledEntity { get; private set; }
 
-        public PlayerSession Session { get; }
-
-        public LocalPlayer(PlayerSession session)
-        {
-            Session = session;
-        }
-
+        public PlayerSession Session { get; set; }
+        
         /// <summary>
         ///     Attaches a client to an entity.
         /// </summary>

@@ -26,10 +26,7 @@ namespace SS14.Shared.Network
 
         /// <inheritdoc />
         public NetConnection Connection { get; }
-
-        /// <inheritdoc />
-        public int NetworkId { get; set; }
-
+        
         /// <inheritdoc />
         public long ConnectionId => Connection.RemoteUniqueIdentifier;
 

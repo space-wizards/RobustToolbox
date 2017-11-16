@@ -52,10 +52,7 @@ namespace SS14.Client.Player
 
         public void Startup(INetChannel channel)
         {
-            // build a temporary client-side session
-            var session = new PlayerSession(this, channel.NetworkId, channel.ConnectionId);
-            _sessions.Add(channel.NetworkId, session);
-            LocalPlayer = new LocalPlayer(session);
+            LocalPlayer = new LocalPlayer();
 
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty

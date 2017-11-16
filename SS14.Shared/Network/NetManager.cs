@@ -46,7 +46,7 @@ namespace SS14.Shared.Network
         ///     The instance of the net server.
         /// </summary>
         private NetPeer _netPeer;
-
+        
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
 

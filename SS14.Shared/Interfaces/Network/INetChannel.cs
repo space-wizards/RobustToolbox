@@ -19,12 +19,7 @@ namespace SS14.Shared.Interfaces.Network
         ///     The NetPeer this belongs to.
         /// </summary>
         INetManager NetPeer { get; }
-
-        /// <summary>
-        ///     The player slot ID of this channel.
-        /// </summary>
-        int NetworkId { get; set; }
-
+        
         /// <summary>
         ///     The Unique Identifier of the connection.
         /// </summary>

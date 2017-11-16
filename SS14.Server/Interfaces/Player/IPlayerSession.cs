@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using System;
+using SS14.Server.Player;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
@@ -15,6 +16,8 @@ namespace SS14.Server.Interfaces.Player
         SessionStatus Status { get; set; }
         INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
+
+        PlayerIndex Index { get; }
 
         void SetName(string name);
 

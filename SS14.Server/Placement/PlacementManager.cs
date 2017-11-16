@@ -71,7 +71,7 @@ namespace SS14.Server.Placement
 
             var dirRcv = msg.DirRcv;
 
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.MsgChannel.NetworkId);
+            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobodys
 

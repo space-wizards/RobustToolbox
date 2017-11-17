@@ -165,12 +165,13 @@ namespace SS14.Client.State.States
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
             var message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessages.WelcomeMessageReq); //Request Welcome msg.
+            message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
             NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
             var playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte) NetMessages.PlayerListReq); //Request Playerlist.
+            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
             NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+            FormResize();
         }
 
         public override void Shutdown()
@@ -190,8 +191,8 @@ namespace SS14.Client.State.States
 
         public override void FormResize()
         {
-            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -247,7 +248,7 @@ namespace SS14.Client.State.States
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus) message.ReadByte();
+                    var statMsg = (NetConnectionStatus)message.ReadByte();
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         var disconnectMessage = message.ReadString();
@@ -259,13 +260,13 @@ namespace SS14.Client.State.States
                     break;
 
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages) message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
                         case NetMessages.LobbyChat:
                             //TODO: Send player messages to a lobby chat
                             break;
-                            
+
                         case NetMessages.WelcomeMessage:
                             HandleWelcomeMessage(message);
                             break;
@@ -294,7 +295,7 @@ namespace SS14.Client.State.States
 
         private void HandleChatMessage(NetIncomingMessage msg)
         {
-            var channel = (ChatChannel) msg.ReadByte();
+            var channel = (ChatChannel)msg.ReadByte();
             var text = msg.ReadString();
             var message = "[" + channel + "] " + text;
             _lobbyChat.AddLine(message, ChatChannel.Lobby);
@@ -304,22 +305,22 @@ namespace SS14.Client.State.States
         {
             //TODO: Race between getting InitializeGUI setup before we receive PlayerList message
             //TODO: Move all netcode to a new class.
-            if(_tabServer == null)
+            if (_tabServer == null)
                 return;
 
-            var playerList = (MsgPlayerList) message;
+            var playerList = (MsgPlayerList)message;
 
             var playerCount = playerList.PlyCount;
             _serverPlayers = playerCount;
-           // _tabServer?.PlayerList.Components.Clear();
-           _tabServer.PlayerList.DisposeAllChildren();
+            // _tabServer?.PlayerList.Components.Clear();
+            _tabServer.PlayerList.DisposeAllChildren();
             var offY = 0;
             for (var i = 0; i < playerCount; i++)
             {
                 var plyr = playerList.Plyrs[i];
 
                 var currName = plyr.Name;
-                var currStatus = (SessionStatus) plyr.Status;
+                var currStatus = (SessionStatus)plyr.Status;
                 var currRoundtrip = plyr.Ping;
 
                 var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");

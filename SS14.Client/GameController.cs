@@ -302,10 +302,10 @@ namespace SS14.Client
             var window = CluwneLib.ShowSplashScreen(new VideoMode(SIZE_X, SIZE_Y)).Graphics;
 
             var logo = _resourceCache.GetSprite("ss14_logo");
-            logo.Position = Size/2 - logo.TextureRect.Size/2;
+            logo.Position = Size / 2 - logo.TextureRect.Size / 2;
 
             var background = _resourceCache.GetSprite("ss14_logo_background");
-            background.Scale = (Vector2)Size/background.TextureRect.Size;
+            background.Scale = (Vector2)Size / background.TextureRect.Size;
 
             var nanotrasen = _resourceCache.GetSprite("ss14_logo_nt");
             nanotrasen.Scale = NTSize / nanotrasen.TextureRect.Size;
@@ -331,6 +331,10 @@ namespace SS14.Client
         private void MainWindowResizeEnd(object sender, SizeEventArgs e)
         {
             _stateManager.FormResize();
+            // Not sure if changing the view manually is needed.
+            // Better safe than sorry.
+            CluwneLib.Window.View = new Graphics.Views.View(
+               Box2.FromDimensions(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y));
         }
         private void MainWindowRequestClose(object sender, EventArgs e)
         {

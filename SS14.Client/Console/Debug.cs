@@ -1,5 +1,6 @@
 using OpenTK.Graphics;
 using SS14.Client.GameObjects;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -7,9 +8,13 @@ using SS14.Shared.IoC;
 using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using SS14.Client.Graphics;
+using SS14.Client.Interfaces.State;
+using SS14.Client.State.States;
+using SS14.Shared.ContentPack;
 
 namespace SS14.Client.Console
 {
@@ -109,6 +114,107 @@ namespace SS14.Client.Console
         public bool Execute(IDebugConsole console, params string[] args)
         {
             CluwneLib.Debug.ToggleFPSDebug();
+            return false;
+        }
+    }
+
+    class GetRenderImageDumpCommand : IConsoleCommand
+    {
+        public string Command => "dumprt";
+        public string Description => "Dump RenderTarget";
+        public string Help => @"usage: dumprt <key>
+Dumps the specified render target used in the drawing process by key.
+The file gets dumped besides the executable.
+List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, composedscene, overlay, scene, tiles, screenshadows, shadowblendintermediate, shadowintermediate.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length == 0)
+            {
+                console.AddLine("No key specified.", Color4.Red);
+                return false;
+            }
+            if (args.Length > 1)
+            {
+                console.AddLine("This command only takes one argument.", Color4.Red);
+                return false;
+            }
+            var statemgr = IoCManager.Resolve<IStateManager>();
+            if (!(statemgr.CurrentState is GameScreen screen))
+            {
+                console.AddLine("Wrong game state active. Must be GameScreen", Color4.Red);
+                return false;
+            }
+            RenderImage target;
+            var key = args[0];
+            switch (key) {
+                case "playerocclusion":
+                    target = screen.PlayerOcclusionTarget;
+                    break;
+                case "occluderdebug":
+                    target = screen.OccluderDebugTarget;
+                    break;
+                case "light":
+                    target = screen.LightTarget;
+                    break;
+                case "lightintermediate":
+                    target = screen.LightTargetIntermediate;
+                    break;
+                case "composedscene":
+                    target = screen.ComposedSceneTarget;
+                    break;
+                case "overlay":
+                    target = screen.OverlayTarget;
+                    break;
+                case "scene":
+                    target = screen.SceneTarget;
+                    break;
+                case "tiles":
+                    target = screen.TilesTarget;
+                    break;
+                case "screenshadows":
+                    target = screen.ScreenShadows;
+                    break;
+                case "shadowblendintermediate":
+                    target = screen.ShadowBlendIntermediate;
+                    break;
+                case "shadowintermediate":
+                    target = screen.ShadowIntermediate;
+                    break;
+                default:
+                    console.AddLine("Unknown key", Color4.Red);
+                    return false;
+            }
+
+            using (var image = target.Texture.CopyToImage())
+            {
+                var timestamp = DateTime.Now.ToString("yyyyMMddTHHmmsszzz");
+                var filename = Path.GetFullPath(PathHelpers.ExecutableRelativeFile($"dumprt-{key}-{timestamp}.png"));
+                image.SaveToFile(filename);
+                console.AddLine($"Saved dump to {filename}!", Color4.Green);
+            }
+
+            return false;
+        }
+    }
+
+    class ReRenderCommand : IConsoleCommand
+    {
+        public string Command => "rerender";
+        public string Description => "Forces GameScreen to re-render everything.";
+        public string Help => "This is done by re-creating all render targets.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var stateMgr = IoCManager.Resolve<IStateManager>();
+            if (!(stateMgr.CurrentState is GameScreen screen))
+            {
+                console.AddLine("Wrong game state active. Must be GameScreen.", Color4.Red);
+                return false;
+            }
+
+            screen.FormResize();
+
             return false;
         }
     }

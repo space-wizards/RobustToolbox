@@ -201,20 +201,13 @@ List of valid keys: playerocclusion, occluderdebug, light, lightintermediate, co
     class ReRenderCommand : IConsoleCommand
     {
         public string Command => "rerender";
-        public string Description => "Forces GameScreen to re-render everything.";
-        public string Help => "This is done by re-creating all render targets.";
+        public string Description => "Forces the current GameState to re-render everything.";
+        public string Help => "";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var stateMgr = IoCManager.Resolve<IStateManager>();
-            if (!(stateMgr.CurrentState is GameScreen screen))
-            {
-                console.AddLine("Wrong game state active. Must be GameScreen.", Color4.Red);
-                return false;
-            }
-
+            var screen = IoCManager.Resolve<IStateManager>().CurrentState;
             screen.FormResize();
-
             return false;
         }
     }

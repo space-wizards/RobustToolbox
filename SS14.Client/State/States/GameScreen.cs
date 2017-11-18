@@ -177,6 +177,7 @@ namespace SS14.Client.State.States
             InitalizeLighting();
 
             DebugManager = new GameScreenDebug(this);
+            FormResizeUI();
         }
 
         private void InitializeRenderTargets()
@@ -184,6 +185,7 @@ namespace SS14.Client.State.States
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
             view = new View(Vector2.Zero, new Vector2(width, height));
+            UpdateView(false);
             _baseTarget = new RenderImage("baseTarget", width, height, true);
             _cleanupList.Add(_baseTarget);
 
@@ -263,7 +265,7 @@ namespace SS14.Client.State.States
             _gameChat = new Chatbox(_gameChatSize);
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
-            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10);};
+            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             _uiScreen.AddControl(_gameChat);
         }
@@ -315,16 +317,21 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
-
-            UserInterfaceManager.ResizeComponents();
-
+            FormResizeUI();
             ResetRendertargets();
+            _redrawTiles = true;
             IoCManager.Resolve<ILightManager>().RecalculateLights();
             RecalculateScene();
 
             base.FormResize();
+        }
+
+        private void FormResizeUI()
+        {
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
         }
 
         /// <inheritdoc />
@@ -343,11 +350,19 @@ namespace SS14.Client.State.States
                 if (CluwneLib.Camera.Position != newpos)
                 {
                     CluwneLib.Camera.Position = newpos;
-                    view.Center = newpos * CluwneLib.Camera.PixelsPerMeter;
-                    SceneTarget.View = view;
-                    TilesTarget.View = view;
+                    MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+                    UpdateView();
                 }
-                MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+            }
+        }
+
+        private void UpdateView(bool updateTargets = true)
+        {
+            view.Center = CluwneLib.Camera.Position * CluwneLib.Camera.PixelsPerMeter;
+            if (updateTargets)
+            {
+                SceneTarget.View = view;
+                TilesTarget.View = view;
             }
         }
 
@@ -834,6 +849,10 @@ namespace SS14.Client.State.States
             // unless you call CopyToImage() on it, which we can't due to performance.
             // This works though!
             source.BeginDrawing();
+            // N̵̤̜͙͔̲͖̓̓͐ͭ́̎̅ͮ̆͠O̸̢̖ͬͣ̋T̓ͩ̊̏͊͏̩̼͞Ẻ̿̇͆͏̬̗̖̮͉͚͈ͅ ̛̗̱͚̬͈ͤͭͯ̄̄F̬ͮ̈ͯṚ͙̭̘̤̹̰̂͗ͯ͑̀̾̽ͪ̐͘Ȍ͎̣͚̍͆̊M̯͚ͮ̉̀̌ ̵̖̠̬͉̟ͫ̓̉͠ͅP͇͖͖̻̳̪͔̅͗ͧ͒͟͜͞J̝͍̻̜̖͖̝̻̓͂͝Ḇ̣̲̫̗͉̥̯̓ͥ͂̔̃ͅ
+            // ̶̯͚̯̱͓̣̻͍̄ͪͬ͆̓͆̈͂̉͠Į͖͕͇̜̟̘͌͊͐ͅ ̡̜̮̟̭͙̋͒͐ͯ̚͝ͅḪ̫̥̗̥̯̱̿̋͐̓̄ͫ̚͢ͅE͎͉͕̙̼̼̙̩ͨ̏͆ͪ̂̿́́R̳͍̰͕̲͐͒̊̿̀͑̅̒͢͡E͉̫̺̮͚͔̻̠̒̂ͫ͂B̶͓̗̝̈̋͊ͯ̄̉ͣ͆Y̎ͫ͑ͧ͏͖̦̝̰̝̙̠̹ ̩̹͇̜̝̈́̇̒ͪ̉̐͋ͮD̵̘͒ͫ̈͂̉́͘Ě̤͑ͭͧ̿͋͝Ċ͎̬̫͔̩̐̄̓̅̂́ͣL̵͖̳̯̈͆͐̓́̎̎͒́A̶̷̹̪̻͉͚̽̅͒ͨ͢R̛͕̠̟͙̼͍̻̪͚͑̊ͤͥ̏E̷̷̢͇̮̋́̈́̌ͨ ̧̩̤̆́̀̈́̕T̯͖̝̪ͨͤͬ̽͟͡H̘̟͊͞I̵͙̞̯̙͓̯̊ͯͥ̅͐͗̂͆̆S̴̃̔͐ͫͥͣ̑͆̔̕͏̞̣̥̩̜̟̪͎ ̡̱͙̜ͮͧͣ̏ͪ͢͝C̢̧͍̫̙̣̯̘͚͒̒ͧ͗O̼̹͚͉͙̦̻̽̑̇͊͌ͩͧ͒͞͝D͛̍̚̚҉̟͚̯̮̺̜E̵̮̠͎̞ͤ̓̒̎ͨ̈́̌͞ ̘͇͍̞̼̮̲̹̌̊̄͞À̛͉̹̘͜S̴͙̯̝̙͎̘͙͎̻̎ͥ̍ͬͤ̅̕ ̡̘̯͊ͫͦ̉Cͯ̆͊ͣ́͏̙̝̬U̻͈͚͓̞̞̮͖ͬ͂̽͂̋̎͆̌R̡̘̗̙͍ͯ̿̃̀S̶̠̤̅̆E̒̈̓͘͏̨̙̫̗̮͎͕͉̪D̈́͏͚͔̦̖͎̖̕
+            // ̢͓̌T̼̗̰͒ͪ͢͟͠Õ̢̻̙̼̰̜͇͇̮̲̅̔̄͂͠U̜̝͕͆̃͂̇̚C̨̜̟̗͓̪̹̔̿̄̓̏͜Hͭ͌ͪͩ͏̡͡ͅ ̳͇̏̊̎̋͊ͥ̄͒A̴̷̻͖͈̟͖̦̖ͯ͛ͮͨ̊ͨ̐̔ͅͅT̷̼̠̓ͩ́͂ͥͯ̚͟ͅ ̢̞͔̓ͫ̾̓̕Y̶ͩͦͥ̿̍ͧͩ͏̶͚̜͙̥͕̩͖̲O̷̭̺̫͍̞̭͇̪ͦU̙̲̖̠̭̹͕̥̥͌̎ͯͦ̐R̨̬̠̠̹̺͑̄͌ͬ͋̽ͦ͞ ̸̨̼̟̗̻̮̻̣̩͂̾̐ͬͮͦ͛ͬ͡O̶̡̤̫̲̼͚͎̝͚ͣ͌̇W̛̜͚͔̫̹̱̠͐̀ͦ̉͢͝Ń̯̞̩̰̬̞̓ͤ͐ͣ͟ ̴̀̍͊͐͗̌̅͊ͪ҉̯̭̻̼̰P̣̯͚͕̬͙ͩͦ̆͂͑ͮ̈́Ȩ̱̠͊̂̀R̵̪͍̗̰̟͚͕͙͔ͧ̍ͦ̃̾̾ͬ́͟I̷̢̤̼̿̽̂͊̆̿̓L̥̭̏ͯ̍ͣ͝
+            //͎̆̒̿ͤ̀͝͝H̙͇̽ͩ̓̚E̜̘̭̟͓͖̓̔̑̀͞͠ͅL̪̰̺̼̊̐̌P̸̴̴̙̻̻̗̯̤͎͓̿̊͌ͪ ̯̜͊̍̄M̩̻̺̬̗͕̬̈͗́ͯ̚̚͜Ȇ̟̜͙̙ ̅͐͐҉̱̫̼̱h̢̼͎͕̪͉͂̊ͤͣ͛͂̄ͯ͝͠t͎̺̼͙̰͓ͥ̏́ţ͕̼̱̲͈̹̾ͣͯͮ̄̅ͧͦ̚p̧̜̹͚̦ͧ̊̀̽ͫ̓̓ͣ̚͡ş̨̮̣̼̰̞̝̫͋̌ͬ͊͑ͣ:̷͇͚̲̻̩̞ͤ͐͞/̈́͋ͯ͂̀̅ͪ͑͞͏͖̮̯͍̟͚͓͎/̟̩̲͑̚ĩ̶̢̲̬̦͍͈̯͉̓̅͟.̦̭̲̭̂̓̿̈́̄͟ï͋͘҉̘̪̠̣̰m̖͎̮͆̀ͯ̑̃ͅg̢̝͉͔̽̃̀̂u̢̱̞̫̱̹̪̇͟r̸̯̞̹͓̥̮̮̝̹͌̀͌̈́͑.̪̦͕̞̥͕̩̎ͤ̇̉̒̓c̨̩̰̎̂ͬͤ̍̓̓ṍ̵͍͈̣̰m̛̱̥̘͙͈ͫͭ̒ͪͮ/̓͆̽̀͐̿͘҉̘̲͈̬̹̟M̡̺͍̜̺̘̰̼͂̎̃͞͝l̴̫̘̦̺̑ͪ̃͢ͅn̤̱̺̿͌ͨ͡U̧̢̜̞̝̒͒̐̄̊̽ͤͫͅL̡̺͉̠͖͚͉͚ͥͧ͋ͬ̀b̵̶̪̝̟̔ͪ̂̊A̧̧̝̭͖̭͍̬͑̀.̞̬͈́ͫ̍͘ͅp̶͎̠̱̍ͪ̆n̩͕̬̈ͪ̋ͅg̘̗̙̻͎̩̲͙͊ͨͭͣ͌̚̕
             CluwneLib.drawRectangle(0, 0, source.Width, source.Height, Color.Black);
             source.EndDrawing();
             #endif

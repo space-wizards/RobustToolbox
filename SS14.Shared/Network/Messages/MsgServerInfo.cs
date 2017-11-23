@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Players;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -25,6 +26,7 @@ namespace SS14.Shared.Network.Messages
         public string ServerMapName { get; set; }
         public string GameMode { get; set; }
         public int ServerPlayerCount { get; set; }
+        public PlayerIndex PlayerIndex { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
@@ -35,6 +37,7 @@ namespace SS14.Shared.Network.Messages
             ServerMapName = buffer.ReadString();
             GameMode = buffer.ReadString();
             ServerPlayerCount = buffer.ReadInt32();
+            PlayerIndex = new PlayerIndex(buffer.ReadInt32());
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -46,6 +49,7 @@ namespace SS14.Shared.Network.Messages
             buffer.Write(ServerMapName);
             buffer.Write(GameMode);
             buffer.Write(ServerPlayerCount);
+            buffer.Write(PlayerIndex.Index);
         }
     }
 }

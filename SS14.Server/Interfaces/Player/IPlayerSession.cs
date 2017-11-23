@@ -1,10 +1,9 @@
-﻿using SS14.Shared;
+﻿using System;
+using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
-using System;
-using SS14.Server.Player;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Players;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -18,6 +17,8 @@ namespace SS14.Server.Interfaces.Player
         DateTime ConnectedTime { get; }
 
         PlayerIndex Index { get; }
+
+        void JoinLobby();
 
         void SetName(string name);
 

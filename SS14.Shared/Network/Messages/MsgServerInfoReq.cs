@@ -15,12 +15,16 @@ namespace SS14.Shared.Network.Messages
         {}
         #endregion
 
+        public string PlayerName { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
+            PlayerName = buffer.ReadString();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
+            buffer.Write(PlayerName);
         }
     }
 }

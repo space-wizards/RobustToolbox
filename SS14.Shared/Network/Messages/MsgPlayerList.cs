@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Players;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -24,7 +25,7 @@ namespace SS14.Shared.Network.Messages
 
         public class PlyInfo
         {
-            public int NetId { get; set; }
+            public PlayerIndex Index { get; set; }
             public long Uuid { get; set; }
             public string Name { get; set; }
             public byte Status { get; set; }
@@ -38,7 +39,7 @@ namespace SS14.Shared.Network.Messages
             for (var i = 0; i < PlyCount; i++)
             {
                 var plyNfo = new PlyInfo();
-                plyNfo.NetId = buffer.ReadInt32();
+                plyNfo.Index = new PlayerIndex(buffer.ReadInt32());
                 plyNfo.Uuid = buffer.ReadInt64();
                 plyNfo.Name = buffer.ReadString();
                 plyNfo.Status = buffer.ReadByte();
@@ -53,7 +54,7 @@ namespace SS14.Shared.Network.Messages
 
             foreach (var ply in Plyrs)
             {
-                buffer.Write(ply.NetId);
+                buffer.Write(ply.Index);
                 buffer.Write(ply.Uuid);
                 buffer.Write(ply.Name);
                 buffer.Write(ply.Status);

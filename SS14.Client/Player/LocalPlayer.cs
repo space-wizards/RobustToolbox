@@ -1,10 +1,11 @@
-﻿using SS14.Client.GameObjects;
+﻿using System;
+using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using System;
+using SS14.Shared.Players;
 
 namespace SS14.Client.Player
 {
@@ -13,17 +14,19 @@ namespace SS14.Client.Player
         public EventHandler EntityAttached;
         public EventHandler EntityDetatched;
 
-        public event EventHandler<MoveEventArgs> EntityMoved;
-        public event EventHandler<StatusEventArgs> StatusChanged;
-
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player
         ///     is in free/spectator cam.
         /// </summary>
         public IEntity ControlledEntity { get; private set; }
 
+        public PlayerIndex Index { get; set; }
+
         public PlayerSession Session { get; set; }
-        
+
+        public event EventHandler<MoveEventArgs> EntityMoved;
+        public event EventHandler<StatusEventArgs> StatusChanged;
+
         /// <summary>
         ///     Attaches a client to an entity.
         /// </summary>

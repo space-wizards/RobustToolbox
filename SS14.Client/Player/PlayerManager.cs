@@ -32,8 +32,18 @@ namespace SS14.Client.Player
         [Dependency]
         private readonly IBaseClient _client;
 
+        /// <summary>
+        ///     Number of active session.
+        ///     This is the cached value of _sessions.Count(s => s != null);
+        /// </summary>
+        private int _sessionCount;
+
+        /// <summary>
+        ///     Active sessions of connected clients to the server.
+        /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
-        public int PlayerCount => _sessions.Count;
+
+        public int PlayerCount => _sessionCount;
         public int MaxPlayers => _client.GameInfo.ServerMaxPlayers;
         public LocalPlayer LocalPlayer { get; private set; }
         public IEnumerable<PlayerSession> Sessions => _sessions.Values;
@@ -85,7 +95,9 @@ namespace SS14.Client.Player
 
         public void ApplyPlayerStates(List<PlayerState> list)
         {
+            Debug.Assert(_network.IsConnected, "Received player state before fully connected");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
+            Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
 
             var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _network.Peer.UniqueIdentifier);
             if (myState == null)
@@ -140,35 +152,58 @@ namespace SS14.Client.Player
             var msg = (MsgPlayerList) netMessage;
 
             // diff the sessions to the Plyers
-            var sessions = Sessions.ToList(); // we modify the collection, so it must be cached
-            foreach (var session in sessions)
+            for(var i=0; i<MaxPlayers; i++)
             {
+                // try to get local session
+                var cSession = _sessions.ContainsKey(i) ? _sessions[i] : null;
+
                 // should these be mapped NetId -> PlyInfo?
-                var info = msg.Plyrs.FirstOrDefault(plyr => plyr.NetId == session.NetID);
+                var info = msg.Plyrs.FirstOrDefault(plyr => plyr.Index == i);
 
                 // slot already occupied
-                if (info != null)
+                if (cSession != null && info != null)
                 {
-                    if (info.Uuid != session.Uuid) // not the same player
+                    if (info.Uuid != cSession.Uuid) // not the same player
                     {
-                        _sessions.Remove(info.NetId);
-                        var newSession = new PlayerSession(this, info.NetId, info.Uuid);
+                        Debug.Assert(LocalPlayer.Index != info.Index, "my uuid should not change");
+
+                        _sessions.Remove(info.Index);
+                        var newSession = new PlayerSession(this, info.Index, info.Uuid);
                         newSession.Name = info.Name;
                         newSession.Status = (SessionStatus) info.Status;
                         newSession.Ping = info.Ping;
-                        _sessions.Add(info.NetId, newSession);
+                        _sessions.Add(info.Index, newSession);
                     }
                     else // same player, update info
                     {
-                        session.Name = info.Name;
-                        session.Status = (SessionStatus) info.Status;
-                        session.Ping = info.Ping;
+                        cSession.Name = info.Name;
+                        cSession.Status = (SessionStatus) info.Status;
+                        cSession.Ping = info.Ping;
                     }
                 }
-                else // could not find it, which means it was removed.
+                // clear slot, player left
+                else if(cSession != null)
                 {
-                    _sessions.Remove(session.NetID);
+                    Debug.Assert(LocalPlayer.Index != i, "I'm still connected to the server, but i left?");
+                    _sessions.Remove(cSession.Index);
                 }
+
+                // add new session to slot
+                else if (info != null)
+                {
+                    Debug.Assert(LocalPlayer.Index != info.Index || LocalPlayer.Session == null, "I already have a session, why am i getting a new one?");
+
+                    var newSession = new PlayerSession(this, info.Index, info.Uuid);
+                    newSession.Name = info.Name;
+                    newSession.Status = (SessionStatus)info.Status;
+                    newSession.Ping = info.Ping;
+                    _sessions.Add(info.Index, newSession);
+
+                    if (LocalPlayer.Index == info.Index)
+                        LocalPlayer.Session = newSession;
+                }
+
+                // else they are both null, continue
             }
 
             //raise event

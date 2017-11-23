@@ -1,5 +1,6 @@
 ﻿using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Players;
 
 namespace SS14.Client.Player
 {
@@ -8,15 +9,15 @@ namespace SS14.Client.Player
         private PlayerManager _manager;
 
         public SessionStatus Status { get; set; } = SessionStatus.Zombie;
-        public int NetID { get; }
+        public PlayerIndex Index { get; }
         public long Uuid { get; }
         public string Name { get; set; } = "<Unknown>";
         public short Ping { get; set; }
 
-        public PlayerSession(PlayerManager manager, int netId, long uuid)
+        public PlayerSession(PlayerManager manager, PlayerIndex index, long uuid)
         {
             _manager = manager;
-            NetID = netId;
+            Index = index;
             Uuid = uuid;
         }
 

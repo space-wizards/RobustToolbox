@@ -2,15 +2,18 @@
 using System.Diagnostics;
 using Lidgren.Network;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Players;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Players;
+using IPlayerManager = SS14.Client.Interfaces.Player.IPlayerManager;
 
 namespace SS14.Client
 {
@@ -48,20 +51,8 @@ namespace SS14.Client
         {
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
-            // message is empty
+            msgInfo.PlayerName = "Joe Hello";
             _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
-
-            // start up player management
-            _playMan.Startup(args.Channel);
-
-            _playMan.LocalPlayer.StatusChanged += (obj, eventArgs) =>
-            {
-                if (eventArgs.NewStatus == SessionStatus.InLobby)
-                {
-                    var stateMan = IoCManager.Resolve<IStateManager>();
-                    stateMan.RequestStateChange<Lobby>();
-                }
-            };
         }
 
         public void Update() { }
@@ -69,6 +60,22 @@ namespace SS14.Client
         public void Tick() { }
 
         public void Dispose() { }
+
+
+        /// <summary>
+        /// Player session is fully built, player is an active member of the server. Player is prepaired to start 
+        /// receiving states when they join the lobby.
+        /// </summary>
+        /// <param name="session">Fully built session</param>
+        public void PlayerJoinedServer(PlayerSession session)
+        {
+            //TODO: There should be a way to notify the content
+
+            // Server info is the first message to be sent by the server.
+            // Receiving this message asserts that the connection was successful.
+            Debug.Assert(RunLevel < ClientRunLevel.Lobby);
+            OnRunLevelChanged(ClientRunLevel.Lobby);
+        }
 
         public void ConnectToServer(string ip, ushort port)
         {
@@ -128,11 +135,27 @@ namespace SS14.Client
             info.ServerMapName = msg.ServerMapName;
             info.GameMode = msg.GameMode;
             info.ServerPlayerCount = msg.ServerPlayerCount;
+            info.Index = msg.PlayerIndex;
 
-            // Server info is the first message to be sent by the server.
-            // Receiving this message asserts that the connection was successful.
-            Debug.Assert(RunLevel < ClientRunLevel.Lobby);
-            OnRunLevelChanged(ClientRunLevel.Lobby);
+            // start up player management
+            _playMan.Startup(_net.ServerChannel);
+
+            _playMan.LocalPlayer.Index = info.Index;
+            
+            _playMan.LocalPlayer.StatusChanged += (obj, eventArgs) =>
+            {
+                // player finished fully connecting to the server.
+                if (eventArgs.OldStatus == SessionStatus.Connected)
+                {
+                    PlayerJoinedServer(_playMan.LocalPlayer.Session);
+                }
+
+                if (eventArgs.NewStatus == SessionStatus.InLobby)
+                {
+                    var stateMan = IoCManager.Resolve<IStateManager>();
+                    stateMan.RequestStateChange<Lobby>();
+                }
+            };
         }
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
@@ -174,5 +197,6 @@ namespace SS14.Client
         public string ServerMapName { get; set; }
         public string GameMode { get; set; }
         public int ServerPlayerCount { get; set; }
+        public PlayerIndex Index { get; set; }
     }
 }

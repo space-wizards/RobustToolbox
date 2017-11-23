@@ -21,6 +21,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
 using SS14.Shared.Map;
+using SS14.Shared.Players;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
@@ -39,6 +40,7 @@ namespace SS14.Server.Player
 
         /// <summary>
         ///     Number of active sessions.
+        ///     This is the cached value of _sessions.Count(s => s != null);
         /// </summary>
         private int _sessionCount = 0;
 

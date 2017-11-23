@@ -569,9 +569,13 @@ namespace SS14.Server
                 return;
             }
 
+            var playerMan = IoCManager.Resolve<IPlayerManager>();
+
             foreach (var c in connections)
             {
-                SendConnectionGameStateUpdate(c, state);
+                var session = playerMan.GetSessionByChannel(c);
+                if (session != null && (session.Status == SessionStatus.InGame || session.Status == SessionStatus.InLobby))
+                    SendConnectionGameStateUpdate(c, state);
             }
 
             stateManager.Cull();
@@ -622,6 +626,9 @@ namespace SS14.Server
 
         private void HandleWelcomeMessageReq(NetMessage message)
         {
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel);
+            session.Name = ((MsgServerInfoReq) message).PlayerName;
+
             var net = IoCManager.Resolve<IServerNetManager>();
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
@@ -632,8 +639,24 @@ namespace SS14.Server
             netMsg.ServerMapName = MapName;
             netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
             netMsg.ServerPlayerCount = IoCManager.Resolve<IPlayerManager>().PlayerCount;
+            netMsg.PlayerIndex = session.Index;
 
             message.MsgChannel.SendMessage(netMsg);
+
+            
+        }
+
+        /// <summary>
+        /// Player session is fully built, player is an active member of the server. Player is prepaired to start 
+        /// receiving states when they join the lobby.
+        /// </summary>
+        /// <param name="session">Fully built session</param>
+        public void PlayerJoinedServer(IPlayerSession session)
+        {
+            //TODO: There should be a way to notify the content
+
+            // send the player to the lobby screen
+            session.JoinLobby();
         }
 
         private void HandleAdminMessage(MsgAdmin msg)
@@ -654,7 +677,7 @@ namespace SS14.Server
             Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
         }
 
-        private static void HandlePlayerListReq(NetMessage message)
+        private void HandlePlayerListReq(NetMessage message)
         {
             var channel = message.MsgChannel;
             var plyMgr = IoCManager.Resolve<IPlayerManager>();
@@ -670,7 +693,7 @@ namespace SS14.Server
 
                 var info = new MsgPlayerList.PlyInfo
                 {
-                    NetId = client.Index,
+                    Index = client.Index,
                     Uuid = client.ConnectedClient.ConnectionId,
                     Name = client.Name,
                     Status = (byte)client.Status,
@@ -681,6 +704,10 @@ namespace SS14.Server
             netMsg.Plyrs = list;
 
             channel.SendMessage(netMsg);
+
+            // client session is complete
+            var session = plyMgr.GetSessionByChannel(channel);
+            PlayerJoinedServer(session);
         }
 
         private static void HandleClientGreet(MsgClGreet msg)

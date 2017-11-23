@@ -153,17 +153,7 @@ namespace SS14.Client.State.States
 
             UserInterfaceManager.AddComponent(_uiScreen);
 
-#if _delme
-            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-
-            var message = NetworkManager.CreateMessage();
-            message.Write((byte) NetMessages.WelcomeMessageReq); //Request Welcome msg.
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
-
-            var playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte) NetMessages.PlayerListReq); //Request Playerlist.
-            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
-#endif
+            UpdateInfo();
         }
 
         public override void Shutdown()
@@ -172,15 +162,8 @@ namespace SS14.Client.State.States
             _plyrMan.PlayerListUpdated -= HandlePlayerList;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
-#if _delme
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
-#endif
         }
-
-        public override void Update(FrameEventArgs e)
-        {
-        }
-
+        
         public override void FormResize()
         {
             _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
@@ -275,6 +258,7 @@ namespace SS14.Client.State.States
             _lblPortInfo.Text = info.ServerPort.ToString();
         }
 
+#if _delme
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
             var message = args.RawMessage;
@@ -311,7 +295,7 @@ namespace SS14.Client.State.States
                     break;
             }
         }
-        
+#endif
         private void HandleChatMessage(NetIncomingMessage msg)
         {
             var channel = (ChatChannel) msg.ReadByte();
@@ -322,7 +306,12 @@ namespace SS14.Client.State.States
 
         private void HandlePlayerList(object sender, EventArgs args)
         {
-            var man = (IPlayerManager) sender;
+            UpdateInfo();
+        }
+
+        private void UpdateInfo()
+        {
+            var man = IoCManager.Resolve<IPlayerManager>();
             UpdatePlayerList(man.SessionsDict);
 
             var clBase = IoCManager.Resolve<IBaseClient>();

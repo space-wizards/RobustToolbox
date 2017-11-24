@@ -43,6 +43,7 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             UserInterfaceManager.AddComponent(_uiScreen);
+            FormResize();
         }
 
         /// <inheritdoc />
@@ -54,8 +55,8 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -127,8 +128,8 @@ namespace SS14.Client.State.States
             _bgPanel.Alignment = Align.HCenter | Align.VCenter;
             _bgPanel.Layout += (sender, args) =>
             {
-                _bgPanel.Width = (int) (_uiScreen.Width * 0.85f);
-                _bgPanel.Height = (int) (_uiScreen.Height * 0.85f);
+                _bgPanel.Width = (int)(_uiScreen.Width * 0.85f);
+                _bgPanel.Height = (int)(_uiScreen.Height * 0.85f);
             };
             _uiScreen.AddControl(_bgPanel);
 
@@ -238,8 +239,8 @@ namespace SS14.Client.State.States
             if (_videoModeList.ContainsKey(item.Text))
             {
                 var sel = _videoModeList[item.Text];
-                ConfigurationManager.SetCVar("display.width", (int) sel.Width);
-                ConfigurationManager.SetCVar("display.height", (int) sel.Height);
+                ConfigurationManager.SetCVar("display.width", (int)sel.Width);
+                ConfigurationManager.SetCVar("display.height", (int)sel.Height);
 
                 CluwneLib.UpdateVideoSettings();
                 FormResize();

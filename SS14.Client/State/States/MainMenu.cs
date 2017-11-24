@@ -99,8 +99,8 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -165,6 +165,7 @@ namespace SS14.Client.State.States
             _client.RunLevelChanged += RunLevelChanged;
 
             UserInterfaceManager.AddComponent(_uiScreen);
+            FormResize();
         }
 
         /// <inheritdoc />

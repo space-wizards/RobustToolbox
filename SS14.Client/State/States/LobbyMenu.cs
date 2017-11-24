@@ -154,6 +154,7 @@ namespace SS14.Client.State.States
             UserInterfaceManager.AddComponent(_uiScreen);
 
             UpdateInfo();
+            FormResize();
         }
 
         public override void Shutdown()
@@ -166,8 +167,8 @@ namespace SS14.Client.State.States
         
         public override void FormResize()
         {
-            _uiScreen.Width = (int) CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int) CluwneLib.Window.Viewport.Size.Y;
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
 
             UserInterfaceManager.ResizeComponents();
         }
@@ -265,7 +266,7 @@ namespace SS14.Client.State.States
             switch (message.MessageType)
             {
                 case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus) message.ReadByte();
+                    var statMsg = (NetConnectionStatus)message.ReadByte();
                     if (statMsg == NetConnectionStatus.Disconnected)
                     {
                         var disconnectMessage = message.ReadString();
@@ -277,13 +278,13 @@ namespace SS14.Client.State.States
                     break;
 
                 case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages) message.ReadByte();
+                    var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
                         case NetMessages.LobbyChat:
                             //TODO: Send player messages to a lobby chat
                             break;
-                            
+
                         case NetMessages.ChatMessage:
                             HandleChatMessage(message);
                             break;
@@ -298,7 +299,7 @@ namespace SS14.Client.State.States
 #endif
         private void HandleChatMessage(NetIncomingMessage msg)
         {
-            var channel = (ChatChannel) msg.ReadByte();
+            var channel = (ChatChannel)msg.ReadByte();
             var text = msg.ReadString();
             var message = "[" + channel + "] " + text;
             _lobbyChat.AddLine(message, ChatChannel.Lobby);

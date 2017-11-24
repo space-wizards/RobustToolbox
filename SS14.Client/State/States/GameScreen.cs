@@ -145,9 +145,9 @@ namespace SS14.Client.State.States
 
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
-            
+
             UserInterfaceManager.AddComponent(_uiScreen);
-            
+
             //Init serializer
             serializer = IoCManager.Resolve<ISS14Serializer>();
 
@@ -176,6 +176,7 @@ namespace SS14.Client.State.States
             InitalizeLighting();
 
             DebugManager = new GameScreenDebug(this);
+            FormResizeUI();
         }
 
         private void InitializeRenderTargets()
@@ -183,6 +184,7 @@ namespace SS14.Client.State.States
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
             view = new View(Vector2.Zero, new Vector2(width, height));
+            UpdateView(false);
             _baseTarget = new RenderImage("baseTarget", width, height, true);
             _cleanupList.Add(_baseTarget);
 
@@ -262,7 +264,7 @@ namespace SS14.Client.State.States
             _gameChat = new Chatbox(_gameChatSize);
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
-            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10);};
+            _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
             _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
             _uiScreen.AddControl(_gameChat);
         }
@@ -314,23 +316,28 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void FormResize()
         {
-            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
-            
-            UserInterfaceManager.ResizeComponents();
-
+            FormResizeUI();
             ResetRendertargets();
+            _redrawTiles = true;
             IoCManager.Resolve<ILightManager>().RecalculateLights();
             RecalculateScene();
-            
+
             base.FormResize();
+        }
+
+        private void FormResizeUI()
+        {
+            _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
+            _uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
+
+            UserInterfaceManager.ResizeComponents();
         }
 
         /// <inheritdoc />
         public override void Update(FrameEventArgs e)
         {
             base.Update(e);
-            
+
             _componentManager.Update(e.Elapsed);
             _entityManager.Update(e.Elapsed);
             PlacementManager.Update(MousePosScreen);
@@ -342,11 +349,19 @@ namespace SS14.Client.State.States
                 if (CluwneLib.Camera.Position != newpos)
                 {
                     CluwneLib.Camera.Position = newpos;
-                    view.Center = newpos * CluwneLib.Camera.PixelsPerMeter;
-                    _sceneTarget.View = view;
-                    _tilesTarget.View = view;
+                    MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+                    UpdateView();
                 }
-                MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
+            }
+        }
+
+        private void UpdateView(bool updateTargets = true)
+        {
+            view.Center = CluwneLib.Camera.Position * CluwneLib.Camera.PixelsPerMeter;
+            if (updateTargets)
+            {
+                _sceneTarget.View = view;
+                _tilesTarget.View = view;
             }
         }
 
@@ -770,7 +785,7 @@ namespace SS14.Client.State.States
         }
 
         #endregion Messages
-        
+
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {
             //Recalculate scene batches for drawing.

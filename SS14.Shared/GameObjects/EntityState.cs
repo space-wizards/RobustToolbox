@@ -7,9 +7,9 @@ namespace SS14.Shared.GameObjects
     [Serializable, NetSerializable]
     public class EntityState
     {
-        public EntityStateData StateData;
+        private EntityStateData stateData;
         [NonSerialized]
-        public float ReceivedTime;
+        private float receivedTime;
 
         public EntityState(int uid, List<ComponentState> componentStates, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes )
         {
@@ -18,6 +18,8 @@ namespace SS14.Shared.GameObjects
         }
 
         public List<ComponentState> ComponentStates { get; private set; }
+        public EntityStateData StateData { get => stateData; set => stateData = value; }
+        public float ReceivedTime { get => receivedTime; set => receivedTime = value; }
 
         public void SetStateData(EntityStateData data)
         {
@@ -28,12 +30,17 @@ namespace SS14.Shared.GameObjects
     [Serializable, NetSerializable]
     public struct EntityStateData
     {
-        public string Name;
-        public string TemplateName;
-        public int Uid;
-        public List<Tuple<uint, string>> SynchedComponentTypes;
+        private string name;
+        private string templateName;
+        private int uid;
+        private List<Tuple<uint, string>> synchedComponentTypes;
 
-        public EntityStateData(int uid, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes)
+        public string Name { get => name; set => name = value; }
+        public string TemplateName { get => templateName; set => templateName = value; }
+        public int Uid { get => uid; set => uid = value; }
+        public List<Tuple<uint, string>> SynchedComponentTypes { get => synchedComponentTypes; set => synchedComponentTypes = value; }
+
+        public EntityStateData(int uid, string templateName, string name, List<Tuple<uint, string>> synchedComponentTypes) : this()
         {
             Uid = uid;
             TemplateName = templateName;

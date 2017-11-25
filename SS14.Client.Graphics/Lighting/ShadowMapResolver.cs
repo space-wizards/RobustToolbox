@@ -88,8 +88,8 @@ namespace SS14.Client.Graphics.Lighting
 
             //only DrawShadows needs these vars
             resolveShadowsEffectTechnique["DrawShadows"].SetUniform("AttenuateShadows", attenuateShadows ? 0 : 1);
-            resolveShadowsEffectTechnique["DrawShadows"].SetUniform("MaskProps", MaskProps);
-            resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
+            //resolveShadowsEffectTechnique["DrawShadows"].SetUniform("MaskProps", MaskProps);
+            //resolveShadowsEffectTechnique["DrawShadows"].SetUniform("DiffuseColor", diffuseColor);
 
             var maskSize = MaskTexture.Size;
             // I have TRIED to get this to work without this blank one.
@@ -128,8 +128,8 @@ namespace SS14.Client.Graphics.Lighting
 
             resolveShadowsEffectTechnique[techniqueName].setAsCurrentShader();
 
-            resolveShadowsEffectTechnique[techniqueName].SetUniform("renderTargetSize", renderTargetSize);
-            resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
+            //resolveShadowsEffectTechnique[techniqueName].SetUniform("renderTargetSize", renderTargetSize);
+            //resolveShadowsEffectTechnique[techniqueName].SetUniform("inputSampler", source);
             if (shadowMap != null)
                 resolveShadowsEffectTechnique[techniqueName].SetUniform("shadowMapSampler", shadowMap);
 

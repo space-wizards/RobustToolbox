@@ -11,7 +11,10 @@ namespace SS14.Client.GameObjects
     public class IconComponent : Component
     {
         public override string Name => "Icon";
-        public Sprite Icon;
+
+        public Sprite Icon { get => icon; set => icon = value; }
+
+        private Sprite icon;
 
         public override void LoadParameters(YamlMappingNode mapping)
         {

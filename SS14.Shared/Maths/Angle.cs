@@ -12,10 +12,12 @@ namespace SS14.Shared.Maths
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
-        public static Angle Zero = new Angle();
+        private static Angle zero = new Angle();
 
         public readonly double Theta;
         public double Degrees => MathHelper.RadiansToDegrees(Theta);
+
+        public static Angle Zero { get => zero; set => zero = value; }
 
         /// <summary>
         ///     Constructs an instance of an Angle.

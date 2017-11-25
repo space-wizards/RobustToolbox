@@ -6,10 +6,15 @@ namespace SS14.Shared
 {
     public class IncomingEntityMessage
     {
-        public MsgEntity Message;
-        public ushort Expires;
-        public DateTime LastProcessingAttempt;
-        public DateTime ReceivedTime;
+        private MsgEntity message;
+        private ushort expires;
+        private DateTime lastProcessingAttempt;
+        private DateTime receivedTime;
+
+        public MsgEntity Message { get => message; set => message = value; }
+        public ushort Expires { get => expires; set => expires = value; }
+        public DateTime ReceivedTime { get => receivedTime; set => receivedTime = value; }
+        public DateTime LastProcessingAttempt { get => lastProcessingAttempt; set => lastProcessingAttempt = value; }
 
         public IncomingEntityMessage(MsgEntity message)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared.GameObjects
 {
@@ -9,8 +9,11 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemPickUp : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
+        private int uidUser;
+        private int uidObject;
+
+        public int UidUser { get => uidUser; set => uidUser = value; }
+        public int UidObject { get => uidObject; set => uidObject = value; }
 
         public InventorySystemPickUp()
         {
@@ -23,9 +26,13 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemDrop : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
-        public int uidDroppingInventory;
+        private int uidUser;
+        private int uidObject;
+        private int uidDroppingInventory;
+
+        public int UidUser { get => uidUser; set => uidUser = value; }
+        public int UidObject { get => uidObject; set => uidObject = value; }
+        public int UidDroppingInventory { get => uidDroppingInventory; set => uidDroppingInventory = value; }
 
         public InventorySystemDrop()
         {
@@ -38,10 +45,15 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemExchange : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
-        public int uidPreviousInventory;
-        public int uidNewInventory;
+        private int uidUser;
+        private int uidObject;
+        private int uidPreviousInventory;
+        private int uidNewInventory;
+
+        public int UidUser { get => uidUser; set => uidUser = value; }
+        public int UidObject { get => uidObject; set => uidObject = value; }
+        public int UidPreviousInventory { get => uidPreviousInventory; set => uidPreviousInventory = value; }
+        public int UidNewInventory { get => uidNewInventory; set => uidNewInventory = value; }
 
         public InventorySystemExchange()
         {

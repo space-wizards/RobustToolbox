@@ -7,9 +7,10 @@ namespace SS14.Shared.GameObjects
     public class ComponentState
     {
         [NonSerialized]
-        public float ReceivedTime;
+        private float receivedTime;
 
         public uint NetID { get; protected set; }
+        public global::System.Single ReceivedTime { get => receivedTime; set => receivedTime = value; }
 
         public ComponentState(uint netID)
         {

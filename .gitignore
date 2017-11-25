@@ -85,3 +85,6 @@ Third-Party/extlibs/Windows/
 # Python stuff
 __pycache__
 .mypy_cache
+/debug.log
+/Space Station 14.csproj
+/UpgradeLog.htm

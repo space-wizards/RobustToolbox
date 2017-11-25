@@ -66,8 +66,8 @@ namespace SS14.Client.State.States
         private SpriteBatch _decalBatch;
 
         #region Mouse/Camera stuff
-        public ScreenCoordinates MousePosScreen = new ScreenCoordinates(0, 0, 0);
-        public LocalCoordinates MousePosWorld = new LocalCoordinates(0, 0, 0, 0);
+        private ScreenCoordinates mousePosScreen = new ScreenCoordinates(0, 0, 0);
+        private LocalCoordinates mousePosWorld = new LocalCoordinates(0, 0, 0, 0);
         private View view;
         #endregion Mouse/Camera stuff
 
@@ -94,7 +94,7 @@ namespace SS14.Client.State.States
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
         private bool debugHitboxes = false;
-        public bool BlendLightMap = true;
+        private bool blendLightMap = true;
 
         private TechniqueList LightblendTechnique;
         private GLSLShader Lightmap;
@@ -205,10 +205,12 @@ namespace SS14.Client.State.States
             _overlayTarget = new RenderImage("OverlayTarget", width, height, true);
             _cleanupList.Add(_overlayTarget);
 
-            _overlayTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _overlayTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            _overlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _overlayTarget.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            BlendMode blendSettings = _overlayTarget.BlendSettings;
+            blendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            blendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            _overlayTarget.BlendSettings = blendSettings;
 
             _composedSceneTarget = new RenderImage("composedSceneTarget", width, height,
                                                  ImageBufferFormats.BufferRGB888A8);
@@ -231,21 +233,29 @@ namespace SS14.Client.State.States
         private void InitializeSpriteBatches()
         {
             _gasBatch = new SpriteBatch();
-            _gasBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _gasBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
-            _gasBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _gasBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            BlendMode blendingSettings = _gasBatch.BlendingSettings;
+            blendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
+            blendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            blendingSettings = blendingSettings;
 
             _decalBatch = new SpriteBatch();
-            _decalBatch.BlendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _decalBatch.BlendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
-            _decalBatch.BlendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _decalBatch.BlendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            blendingSettings = _decalBatch.BlendingSettings;
+            blendingSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
+            blendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            _decalBatch.BlendingSettings = blendingSettings;
 
             _floorBatch = new SpriteBatch();
         }
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
+
+        public LocalCoordinates MousePosWorld { get => mousePosWorld; set => mousePosWorld = value; }
+        public ScreenCoordinates MousePosScreen { get => mousePosScreen; set => mousePosScreen = value; }
+        public bool BlendLightMap { get => blendLightMap; set => blendLightMap = value; }
 
         /// <inheritdoc />
         public override void InitializeGUI()
@@ -1038,13 +1048,17 @@ namespace SS14.Client.State.States
 
                 playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 
-                area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
-                area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
+                BlendMode blendSettings = area.RenderTarget.BlendSettings;
+
+                blendSettings.ColorSrcFactor = BlendMode.Factor.One;
+                blendSettings.ColorDstFactor = BlendMode.Factor.Zero;
+                area.RenderTarget.BlendSettings = blendSettings;
 
                 area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
 
-                area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
-                area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+                blendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
+                blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+                area.RenderTarget.BlendSettings = blendSettings;
 
                 playerOcclusionTarget.EndDrawing();
             }

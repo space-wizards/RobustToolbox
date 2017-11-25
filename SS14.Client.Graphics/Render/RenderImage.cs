@@ -37,7 +37,7 @@ namespace SS14.Client.Graphics.Render
         /// SourceAlpha           == SrcAlpha
         /// InverseSourceAlpha    == OneMinusSrcAlpha
         /// </summary>
-        public BlendMode BlendSettings = BlendMode.Alpha;
+        private BlendMode blendSettings = BlendMode.Alpha;
 
         #region Accessors
 
@@ -94,6 +94,7 @@ namespace SS14.Client.Graphics.Render
             get => new View(SFMLTarget.GetView());
             set => SFMLTarget.SetView(value.SFMLView);
         }
+        public BlendMode BlendSettings { get => blendSettings; set => blendSettings = value; }
 
         #endregion Accessors
 

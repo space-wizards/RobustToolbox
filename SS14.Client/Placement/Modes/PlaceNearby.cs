@@ -23,9 +23,9 @@ namespace SS14.Client.Placement.Modes
         {
             if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
-            mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
-            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
+            MouseScreen = mouseS;
+            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
+            CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;

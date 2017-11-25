@@ -1,8 +1,11 @@
-namespace SS14.Shared.GameObjects.Events
+﻿namespace SS14.Shared.GameObjects.Events
 {
     public class BoundKeyChangeEventArgs : EntityEventArgs
     {
-        public BoundKeyFunctions KeyFunction;
-        public BoundKeyState KeyState;
+        private BoundKeyFunctions keyFunction;
+        private BoundKeyState keyState;
+
+        public BoundKeyFunctions KeyFunction { get => keyFunction; set => keyFunction = value; }
+        public BoundKeyState KeyState { get => keyState; set => keyState = value; }
     }
 }

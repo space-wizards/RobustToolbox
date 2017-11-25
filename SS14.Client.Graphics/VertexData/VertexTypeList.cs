@@ -41,7 +41,7 @@ namespace SS14.Client.Graphics.VertexData
             /// <summary>
             /// Position of the vertex.
             /// </summary>
-            public Vector3 Position;
+            private Vector3 position;
 
             /// <summary>
             /// Color value of the vertex.
@@ -51,7 +51,7 @@ namespace SS14.Client.Graphics.VertexData
             /// <summary>
             /// Texture coordinates.
             /// </summary>
-            public Vector2 TextureCoordinates;
+            private Vector2 textureCoordinates;
             #endregion Variables.
 
             #region Properties.
@@ -69,6 +69,9 @@ namespace SS14.Client.Graphics.VertexData
                     ColorValue = ColorToInt(value);
                 }
             }
+
+            public Vector3 Position { get => position; set => position = value; }
+            public Vector2 TextureCoordinates { get => textureCoordinates; set => textureCoordinates = value; }
             #endregion Properties.
 
             #region Methods.
@@ -141,7 +144,7 @@ namespace SS14.Client.Graphics.VertexData
             /// <param name="position">Position of the vertex.</param>
             /// <param name="color">Color of the vertex.</param>
             /// <param name="textureCoordinates">Texture coordinates.</param>
-            public PositionDiffuse2DTexture1(Vector3 position, Color color, Vector2 textureCoordinates)
+            public PositionDiffuse2DTexture1(Vector3 position, Color color, Vector2 textureCoordinates) : this()
             {
                 // Copy data.
                 Position = position;

@@ -1,9 +1,13 @@
-namespace SS14.Client.GameObjects
+﻿namespace SS14.Client.GameObjects
 {
     public struct ContextMenuEntry
     {
-        public string ComponentMessage;
-        public string EntryName;
-        public string IconName;
+        private string componentMessage;
+        private string entryName;
+        private string iconName;
+
+        public string ComponentMessage { get => componentMessage; set => componentMessage = value; }
+        public string EntryName { get => entryName; set => entryName = value; }
+        public string IconName { get => iconName; set => iconName = value; }
     }
 }

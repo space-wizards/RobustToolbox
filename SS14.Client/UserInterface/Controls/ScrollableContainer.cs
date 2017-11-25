@@ -39,10 +39,14 @@ namespace SS14.Client.UserInterface.Controls
             DrawBorder = true;
 
             _clippingRi = new RenderImage("UI_SCR_CONTAINER", (uint)size.X, (uint)size.Y);
-            _clippingRi.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _clippingRi.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            _clippingRi.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _clippingRi.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+
+            BlendMode blendSettings = _clippingRi.BlendSettings;
+            blendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            blendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            blendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+
+            _clippingRi.BlendSettings = blendSettings;
 
             ScrollbarH = new Scrollbar(true);
             ScrollbarV = new Scrollbar(false);

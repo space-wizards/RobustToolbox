@@ -47,13 +47,13 @@ namespace SS14.Client.Placement
         public readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
-        public Sprite CurrentBaseSprite;
-        public string CurrentBaseSpriteKey = "";
-        public PlacementMode CurrentMode;
-        public PlacementInformation CurrentPermission;
-        public EntityPrototype CurrentPrototype;
-        public Direction Direction = Direction.South;
-        public bool ValidPosition;
+        private Sprite currentBaseSprite;
+        private string currentBaseSpriteKey = "";
+        private PlacementMode currentMode;
+        private PlacementInformation currentPermission;
+        private EntityPrototype currentPrototype;
+        private Direction direction = Direction.South;
+        private bool validPosition;
 
         public PlacementManager()
         {
@@ -73,6 +73,13 @@ namespace SS14.Client.Placement
 
         public bool IsActive { get; private set; }
         public bool Eraser { get; private set; }
+        public Sprite CurrentBaseSprite { get => currentBaseSprite; set => currentBaseSprite = value; }
+        public string CurrentBaseSpriteKey { get => currentBaseSpriteKey; set => currentBaseSpriteKey = value; }
+        public PlacementMode CurrentMode { get => currentMode; set => currentMode = value; }
+        public PlacementInformation CurrentPermission { get => currentPermission; set => currentPermission = value; }
+        public EntityPrototype CurrentPrototype { get => currentPrototype; set => currentPrototype = value; }
+        public Direction Direction { get => direction; set => direction = value; }
+        public bool ValidPosition { get => validPosition; set => validPosition = value; }
 
         public event EventHandler PlacementCanceled;
 
@@ -257,10 +264,10 @@ namespace SS14.Client.Placement
             if (CurrentPermission.IsTile) message.TileType = CurrentPermission.TileType;
             else message.EntityTemplateName = CurrentPermission.EntityType;
 
-            message.XValue = CurrentMode.mouseCoords.X;
-            message.YValue = CurrentMode.mouseCoords.Y;
-            message.GridIndex = CurrentMode.mouseCoords.GridID;
-            message.MapIndex = CurrentMode.mouseCoords.MapID;
+            message.XValue = CurrentMode.MouseCoords.X;
+            message.YValue = CurrentMode.MouseCoords.Y;
+            message.GridIndex = CurrentMode.MouseCoords.GridID;
+            message.MapIndex = CurrentMode.MouseCoords.MapID;
 
             message.DirRcv = Direction;
 

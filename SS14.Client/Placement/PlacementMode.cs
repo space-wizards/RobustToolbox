@@ -16,12 +16,12 @@ namespace SS14.Client.Placement
     {
         public readonly PlacementManager pManager;
 
-        public TileRef currentTile;
-        public ScreenCoordinates mouseScreen;
-        public LocalCoordinates mouseCoords;
-        public Sprite spriteToDraw;
-        public Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
-        public Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
+        private TileRef currentTile;
+        private ScreenCoordinates mouseScreen;
+        private LocalCoordinates mouseCoords;
+        private Sprite spriteToDraw;
+        private Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
+        private Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
         public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)
@@ -34,6 +34,13 @@ namespace SS14.Client.Placement
             get { return GetType().Name; }
         }
 
+        public TileRef CurrentTile { get => currentTile; set => currentTile = value; }
+        public ScreenCoordinates MouseScreen { get => mouseScreen; set => mouseScreen = value; }
+        public LocalCoordinates MouseCoords { get => mouseCoords; set => mouseCoords = value; }
+        public Sprite SpriteToDraw { get => spriteToDraw; set => spriteToDraw = value; }
+        public Color ValidPlaceColor { get => validPlaceColor; set => validPlaceColor = value; }
+        public Color InvalidPlaceColor { get => invalidPlaceColor; set => invalidPlaceColor = value; }
+
         public virtual bool Update(ScreenCoordinates mouseScreen)
         {
             return false;
@@ -41,18 +48,18 @@ namespace SS14.Client.Placement
 
         public virtual void Render()
         {
-            if(spriteToDraw == null)
+            if(SpriteToDraw == null)
             {
-                spriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
-                spriteToDraw = new Sprite(spriteToDraw);
+                SpriteToDraw = GetSprite(pManager.CurrentBaseSpriteKey);
+                SpriteToDraw = new Sprite(SpriteToDraw);
             }
 
-            var bounds = spriteToDraw.LocalBounds;
-            spriteToDraw.Color = pManager.ValidPosition ? validPlaceColor : invalidPlaceColor;
-            spriteToDraw.Position = new Vector2(mouseScreen.X - (bounds.Width / 2f),
-                                                mouseScreen.Y - (bounds.Height / 2f));
+            var bounds = SpriteToDraw.LocalBounds;
+            SpriteToDraw.Color = pManager.ValidPosition ? ValidPlaceColor : InvalidPlaceColor;
+            SpriteToDraw.Position = new Vector2(MouseScreen.X - (bounds.Width / 2f),
+                                                MouseScreen.Y - (bounds.Height / 2f));
             //Centering the sprite on the cursor.
-            spriteToDraw.Draw();
+            SpriteToDraw.Draw();
         }
 
         public Sprite GetSprite(string key)
@@ -79,7 +86,7 @@ namespace SS14.Client.Placement
             if (!rangerequired)
                 return true;
             var range = pManager.CurrentPermission.Range;
-            if (range > 0 && !pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(mouseCoords, range))
+            if (range > 0 && !pManager.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(MouseCoords, range))
                     return false;
             return true;
         }
@@ -89,8 +96,8 @@ namespace SS14.Client.Placement
             var drawsprite = GetSprite(pManager.CurrentBaseSpriteKey);
             var bounds = drawsprite.LocalBounds;
             var spriteSize = CluwneLib.PixelToTile(new Vector2(bounds.Width, bounds.Height));
-            var spriteRectWorld = Box2.FromDimensions(mouseCoords.X - (spriteSize.X / 2f),
-                                                 mouseCoords.Y - (spriteSize.Y / 2f),
+            var spriteRectWorld = Box2.FromDimensions(MouseCoords.X - (spriteSize.X / 2f),
+                                                 MouseCoords.Y - (spriteSize.Y / 2f),
                                                  spriteSize.X, spriteSize.Y);
             if (pManager.CollisionManager.IsColliding(spriteRectWorld))
                 return false;

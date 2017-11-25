@@ -1,4 +1,4 @@
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Sprites
 {
@@ -9,8 +9,12 @@ namespace SS14.Client.Graphics.Sprites
 
     public struct SpriteInfo
     {
-        public string Name;
-        public Vector2 Offsets;
-        public Vector2 Size;
+        private string name;
+        private Vector2 offsets;
+        private Vector2 size;
+
+        public Vector2 Offsets { get => offsets; set => offsets = value; }
+        public Vector2 Size { get => size; set => size = value; }
+        public string Name { get => name; set => name = value; }
     }
 }

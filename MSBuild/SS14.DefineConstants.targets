@@ -1,0 +1,20 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <!-- Adds to the DefineConstants to provide things such as platform-specific defines. -->
+  <Choose>
+    <When Condition="'$(TargetOS)' == 'Windows'">
+      <PropertyGroup>
+        <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(TargetOS)' == 'MacOS'" >
+      <PropertyGroup>
+        <DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+</Project>

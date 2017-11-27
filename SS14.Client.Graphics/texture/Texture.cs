@@ -49,5 +49,14 @@ namespace SS14.Client.Graphics.Textures
         }
 
         public void Dispose() => SFMLTexture.Dispose();
+
+        /// <summary>
+        ///     Copies the contents of this <c>RenderImage</c> into an <see cref="Image" />,
+        ///     THIS IS A VERY SLOW OPERATION. DO NOT DO THIS IN PERFORMANCE CRITICAL CODE.
+        /// </summary>
+        public Image CopyToImage()
+        {
+            return new Image(SFMLTexture.CopyToImage());
+        }
     }
 }

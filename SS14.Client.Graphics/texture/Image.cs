@@ -43,5 +43,14 @@ namespace SS14.Client.Graphics.Textures
         }
 
         public void Dispose() => SFMLImage.Dispose();
+
+        public void SaveToFile(string filename)
+        {
+            if (!SFMLImage.SaveToFile(filename))
+            {
+                // Can't get any more accurate because of SFML, sadly.
+                throw new IOException("Unable to save image to file.");
+            }
+        }
     }
 }

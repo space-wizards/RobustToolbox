@@ -39,6 +39,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.ContentPack;
 
 namespace SS14.Client.State.States
 {
@@ -107,17 +108,17 @@ namespace SS14.Client.State.States
         private ILight playerVision;
         private ISS14Serializer serializer;
 
-        private RenderImage playerOcclusionTarget;
-        private RenderImage _occluderDebugTarget;
-        private RenderImage _lightTarget;
-        private RenderImage _lightTargetIntermediate;
-        private RenderImage _composedSceneTarget;
-        private RenderImage _overlayTarget;
-        private RenderImage _sceneTarget;
-        private RenderImage _tilesTarget;
-        private RenderImage screenShadows;
-        private RenderImage shadowBlendIntermediate;
-        private RenderImage shadowIntermediate;
+        public RenderImage PlayerOcclusionTarget { get; private set; }
+        public RenderImage OccluderDebugTarget { get; private set; }
+        public RenderImage LightTarget { get; private set; }
+        public RenderImage LightTargetIntermediate { get; private set; }
+        public RenderImage ComposedSceneTarget { get; private set; }
+        public RenderImage OverlayTarget { get; private set; }
+        public RenderImage SceneTarget { get; private set; }
+        public RenderImage TilesTarget { get; private set; }
+        public RenderImage ScreenShadows { get; private set; }
+        public RenderImage ShadowBlendIntermediate { get; private set; }
+        public RenderImage ShadowIntermediate { get; private set; }
 
         private ShadowMapResolver shadowMapResolver;
 
@@ -191,40 +192,40 @@ namespace SS14.Client.State.States
             _baseTargetSprite = new Sprite(_baseTarget.Texture);
             _cleanupSpriteList.Add(_baseTargetSprite);
 
-            _sceneTarget = new RenderImage("sceneTarget", width, height, true)
+            SceneTarget = new RenderImage("sceneTarget", width, height, true)
             {
                 View = view
             };
-            _cleanupList.Add(_sceneTarget);
-            _tilesTarget = new RenderImage("tilesTarget", width, height, true)
+            _cleanupList.Add(SceneTarget);
+            TilesTarget = new RenderImage("tilesTarget", width, height, true)
             {
                 View = view
             };
-            _cleanupList.Add(_tilesTarget);
+            _cleanupList.Add(TilesTarget);
 
-            _overlayTarget = new RenderImage("OverlayTarget", width, height, true);
-            _cleanupList.Add(_overlayTarget);
+            OverlayTarget = new RenderImage("OverlayTarget", width, height, true);
+            _cleanupList.Add(OverlayTarget);
 
-            _overlayTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
-            _overlayTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            _overlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
-            _overlayTarget.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            OverlayTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
+            OverlayTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
+            OverlayTarget.BlendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
+            OverlayTarget.BlendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-            _composedSceneTarget = new RenderImage("composedSceneTarget", width, height,
+            ComposedSceneTarget = new RenderImage("composedSceneTarget", width, height,
                                                  ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(_composedSceneTarget);
+            _cleanupList.Add(ComposedSceneTarget);
 
-            _lightTarget = new RenderImage("lightTarget", width, height, ImageBufferFormats.BufferRGB888A8);
+            LightTarget = new RenderImage("lightTarget", width, height, ImageBufferFormats.BufferRGB888A8);
 
-            _cleanupList.Add(_lightTarget);
-            _lightTargetSprite = new Sprite(_lightTarget.Texture);
+            _cleanupList.Add(LightTarget);
+            _lightTargetSprite = new Sprite(LightTarget.Texture);
 
             _cleanupSpriteList.Add(_lightTargetSprite);
 
-            _lightTargetIntermediate = new RenderImage("lightTargetIntermediate", width, height,
+            LightTargetIntermediate = new RenderImage("lightTargetIntermediate", width, height,
                                                       ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(_lightTargetIntermediate);
-            _lightTargetIntermediateSprite = new Sprite(_lightTargetIntermediate.Texture);
+            _cleanupList.Add(LightTargetIntermediate);
+            _lightTargetIntermediateSprite = new Sprite(LightTargetIntermediate.Texture);
             _cleanupSpriteList.Add(_lightTargetIntermediateSprite);
         }
 
@@ -288,19 +289,19 @@ namespace SS14.Client.State.States
 
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
-            screenShadows = new RenderImage("screenShadows", width, height, ImageBufferFormats.BufferRGB888A8);
+            ScreenShadows = new RenderImage("screenShadows", width, height, ImageBufferFormats.BufferRGB888A8);
 
-            _cleanupList.Add(screenShadows);
-            screenShadows.UseDepthBuffer = false;
-            shadowIntermediate = new RenderImage("shadowIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(shadowIntermediate);
-            shadowIntermediate.UseDepthBuffer = false;
-            shadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(shadowBlendIntermediate);
-            shadowBlendIntermediate.UseDepthBuffer = false;
-            playerOcclusionTarget = new RenderImage("playerOcclusionTarget", width, height, ImageBufferFormats.BufferRGB888A8);
-            _cleanupList.Add(playerOcclusionTarget);
-            playerOcclusionTarget.UseDepthBuffer = false;
+            _cleanupList.Add(ScreenShadows);
+            ScreenShadows.UseDepthBuffer = false;
+            ShadowIntermediate = new RenderImage("shadowIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(ShadowIntermediate);
+            ShadowIntermediate.UseDepthBuffer = false;
+            ShadowBlendIntermediate = new RenderImage("shadowBlendIntermediate", width, height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(ShadowBlendIntermediate);
+            ShadowBlendIntermediate.UseDepthBuffer = false;
+            PlayerOcclusionTarget = new RenderImage("playerOcclusionTarget", width, height, ImageBufferFormats.BufferRGB888A8);
+            _cleanupList.Add(PlayerOcclusionTarget);
+            PlayerOcclusionTarget.UseDepthBuffer = false;
 
             LightblendTechnique = resourceCache.GetTechnique("lightblend");
             Lightmap = resourceCache.GetShader("lightmap");
@@ -310,7 +311,7 @@ namespace SS14.Client.State.States
             playerVision.Radius = 1024;
             playerVision.Coordinates = new LocalCoordinates(0, 0, 0, 0);
 
-            _occluderDebugTarget = new RenderImage("debug", width, height);
+            OccluderDebugTarget = new RenderImage("debug", width, height);
         }
 
         /// <inheritdoc />
@@ -360,8 +361,8 @@ namespace SS14.Client.State.States
             view.Center = CluwneLib.Camera.Position * CluwneLib.Camera.PixelsPerMeter;
             if (updateTargets)
             {
-                _sceneTarget.View = view;
-                _tilesTarget.View = view;
+                SceneTarget.View = view;
+                TilesTarget.View = view;
             }
         }
 
@@ -392,25 +393,25 @@ namespace SS14.Client.State.States
             CalculateSceneBatches(vp);
 
             //Draw all rendertargets to the scenetarget
-            _sceneTarget.BeginDrawing();
-            _sceneTarget.Clear(Color.Black);
+            SceneTarget.BeginDrawing();
+            SceneTarget.Clear(Color.Black);
 
             //PreOcclusion
             RenderTiles();
 
-            _sceneTarget.View = view;
+            SceneTarget.View = view;
             RenderComponents(e.Elapsed, vp, map);
 
             RenderOverlay();
 
-            _sceneTarget.EndDrawing();
-            _sceneTarget.ResetCurrentRenderTarget();
+            SceneTarget.EndDrawing();
+            SceneTarget.ResetCurrentRenderTarget();
             //_sceneTarget.Blit(0, 0, CluwneLib.Window.Size.X, CluwneLib.Window.Size.Y);
 
             //Debug.DebugRendertarget(_sceneTarget);
 
             if (bFullVision)
-                _sceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
+                SceneTarget.Blit(0, 0, CluwneLib.Window.Viewport.Size.X, CluwneLib.Window.Viewport.Size.Y);
             else
                 LightScene();
 
@@ -425,41 +426,41 @@ namespace SS14.Client.State.States
             if (_redrawTiles)
             {
                 //Set rendertarget to draw the rest of the scene
-                _tilesTarget.BeginDrawing();
-                _tilesTarget.Clear(Color.Black);
+                TilesTarget.BeginDrawing();
+                TilesTarget.Clear(Color.Black);
 
                 if (_floorBatch.Count > 0)
                 {
-                    _tilesTarget.Draw(_floorBatch);
+                    TilesTarget.Draw(_floorBatch);
                 }
 
-                _tilesTarget.EndDrawing();
+                TilesTarget.EndDrawing();
                 _redrawTiles = false;
             }
 
-            _tilesTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Scale);
+            TilesTarget.Blit(0, 0, TilesTarget.Width, TilesTarget.Height, Color.White, BlitterSizeMode.Scale);
         }
 
         private void RenderOverlay()
         {
             if (_redrawOverlay)
             {
-                _overlayTarget.BeginDrawing();
-                _overlayTarget.Clear(Color.Transparent);
+                OverlayTarget.BeginDrawing();
+                OverlayTarget.Clear(Color.Transparent);
 
                 // Render decal batch
 
                 if (_decalBatch.Count > 0)
-                    _overlayTarget.Draw(_decalBatch);
+                    OverlayTarget.Draw(_decalBatch);
 
                 if (_gasBatch.Count > 0)
-                    _overlayTarget.Draw(_gasBatch);
+                    OverlayTarget.Draw(_gasBatch);
 
                 _redrawOverlay = false;
-                _overlayTarget.EndDrawing();
+                OverlayTarget.EndDrawing();
             }
 
-            _overlayTarget.Blit(0, 0, _tilesTarget.Width, _tilesTarget.Height, Color.White, BlitterSizeMode.Crop);
+            OverlayTarget.Blit(0, 0, TilesTarget.Width, TilesTarget.Height, Color.White, BlitterSizeMode.Crop);
         }
 
         /// <inheritdoc />
@@ -840,10 +841,23 @@ namespace SS14.Client.State.States
             }
 
             //Step 2 - Set up the render targets for the composite lighting.
-            RenderImage source = screenShadows;
+            RenderImage source = ScreenShadows;
+            #if !MACOS
             source.Clear(Color.Black);
+            #else
+            // For some insane reason, SFML does not clear the texture on MacOS.
+            // unless you call CopyToImage() on it, which we can't due to performance.
+            // This works though!
+            source.BeginDrawing();
+            // N̵̤̜͙͔̲͖̓̓͐ͭ́̎̅ͮ̆͠O̸̢̖ͬͣ̋T̓ͩ̊̏͊͏̩̼͞Ẻ̿̇͆͏̬̗̖̮͉͚͈ͅ ̛̗̱͚̬͈ͤͭͯ̄̄F̬ͮ̈ͯṚ͙̭̘̤̹̰̂͗ͯ͑̀̾̽ͪ̐͘Ȍ͎̣͚̍͆̊M̯͚ͮ̉̀̌ ̵̖̠̬͉̟ͫ̓̉͠ͅP͇͖͖̻̳̪͔̅͗ͧ͒͟͜͞J̝͍̻̜̖͖̝̻̓͂͝Ḇ̣̲̫̗͉̥̯̓ͥ͂̔̃ͅ
+            // ̶̯͚̯̱͓̣̻͍̄ͪͬ͆̓͆̈͂̉͠Į͖͕͇̜̟̘͌͊͐ͅ ̡̜̮̟̭͙̋͒͐ͯ̚͝ͅḪ̫̥̗̥̯̱̿̋͐̓̄ͫ̚͢ͅE͎͉͕̙̼̼̙̩ͨ̏͆ͪ̂̿́́R̳͍̰͕̲͐͒̊̿̀͑̅̒͢͡E͉̫̺̮͚͔̻̠̒̂ͫ͂B̶͓̗̝̈̋͊ͯ̄̉ͣ͆Y̎ͫ͑ͧ͏͖̦̝̰̝̙̠̹ ̩̹͇̜̝̈́̇̒ͪ̉̐͋ͮD̵̘͒ͫ̈͂̉́͘Ě̤͑ͭͧ̿͋͝Ċ͎̬̫͔̩̐̄̓̅̂́ͣL̵͖̳̯̈͆͐̓́̎̎͒́A̶̷̹̪̻͉͚̽̅͒ͨ͢R̛͕̠̟͙̼͍̻̪͚͑̊ͤͥ̏E̷̷̢͇̮̋́̈́̌ͨ ̧̩̤̆́̀̈́̕T̯͖̝̪ͨͤͬ̽͟͡H̘̟͊͞I̵͙̞̯̙͓̯̊ͯͥ̅͐͗̂͆̆S̴̃̔͐ͫͥͣ̑͆̔̕͏̞̣̥̩̜̟̪͎ ̡̱͙̜ͮͧͣ̏ͪ͢͝C̢̧͍̫̙̣̯̘͚͒̒ͧ͗O̼̹͚͉͙̦̻̽̑̇͊͌ͩͧ͒͞͝D͛̍̚̚҉̟͚̯̮̺̜E̵̮̠͎̞ͤ̓̒̎ͨ̈́̌͞ ̘͇͍̞̼̮̲̹̌̊̄͞À̛͉̹̘͜S̴͙̯̝̙͎̘͙͎̻̎ͥ̍ͬͤ̅̕ ̡̘̯͊ͫͦ̉Cͯ̆͊ͣ́͏̙̝̬U̻͈͚͓̞̞̮͖ͬ͂̽͂̋̎͆̌R̡̘̗̙͍ͯ̿̃̀S̶̠̤̅̆E̒̈̓͘͏̨̙̫̗̮͎͕͉̪D̈́͏͚͔̦̖͎̖̕
+            // ̢͓̌T̼̗̰͒ͪ͢͟͠Õ̢̻̙̼̰̜͇͇̮̲̅̔̄͂͠U̜̝͕͆̃͂̇̚C̨̜̟̗͓̪̹̔̿̄̓̏͜Hͭ͌ͪͩ͏̡͡ͅ ̳͇̏̊̎̋͊ͥ̄͒A̴̷̻͖͈̟͖̦̖ͯ͛ͮͨ̊ͨ̐̔ͅͅT̷̼̠̓ͩ́͂ͥͯ̚͟ͅ ̢̞͔̓ͫ̾̓̕Y̶ͩͦͥ̿̍ͧͩ͏̶͚̜͙̥͕̩͖̲O̷̭̺̫͍̞̭͇̪ͦU̙̲̖̠̭̹͕̥̥͌̎ͯͦ̐R̨̬̠̠̹̺͑̄͌ͬ͋̽ͦ͞ ̸̨̼̟̗̻̮̻̣̩͂̾̐ͬͮͦ͛ͬ͡O̶̡̤̫̲̼͚͎̝͚ͣ͌̇W̛̜͚͔̫̹̱̠͐̀ͦ̉͢͝Ń̯̞̩̰̬̞̓ͤ͐ͣ͟ ̴̀̍͊͐͗̌̅͊ͪ҉̯̭̻̼̰P̣̯͚͕̬͙ͩͦ̆͂͑ͮ̈́Ȩ̱̠͊̂̀R̵̪͍̗̰̟͚͕͙͔ͧ̍ͦ̃̾̾ͬ́͟I̷̢̤̼̿̽̂͊̆̿̓L̥̭̏ͯ̍ͣ͝
+            //͎̆̒̿ͤ̀͝͝H̙͇̽ͩ̓̚E̜̘̭̟͓͖̓̔̑̀͞͠ͅL̪̰̺̼̊̐̌P̸̴̴̙̻̻̗̯̤͎͓̿̊͌ͪ ̯̜͊̍̄M̩̻̺̬̗͕̬̈͗́ͯ̚̚͜Ȇ̟̜͙̙ ̅͐͐҉̱̫̼̱h̢̼͎͕̪͉͂̊ͤͣ͛͂̄ͯ͝͠t͎̺̼͙̰͓ͥ̏́ţ͕̼̱̲͈̹̾ͣͯͮ̄̅ͧͦ̚p̧̜̹͚̦ͧ̊̀̽ͫ̓̓ͣ̚͡ş̨̮̣̼̰̞̝̫͋̌ͬ͊͑ͣ:̷͇͚̲̻̩̞ͤ͐͞/̈́͋ͯ͂̀̅ͪ͑͞͏͖̮̯͍̟͚͓͎/̟̩̲͑̚ĩ̶̢̲̬̦͍͈̯͉̓̅͟.̦̭̲̭̂̓̿̈́̄͟ï͋͘҉̘̪̠̣̰m̖͎̮͆̀ͯ̑̃ͅg̢̝͉͔̽̃̀̂u̢̱̞̫̱̹̪̇͟r̸̯̞̹͓̥̮̮̝̹͌̀͌̈́͑.̪̦͕̞̥͕̩̎ͤ̇̉̒̓c̨̩̰̎̂ͬͤ̍̓̓ṍ̵͍͈̣̰m̛̱̥̘͙͈ͫͭ̒ͪͮ/̓͆̽̀͐̿͘҉̘̲͈̬̹̟M̡̺͍̜̺̘̰̼͂̎̃͞͝l̴̫̘̦̺̑ͪ̃͢ͅn̤̱̺̿͌ͨ͡U̧̢̜̞̝̒͒̐̄̊̽ͤͫͅL̡̺͉̠͖͚͉͚ͥͧ͋ͬ̀b̵̶̪̝̟̔ͪ̂̊A̧̧̝̭͖̭͍̬͑̀.̞̬͈́ͫ̍͘ͅp̶͎̠̱̍ͪ̆n̩͕̬̈ͪ̋ͅg̘̗̙̻͎̩̲͙͊ͨͭͣ͌̚̕
+            CluwneLib.drawRectangle(0, 0, source.Width, source.Height, Color.Black);
+            source.EndDrawing();
+            #endif
 
-            RenderImage desto = shadowIntermediate;
+            RenderImage desto = ShadowIntermediate;
             RenderImage copy = null;
 
             Lightmap.setAsCurrentShader();
@@ -866,10 +880,10 @@ namespace SS14.Client.State.States
                 Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
 
                 //Set shader parameters
-                var LightPositionData = new Vector4(blitPos.X / screenShadows.Width,
-                                                    blitPos.Y / screenShadows.Height,
-                                                    (float)screenShadows.Width / area.RenderTarget.Width,
-                                                    (float)screenShadows.Height / area.RenderTarget.Height);
+                var LightPositionData = new Vector4(blitPos.X / ScreenShadows.Width,
+                                                    blitPos.Y / ScreenShadows.Height,
+                                                    (float)ScreenShadows.Width / area.RenderTarget.Width,
+                                                    (float)ScreenShadows.Height / area.RenderTarget.Height);
                 lightTextures.Add(area.RenderTarget.Texture);
                 colors.Add(Light.ColorVec);
                 positions.Add(LightPositionData);
@@ -950,11 +964,11 @@ namespace SS14.Client.State.States
 
             Lightmap.ResetCurrentShader();
 
-            if (source != screenShadows)
+            if (source != ScreenShadows)
             {
-                screenShadows.BeginDrawing();
+                ScreenShadows.BeginDrawing();
                 source.Blit(0, 0, source.Width, source.Height);
-                screenShadows.EndDrawing();
+                ScreenShadows.EndDrawing();
             }
         }
 
@@ -988,14 +1002,14 @@ namespace SS14.Client.State.States
         {
             if (bFullVision)
             {
-                playerOcclusionTarget.Clear(new Color(211, 211, 211));
+                PlayerOcclusionTarget.Clear(new Color(211, 211, 211));
                 return;
             }
             if (bPlayerVision)
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
-                playerOcclusionTarget.Clear(Color.Black);
+                PlayerOcclusionTarget.Clear(Color.Black);
                 var playerposition = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
                 playerVision.Coordinates = playerposition;
 
@@ -1019,24 +1033,24 @@ namespace SS14.Client.State.States
 
                 if (debugWallOccluders)
                 {
-                    _occluderDebugTarget.BeginDrawing();
-                    _occluderDebugTarget.Clear(Color.White);
+                    OccluderDebugTarget.BeginDrawing();
+                    OccluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
-                    _occluderDebugTarget.EndDrawing();
+                    OccluderDebugTarget.EndDrawing();
                 }
 
                 shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceCache>().GetSprite("whitemask").Texture); // Calc shadows
 
                 if (debugPlayerShadowMap)
                 {
-                    _occluderDebugTarget.BeginDrawing();
-                    _occluderDebugTarget.Clear(Color.White);
+                    OccluderDebugTarget.BeginDrawing();
+                    OccluderDebugTarget.Clear(Color.White);
                     area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
-                    _occluderDebugTarget.EndDrawing();
+                    OccluderDebugTarget.EndDrawing();
                 }
 
-                playerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
+                PlayerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 
                 area.RenderTarget.BlendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.Zero;
@@ -1046,11 +1060,11 @@ namespace SS14.Client.State.States
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 area.RenderTarget.BlendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
 
-                playerOcclusionTarget.EndDrawing();
+                PlayerOcclusionTarget.EndDrawing();
             }
             else
             {
-                playerOcclusionTarget.Clear(Color.Black);
+                PlayerOcclusionTarget.Clear(Color.Black);
             }
         }
 
@@ -1078,8 +1092,8 @@ namespace SS14.Client.State.States
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2(playerOcclusionTarget.Width, playerOcclusionTarget.Height));
-            _gaussianBlur.PerformGaussianBlur(playerOcclusionTarget);
+            _gaussianBlur.SetSize(new Vector2(PlayerOcclusionTarget.Width, PlayerOcclusionTarget.Height));
+            _gaussianBlur.PerformGaussianBlur(PlayerOcclusionTarget);
         }
 
         /// <summary>
@@ -1152,46 +1166,46 @@ namespace SS14.Client.State.States
 
             //Render the scene and lights together to compose the lit scene
 
-            _composedSceneTarget.BeginDrawing();
-            _composedSceneTarget.Clear(Color.Black);
+            ComposedSceneTarget.BeginDrawing();
+            ComposedSceneTarget.Clear(Color.Black);
             LightblendTechnique["FinalLightBlend"].setAsCurrentShader();
             Sprite outofview = IoCManager.Resolve<IResourceCache>().GetSprite("outofview");
             float texratiox = (float)CluwneLib.Window.Viewport.Width / outofview.Texture.Size.X;
             float texratioy = (float)CluwneLib.Window.Viewport.Height / outofview.Texture.Size.Y;
             var maskProps = new Vector4(texratiox, texratioy, 0, 0);
 
-            LightblendTechnique["FinalLightBlend"].SetUniform("PlayerViewTexture", playerOcclusionTarget);
+            LightblendTechnique["FinalLightBlend"].SetUniform("PlayerViewTexture", PlayerOcclusionTarget);
             LightblendTechnique["FinalLightBlend"].SetUniform("OutOfViewTexture", outofview.Texture);
             LightblendTechnique["FinalLightBlend"].SetUniform("MaskProps", maskProps);
-            LightblendTechnique["FinalLightBlend"].SetUniform("LightTexture", screenShadows);
-            LightblendTechnique["FinalLightBlend"].SetUniform("SceneTexture", _sceneTarget);
+            LightblendTechnique["FinalLightBlend"].SetUniform("LightTexture", ScreenShadows);
+            LightblendTechnique["FinalLightBlend"].SetUniform("SceneTexture", SceneTarget);
             LightblendTechnique["FinalLightBlend"].SetUniform("AmbientLight", new Vector4(.05f, .05f, 0.05f, 1));
 
             // Blit the shadow image on top of the screen
-            screenShadows.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop);
+            ScreenShadows.Blit(0, 0, ScreenShadows.Width, ScreenShadows.Height, Color.White, BlitterSizeMode.Crop);
 
             LightblendTechnique["FinalLightBlend"].ResetCurrentShader();
-            _composedSceneTarget.EndDrawing();
+            ComposedSceneTarget.EndDrawing();
 
-            playerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
-            playerOcclusionTarget.Blit(0, 0, screenShadows.Width, screenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again
+            PlayerOcclusionTarget.ResetCurrentRenderTarget(); // set the rendertarget back to screen
+            PlayerOcclusionTarget.Blit(0, 0, ScreenShadows.Width, ScreenShadows.Height, Color.White, BlitterSizeMode.Crop); //draw playervision again
             PlayerPostProcess();
 
             //redraw composed scene
-            _composedSceneTarget.Blit(0, 0, (uint)CluwneLib.Window.Viewport.Size.X, (uint)CluwneLib.Window.Viewport.Size.Y, Color.White, BlitterSizeMode.Crop);
+            ComposedSceneTarget.Blit(0, 0, (uint)CluwneLib.Window.Viewport.Size.X, (uint)CluwneLib.Window.Viewport.Size.Y, Color.White, BlitterSizeMode.Crop);
         }
 
         private void BlurShadowMap()
         {
             _gaussianBlur.SetRadius(11);
             _gaussianBlur.SetAmount(2);
-            _gaussianBlur.SetSize(new Vector2(screenShadows.Width, screenShadows.Height));
-            _gaussianBlur.PerformGaussianBlur(screenShadows);
+            _gaussianBlur.SetSize(new Vector2(ScreenShadows.Width, ScreenShadows.Height));
+            _gaussianBlur.PerformGaussianBlur(ScreenShadows);
         }
 
         private void PlayerPostProcess()
         {
-            PlayerManager.ApplyEffects(_composedSceneTarget);
+            PlayerManager.ApplyEffects(ComposedSceneTarget);
         }
 
         #endregion Lighting in order of call

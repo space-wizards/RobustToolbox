@@ -207,12 +207,12 @@ namespace SS14.Client.State.States
             _cleanupList.Add(OverlayTarget);
 
 
-            BlendMode blendSettings = _overlayTarget.BlendSettings;
+            BlendMode blendSettings = OverlayTarget.BlendSettings;
             blendSettings.ColorSrcFactor = BlendMode.Factor.SrcAlpha;
             blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
             blendSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             blendSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            _overlayTarget.BlendSettings = blendSettings;
+            OverlayTarget.BlendSettings = blendSettings;
 
 
             ComposedSceneTarget = new RenderImage("composedSceneTarget", width, height,

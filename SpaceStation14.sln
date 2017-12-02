@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network", "Lidgren.Network\Lidgren.Network.csproj", "{59250BAF-0000-0000-0000-000000000000}"
 EndProject
@@ -15,14 +15,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS14.UnitTesting", "SS14.UnitTesting\SS14.UnitTesting.csproj", "{F0ADA779-40B8-4F7E-BA6C-CDB19F3065D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildChecker", "BuildChecker\BuildChecker.csproj", "{D0DA124B-5580-4345-A02B-9F051F78915F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sfml-system", "SFML\src\System\sfml-system.csproj", "{31D24303-F6A9-4D53-BB03-A73EDCB3186D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sfml-window", "SFML\src\Window\sfml-window.csproj", "{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sfml-graphics", "SFML\src\Graphics\sfml-graphics.csproj", "{46786269-57B9-48E7-AA4F-8F4D84609FE6}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SFML", "SFML", "{600F7C3B-7142-4EEF-BE13-824BC4548D0D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{795D76AB-19B5-4682-B51F-6DB148024A0C}"
 EndProject
@@ -90,39 +82,12 @@ Global
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Release|x64.Build.0 = Release|x64
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Release|x86.ActiveCfg = Release|x86
 		{D0DA124B-5580-4345-A02B-9F051F78915F}.Release|x86.Build.0 = Release|x86
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Debug|x64.ActiveCfg = Debug|x64
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Debug|x64.Build.0 = Debug|x64
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Debug|x86.ActiveCfg = Debug|x86
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Debug|x86.Build.0 = Debug|x86
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Release|x64.ActiveCfg = Release|x64
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Release|x64.Build.0 = Release|x64
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Release|x86.ActiveCfg = Release|x86
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D}.Release|x86.Build.0 = Release|x86
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Debug|x64.ActiveCfg = Debug|x64
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Debug|x64.Build.0 = Debug|x64
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Debug|x86.ActiveCfg = Debug|x86
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Debug|x86.Build.0 = Debug|x86
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Release|x64.ActiveCfg = Release|x64
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Release|x64.Build.0 = Release|x64
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Release|x86.ActiveCfg = Release|x86
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F}.Release|x86.Build.0 = Release|x86
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Debug|x64.ActiveCfg = Debug|x64
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Debug|x64.Build.0 = Debug|x64
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Debug|x86.ActiveCfg = Debug|x86
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Debug|x86.Build.0 = Debug|x86
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Release|x64.ActiveCfg = Release|x64
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Release|x64.Build.0 = Release|x64
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Release|x86.ActiveCfg = Release|x86
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D0DA124B-5580-4345-A02B-9F051F78915F} = {795D76AB-19B5-4682-B51F-6DB148024A0C}
-		{31D24303-F6A9-4D53-BB03-A73EDCB3186D} = {600F7C3B-7142-4EEF-BE13-824BC4548D0D}
-		{D17DE83D-A592-461F-8AF2-53F9E22E1D0F} = {600F7C3B-7142-4EEF-BE13-824BC4548D0D}
-		{46786269-57B9-48E7-AA4F-8F4D84609FE6} = {600F7C3B-7142-4EEF-BE13-824BC4548D0D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {57757344-0FF4-4842-8A68-141CAA18A35D}

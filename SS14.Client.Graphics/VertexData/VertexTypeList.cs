@@ -41,8 +41,8 @@ namespace SS14.Client.Graphics.VertexData
             /// <summary>
             /// Position of the vertex.
             /// </summary>
-            private Vector3 position;
-
+            public Vector3 Position { get; set; }
+            
             /// <summary>
             /// Color value of the vertex.
             /// </summary>
@@ -51,7 +51,7 @@ namespace SS14.Client.Graphics.VertexData
             /// <summary>
             /// Texture coordinates.
             /// </summary>
-            private Vector2 textureCoordinates;
+            public Vector2 TextureCoordinates { get; set; }
             #endregion Variables.
 
             #region Properties.
@@ -69,9 +69,7 @@ namespace SS14.Client.Graphics.VertexData
                     ColorValue = ColorToInt(value);
                 }
             }
-
-            public Vector3 Position { get => position; set => position = value; }
-            public Vector2 TextureCoordinates { get => textureCoordinates; set => textureCoordinates = value; }
+            
             #endregion Properties.
 
             #region Methods.

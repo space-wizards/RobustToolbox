@@ -10,9 +10,9 @@ namespace SS14.Client.UserInterface.Controls
     {
         protected const int titleBuffer = 1;
 
-        private Color titleColor1 = new Color(112, 128, 144);
-        private Color titleColor2 = new Color(47, 79, 79);
-        private bool closeButtonVisible = true;
+        public Color TitleColor1 { get; set; } = new Color(112, 128, 144);
+        public Color TitleColor2 { get; set; } = new Color(47, 79, 79);
+        public bool CloseButtonVisible { get; set; } = true;
 
         protected ImageButton closeButton;
         protected bool dragging;
@@ -20,11 +20,7 @@ namespace SS14.Client.UserInterface.Controls
         protected GradientBox gradient;
         protected Label title;
         protected Box2i titleArea;
-
-        public Color TitleColor1 { get => titleColor1; set => titleColor1 = value; }
-        public bool CloseButtonVisible { get => closeButtonVisible; set => closeButtonVisible = value; }
-        public Color TitleColor2 { get => titleColor2; set => titleColor2 = value; }
-
+                
         public Window(string windowTitle, Vector2i size)
             : base(size)
         {
@@ -150,10 +146,10 @@ namespace SS14.Client.UserInterface.Controls
         private  VertexTypeList.PositionDiffuse2DTexture1[] box =
             new VertexTypeList.PositionDiffuse2DTexture1[4];
 
-        public Color Color1 = new Color(112, 128, 144);
-        public Color Color2 = new Color(47, 79, 79);
+        public Color Color1 { get; set;} = new Color(112, 128, 144);
+        public Color Color2 { get; set;} = new Color(47, 79, 79);
 
-        public bool Vertical = true;
+        public bool Vertical { get; set;} = true;
 
         public override void Update(float frameTime)
         {

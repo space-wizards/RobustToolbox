@@ -47,13 +47,15 @@ namespace SS14.Client.Placement
         public readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
-        private Sprite currentBaseSprite;
-        private string currentBaseSpriteKey = "";
-        private PlacementMode currentMode;
-        private PlacementInformation currentPermission;
-        private EntityPrototype currentPrototype;
-        private Direction direction = Direction.South;
-        private bool validPosition;
+        public bool IsActive { get; private set; }
+        public bool Eraser { get; private set; }
+        public Sprite CurrentBaseSprite { get; set; }
+        public string CurrentBaseSpriteKey { get; set; } = "";
+        public PlacementMode CurrentMode { get; set; }
+        public PlacementInformation CurrentPermission { get; set; }
+        public EntityPrototype CurrentPrototype { get; set; }
+        public Direction Direction { get; set; } = Direction.South;
+        public bool ValidPosition { get; set; }
 
         public PlacementManager()
         {
@@ -71,15 +73,7 @@ namespace SS14.Client.Placement
             }
         }
 
-        public bool IsActive { get; private set; }
-        public bool Eraser { get; private set; }
-        public Sprite CurrentBaseSprite { get => currentBaseSprite; set => currentBaseSprite = value; }
-        public string CurrentBaseSpriteKey { get => currentBaseSpriteKey; set => currentBaseSpriteKey = value; }
-        public PlacementMode CurrentMode { get => currentMode; set => currentMode = value; }
-        public PlacementInformation CurrentPermission { get => currentPermission; set => currentPermission = value; }
-        public EntityPrototype CurrentPrototype { get => currentPrototype; set => currentPrototype = value; }
-        public Direction Direction { get => direction; set => direction = value; }
-        public bool ValidPosition { get => validPosition; set => validPosition = value; }
+
 
         public event EventHandler PlacementCanceled;
 

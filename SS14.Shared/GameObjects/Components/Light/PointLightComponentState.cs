@@ -10,11 +10,9 @@ namespace SS14.Shared.GameObjects
         public readonly Color4 Color;
         public readonly LightModeClass Mode;
         public readonly LightState State;
-        private int radius;
-        private Vector2 offset;
 
-        public int Radius { get => radius; set => radius = value; }
-        public Vector2 Offset { get => offset; set => offset = value; }
+        public int Radius { get; set; }
+        public Vector2 Offset { get; set; }
 
         public PointLightComponentState(LightState state, Color4 color, LightModeClass mode, int radius, Vector2 offset)
             : base(NetIDs.POINT_LIGHT)

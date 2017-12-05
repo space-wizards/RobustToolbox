@@ -5,11 +5,8 @@ namespace SS14.Client.Graphics.TexHelpers
 {
     public class TextureInfo
     {
-        private Texture texture;
-        private Image image;
-
-        public Texture Texture { get => texture; set => texture = value; }
-        public Image Image { get => image; set => image = value; }
+        public Texture Texture { get; set; }
+        public Image Image { get; set; }
 
         public TextureInfo(Texture tex, Image img)
         {

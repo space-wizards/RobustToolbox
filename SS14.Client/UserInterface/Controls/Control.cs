@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private readonly List<Control> _children = new List<Control>();
 
-        private object userData;
+        public object UserData { get; set; }
         private Align _align;
         protected Box2i _clientArea;
         protected Box2i _localBounds;
@@ -211,7 +211,6 @@ namespace SS14.Client.UserInterface.Controls
         ///     If this control is currently disposed.
         /// </summary>
         public bool Disposed { get; private set; } = false;
-        public object UserData { get => userData; set => userData = value; }
 
         protected Control()
         {

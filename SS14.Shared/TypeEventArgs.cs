@@ -4,13 +4,12 @@ namespace SS14.Shared
 {
     public class TypeEventArgs : EventArgs
     {
-        private Type type;
+        public Type Type { get; set; }
 
         public TypeEventArgs(Type type)
         {
             Type = type;
         }
 
-        public Type Type { get => type; set => type = value; }
     }
 }

@@ -5,11 +5,8 @@ namespace SS14.Shared
 {
     public struct IncomingEntityComponentMessage
     {
-        private uint netID;
-        private List<object> messageParameters;
-
-        public uint NetID { get => netID; set => netID = value; }
-        public List<object> MessageParameters { get => messageParameters; set => messageParameters = value; }
+        public uint NetID { get; set; }
+        public List<object> MessageParameters { get; set; }
 
         public IncomingEntityComponentMessage(uint netID, List<object> messageParameters) : this()
         {

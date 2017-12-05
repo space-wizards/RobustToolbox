@@ -67,8 +67,8 @@ namespace SS14.Client.State.States
         private SpriteBatch _decalBatch;
 
         #region Mouse/Camera stuff
-        private ScreenCoordinates mousePosScreen = new ScreenCoordinates(0, 0, 0);
-        private LocalCoordinates mousePosWorld = new LocalCoordinates(0, 0, 0, 0);
+        public ScreenCoordinates MousePosScreen { get; set; } = new ScreenCoordinates(0, 0, 0);
+        public LocalCoordinates MousePosWorld { get; set; } = new LocalCoordinates(0, 0, 0, 0);
         private View view;
         #endregion Mouse/Camera stuff
 
@@ -95,7 +95,7 @@ namespace SS14.Client.State.States
         private bool debugWallOccluders = false;
         private bool debugPlayerShadowMap = false;
         private bool debugHitboxes = false;
-        private bool blendLightMap = true;
+        public bool BlendLightMap { get; set; } = true;
 
         private TechniqueList LightblendTechnique;
         private GLSLShader Lightmap;
@@ -255,11 +255,7 @@ namespace SS14.Client.State.States
         }
 
         private Vector2i _gameChatSize = new Vector2i(475, 175); // TODO: Move this magic variable
-
-        public LocalCoordinates MousePosWorld { get => mousePosWorld; set => mousePosWorld = value; }
-        public ScreenCoordinates MousePosScreen { get => mousePosScreen; set => mousePosScreen = value; }
-        public bool BlendLightMap { get => blendLightMap; set => blendLightMap = value; }
-
+        
         /// <inheritdoc />
         public override void InitializeGUI()
         {

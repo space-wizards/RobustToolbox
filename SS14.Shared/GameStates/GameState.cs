@@ -13,8 +13,7 @@ namespace SS14.Shared.GameStates
     {
         [NonSerialized] private bool _serialized;
         [NonSerialized] private MemoryStream _serializedData;
-        [NonSerialized] private float gameTime;
-
+        [NonSerialized] public float GameTime;
         /// <summary>
         /// Constructor!
         /// </summary>
@@ -27,7 +26,6 @@ namespace SS14.Shared.GameStates
         public uint Sequence { get; private set; }
         public List<EntityState> EntityStates { get; set; }
         public List<PlayerState> PlayerStates { get; set; }
-        public float GameTime { get => gameTime; set => gameTime = value; }
 
         /// <summary>
         /// Creates a delta from two game states

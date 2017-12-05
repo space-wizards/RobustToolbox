@@ -9,11 +9,8 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemPickUp : EntitySystemMessage
     {
-        private int uidUser;
-        private int uidObject;
-
-        public int UidUser { get => uidUser; set => uidUser = value; }
-        public int UidObject { get => uidObject; set => uidObject = value; }
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
 
         public InventorySystemPickUp()
         {
@@ -26,13 +23,9 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemDrop : EntitySystemMessage
     {
-        private int uidUser;
-        private int uidObject;
-        private int uidDroppingInventory;
-
-        public int UidUser { get => uidUser; set => uidUser = value; }
-        public int UidObject { get => uidObject; set => uidObject = value; }
-        public int UidDroppingInventory { get => uidDroppingInventory; set => uidDroppingInventory = value; }
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
+        public int UidDroppingInventory { get; set; }
 
         public InventorySystemDrop()
         {
@@ -45,15 +38,10 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemExchange : EntitySystemMessage
     {
-        private int uidUser;
-        private int uidObject;
-        private int uidPreviousInventory;
-        private int uidNewInventory;
-
-        public int UidUser { get => uidUser; set => uidUser = value; }
-        public int UidObject { get => uidObject; set => uidObject = value; }
-        public int UidPreviousInventory { get => uidPreviousInventory; set => uidPreviousInventory = value; }
-        public int UidNewInventory { get => uidNewInventory; set => uidNewInventory = value; }
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
+        public int UidPreviousInventory { get; set; }
+        public int UidNewInventory { get; set; }
 
         public InventorySystemExchange()
         {

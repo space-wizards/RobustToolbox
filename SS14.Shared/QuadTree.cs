@@ -488,14 +488,10 @@ namespace SS14.Shared
                 }
             }
 
-            private ReadOnlyCollection<QuadNode> nodes;
-
+            public ReadOnlyCollection<QuadNode> Nodes { get; set; }
             internal List<T> quadObjects = new List<T>();
-            private ReadOnlyCollection<T> objects;
-
             public Box2 Bounds { get; internal set; }
-            public ReadOnlyCollection<QuadNode> Nodes { get => nodes; set => nodes = value; }
-            public ReadOnlyCollection<T> Objects { get => objects; set => objects = value; }
+            public ReadOnlyCollection<T> Objects { get; set; }
 
             public bool HasChildNodes()
             {

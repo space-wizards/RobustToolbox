@@ -33,7 +33,7 @@ namespace SS14.Server.Player
         /// <summary>
         /// The server that instantiated this manager.
         /// </summary>
-        private IBaseServer server;
+        public IBaseServer Server { get; set; }
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
@@ -137,7 +137,6 @@ namespace SS14.Server.Player
         }
 
         public RunLevel RunLevel { get; set; }
-        public IBaseServer Server { get => server; set => server = value; }
 
         /// <summary>
         /// Processes an incoming network message.

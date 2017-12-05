@@ -5,17 +5,11 @@ namespace SS14.Client.Helpers
 {
     public struct InterpolationPacket
     {
-        private int iterations;
-        private Vector2 position;
-        private float rotation;
-        private Vector2 startposition;
-        private double time;
-
-        public int Iterations { get => iterations; set => iterations = value; }
-        public Vector2 Position { get => position; set => position = value; }
-        public float Rotation { get => rotation; set => rotation = value; }
-        public Vector2 Startposition { get => startposition; set => startposition = value; }
-        public double Time { get => time; set => time = value; }
+        public int Iterations { get; set; }
+        public Vector2 Position { get; set; }
+        public float Rotation { get; set; }
+        public Vector2 Startposition { get; set; }
+        public double Time { get; set; }
 
         public InterpolationPacket(Vector2 position, float rotation, double time) : this()
         {

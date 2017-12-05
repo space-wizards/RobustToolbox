@@ -15,7 +15,7 @@ namespace SS14.Client.GameStates
 {
     public class GameStateManager : IGameStateManager
     {
-        private Dictionary<uint, GameState> gameStates;
+        public Dictionary<uint, GameState> GameStates { get; set; }
 
         [Dependency]
         private readonly IGameTiming timing;
@@ -27,8 +27,7 @@ namespace SS14.Client.GameStates
         private readonly IPlayerManager playerManager;
 
         public GameState CurrentState { get; private set; }
-        public Dictionary<uint, GameState> GameStates { get => gameStates; set => gameStates = value; }
-
+        
         public GameStateManager()
         {
             GameStates = new Dictionary<uint, GameState>();

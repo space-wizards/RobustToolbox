@@ -24,12 +24,9 @@ namespace SS14.Client.UserInterface.Components
         protected readonly List<KeyValuePair<ImageButton, Object>> _items = new List<KeyValuePair<ImageButton, object>>();
         protected readonly IResourceCache _resourceCache;
         protected readonly SimpleImage _selectionGlow;
-
-        private int additionalColumns = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
-
-        private int itemSpacing = 10; //Additional space between items.
-
-        private Vector2i size = new Vector2i(300, 100);
+        public int AdditionalColumns { get; set; } = 2;//Number of additional visible columns beside the selection. 1 = 3 total visible. selection + 1 left + 1 right.
+        public int ItemSpacing { get; set; } = 10; //Additional space between items.
+        public Vector2i Size { get; set; } = new Vector2i(300, 100);
         protected ImageButton _buttonLeft;
         private Color4 ctemp;
         protected ImageButton _buttonRight;
@@ -43,9 +40,8 @@ namespace SS14.Client.UserInterface.Components
             }
         }
         protected int _selected;
-
-        private bool fadeItems = false;   //Fade out items to the sides?
-        private bool showArrows = true; //Show side arrows?
+        public bool FadeItems { get; set; } = false; //Fade out items to the sides?
+        public bool ShowArrows { get; set; } = true; //Show side arrows?
 
         public Showcase()
         {
@@ -76,13 +72,7 @@ namespace SS14.Client.UserInterface.Components
         {
             set { _selectionGlow.Sprite = value; }
         }
-
-        public int AdditionalColumns { get => additionalColumns; set => additionalColumns = value; }
-        public int ItemSpacing { get => itemSpacing; set => itemSpacing = value; }
-        public Vector2i Size { get => size; set => size = value; }
-        public bool FadeItems { get => fadeItems; set => fadeItems = value; }
-        public bool ShowArrows { get => showArrows; set => showArrows = value; }
-
+        
         public event ShowcaseSelectionChangedHandler SelectionChanged;
 
         protected virtual void _buttonRight_Clicked(ImageButton sender)

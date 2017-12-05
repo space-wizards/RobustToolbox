@@ -33,7 +33,7 @@ namespace SS14.Client.UserInterface.Components
         private Box2i _clientAreaButton;
         private int _currentPos; //The current button position in relation to location of scrollbar.
         private bool _dragging; //Currently dragging the button?
-        private int max = 100; //Maximum value of the bar.
+        public int Max { get; set; } = 100; //Maximum value of the bar.
 
         /// <summary>
         /// Multiplier added to the scroll delta, to increase scrolling speed.
@@ -82,8 +82,6 @@ namespace SS14.Client.UserInterface.Components
                 _raiseEvent = true;
             }
         }
-
-        public int Max { get => max; set => max = value; }
 
         public event ScrollbarChangedHandler ValueChanged;
 

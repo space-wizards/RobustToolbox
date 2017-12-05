@@ -12,9 +12,7 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "Icon";
 
-        public Sprite Icon { get => icon; set => icon = value; }
-
-        private Sprite icon;
+        public Sprite Icon { get; set; }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {

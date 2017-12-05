@@ -20,12 +20,11 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "WearableAnimatedSprite";
         public override uint? NetID => NetIDs.WEARABLE_ANIMATED_SPRITE;
-        private bool isCurrentlyWorn;
-        private Sprite notWornSprite;
-
-        private bool isCurrentlyCarried;
-        private string carriedSprite;
-
+        public bool IsCurrentlyWorn { get; set; }
+        public Sprite NotWornSprite { get; set; }
+        public bool IsCurrentlyCarried { get; set; }
+        public string CarriedSprite { get; set; }
+        
         public override Type StateType => typeof(WearableAnimatedSpriteComponentState);
 
         /// <inheritdoc />
@@ -80,11 +79,6 @@ namespace SS14.Client.GameObjects
                 return base.LocalAABB;
             }
         }
-
-        public bool IsCurrentlyWorn { get => isCurrentlyWorn; set => isCurrentlyWorn = value; }
-        public Sprite NotWornSprite { get => notWornSprite; set => notWornSprite = value; }
-        public bool IsCurrentlyCarried { get => isCurrentlyCarried; set => isCurrentlyCarried = value; }
-        public string CarriedSprite { get => carriedSprite; set => carriedSprite = value; }
 
         public override void Render(Vector2 topLeft, Vector2 bottomRight)
         {

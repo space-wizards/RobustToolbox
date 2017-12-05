@@ -15,13 +15,16 @@ namespace SS14.Client.Placement
     public class PlacementMode
     {
         public readonly PlacementManager pManager;
+        public TileRef CurrentTile { get; set; }
+        public ScreenCoordinates MouseScreen { get ; set; }
+        public LocalCoordinates MouseCoords { get; set; }
+        public Sprite SpriteToDraw { get; set; }
+        public Color ValidPlaceColor { get; set; } = new Color(34, 139, 34); //Default valid color is green
+        public Color InvalidPlaceColor { get; set; } = new Color(34, 34, 139); //Default invalid placement is red
 
-        private TileRef currentTile;
-        private ScreenCoordinates mouseScreen;
-        private LocalCoordinates mouseCoords;
-        private Sprite spriteToDraw;
-        private Color validPlaceColor = new Color(34, 139, 34); //Default valid color is green
-        private Color invalidPlaceColor = new Color(34, 34, 139); //Default invalid placement is red
+        
+        
+
         public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)
@@ -34,12 +37,6 @@ namespace SS14.Client.Placement
             get { return GetType().Name; }
         }
 
-        public TileRef CurrentTile { get => currentTile; set => currentTile = value; }
-        public ScreenCoordinates MouseScreen { get => mouseScreen; set => mouseScreen = value; }
-        public LocalCoordinates MouseCoords { get => mouseCoords; set => mouseCoords = value; }
-        public Sprite SpriteToDraw { get => spriteToDraw; set => spriteToDraw = value; }
-        public Color ValidPlaceColor { get => validPlaceColor; set => validPlaceColor = value; }
-        public Color InvalidPlaceColor { get => invalidPlaceColor; set => invalidPlaceColor = value; }
 
         public virtual bool Update(ScreenCoordinates mouseScreen)
         {

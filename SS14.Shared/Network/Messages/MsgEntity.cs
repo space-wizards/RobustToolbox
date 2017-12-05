@@ -28,9 +28,7 @@ namespace SS14.Shared.Network.Messages
 
         public int EntityId { get; set; }
         public uint NetId { get; set; }
-        public List<object> Parameters { get => parameters; set => parameters = value; }
-
-        private List<object> parameters;
+        public List<object> Parameters { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

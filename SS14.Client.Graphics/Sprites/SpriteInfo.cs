@@ -9,12 +9,8 @@ namespace SS14.Client.Graphics.Sprites
 
     public struct SpriteInfo
     {
-        private string name;
-        private Vector2 offsets;
-        private Vector2 size;
-
-        public Vector2 Offsets { get => offsets; set => offsets = value; }
-        public Vector2 Size { get => size; set => size = value; }
-        public string Name { get => name; set => name = value; }
+        public Vector2 Offsets { get; set; }
+        public Vector2 Size { get; set; }
+        public string Name { get; set; }
     }
 }

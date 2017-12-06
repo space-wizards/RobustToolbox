@@ -31,19 +31,13 @@ namespace SS14.Client.Player
 
         [Dependency]
         private readonly IBaseClient _client;
-
-        /// <summary>
-        ///     Number of active session.
-        ///     This is the cached value of _sessions.Count(s => s != null);
-        /// </summary>
-        private int _sessionCount;
-
+        
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
 
-        public int PlayerCount => _sessionCount;
+        public int PlayerCount => _sessions.Values.Count;
         public int MaxPlayers => _client.GameInfo.ServerMaxPlayers;
         public LocalPlayer LocalPlayer { get; private set; }
         public IEnumerable<PlayerSession> Sessions => _sessions.Values;
@@ -210,7 +204,7 @@ namespace SS14.Client.Player
             PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddEffect(PostProcessingEffectType type, float duration)
+        private void AddEffect(PostProcessingEffectType type, float duration)
         {
             PostProcessingEffect e;
             switch (type)

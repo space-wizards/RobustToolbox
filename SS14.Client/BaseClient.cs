@@ -2,18 +2,17 @@
 using System.Diagnostics;
 using Lidgren.Network;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Players;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
-using IPlayerManager = SS14.Client.Interfaces.Player.IPlayerManager;
 
 namespace SS14.Client
 {
@@ -47,44 +46,20 @@ namespace SS14.Client
             Reset();
         }
 
-        private void OnConnected(object sender, NetChannelArgs args)
-        {
-            // request base info about the server
-            var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
-            msgInfo.PlayerName = "Joe Hello";
-            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
-        }
-
         public void Update() { }
 
         public void Tick() { }
 
         public void Dispose() { }
 
-
-        /// <summary>
-        /// Player session is fully built, player is an active member of the server. Player is prepaired to start 
-        /// receiving states when they join the lobby.
-        /// </summary>
-        /// <param name="session">Fully built session</param>
-        public void PlayerJoinedServer(PlayerSession session)
-        {
-            //TODO: There should be a way to notify the content
-
-            // Server info is the first message to be sent by the server.
-            // Receiving this message asserts that the connection was successful.
-            Debug.Assert(RunLevel < ClientRunLevel.Lobby);
-            OnRunLevelChanged(ClientRunLevel.Lobby);
-        }
-
         public void ConnectToServer(string ip, ushort port)
         {
-            Debug.Assert(RunLevel < ClientRunLevel.Connect);
+            Debug.Assert(RunLevel < ClientRunLevel.Connecting);
             Debug.Assert(!_net.IsConnected);
 
             _net.Startup();
 
-            OnRunLevelChanged(ClientRunLevel.Connect);
+            OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port);
         }
 
@@ -100,14 +75,59 @@ namespace SS14.Client
 
         public event EventHandler<RunLevelChangedEvent> RunLevelChanged;
 
+        private void OnConnected(object sender, NetChannelArgs args)
+        {
+            // request base info about the server
+            var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
+            msgInfo.PlayerName = "Joe Hello";
+            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        /// <summary>
+        ///     Player session is fully built, player is an active member of the server. Player is prepaired to start
+        ///     receiving states when they join the lobby.
+        /// </summary>
+        /// <param name="session">Session of the player.</param>
+        public void PlayerJoinedServer(PlayerSession session)
+        {
+            Debug.Assert(RunLevel < ClientRunLevel.Connected);
+            OnRunLevelChanged(ClientRunLevel.Connected);
+
+            //TODO: Notify Content
+        }
+
+        /// <summary>
+        ///     Player is joining the lobby for whatever reason.
+        /// </summary>
+        /// <param name="session">Session of the player.</param>
+        public void PlayerJoinedLobby(PlayerSession session)
+        {
+            Debug.Assert(RunLevel >= ClientRunLevel.Connected);
+            OnRunLevelChanged(ClientRunLevel.Lobby);
+
+            //TODO: Notify Content
+        }
+
+        /// <summary>
+        ///     Player is joining the game (usually from lobby.)
+        /// </summary>
+        /// <param name="session">Session of the player.</param>
+        public void PlayerJoinedGame(PlayerSession session)
+        {
+            Debug.Assert(RunLevel >= ClientRunLevel.Lobby);
+            OnRunLevelChanged(ClientRunLevel.Ingame);
+
+            //TODO: Notify Content
+        }
+
         private void Reset()
         {
             OnRunLevelChanged(ClientRunLevel.Initialize);
         }
-        
+
         private void OnConnectFailed(object sender, NetConnectFailArgs args)
         {
-            Debug.Assert(RunLevel == ClientRunLevel.Connect);
+            Debug.Assert(RunLevel == ClientRunLevel.Connecting);
             Reset();
         }
 
@@ -141,21 +161,29 @@ namespace SS14.Client
             _playMan.Startup(_net.ServerChannel);
 
             _playMan.LocalPlayer.Index = info.Index;
-            
-            _playMan.LocalPlayer.StatusChanged += (obj, eventArgs) =>
-            {
-                // player finished fully connecting to the server.
-                if (eventArgs.OldStatus == SessionStatus.Connected)
-                {
-                    PlayerJoinedServer(_playMan.LocalPlayer.Session);
-                }
 
-                if (eventArgs.NewStatus == SessionStatus.InLobby)
-                {
-                    var stateMan = IoCManager.Resolve<IStateManager>();
-                    stateMan.RequestStateChange<Lobby>();
-                }
-            };
+            _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+        }
+
+        private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
+        {
+            // player finished fully connecting to the server.
+            if (eventArgs.OldStatus == SessionStatus.Connected)
+                PlayerJoinedServer(_playMan.LocalPlayer.Session);
+
+            if (eventArgs.NewStatus == SessionStatus.InLobby)
+            {
+                var stateMan = IoCManager.Resolve<IStateManager>();
+                stateMan.RequestStateChange<Lobby>();
+                PlayerJoinedLobby(_playMan.LocalPlayer.Session);
+            }
+
+            if (eventArgs.NewStatus == SessionStatus.InGame)
+            {
+                var stateMan = IoCManager.Resolve<IStateManager>();
+                stateMan.RequestStateChange<GameScreen>();
+                PlayerJoinedGame(_playMan.LocalPlayer.Session);
+            }
         }
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
@@ -171,9 +199,11 @@ namespace SS14.Client
     {
         Error = 0,
         Initialize,
-        Connect,
+        Connecting,
+        Connected,
         Lobby,
-        Ingame
+        Ingame,
+        ChangeLevel
     }
 
     public class RunLevelChangedEvent : EventArgs

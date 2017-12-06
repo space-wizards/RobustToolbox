@@ -345,10 +345,13 @@ namespace SS14.Client.State.States
 
             if (PlayerManager.LocalPlayer != null)
             {
-                var newpos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
-                if (CluwneLib.Camera.Position != newpos)
+                var newPos = Vector2.Zero;
+                if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                    newPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+
+                if (CluwneLib.Camera.Position != newPos)
                 {
-                    CluwneLib.Camera.Position = newpos;
+                    CluwneLib.Camera.Position = newPos;
                     MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
                     UpdateView();
                 }
@@ -379,7 +382,10 @@ namespace SS14.Client.State.States
 
             // vp is the rectangle in which we can render in world space.
             var vp = CluwneLib.WorldViewport;
-            var map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+
+            int map = 0;
+            if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
 
             if (!bFullVision)
             {
@@ -659,7 +665,7 @@ namespace SS14.Client.State.States
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (PlayerManager.LocalPlayer != null && PlayerManager.LocalPlayer.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
+            if (PlayerManager.LocalPlayer.ControlledEntity != null && PlayerManager.LocalPlayer.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
                 MousePosScreen = new ScreenCoordinates(e.NewPosition, transform.MapID);
             }
@@ -1087,7 +1093,10 @@ namespace SS14.Client.State.States
         /// </summary>
         private void DrawTiles(Box2 vision)
         {
-            var position = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+            LocalCoordinates position = new LocalCoordinates();
+            if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                position = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+
             var grids = position.Map.FindGridsIntersecting(vision); //Collect all grids in vision range
 
             //Draw the default grid as the background which will be drawn over

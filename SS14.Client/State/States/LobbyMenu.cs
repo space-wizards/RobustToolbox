@@ -5,13 +5,11 @@ using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Player;
 using SS14.Client.UserInterface;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
-using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 
@@ -236,7 +234,7 @@ namespace SS14.Client.State.States
                 }
                 else
                 {
-                    labelText = labelText + $" <EMPTY>";
+                    labelText = labelText + " <EMPTY>";
                 }
 
                 var newLabel = new Label(labelText, "MICROGBE");
@@ -317,11 +315,6 @@ namespace SS14.Client.State.States
 
             var clBase = IoCManager.Resolve<IBaseClient>();
             UpdateServerInfo(clBase.GameInfo);
-        }
-
-        private void HandleJoinGame()
-        {
-            StateManager.RequestStateChange<GameScreen>();
         }
 
         private void _btnReady_Clicked(ImageButton sender)

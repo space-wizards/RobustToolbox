@@ -415,8 +415,8 @@ namespace SS14.Shared.Network
 
         public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
         {
-            foreach (var connection in _netPeer.Connections)
-                ServerSendMessage(message, connection, method);
+            if(_netPeer.Connections.Count > 0)
+                _netPeer.SendMessage(message, _netPeer.Connections, method, 0);
         }
 
         public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)

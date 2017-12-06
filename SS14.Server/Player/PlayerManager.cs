@@ -191,7 +191,7 @@ namespace SS14.Server.Player
         {
             foreach (PlayerSession s in _sessions)
             {
-                s.DetachFromEntity();
+                s?.DetachFromEntity();
             }
         }
 
@@ -205,7 +205,7 @@ namespace SS14.Server.Player
         {
             //TODO: This needs to be moved to the PVS system.
             return
-                _sessions.Where(x =>
+                _sessions.Where(x => x != null &&
                     x.attachedEntity != null &&
                     position.InRange(x.attachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
@@ -221,7 +221,7 @@ namespace SS14.Server.Player
             //TODO: Lobby system needs to be moved to Content Assemblies.
             return
                 _sessions.Where(
-                    x => x.Status == SessionStatus.InLobby)
+                    x => x != null && x.Status == SessionStatus.InLobby)
                     .Cast<IPlayerSession>()
                     .ToList();
         }

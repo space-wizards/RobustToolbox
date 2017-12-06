@@ -1127,7 +1127,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                 where c.DrawDepth < DrawDepth.MobBase &&
+                                                                 where c.Owner.Initialized &&
+                                                                       c.DrawDepth < DrawDepth.MobBase &&
                                                                        c.MapID == argMapLevel
                                                                  select c;
 
@@ -1136,7 +1137,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending
-                                                                 where c.DrawDepth >= DrawDepth.MobBase &&
+                                                                 where c.Owner.Initialized &&
+                                                                       c.DrawDepth >= DrawDepth.MobBase &&
                                                                        c.DrawDepth < DrawDepth.WallTops &&
                                                                        c.MapID == argMapLevel
                                                                  select c;
@@ -1146,7 +1148,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
                                                                    orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                   where c.DrawDepth >= DrawDepth.WallTops &&
+                                                                   where c.Owner.Initialized &&
+                                                                         c.DrawDepth >= DrawDepth.WallTops &&
                                                                          c.MapID == argMapLevel
                                                                    select c;
 

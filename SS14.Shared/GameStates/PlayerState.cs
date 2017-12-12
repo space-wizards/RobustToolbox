@@ -7,11 +7,13 @@ namespace SS14.Shared.GameStates
     [Serializable, NetSerializable]
     public class PlayerState
     {
-        public int? ControlledEntity;
+        public PlayerIndex Index;
+        public long Uuid;
+
         public string Name;
         public SessionStatus Status;
-        public long UniqueIdentifier;
+        public short Ping;
 
-        public PlayerIndex Index;
+        public int? ControlledEntity;
     }
 }

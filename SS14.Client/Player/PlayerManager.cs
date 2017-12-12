@@ -18,12 +18,13 @@ using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.Player
 {
+    /// <summary>
+    ///     Here's the player controller. This will handle attaching GUIS and input to controllable things.
+    ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
+    ///     This class also communicates with the server to let the server control what entity it is attached to.
+    /// </summary>
     public class PlayerManager : IPlayerManager
     {
-        /* Here's the player controller. This will handle attaching GUIS and input to controllable things.
-         * Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
-         * This class also communicates with the server to let the server control what entity it is attached to. */
-
         private readonly List<PostProcessingEffect> _effects = new List<PostProcessingEffect>();
 
         [Dependency]
@@ -31,7 +32,7 @@ namespace SS14.Client.Player
 
         [Dependency]
         private readonly IBaseClient _client;
-        
+
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
@@ -49,9 +50,30 @@ namespace SS14.Client.Player
             _sessions = new Dictionary<int, PlayerSession>();
 
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int) MsgPlayerListReq.ID, message =>
-                Logger.Error($"[SRV] Unhandled NetMessage type: {message.MsgId}"));
+                Logger.Error($"[PLY] Unhandled NetMessage type: {message.MsgId}"));
 
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandlePlayerList);
+
+            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, HandleSessionMessage);
+        }
+
+        /// <summary>
+        ///     Handles an incoming session NetMsg from the server.
+        /// </summary>
+        private void HandleSessionMessage(NetMessage netMessage)
+        {
+            var msg = (MsgSession) netMessage;
+
+            switch (msg.MsgType)
+            {
+                case PlayerSessionMessage.AttachToEntity:
+                    break;
+                case PlayerSessionMessage.JoinLobby:
+                    break;
+                case PlayerSessionMessage.AddPostProcessingEffect:
+                    AddEffect(msg.PpType, msg.PpDuration);
+                    break;
+            }
         }
 
         public void Startup(INetChannel channel)
@@ -92,37 +114,18 @@ namespace SS14.Client.Player
             Debug.Assert(_network.IsConnected, "Received player state before fully connected");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
+            
+            var myState = list.FirstOrDefault(s => s.Index == LocalPlayer.Index);
 
-            var myState = list.FirstOrDefault(s => s.UniqueIdentifier == _network.Peer.UniqueIdentifier);
-            if (myState == null)
-                return;
-            if (myState.ControlledEntity != null &&
-                (LocalPlayer.ControlledEntity == null ||
-                 LocalPlayer.ControlledEntity != null && myState.ControlledEntity != LocalPlayer.ControlledEntity.Uid))
-                LocalPlayer.AttachEntity(
-                    IoCManager.Resolve<IEntityManager>().GetEntity((int) myState.ControlledEntity));
-
-            if (LocalPlayer.Session.Status != myState.Status)
-                LocalPlayer.SwitchState(myState.Status);
-        }
-
-        public void HandleNetworkMessage(NetIncomingMessage message)
-        {
-            var messageType = (PlayerSessionMessage) message.ReadByte();
-            switch (messageType)
+            if (myState != null)
             {
-                case PlayerSessionMessage.AttachToEntity:
-                    break;
-                case PlayerSessionMessage.JoinLobby:
-                    break;
-                case PlayerSessionMessage.AddPostProcessingEffect:
-                    var effectType = (PostProcessingEffectType) message.ReadInt32();
-                    var duration = message.ReadFloat();
-                    AddEffect(effectType, duration);
-                    break;
+                UpdateAttachedEntity(myState.ControlledEntity);
+                UpdateSessionStatus(myState.Status);
             }
-        }
 
+            UpdatePlayerList(list);
+        }
+        
         /// <summary>
         ///     Verb sender
         ///     If UID is 0, it means its a global verb.
@@ -131,28 +134,63 @@ namespace SS14.Client.Player
         /// <param name="uid">a target entity's Uid</param>
         public void SendVerb(string verb, int uid)
         {
-            var message = _network.CreateMessage();
-            message.Write((byte) NetMessages.PlayerSessionMessage);
-            message.Write((byte) PlayerSessionMessage.Verb);
-            message.Write(verb);
-            message.Write(uid);
+            //TODO: Convert this to the concmd system.
+
+            var message = _network.CreateNetMessage<MsgSession>();
+            message.MsgType = PlayerSessionMessage.Verb;
+            message.Uid = uid;
+            message.Verb = verb;
             _network.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
         }
 
-        // Player list came in from the server.
+        /// <summary>
+        ///     Compares the server sessionStatus to the client one, and updates if needed.
+        /// </summary>
+        private void UpdateSessionStatus(SessionStatus myStateStatus)
+        {
+            if (LocalPlayer.Session.Status != myStateStatus)
+                LocalPlayer.SwitchState(myStateStatus);
+        }
+
+        /// <summary>
+        ///     Compares the server attachedEntity to the client one, and updates if needed.
+        /// </summary>
+        /// <param name="entity">AttachedEntity in the server session.</param>
+        private void UpdateAttachedEntity(int? entity)
+        {
+            if (entity != null &&
+                (LocalPlayer.ControlledEntity == null ||
+                 LocalPlayer.ControlledEntity != null && entity != LocalPlayer.ControlledEntity.Uid))
+                LocalPlayer.AttachEntity(
+                    IoCManager.Resolve<IEntityManager>().GetEntity((int) entity));
+        }
+
+        /// <summary>
+        ///     Handles the incoming PlayerList message from the server.
+        /// </summary>
         private void HandlePlayerList(NetMessage netMessage)
         {
             //update sessions with player info
             var msg = (MsgPlayerList) netMessage;
 
+            UpdatePlayerList(msg.Plyrs);
+        }
+
+        /// <summary>
+        ///     Compares the server playerlist to the client one, and updates if needed.
+        /// </summary>
+        private void UpdatePlayerList(List<PlayerState> remotePlayers)
+        {
+            bool dirty = false;
+
             // diff the sessions to the Plyers
-            for(var i=0; i<MaxPlayers; i++)
+            for (var i = 0; i < MaxPlayers; i++)
             {
                 // try to get local session
                 var cSession = _sessions.ContainsKey(i) ? _sessions[i] : null;
 
                 // should these be mapped NetId -> PlyInfo?
-                var info = msg.Plyrs.FirstOrDefault(plyr => plyr.Index == i);
+                var info = remotePlayers.FirstOrDefault(plyr => plyr.Index == i);
 
                 // slot already occupied
                 if (cSession != null && info != null)
@@ -160,25 +198,33 @@ namespace SS14.Client.Player
                     if (info.Uuid != cSession.Uuid) // not the same player
                     {
                         Debug.Assert(LocalPlayer.Index != info.Index, "my uuid should not change");
+                        dirty = true;
 
                         _sessions.Remove(info.Index);
                         var newSession = new PlayerSession(this, info.Index, info.Uuid);
                         newSession.Name = info.Name;
-                        newSession.Status = (SessionStatus) info.Status;
+                        newSession.Status = info.Status;
                         newSession.Ping = info.Ping;
                         _sessions.Add(info.Index, newSession);
                     }
                     else // same player, update info
                     {
+                        if (cSession.Name != info.Name ||
+                            cSession.Status != info.Status ||
+                            cSession.Ping != info.Ping)
+                            dirty = true;
+
                         cSession.Name = info.Name;
-                        cSession.Status = (SessionStatus) info.Status;
+                        cSession.Status = info.Status;
                         cSession.Ping = info.Ping;
                     }
                 }
                 // clear slot, player left
-                else if(cSession != null)
+                else if (cSession != null)
                 {
                     Debug.Assert(LocalPlayer.Index != i, "I'm still connected to the server, but i left?");
+                    dirty = true;
+
                     _sessions.Remove(cSession.Index);
                 }
 
@@ -186,10 +232,11 @@ namespace SS14.Client.Player
                 else if (info != null)
                 {
                     Debug.Assert(LocalPlayer.Index != info.Index || LocalPlayer.Session == null, "I already have a session, why am i getting a new one?");
+                    dirty = true;
 
                     var newSession = new PlayerSession(this, info.Index, info.Uuid);
                     newSession.Name = info.Name;
-                    newSession.Status = (SessionStatus)info.Status;
+                    newSession.Status = info.Status;
                     newSession.Ping = info.Ping;
                     _sessions.Add(info.Index, newSession);
 
@@ -200,8 +247,10 @@ namespace SS14.Client.Player
                 // else they are both null, continue
             }
 
+
             //raise event
-            PlayerListUpdated?.Invoke(this, EventArgs.Empty);
+            if(dirty)
+                PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         private void AddEffect(PostProcessingEffectType type, float duration)

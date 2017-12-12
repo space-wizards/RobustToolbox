@@ -776,9 +776,6 @@ namespace SS14.Client.State.States
                     var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessages.PlayerSessionMessage:
-                            PlayerManager.HandleNetworkMessage(message);
-                            break;
                         case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;

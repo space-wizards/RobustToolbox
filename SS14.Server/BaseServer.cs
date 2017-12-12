@@ -684,18 +684,18 @@ namespace SS14.Server
             var players = plyMgr.GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
 
-            var list = new List<MsgPlayerList.PlyInfo>();
+            var list = new List<PlayerState>();
             foreach (var client in players)
             {
                 if(client == null)
                     continue;
 
-                var info = new MsgPlayerList.PlyInfo
+                var info = new PlayerState
                 {
                     Index = client.Index,
                     Uuid = client.ConnectedClient.ConnectionId,
                     Name = client.Name,
-                    Status = (byte)client.Status,
+                    Status = client.Status,
                     Ping = client.ConnectedClient.Ping
                 };
                 list.Add(info);

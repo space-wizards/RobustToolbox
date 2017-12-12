@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using SS14.Client.Graphics.Render;
 using SS14.Client.Player;
 using SS14.Shared.GameStates;
@@ -27,8 +26,7 @@ namespace SS14.Client.Interfaces.Player
 
         //TODO: Move to console system
         void SendVerb(string verb, int uid);
-
-        void HandleNetworkMessage(NetIncomingMessage message);
+        
         void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(List<PlayerState> list);
     }

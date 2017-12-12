@@ -1,5 +1,4 @@
 ﻿using SS14.Shared;
-using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player

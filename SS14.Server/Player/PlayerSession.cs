@@ -29,7 +29,7 @@ namespace SS14.Server.Player
 
             PlayerState = new PlayerState()
             {
-                UniqueIdentifier = client.ConnectionId,
+                Uuid = client.ConnectionId,
                 Index = index,
             };
 

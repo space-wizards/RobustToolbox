@@ -683,7 +683,6 @@ namespace SS14.Server
             var plyMgr = IoCManager.Resolve<IPlayerManager>();
             var players = plyMgr.GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
-            netMsg.PlyCount = (byte)players.Length;
 
             var list = new List<MsgPlayerList.PlyInfo>();
             foreach (var client in players)
@@ -702,6 +701,7 @@ namespace SS14.Server
                 list.Add(info);
             }
             netMsg.Plyrs = list;
+            netMsg.PlyCount = (byte) list.Count;
 
             channel.SendMessage(netMsg);
 

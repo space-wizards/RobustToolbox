@@ -24,15 +24,16 @@ namespace SS14.Client
         [Dependency]
         private readonly IPlayerManager _playMan;
 
-        /// <summary>
-        ///     Default port that the client tries to connect to if no other port is specified.
-        /// </summary>
+        /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
 
+        /// <inheritdoc />
         public ClientRunLevel RunLevel { get; private set; }
 
+        /// <inheritdoc />
         public ServerInfo GameInfo { get; private set; }
 
+        /// <inheritdoc />
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
@@ -46,12 +47,16 @@ namespace SS14.Client
             Reset();
         }
 
+        /// <inheritdoc />
         public void Update() { }
 
+        /// <inheritdoc />
         public void Tick() { }
 
+        /// <inheritdoc />
         public void Dispose() { }
 
+        /// <inheritdoc />
         public void ConnectToServer(string ip, ushort port)
         {
             Debug.Assert(RunLevel < ClientRunLevel.Connecting);
@@ -63,6 +68,7 @@ namespace SS14.Client
             _net.ClientConnect(ip, port);
         }
 
+        /// <inheritdoc />
         public void DisconnectFromServer(string reason)
         {
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
@@ -73,6 +79,7 @@ namespace SS14.Client
             _net.ClientDisconnect(reason);
         }
 
+        /// <inheritdoc />
         public event EventHandler<RunLevelChangedEvent> RunLevelChanged;
 
         private void OnConnected(object sender, NetChannelArgs args)
@@ -88,7 +95,7 @@ namespace SS14.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        public void PlayerJoinedServer(PlayerSession session)
+        private void PlayerJoinedServer(PlayerSession session)
         {
             Debug.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
@@ -100,7 +107,7 @@ namespace SS14.Client
         ///     Player is joining the lobby for whatever reason.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        public void PlayerJoinedLobby(PlayerSession session)
+        private void PlayerJoinedLobby(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Lobby);
@@ -112,7 +119,7 @@ namespace SS14.Client
         ///     Player is joining the game (usually from lobby.)
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        public void PlayerJoinedGame(PlayerSession session)
+        private void PlayerJoinedGame(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Lobby);
             OnRunLevelChanged(ClientRunLevel.Ingame);

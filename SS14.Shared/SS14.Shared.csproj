@@ -115,8 +115,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BoundKeyEventArgs.cs" />
-    <Compile Include="Interfaces\Players\IClientPlayerManager.cs" />
-    <Compile Include="Interfaces\Players\IPlayerManager.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVar.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />
@@ -157,7 +155,6 @@
     <Compile Include="Interfaces\Physics\ICollidable.cs" />
     <Compile Include="Interfaces\Physics\ICollider.cs" />
     <Compile Include="Interfaces\Physics\ICollisionManager.cs" />
-    <Compile Include="Interfaces\Players\IServerPlayerManager.cs" />
     <Compile Include="Interfaces\Reflection\IReflectionManager.cs" />
     <Compile Include="Interfaces\Serialization\ISS14Serializer.cs" />
     <Compile Include="Interfaces\Map\IMapChunk.cs" />
@@ -231,8 +228,7 @@
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
-    <Compile Include="Interfaces\Players\IPlayerSession.cs" />
-    <Compile Include="Players\PlayerSession.cs" />
+    <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
@@ -240,7 +236,6 @@
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
-    <Compile Include="Players\PlayerManager.cs" />
     <Compile Include="Timing\GameTiming.cs" />
     <Compile Include="TypeEventArgs.cs" />
     <!--

@@ -1,16 +1,7 @@
 ﻿using System;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Players;
 
 namespace SS14.Shared.Players
 {
-    internal class PlayerSession : IPlayerSession
-    {
-        public INetChannel NetChannel { get; }
-
-        public int Entity { get; }
-    }
-
     [Serializable]
     public struct PlayerIndex
     {

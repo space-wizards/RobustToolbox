@@ -26,7 +26,7 @@ namespace SS14.Client.Interfaces.Player
 
         //TODO: Move to console system
         void SendVerb(string verb, int uid);
-        
+
         void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(List<PlayerState> list);
     }

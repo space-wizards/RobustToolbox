@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
@@ -7,7 +6,6 @@ using SS14.Client.Player;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
@@ -256,53 +254,7 @@ namespace SS14.Client.State.States
             _lblPlayersInfo.Text = info.ServerPlayerCount + " / " + info.ServerMaxPlayers;
             _lblPortInfo.Text = info.ServerPort.ToString();
         }
-
-#if _delme
-        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
-        {
-            var message = args.RawMessage;
-            switch (message.MessageType)
-            {
-                case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
-                    if (statMsg == NetConnectionStatus.Disconnected)
-                    {
-                        var disconnectMessage = message.ReadString();
-                        UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                            UserInterfaceManager,
-                            ResourceCache,
-                            disconnectMessage));
-                    }
-                    break;
-
-                case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
-                    switch (messageType)
-                    {
-                        case NetMessages.LobbyChat:
-                            //TODO: Send player messages to a lobby chat
-                            break;
-
-                        case NetMessages.ChatMessage:
-                            HandleChatMessage(message);
-                            break;
-
-                        case NetMessages.JoinGame:
-                            HandleJoinGame();
-                            break;
-                    }
-                    break;
-            }
-        }
-#endif
-        private void HandleChatMessage(NetIncomingMessage msg)
-        {
-            var channel = (ChatChannel)msg.ReadByte();
-            var text = msg.ReadString();
-            var message = "[" + channel + "] " + text;
-            _lobbyChat.AddLine(message, ChatChannel.Lobby);
-        }
-
+        
         private void HandlePlayerList(object sender, EventArgs args)
         {
             UpdateInfo();

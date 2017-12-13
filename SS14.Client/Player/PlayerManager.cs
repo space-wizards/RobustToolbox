@@ -54,26 +54,7 @@ namespace SS14.Client.Player
 
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandlePlayerList);
 
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, HandleSessionMessage);
-        }
-
-        /// <summary>
-        ///     Handles an incoming session NetMsg from the server.
-        /// </summary>
-        private void HandleSessionMessage(NetMessage netMessage)
-        {
-            var msg = (MsgSession) netMessage;
-
-            switch (msg.MsgType)
-            {
-                case PlayerSessionMessage.AttachToEntity:
-                    break;
-                case PlayerSessionMessage.JoinLobby:
-                    break;
-                case PlayerSessionMessage.AddPostProcessingEffect:
-                    AddEffect(msg.PpType, msg.PpDuration);
-                    break;
-            }
+            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int) MsgSession.ID, HandleSessionMessage);
         }
 
         public void Startup(INetChannel channel)
@@ -114,7 +95,7 @@ namespace SS14.Client.Player
             Debug.Assert(_network.IsConnected, "Received player state before fully connected");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
-            
+
             var myState = list.FirstOrDefault(s => s.Index == LocalPlayer.Index);
 
             if (myState != null)
@@ -125,7 +106,7 @@ namespace SS14.Client.Player
 
             UpdatePlayerList(list);
         }
-        
+
         /// <summary>
         ///     Verb sender
         ///     If UID is 0, it means its a global verb.
@@ -141,6 +122,25 @@ namespace SS14.Client.Player
             message.Uid = uid;
             message.Verb = verb;
             _network.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        /// <summary>
+        ///     Handles an incoming session NetMsg from the server.
+        /// </summary>
+        private void HandleSessionMessage(NetMessage netMessage)
+        {
+            var msg = (MsgSession) netMessage;
+
+            switch (msg.MsgType)
+            {
+                case PlayerSessionMessage.AttachToEntity:
+                    break;
+                case PlayerSessionMessage.JoinLobby:
+                    break;
+                case PlayerSessionMessage.AddPostProcessingEffect:
+                    AddEffect(msg.PpType, msg.PpDuration);
+                    break;
+            }
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace SS14.Client.Player
         /// </summary>
         private void UpdatePlayerList(List<PlayerState> remotePlayers)
         {
-            bool dirty = false;
+            var dirty = false;
 
             // diff the sessions to the Plyers
             for (var i = 0; i < MaxPlayers; i++)
@@ -201,7 +201,7 @@ namespace SS14.Client.Player
                         dirty = true;
 
                         _sessions.Remove(info.Index);
-                        var newSession = new PlayerSession(this, info.Index, info.Uuid);
+                        var newSession = new PlayerSession(info.Index, info.Uuid);
                         newSession.Name = info.Name;
                         newSession.Status = info.Status;
                         newSession.Ping = info.Ping;
@@ -209,11 +209,10 @@ namespace SS14.Client.Player
                     }
                     else // same player, update info
                     {
-                        if (cSession.Name != info.Name ||
-                            cSession.Status != info.Status ||
-                            cSession.Ping != info.Ping)
-                            dirty = true;
+                        if (cSession.Name == info.Name && cSession.Status == info.Status && cSession.Ping == info.Ping)
+                            continue;
 
+                        dirty = true;
                         cSession.Name = info.Name;
                         cSession.Status = info.Status;
                         cSession.Ping = info.Ping;
@@ -234,7 +233,7 @@ namespace SS14.Client.Player
                     Debug.Assert(LocalPlayer.Index != info.Index || LocalPlayer.Session == null, "I already have a session, why am i getting a new one?");
                     dirty = true;
 
-                    var newSession = new PlayerSession(this, info.Index, info.Uuid);
+                    var newSession = new PlayerSession(info.Index, info.Uuid);
                     newSession.Name = info.Name;
                     newSession.Status = info.Status;
                     newSession.Ping = info.Ping;
@@ -243,13 +242,11 @@ namespace SS14.Client.Player
                     if (LocalPlayer.Index == info.Index)
                         LocalPlayer.Session = newSession;
                 }
-
                 // else they are both null, continue
             }
 
-
             //raise event
-            if(dirty)
+            if (dirty)
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
 

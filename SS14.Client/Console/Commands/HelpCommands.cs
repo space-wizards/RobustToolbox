@@ -1,16 +1,9 @@
 ﻿using OpenTK.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SS14.Client.Interfaces.Console;
-using SS14.Shared.IoC;
-using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.Interfaces.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.IoC;
 
-namespace SS14.Client.Console
+namespace SS14.Client.Console.Commands
 {
     class HelpCommand : IConsoleCommand
     {

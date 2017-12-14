@@ -2,13 +2,11 @@
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 
+using System;
 using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.UserInterface;
-using SS14.Shared.IoC;
-using System;
 
-namespace SS14.Client.Console
+namespace SS14.Client.Console.Commands
 {
     class ClearCommand : IConsoleCommand
     {

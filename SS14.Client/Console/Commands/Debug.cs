@@ -1,22 +1,22 @@
-using OpenTK.Graphics;
-using SS14.Client.GameObjects;
-using SS14.Client.Graphics.Render;
-using SS14.Client.Interfaces.Console;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using SS14.Shared.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using OpenTK.Graphics;
+using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
+using SS14.Client.Graphics.Render;
+using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.State;
 using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
+using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.IoC;
 
-namespace SS14.Client.Console
+namespace SS14.Client.Console.Commands
 {
     class DumpEntitiesCommand : IConsoleCommand
     {

@@ -20,6 +20,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Diagnostics;
 using System.IO;
+using SS14.Client.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
@@ -66,6 +67,8 @@ namespace SS14.Client
         private readonly IPlacementManager _placementManager;
         [Dependency]
         private readonly IBaseClient _client;
+        [Dependency]
+        private readonly IClientConsole _console;
 
         #endregion Fields
 
@@ -109,6 +112,7 @@ namespace SS14.Client
             prototypeManager.LoadDirectory(@"Prototypes");
             prototypeManager.Resync();
             _networkManager.Initialize(false);
+            _console.Initialize();
             _netGrapher.Initialize();
             _userInterfaceManager.Initialize();
             _mapManager.Initialize();

@@ -33,6 +33,7 @@ using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Console;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -535,7 +536,7 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.F5)
             {
-                PlayerManager.SendVerb("save", 0);
+                IoCManager.Resolve<IClientConsole>().ProcessCommand("save");
             }
             if (e.Key == Keyboard.Key.F6)
             {

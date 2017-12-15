@@ -1,7 +1,6 @@
 ﻿using System;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
 using System.Collections.Generic;
 
@@ -10,8 +9,7 @@ namespace SS14.Client.Interfaces.UserInterface
     public interface IUserInterfaceManager
     {
         IDragDropInfo DragInfo { get; }
-
-        IDebugConsole Console { get; }
+        
         void Initialize();
 
         void AddComponent(Control component);

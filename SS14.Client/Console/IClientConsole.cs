@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS14.Client.Interfaces.Console;
 
 namespace SS14.Client.Console
 {
@@ -17,5 +15,15 @@ namespace SS14.Client.Console
         ///     Resets the console to a post-initialized state.
         /// </summary>
         void Reset();
+
+
+        event EventHandler<AddStringArgs> AddString;
+        event EventHandler ClearText;
+
+        IReadOnlyDictionary<string, IConsoleCommand> Commands { get; }
+
+        void ProcessCommand(string text);
+
+        void SendServerCommandRequest();
     }
 }

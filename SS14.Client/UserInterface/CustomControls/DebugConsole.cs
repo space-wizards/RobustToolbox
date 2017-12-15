@@ -4,14 +4,14 @@ using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
+using SS14.Shared.IoC;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
     public class DebugConsole : ScrollableContainer, IDebugConsole
     {
-        private readonly ClientConsole _console;
-
+        private readonly IClientConsole _console;
         private readonly Textbox _txtInput;
         private readonly ListPanel _historyList;
 
@@ -30,6 +30,7 @@ namespace SS14.Client.UserInterface.CustomControls
         public DebugConsole(Vector2i size)
             : base(size)
         {
+            _console = IoCManager.Resolve<IClientConsole>();
             _txtInput = new Textbox(size.X)
             {
                 ClearFocusOnSubmit = false,
@@ -44,10 +45,7 @@ namespace SS14.Client.UserInterface.CustomControls
             BackgroundColor = new Color4(64, 64, 64, 200);
             DrawBackground = true;
             DrawBorder = true;
-
-            _console = new ClientConsole();
-            _console.Initialize();
-
+            
             _console.AddString += (sender, args) => AddLine(args.Text, args.Color);
             _console.ClearText += (sender, args) => Clear();
         }

@@ -120,7 +120,6 @@
     public enum PlayerSessionMessage
     {
         AttachToEntity,
-        Verb,
         JoinLobby,
         AddPostProcessingEffect
     }

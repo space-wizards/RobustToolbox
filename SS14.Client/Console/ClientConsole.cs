@@ -13,7 +13,7 @@ using SS14.Shared.Utility;
 
 namespace SS14.Client.Console
 {
-    internal class AddStringArgs : EventArgs
+    public class AddStringArgs : EventArgs
     {
         public string Text { get; }
         public Color4 Color { get; }
@@ -25,19 +25,20 @@ namespace SS14.Client.Console
         }
     }
 
-    internal class ClientConsole : IClientConsole, IDebugConsole
+    public class ClientConsole : IClientConsole, IDebugConsole
     {
+        [Dependency]
+        private readonly IClientNetManager _network;
+
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
 
         /// <inheritdoc />
         public void Initialize()
         {
-            var net = IoCManager.Resolve<IClientNetManager>();
-
-            net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int) MsgConCmdReg.ID, HandleConCmdReg);
-            net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int) MsgConCmdAck.ID, HandleConCmdAck);
-            net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int) MsgConCmd.ID);
+            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, HandleConCmdReg);
+            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleConCmdAck);
+            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID);
 
             Reset();
         }

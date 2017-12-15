@@ -10,6 +10,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Console;
 
 namespace SS14.Client.State.States
 {
@@ -271,7 +272,7 @@ namespace SS14.Client.State.States
 
         private void _btnReady_Clicked(ImageButton sender)
         {
-            IoCManager.Resolve<IPlayerManager>().SendVerb("joingame", 0);
+            IoCManager.Resolve<IClientConsole>().ProcessCommand("joingame");
         }
 
         private void _btnBack_Clicked(ImageButton sender)

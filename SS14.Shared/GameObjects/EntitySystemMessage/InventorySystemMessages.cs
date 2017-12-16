@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SS14.Shared.GameObjects
 {
@@ -9,8 +9,8 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemPickUp : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
 
         public InventorySystemPickUp()
         {
@@ -23,9 +23,9 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemDrop : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
-        public int uidDroppingInventory;
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
+        public int UidDroppingInventory { get; set; }
 
         public InventorySystemDrop()
         {
@@ -38,10 +38,10 @@ namespace SS14.Shared.GameObjects
     [Serializable]
     public class InventorySystemExchange : EntitySystemMessage
     {
-        public int uidUser;
-        public int uidObject;
-        public int uidPreviousInventory;
-        public int uidNewInventory;
+        public int UidUser { get; set; }
+        public int UidObject { get; set; }
+        public int UidPreviousInventory { get; set; }
+        public int UidNewInventory { get; set; }
 
         public InventorySystemExchange()
         {

@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface.Controls
 
         private readonly List<Control> _children = new List<Control>();
 
-        public object UserData;
+        public object UserData { get; set; }
         private Align _align;
         protected Box2i _clientArea;
         protected Box2i _localBounds;

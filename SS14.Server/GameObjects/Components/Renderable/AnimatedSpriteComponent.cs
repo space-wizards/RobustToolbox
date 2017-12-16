@@ -15,7 +15,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.ANIMATED_SPRITE;
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves;
-        public string SpriteName;
+        public string SpriteName { get; set; }
         private string _currentAnimation;
         public string CurrentAnimation
         {
@@ -43,7 +43,7 @@ namespace SS14.Server.GameObjects
             }
             set { _loop = value; }
         }
-        public DrawDepth DrawDepth = DrawDepth.FloorTiles;
+        public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
         public bool Visible { get; set; }
 
         public AnimatedSpriteComponent()

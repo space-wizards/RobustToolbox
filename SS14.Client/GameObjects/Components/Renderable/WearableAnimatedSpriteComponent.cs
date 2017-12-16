@@ -20,12 +20,11 @@ namespace SS14.Client.GameObjects
     {
         public override string Name => "WearableAnimatedSprite";
         public override uint? NetID => NetIDs.WEARABLE_ANIMATED_SPRITE;
-        public bool IsCurrentlyWorn;
-        public Sprite NotWornSprite;
-
-        public bool IsCurrentlyCarried;
-        public string CarriedSprite;
-
+        public bool IsCurrentlyWorn { get; set; }
+        public Sprite NotWornSprite { get; set; }
+        public bool IsCurrentlyCarried { get; set; }
+        public string CarriedSprite { get; set; }
+        
         public override Type StateType => typeof(WearableAnimatedSpriteComponentState);
 
         /// <inheritdoc />

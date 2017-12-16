@@ -161,9 +161,11 @@ namespace SS14.Client.UserInterface.Components
         private readonly IResourceCache _resourceCache;
         private readonly Label _textLabel;
 
-        public Vector2 Size;
+        public Vector2 Size { get; set; }
         private Color4 _currentColor = Color4.Gray;
         private Sprite _iconSprite;
+
+        
 
         public ContextMenuButton(ContextMenuEntry entry, Vector2 size, IResourceCache resourceCache)
         {

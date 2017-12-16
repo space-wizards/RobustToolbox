@@ -7,8 +7,9 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "WearableAnimatedSprite";
         public override uint? NetID => NetIDs.WEARABLE_ANIMATED_SPRITE;
-        public bool IsCurrentlyWorn = false;
-        public bool IsCurrentlyCarried = false;
+
+        public bool IsCurrentlyWorn { get; set; } = false;
+        public bool IsCurrentlyCarried { get; set; } = false;
 
         public override ComponentReplyMessage ReceiveMessage(object sender, ComponentMessageType type,
                                                       params object[] list)

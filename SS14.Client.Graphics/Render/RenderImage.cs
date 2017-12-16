@@ -37,7 +37,7 @@ namespace SS14.Client.Graphics.Render
         /// SourceAlpha           == SrcAlpha
         /// InverseSourceAlpha    == OneMinusSrcAlpha
         /// </summary>
-        public BlendMode BlendSettings = BlendMode.Alpha;
+        public BlendMode BlendSettings { get; set; } = BlendMode.Alpha;
 
         #region Accessors
 

@@ -12,8 +12,8 @@ namespace SS14.Shared
     public class GameStateDelta
     {
         public readonly MemoryStream deltaBytes = new MemoryStream();
-        public uint FromSequence;
-        public uint Sequence;
+        public uint FromSequence { get; set; }
+        public uint Sequence { get; set; }
 
         public GameStateDelta(byte[] bytes)
         {
@@ -29,7 +29,7 @@ namespace SS14.Shared
         {
             get { return deltaBytes.Length; }
         }
-
+        
         public void Create(GameState fromState, GameState toState)
         {
             Sequence = toState.Sequence;

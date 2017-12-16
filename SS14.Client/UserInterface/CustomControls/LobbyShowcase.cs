@@ -12,8 +12,8 @@ namespace SS14.Client.UserInterface.CustomControls
     public class LobbyShowcase : Showcase
     {
         protected int ScrollOffset = 0;
-        public Vector2i ItemOffsets = new Vector2i(0, 0);
-
+        public Vector2i ItemOffsets { get; set; } = new Vector2i(0, 0);
+        
         protected override void _buttonRight_Clicked(ImageButton sender)
         {
             if (ScrollOffset + 1 <= _items.Count - 1) ScrollOffset++;

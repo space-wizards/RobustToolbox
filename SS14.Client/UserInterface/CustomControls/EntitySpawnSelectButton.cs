@@ -22,8 +22,11 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly TextSprite _name;
         private readonly Sprite _sprite;
 
-        public int FixedWidth = -1;
-        public bool Selected = false;
+        public int FixedWidth { get; set; } = -1;
+        public bool Selected { get; set; } = false;
+
+        
+        
 
         public EntitySpawnSelectButton(EntityPrototype entityTemplate, string templateName)
         {

@@ -10,9 +10,9 @@ namespace SS14.Client.UserInterface.Controls
     {
         protected const int titleBuffer = 1;
 
-        public Color TitleColor1 = new Color(112, 128, 144);
-        public Color TitleColor2 = new Color(47, 79, 79);
-        public bool closeButtonVisible = true;
+        public Color TitleColor1 { get; set; } = new Color(112, 128, 144);
+        public Color TitleColor2 { get; set; } = new Color(47, 79, 79);
+        public bool CloseButtonVisible { get; set; } = true;
 
         protected ImageButton closeButton;
         protected bool dragging;
@@ -20,7 +20,7 @@ namespace SS14.Client.UserInterface.Controls
         protected GradientBox gradient;
         protected Label title;
         protected Box2i titleArea;
-
+                
         public Window(string windowTitle, Vector2i size)
             : base(size)
         {
@@ -78,7 +78,7 @@ namespace SS14.Client.UserInterface.Controls
             //TODO RenderTargetRectangle
             base.Draw();
             title.Draw();
-            if (closeButtonVisible) closeButton.Draw();
+            if (CloseButtonVisible) closeButton.Draw();
         }
 
         public override void Dispose()
@@ -143,34 +143,42 @@ namespace SS14.Client.UserInterface.Controls
 
     public class GradientBox : Control
     {
-        private readonly VertexTypeList.PositionDiffuse2DTexture1[] box =
+        private  VertexTypeList.PositionDiffuse2DTexture1[] box =
             new VertexTypeList.PositionDiffuse2DTexture1[4];
 
-        public Color Color1 = new Color(112, 128, 144);
-        public Color Color2 = new Color(47, 79, 79);
+        public Color Color1 { get; set;} = new Color(112, 128, 144);
+        public Color Color2 { get; set;} = new Color(47, 79, 79);
 
-        public bool Vertical = true;
+        public bool Vertical { get; set;} = true;
 
         public override void Update(float frameTime)
         {
-            box[0].Position.X = ClientArea.Left;
-            box[0].Position.Y = ClientArea.Top;
+            OpenTK.Vector3 position = box[0].Position;
+            position.X = ClientArea.Left;
+            position.Y = ClientArea.Top;
+            box[0].Position = position;
             box[0].TextureCoordinates = Vector2.Zero;
             box[0].Color = Color1;
 
-            box[1].Position.X = ClientArea.Right;
-            box[1].Position.Y = ClientArea.Top;
+            position = box[1].Position;
+            position.X = ClientArea.Right;
+            position.Y = ClientArea.Top;
+            box[1].Position = position;
             box[1].TextureCoordinates = Vector2.Zero;
             if (!Vertical) box[1].Color = Color2;
             else box[1].Color = Color1;
 
-            box[2].Position.X = ClientArea.Right;
-            box[2].Position.Y = ClientArea.Bottom;
+            position = box[2].Position;
+            position.X = ClientArea.Right;
+            position.Y = ClientArea.Bottom;
+            box[2].Position = position;
             box[2].TextureCoordinates = Vector2.Zero;
             box[2].Color = Color2;
 
-            box[3].Position.X = ClientArea.Left;
-            box[3].Position.Y = ClientArea.Bottom;
+            position = box[3].Position;
+            position.X = ClientArea.Left;
+            position.Y = ClientArea.Bottom;
+            box[3].Position = position;
             box[3].TextureCoordinates = Vector2.Zero;
             if (!Vertical) box[3].Color = Color1;
             else box[3].Color = Color2;

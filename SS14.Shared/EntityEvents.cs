@@ -15,19 +15,19 @@ namespace SS14.Shared
     public delegate void TestCEventDelegate(TestCEventArgs ev);
     public class TestCEventArgs : EntityEventArgs
     {
-        public string testStr;
-
         public TestCEventArgs(string str)
         {
-            testStr = str;
+            TestStr = str;
         }
+
+        public String TestStr { get; set; }
     }
 
     public class ClickedOnEntityEventArgs : EntityEventArgs
     {
-        public int Clicker;
-        public int Clicked;
-        public int MouseButton;
+        public int Clicker { get; set; }
+        public int Clicked { get; set; }
+        public int MouseButton { get; set; }
     }
 
 }

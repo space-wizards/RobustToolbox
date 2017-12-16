@@ -6,9 +6,9 @@ namespace SS14.Shared.GameStates
     [Serializable, NetSerializable]
     public class PlayerState
     {
-        public int? ControlledEntity;
-        public string Name;
-        public SessionStatus Status;
-        public long UniqueIdentifier;
+        public int? ControlledEntity { get; set; }
+        public string Name { get; set; }
+        public SessionStatus Status { get; set; }
+        public long UniqueIdentifier { get; set; }
     }
 }

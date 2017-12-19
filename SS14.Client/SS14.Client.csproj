@@ -1,345 +1,65 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
-  <Import Project="..\MSBuild\SS14.Properties.targets" />
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <ProjectType>Local</ProjectType>
-    <ProductVersion>12.0.31101.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0C31DFDF-0000-0000-0000-000000000000}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ApplicationIcon>ss14.ico</ApplicationIcon>
-    <AssemblyKeyContainerName />
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{83429BD6-6358-4B18-BE51-401DF8EA2673}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SS14.Client</RootNamespace>
     <AssemblyName>SS14.Client</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <OutputType>Exe</OutputType>
-    <AppDesignerFolder />
-    <RootNamespace>SS14.Client</RootNamespace>
-    <StartupObject />
-    <StartArguments />
-    <FileUpgradeFlags />
-    <TargetFrameworkProfile />
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <NoWarn>0649</NoWarn>
-    <AllowedReferenceRelatedFileExtensions>.pdb;.dll.config</AllowedReferenceRelatedFileExtensions>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile />
-    <FileAlignment>4096</FileAlignment>
+    <FileAlignment>512</FileAlignment>
     <OutputPath>$(SolutionDir)bin\Client\</OutputPath>
-    <RegisterForComInterop>False</RegisterForComInterop>
-    <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <NoStdLib>False</NoStdLib>
-    <DocumentationFile />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DebugSymbols>True</DebugSymbols>
-    <Optimize>False</Optimize>
-    <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <DefineConstants>TRACE;RELEASE</DefineConstants>
-    <DebugSymbols>False</DebugSymbols>
-    <Optimize>True</Optimize>
-    <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>true</Prefer32Bit>
-    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <DebugSymbols>True</DebugSymbols>
-    <Optimize>False</Optimize>
-    <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DefineConstants>TRACE;RELEASE</DefineConstants>
-    <DebugSymbols>False</DebugSymbols>
-    <Optimize>True</Optimize>
-    <PlatformTarget>x64</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
-    <AllowedReferenceRelatedFileExtensions>.dll.config</AllowedReferenceRelatedFileExtensions>
-  </PropertyGroup>
-  <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
-    <Reference Include="Microsoft.Diagnostics.Runtime, Version=0.8.31.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\Microsoft.Diagnostics.Runtime.0.8.31-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NetSerializer, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\NetSerializer.4.1.0\lib\net45\NetSerializer.dll</HintPath>
-    </Reference>
-    <Reference Include="OpenTK, Version=3.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\OpenTK.3.0.0-pre\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="System">
-      <Name>System</Name>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="GodotSharp">
+      <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Core">
-      <Name>System.Core</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <Name>System.Xml.Linq</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.ServiceModel">
-      <Name>System.ServiceModel</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.CSharp">
-      <Name>Microsoft.CSharp</Name>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="YamlDotNet">
-      <HintPath>$(SolutionDir)packages\YamlDotNet.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
-    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EntryPoint.cs" />
+    <Compile Include="Log\GodotLogManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{59250baf-0000-0000-0000-000000000000}</Project>
       <Name>Lidgren.Network</Name>
-      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
-      <Project>{302b877e-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.Graphics</Name>
+    <ProjectReference Include="..\SS14.Client.Godot\SS14.Client.Godot.csproj">
+      <Project>{8af31169-49b1-4a12-b8f4-2a0674a9e7cb}</Project>
+      <Name>SS14.Client.Godot</Name>
     </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
+      <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
-      <Project>{0529F740-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="GameController.cs" />
-    <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
-    <Compile Include="Interfaces\IGameController.cs" />
-    <Compile Include="Map\MapRenderer.cs" />
-    <Compile Include="Placement\Modes\AlignSnapgridCenter.cs" />
-    <Compile Include="Placement\Modes\AlignSnapgridBorder.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="ss14.ico" />
-    <None Include="app.config">
-    </None>
-    <Content Include="KeyBindings.xml">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Resources\EngineContentPack.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Resources\ResourcePack.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Content Include="client_config.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(SolutionDir)packages\OpenTK.3.0.0-pre\content\OpenTK.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="packages.config" />
-    <Compile Include="GameObjects\AnimatedSprite.cs" />
-    <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
-    <Compile Include="GameObjects\Components\Collidable\CollidableComponent.cs" />
-    <Compile Include="GameObjects\Components\BoundingBox\BoundingBoxComponent.cs" />
-    <Compile Include="GameObjects\Components\Icon\IconComponent.cs" />
-    <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
-    <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
-    <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
-    <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ParticleSystem.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ParticleSystemComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
-    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ItemSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\MobSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
-    <Compile Include="GameObjects\ContextMenuEntry.cs" />
-    <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\ClientEntityManager.cs" />
-    <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
-    <Compile Include="GameObjects\ClientComponentFactory.cs" />
-    <Compile Include="GameObjects\Components\Input\KeyBindingInputComponent.cs" />
-    <Compile Include="Reflection\ClientReflectionManager.cs" />
-    <Compile Include="ResourceManagement\BaseResource.cs" />
-    <Compile Include="ResourceManagement\FontResource.cs" />
-    <Compile Include="ResourceManagement\SpriteResource.cs" />
-    <Compile Include="ResourceManagement\TextureResource.cs" />
-    <Compile Include="UserInterface\Align.cs" />
-    <Compile Include="UserInterface\Controls\ListPanel.cs" />
-    <Compile Include="UserInterface\Controls\Panel.cs" />
-    <Compile Include="UserInterface\Controls\RichTextPanel.cs" />
-    <Compile Include="UserInterface\Controls\Screen.cs" />
-    <Compile Include="UserInterface\Style.cs" />
-    <Compile Include="Utility\Rand.cs" />
-    <Compile Include="Console\ConsoleCommands.cs" />
-    <Compile Include="Console\HelpCommands.cs" />
-    <Compile Include="Console\QuitCommand.cs" />
-    <Compile Include="Console\Debug.cs" />
-    <Compile Include="GameStates\GameStateManager.cs" />
-    <Compile Include="Helpers\GaussianBlur.cs" />
-    <Compile Include="Helpers\InterpolationPacket.cs" />
-    <Compile Include="Helpers\StarScroller.cs" />
-    <Compile Include="Helpers\Utilities.cs" />
-    <Compile Include="Input\KeyBindingManager.cs" />
-    <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
-    <Compile Include="Interfaces\Console\IDebugConsole.cs" />
-    <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IParticleSystemComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />
-    <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
-    <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
-    <Compile Include="Interfaces\Input\IKeyBindingManager.cs" />
-    <Compile Include="Interfaces\Network\INetworkGrapher.cs" />
-    <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
-    <Compile Include="Interfaces\Player\IPlayerManager.cs" />
-    <Compile Include="Interfaces\Resource\IResourceCache.cs" />
-    <Compile Include="Interfaces\State\IStateManager.cs" />
-    <Compile Include="Interfaces\UserInterface\IDragDropInfo.cs" />
-    <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
-    <Compile Include="Interfaces\Utility\IRand.cs" />
-    <Compile Include="Lighting\LightModes\Flicker.cs" />
-    <Compile Include="Network\NetworkGrapher.cs" />
-    <Compile Include="Placement\PlacementManager.cs" />
-    <Compile Include="Placement\PlacementMode.cs" />
-    <Compile Include="Placement\Modes\PlaceFree.cs" />
-    <Compile Include="Placement\Modes\PlaceNearby.cs" />
-    <Compile Include="Placement\Modes\AlignSimilar.cs" />
-    <Compile Include="Placement\Modes\AlignTileAny.cs" />
-    <Compile Include="Placement\Modes\AlignTileEmpty.cs" />
-    <Compile Include="Placement\Modes\AlignTileNonSolid.cs" />
-    <Compile Include="Placement\Modes\AlignTileSolid.cs" />
-    <Compile Include="Placement\Modes\AlignWall.cs" />
-    <Compile Include="Player\PlayerManager.cs" />
-    <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
-    <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
-    <Compile Include="ResourceManagement\ResourceCache.cs" />
-    <Compile Include="State\State.cs" />
-    <Compile Include="State\StateManager.cs" />
-    <Compile Include="State\States\GameScreen.cs" />
-    <Compile Include="State\States\LobbyMenu.cs" />
-    <Compile Include="State\States\MainMenu.cs" />
-    <Compile Include="State\States\OptionsMenu.cs" />
-    <Compile Include="UserInterface\DragDropInfo.cs" />
-    <Compile Include="UserInterface\UserInterfaceManager.cs" />
-    <Compile Include="UserInterface\Controls\Button.cs" />
-    <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
-    <Compile Include="UserInterface\Controls\Checkbox.cs" />
-    <Compile Include="UserInterface\Controls\ContextMenu.cs" />
-    <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
-    <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
-    <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
-    <Compile Include="UserInterface\CustomControls\EntitySpawnSelectButton.cs" />
-    <Compile Include="UserInterface\Controls\ExamineWindow.cs" />
-    <Compile Include="UserInterface\Controls\FloatingDeco.cs" />
-    <Compile Include="UserInterface\Controls\Control.cs" />
-    <Compile Include="UserInterface\Controls\ImageButton.cs" />
-    <Compile Include="UserInterface\Controls\Label.cs" />
-    <Compile Include="UserInterface\Controls\Listbox.cs" />
-    <Compile Include="UserInterface\CustomControls\MenuWindow.cs" />
-    <Compile Include="UserInterface\Controls\ProgressBar.cs" />
-    <Compile Include="UserInterface\CustomControls\PropEditWindow.cs" />
-    <Compile Include="UserInterface\Controls\ScrollableContainer.cs" />
-    <Compile Include="UserInterface\Controls\Scrollbar.cs" />
-    <Compile Include="UserInterface\Controls\Showcase.cs" />
-    <Compile Include="UserInterface\Controls\SimpleImage.cs" />
-    <Compile Include="UserInterface\Controls\Textbox.cs" />
-    <Compile Include="UserInterface\CustomControls\TileSpawnWindow.cs" />
-    <Compile Include="UserInterface\Controls\TimerBar.cs" />
-    <Compile Include="UserInterface\Controls\Window.cs" />
-    <Compile Include="UserInterface\CustomControls\LobbyShowcase.cs" />
-    <Compile Include="UserInterface\CustomControls\PlayerLstTab.cs" />
-    <Compile Include="UserInterface\CustomControls\TabContainer.cs" />
-    <Compile Include="UserInterface\CustomControls\TabbedMenu.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetOS)' == 'MacOS'">
-    <!-- HAVE to do a deep copy, because framework bundles are directories. -->
-    <MacNatives Include="..\Third-Party\extlibs\Mac\**\*.*" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\MSBuild\SS14.Engine.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared;CopyMacNatives;CopyWinNatives" />
-  <Target Name="CopyMacNatives" Condition="'$(targetOS)' == 'MacOS'">
-    <Error Text="MacOS natives not found in Third-Party/extlibs/Mac/. To target MacOS, you need to make the SFML natives, as we do not ship them with the repo. Download SFML 2.4 and CSFML 2.4 for MacOS, and copy the contents of libs/ and extlibs/ in both to Third-Party/extlibs/Mac. Follow this tutorial, and copy the relevant .dylib and .frameworks to Third-Party/extlibs/Mac/: https://github.com/SFML/SFML/wiki/Tutorial:-SFML.Net-on-OSX" Condition="'$(AllowMissingMacNatives)' != 'yes' And !Exists('..\Third-Party\extlibs\Mac\libcsfml-graphics.2.4.0.dylib')" />
-    <Copy SourceFiles="@(MacNatives)" DestinationFolder="$(OutputPath)\%(RecursiveDir)" />
-  </Target>
-  <Target Name="CopyWinNatives" Condition="'$(targetOS)' == 'Windows'">
-    <Exec Command="$(Python) fetch_win_csfml.py" CustomErrorRegularExpression="^Error" Condition="!Exists('..\Third-Party\extlibs\Windows\csfml-system-2.dll')" />
-    <ItemGroup>
-      <WinNatives Include="..\Third-Party\extlibs\Windows\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(WinNatives)" DestinationFolder="$(OutputPath)" />
-  </Target>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

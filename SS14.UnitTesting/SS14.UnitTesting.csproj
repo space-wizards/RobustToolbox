@@ -101,14 +101,6 @@
       <Project>{59250baf-0000-0000-0000-000000000000}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
-      <Project>{302b877e-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client.Graphics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SS14.Client\SS14.Client.csproj">
-      <Project>{0c31dfdf-0000-0000-0000-000000000000}</Project>
-      <Name>SS14.Client</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Server\SS14.Server.csproj">
       <Project>{b04aae71-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Server</Name>

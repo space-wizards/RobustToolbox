@@ -1,0 +1,10 @@
+<!--
+This file gets relatively imported based on SolutionDir
+So we can change the package dir to use the
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <PackageDir>$(SolutionDir)packages\</PackageDir>
+    <Godot>No</Godot>
+  </PropertyGroup>
+</Project>

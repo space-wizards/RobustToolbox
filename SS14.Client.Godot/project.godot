@@ -1,0 +1,30 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=3
+
+[application]
+
+config/name="SS14.Client.Godot"
+run/main_scene="res://MainScene.tscn"
+boot_splash/image="res://bootsplash.png"
+boot_splash/fullsize=false
+config/icon="res://logo.png"
+
+[autoload]
+
+SS14Loader="*res://SS14Loader.cs"
+
+[gdnative]
+
+singletons=[  ]
+
+[rendering]
+
+environment/default_clear_color=Color( 0, 0, 0, 1 )
+environment/default_environment="res://default_env.tres"

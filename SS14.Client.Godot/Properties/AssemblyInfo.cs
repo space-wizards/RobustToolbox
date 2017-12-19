@@ -1,10 +1,10 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 // Information about this assembly is defined by the following attributes.
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("SS14.Client.Godot")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("SS14 Client glue code to connect the main client to Godot.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("")]

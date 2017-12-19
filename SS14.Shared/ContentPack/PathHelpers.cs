@@ -15,7 +15,14 @@ namespace SS14.Shared.ContentPack
         /// </summary>
         private static string GetExecutableDirectory()
         {
-            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            // TODO: remove this shitty hack, either through making it less hardcoded into shared,
+            //   or by making our file structure less spaghetti somehow.
+            // Godot always executes relative to the project.godot file you opened the engine/editor on.
+            // So this needs to return the directory relative to SS14.Client.dll,
+            //   NOT the current working dir, when on the client.
+            var assembly = AppDomain.CurrentDomain.GetAssemblyByName("SS14.Client")
+                           ?? Assembly.GetEntryAssembly()
+                           ?? Assembly.GetExecutingAssembly();
             var path = new Uri(assembly.CodeBase).LocalPath;
             return Path.GetDirectoryName(path);
         }

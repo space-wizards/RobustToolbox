@@ -78,10 +78,6 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Client\Graphics\Shaders\TestShader_Test.cs" />
-    <Compile Include="Client\Graphics\Sprite\CluwneSprite_Test.cs" />
-    <Compile Include="Client\Services\Helpers\GaussianBlur_Test.cs" />
-    <Compile Include="Client\Services\Helpers\StarScroller_Test.cs" />
     <Compile Include="Server\GameObjects\Container_Test.cs" />
     <Compile Include="Shared\IoC\IoCManager_Test.cs" />
     <Compile Include="Shared\Maths\Angle_Test.cs" />

@@ -3,7 +3,8 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace SS14.Client.Godot
+// NOT SS14.Client.Godot so you can still use Godot.xxx without a using statement.
+namespace SS14.Client.GodotGlue
 {
     /// <summary>
     ///     AutoLoad Node that starts the rest of the SS14 Client through <see cref="ClientEntryPoint"/>.
@@ -23,7 +24,14 @@ namespace SS14.Client.Godot
                 if (entryType.IsAssignableFrom(type) && !type.IsAbstract)
                 {
                     var instance = (ClientEntryPoint)Activator.CreateInstance(type);
-                    instance.Main();
+                    try
+                    {
+                        instance.Main();
+                    }
+                    catch (Exception e)
+                    {
+                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{e}");
+                    }
                     entryPoints.Add(instance);
                 }
             }
@@ -44,6 +52,14 @@ namespace SS14.Client.Godot
                 entrypoint.FrameProcess(delta);
             }
         }
+
+        public override void _Input(InputEvent inputEvent)
+        {
+            foreach (var entrypoint in EntryPoints)
+            {
+                entrypoint.Input(inputEvent);
+            }
+        }
     }
 
     /// <summary>
@@ -57,6 +73,7 @@ namespace SS14.Client.Godot
         public virtual void Main()
         {
         }
+
         /// <summary>
         ///     Called every rendering frame by Godot.
         /// </summary>
@@ -64,6 +81,7 @@ namespace SS14.Client.Godot
         public virtual void FrameProcess(float delta)
         {
         }
+
         /// <summary>
         ///     Called every physics process by Godot.
         ///     This should be a fixed update rate.
@@ -73,6 +91,13 @@ namespace SS14.Client.Godot
         ///     Should be constant if the CPU isn't being tortured.
         /// </param>
         public virtual void PhysicsProcess(float delta)
+        {
+        }
+
+        /// <summary>
+        ///     Called whenever Godot receives input.
+        /// </summary>
+        public virtual void Input(InputEvent inputEvent)
         {
         }
     }

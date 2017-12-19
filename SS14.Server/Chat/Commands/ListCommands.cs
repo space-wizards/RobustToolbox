@@ -1,10 +1,6 @@
-﻿using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
-using SS14.Shared.IoC;
-using System;
+﻿using SS14.Server.Interfaces.Chat;
 using System.Text;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 
 namespace SS14.Server.Chat.Commands
 {

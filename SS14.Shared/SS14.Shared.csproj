@@ -128,7 +128,7 @@
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
-    <Compile Include="ConsoleCommand.cs" />
+    <Compile Include="Console\ICommand.cs" />
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />

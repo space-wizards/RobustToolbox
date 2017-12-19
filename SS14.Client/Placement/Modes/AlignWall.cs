@@ -24,13 +24,13 @@ namespace SS14.Client.Placement.Modes
         {
             if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
-            mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+            MouseScreen = mouseS;
+            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
+            CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -41,23 +41,23 @@ namespace SS14.Client.Placement.Modes
             {
                 nodes.AddRange(
                     pManager.CurrentPrototype.MountingPoints.Select(
-                        current => new Vector2(mouseCoords.X, currentTile.Y + current)));
+                        current => new Vector2(MouseCoords.X, CurrentTile.Y + current)));
             }
             else
             {
-                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 0.5f));
-                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 1.0f));
-                nodes.Add(new Vector2(mouseCoords.X, currentTile.Y + 1.5f));
+                nodes.Add(new Vector2(MouseCoords.X, CurrentTile.Y + 0.5f));
+                nodes.Add(new Vector2(MouseCoords.X, CurrentTile.Y + 1.0f));
+                nodes.Add(new Vector2(MouseCoords.X, CurrentTile.Y + 1.5f));
             }
 
             Vector2 closestNode = (from Vector2 node in nodes
-                                    orderby (node - mouseCoords.Position).LengthSquared ascending
+                                    orderby (node - MouseCoords.Position).LengthSquared ascending
                                     select node).First();
 
-            mouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
+            MouseCoords = new LocalCoordinates(closestNode + new Vector2(pManager.CurrentPrototype.PlacementOffset.X,
                                                                          pManager.CurrentPrototype.PlacementOffset.Y),
-                                               mouseCoords.Grid);
-            mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
+                                               MouseCoords.Grid);
+            MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
 
             return true;
         }

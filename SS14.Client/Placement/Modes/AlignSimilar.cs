@@ -30,13 +30,13 @@ namespace SS14.Client.Placement.Modes
         {
             if (mouseS.MapID == MapManager.NULLSPACE) return false;
 
-            mouseScreen = mouseS;
-            mouseCoords = CluwneLib.ScreenToCoordinates(mouseScreen);
+            MouseScreen = mouseS;
+            MouseCoords = CluwneLib.ScreenToCoordinates(MouseScreen);
 
             if (pManager.CurrentPermission.IsTile)
                 return false;
 
-            currentTile = mouseCoords.Grid.GetTile(mouseCoords);
+            CurrentTile = MouseCoords.Grid.GetTile(MouseCoords);
 
             if (!RangeCheck())
                 return false;
@@ -44,12 +44,12 @@ namespace SS14.Client.Placement.Modes
             var manager = IoCManager.Resolve<IClientEntityManager>();
 
             IOrderedEnumerable<IEntity> snapToEntities =
-                from IEntity entity in manager.GetEntitiesInRange(mouseCoords, snapToRange)
+                from IEntity entity in manager.GetEntitiesInRange(MouseCoords, snapToRange)
                 where entity.Prototype == pManager.CurrentPrototype &&
-                      entity.GetComponent<ITransformComponent>().MapID == mouseCoords.MapID
+                      entity.GetComponent<ITransformComponent>().MapID == MouseCoords.MapID
                 orderby
                     (entity.GetComponent<ITransformComponent>(
-                        ).WorldPosition - mouseCoords.ToWorld().Position).LengthSquared
+                        ).WorldPosition - MouseCoords.ToWorld().Position).LengthSquared
                     ascending
                 select entity;
 
@@ -76,10 +76,10 @@ namespace SS14.Client.Placement.Modes
                     };
 
                     Vector2 closestSide =
-                        (from Vector2 side in sides orderby (side - mouseCoords.Position).LengthSquared ascending select side).First();
+                        (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared ascending select side).First();
 
-                    mouseCoords = new LocalCoordinates(closestSide, mouseCoords.Grid);
-                    mouseScreen = CluwneLib.WorldToScreen(mouseCoords);
+                    MouseCoords = new LocalCoordinates(closestSide, MouseCoords.Grid);
+                    MouseScreen = CluwneLib.WorldToScreen(MouseCoords);
                 }
             }
 

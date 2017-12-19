@@ -34,7 +34,7 @@ namespace SS14.Server.Player
         /// <summary>
         /// The server that instantiated this manager.
         /// </summary>
-        public IBaseServer Server;
+        public IBaseServer Server { get; set; }
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 

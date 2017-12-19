@@ -47,13 +47,15 @@ namespace SS14.Client.Placement
         public readonly IReflectionManager ReflectionManager;
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
 
-        public Sprite CurrentBaseSprite;
-        public string CurrentBaseSpriteKey = "";
-        public PlacementMode CurrentMode;
-        public PlacementInformation CurrentPermission;
-        public EntityPrototype CurrentPrototype;
-        public Direction Direction = Direction.South;
-        public bool ValidPosition;
+        public bool IsActive { get; private set; }
+        public bool Eraser { get; private set; }
+        public Sprite CurrentBaseSprite { get; set; }
+        public string CurrentBaseSpriteKey { get; set; } = "";
+        public PlacementMode CurrentMode { get; set; }
+        public PlacementInformation CurrentPermission { get; set; }
+        public EntityPrototype CurrentPrototype { get; set; }
+        public Direction Direction { get; set; } = Direction.South;
+        public bool ValidPosition { get; set; }
 
         public PlacementManager()
         {
@@ -71,8 +73,7 @@ namespace SS14.Client.Placement
             }
         }
 
-        public bool IsActive { get; private set; }
-        public bool Eraser { get; private set; }
+
 
         public event EventHandler PlacementCanceled;
 
@@ -257,10 +258,10 @@ namespace SS14.Client.Placement
             if (CurrentPermission.IsTile) message.TileType = CurrentPermission.TileType;
             else message.EntityTemplateName = CurrentPermission.EntityType;
 
-            message.XValue = CurrentMode.mouseCoords.X;
-            message.YValue = CurrentMode.mouseCoords.Y;
-            message.GridIndex = CurrentMode.mouseCoords.GridID;
-            message.MapIndex = CurrentMode.mouseCoords.MapID;
+            message.XValue = CurrentMode.MouseCoords.X;
+            message.YValue = CurrentMode.MouseCoords.Y;
+            message.GridIndex = CurrentMode.MouseCoords.GridID;
+            message.MapIndex = CurrentMode.MouseCoords.MapID;
 
             message.DirRcv = Direction;
 

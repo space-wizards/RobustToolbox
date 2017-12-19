@@ -10,6 +10,7 @@ namespace SS14.Shared.GameObjects
         public float ReceivedTime;
 
         public uint NetID { get; protected set; }
+        
 
         public ComponentState(uint netID)
         {

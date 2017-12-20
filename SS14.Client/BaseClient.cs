@@ -16,6 +16,7 @@ using SS14.Shared.Players;
 
 namespace SS14.Client
 {
+    /// <inheritdoc />
     public class BaseClient : IBaseClient
     {
         [Dependency]
@@ -74,13 +75,13 @@ namespace SS14.Client
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
             Debug.Assert(_net.IsConnected);
 
-            // runlevel changed in OnNetDisconnect()
+            // run level changed in OnNetDisconnect()
             // are both of these *really* needed?
             _net.ClientDisconnect(reason);
         }
 
         /// <inheritdoc />
-        public event EventHandler<RunLevelChangedEvent> RunLevelChanged;
+        public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         private void OnConnected(object sender, NetChannelArgs args)
         {
@@ -91,7 +92,7 @@ namespace SS14.Client
         }
 
         /// <summary>
-        ///     Player session is fully built, player is an active member of the server. Player is prepaired to start
+        ///     Player session is fully built, player is an active member of the server. Player is prepared to start
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
@@ -196,12 +197,15 @@ namespace SS14.Client
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
         {
             Logger.Debug($"[ENG] Runlevel changed to: {newRunLevel}");
-            var evnt = new RunLevelChangedEvent(RunLevel, newRunLevel);
+            var args = new RunLevelChangedEventArgs(RunLevel, newRunLevel);
             RunLevel = newRunLevel;
-            RunLevelChanged?.Invoke(this, evnt);
+            RunLevelChanged?.Invoke(this, args);
         }
     }
 
+    /// <summary>
+    ///     Enumeration of the run levels of the BaseClient.
+    /// </summary>
     public enum ClientRunLevel
     {
         Error = 0,
@@ -210,30 +214,77 @@ namespace SS14.Client
         Connected,
         Lobby,
         Ingame,
-        ChangeLevel
+        ChangeMap
     }
 
-    public class RunLevelChangedEvent : EventArgs
+    /// <summary>
+    ///     Event arguments for when the RunLevel has changed in the BaseClient.
+    /// </summary>
+    public class RunLevelChangedEventArgs : EventArgs
     {
+        /// <summary>
+        ///     RunLevel that the BaseClient switched from.
+        /// </summary>
         public ClientRunLevel OldLevel { get; }
+
+        /// <summary>
+        ///     RunLevel that the BaseClient switched to.
+        /// </summary>
         public ClientRunLevel NewLevel { get; }
 
-        public RunLevelChangedEvent(ClientRunLevel oldLevel, ClientRunLevel newLevel)
+        /// <summary>
+        ///     Constructs a new instance of the class.
+        /// </summary>
+        public RunLevelChangedEventArgs(ClientRunLevel oldLevel, ClientRunLevel newLevel)
         {
             OldLevel = oldLevel;
             NewLevel = newLevel;
         }
     }
 
+    /// <summary>
+    ///     Info about the server and player that is sent to the client while connecting.
+    /// </summary>
     public class ServerInfo
     {
+        /// <summary>
+        ///     Current name of the server.
+        /// </summary>
         public string ServerName { get; set; }
+
+        /// <summary>
+        ///     Current port the server is listening on.
+        /// </summary>
         public int ServerPort { get; set; }
+
+        /// <summary>
+        ///     Current welcome message that is displayed when the client connects.
+        /// </summary>
         public string ServerWelcomeMessage { get; set; }
+
+        /// <summary>
+        ///     Max number of players that are allowed in the server at one time.
+        /// </summary>
         public int ServerMaxPlayers { get; set; }
+
+        /// <summary>
+        ///     Name of the current map loaded on the server.
+        /// </summary>
         public string ServerMapName { get; set; }
+
+        /// <summary>
+        ///     Name of the current game mode loaded on the server.
+        /// </summary>
         public string GameMode { get; set; }
+
+        /// <summary>
+        ///     Current number of players connected to the server, never greater than ServerMaxPlayers.
+        /// </summary>
         public int ServerPlayerCount { get; set; }
+
+        /// <summary>
+        ///     Index of the client inside the PlayerManager.
+        /// </summary>
         public PlayerIndex Index { get; set; }
     }
 }

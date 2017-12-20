@@ -19,7 +19,7 @@ using SS14.Shared.Network.Messages;
 namespace SS14.Client.Player
 {
     /// <summary>
-    ///     Here's the player controller. This will handle attaching GUIS and input to controllable things.
+    ///     Here's the player controller. This will handle attaching GUIs and input to controllable things.
     ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
     ///     This class also communicates with the server to let the server control what entity it is attached to.
     /// </summary>
@@ -38,13 +38,25 @@ namespace SS14.Client.Player
         /// </summary>
         private Dictionary<int, PlayerSession> _sessions;
 
+        /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
+
+        /// <inheritdoc />
         public int MaxPlayers => _client.GameInfo.ServerMaxPlayers;
+
+        /// <inheritdoc />
         public LocalPlayer LocalPlayer { get; private set; }
+
+        /// <inheritdoc />
         public IEnumerable<PlayerSession> Sessions => _sessions.Values;
+
+        /// <inheritdoc />
         public IReadOnlyDictionary<int, PlayerSession> SessionsDict => _sessions;
+
+        /// <inheritdoc />
         public event EventHandler PlayerListUpdated;
 
+        /// <inheritdoc />
         public void Initialize()
         {
             _sessions = new Dictionary<int, PlayerSession>();
@@ -57,6 +69,7 @@ namespace SS14.Client.Player
             _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int) MsgSession.ID, HandleSessionMessage);
         }
 
+        /// <inheritdoc />
         public void Startup(INetChannel channel)
         {
             LocalPlayer = new LocalPlayer();
@@ -66,6 +79,7 @@ namespace SS14.Client.Player
             _network.ClientSendMessage(msgList, NetDeliveryMethod.ReliableOrdered);
         }
 
+        /// <inheritdoc />
         public void Update(float frameTime)
         {
             foreach (var e in _effects.ToArray())
@@ -74,14 +88,17 @@ namespace SS14.Client.Player
             }
         }
 
+        /// <inheritdoc />
         public void Shutdown()
         {
             LocalPlayer = null;
             _sessions.Clear();
         }
 
+        /// <inheritdoc />
         public void Destroy() { }
 
+        /// <inheritdoc />
         public void ApplyEffects(RenderImage image)
         {
             foreach (var e in _effects)
@@ -90,6 +107,7 @@ namespace SS14.Client.Player
             }
         }
 
+        /// <inheritdoc />
         public void ApplyPlayerStates(List<PlayerState> list)
         {
             Debug.Assert(_network.IsConnected, "Received player state before fully connected");
@@ -115,7 +133,7 @@ namespace SS14.Client.Player
         /// <param name="uid">a target entity's Uid</param>
         public void SendVerb(string verb, int uid)
         {
-            //TODO: Convert this to the concmd system.
+            //TODO: Convert this to the ConCmd system.
 
             var message = _network.CreateNetMessage<MsgSession>();
             message.MsgType = PlayerSessionMessage.Verb;
@@ -177,20 +195,20 @@ namespace SS14.Client.Player
         }
 
         /// <summary>
-        ///     Compares the server playerlist to the client one, and updates if needed.
+        ///     Compares the server player list to the client one, and updates if needed.
         /// </summary>
         private void UpdatePlayerList(List<PlayerState> remotePlayers)
         {
             var dirty = false;
 
-            // diff the sessions to the Plyers
+            // diff the sessions to the states
             for (var i = 0; i < MaxPlayers; i++)
             {
                 // try to get local session
                 var cSession = _sessions.ContainsKey(i) ? _sessions[i] : null;
 
                 // should these be mapped NetId -> PlyInfo?
-                var info = remotePlayers.FirstOrDefault(plyr => plyr.Index == i);
+                var info = remotePlayers.FirstOrDefault(state => state.Index == i);
 
                 // slot already occupied
                 if (cSession != null && info != null)

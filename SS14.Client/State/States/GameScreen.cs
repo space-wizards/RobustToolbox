@@ -482,7 +482,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.RemoveComponent(_uiScreen);
 
-            IoCManager.Resolve<IPlayerManager>().LocalPlayer.DetatchEntity();
+            IoCManager.Resolve<IPlayerManager>().LocalPlayer.DetachEntity();
 
             //TODO: Are these lists actually needed?
             //_cleanupSpriteList.ForEach(s => s.Dispose());

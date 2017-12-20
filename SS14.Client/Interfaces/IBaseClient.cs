@@ -23,7 +23,7 @@ namespace SS14.Client.Interfaces
         /// <summary>
         ///     Raised when the client RunLevel is changed.
         /// </summary>
-        event EventHandler<RunLevelChangedEvent> RunLevelChanged;
+        event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
         /// <summary>
         ///     Call this after BaseClient has been created. This sets up the object to its initial state. Only call this once.

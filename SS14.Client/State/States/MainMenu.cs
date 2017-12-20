@@ -180,7 +180,7 @@ namespace SS14.Client.State.States
             //_uiScreen = null;
         }
 
-        private void RunLevelChanged(object obj, RunLevelChangedEvent args)
+        private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
             if (args.NewLevel == ClientRunLevel.Lobby)
                 StateManager.RequestStateChange<Lobby>();

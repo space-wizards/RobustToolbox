@@ -172,6 +172,7 @@ namespace SS14.Server
             try
             {
                 netMan.Initialize(true);
+                netMan.Startup();
             }
             catch (System.Net.Sockets.SocketException e)
             {
@@ -213,7 +214,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
             IoCManager.Resolve<IChatManager>().Initialize();
-            IoCManager.Resolve<IPlayerManager>().Initialize(this);
+            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
             IoCManager.Resolve<IMapManager>().Initialize();
 
             // Set up the VFS
@@ -568,9 +569,13 @@ namespace SS14.Server
                 return;
             }
 
+            var playerMan = IoCManager.Resolve<IPlayerManager>();
+
             foreach (var c in connections)
             {
-                SendConnectionGameStateUpdate(c, state);
+                var session = playerMan.GetSessionByChannel(c);
+                if (session != null && (session.Status == SessionStatus.InGame || session.Status == SessionStatus.InLobby))
+                    SendConnectionGameStateUpdate(c, state);
             }
 
             stateManager.Cull();
@@ -621,6 +626,9 @@ namespace SS14.Server
 
         private void HandleWelcomeMessageReq(NetMessage message)
         {
+            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel);
+            session.Name = ((MsgServerInfoReq) message).PlayerName;
+
             var net = IoCManager.Resolve<IServerNetManager>();
             var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
 
@@ -631,8 +639,24 @@ namespace SS14.Server
             netMsg.ServerMapName = MapName;
             netMsg.GameMode = IoCManager.Resolve<IRoundManager>().CurrentGameMode.Name;
             netMsg.ServerPlayerCount = IoCManager.Resolve<IPlayerManager>().PlayerCount;
+            netMsg.PlayerIndex = session.Index;
 
             message.MsgChannel.SendMessage(netMsg);
+
+            
+        }
+
+        /// <summary>
+        /// Player session is fully built, player is an active member of the server. Player is prepaired to start 
+        /// receiving states when they join the lobby.
+        /// </summary>
+        /// <param name="session">Fully built session</param>
+        public void PlayerJoinedServer(IPlayerSession session)
+        {
+            //TODO: There should be a way to notify the content
+
+            // send the player to the lobby screen
+            session.JoinLobby();
         }
 
         private void HandleAdminMessage(MsgAdmin msg)
@@ -653,37 +677,47 @@ namespace SS14.Server
             Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
         }
 
-        private static void HandlePlayerListReq(NetMessage message)
+        private void HandlePlayerListReq(NetMessage message)
         {
             var channel = message.MsgChannel;
             var plyMgr = IoCManager.Resolve<IPlayerManager>();
             var players = plyMgr.GetAllPlayers().ToArray();
             var netMsg = channel.CreateNetMessage<MsgPlayerList>();
-            netMsg.PlyCount = (byte)players.Length;
 
-            var list = new List<MsgPlayerList.PlyInfo>();
+            var list = new List<PlayerState>();
             foreach (var client in players)
             {
-                var info = new MsgPlayerList.PlyInfo
+                if(client == null)
+                    continue;
+
+                var info = new PlayerState
                 {
+                    Index = client.Index,
+                    Uuid = client.ConnectedClient.ConnectionId,
                     Name = client.Name,
-                    Status = (byte)client.Status,
-                    Ping = client.ConnectedClient.Connection.AverageRoundtripTime
+                    Status = client.Status,
+                    Ping = client.ConnectedClient.Ping
                 };
                 list.Add(info);
             }
             netMsg.Plyrs = list;
+            netMsg.PlyCount = (byte) list.Count;
 
             channel.SendMessage(netMsg);
+
+            // client session is complete
+            var session = plyMgr.GetSessionByChannel(channel);
+            PlayerJoinedServer(session);
         }
 
         private static void HandleClientGreet(MsgClGreet msg)
         {
+            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
+
             var fixedName = msg.PlyName.Trim();
             if (fixedName.Length < 3)
-                fixedName = $"Player {msg.MsgChannel.NetworkId}";
+                fixedName = $"Player {p.Index}";
 
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             p.SetName(fixedName);
         }
 
@@ -705,7 +739,7 @@ namespace SS14.Server
 
             // Todo: Preempt this with the lobby.
             IoCManager.Resolve<IRoundManager>().SpawnPlayer(
-                IoCManager.Resolve<IPlayerManager>().GetSessionById(client.NetworkId)); //SPAWN PLAYER
+                IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(client)); //SPAWN PLAYER
         }
 
         #endregion MessageProcessing

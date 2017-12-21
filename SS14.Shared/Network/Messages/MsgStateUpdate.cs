@@ -12,7 +12,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.StateUpdate;
-        public static readonly MsgGroups GROUP = MsgGroups.Core;
+        public static readonly MsgGroups GROUP = MsgGroups.Entity;
 
         public static readonly string NAME = ID.ToString();
         public MsgStateUpdate(INetChannel channel)

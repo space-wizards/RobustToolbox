@@ -8,7 +8,7 @@ namespace SS14.Shared.Network.Messages
     {
         #region REQUIRED
         public const NetMessages ID = NetMessages.RequestEntityDeletion;
-        public const MsgGroups GROUP = MsgGroups.Entity;
+        public const MsgGroups GROUP = MsgGroups.Command;
         public static readonly string NAME = ID.ToString();
         
         public MsgAdmin(INetChannel channel) : base(NAME, GROUP, ID) { }

@@ -54,6 +54,9 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new HashSet<string>();
 
+        /// <inheritdoc />
+        public IEnumerable<Type> AllRegisteredTypes => types.Keys;
+
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
         {
             if (types.ContainsKey(typeof(T)))

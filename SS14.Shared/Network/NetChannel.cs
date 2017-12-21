@@ -26,10 +26,7 @@ namespace SS14.Shared.Network
 
         /// <inheritdoc />
         public NetConnection Connection { get; }
-
-        /// <inheritdoc />
-        public int NetworkId { get; set; }
-
+        
         /// <inheritdoc />
         public long ConnectionId => Connection.RemoteUniqueIdentifier;
 
@@ -37,7 +34,7 @@ namespace SS14.Shared.Network
         public string RemoteAddress => Connection.RemoteEndPoint.Address.ToString();
 
         /// <inheritdoc />
-        public int Ping => (int) Math.Round(Connection.AverageRoundtripTime * 1000);
+        public short Ping => (short) Math.Round(Connection.AverageRoundtripTime * 1000);
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()

@@ -155,7 +155,7 @@ namespace SS14.Client.State.States
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
-            IoCManager.Resolve<IPlayerManager>().OnPlayerMove += OnPlayerMove;
+            IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
 
@@ -352,12 +352,15 @@ namespace SS14.Client.State.States
             PlacementManager.Update(MousePosScreen);
             PlayerManager.Update(e.Elapsed);
 
-            if (PlayerManager.ControlledEntity != null)
+            if (PlayerManager.LocalPlayer != null)
             {
-                var newpos = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
-                if (CluwneLib.Camera.Position != newpos)
+                var newPos = Vector2.Zero;
+                if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                    newPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+
+                if (CluwneLib.Camera.Position != newPos)
                 {
-                    CluwneLib.Camera.Position = newpos;
+                    CluwneLib.Camera.Position = newPos;
                     MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
                     UpdateView();
                 }
@@ -381,14 +384,17 @@ namespace SS14.Client.State.States
 
             CalculateAllLights();
 
-            if (PlayerManager.ControlledEntity == null)
+            if (PlayerManager.LocalPlayer == null)
             {
                 return;
             }
 
             // vp is the rectangle in which we can render in world space.
             var vp = CluwneLib.WorldViewport;
-            var map = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+
+            int map = 0;
+            if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
 
             if (!bFullVision)
             {
@@ -476,7 +482,7 @@ namespace SS14.Client.State.States
         {
             UserInterfaceManager.RemoveComponent(_uiScreen);
 
-            IoCManager.Resolve<IPlayerManager>().Detach();
+            IoCManager.Resolve<IPlayerManager>().LocalPlayer.DetachEntity();
 
             //TODO: Are these lists actually needed?
             //_cleanupSpriteList.ForEach(s => s.Dispose());
@@ -584,7 +590,7 @@ namespace SS14.Client.State.States
 
         public override void MouseDown(MouseButtonEventArgs e)
         {
-            if (PlayerManager.ControlledEntity == null)
+            if (PlayerManager.LocalPlayer == null)
                 return;
 
             if (UserInterfaceManager.MouseDown(e))
@@ -644,17 +650,17 @@ namespace SS14.Client.State.States
 
             // Check whether click is outside our 1.5 meter range
             float checkDistance = 1.5f;
-            if (!PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
+            if (!PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition.InRange(entToClick.GetComponent<ITransformComponent>().LocalPosition, checkDistance))
                 return;
 
             var clickable = entToClick.GetComponent<IClientClickableComponent>();
             switch (e.Button)
             {
                 case Mouse.Button.Left:
-                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Left);
+                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, MouseClickType.Left);
                     break;
                 case Mouse.Button.Right:
-                    clickable.DispatchClick(PlayerManager.ControlledEntity, MouseClickType.Right);
+                    clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, MouseClickType.Right);
                     break;
                 case Mouse.Button.Middle:
                     UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
@@ -668,7 +674,7 @@ namespace SS14.Client.State.States
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (PlayerManager.ControlledEntity != null && PlayerManager.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
+            if (PlayerManager.LocalPlayer.ControlledEntity != null && PlayerManager.LocalPlayer.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
             {
                 MousePosScreen = new ScreenCoordinates(e.NewPosition, transform.MapID);
             }
@@ -779,9 +785,6 @@ namespace SS14.Client.State.States
                     var messageType = (NetMessages)message.ReadByte();
                     switch (messageType)
                     {
-                        case NetMessages.PlayerSessionMessage:
-                            PlayerManager.HandleNetworkMessage(message);
-                            break;
                         case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
@@ -1018,7 +1021,7 @@ namespace SS14.Client.State.States
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
                 PlayerOcclusionTarget.Clear(Color.Black);
-                var playerposition = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+                var playerposition = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
                 playerVision.Coordinates = playerposition;
 
                 LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
@@ -1113,7 +1116,10 @@ namespace SS14.Client.State.States
         /// </summary>
         private void DrawTiles(Box2 vision)
         {
-            var position = PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+            LocalCoordinates position = new LocalCoordinates();
+            if(PlayerManager.LocalPlayer.ControlledEntity != null)
+                position = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+
             var grids = position.Map.FindGridsIntersecting(vision); //Collect all grids in vision range
 
             //Draw the default grid as the background which will be drawn over
@@ -1144,7 +1150,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> floorRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                 where c.DrawDepth < DrawDepth.MobBase &&
+                                                                 where c.Owner.Initialized &&
+                                                                       c.DrawDepth < DrawDepth.MobBase &&
                                                                        c.MapID == argMapLevel
                                                                  select c;
 
@@ -1153,7 +1160,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> largeRenderables = from IRenderableComponent c in components
                                                                  orderby c.Bottom ascending
-                                                                 where c.DrawDepth >= DrawDepth.MobBase &&
+                                                                 where c.Owner.Initialized &&
+                                                                       c.DrawDepth >= DrawDepth.MobBase &&
                                                                        c.DrawDepth < DrawDepth.WallTops &&
                                                                        c.MapID == argMapLevel
                                                                  select c;
@@ -1163,7 +1171,8 @@ namespace SS14.Client.State.States
 
             IEnumerable<IRenderableComponent> ceilingRenderables = from IRenderableComponent c in components
                                                                    orderby c.Bottom ascending, c.DrawDepth ascending
-                                                                   where c.DrawDepth >= DrawDepth.WallTops &&
+                                                                   where c.Owner.Initialized &&
+                                                                         c.DrawDepth >= DrawDepth.WallTops &&
                                                                          c.MapID == argMapLevel
                                                                    select c;
 
@@ -1405,7 +1414,7 @@ namespace SS14.Client.State.States
                     DebugDisplayBackground.Draw();
 
                     // Player position debug
-                    Vector2 playerWorldOffset = Parent.PlayerManager.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                    Vector2 playerWorldOffset = Parent.PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
                     Vector2 playerTile = CluwneLib.WorldToTile(playerWorldOffset);
                     Vector2 playerScreen = CluwneLib.WorldToScreen(playerWorldOffset);
 

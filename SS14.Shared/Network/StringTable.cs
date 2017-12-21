@@ -1,17 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network
 {
     /// <summary>
+    ///     Callback for when the string table gets initialized on the client. This is NOT called on the server.
+    /// </summary>
+    public delegate void InitCallback();
+
+    /// <summary>
     ///     Contains a networked mapping of IDs -> Strings.
     /// </summary>
     public class StringTable
     {
+        private bool _initialized = false;
         private INetManager _network;
         private readonly Dictionary<int, string> _strings;
         private int _lastStringIndex;
+        private InitCallback _callback;
 
         /// <summary>
         ///     Default constructor.
@@ -29,43 +38,67 @@ namespace SS14.Shared.Network
         /// <summary>
         /// Initializes the string table.
         /// </summary>
-        public void Initialize(INetManager network)
+        public void Initialize(INetManager network, InitCallback callback = null)
         {
+            Debug.Assert(!_initialized);
+
+            _callback = callback;
             _network = network;
-            _network.RegisterNetMessage<MsgStringTableEntry>(MsgStringTableEntry.NAME, (int)MsgStringTableEntry.ID, message =>
+            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, (int)MsgStringTableEntries.ID, message =>
             {
                 if (_network.IsServer) // Server does not receive entries from clients.
                     return;
 
-                var entry = (MsgStringTableEntry)message;
-                var id = entry.EntryId;
-                var str = string.IsNullOrEmpty(entry.EntryString) ? null : entry.EntryString;
+                var msg = (MsgStringTableEntries)message;
 
-                if (str == null)
+                foreach (var entry in msg.Entries)
                 {
-                    _strings.Remove(id);
-                }
-                else
-                {
-                    if (TryFindStringId(str, out int oldId))
+                    var id = entry.Id;
+                    var str = string.IsNullOrEmpty(entry.String) ? null : entry.String;
+
+                    if (str == null)
                     {
-                        if(oldId == id)
-                            return;
-
-                        _strings.Remove(oldId);
-                        _strings.Add(id, str);
+                        _strings.Remove(id);
                     }
                     else
                     {
-                        _strings.Add(id, str);
+                        if (TryFindStringId(str, out int oldId))
+                        {
+                            if(oldId == id)
+                                continue;
+
+                            _strings.Remove(oldId);
+                            _strings.Add(id, str);
+                        }
+                        else
+                        {
+                            _strings.Add(id, str);
+                        }
                     }
                 }
+
+                if (callback == null)
+                    return;
+
+                if (_network.IsClient && !_initialized)
+                    _callback?.Invoke();
             });
 
+            Reset();
+        }
+
+        /// <summary>
+        ///     Resets the string table to the state right after calling Initialize().
+        /// </summary>
+        public void Reset()
+        {
+            _strings.Clear();
+            _initialized = false;
+
             // manually register the id on the client so it can bootstrap itself with incoming table entries
-            if (_network.IsClient && !TryFindStringId(MsgStringTableEntry.NAME, out int msgId))
+            if (!TryFindStringId(MsgStringTableEntries.NAME, out int msgId))
             {
-                _strings.Add((int)MsgStringTableEntry.ID, MsgStringTableEntry.NAME);
+                _strings.Add((int)MsgStringTableEntries.ID, MsgStringTableEntries.NAME);
             }
         }
 
@@ -108,6 +141,8 @@ namespace SS14.Shared.Network
         /// <returns>The ID of the added string.</returns>
         public void AddStringFixed(int id, string str)
         {
+            Debug.Assert(_network != null, "You need to call Initialize.");
+
             // The client should receive the table from the server, not add their own.
             if (_network.IsClient)
                 return;
@@ -170,10 +205,14 @@ namespace SS14.Shared.Network
             if (_network.IsClient)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntry>();
+            if(!_network.IsRunning)
+                return;
 
-            message.EntryId = id;
-            message.EntryString = str;
+            var message = _network.CreateNetMessage<MsgStringTableEntries>();
+
+            message.Entries = new MsgStringTableEntries.Entry[1];
+            message.Entries[0].Id = id;
+            message.Entries[0].String = str;
 
             _network.ServerSendToAll(message);
         }
@@ -187,53 +226,80 @@ namespace SS14.Shared.Network
             if (_network.IsClient)
                 return;
 
-            var message = _network.CreateNetMessage<MsgStringTableEntry>();
+            var message = _network.CreateNetMessage<MsgStringTableEntries>();
 
+            var count = _strings.Count;
+            message.Entries = new MsgStringTableEntries.Entry[count];
+
+            var i = 0;
             foreach (var kvEntries in _strings)
             {
-                message.EntryId = kvEntries.Key;
-                message.EntryString = kvEntries.Value;
+                message.Entries[i].Id = kvEntries.Key;
+                message.Entries[i].String = kvEntries.Value;
+                i++;
 
-                _network.ServerSendMessage(message, channel);
             }
+
+            _network.ServerSendMessage(message, channel);
         }
     }
 
     /// <summary>
     /// A net message for transmitting a string table entry to clients.
     /// </summary>
-    public class MsgStringTableEntry : NetMessage
+    public class MsgStringTableEntries : NetMessage
     {
         #region REQUIRED
         public static readonly NetMessages ID = NetMessages.StringTableEntry;
         public static readonly MsgGroups GROUP = MsgGroups.String;
 
         public static readonly string NAME = ID.ToString();
-        public MsgStringTableEntry(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP, ID) { }
         #endregion
+        
+        public Entry[] Entries { get; set; }
 
         /// <summary>
-        /// The string contained inside of the message.
+        ///     A string table entry.
         /// </summary>
-        public string EntryString { get; set; }
+        public struct Entry
+        {
+            /// <summary>
+            ///     The string contained inside of the message.
+            /// </summary>
+            public string String { get; set; }
 
-        /// <summary>
-        /// The ID of the string inside of the message.
-        /// </summary>
-        public int EntryId { get; set; }
+
+            /// <summary>
+            ///     The ID of the string inside of the message.
+            /// </summary>
+            public int Id { get; set; }
+        }
 
         /// <inheritdoc />
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            EntryId = buffer.ReadVariableInt32();
-            EntryString = buffer.ReadString();
+            var count = buffer.ReadUInt32();
+            Entries = new Entry[count];
+            for (var i = 0; i < count; i++)
+            {
+                Entries[i].Id = buffer.ReadVariableInt32();
+                Entries[i].String = buffer.ReadString();
+            }
         }
 
         /// <inheritdoc />
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.WriteVariableInt32(EntryId);
-            buffer.Write(EntryString);
+            if(Entries == null)
+                throw new InvalidOperationException("Entries is null!");
+
+            buffer.Write(Entries.Length);
+            foreach (var entry in Entries)
+            {
+                buffer.WriteVariableInt32(entry.Id);
+                buffer.Write(entry.String);
+            }
         }
     }
 }

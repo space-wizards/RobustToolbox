@@ -46,7 +46,7 @@ namespace SS14.Shared.Network
         ///     The instance of the net server.
         /// </summary>
         private NetPeer _netPeer;
-
+        
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
 
@@ -57,7 +57,9 @@ namespace SS14.Shared.Network
         public bool IsClient => !IsServer;
 
         /// <inheritdoc />
-        public bool IsConnected => _netPeer.ConnectionsCount > 0;
+        public bool IsConnected => _netPeer != null && _netPeer.ConnectionsCount > 0;
+
+        public bool IsRunning => _netPeer != null;
 
         /// <inheritdoc />
         [Obsolete("You should be using NetPeer.")]
@@ -83,15 +85,7 @@ namespace SS14.Shared.Network
 
             _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
             _config.RegisterCVar("net.allowdupeip", false, CVar.ARCHIVE);
-
-            var netConfig = new NetPeerConfiguration("SS13_NetTag");
-
-            if(isServer)
-            {
-                netConfig.Port = Port;
-                netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
-            }
-
+            
             if (!isServer)
             {
                 _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
@@ -106,7 +100,25 @@ namespace SS14.Shared.Network
             _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT);
             _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT);
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT);
+#endif
 
+            _strings.Initialize(this, () =>
+            {
+                OnConnected(ServerChannel);
+            });
+        }
+        
+        public void Startup()
+        {
+            var netConfig = new NetPeerConfiguration("SS13_NetTag");
+
+            if (IsServer)
+            {
+                netConfig.Port = Port;
+                netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+            }
+            
+#if DEBUG
             //Simulate Latency
             if (_config.GetCVar<bool>("net.fakelag"))
             {
@@ -120,8 +132,6 @@ namespace SS14.Shared.Network
             _netPeer = new NetPeer(netConfig);
 
             _netPeer.Start();
-
-            _strings.Initialize(this);
         }
 
         /// <inheritdoc />
@@ -129,15 +139,16 @@ namespace SS14.Shared.Network
         {
             foreach (var kvChannel in _channels)
                 DisconnectChannel(kvChannel.Value, reason);
-
+            
             _netPeer.Shutdown(reason);
+            _strings.Reset();
         }
 
         /// <inheritdoc />
         public void Restart(string reason)
         {
             Shutdown(reason);
-            Initialize(IsServer);
+            Startup();
         }
 
         /// <summary>
@@ -145,6 +156,11 @@ namespace SS14.Shared.Network
         /// </summary>
         public void ProcessPackets()
         {
+            // client does not always have its networking running, for example on main menu
+            if (IsClient && _netPeer == null)
+                return;
+
+            // server on the other hand needs it to be running
             Debug.Assert(_netPeer != null);
 
             NetIncomingMessage msg;
@@ -193,6 +209,7 @@ namespace SS14.Shared.Network
         {
             Debug.Assert(_netPeer != null);
             Debug.Assert(!IsServer, "Should never be called on the server.");
+            Debug.Assert(!IsConnected);
 
             if (_netPeer.ConnectionsCount > 0)
                 ClientDisconnect("Client left server.");
@@ -204,8 +221,10 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
-            Debug.Assert(_netPeer != null);
             Debug.Assert(IsClient, "Should never be called on the server.");
+
+            if(_netPeer == null)
+                return;
 
             // Client should never have more than one connection.
             Debug.Assert(_netPeer.ConnectionsCount <= 1);
@@ -214,6 +233,8 @@ namespace SS14.Shared.Network
             {
                 connection.Disconnect(reason);
             }
+
+            Shutdown(reason);
         }
 
         /// <inheritdoc />
@@ -250,6 +271,11 @@ namespace SS14.Shared.Network
                 case NetConnectionStatus.Disconnected:
                     if (_channels.ContainsKey(sender))
                         HandleDisconnect(msg);
+                    else if(sender.RemoteUniqueIdentifier == 0) // is this the best way to detect an unsuccessful connect?
+                    {
+                        Logger.Info($"[NET] {sender.RemoteEndPoint}: Failed to connect");
+                        OnConnectFailed();
+                    }
                     break;
             }
         }
@@ -281,7 +307,9 @@ namespace SS14.Shared.Network
 
             Logger.Info($"[NET] {channel.RemoteAddress}: Connected");
 
-            OnConnected(channel);
+            // client is connected after string packet get received
+            if(IsServer)
+                OnConnected(channel);
         }
 
         private void HandleDisconnect(NetIncomingMessage message)
@@ -300,10 +328,13 @@ namespace SS14.Shared.Network
             var conn = message.SenderConnection;
             var channel = _channels[conn];
 
-            Logger.Info($"[NET] {channel.RemoteAddress}: Disconnected ({reason})");
+            Logger.Info($"[NET] {channel.RemoteAddress}:{channel.Connection.RemoteEndPoint.Port}: Disconnected ({reason})");
 
             OnDisconnected(channel);
             _channels.Remove(conn);
+
+            if (IsClient)
+                _strings.Reset();
         }
 
         // server-side disconnect
@@ -317,8 +348,11 @@ namespace SS14.Shared.Network
             string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
 
             if (msg.LengthBytes < 1)
+            {
                 Logger.Warning($"[NET] {address}: Received empty packet.");
-
+                return;
+            }
+            
             var id = msg.ReadByte();
 
             if (!_strings.TryGetString(id, out string name))
@@ -364,6 +398,8 @@ namespace SS14.Shared.Network
                 Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
 
+            DebugIn(instance);
+
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
                 return;
 
@@ -379,8 +415,8 @@ namespace SS14.Shared.Network
 
         public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
         {
-            foreach (var connection in _netPeer.Connections)
-                ServerSendMessage(message, connection, method);
+            if(_netPeer.Connections.Count > 0)
+                _netPeer.SendMessage(message, _netPeer.Connections, method, 0);
         }
 
         public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
@@ -426,6 +462,9 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToAll(NetMessage message)
         {
+            if(_netPeer == null)
+                return;
+
             var packet = BuildMessage(message);
             ServerSendToAll(packet, NetDeliveryMethod.ReliableOrdered);
         }
@@ -433,6 +472,10 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendMessage(NetMessage message, INetChannel recipient)
         {
+            if (_netPeer == null)
+                return;
+
+            DebugOut(message);
             var packet = BuildMessage(message);
             ServerSendMessage(packet, recipient.Connection);
         }
@@ -440,6 +483,9 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToMany(NetMessage message, List<INetChannel> recipients)
         {
+            if (_netPeer == null)
+                return;
+
             foreach (var channel in recipients)
             {
                 ServerSendMessage(message, channel);
@@ -449,6 +495,9 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod)
         {
+            if (_netPeer == null)
+                return;
+
             var packet = BuildMessage(message);
             ClientSendMessage(packet, deliveryMethod);
         }
@@ -456,13 +505,32 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
         {
-            // not connected to a server, so a message cannot be sent to it.
-            if(ServerChannel == null)
+            if (_netPeer == null)
                 return;
 
+            // not connected to a server, so a message cannot be sent to it.
+            if (ServerChannel == null)
+                return;
+            
             _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
         }
         #endregion NetMessages
+
+        #region NetDebug
+
+        [Conditional("DEBUG")]
+        private void DebugOut(NetMessage msg)
+        {
+            //Logger.Debug($"[NET] OUT: {msg.MsgName}");
+        }
+
+        [Conditional("DEBUG")]
+        private void DebugIn(NetMessage msg)
+        {
+            //Logger.Debug($"[NET]  IN: {msg.MsgName}");
+        }
+
+        #endregion NetDebug
 
         #region Events
 
@@ -471,6 +539,12 @@ namespace SS14.Shared.Network
             var args = new NetConnectingArgs(ip);
             Connecting?.Invoke(this, args);
             return !args.Deny;
+        }
+
+        protected virtual void OnConnectFailed()
+        {
+            var args = new NetConnectFailArgs();
+            ConnectFailed?.Invoke(this, args);
         }
 
         protected virtual void OnConnected(INetChannel channel)
@@ -490,6 +564,9 @@ namespace SS14.Shared.Network
 
         /// <inheritdoc />
         public event EventHandler<NetConnectingArgs> Connecting;
+
+        /// <inheritdoc />
+        public event EventHandler<NetConnectFailArgs> ConnectFailed; 
 
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Connected;

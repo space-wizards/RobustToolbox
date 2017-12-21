@@ -57,7 +57,7 @@ namespace SS14.Server.Chat
 
             Logger.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
 
-            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionById(message.MsgChannel.NetworkId).AttachedEntityUid;
+            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel).AttachedEntityUid;
 
             bool hasChannelIdentifier = false;
             if (channel != ChatChannel.Lobby)

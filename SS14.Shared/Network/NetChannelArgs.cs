@@ -48,4 +48,12 @@ namespace SS14.Shared.Network
             Ip = ip;
         }
     }
+
+    /// <summary>
+    /// Arguments for a failed connection attempt.
+    /// </summary>
+    public class NetConnectFailArgs : EventArgs
+    {
+        
+    }
 }

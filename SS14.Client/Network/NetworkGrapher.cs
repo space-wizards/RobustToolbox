@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Utility;
 using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;

@@ -54,8 +54,9 @@ namespace SS14.Client.GameObjects
         {
             get
             {
-                return transform.WorldPosition.Y +
-                       (GetActiveDirectionalSprite().LocalBounds.Height / 2);
+                if(Owner.Initialized)
+                    return transform.WorldPosition.Y + (GetActiveDirectionalSprite().LocalBounds.Height / 2);
+                return 0;
             }
         }
 

@@ -64,6 +64,8 @@ namespace SS14.Client
         private readonly IMapManager _mapManager;
         [Dependency]
         private readonly IPlacementManager _placementManager;
+        [Dependency]
+        private readonly IBaseClient _client;
 
         #endregion Fields
 
@@ -116,6 +118,8 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
+            _client.Initialize();
+
             _stateManager.RequestStateChange<MainScreen>();
 
             #region GameLoop
@@ -144,7 +148,7 @@ namespace SS14.Client
                     // announce we are falling behind
                     if ((_time.RealTime - _lastKeepUpAnnounce).TotalSeconds >= 15.0)
                     {
-                        Logger.Warning("[SRV] MainLoop: Cannot keep up!");
+                        Logger.Warning("[ENG] MainLoop: Cannot keep up!");
                         _lastKeepUpAnnounce = _time.RealTime;
                     }
                 }

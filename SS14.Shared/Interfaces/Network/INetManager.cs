@@ -21,6 +21,11 @@ namespace SS14.Shared.Interfaces.Network
         bool IsClient { get; }
 
         /// <summary>
+        ///     Has networking been started?
+        /// </summary>
+        bool IsRunning { get; }
+
+        /// <summary>
         ///     Is there at least one open NetChannel?
         /// </summary>
         bool IsConnected { get; }
@@ -50,6 +55,11 @@ namespace SS14.Shared.Interfaces.Network
         /// </summary>
         /// <param name="isServer">Is this a server, or a client?</param>
         void Initialize(bool isServer);
+
+        /// <summary>
+        ///     Starts the server running and listening on the port.
+        /// </summary>
+        void Startup();
 
         /// <summary>
         ///     Shuts down this peer, disconnecting all channels.

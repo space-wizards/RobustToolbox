@@ -19,12 +19,7 @@ namespace SS14.Shared.Interfaces.Network
         ///     The NetPeer this belongs to.
         /// </summary>
         INetManager NetPeer { get; }
-
-        /// <summary>
-        ///     The player slot ID of this channel.
-        /// </summary>
-        int NetworkId { get; set; }
-
+        
         /// <summary>
         ///     The Unique Identifier of the connection.
         /// </summary>
@@ -38,7 +33,7 @@ namespace SS14.Shared.Interfaces.Network
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.
         /// </summary>
-        int Ping { get; }
+        short Ping { get; }
 
         /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.

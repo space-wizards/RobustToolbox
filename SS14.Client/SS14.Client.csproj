@@ -151,13 +151,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseClient.cs" />
     <Compile Include="GameController.cs" />
     <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
+    <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
     <Compile Include="Map\MapRenderer.cs" />
     <Compile Include="Placement\Modes\AlignSnapgridCenter.cs" />
     <Compile Include="Placement\Modes\AlignSnapgridBorder.cs" />
+    <Compile Include="Player\LocalPlayer.cs" />
+    <Compile Include="Player\PlayerSession.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="ss14.ico" />

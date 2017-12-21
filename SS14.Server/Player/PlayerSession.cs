@@ -2,7 +2,6 @@
 using SS14.Server.Interfaces.Player;
 using SS14.Server.Interfaces.Round;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
@@ -12,6 +11,7 @@ using SS14.Server.GameObjects;
 using System;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Players;
 
 namespace SS14.Server.Player
 {
@@ -22,29 +22,23 @@ namespace SS14.Server.Player
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
-        public PlayerSession(INetChannel client, PlayerManager playerManager)
+        public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerIndex index)
         {
             _playerManager = playerManager;
+            Index = index;
 
             PlayerState = new PlayerState()
             {
-                UniqueIdentifier = client.ConnectionId
-
+                Uuid = client.ConnectionId,
+                Index = index,
             };
 
-            if (client != null)
-            {
-                ConnectedClient = client;
-                OnConnect();
-            }
-            else
-                Status = SessionStatus.Zombie;
+            ConnectedClient = client;
+            OnConnect();
 
             UpdatePlayerState();
         }
-
-        #region IPlayerSession Members
-
+        
         public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
@@ -57,10 +51,11 @@ namespace SS14.Server.Player
             set => _name = value;
         }
 
-
         public SessionStatus Status { get; set; }
 
         public DateTime ConnectedTime { get; private set; }
+
+        public PlayerIndex Index { get; }
 
         public void AttachToEntity(IEntity a)
         {
@@ -123,9 +118,6 @@ namespace SS14.Server.Player
             ConnectedTime = DateTime.Now;
             Status = SessionStatus.Connected;
             UpdatePlayerState();
-
-            //Put player in lobby immediately.
-            JoinLobby();
         }
 
         public void OnDisconnect()
@@ -147,9 +139,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-
-        #endregion IPlayerSession Members
-
+        
         private void SendAttachMessage()
         {
             if (attachedEntity == null)
@@ -169,7 +159,7 @@ namespace SS14.Server.Player
             DispatchVerb(message.Verb, message.Uid);
         }
 
-        public void DispatchVerb(string verb, int uid)
+        private void DispatchVerb(string verb, int uid)
         {
             //Handle global verbs
             Logger.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
+using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Players;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -20,25 +22,20 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public byte PlyCount { get; set; }
-        public List<PlyInfo> Plyrs { get; set; }
-
-        public class PlyInfo
-        {
-            public string Name { get; set; }
-            public byte Status { get; set; }
-            public float Ping { get; set; }
-        }
-
+        public List<PlayerState> Plyrs { get; set; }
+        
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            Plyrs = new List<PlyInfo>();
+            Plyrs = new List<PlayerState>();
             PlyCount = buffer.ReadByte();
             for (var i = 0; i < PlyCount; i++)
             {
-                var plyNfo = new PlyInfo();
+                var plyNfo = new PlayerState();
+                plyNfo.Index = new PlayerIndex(buffer.ReadInt32());
+                plyNfo.Uuid = buffer.ReadInt64();
                 plyNfo.Name = buffer.ReadString();
-                plyNfo.Status = buffer.ReadByte();
-                plyNfo.Ping = buffer.ReadFloat();
+                plyNfo.Status = (SessionStatus) buffer.ReadByte();
+                plyNfo.Ping = buffer.ReadInt16();
                 Plyrs.Add(plyNfo);
             }
         }
@@ -49,8 +46,10 @@ namespace SS14.Shared.Network.Messages
 
             foreach (var ply in Plyrs)
             {
+                buffer.Write(ply.Index);
+                buffer.Write(ply.Uuid);
                 buffer.Write(ply.Name);
-                buffer.Write(ply.Status);
+                buffer.Write((byte) ply.Status);
                 buffer.Write(ply.Ping);
             }
         }

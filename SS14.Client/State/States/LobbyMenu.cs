@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using Lidgren.Network;
-using SS14.Client.Graphics;
+﻿using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
+using SS14.Client.Player;
 using SS14.Client.UserInterface;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Shared;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using SS14.Shared.Network;
-using SS14.Shared.Network.Messages;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.State.States
 {
     public class Lobby : State
     {
+        private IPlayerManager _plyrMan;
+
         private Screen _uiScreen;
 
         private Label _lblModeInfo;
@@ -30,26 +28,12 @@ namespace SS14.Client.State.States
         private TabbedMenu _tabs;
 
         private Chatbox _lobbyChat;
-
-        private string _serverName;
-        private int _serverPort;
-        private string _welcomeString;
-        private int _serverMaxPlayers;
-        private int _serverPlayers;
-        private string _serverMapName;
-        private string _gameType;
-
+        
         public Lobby(IDictionary<Type, object> managers)
             : base(managers) { }
 
         public override void InitializeGUI()
         {
-            //TODO: This needs to go in BaseClient
-            NetworkManager.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, message =>
-                Logger.Error($"[SRV] Unhandled NetMessage type: {message.MsgId}"));
-
-            NetworkManager.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandlePlayerList);
-
             _uiScreen = new Screen();
             _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
             // UI screen is added in startup
@@ -69,7 +53,7 @@ namespace SS14.Client.State.States
             lblServer.LocalPosition = new Vector2i(5, 2);
             imgStatus.AddControl(lblServer);
 
-            _lblServerInfo = new Label("LLJK#1", "MICROGME");
+            _lblServerInfo = new Label("------", "MICROGME");
             _lblServerInfo.ForegroundColor = new Color(139, 0, 0);
             _lblServerInfo.FixedWidth = 100;
             _lblServerInfo.Alignment = Align.Right;
@@ -81,7 +65,7 @@ namespace SS14.Client.State.States
             lblMode.LocalPosition = new Vector2i(10, 0);
             _lblServerInfo.AddControl(lblMode);
 
-            _lblModeInfo = new Label("SECRET", "MICROGME");
+            _lblModeInfo = new Label("------", "MICROGME");
             _lblModeInfo.ForegroundColor = new Color(139, 0, 0);
             _lblModeInfo.FixedWidth = 90;
             _lblModeInfo.Alignment = Align.Right;
@@ -93,7 +77,7 @@ namespace SS14.Client.State.States
             lblPlayers.LocalPosition = new Vector2i(10, 0);
             _lblModeInfo.AddControl(lblPlayers);
 
-            _lblPlayersInfo = new Label("17/32", "MICROGME");
+            _lblPlayersInfo = new Label("--/--", "MICROGME");
             _lblPlayersInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPlayersInfo.FixedWidth = 60;
             _lblPlayersInfo.Alignment = Align.Right;
@@ -105,7 +89,7 @@ namespace SS14.Client.State.States
             lblPort.LocalPosition = new Vector2i(10, 0);
             _lblPlayersInfo.AddControl(lblPort);
 
-            _lblPortInfo = new Label(MainScreen.DefaultPort.ToString(), "MICROGME");
+            _lblPortInfo = new Label("----", "MICROGME");
             _lblPortInfo.ForegroundColor = new Color(139, 0, 0);
             _lblPortInfo.FixedWidth = 50;
             _lblPortInfo.Alignment = Align.Right;
@@ -127,10 +111,10 @@ namespace SS14.Client.State.States
             tabObserve.TabSpriteName = "lobby_tab_eye";
             _tabs.AddTab(tabObserve);
 
-            var tabServer = new PlayerListTab(new Vector2i(793, 350));
-            tabServer.TabSpriteName = "lobby_tab_info";
-            _tabs.AddTab(tabServer);
-            _tabs.SelectTab(tabServer);
+            _tabServer = new PlayerListTab(new Vector2i(793, 350));
+            _tabServer.TabSpriteName = "lobby_tab_info";
+            _tabs.AddTab(_tabServer);
+            _tabs.SelectTab(_tabServer);
 
             var imgChatBg = new SimpleImage();
             imgChatBg.Sprite = "lobby_chatbg";
@@ -160,35 +144,23 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
+            _plyrMan = IoCManager.Resolve<IPlayerManager>();
+            _plyrMan.PlayerListUpdated += HandlePlayerList;
+
             UserInterfaceManager.AddComponent(_uiScreen);
 
-            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-
-            var message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.WelcomeMessageReq); //Request Welcome msg.
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
-
-            var playerListMsg = NetworkManager.CreateMessage();
-            playerListMsg.Write((byte)NetMessages.PlayerListReq); //Request Playerlist.
-            NetworkManager.ClientSendMessage(playerListMsg, NetDeliveryMethod.ReliableOrdered);
+            UpdateInfo();
             FormResize();
         }
 
         public override void Shutdown()
         {
+            _plyrMan = IoCManager.Resolve<IPlayerManager>();
+            _plyrMan.PlayerListUpdated -= HandlePlayerList;
+
             UserInterfaceManager.RemoveComponent(_uiScreen);
-
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
         }
-
-        public override void Update(FrameEventArgs e)
-        {
-            _lblServerInfo.Text = _serverName;
-            _lblModeInfo.Text = _gameType;
-            _lblPlayersInfo.Text = _serverPlayers + " / " + _serverMaxPlayers;
-            _lblPortInfo.Text = _serverPort.ToString();
-        }
-
+        
         public override void FormResize()
         {
             _uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
@@ -242,100 +214,59 @@ namespace SS14.Client.State.States
             UserInterfaceManager.TextEntered(e);
         }
 
-        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
+        /// <summary>
+        ///     Updates the visual player list in the tab.
+        /// </summary>
+        private void UpdatePlayerList(IReadOnlyDictionary<int, PlayerSession> sessions)
         {
-            var message = args.RawMessage;
-            switch (message.MessageType)
-            {
-                case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
-                    if (statMsg == NetConnectionStatus.Disconnected)
-                    {
-                        var disconnectMessage = message.ReadString();
-                        UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                            UserInterfaceManager,
-                            ResourceCache,
-                            disconnectMessage));
-                    }
-                    break;
-
-                case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
-                    switch (messageType)
-                    {
-                        case NetMessages.LobbyChat:
-                            //TODO: Send player messages to a lobby chat
-                            break;
-
-                        case NetMessages.WelcomeMessage:
-                            HandleWelcomeMessage(message);
-                            break;
-
-                        case NetMessages.ChatMessage:
-                            HandleChatMessage(message);
-                            break;
-
-                        case NetMessages.JoinGame:
-                            HandleJoinGame();
-                            break;
-                    }
-                    break;
-            }
-        }
-
-        private void HandleWelcomeMessage(NetIncomingMessage msg)
-        {
-            _serverName = msg.ReadString();
-            _serverPort = msg.ReadInt32();
-            _welcomeString = msg.ReadString();
-            _serverMaxPlayers = msg.ReadInt32();
-            _serverMapName = msg.ReadString();
-            _gameType = msg.ReadString();
-        }
-
-        private void HandleChatMessage(NetIncomingMessage msg)
-        {
-            var channel = (ChatChannel)msg.ReadByte();
-            var text = msg.ReadString();
-            var message = "[" + channel + "] " + text;
-            _lobbyChat.AddLine(message, ChatChannel.Lobby);
-        }
-
-        private void HandlePlayerList(NetMessage message)
-        {
-            //TODO: Race between getting InitializeGUI setup before we receive PlayerList message
-            //TODO: Move all netcode to a new class.
-            if (_tabServer == null)
-                return;
-
-            var playerList = (MsgPlayerList)message;
-
-            var playerCount = playerList.PlyCount;
-            _serverPlayers = playerCount;
-            // _tabServer?.PlayerList.Components.Clear();
+            var playerCount = _plyrMan.MaxPlayers;
+            
             _tabServer.PlayerList.DisposeAllChildren();
             var offY = 0;
             for (var i = 0; i < playerCount; i++)
             {
-                var plyr = playerList.Plyrs[i];
+                var labelText = $"[{i+1}]";
+                if (sessions.TryGetValue(i, out var session))
+                {
+                    labelText = labelText + $" {session.Name}\t\tStatus: {session.Status}\t\tLatency: {session.Ping} ms";
+                }
+                else
+                {
+                    labelText = labelText + " <EMPTY>";
+                }
 
-                var currName = plyr.Name;
-                var currStatus = (SessionStatus)plyr.Status;
-                var currRoundtrip = plyr.Ping;
-
-                var newLabel = new Label(currName + "\t\tStatus: " + currStatus + "\t\tLatency: " + Math.Truncate(currRoundtrip * 1000) + " ms", "MICROGBE");
+                var newLabel = new Label(labelText, "MICROGBE");
                 newLabel.Position = new Vector2i(0, offY);
                 newLabel.ForegroundColor = Color.Black;
                 newLabel.DoLayout();
                 offY += newLabel.ClientArea.Height;
-                //_tabServer.PlayerList.Components.Add(newLabel);
                 _tabServer.PlayerList.AddControl(newLabel);
             }
         }
 
-        private void HandleJoinGame()
+        /// <summary>
+        ///     Updates the visual server info at the top of the lobby.
+        /// </summary>
+        private void UpdateServerInfo(ServerInfo info)
         {
-            StateManager.RequestStateChange<GameScreen>();
+            _lblServerInfo.Text = info.ServerName;
+            _lblModeInfo.Text = info.GameMode;
+            _lblPlayersInfo.Text = info.ServerPlayerCount + " / " + info.ServerMaxPlayers;
+            _lblPortInfo.Text = info.ServerPort.ToString();
+        }
+        
+        private void HandlePlayerList(object sender, EventArgs args)
+        {
+            UpdateInfo();
+        }
+
+        private void UpdateInfo()
+        {
+            var man = IoCManager.Resolve<IPlayerManager>();
+            UpdatePlayerList(man.SessionsDict);
+
+            var clBase = IoCManager.Resolve<IBaseClient>();
+            UpdateServerInfo(clBase.GameInfo);
         }
 
         private void _btnReady_Clicked(ImageButton sender)

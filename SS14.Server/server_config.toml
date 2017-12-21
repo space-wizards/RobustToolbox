@@ -8,6 +8,7 @@ enabled = false
 [net]
 tickrate = 66
 port = 1212
+allowdupeip = true
 
 [game]
 hostname = "MyServer"

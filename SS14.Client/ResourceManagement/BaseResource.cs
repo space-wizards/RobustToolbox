@@ -26,11 +26,6 @@ namespace SS14.Client.ResourceManagement
         /// </summary>
         /// <param name="cache">ResourceCache this resource is being loaded into.</param>
         /// <param name="path">Path of the resource relative to the root of the ResourceCache.</param>
-        /// <param name="stream">Stream of the resource that was opened.</param>
-        public abstract void Load(IResourceCache cache, string path, Stream stream);
-
-        public virtual void LoadFromDisk(IResourceCache cache, string diskPath)
-        {
-        }
+        public abstract void Load(IResourceCache cache, string path);
     }
 }

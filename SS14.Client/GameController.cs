@@ -1,14 +1,18 @@
 ﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using System;
 
 namespace SS14.Client
 {
     // Gets automatically ran by SS14.Client.Godot.
-    public partial class GameController : ClientEntryPoint
+    public sealed partial class GameController : ClientEntryPoint
     {
+        public Godot.SceneTree SceneTree { get; private set; }
+
         [Dependency]
         readonly IConfigurationManager _configurationManager;
         [Dependency]
@@ -36,8 +40,10 @@ namespace SS14.Client
         private readonly IPlacementManager _placementManager;
         */
 
-        public override void Main()
+        public override void Main(Godot.SceneTree tree)
         {
+            SceneTree = tree;
+
             InitIoC();
 
             // Load config.
@@ -45,6 +51,14 @@ namespace SS14.Client
 
             // Init resources.
             _resourceCache.LoadBaseResources();
+
+            var texture = _resourceCache.GetResource<TextureResource>("Textures/Items/Toolbox_b.png");
+            var s = new Godot.Sprite();
+            Console.WriteLine("New sprite...");
+            SceneTree.GetRoot().AddChild(s);
+            Console.WriteLine("Added as child...");
+            s.Texture = texture.Texture;
+            Console.WriteLine("What the fuck?");
         }
     }
 }

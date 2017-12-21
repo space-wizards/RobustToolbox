@@ -3,11 +3,14 @@ using SS14.Client.ResourceManagement;
 using SS14.Shared.GameObjects;
 using System.Collections.Generic;
 using System.IO;
+using SS14.Shared.Interfaces;
 
 namespace SS14.Client.Interfaces.ResourceManagement
 {
     public interface IResourceCache
     {
+        // For convenience.
+
         void LoadLocalResources();
         void LoadBaseResources();
 

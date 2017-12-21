@@ -17,6 +17,11 @@ namespace SS14.Client.GodotGlue
 
         public override void _Ready()
         {
+            CallDeferred(nameof(AnnounceMain));
+        }
+
+        public void AnnounceMain()
+        {
             SS14Assembly = Assembly.LoadFrom("../bin/Client/SS14.Client.dll");
             var entryType = typeof(ClientEntryPoint);
             foreach (var type in SS14Assembly.GetTypes())
@@ -26,11 +31,12 @@ namespace SS14.Client.GodotGlue
                     var instance = (ClientEntryPoint)Activator.CreateInstance(type);
                     try
                     {
-                        instance.Main();
+                        instance.Main(GetTree());
                     }
-                    catch (Exception e)
+                    catch (Exception whatthefuck)
                     {
-                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{e}");
+                        Console.WriteLine(whatthefuck.StackTrace);
+                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{whatthefuck}");
                     }
                     entryPoints.Add(instance);
                 }
@@ -70,7 +76,7 @@ namespace SS14.Client.GodotGlue
         /// <summary>
         ///     Called when the entry point gets created.
         /// </summary>
-        public virtual void Main()
+        public virtual void Main(SceneTree tree)
         {
         }
 

@@ -1,0 +1,32 @@
+
+[key]
+
+[key.keyboard]
+console = 64
+
+[res]
+pack = "./ResourcePack.zip"
+
+[display]
+width = 1280
+height = 720
+fullscreen = false
+refresh = 60
+vsync = false
+
+[net]
+server = "127.0.0.1"
+updaterate = 20
+cmdrate = 30
+interpolation = 0.100000001490116
+rate = 10240
+fakelag = false
+fakeloss = 0.0
+fakelagmin = 0.0
+fakelagrand = 0.0
+
+[player]
+name = "Joe Genero"
+
+[ent]
+logging = false

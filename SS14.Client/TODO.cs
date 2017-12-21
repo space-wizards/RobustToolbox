@@ -4,4 +4,5 @@
  *  Re-add cool splash screen.
  *  Some way to hook shutdown (IoCManager.Clear() needs it)
  *  Fix that HORRIBLE hack inside PathHelpers.ExecutableRelativeFile()
+ *  Resource Cache doesn't use VFS, so no ZIP support.
  */

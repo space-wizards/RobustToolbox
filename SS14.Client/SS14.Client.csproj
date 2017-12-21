@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(SolutionDir)\MSBuild\SS14.SolutionSpecific.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -41,6 +42,9 @@
       <HintPath>..\SS14.Client.Godot\.mono\assemblies\GodotSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.ValueTuple" Condition="'$(Godot)' != 'Yes'">
+      <HintPath>$(PackageDir)System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameController.cs" />
@@ -48,7 +52,16 @@
     <Compile Include="Log\GodotLogManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />
+    <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />
+    <Compile Include="ResourceManagement\BaseResource.cs" />
+    <Compile Include="ResourceManagement\ResourceCache.cs" />
+    <Compile Include="ResourceManagement\TextureResource.cs" />
     <Compile Include="TODO.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="client_config.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
@@ -63,9 +76,6 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,4 @@
 ﻿using SS14.Shared.Interfaces.Log;
-using SS14.Shared.IoC;
 using System;
 
 namespace SS14.Shared.Log
@@ -40,10 +39,10 @@ namespace SS14.Shared.Log
             string name = LogLevelToName(level);
             ConsoleColor color = LogLevelToConsoleColor(level);
 
-            Console.ForegroundColor = color;
-            Console.Write(name);
-            Console.ResetColor();
-            Console.WriteLine(": {0}", message);
+            System.Console.ForegroundColor = color;
+            System.Console.Write(name);
+            System.Console.ResetColor();
+            System.Console.WriteLine(": {0}", message);
         }
 
         // If you make either of these methods public.

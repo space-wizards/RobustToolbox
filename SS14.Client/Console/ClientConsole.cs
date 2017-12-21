@@ -28,13 +28,13 @@ namespace SS14.Client.Console
     public class ClientConsole : IClientConsole, IDebugConsole
     {
         [Dependency]
-        private readonly IClientNetManager _network;
+        protected readonly IClientNetManager _network;
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
 
         /// <inheritdoc />
-        public void Initialize()
+        public virtual void Initialize()
         {
             _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, HandleConCmdReg);
             _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleConCmdAck);
@@ -44,7 +44,7 @@ namespace SS14.Client.Console
         }
 
         /// <inheritdoc />
-        public void Reset()
+        public virtual void Reset()
         {
             _commands.Clear();
             _requestedCommands = false;

@@ -89,11 +89,11 @@ namespace SS14.Shared.GameObjects
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
         public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
+        public YamlMappingNode DataNode { get; set; }
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
         /// </summary>
-        public YamlMappingNode DataNode;
 
         public void LoadFrom(YamlMappingNode mapping)
         {

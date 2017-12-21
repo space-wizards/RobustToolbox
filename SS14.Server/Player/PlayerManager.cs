@@ -13,14 +13,15 @@ using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Prototypes;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Utility;
 using SS14.Shared.Map;
+using SS14.Shared.Players;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
@@ -33,36 +34,36 @@ namespace SS14.Server.Player
         /// <summary>
         /// The server that instantiated this manager.
         /// </summary>
-        public IBaseServer Server;
+        public IBaseServer Server { get; set; }
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
-        private readonly Dictionary<int, PlayerSession> _sessions;
+        /// <summary>
+        ///     Number of active sessions.
+        ///     This is the cached value of _sessions.Count(s => s != null);
+        /// </summary>
+        private int _sessionCount = 0;
 
+        /// <summary>
+        ///     Active sessions of connected clients to the server.
+        /// </summary>
+        private PlayerSession[] _sessions;
+        
         [Dependency]
         private readonly IServerEntityManager _entityManager;
 
         [Dependency]
         private readonly IPrototypeManager _prototypeManager;
+        
+        public int PlayerCount => _sessionCount;
+        public int MaxPlayers => _sessions.Length;
 
-        /// <summary>
-        /// Constructs an instance of the player manager.
-        /// </summary>
-        public PlayerManager()
-        {
-            _sessions = new Dictionary<int, PlayerSession>();
-        }
-
-        public int PlayerCount => _sessions.Count;
-
-        /// <summary>
-        /// Initializes the manager.
-        /// </summary>
-        /// <param name="server">The server that instantiated this manager.</param>
-        public void Initialize(BaseServer server)
+        public void Initialize(BaseServer server, int maxPlayers)
         {
             Server = server;
             Server.OnRunLevelChanged += RunLevelChanged;
+            
+            _sessions = new PlayerSession[maxPlayers];
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
 
@@ -91,8 +92,17 @@ namespace SS14.Server.Player
         /// <param name="args"></param>
         public void NewSession(object sender, NetChannelArgs args)
         {
-            var session = new PlayerSession(args.Channel, this);
-            _sessions.Add(args.Channel.NetworkId, session);
+            var pos = GetFirstOpenIndex();
+
+            if(pos == -1)
+                throw new InvalidOperationException("NewSession was called, but there are no available slots!");
+
+            var index = new PlayerIndex(pos);
+            var session = new PlayerSession(this, args.Channel, index);
+
+            Debug.Assert(_sessions[pos] == null);
+            _sessionCount++;
+            _sessions[pos] = session;
         }
 
         /// <summary>
@@ -107,12 +117,8 @@ namespace SS14.Server.Player
 
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
-            IEnumerable<PlayerSession> sessions =
-                from s in _sessions
-                where s.Value.ConnectedClient == client
-                select s.Value;
-
-            return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
+            // Should only be one session per client. Returns that session, in theory.
+            return _sessions.FirstOrDefault(s => s.ConnectedClient == client);
         }
 
         /// <summary>
@@ -120,20 +126,10 @@ namespace SS14.Server.Player
         /// </summary>
         /// <param name="networkId">The network id of the client.</param>
         /// <returns></returns>
-        public IPlayerSession GetSessionById(int networkId)
+        public IPlayerSession GetSessionById(PlayerIndex index)
         {
-            return _sessions.TryGetValue(networkId, out PlayerSession session) ? session : null;
-        }
-
-        [Obsolete("Use GetSessionById/GetSessionByChannel")]
-        public IPlayerSession GetSessionByConnection(NetConnection client)
-        {
-            IEnumerable<PlayerSession> sessions =
-                from s in _sessions
-                where s.Value.ConnectedClient.Connection == client
-                select s.Value;
-
-            return sessions.FirstOrDefault(); // Should only be one session per client. Returns that session, in theory.
+            Debug.Assert(0 <= index && index <= MaxPlayers);
+            return _sessions[index];
         }
 
         public RunLevel RunLevel { get; set; }
@@ -144,23 +140,26 @@ namespace SS14.Server.Player
         /// <param name="msg">Incoming message.</param>
         public void HandleNetworkMessage(MsgSession msg)
         {
-            GetSessionById(msg.MsgChannel.NetworkId)?.HandleNetworkMessage(msg);
+            GetSessionByChannel(msg.MsgChannel)?.HandleNetworkMessage(msg);
         }
 
         /// <summary>
-        /// Ends a clients session, and disconnects them.
+        ///     Ends a clients session, and disconnects them.
         /// </summary>
-        /// <param name="client">Client network channel to close.</param>
-        public void EndSession(object sender, NetChannelArgs args)
+        private void EndSession(object sender, NetChannelArgs args)
         {
-            var session = GetSessionById(args.Channel.NetworkId);
-            if (session == null)
-                return; //There is no session!
+            var session = GetSessionByChannel(args.Channel);
+
+            // make sure nothing got messed up during the life of the session
+            Debug.Assert(_sessionCount > 0);
+            Debug.Assert(0 <= session.Index && session.Index <= MaxPlayers);
+            Debug.Assert(_sessions[session.Index] != null);
+            Debug.Assert(_sessions[session.Index].ConnectedClient.ConnectionId == args.Channel.ConnectionId);
 
             //Detach the entity and (don't)delete it.
             session.OnDisconnect();
-
-            _sessions.Remove(args.Channel.NetworkId);
+            _sessionCount--;
+            _sessions[session.Index] = null;
         }
 
         /// <summary>
@@ -168,9 +167,9 @@ namespace SS14.Server.Player
         /// </summary>
         public void SendJoinGameToAll()
         {
-            foreach (PlayerSession s in _sessions.Values)
+            foreach (PlayerSession s in _sessions)
             {
-                s.JoinGame();
+                s?.JoinGame();
             }
         }
 
@@ -179,9 +178,9 @@ namespace SS14.Server.Player
         /// </summary>
         public void SendJoinLobbyToAll()
         {
-            foreach (PlayerSession s in _sessions.Values)
+            foreach (PlayerSession s in _sessions)
             {
-                s.JoinLobby();
+                s?.JoinLobby();
             }
         }
 
@@ -190,9 +189,9 @@ namespace SS14.Server.Player
         /// </summary>
         public void DetachAll()
         {
-            foreach (PlayerSession s in _sessions.Values)
+            foreach (PlayerSession s in _sessions)
             {
-                s.DetachFromEntity();
+                s?.DetachFromEntity();
             }
         }
 
@@ -206,7 +205,7 @@ namespace SS14.Server.Player
         {
             //TODO: This needs to be moved to the PVS system.
             return
-                _sessions.Values.Where(x =>
+                _sessions.Where(x => x != null &&
                     x.attachedEntity != null &&
                     position.InRange(x.attachedEntity.GetComponent<ITransformComponent>().LocalPosition, range))
                     .Cast<IPlayerSession>()
@@ -221,8 +220,8 @@ namespace SS14.Server.Player
         {
             //TODO: Lobby system needs to be moved to Content Assemblies.
             return
-                _sessions.Values.Where(
-                    x => x.Status == SessionStatus.InLobby)
+                _sessions.Where(
+                    x => x != null && x.Status == SessionStatus.InLobby)
                     .Cast<IPlayerSession>()
                     .ToList();
         }
@@ -233,7 +232,7 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<IPlayerSession> GetAllPlayers()
         {
-            return _sessions.Values.Cast<IPlayerSession>().ToList();
+            return _sessions.Cast<IPlayerSession>().ToList();
         }
 
         /// <summary>
@@ -242,9 +241,27 @@ namespace SS14.Server.Player
         /// <returns></returns>
         public List<PlayerState> GetPlayerStates()
         {
-            return _sessions.Values
+            return _sessions
+                .Where(s => s != null)
                 .Select(s => s.PlayerState)
                 .ToList();
+        }
+
+        private int GetFirstOpenIndex()
+        {
+            Debug.Assert(PlayerCount <= MaxPlayers);
+
+            if (PlayerCount == MaxPlayers)
+                return -1;
+
+            for (var i = 0; i < _sessions.Length; i++)
+            {
+                if (_sessions[i] == null)
+                    return i;
+            }
+
+            Debug.Assert(true, "Why was a slot not found? There should be one.");
+            return -1;
         }
 
         #endregion IPlayerManager Members

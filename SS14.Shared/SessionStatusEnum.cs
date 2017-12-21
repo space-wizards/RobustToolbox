@@ -1,8 +1,8 @@
-namespace SS14.Shared
+﻿namespace SS14.Shared
 {
-    public enum SessionStatus
+    public enum SessionStatus : byte
     {
-        Zombie,
+        Zombie = 0,
         Connected,
         InLobby,
         InGame,

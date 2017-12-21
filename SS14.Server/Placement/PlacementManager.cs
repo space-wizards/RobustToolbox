@@ -28,7 +28,8 @@ namespace SS14.Server.Placement
     {
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-        public List<PlacementInformation> BuildPermissions = new List<PlacementInformation>();
+        public List<PlacementInformation> BuildPermissions { get; set; } = new List<PlacementInformation>();
+
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
         #region IPlacementManager Members
@@ -71,7 +72,7 @@ namespace SS14.Server.Placement
 
             var dirRcv = msg.DirRcv;
 
-            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionById(msg.MsgChannel.NetworkId);
+            IPlayerSession session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobodys
 

@@ -230,6 +230,7 @@
     <Compile Include="Physics\CollisionManager.cs" />
     <Compile Include="PlacementInformation.cs" />
     <Compile Include="KeyFunctions.cs" />
+    <Compile Include="Players\PlayerIndex.cs" />
     <Compile Include="PostProcessingEffects.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />

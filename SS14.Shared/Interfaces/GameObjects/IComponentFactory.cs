@@ -48,6 +48,11 @@ namespace SS14.Shared.Interfaces.GameObjects
     public interface IComponentFactory
     {
         /// <summary>
+        ///     All IComponent types that are currently registered to this factory.
+        /// </summary>
+        IEnumerable<Type> AllRegisteredTypes { get; }
+
+            /// <summary>
         /// Get whether a component is available right now.
         /// </summary>
         /// <param name="componentName">The name of the component to check.</param>

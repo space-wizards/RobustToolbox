@@ -31,12 +31,13 @@ namespace SS14.Shared.Network
         /// <summary>
         /// If this is set to true, deny the incoming connection.
         /// </summary>
-        public bool Deny;
 
         /// <summary>
         /// The IP of the incoming connection.
         /// </summary>
         public readonly string Ip;
+
+        public bool Deny { get; set; }
 
         /// <summary>
         /// Constructs a new instance.
@@ -46,5 +47,13 @@ namespace SS14.Shared.Network
         {
             Ip = ip;
         }
+    }
+
+    /// <summary>
+    /// Arguments for a failed connection attempt.
+    /// </summary>
+    public class NetConnectFailArgs : EventArgs
+    {
+        
     }
 }

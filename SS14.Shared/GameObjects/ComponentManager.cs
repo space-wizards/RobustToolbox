@@ -8,22 +8,31 @@ using System.Linq;
 
 namespace SS14.Shared.GameObjects
 {
-    public class ComponentManager : IComponentManager
+    public class ComponentManager : IComponentManager, IPostInjectInit
     {
         /// <summary>
         /// Dictionary of components -- this is the master list.
         /// </summary>
-        private readonly Dictionary<Type, List<IComponent>> components
+        private readonly Dictionary<Type, List<IComponent>> _components
             = new Dictionary<Type, List<IComponent>>();
 
-        private readonly List<IComponent> allComponents = new List<IComponent>();
+        private readonly List<IComponent> _allComponents = new List<IComponent>();
 
         [Dependency]
         private readonly IComponentFactory ComponentFactory;
 
-        public IEnumerable<IComponent> GetComponents(Type type)
+        /// <inheritdoc />
+        public void PostInject()
         {
-            return components[type].Where(c => !c.Deleted);
+            foreach (var compType in ComponentFactory.AllRegisteredTypes)
+            {
+                _components[compType] = new List<IComponent>();
+            }
+        }
+
+        private IEnumerable<IComponent> GetComponents(Type type)
+        {
+            return _components[type].Where(c => !c.Deleted);
         }
 
         public IEnumerable<T> GetComponents<T>() where T : IComponent
@@ -41,14 +50,14 @@ namespace SS14.Shared.GameObjects
 
             foreach (Type type in reg.References)
             {
-                if (!components.ContainsKey(type))
+                if (!_components.ContainsKey(type))
                 {
-                    components[type] = new List<IComponent>();
+                    _components[type] = new List<IComponent>();
                 }
-                components[type].Add(component);
+                _components[type].Add(component);
             }
 
-            allComponents.Add(component);
+            _allComponents.Add(component);
         }
 
         /// <summary>
@@ -58,9 +67,9 @@ namespace SS14.Shared.GameObjects
         public void Update(float frameTime)
         {
             // Cull components and update them too.
-            for (var i = 0; i < allComponents.Count; i++)
+            for (var i = 0; i < _allComponents.Count; i++)
             {
-                var component = allComponents[i];
+                var component = _allComponents[i];
                 if (!component.Deleted)
                 {
                     component.Update(frameTime);
@@ -68,13 +77,13 @@ namespace SS14.Shared.GameObjects
                 }
 
                 var reg = ComponentFactory.GetRegistration(component);
-                allComponents.RemoveSwap(i);
+                _allComponents.RemoveSwap(i);
 
                 foreach (Type type in reg.References)
                 {
                     // TODO: This is ridiculously slow due to O(n) removal times.
-                    var index = components[type].FindIndex(c => c == component);
-                    components[type].RemoveSwap(index);
+                    var index = _components[type].FindIndex(c => c == component);
+                    _components[type].RemoveSwap(index);
                 }
 
                 // Check the one we just swapped with next iteration.
@@ -84,8 +93,8 @@ namespace SS14.Shared.GameObjects
 
         public void Cull()
         {
-            allComponents.Clear();
-            components.Clear();
+            _allComponents.Clear();
+            _components.Clear();
         }
     }
 }

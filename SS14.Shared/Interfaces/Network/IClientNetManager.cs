@@ -21,6 +21,11 @@ namespace SS14.Shared.Interfaces.Network
         event EventHandler<NetMessageArgs> MessageArrived;
 
         /// <summary>
+        ///     The attempted connection by a client to a server failed.
+        /// </summary>
+        event EventHandler<NetConnectFailArgs> ConnectFailed;
+
+        /// <summary>
         ///     Attempts to connect to the remote server. This does not Restart() the client networking. Make sure
         ///     to Initialize(true) networking before calling this.
         /// </summary>

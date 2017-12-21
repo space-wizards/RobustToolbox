@@ -53,7 +53,7 @@ namespace SS14.Client.Graphics.Sprites
             get { return count; }
         }
 
-        public BlendMode BlendingSettings;
+        public BlendMode BlendingSettings { get; set; }
 
         public SpriteBatch(uint maxCapacity = 100000)
         {
@@ -216,6 +216,7 @@ namespace SS14.Client.Graphics.Sprites
         }
 
         Drawable IDrawable.SFMLDrawable => drawableDummy;
+
         private SpriteBatchDrawableDummy drawableDummy;
 
         ~SpriteBatch()

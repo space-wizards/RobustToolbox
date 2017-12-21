@@ -33,10 +33,10 @@ namespace SS14.Client.GodotGlue
                     {
                         instance.Main(GetTree());
                     }
-                    catch (Exception whatthefuck)
+                    catch (Exception e)
                     {
-                        Console.WriteLine(whatthefuck.StackTrace);
-                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{whatthefuck}");
+                        Console.WriteLine(e.StackTrace);
+                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{e}");
                     }
                     entryPoints.Add(instance);
                 }

@@ -16,28 +16,25 @@ namespace SS14.Client.ResourceManagement
     public class ResourceCache : IResourceCache
     {
         [Dependency]
-        readonly IConfigurationManager _config;
+        readonly IResourceManager _resources;
 
-        // [Dependency]
-        // readonly IResourceManager _resources;
-
-        private static readonly string BaseResourceDir = PathHelpers.ExecutableRelativeFile("Resources/");
+        private static readonly string BaseResourceDir = PathHelpers.ExecutableRelativeFile(@"./Resources/");
         private Dictionary<(string, Type), BaseResource> CachedResources = new Dictionary<(string, Type), BaseResource>();
 
         public void LoadBaseResources()
         {
-            // _resources.Initialize();
+            _resources.Initialize();
 
             // TODO: Right now the resource cache doesn't use the VFS,
             //   so that we always have on-disk locations of files.
             //   Godot doesn't make it easy to load resources without them being on-disk.
-            // _resources.MountContentDirectory(@"./Resources/");
-            // _resources.MountContentPack(@"./EngineContentPack.zip");
+            _resources.MountContentDirectory(@"./Resources/");
+            _resources.MountContentPack(@"./EngineContentPack.zip");
         }
 
         public void LoadLocalResources()
         {
-            // _resources.MountDefaultContentPack();
+            _resources.MountDefaultContentPack();
         }
 
         public T GetResource<T>(string path) where T : BaseResource, new()
@@ -61,12 +58,12 @@ namespace SS14.Client.ResourceManagement
                 CachedResources[(path, typeof(T))] = resource;
                 return true;
             }
-            catch (FileNotFoundException)
+            catch (Exception e)
             {
                 if (_resource.Fallback != null)
                 {
-                    // TODO: This totally infinite loops if the fallback doesn't exist EITHER.
-                    Logger.Warning($"Failed to load resource of type {typeof(T)}: {path}, but we have to resort to fallback!");
+                    // TODO: This totally infinite loops if the fallback throws an exception too.
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback:\n{e}");
                     return TryGetResource(_resource.Fallback, out resource);
                 }
                 else

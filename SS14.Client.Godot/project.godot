@@ -12,6 +12,7 @@ config_version=3
 
 config/name="SS14.Client.Godot"
 run/main_scene="res://MainScene.tscn"
+config/use_custom_user_dir=true
 boot_splash/image="res://bootsplash.png"
 boot_splash/fullsize=false
 config/icon="res://logo.png"
@@ -23,6 +24,10 @@ SS14Loader="*res://SS14Loader.cs"
 [gdnative]
 
 singletons=[  ]
+
+[network]
+
+limits/debugger_stdout/max_chars_per_second=8128
 
 [rendering]
 

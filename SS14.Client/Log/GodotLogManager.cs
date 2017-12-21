@@ -16,8 +16,9 @@ namespace SS14.Client.Log
     {
         protected override void LogInternal(string message, LogLevel level)
         {
-            var levelname = LogLevelToName(level);
-            GD.Print($"{levelname}: {message}");
+            base.LogInternal(message, level);
+            //var levelname = LogLevelToName(level);
+            //GD.Print($"{levelname}: {message}");
         }
     }
 }

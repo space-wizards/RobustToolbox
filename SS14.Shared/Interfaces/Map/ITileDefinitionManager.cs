@@ -27,7 +27,7 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         int Count { get; }
 
-        void InitializeResources();
+        void Initialize();
 
         /// <summary>
         ///     Register a definition with this manager.

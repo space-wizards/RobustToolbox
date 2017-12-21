@@ -13,9 +13,6 @@ namespace SS14.Shared.Map
         {
             get
             {
-                if (_tileId == ushort.MaxValue)
-                    _tileId = IoCManager.Resolve<ITileDefinitionManager>().Register(this);
-
                 Debug.Assert(_tileId != ushort.MaxValue);
                 return _tileId;
             }
@@ -24,6 +21,11 @@ namespace SS14.Shared.Map
         public void InvalidateTileId()
         {
             _tileId = ushort.MaxValue;
+        }
+
+        public void Register(ITileDefinitionManager tileDefinitionManager)
+        {
+            _tileId = tileDefinitionManager.Register(this);
         }
 
         public string Name { get; protected set; }
@@ -37,7 +39,7 @@ namespace SS14.Shared.Map
         public bool IsGasVolume { get; protected set; }
 
         public bool IsVentedIntoSpace { get; protected set; }
-        
+
         public bool IsFloor { get; protected set; }
 
         public string SpriteName { get; protected set; }
@@ -48,6 +50,5 @@ namespace SS14.Shared.Map
         /// <param name="data">Optional per-tile data.</param>
         /// <returns></returns>
         public Tile Create(ushort data = 0) { return new Tile(TileId, data); }
-
     }
 }

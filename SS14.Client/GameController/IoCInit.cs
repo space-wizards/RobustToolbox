@@ -1,12 +1,18 @@
 ﻿using SS14.Client.GameObjects;
+using SS14.Client.GameStates;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Map;
+using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.State;
 using SS14.Client.Log;
 using SS14.Client.Map;
+using SS14.Client.Player;
 using SS14.Client.Reflection;
 using SS14.Client.ResourceManagement;
+using SS14.Client.State;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -31,7 +37,7 @@ using System.Reflection;
 namespace SS14.Client
 {
     // Partial of GameController to initialize IoC and some other low-level systems like it.
-    public partial class GameController
+    public sealed partial class GameController
     {
         private void InitIoC()
         {
@@ -67,6 +73,10 @@ namespace SS14.Client
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+            IoCManager.Register<IGameStateManager, GameStateManager>();
+            IoCManager.Register<IBaseClient, BaseClient>();
+            IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<IStateManager, StateManager>();
 
             IoCManager.BuildGraph();
         }

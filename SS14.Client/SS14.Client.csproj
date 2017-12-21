@@ -64,7 +64,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseClient.cs" />
     <Compile Include="GameController.cs" />
+    <Compile Include="GameController\FrameEventArgs.cs" />
+    <Compile Include="GameController\Input.cs" />
     <Compile Include="GameController\IoCInit.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
@@ -82,6 +85,7 @@
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\ContextMenuEntry.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
+    <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClientEntityManager.cs" />
@@ -90,8 +94,13 @@
     <Compile Include="Interfaces\GameObjects\IRenderableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
+    <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
+    <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Player\IPlayerManager.cs" />
+    <Compile Include="Interfaces\State\IStateManager.cs" />
+    <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Log\GodotLogManager.cs" />
     <Compile Include="Map\ClientTileDefinitionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -103,6 +112,19 @@
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="TODO.cs" />
+    <Compile Include="Utility\Rand.cs" />
+    <Compile Include="Utility\GodotConversions.cs" />
+    <Compile Include="State\State.cs" />
+    <Compile Include="State\StateManager.cs" />
+    <Compile Include="State\States\MainMenu.cs" />
+    <Compile Include="Input\Events.cs" />
+    <Compile Include="Input\InputDevices.cs" />
+    <Compile Include="Player\LocalPlayer.cs" />
+    <Compile Include="Player\PlayerManager.cs" />
+    <Compile Include="Player\PlayerSession.cs" />
+    <Compile Include="Player\PostProcessing\BlurPostProcessingEffect.cs" />
+    <Compile Include="Player\PostProcessing\DeathPostProcessingEffect.cs" />
+    <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

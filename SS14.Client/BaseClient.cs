@@ -37,7 +37,7 @@ namespace SS14.Client
         /// <inheritdoc />
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
+            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleServerInfo);
 
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
@@ -153,7 +153,7 @@ namespace SS14.Client
             if (GameInfo == null)
                 GameInfo = new ServerInfo();
 
-            var msg = (MsgServerInfo) message;
+            var msg = (MsgServerInfo)message;
             var info = GameInfo;
 
             info.ServerName = msg.ServerName;
@@ -182,14 +182,14 @@ namespace SS14.Client
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
-                stateMan.RequestStateChange<Lobby>();
+                //stateMan.RequestStateChange<Lobby>();
                 PlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
             if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
-                stateMan.RequestStateChange<GameScreen>();
+                //stateMan.RequestStateChange<GameScreen>();
                 PlayerJoinedGame(_playMan.LocalPlayer.Session);
             }
         }

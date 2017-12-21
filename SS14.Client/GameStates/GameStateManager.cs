@@ -17,8 +17,8 @@ namespace SS14.Client.GameStates
     {
         public Dictionary<uint, GameState> GameStates { get; set; }
 
-        [Dependency]
-        private readonly IGameTiming timing;
+        //[Dependency]
+        //private readonly IGameTiming timing;
         [Dependency]
         private readonly IClientNetManager networkManager;
         [Dependency]
@@ -41,7 +41,7 @@ namespace SS14.Client.GameStates
             {
                 AckGameState(message.State.Sequence);
 
-                message.State.GameTime = (float)timing.CurTime.TotalSeconds;
+                message.State.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
                 ApplyGameState(message.State);
             }
         }
@@ -56,7 +56,7 @@ namespace SS14.Client.GameStates
 
                 GameState fromState = GameStates[delta.FromSequence];
                 GameState newState = fromState + delta;
-                newState.GameTime = (float)timing.CurTime.TotalSeconds;
+                newState.GameTime = 0;//(float)timing.CurTime.TotalSeconds;
                 ApplyGameState(newState);
 
                 CullOldStates(delta.FromSequence);

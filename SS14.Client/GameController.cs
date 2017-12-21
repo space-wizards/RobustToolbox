@@ -1,8 +1,12 @@
 ﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.Interfaces.State;
 using SS14.Client.ResourceManagement;
+using SS14.Client.State.States;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
@@ -11,6 +15,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using System;
 using System.IO;
@@ -38,13 +43,13 @@ namespace SS14.Client
         readonly private IClientNetManager _networkManager;
         [Dependency]
         private readonly IMapManager _mapManager;
+        [Dependency]
+        readonly private IStateManager _stateManager;
         //[Dependency]
         //private readonly IPlacementManager _placementManager;
         /*
         [Dependency]
         readonly private INetworkGrapher _netGrapher;
-        [Dependency]
-        readonly private IStateManager _stateManager;
         [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
@@ -85,8 +90,6 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
-
-            _client.Initialize();
 
             _stateManager.RequestStateChange<MainScreen>();
         }

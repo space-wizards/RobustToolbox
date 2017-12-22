@@ -156,7 +156,6 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Startup()
         {
-            Logger.Debug("We Main Menu now!");
             _client.RunLevelChanged += RunLevelChanged;
 
             //UserInterfaceManager.AddComponent(_uiScreen);
@@ -173,6 +172,11 @@ namespace SS14.Client.State.States
             // There is no way to actually destroy a screen.
             //_uiScreen.Destroy();
             //_uiScreen = null;
+        }
+
+        public override void Update(FrameEventArgs e)
+        {
+            // Logger.Debug($"tick: {e.Elapsed}");
         }
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)

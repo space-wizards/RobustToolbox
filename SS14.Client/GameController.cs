@@ -92,6 +92,14 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _stateManager.RequestStateChange<MainScreen>();
+
+            IoCManager.Resolve<IClientEntityManager>().SpawnDummy();
+        }
+
+        public override void PhysicsProcess(float delta)
+        {
+            var eventArgs = new FrameEventArgs(delta);
+            _stateManager.Update(eventArgs);
         }
 
         private void LoadContentAssembly<T>(string name) where T : GameShared

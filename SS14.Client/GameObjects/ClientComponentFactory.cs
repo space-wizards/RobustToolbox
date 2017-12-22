@@ -23,6 +23,7 @@ namespace SS14.Client.GameObjects
             Register<PhysicsComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+            RegisterReference<TransformComponent, IClientTransformComponent>();
 
             Register<PlayerInputMoverComponent>();
             RegisterReference<PlayerInputMoverComponent, IMoverComponent>();

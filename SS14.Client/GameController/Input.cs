@@ -1,7 +1,5 @@
-﻿using System;
-using Godot;
+﻿using Godot;
 using SS14.Client.Input;
-using SS14.Shared.Log;
 
 namespace SS14.Client
 {

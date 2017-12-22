@@ -14,5 +14,6 @@ namespace SS14.Client.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position);
         bool AnyEntitiesIntersecting(Box2 position);
         void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime);
+        void SpawnDummy();
     }
 }

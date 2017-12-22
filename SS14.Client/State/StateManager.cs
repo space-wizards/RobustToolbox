@@ -63,14 +63,12 @@ namespace SS14.Client.State
 
         public void KeyDown(KeyEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.KeyDown(e);
+            CurrentState?.KeyDown(e);
         }
 
         public void KeyUp(KeyEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.KeyUp(e);
+            CurrentState?.KeyUp(e);
         }
 
         public void KeyHeld(KeyEventArgs e)
@@ -80,38 +78,32 @@ namespace SS14.Client.State
 
         public void MouseUp(MouseButtonEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseUp(e);
+            CurrentState?.MouseUp(e);
         }
 
         public void MouseDown(MouseButtonEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseDown(e);
+            CurrentState?.MouseDown(e);
         }
 
         public void MouseMove(MouseMoveEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseMove(e);
+            CurrentState?.MouseMove(e);
         }
 
         public void MouseWheelMove(MouseWheelEventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseWheelMove(e);
+            CurrentState?.MouseWheelMove(e);
         }
 
         public void MouseEntered(EventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseEntered(e);
+            CurrentState?.MouseEntered(e);
         }
 
         public void MouseLeft(EventArgs e)
         {
-            if (CurrentState != null)
-                CurrentState.MouseLeft(e);
+            CurrentState?.MouseLeft(e);
         }
 
         #endregion Input
@@ -123,23 +115,15 @@ namespace SS14.Client.State
             CurrentState?.Update(e);
         }
 
-        public void Render(FrameEventArgs e)
-        {
-            CurrentState?.Render(e);
-        }
-
         public void RequestStateChange<T>() where T : State
         {
-            if (CurrentState == null || CurrentState.GetType() != typeof(T))
+            if (CurrentState?.GetType() != typeof(T))
                 SwitchToState<T>();
         }
 
         public void FormResize()
         {
-            if (CurrentState == null)
-                return;
-
-            CurrentState.FormResize();
+            CurrentState?.FormResize();
         }
 
         private void SwitchToState<T>() where T : State
@@ -166,7 +150,7 @@ namespace SS14.Client.State
 
         private void RequestStateChange(Type type)
         {
-            if (CurrentState.GetType() != type)
+            if (CurrentState?.GetType() != type)
             {
                 SwitchToState(type);
             }

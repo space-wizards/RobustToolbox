@@ -1,4 +1,6 @@
-﻿using SS14.Shared;
+﻿using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Utility;
+using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -7,14 +9,18 @@ using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Client.Interfaces;
 
 namespace SS14.Client.GameObjects
 {
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    public class TransformComponent : Component, ITransformComponent
+    public class TransformComponent : Component, IClientTransformComponent
     {
+        public Godot.Node2D SceneNode { get; private set; }
+
         private Vector2 _position;
         public int MapID { get; private set; }
         public int GridID { get; private set; }
@@ -31,7 +37,7 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override Type StateType => typeof(TransformComponentState);
 
-        /// <inheritdoc />
+        /// <inheritdoc />1
         public event EventHandler<MoveEventArgs> OnMove;
 
         public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
@@ -56,11 +62,13 @@ namespace SS14.Client.GameObjects
         {
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
+            SceneNode.SetRotation((float)Rotation);
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
                 _position = newState.Position;
+                SceneNode.Position = _position.Convert();
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }
@@ -130,6 +138,22 @@ namespace SS14.Client.GameObjects
                 }
             }
             return false;
+        }
+
+        public override void OnAdd(IEntity owner)
+        {
+            base.OnAdd(owner);
+            var holder = IoCManager.Resolve<ISceneTreeHolder>();
+            SceneNode = new Godot.Node2D();
+            SceneNode.SetName($"Transform{owner.Uid}");
+            holder.WorldRoot.AddChild(SceneNode);
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+            SceneNode.QueueFree();
+            SceneNode = null;
         }
     }
 }

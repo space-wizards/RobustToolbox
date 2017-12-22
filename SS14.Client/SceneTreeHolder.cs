@@ -20,8 +20,14 @@ namespace SS14.Client
                 }
 
                 sceneTree = value ?? throw new ArgumentNullException(nameof(value));
+
+                WorldRoot = new Godot.Node2D();
+                WorldRoot.SetName("WorldRoot");
+                sceneTree.GetRoot().AddChild(WorldRoot);
             }
         }
         private Godot.SceneTree sceneTree;
+
+        public Godot.Node2D WorldRoot { get; private set; }
     }
 }

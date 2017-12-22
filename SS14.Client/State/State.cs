@@ -63,11 +63,6 @@ namespace SS14.Client.State
         /// </summary>
         public virtual void Update(FrameEventArgs e) { }
 
-        /// <summary>
-        ///     Draw the contents of this screen.
-        /// </summary>
-        public virtual void Render(FrameEventArgs e) { }
-
         #region Events
 
         /// <summary>

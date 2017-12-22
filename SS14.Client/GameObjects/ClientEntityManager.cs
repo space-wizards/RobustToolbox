@@ -140,5 +140,11 @@ namespace SS14.Client.GameObjects
                 Initialize();
             }
         }
+
+        public void SpawnDummy()
+        {
+            IEntity ent = SpawnEntity("__engine_toolbox");
+            ent.Name = "TOOLBOX!";
+        }
     }
 }

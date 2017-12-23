@@ -51,6 +51,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SS14Loader.cs" />
+    <Compile Include="SignalSubscriber\BaseGodotSignalSubscriber.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber0.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber1.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber2.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber3.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber4.cs" />
+    <Compile Include="SignalSubscriber\GodotSignalSubscriber5.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

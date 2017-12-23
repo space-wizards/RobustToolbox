@@ -11,6 +11,7 @@ using System.Linq;
 using SS14.Shared.Utility;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
 {
@@ -143,8 +144,13 @@ namespace SS14.Client.GameObjects
 
         public void SpawnDummy()
         {
+            Initialize();
             IEntity ent = SpawnEntity("__engine_toolbox");
+            var transform = ent.GetComponent<IClientTransformComponent>();
             ent.Name = "TOOLBOX!";
+            transform.SceneNode.Position = new Godot.Vector2(400, 400);
+            transform.SceneNode.Rotate(4);
+            transform.SceneNode.Scale = new Godot.Vector2(5, 5);
         }
     }
 }

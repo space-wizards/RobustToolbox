@@ -29,12 +29,12 @@ namespace SS14.Client.ResourceManagement
             //   so that we always have on-disk locations of files.
             //   Godot doesn't make it easy to load resources without them being on-disk.
             _resources.MountContentDirectory(@"./Resources/");
-            _resources.MountContentPack(@"./EngineContentPack.zip");
+            //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
 
         public void LoadLocalResources()
         {
-            _resources.MountDefaultContentPack();
+            //_resources.MountDefaultContentPack();
         }
 
         public T GetResource<T>(string path) where T : BaseResource, new()

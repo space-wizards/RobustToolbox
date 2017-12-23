@@ -5,8 +5,10 @@ using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.ResourceManagement;
 using SS14.Client.State.States;
+using SS14.Client.UserInterface;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Configuration;
@@ -45,13 +47,13 @@ namespace SS14.Client
         private readonly IMapManager _mapManager;
         [Dependency]
         readonly private IStateManager _stateManager;
+        [Dependency]
+        readonly private IUserInterfaceManager _userInterfaceManager;
         //[Dependency]
         //private readonly IPlacementManager _placementManager;
         /*
         [Dependency]
         readonly private INetworkGrapher _netGrapher;
-        [Dependency]
-        readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
         private readonly IGameTiming _time;
         */
@@ -77,6 +79,14 @@ namespace SS14.Client
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
             _serializer.Initialize();
+
+            _userInterfaceManager.Initialize();
+
+            //var c1 = new Panel("Child1");
+            //c1.MarginRight = 400;
+            //c1.MarginBottom = 400;
+            //_userInterfaceManager.RootControl.AddChild(c1);
+
             _tileDefinitionManager.Initialize();
 
             _networkManager.Initialize(false);
@@ -93,13 +103,13 @@ namespace SS14.Client
 
             _stateManager.RequestStateChange<MainScreen>();
 
-            IoCManager.Resolve<IClientEntityManager>().SpawnDummy();
+            // IoCManager.Resolve<IClientEntityManager>().SpawnDummy();
         }
 
         public override void PhysicsProcess(float delta)
         {
             var eventArgs = new FrameEventArgs(delta);
-            _stateManager.Update(eventArgs);
+            _stateManager?.Update(eventArgs);
         }
 
         private void LoadContentAssembly<T>(string name) where T : GameShared

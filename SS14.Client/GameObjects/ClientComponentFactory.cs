@@ -38,7 +38,7 @@ namespace SS14.Client.GameObjects
             //RegisterReference<WearableAnimatedSpriteComponent, IClickTargetComponent>();
             //RegisterReference<WearableAnimatedSpriteComponent, ISpriteRenderableComponent>();
 
-            //Register<SpriteComponent>();
+            Register<SpriteComponent>();
             //RegisterReference<SpriteComponent, ISpriteComponent>();
             //RegisterReference<SpriteComponent, IClickTargetComponent>();
             //RegisterReference<SpriteComponent, ISpriteRenderableComponent>();

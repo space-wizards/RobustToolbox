@@ -59,7 +59,7 @@ namespace SS14.Client.GodotGlue
             }
         }
 
-        public override void _Input(InputEvent inputEvent)
+        public override void _UnhandledInput(InputEvent inputEvent)
         {
             foreach (var entrypoint in EntryPoints)
             {
@@ -101,7 +101,8 @@ namespace SS14.Client.GodotGlue
         }
 
         /// <summary>
-        ///     Called whenever Godot receives input.
+        ///     Called whenever we receive input.
+        ///     The UI system can still intercept this beforehand.
         /// </summary>
         public virtual void Input(InputEvent inputEvent)
         {

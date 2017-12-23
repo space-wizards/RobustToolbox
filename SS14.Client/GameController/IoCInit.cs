@@ -7,12 +7,14 @@ using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.State;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.Log;
 using SS14.Client.Map;
 using SS14.Client.Player;
 using SS14.Client.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Client.State;
+using SS14.Client.UserInterface;
 using SS14.Shared.Configuration;
 using SS14.Shared.ContentPack;
 using SS14.Shared.GameObjects;
@@ -77,6 +79,7 @@ namespace SS14.Client
             IoCManager.Register<IBaseClient, BaseClient>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();
+            IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
 
             IoCManager.BuildGraph();
         }

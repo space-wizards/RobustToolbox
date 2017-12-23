@@ -13,7 +13,7 @@ config_version=3
 config/name="SS14.Client.Godot"
 run/main_scene="res://MainScene.tscn"
 config/use_custom_user_dir=true
-boot_splash/image="res://bootsplash.png"
+boot_splash/image="res://Art/bootsplash.png"
 boot_splash/fullsize=false
 config/icon="res://logo.png"
 

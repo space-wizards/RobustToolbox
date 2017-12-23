@@ -82,10 +82,11 @@ namespace SS14.Client
 
             _userInterfaceManager.Initialize();
 
-            //var c1 = new Panel("Child1");
-            //c1.MarginRight = 400;
-            //c1.MarginBottom = 400;
-            //_userInterfaceManager.RootControl.AddChild(c1);
+            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://ConceptScenes/MainMenu/MainMenu.tscn");
+            var control = Control.InstanceScene(scene);
+            _userInterfaceManager.RootControl.AddChild(control);
+            control.GetChild<Label>("Label").Text = "v 0.2";
+            control.GetChild("VBoxContainer").GetChild<Button>("ConnectButton").OnPressed += GameController_OnPressed;
 
             _tileDefinitionManager.Initialize();
 
@@ -104,6 +105,11 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
 
             // IoCManager.Resolve<IClientEntityManager>().SpawnDummy();
+        }
+
+        private void GameController_OnPressed(BaseButton.ButtonEventArgs obj)
+        {
+            Logger.Debug("There would be a connection maybe.");
         }
 
         public override void PhysicsProcess(float delta)

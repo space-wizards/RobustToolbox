@@ -1,3 +1,5 @@
+﻿using Godot;
+
 namespace SS14.Client.UserInterface
 {
     /// <summary>
@@ -5,8 +7,15 @@ namespace SS14.Client.UserInterface
     /// </summary>
     public class Label : Control
     {
-        public Label(string name) : base(name) {}
-        public Label() : base() {}
+        public Label(string name) : base(name)
+        {
+        }
+        public Label() : base()
+        {
+        }
+        public Label(Godot.Label control) : base(control)
+        {
+        }
 
         public string Text
         {
@@ -18,8 +27,13 @@ namespace SS14.Client.UserInterface
 
         protected override Godot.Control SpawnSceneControl()
         {
-            SceneControl = new Godot.Label();
-            return SceneControl;
+            return new Godot.Label();
+        }
+
+        protected override void SetSceneControl(Godot.Control control)
+        {
+            base.SetSceneControl(control);
+            SceneControl = (Godot.Label)control;
         }
     }
 }

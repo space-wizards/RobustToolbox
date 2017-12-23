@@ -141,6 +141,8 @@
     <Compile Include="ResourceManagement\ResourceTypes\TextureResource.cs" />
     <Compile Include="SceneTreeHolder.cs" />
     <Compile Include="TODO.cs" />
+    <Compile Include="UserInterface\Controls\BaseButton.cs" />
+    <Compile Include="UserInterface\Controls\Button.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />

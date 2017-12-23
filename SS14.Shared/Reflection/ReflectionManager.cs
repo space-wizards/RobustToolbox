@@ -23,7 +23,7 @@ namespace SS14.Shared.Reflection
 
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
-        public IEnumerable<Type> GetAllChildren<T>(bool inclusive=false)
+        public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
         {
             try
             {

@@ -1,9 +1,12 @@
-using SS14.Client.GodotGlue;
+﻿using SS14.Client.GodotGlue;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using SS14.Shared.Log;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.ContentPack;
+using System.Reflection;
 
 namespace SS14.Client.UserInterface
 {
@@ -14,7 +17,42 @@ namespace SS14.Client.UserInterface
         ///     Names must be unique between the control's siblings.
         /// </summary>
         // TODO: Allow changing the name at any point, probably.
-        public string Name { get; }
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (value == _name)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("New name may not be null or whitespace.", nameof(value));
+                }
+
+                if (Parent != null)
+                {
+                    if (Parent.HasChild(value))
+                    {
+                        throw new ArgumentException($"Parent already has a child with name {value}.");
+                    }
+
+                    Parent._children.Remove(_name);
+                }
+
+                _name = value;
+                SceneControl.SetName(_name);
+
+                if (Parent != null)
+                {
+                    Parent._children[_name] = this;
+                }
+            }
+        }
+
+        private string _name;
 
         public Control Parent { get; private set; }
 
@@ -94,8 +132,8 @@ namespace SS14.Client.UserInterface
         public Control()
         {
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-            Name = GetType().Name;
             SetupSceneControl();
+            Name = GetType().Name;
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -106,16 +144,26 @@ namespace SS14.Client.UserInterface
                 throw new ArgumentException("Name must not be null or whitespace.", nameof(name));
             }
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
-            Name = name;
             SetupSceneControl();
+            Name = name;
+        }
+
+        /// <summary>
+        ///     Wrap the provided Godot control with this one.
+        ///     This does NOT set up parenting correctly!
+        /// </summary>
+        public Control(Godot.Control control)
+        {
+            SetSceneControl(control);
+            UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
+            _name = control.GetName();
+            SetupSignalHooks();
+            Logger.Debug($"Wrapping control {Name} ({control.GetType()})");
         }
 
         private void SetupSceneControl()
         {
-            SceneControl = SpawnSceneControl();
-            SceneControl.SetName(Name);
-
-            SetupSignalHooks();
+            SetSceneControl(SpawnSceneControl());
         }
 
         /// <summary>
@@ -127,6 +175,10 @@ namespace SS14.Client.UserInterface
             return new Godot.Control();
         }
 
+        protected virtual void SetSceneControl(Godot.Control control)
+        {
+            SceneControl = control;
+        }
 
         public virtual void Dispose()
         {
@@ -157,21 +209,21 @@ namespace SS14.Client.UserInterface
         ///     Thrown if we already have a component with the same name,
         ///     or the provided component is still parented to a different control.
         /// </exception>
-        public virtual void AddChild(Control child)
+        public virtual void AddChild(Control child, bool LegibleUniqueName = false)
         {
-            if (_children.ContainsKey(child.Name))
-            {
-                throw new InvalidOperationException($"We already have a control with name {child.Name}!");
-            }
-
             if (child.Parent != null)
             {
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
 
             child.Parented(this);
+            SceneControl.AddChild(child.SceneControl, LegibleUniqueName);
+            // Godot changes the name automtically if you would cause a naming conflict.
+            if (child.SceneControl.GetName() != child._name)
+            {
+                child._name = child.SceneControl.GetName();
+            }
             _children[child.Name] = child;
-            SceneControl.AddChild(child.SceneControl);
         }
 
         /// <summary>
@@ -208,12 +260,163 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        public T GetChild<T>(string name) where T : Control
+        {
+            return (T)GetChild(name);
+        }
+
+        public Control GetChild(string name)
+        {
+            if (TryGetChild(name, out var control))
+            {
+                return control;
+            }
+
+            throw new KeyNotFoundException($"No child UI element {name}");
+        }
+
+        public bool TryGetChild<T>(string name, out T child) where T : Control
+        {
+            if (_children.TryGetValue(name, out var control))
+            {
+                child = (T)control;
+                return true;
+            }
+            child = null;
+            return false;
+        }
+
+        public bool TryGetChild(string name, out Control child)
+        {
+            return _children.TryGetValue(name, out child);
+        }
+
+        public bool HasChild(string name)
+        {
+            return _children.ContainsKey(name);
+        }
+
+        /// <summary>
+        ///     Called when this control receives focus.
+        /// </summary>
         protected virtual void FocusEntered()
         {
         }
 
+        /// <summary>
+        ///     Called when this control loses focus.
+        /// </summary>
         protected virtual void FocusExited()
         {
+        }
+
+        /// <summary>
+        ///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
+        ///     This makes it possible to use Godot's GUI editor relatively comfortably,
+        ///     while still being able to use the better SS14 API.
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        // TODO: Handle instances inside the provided scene in some way.
+        //       Shouldn't need more than support for populating the GodotTranslationCache
+        //         from SS14.Client.Godot I *think*?
+        public static Control InstanceScene(Godot.PackedScene scene)
+        {
+            if (GodotTranslationCache == null)
+            {
+                SetupGodotTranslationCache();
+            }
+            var root = (Godot.Control)scene.Instance();
+            return WrapGodotControl(null, root);
+        }
+
+        private static Control WrapGodotControl(Control parent, Godot.Control control)
+        {
+            var type = FindGodotTranslationType(control);
+            var newControl = (Control)Activator.CreateInstance(type, control);
+
+            if (parent != null)
+            {
+                newControl.Parent = parent;
+                parent._children[newControl.Name] = newControl;
+            }
+
+            foreach (var child in control.GetChildren())
+            {
+                // Some Godot nodes have subnodes.
+                // great example being the LineEdit.
+                // These subnodes may be other stuff like timers,
+                // so don't blow up on it!
+                if (child is Godot.Control childControl)
+                {
+                    WrapGodotControl(newControl, childControl);
+                }
+            }
+
+            return newControl;
+        }
+
+        private static Dictionary<Type, Type> GodotTranslationCache;
+
+        // Because the translation cache may not include every control,
+        // for example controls we don't have SS14 counterparts to,
+        // this method will look up the inheritance tree until (last resort) it hits Godot.Control.
+        // Filling in the blanks later.
+        private static Type FindGodotTranslationType(Godot.Control control)
+        {
+            Logger.Debug($"FindGodotTranslationType: Original: {control.GetType()}");
+            var original = control.GetType();
+            var tmp = original;
+            // CanvasItem is the parent of Godot.Control so reaching it means we passed Godot.Control.
+            while (tmp != typeof(Godot.CanvasItem))
+            {
+                Logger.Debug($"FindGodotTranslationType: tmp: {tmp}");
+                if (GodotTranslationCache.TryGetValue(tmp, out var info))
+                {
+                    if (original != tmp)
+                    {
+                        GodotTranslationCache[original] = info;
+                    }
+
+                    Logger.Debug($"Settling on {info}");
+                    return info;
+                }
+
+                tmp = tmp.BaseType;
+            }
+
+            throw new InvalidOperationException("Managed to pass Godot.Control when finding translations. This should be impossible!");
+        }
+
+        private static void SetupGodotTranslationCache()
+        {
+            GodotTranslationCache = new Dictionary<Type, Type>();
+            var refl = IoCManager.Resolve<IReflectionManager>();
+            var godotAsm = AppDomain.CurrentDomain.GetAssemblyByName("GodotSharp");
+            foreach (var childType in refl.GetAllChildren<Control>(inclusive: true))
+            {
+                var childName = childType.Name;
+                var godotType = godotAsm.GetType($"Godot.{childName}");
+                if (godotType == null)
+                {
+                    Logger.Debug($"Unable to find Godot type for {childType}.");
+                    continue;
+                }
+
+                if (GodotTranslationCache.TryGetValue(godotType, out var dupe))
+                {
+                    Logger.Error($"Found multiple SS14 Control types pointing to a single Godot Control type. Godot: {godotType}, first: {dupe}, second: {childType}");
+                    continue;
+                }
+
+                GodotTranslationCache[godotType] = childType;
+            }
+
+            if (!GodotTranslationCache.ContainsKey(typeof(Godot.Control)))
+            {
+                GodotTranslationCache = null;
+                throw new InvalidOperationException("We don't even have the base Godot Control in the translation cache. We can't use scene instancing like this!");
+            }
         }
     }
 }

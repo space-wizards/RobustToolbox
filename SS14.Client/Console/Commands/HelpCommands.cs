@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
-using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;

@@ -51,13 +51,15 @@ namespace SS14.Client.Console
                 var conInput = text.Substring(1);
                 ProcessCommand(conInput);
             }
-
-            // say
-            var message = _network.CreateNetMessage<MsgChat>();
-            message.Channel = ChatChannel.Player;
-            message.Text = text;
-            message.EntityId = -1;
-            _network.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            else
+            {
+                // say
+                var message = _network.CreateNetMessage<MsgChat>();
+                message.Channel = ChatChannel.Player;
+                message.Text = text;
+                message.EntityId = -1;
+                _network.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            }
         }
 
         private void HandleChatMsg(NetMessage message)

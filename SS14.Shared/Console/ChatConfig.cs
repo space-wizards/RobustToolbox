@@ -5,7 +5,7 @@
         /// <summary>
         /// Default, unspecified
         /// </summary>
-        Default,
+        Default = 0,
         /// <summary>
         /// Players in the lobby chat
         /// </summary>

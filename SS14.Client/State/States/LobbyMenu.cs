@@ -148,6 +148,10 @@ namespace SS14.Client.State.States
             _plyrMan = IoCManager.Resolve<IPlayerManager>();
             _plyrMan.PlayerListUpdated += HandlePlayerList;
 
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _lobbyChat.TextSubmitted += console.ParseChatMessage;
+            console.AddString += _lobbyChat.AddLine;
+
             UserInterfaceManager.AddComponent(_uiScreen);
 
             UpdateInfo();
@@ -158,6 +162,10 @@ namespace SS14.Client.State.States
         {
             _plyrMan = IoCManager.Resolve<IPlayerManager>();
             _plyrMan.PlayerListUpdated -= HandlePlayerList;
+
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _lobbyChat.TextSubmitted -= console.ParseChatMessage;
+            console.AddString -= _lobbyChat.AddLine;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
         }

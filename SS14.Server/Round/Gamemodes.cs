@@ -1,8 +1,8 @@
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameMode;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
+using SS14.Shared.Console;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Round

@@ -21,6 +21,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Utility;
+using SS14.Shared.Console;
 
 namespace SS14.Client.GameObjects
 {

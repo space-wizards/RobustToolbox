@@ -1,15 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS14.Client.UserInterface.CustomControls;
 
 namespace SS14.Client.Console
 {
     /// <summary>
     ///     Interface for a chat compatible console.
     /// </summary>
-    internal interface IClientChatConsole
+    internal interface IClientChatConsole : IClientConsole
     {
+        /// <summary>
+        ///     Parses a raw chat message the player has submitted.
+        /// </summary>
+        /// <param name="text">Raw unsanitized string the player submitted.</param>
+        void ParseChatMessage(string text);
+
+        /// <summary>
+        ///     Parses a raw chat message the player has submitted.
+        /// </summary>
+        [Obsolete("Use ParseChatMessage(string text)")]
+        void ParseChatMessage(Chatbox chatBox, string text);
     }
 }

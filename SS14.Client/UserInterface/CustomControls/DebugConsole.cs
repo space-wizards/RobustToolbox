@@ -4,6 +4,8 @@ using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
+using SS14.Shared;
+using SS14.Shared.Console;
 using SS14.Shared.IoC;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -46,13 +48,13 @@ namespace SS14.Client.UserInterface.CustomControls
             DrawBackground = true;
             DrawBorder = true;
             
-            _console.AddString += (sender, args) => AddLine(args.Text, args.Color);
+            _console.AddString += (sender, args) => AddLine(args.Text, args.Channel, args.Color);
             _console.ClearText += (sender, args) => Clear();
         }
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
 
-        public void AddLine(string text, Color4 color)
+        public void AddLine(string text, ChatChannel channel, Color4 color)
         {
             var atBottom = ScrollbarV.Value >= ScrollbarV.Max;
             var newLabel = new Label(text, "CALIBRI")
@@ -145,8 +147,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void TxtInputOnSubmit(Textbox sender, string text)
         {
-            AddLine("> " + text, new Color4(255, 250, 240, 255));
-
+            // debugConsole input is not prefixed with slash
             if(!string.IsNullOrWhiteSpace(text))
                 _console.ProcessCommand(text);
         }

@@ -1,22 +1,17 @@
-﻿using OpenTK;
-using SS14.Server.Interfaces;
-using SS14.Server.Interfaces.Chat;
+﻿using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Serialization;
+using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
@@ -57,7 +52,7 @@ namespace SS14.Server.Chat
 
             Logger.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
 
-            var entityId = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(message.MsgChannel).AttachedEntityUid;
+            var entityId = session.AttachedEntityUid;
 
             bool hasChannelIdentifier = false;
             if (channel != ChatChannel.Lobby)

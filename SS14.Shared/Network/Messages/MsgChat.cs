@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages

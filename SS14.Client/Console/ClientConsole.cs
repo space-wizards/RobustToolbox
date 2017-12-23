@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using Lidgren.Network;
 using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
+using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
@@ -17,11 +19,13 @@ namespace SS14.Client.Console
     {
         public string Text { get; }
         public Color4 Color { get; }
+        public ChatChannel Channel { get; }
 
-        public AddStringArgs(string text, Color4 color)
+        public AddStringArgs(string text, Color4 color, ChatChannel channel)
         {
             Text = text;
             Color = color;
+            Channel = channel;
         }
     }
 
@@ -57,9 +61,9 @@ namespace SS14.Client.Console
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
-        public void AddLine(string text, Color4 color)
+        public void AddLine(string text, ChatChannel channel, Color4 color)
         {
-            AddString?.Invoke(this, new AddStringArgs(text, color));
+            AddString?.Invoke(this, new AddStringArgs(text, color, channel));
         }
 
         public void Clear()
@@ -74,7 +78,7 @@ namespace SS14.Client.Console
         {
             var msg = (MsgConCmdAck) message;
 
-            AddLine("< " + msg.Text, new Color4(65, 105, 225, 255));
+            AddLine("< " + msg.Text, ChatChannel.Default, new Color4(65, 105, 225, 255));
         }
 
         private void HandleConCmdReg(NetMessage message)
@@ -88,7 +92,7 @@ namespace SS14.Client.Console
                 // Do not do duplicate commands.
                 if (_commands.ContainsKey(commandName))
                 {
-                    AddLine("Server sent console command {0}, but we already have one with the same name. Ignoring." + commandName, Color4.White);
+                    Logger.Warning($"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
                     continue;
                 }
 
@@ -103,6 +107,9 @@ namespace SS14.Client.Console
         /// <param name="text">input text</param>
         public void ProcessCommand(string text)
         {
+            // echo the command locally
+            AddLine("> " + text, ChatChannel.Default, new Color4(255, 250, 240, 255));
+
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
 
@@ -119,7 +126,7 @@ namespace SS14.Client.Console
             }
             else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
-                AddLine("Unknown command: " + commandname, Color4.Red);
+                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color4.Red);
                 return;
             }
 

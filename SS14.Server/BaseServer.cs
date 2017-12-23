@@ -35,6 +35,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Shared.Console;
 
 namespace SS14.Server
 {

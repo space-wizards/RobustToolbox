@@ -2,9 +2,11 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics;
+using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
+using SS14.Shared.Console;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -311,6 +313,11 @@ namespace SS14.Client.UserInterface.CustomControls
             _inputIndex = -1;
 
             Focus = false;
+        }
+
+        public void AddLine(object sender, AddStringArgs e)
+        {
+            AddLine(e.Text, e.Channel);
         }
     }
 }

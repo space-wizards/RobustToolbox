@@ -1,5 +1,6 @@
 ﻿using SS14.Server.Interfaces.Chat;
 using System.Text;
+using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Server.Chat.Commands
@@ -18,7 +19,7 @@ namespace SS14.Server.Chat.Commands
                 builder.AppendFormat("{0}: {1}\n", command.Command, command.Description);
             }
             string message = builder.ToString().Trim(' ', '\n');
-            manager.SendPrivateMessage(client, Shared.ChatChannel.Default, message, "Server", null);
+            manager.SendPrivateMessage(client, ChatChannel.Default, message, "Server", null);
         }
     }
 }

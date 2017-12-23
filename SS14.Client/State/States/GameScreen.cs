@@ -242,7 +242,7 @@ namespace SS14.Client.State.States
             blendingSettings.ColorDstFactor = BlendMode.Factor.OneMinusDstAlpha;
             blendingSettings.AlphaSrcFactor = BlendMode.Factor.SrcAlpha;
             blendingSettings.AlphaDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-            blendingSettings = blendingSettings;
+            _gasBatch.BlendingSettings = blendingSettings;
 
             _decalBatch = new SpriteBatch();
             blendingSettings = _decalBatch.BlendingSettings;
@@ -275,7 +275,7 @@ namespace SS14.Client.State.States
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
-            _gameChat.TextSubmitted += ChatTextboxTextSubmitted;
+            _gameChat.TextSubmitted += IoCManager.Resolve<IClientChatConsole>().ParseChatMessage;
             _uiScreen.AddControl(_gameChat);
         }
 
@@ -712,55 +712,13 @@ namespace SS14.Client.State.States
             UserInterfaceManager.MouseLeft(e);
         }
         #endregion Mouse
+        
 
-        #region Chat
-        private void HandleChatMessage(NetIncomingMessage msg)
-        {
-            var channel = (ChatChannel)msg.ReadByte();
-            string text = msg.ReadString();
-            int entityId = msg.ReadInt32();
-            string message;
-            switch (channel)
-            {
-                case ChatChannel.Ingame:
-                case ChatChannel.Server:
-                case ChatChannel.OOC:
-                case ChatChannel.Radio:
-                    message = "[" + channel + "] " + text;
-                    break;
-                default:
-                    message = text;
-                    break;
-            }
-            _gameChat.AddLine(message, channel);
-            if (entityId > 0 && _entityManager.TryGetEntity(entityId, out IEntity a))
-            {
-                a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
-            }
-        }
+#endregion Input
 
-        private void ChatTextboxTextSubmitted(Chatbox chatbox, string text)
-        {
-            SendChatMessage(text);
-        }
+#region Event Handlers
 
-        private void SendChatMessage(string text)
-        {
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.ChatMessage);
-            message.Write((byte)ChatChannel.Player);
-            message.Write(text);
-            message.Write(-1);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
-        }
-
-        #endregion Chat
-
-        #endregion Input
-
-        #region Event Handlers
-
-        #region Messages
+#region Messages
 
         private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
         {
@@ -789,15 +747,12 @@ namespace SS14.Client.State.States
                         case NetMessages.PlacementManagerMessage:
                             PlacementManager.HandleNetMessage(message);
                             break;
-                        case NetMessages.ChatMessage:
-                            HandleChatMessage(message);
-                            break;
                     }
                     break;
             }
         }
 
-        #endregion Messages
+#endregion Messages
 
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {
@@ -812,9 +767,9 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        #endregion Event Handlers
+#endregion Event Handlers
 
-        #region Lighting in order of call
+#region Lighting in order of call
 
         /**
          *  Calculate lights In player view
@@ -854,9 +809,9 @@ namespace SS14.Client.State.States
 
             //Step 2 - Set up the render targets for the composite lighting.
             RenderImage source = ScreenShadows;
-            #if !MACOS
+#if !MACOS
             source.Clear(Color.Black);
-            #else
+#else
             // For some insane reason, SFML does not clear the texture on MacOS.
             // unless you call CopyToImage() on it, which we can't due to performance.
             // This works though!
@@ -867,7 +822,7 @@ namespace SS14.Client.State.States
             //͎̆̒̿ͤ̀͝͝H̙͇̽ͩ̓̚E̜̘̭̟͓͖̓̔̑̀͞͠ͅL̪̰̺̼̊̐̌P̸̴̴̙̻̻̗̯̤͎͓̿̊͌ͪ ̯̜͊̍̄M̩̻̺̬̗͕̬̈͗́ͯ̚̚͜Ȇ̟̜͙̙ ̅͐͐҉̱̫̼̱h̢̼͎͕̪͉͂̊ͤͣ͛͂̄ͯ͝͠t͎̺̼͙̰͓ͥ̏́ţ͕̼̱̲͈̹̾ͣͯͮ̄̅ͧͦ̚p̧̜̹͚̦ͧ̊̀̽ͫ̓̓ͣ̚͡ş̨̮̣̼̰̞̝̫͋̌ͬ͊͑ͣ:̷͇͚̲̻̩̞ͤ͐͞/̈́͋ͯ͂̀̅ͪ͑͞͏͖̮̯͍̟͚͓͎/̟̩̲͑̚ĩ̶̢̲̬̦͍͈̯͉̓̅͟.̦̭̲̭̂̓̿̈́̄͟ï͋͘҉̘̪̠̣̰m̖͎̮͆̀ͯ̑̃ͅg̢̝͉͔̽̃̀̂u̢̱̞̫̱̹̪̇͟r̸̯̞̹͓̥̮̮̝̹͌̀͌̈́͑.̪̦͕̞̥͕̩̎ͤ̇̉̒̓c̨̩̰̎̂ͬͤ̍̓̓ṍ̵͍͈̣̰m̛̱̥̘͙͈ͫͭ̒ͪͮ/̓͆̽̀͐̿͘҉̘̲͈̬̹̟M̡̺͍̜̺̘̰̼͂̎̃͞͝l̴̫̘̦̺̑ͪ̃͢ͅn̤̱̺̿͌ͨ͡U̧̢̜̞̝̒͒̐̄̊̽ͤͫͅL̡̺͉̠͖͚͉͚ͥͧ͋ͬ̀b̵̶̪̝̟̔ͪ̂̊A̧̧̝̭͖̭͍̬͑̀.̞̬͈́ͫ̍͘ͅp̶͎̠̱̍ͪ̆n̩͕̬̈ͪ̋ͅg̘̗̙̻͎̩̲͙͊ͨͭͣ͌̚̕
             CluwneLib.drawRectangle(0, 0, source.Width, source.Height, Color.Black);
             source.EndDrawing();
-            #endif
+#endif
 
             RenderImage desto = ShadowIntermediate;
             RenderImage copy = null;
@@ -1230,9 +1185,9 @@ namespace SS14.Client.State.States
             PlayerManager.ApplyEffects(ComposedSceneTarget);
         }
 
-        #endregion Lighting in order of call
+#endregion Lighting in order of call
 
-        #region Helper methods
+#region Helper methods
 
         private void RenderList(Vector2 topleft, Vector2 bottomright, IEnumerable<IRenderableComponent> renderables)
         {
@@ -1326,9 +1281,9 @@ namespace SS14.Client.State.States
             debugWallOccluders = !debugWallOccluders;
         }
 
-        #endregion Helper methods
+#endregion Helper methods
 
-        #region Nested type: ClickData
+#region Nested type: ClickData
 
         private struct ClickData
         {
@@ -1342,7 +1297,7 @@ namespace SS14.Client.State.States
             }
         }
 
-        #endregion Nested type: ClickData
+#endregion Nested type: ClickData
 
         class GameScreenDebug
         {

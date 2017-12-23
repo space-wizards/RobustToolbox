@@ -68,7 +68,7 @@ namespace SS14.Client
         [Dependency]
         private readonly IBaseClient _client;
         [Dependency]
-        private readonly IClientConsole _console;
+        private readonly IClientChatConsole _console;
 
         #endregion Fields
 

@@ -32,7 +32,7 @@ namespace SS14.Client.UserInterface
             SceneControl = (Godot.Button)control;
         }
 
-        public AlignMode Align
+        public AlignMode TextAlign
         {
             get => (AlignMode)SceneControl.Align;
             set => SceneControl.Align = (int)value;

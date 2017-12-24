@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Reflection;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
-//using SS14.Client.UserInterface;
-//using SS14.Client.UserInterface.Controls;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.UserInterface;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Log;
@@ -18,8 +18,12 @@ namespace SS14.Client.State.States
     // Instantiated dynamically through the StateManager.
     public class MainScreen : State
     {
-        private IBaseClient _client;
-        //private Screen _uiScreen;
+        [Dependency]
+        readonly IBaseClient _client;
+        [Dependency]
+        readonly IUserInterfaceManager userInterfaceManager;
+
+        private Control MainMenuControl;
 
         /// <summary>
         ///     Constructs an instance of this object.
@@ -30,127 +34,15 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void InitializeGUI()
         {
-            _client = IoCManager.Resolve<IBaseClient>();
-            /*
-            _uiScreen = new Screen();
-            _uiScreen.BackgroundImage = ResourceCache.GetSprite("ss14_logo_background");
-            // UI screen is added in startup
+            IoCManager.InjectDependencies(this);
 
-            var imgTitle = new SimpleImage();
-            imgTitle.Sprite = "ss14_logo";
-            imgTitle.Alignment = Align.Right;
-            imgTitle.LocalPosition = new Vector2i(-550, 100);
-            _uiScreen.AddControl(imgTitle);
+            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
+            MainMenuControl = Control.InstanceScene(scene);
 
-            var txtConnect = new Textbox(100);
-            txtConnect.Text = ConfigurationManager.GetCVar<string>("net.server");
-            txtConnect.Alignment = Align.Left | Align.Bottom;
-            txtConnect.LocalPosition = new Vector2i(10, 50);
-            txtConnect.OnSubmit += (sender, text) =>
-            {
-                if (_client.RunLevel == ClientRunLevel.Initialize)
-                    if (TryParseAddress(text, out var ip, out var port))
-                        _client.ConnectToServer(ip, port);
-                //TODO: Else notify user that textbox address is not valid
-            };
-            imgTitle.AddControl(txtConnect);
+            userInterfaceManager.RootControl.AddChild(MainMenuControl);
 
-            var btnConnect = new ImageButton();
-            btnConnect.ImageNormal = "connect_norm";
-            btnConnect.ImageHover = "connect_hover";
-            btnConnect.Alignment = Align.Left | Align.Bottom;
-            btnConnect.LocalPosition = new Vector2i(0, 20);
-            btnConnect.Clicked += sender =>
-            {
-                if (_client.RunLevel == ClientRunLevel.Initialize)
-                    if (TryParseAddress(txtConnect.Text, out var ip, out var port))
-                        _client.ConnectToServer(ip, port);
-            };
-            txtConnect.AddControl(btnConnect);
-
-            var btnOptions = new ImageButton();
-            btnOptions.ImageNormal = "options_norm";
-            btnOptions.ImageHover = "options_hover";
-            btnOptions.Alignment = Align.Left | Align.Bottom;
-            btnOptions.LocalPosition = new Vector2i(0, 20);
-            btnOptions.Clicked += sender =>
-            {
-                if (_client.RunLevel <= ClientRunLevel.Initialize)
-                    StateManager.RequestStateChange<OptionsMenu>();
-            };
-            btnConnect.AddControl(btnOptions);
-
-            var btnExit = new ImageButton();
-            btnExit.ImageNormal = "exit_norm";
-            btnExit.ImageHover = "exit_hover";
-            btnExit.Alignment = Align.Left | Align.Bottom;
-            btnExit.LocalPosition = new Vector2i(0, 20);
-            btnExit.Clicked += sender => CluwneLib.Stop();
-            btnOptions.AddControl(btnExit);
-
-            var fvi = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
-            var lblVersion = new Label("v. " + fvi.FileVersion, "CALIBRI");
-            lblVersion.ForegroundColor = new Color(245, 245, 245);
-            lblVersion.Alignment = Align.Right | Align.Bottom;
-            lblVersion.Resize += (sender, args) => { lblVersion.LocalPosition = new Vector2i(-3 + -lblVersion.ClientArea.Width, -3 + -lblVersion.ClientArea.Height); };
-            _uiScreen.AddControl(lblVersion);*/
-        }
-
-        /// <inheritdoc />
-        public override void FormResize()
-        {
-            //_uiScreen.Width = (int)CluwneLib.Window.Viewport.Size.X;
-            //_uiScreen.Height = (int)CluwneLib.Window.Viewport.Size.Y;
-
-            //UserInterfaceManager.ResizeComponents();
-        }
-
-        /// <inheritdoc />
-        public override void KeyDown(KeyEventArgs e)
-        {
-            //UserInterfaceManager.KeyDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseUp(MouseButtonEventArgs e)
-        {
-            //UserInterfaceManager.MouseUp(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseDown(MouseButtonEventArgs e)
-        {
-            //UserInterfaceManager.MouseDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MousePressed(MouseButtonEventArgs e)
-        {
-            //UserInterfaceManager.MouseDown(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseMove(MouseMoveEventArgs e)
-        {
-            //UserInterfaceManager.MouseMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseWheelMove(MouseWheelEventArgs e)
-        {
-            //UserInterfaceManager.MouseWheelMove(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseEntered(EventArgs e)
-        {
-            //UserInterfaceManager.MouseEntered(e);
-        }
-
-        /// <inheritdoc />
-        public override void MouseLeft(EventArgs e)
-        {
-            //UserInterfaceManager.MouseLeft(e);
+            var VBox = MainMenuControl.GetChild("VBoxContainer");
+            VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
         }
 
         /// <inheritdoc />
@@ -158,7 +50,6 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged += RunLevelChanged;
 
-            //UserInterfaceManager.AddComponent(_uiScreen);
             FormResize();
         }
 
@@ -166,17 +57,11 @@ namespace SS14.Client.State.States
         public override void Shutdown()
         {
             _client.RunLevelChanged -= RunLevelChanged;
-
-            //UserInterfaceManager.RemoveComponent(_uiScreen);
-
-            // There is no way to actually destroy a screen.
-            //_uiScreen.Destroy();
-            //_uiScreen = null;
         }
 
-        public override void Update(FrameEventArgs e)
+        private void ExitButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            // Logger.Debug($"tick: {e.Elapsed}");
+            IoCManager.Resolve<IGameControllerProxy>().GameController.Shutdown();
         }
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)

@@ -25,7 +25,7 @@ using System.IO;
 namespace SS14.Client
 {
     // Gets automatically ran by SS14.Client.Godot.
-    public sealed partial class GameController : ClientEntryPoint
+    public sealed partial class GameController : ClientEntryPoint, IGameController
     {
         [Dependency]
         readonly IConfigurationManager _configurationManager;
@@ -82,12 +82,6 @@ namespace SS14.Client
 
             _userInterfaceManager.Initialize();
 
-            var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://ConceptScenes/MainMenu/MainMenu.tscn");
-            var control = Control.InstanceScene(scene);
-            _userInterfaceManager.RootControl.AddChild(control);
-            control.GetChild<Label>("Label").Text = "v 0.2";
-            control.GetChild("VBoxContainer").GetChild<Button>("ConnectButton").OnPressed += GameController_OnPressed;
-
             _tileDefinitionManager.Initialize();
 
             _networkManager.Initialize(false);
@@ -103,13 +97,21 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _stateManager.RequestStateChange<MainScreen>();
-
-            // IoCManager.Resolve<IClientEntityManager>().SpawnDummy();
         }
 
-        private void GameController_OnPressed(BaseButton.ButtonEventArgs obj)
+        public void Shutdown(string reason = null)
         {
-            Logger.Debug("There would be a connection maybe.");
+            if (reason != null)
+            {
+                Logger.Info($"Shutting down! Reason: {reason}");
+            }
+            else
+            {
+                Logger.Info("Shutting down!");
+            }
+            Logger.Debug("Goodbye");
+            IoCManager.Clear();
+            _sceneTreeHolder.SceneTree.Quit();
         }
 
         public override void PhysicsProcess(float delta)

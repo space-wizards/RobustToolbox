@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=2]
 
-[ext_resource path="res://ConceptScenes/MainMenu/MainMenuTheme.tres" type="Theme" id=1]
+[ext_resource path="res://Scenes/MainMenu/MainMenuTheme.tres" type="Theme" id=1]
 [ext_resource path="res://Art/background.png" type="Texture" id=2]
 [ext_resource path="res://Art/bootsplash.png" type="Texture" id=3]
 [ext_resource path="res://Art/Animal Silence.otf" type="DynamicFontData" id=4]
@@ -28,6 +28,7 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -40,7 +41,10 @@ anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+margin_right = 896.0
+margin_bottom = 600.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 1
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -59,6 +63,7 @@ margin_top = 27.0
 margin_right = -25.0
 margin_bottom = -23.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 1
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -74,6 +79,7 @@ anchor_bottom = 0.0
 margin_right = 308.0
 margin_bottom = 165.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 1
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -91,6 +97,7 @@ margin_top = 169.0
 margin_right = 308.0
 margin_bottom = 213.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -114,6 +121,7 @@ margin_top = 217.0
 margin_right = 308.0
 margin_bottom = 274.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -136,6 +144,7 @@ margin_top = 278.0
 margin_right = 308.0
 margin_bottom = 335.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -158,6 +167,7 @@ margin_top = 339.0
 margin_right = 308.0
 margin_bottom = 396.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
@@ -181,6 +191,7 @@ margin_top = -36.0
 margin_right = -10.0
 margin_bottom = -10.0
 rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
 mouse_filter = 2
 size_flags_horizontal = 1
 size_flags_vertical = 4

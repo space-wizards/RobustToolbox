@@ -49,6 +49,9 @@ namespace SS14.Client
 
             // We are not IoC-managed (SS14.Client.Godot spawns us), but we still want the dependencies.
             IoCManager.InjectDependencies(this);
+
+            var proxy = (GameControllerProxy)IoCManager.Resolve<IGameControllerProxy>();
+            proxy.GameController = this;
         }
 
         private static void RegisterIoC()
@@ -80,6 +83,7 @@ namespace SS14.Client
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
+            IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
 
             IoCManager.BuildGraph();
         }

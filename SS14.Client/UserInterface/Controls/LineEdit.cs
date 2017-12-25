@@ -27,7 +27,7 @@ namespace SS14.Client.UserInterface
             set => SceneControl.Align = (int)value;
         }
 
-        string Text
+        public string Text
         {
             get => SceneControl.Text;
             set => SceneControl.Text = value;

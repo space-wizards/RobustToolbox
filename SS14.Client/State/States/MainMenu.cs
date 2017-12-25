@@ -43,6 +43,9 @@ namespace SS14.Client.State.States
 
             var VBox = MainMenuControl.GetChild("VBoxContainer");
             VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
+            VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
+            VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
+            VBox.GetChild<LineEdit>("IPBox").OnTextEntered += IPBoxEntered;
         }
 
         /// <inheritdoc />
@@ -64,31 +67,62 @@ namespace SS14.Client.State.States
             IoCManager.Resolve<IGameControllerProxy>().GameController.Shutdown();
         }
 
+        private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
+        {
+            MainMenuControl.GetChild<AcceptDialog>("NoOptionsDialog").OpenCentered();
+        }
+
+        private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)
+        {
+            var input = MainMenuControl.GetChild("VBoxContainer").GetChild<LineEdit>("IPBox");
+            TryConnect(input.Text);
+        }
+
+        private void IPBoxEntered(LineEdit.LineEditEventArgs args)
+        {
+            TryConnect(args.Text);
+        }
+
+        private void TryConnect(string address)
+        {
+            try
+            {
+                ParseAddress(address, out var ip, out var port);
+            }
+            catch (ArgumentException e)
+            {
+                var dialog = MainMenuControl.GetChild<AcceptDialog>("IPErrorDialog");
+                dialog.DialogText = $"Unable to resolve address: {e.Message}";
+                dialog.OpenCentered();
+            }
+        }
+
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
             //if (args.NewLevel == ClientRunLevel.Lobby)
             //    StateManager.RequestStateChange<Lobby>();
         }
 
-        private bool TryParseAddress(string address, out string ip, out ushort port)
+        private void ParseAddress(string address, out string ip, out ushort port)
         {
             // See if the IP includes a port.
             var split = address.Split(':');
             ip = address;
             port = _client.DefaultPort;
             if (split.Length > 2)
-                return false;
-            //throw new InvalidOperationException("Not a valid Address.");
+            {
+                throw new ArgumentException("Not a valid Address.");
+            }
 
             // IP:port format.
             if (split.Length == 2)
             {
                 ip = split[0];
                 if (!ushort.TryParse(split[1], out port))
-                    return false;
-                //throw new InvalidOperationException("Not a valid port.");
+                {
+                    throw new ArgumentException("Not a valid port.");
+                }
             }
-            return true;
         }
     }
 }

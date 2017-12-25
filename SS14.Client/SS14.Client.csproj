@@ -164,6 +164,9 @@
     <Compile Include="UserInterface\Controls\Label.cs" />
     <Compile Include="UserInterface\Controls\Panel.cs" />
     <Compile Include="UserInterface\Controls\LineEdit.cs" />
+    <Compile Include="UserInterface\Controls\Popup.cs" />
+    <Compile Include="UserInterface\Controls\WindowDialog.cs" />
+    <Compile Include="UserInterface\Controls\AcceptDialog.cs" />
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />

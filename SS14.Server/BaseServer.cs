@@ -223,10 +223,10 @@ namespace SS14.Server
             _resources.MountContentDirectory(@"./Resources/");
 
             //mount the engine content pack
-            _resources.MountContentPack(@"EngineContentPack.zip");
+            // _resources.MountContentPack(@"EngineContentPack.zip");
 
             //mount the default game ContentPack defined in config
-            _resources.MountDefaultContentPack();
+            // _resources.MountDefaultContentPack();
 
             LoadContentAssembly<GameShared>("Shared");
             LoadContentAssembly<GameServer>("Server");
@@ -249,6 +249,8 @@ namespace SS14.Server
             clientConsole.Initialize();
             var consoleManager = IoCManager.Resolve<IConsoleManager>();
             consoleManager.Initialize();
+
+            IoCManager.Resolve<ITileDefinitionManager>().Initialize();
 
             StartLobby();
             StartGame();
@@ -643,11 +645,11 @@ namespace SS14.Server
 
             message.MsgChannel.SendMessage(netMsg);
 
-            
+
         }
 
         /// <summary>
-        /// Player session is fully built, player is an active member of the server. Player is prepaired to start 
+        /// Player session is fully built, player is an active member of the server. Player is prepaired to start
         /// receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Fully built session</param>

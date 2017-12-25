@@ -170,6 +170,7 @@
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />
+    <Compile Include="State\States\LobbyMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

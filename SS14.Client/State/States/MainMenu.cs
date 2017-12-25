@@ -52,14 +52,15 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             _client.RunLevelChanged += RunLevelChanged;
-
-            FormResize();
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
             _client.RunLevelChanged -= RunLevelChanged;
+
+            userInterfaceManager.RootControl.RemoveChild(MainMenuControl);
+            MainMenuControl.Dispose();
         }
 
         private void ExitButtonPressed(BaseButton.ButtonEventArgs args)
@@ -88,6 +89,7 @@ namespace SS14.Client.State.States
             try
             {
                 ParseAddress(address, out var ip, out var port);
+                _client.ConnectToServer(ip, port);
             }
             catch (ArgumentException e)
             {
@@ -97,8 +99,10 @@ namespace SS14.Client.State.States
 
         private void RunLevelChanged(object obj, RunLevelChangedEventArgs args)
         {
-            //if (args.NewLevel == ClientRunLevel.Lobby)
-            //    StateManager.RequestStateChange<Lobby>();
+            if (args.NewLevel == ClientRunLevel.Lobby)
+            {
+                StateManager.RequestStateChange<Lobby>();
+            }
         }
 
         private void ParseAddress(string address, out string ip, out ushort port)

@@ -28,5 +28,10 @@ namespace SS14.Client.UserInterface
         {
             SceneControl.PopupCentered();
         }
+
+        public void OpenMinimum()
+        {
+            SceneControl.PopupCenteredMinsize();
+        }
     }
 }

@@ -93,7 +93,7 @@ namespace SS14.Client.State.States
             {
                 var dialog = MainMenuControl.GetChild<AcceptDialog>("IPErrorDialog");
                 dialog.DialogText = $"Unable to resolve address: {e.Message}";
-                dialog.OpenCentered();
+                dialog.OpenMinimum();
             }
         }
 

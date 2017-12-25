@@ -18,7 +18,7 @@ namespace SS14.Client.GameObjects
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<IconComponent>();
             Register<ContextMenuComponent>();
-            //Register<KeyBindingInputComponent>();
+            Register<KeyBindingInputComponent>();
             //Register<PointLightComponent>();
             Register<PhysicsComponent>();
             Register<TransformComponent>();

@@ -63,8 +63,6 @@ namespace SS14.Client.GameObjects
             SceneSprite.SetName("SpriteComponent");
             transformComponent.SceneNode.AddChild(SceneSprite);
 
-            Logger.Debug($"{textureName}");
-
             if (texture != null)
             {
                 SceneSprite.SetTexture(texture.Texture);

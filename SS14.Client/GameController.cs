@@ -21,6 +21,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using System;
 using System.IO;
+using SS14.Client.Interfaces.Input;
 
 namespace SS14.Client
 {
@@ -51,6 +52,8 @@ namespace SS14.Client
         readonly private IUserInterfaceManager _userInterfaceManager;
         [Dependency]
         readonly IBaseClient _client;
+        [Dependency]
+        readonly IKeyBindingManager keyBindingManager;
         //[Dependency]
         //private readonly IPlacementManager _placementManager;
         /*
@@ -80,17 +83,13 @@ namespace SS14.Client
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
 
+            keyBindingManager.Initialize();
             _serializer.Initialize();
-
             _userInterfaceManager.Initialize();
-
             _tileDefinitionManager.Initialize();
-
             _networkManager.Initialize(false);
-
             _prototypeManager.LoadDirectory(@"./Prototypes/");
             _prototypeManager.Resync();
-
             _mapManager.Initialize();
             //_placementManager.Initialize();
 

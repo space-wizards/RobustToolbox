@@ -4,6 +4,7 @@ using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using SS14.Shared.Log;
 
 namespace SS14.Server.GameObjects
 {
@@ -16,6 +17,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
+            Logger.Debug("Got a net message!");
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 

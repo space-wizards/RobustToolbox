@@ -1,5 +1,4 @@
-﻿/*
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Input;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -8,6 +7,7 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using SS14.Shared.Log;
 
 namespace SS14.Client.GameObjects
 {
@@ -99,6 +99,7 @@ namespace SS14.Client.GameObjects
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
+            Logger.Debug($"comp: Got a keydown! {e.Function}!");
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
 
@@ -109,6 +110,7 @@ namespace SS14.Client.GameObjects
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
+            Logger.Debug($"comp: Got a keyup! {e.Function}!");
             if (!_enabled)
                 return;
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);
@@ -158,4 +160,3 @@ namespace SS14.Client.GameObjects
         }
     }
 }
-*/

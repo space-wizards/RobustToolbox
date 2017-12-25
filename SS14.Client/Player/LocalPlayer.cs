@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -62,7 +63,7 @@ namespace SS14.Client.Player
             var factory = IoCManager.Resolve<IComponentFactory>();
 
             ControlledEntity = entity;
-            //ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
+            ControlledEntity.AddComponent(factory.GetComponent<KeyBindingInputComponent>());
 
             if (ControlledEntity.HasComponent<IMoverComponent>())
                 ControlledEntity.RemoveComponent<IMoverComponent>();
@@ -72,7 +73,12 @@ namespace SS14.Client.Player
             if (!ControlledEntity.HasComponent<CollidableComponent>())
                 ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
 
-            ControlledEntity.GetComponent<ITransformComponent>().OnMove += OnPlayerMoved;
+            var camera = new Godot.Camera2D();
+            camera.SetName("Camera");
+            camera.MakeCurrent();
+            var transform = ControlledEntity.GetComponent<IClientTransformComponent>();
+            transform.OnMove += OnPlayerMoved;
+            transform.SceneNode.AddChild(camera);
 
             EntityAttached?.Invoke(this, EventArgs.Empty);
         }
@@ -84,7 +90,7 @@ namespace SS14.Client.Player
         {
             if (ControlledEntity != null && ControlledEntity.Initialized)
             {
-                //ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
+                ControlledEntity.RemoveComponent<KeyBindingInputComponent>();
                 ControlledEntity.RemoveComponent<PlayerInputMoverComponent>();
                 ControlledEntity.RemoveComponent<CollidableComponent>();
                 var transform = ControlledEntity.GetComponent<ITransformComponent>();

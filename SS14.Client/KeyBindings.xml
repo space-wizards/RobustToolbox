@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<KeyBindings xmlns:xsd="KeyBindings.xsd">
+  <Binding Key="W" Function="MoveUp" />
+  <Binding Key="A" Function="MoveLeft" />
+  <Binding Key="S" Function="MoveDown" />
+  <Binding Key="D" Function="MoveRight" />
+  <Binding Key="Q" Function="Drop" />
+  <Binding Key="Tab" Function="SwitchHands" />
+  <Binding Key="Shift" Function="Run" />
+  <Binding Key="F" Function="ActivateItemInHand" />
+</KeyBindings>

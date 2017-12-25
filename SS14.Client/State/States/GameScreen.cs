@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.Input;
 using SS14.Shared.Interfaces.GameObjects;
 using Lidgren.Network;
 using SS14.Shared;
+using SS14.Client.Input;
 
 namespace SS14.Client.State.States
 {
@@ -23,6 +25,8 @@ namespace SS14.Client.State.States
         readonly IClientEntityManager _entityManager;
         [Dependency]
         readonly IComponentManager _componentManager;
+        [Dependency]
+        readonly IKeyBindingManager keyBindingManager;
 
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
         {
@@ -62,6 +66,16 @@ namespace SS14.Client.State.States
             _entityManager.Update(e.Elapsed);
             //PlacementManager.Update(MousePosScreen);
             PlayerManager.Update(e.Elapsed);
+        }
+
+        public override void KeyDown(KeyEventArgs e)
+        {
+            keyBindingManager.KeyDown(e);
+        }
+
+        public override void KeyUp(KeyEventArgs e)
+        {
+            keyBindingManager.KeyUp(e);
         }
     }
 }

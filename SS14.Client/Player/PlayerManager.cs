@@ -134,7 +134,7 @@ namespace SS14.Client.Player
         public void SendVerb(string verb, int uid)
         {
             //TODO: Convert this to the ConCmd system.
-
+            Logger.Debug($"Sending verb {verb}");
             var message = _network.CreateNetMessage<MsgSession>();
             message.MsgType = PlayerSessionMessage.Verb;
             message.Uid = uid;

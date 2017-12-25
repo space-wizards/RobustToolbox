@@ -38,7 +38,7 @@ namespace SS14.Server.Player
 
             UpdatePlayerState();
         }
-        
+
         public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
@@ -139,7 +139,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-        
+
         private void SendAttachMessage()
         {
             if (attachedEntity == null)

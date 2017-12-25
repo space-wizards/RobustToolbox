@@ -15,6 +15,7 @@ using SS14.Client.Input;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.Log;
 
 namespace SS14.Client.State
 {
@@ -128,6 +129,7 @@ namespace SS14.Client.State
 
         private void SwitchToState<T>() where T : State
         {
+            Logger.Debug($"Switching to state {typeof(T)}");
             State newState;
 
             if (_loadedStates.ContainsKey(typeof(T)))

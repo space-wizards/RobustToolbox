@@ -16,14 +16,10 @@ namespace SS14.Client.UserInterface
         [Dependency]
         readonly IConfigurationManager _config;
         [Dependency]
-        readonly IResourceCache _resourceCache;
-        [Dependency]
         readonly ISceneTreeHolder _sceneTreeHolder;
 
         public Control RootControl { get; private set; }
         public AcceptDialog PopupControl { get; private set; }
-
-        private List<Control> AllControls;
 
         public void PostInject()
         {

@@ -21,6 +21,7 @@ namespace SS14.Client.UserInterface
         readonly ISceneTreeHolder _sceneTreeHolder;
 
         public Control RootControl { get; private set; }
+        public AcceptDialog PopupControl { get; private set; }
 
         private List<Control> AllControls;
 
@@ -43,11 +44,20 @@ namespace SS14.Client.UserInterface
                 MarginLeft = 0,
             };
             _sceneTreeHolder.SceneTree.GetRoot().AddChild(RootControl.SceneControl);
+            PopupControl = new AcceptDialog("RootPopup");
+            RootControl.AddChild(PopupControl);
         }
 
         public void DisposeAllComponents()
         {
-            throw new System.NotImplementedException();
+            RootControl.DisposeAllChildren();
+        }
+
+        public void Popup(string contents, string title="Alert!")
+        {
+            PopupControl.DialogText = contents;
+            PopupControl.Title = title;
+            PopupControl.OpenMinimum();
         }
     }
 }

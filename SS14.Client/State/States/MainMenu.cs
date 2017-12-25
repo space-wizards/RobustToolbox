@@ -69,7 +69,7 @@ namespace SS14.Client.State.States
 
         private void OptionsButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            MainMenuControl.GetChild<AcceptDialog>("NoOptionsDialog").OpenCentered();
+            userInterfaceManager.Popup("Sorry, options menu's not implemented yet!", "// TODO:");
         }
 
         private void ConnectButtonPressed(BaseButton.ButtonEventArgs args)
@@ -91,9 +91,7 @@ namespace SS14.Client.State.States
             }
             catch (ArgumentException e)
             {
-                var dialog = MainMenuControl.GetChild<AcceptDialog>("IPErrorDialog");
-                dialog.DialogText = $"Unable to resolve address: {e.Message}";
-                dialog.OpenMinimum();
+                userInterfaceManager.Popup($"Unable to resolve address: {e.Message}", "Invalid IP");
             }
         }
 

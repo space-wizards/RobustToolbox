@@ -196,44 +196,4 @@ lines_skipped = 0
 max_lines_visible = -1
 _sections_unfolded = [ "Margin", "custom_colors", "custom_fonts" ]
 
-[node name="NoOptionsDialog" type="AcceptDialog" parent="." index="3"]
-
-visible = false
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 350.0
-margin_top = 276.0
-margin_right = 652.0
-margin_bottom = 334.0
-rect_pivot_offset = Vector2( 0, 0 )
-mouse_filter = 0
-size_flags_horizontal = 1
-size_flags_vertical = 1
-popup_exclusive = false
-window_title = "// TODO!"
-resizable = false
-dialog_text = "Options menu's not implemented yet. Sorry!"
-dialog_hide_on_ok = true
-_sections_unfolded = [ "Dialog", "Popup" ]
-
-[node name="IPErrorDialog" type="AcceptDialog" parent="." index="4"]
-
-visible = false
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_right = 83.0
-margin_bottom = 58.0
-rect_pivot_offset = Vector2( 0, 0 )
-mouse_filter = 0
-size_flags_horizontal = 1
-size_flags_vertical = 1
-popup_exclusive = false
-window_title = "Invalid IP"
-resizable = false
-dialog_hide_on_ok = true
-
 

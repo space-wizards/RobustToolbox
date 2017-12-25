@@ -17,5 +17,7 @@ namespace SS14.Client.Interfaces.UserInterface
         Control RootControl { get; }
 
         void Initialize();
+
+        void Popup(string contents, string title="Alert!");
     }
 }

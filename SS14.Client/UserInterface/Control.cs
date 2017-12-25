@@ -158,7 +158,7 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             _name = control.GetName();
             SetupSignalHooks();
-            Logger.Debug($"Wrapping control {Name} ({GetType()} -> {controls.GetType()})");
+            Logger.Debug($"Wrapping control {Name} ({GetType()} -> {control.GetType()})");
         }
 
         private void SetupSceneControl()

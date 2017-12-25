@@ -158,12 +158,15 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             _name = control.GetName();
             SetupSignalHooks();
-            Logger.Debug($"Wrapping control {Name} ({control.GetType()})");
+            Logger.Debug($"Wrapping control {Name} ({GetType()} -> {controls.GetType()})");
         }
 
         private void SetupSceneControl()
         {
             SetSceneControl(SpawnSceneControl());
+            // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
+            // handle these.
+            WrapChildControls();
         }
 
         /// <summary>
@@ -322,10 +325,6 @@ namespace SS14.Client.UserInterface
         //         from SS14.Client.Godot I *think*?
         public static Control InstanceScene(Godot.PackedScene scene)
         {
-            if (GodotTranslationCache == null)
-            {
-                SetupGodotTranslationCache();
-            }
             var root = (Godot.Control)scene.Instance();
             return WrapGodotControl(null, root);
         }
@@ -341,7 +340,14 @@ namespace SS14.Client.UserInterface
                 parent._children[newControl.Name] = newControl;
             }
 
-            foreach (var child in control.GetChildren())
+            newControl.WrapChildControls();
+
+            return newControl;
+        }
+
+        private void WrapChildControls()
+        {
+            foreach (var child in SceneControl.GetChildren())
             {
                 // Some Godot nodes have subnodes.
                 // great example being the LineEdit.
@@ -349,11 +355,10 @@ namespace SS14.Client.UserInterface
                 // so don't blow up on it!
                 if (child is Godot.Control childControl)
                 {
-                    WrapGodotControl(newControl, childControl);
+                    WrapGodotControl(this, childControl);
                 }
             }
 
-            return newControl;
         }
 
         private static Dictionary<Type, Type> GodotTranslationCache;
@@ -364,13 +369,15 @@ namespace SS14.Client.UserInterface
         // Filling in the blanks later.
         private static Type FindGodotTranslationType(Godot.Control control)
         {
-            Logger.Debug($"FindGodotTranslationType: Original: {control.GetType()}");
+            if (GodotTranslationCache == null)
+            {
+                SetupGodotTranslationCache();
+            }
             var original = control.GetType();
             var tmp = original;
             // CanvasItem is the parent of Godot.Control so reaching it means we passed Godot.Control.
             while (tmp != typeof(Godot.CanvasItem))
             {
-                Logger.Debug($"FindGodotTranslationType: tmp: {tmp}");
                 if (GodotTranslationCache.TryGetValue(tmp, out var info))
                 {
                     if (original != tmp)
@@ -378,7 +385,6 @@ namespace SS14.Client.UserInterface
                         GodotTranslationCache[original] = info;
                     }
 
-                    Logger.Debug($"Settling on {info}");
                     return info;
                 }
 

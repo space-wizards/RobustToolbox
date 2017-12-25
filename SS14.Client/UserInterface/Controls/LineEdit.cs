@@ -18,6 +18,7 @@ namespace SS14.Client.UserInterface
 
         protected override void SetSceneControl(Godot.Control control)
         {
+            base.SetSceneControl(control);
             SceneControl = (Godot.LineEdit)control;
         }
 

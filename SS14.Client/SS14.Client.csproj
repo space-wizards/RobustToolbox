@@ -135,6 +135,7 @@
     <Compile Include="Interfaces\Utility\IRand.cs" />
     <Compile Include="Log\GodotLogManager.cs" />
     <Compile Include="Map\ClientTileDefinitionManager.cs" />
+    <Compile Include="Map\ClientMapManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ClientReflectionManager.cs" />
     <Compile Include="Interfaces\ResourceManagement\IResourceCache.cs" />

@@ -57,7 +57,7 @@ namespace SS14.Shared.Map
         /// </summary>
         private readonly Dictionary<int, Map> _Maps = new Dictionary<int, Map>();
 
-        public void UnregisterMap(int mapID)
+        public virtual void UnregisterMap(int mapID)
         {
             if (_Maps.ContainsKey(mapID))
             {
@@ -69,7 +69,7 @@ namespace SS14.Shared.Map
             }
         }
 
-        public IMap CreateMap(int mapID)
+        public virtual IMap CreateMap(int mapID)
         {
             var newMap = new Map(this, mapID);
             _Maps.Add(mapID, newMap);

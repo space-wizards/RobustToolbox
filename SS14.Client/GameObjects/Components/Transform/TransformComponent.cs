@@ -62,13 +62,14 @@ namespace SS14.Client.GameObjects
         {
             var newState = (TransformComponentState)state;
             Rotation = newState.Rotation;
-            SceneNode.SetRotation((float)Rotation);
+            //SceneNode.SetRotation((float)Rotation);
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {
                 OnMove?.Invoke(this, new MoveEventArgs(LocalPosition, new LocalCoordinates(newState.Position, newState.GridID, newState.MapID)));
                 _position = newState.Position;
-                SceneNode.Position = _position.Convert();
+                // TODO: Unhardcode the pixelspermeter (32) here!
+                SceneNode.Position = _position.Convert() * 32;
                 MapID = newState.MapID;
                 GridID = newState.GridID;
             }
@@ -145,7 +146,7 @@ namespace SS14.Client.GameObjects
             base.OnAdd(owner);
             var holder = IoCManager.Resolve<ISceneTreeHolder>();
             SceneNode = new Godot.Node2D();
-            SceneNode.SetName($"Transform{owner.Uid}");
+            SceneNode.SetName($"Transform {owner.Uid} ({owner.Name})");
             holder.WorldRoot.AddChild(SceneNode);
         }
 

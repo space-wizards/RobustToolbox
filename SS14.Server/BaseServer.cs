@@ -452,6 +452,7 @@ namespace SS14.Server
             {
                 Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
                 var floor = defManager["Floor"].TileId;
+                Logger.Debug($"floor: {floor}");
 
                 Debug.Assert(floor > 0);
 

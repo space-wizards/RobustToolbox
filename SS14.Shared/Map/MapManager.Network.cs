@@ -246,7 +246,7 @@ namespace SS14.Shared.Map
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
             var tile = (Tile) message.SingleTurf.Tile;
-            
+
             LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
             coords.Grid.SetTile(coords, tile); //TODO: Fix this
         }

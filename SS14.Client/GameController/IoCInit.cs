@@ -70,7 +70,7 @@ namespace SS14.Client
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<IMapManager, ClientMapManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
 
             // Client stuff.

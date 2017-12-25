@@ -8,6 +8,7 @@
     drawdepth: FloorPlaceable
     sprites:
     - wall_texture
+    sprite: wall_texture
 
   - type: Icon
     icon: wall_texture

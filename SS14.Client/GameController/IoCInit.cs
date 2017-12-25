@@ -24,12 +24,14 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
+using SS14.Shared.Physics;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
 using System;
@@ -69,6 +71,7 @@ namespace SS14.Client
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<ICollisionManager, CollisionManager>();
 
             // Client stuff.
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

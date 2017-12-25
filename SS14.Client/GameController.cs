@@ -49,6 +49,8 @@ namespace SS14.Client
         readonly private IStateManager _stateManager;
         [Dependency]
         readonly private IUserInterfaceManager _userInterfaceManager;
+        [Dependency]
+        readonly IBaseClient _client;
         //[Dependency]
         //private readonly IPlacementManager _placementManager;
         /*
@@ -96,6 +98,8 @@ namespace SS14.Client
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
+            _client.Initialize();
+
             _stateManager.RequestStateChange<MainScreen>();
         }
 
@@ -116,8 +120,11 @@ namespace SS14.Client
 
         public override void PhysicsProcess(float delta)
         {
+            _networkManager.ProcessPackets();
             var eventArgs = new FrameEventArgs(delta);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
             _stateManager?.Update(eventArgs);
+            AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
         }
 
         private void LoadContentAssembly<T>(string name) where T : GameShared

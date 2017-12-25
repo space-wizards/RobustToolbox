@@ -1,3 +1,5 @@
+using SS14.Client.Interfaces.Player;
+using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,6 @@ namespace SS14.Client.State.States
 
         public override void InitializeGUI()
         {
-            Logger.Debug("We connected!");
             // throw new System.NotImplementedException();
         }
 
@@ -22,7 +23,7 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
-            // throw new System.NotImplementedException();
+            IoCManager.Resolve<IPlayerManager>().SendVerb("joingame", 0);
         }
     }
 }

@@ -46,7 +46,7 @@ namespace SS14.Shared.Network
         ///     The instance of the net server.
         /// </summary>
         private NetPeer _netPeer;
-        
+
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
 
@@ -85,7 +85,7 @@ namespace SS14.Shared.Network
 
             _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
             _config.RegisterCVar("net.allowdupeip", false, CVar.ARCHIVE);
-            
+
             if (!isServer)
             {
                 _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
@@ -107,7 +107,7 @@ namespace SS14.Shared.Network
                 OnConnected(ServerChannel);
             });
         }
-        
+
         public void Startup()
         {
             var netConfig = new NetPeerConfiguration("SS13_NetTag");
@@ -117,7 +117,7 @@ namespace SS14.Shared.Network
                 netConfig.Port = Port;
                 netConfig.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
             }
-            
+
 #if DEBUG
             //Simulate Latency
             if (_config.GetCVar<bool>("net.fakelag"))
@@ -139,7 +139,7 @@ namespace SS14.Shared.Network
         {
             foreach (var kvChannel in _channels)
                 DisconnectChannel(kvChannel.Value, reason);
-            
+
             _netPeer.Shutdown(reason);
             _strings.Reset();
         }
@@ -352,7 +352,7 @@ namespace SS14.Shared.Network
                 Logger.Warning($"[NET] {address}: Received empty packet.");
                 return;
             }
-            
+
             var id = msg.ReadByte();
 
             if (!_strings.TryGetString(id, out string name))
@@ -511,7 +511,7 @@ namespace SS14.Shared.Network
             // not connected to a server, so a message cannot be sent to it.
             if (ServerChannel == null)
                 return;
-            
+
             _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
         }
         #endregion NetMessages
@@ -566,7 +566,7 @@ namespace SS14.Shared.Network
         public event EventHandler<NetConnectingArgs> Connecting;
 
         /// <inheritdoc />
-        public event EventHandler<NetConnectFailArgs> ConnectFailed; 
+        public event EventHandler<NetConnectFailArgs> ConnectFailed;
 
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Connected;

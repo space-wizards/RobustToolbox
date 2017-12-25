@@ -182,14 +182,14 @@ namespace SS14.Client
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
-                //stateMan.RequestStateChange<Lobby>();
+                stateMan.RequestStateChange<Lobby>();
                 PlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
             if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
-                //stateMan.RequestStateChange<GameScreen>();
+                stateMan.RequestStateChange<GameScreen>();
                 PlayerJoinedGame(_playMan.LocalPlayer.Session);
             }
         }

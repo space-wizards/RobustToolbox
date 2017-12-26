@@ -18,9 +18,6 @@ namespace SS14.Client.GodotGlue
         public override void _Ready()
         {
             CallDeferred(nameof(AnnounceMain));
-
-            GD.Print($"{IsProcessingInput()}");
-            GD.Print($"{IsProcessingUnhandledInput()}");
         }
 
         public void AnnounceMain()
@@ -38,7 +35,6 @@ namespace SS14.Client.GodotGlue
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.StackTrace);
                         GD.Print($"Caught exception inside ClientEntryPoint Main:\n{e}");
                     }
                     entryPoints.Add(instance);

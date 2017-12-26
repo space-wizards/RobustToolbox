@@ -74,7 +74,7 @@ namespace SS14.Client.State
 
         public void KeyHeld(KeyEventArgs e)
         {
-            CurrentState?.KeyUp(e);
+            CurrentState?.KeyHeld(e);
         }
 
         public void MouseUp(MouseButtonEventArgs e)

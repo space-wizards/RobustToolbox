@@ -17,7 +17,6 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
         {
-            Logger.Debug("Got a net message!");
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 

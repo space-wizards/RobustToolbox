@@ -1,4 +1,6 @@
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.UserInterface;
 using SS14.Shared;
 using SS14.Shared.Utility;
 using SS14.Shared.IoC;
@@ -14,6 +16,9 @@ namespace SS14.Client.Input
 {
     public class KeyBindingManager : IKeyBindingManager
     {
+        [Dependency]
+        readonly IUserInterfaceManager userInterfaceManager;
+
         private Dictionary<Keyboard.Key, BoundKeyFunctions> _boundKeys;
 
         public bool Enabled { get; set; }
@@ -30,14 +35,14 @@ namespace SS14.Client.Input
         public void KeyDown(KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyDown event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Key))
+            if (Enabled && !UIBlocked() && _boundKeys.Keys.Contains(e.Key))
                 BoundKeyDown?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
         }
 
         public void KeyUp(KeyEventArgs e)
         {
             //If the key is bound, fire the BoundKeyUp event.
-            if (Enabled && _boundKeys.Keys.Contains(e.Key))
+            if (Enabled && !UIBlocked() && _boundKeys.Keys.Contains(e.Key))
                 BoundKeyUp?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));
         }
 
@@ -56,6 +61,15 @@ namespace SS14.Client.Input
                         (BoundKeyFunctions)
                         Enum.Parse(typeof (BoundKeyFunctions), node.Attributes["Function"].Value, false));
                 }
+        }
+
+        // Don't take input if we're focused on a LineEdit.
+        // LineEdits don't intercept keydowns when typing properly.
+        // https://github.com/godotengine/godot/issues/15071
+        // So if we didn't do this, the DebugConsole wouldn't block movement (for example).
+        private bool UIBlocked()
+        {
+            return userInterfaceManager.Focused is LineEdit;
         }
     }
 }

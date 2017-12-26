@@ -11,6 +11,8 @@ namespace SS14.Client.Interfaces.UserInterface
         /// </summary>
         void DisposeAllComponents();
 
+        Control Focused { get; }
+
         Control StateRoot { get; }
 
         /// <summary>
@@ -30,5 +32,13 @@ namespace SS14.Client.Interfaces.UserInterface
         void UnhandledMouseDown(MouseButtonEventArgs args);
 
         void UnhandledMouseUp(MouseButtonEventArgs args);
+
+        void FocusEntered(Control control);
+
+        void FocusExited(Control control);
+
+        void PreKeyDown(KeyEventArgs args);
+
+        void PreKeyUp(KeyEventArgs args);
     }
 }

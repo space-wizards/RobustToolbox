@@ -109,6 +109,8 @@ namespace SS14.Client.UserInterface
 
         protected override void SetupSignalHooks()
         {
+            base.SetupSignalHooks();
+
             __textChangedSubscriber = new GodotSignalSubscriber1();
             __textChangedSubscriber.Connect(SceneControl, "text_changed");
             __textChangedSubscriber.Signal += __textChangedHook;
@@ -121,6 +123,8 @@ namespace SS14.Client.UserInterface
 
         protected override void DisposeSignalHooks()
         {
+            base.DisposeSignalHooks();
+
             __textChangedSubscriber.Disconnect(SceneControl, "text_changed");
             __textChangedSubscriber.Dispose();
             __textChangedSubscriber = null;

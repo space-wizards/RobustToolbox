@@ -65,6 +65,14 @@ namespace SS14.Client.GodotGlue
                 entrypoint.Input(inputEvent);
             }
         }
+
+        public override void _Input(InputEvent inputEvent)
+        {
+            foreach (var entrypoint in EntryPoints)
+            {
+                entrypoint.PreInput(inputEvent);
+            }
+        }
     }
 
     /// <summary>
@@ -104,6 +112,10 @@ namespace SS14.Client.GodotGlue
         ///     The UI system can still intercept this beforehand.
         /// </summary>
         public virtual void Input(InputEvent inputEvent)
+        {
+        }
+
+        public virtual void PreInput(InputEvent inputEvent)
         {
         }
     }

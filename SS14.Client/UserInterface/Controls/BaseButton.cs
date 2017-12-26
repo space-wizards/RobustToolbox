@@ -124,6 +124,7 @@ namespace SS14.Client.UserInterface
         protected override void DisposeSignalHooks()
         {
             base.SetupSignalHooks();
+
             __buttonDownSubscriber.Disconnect(SceneControl, "button_down");
             __buttonDownSubscriber.Dispose();
             __buttonDownSubscriber = null;

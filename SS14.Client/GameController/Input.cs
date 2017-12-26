@@ -120,5 +120,30 @@ namespace SS14.Client
                     break;
             }
         }
+
+        public override void PreInput(InputEvent inputEvent)
+        {
+            if (_userInterfaceManager == null)
+            {
+                return;
+            }
+
+            if (inputEvent is InputEventKey keyEvent)
+            {
+                var keyEventArgs = (KeyEventArgs)keyEvent;
+                if (keyEvent.Echo)
+                {
+                    return;
+                }
+                else if (keyEvent.Pressed)
+                {
+                    _userInterfaceManager.PreKeyDown(keyEventArgs);
+                }
+                else
+                {
+                    _userInterfaceManager.PreKeyUp(keyEventArgs);
+                }
+            }
+        }
     }
 }

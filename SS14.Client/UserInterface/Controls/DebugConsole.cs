@@ -1,3 +1,4 @@
+using SS14.Shared.Log;
 using SS14.Shared.Reflection;
 
 namespace SS14.Client.UserInterface
@@ -32,14 +33,14 @@ namespace SS14.Client.UserInterface
             {
                 CommandBar.GrabFocus();
             }
-            else if (CommandBar.HasFocus())
-            {
-                CommandBar.ReleaseFocus();
-            }
         }
 
         private void CommandEntered(LineEdit.LineEditEventArgs args)
         {
+            if (string.IsNullOrWhiteSpace(args.Text))
+            {
+                return;
+            }
             var newtext = new Label();
             newtext.Text = args.Text;
             LogContainer.AddChild(newtext);

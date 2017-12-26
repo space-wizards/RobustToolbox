@@ -18,6 +18,8 @@ namespace SS14.Client.UserInterface
         [Dependency]
         readonly ISceneTreeHolder _sceneTreeHolder;
 
+        public Control Focused { get; private set; }
+
         private Godot.CanvasLayer CanvasLayer;
         public Control StateRoot { get; private set; }
         public Control RootControl { get; private set; }
@@ -64,17 +66,28 @@ namespace SS14.Client.UserInterface
             PopupControl.OpenMinimum();
         }
 
-        public void UnhandledKeyDown(KeyEventArgs args)
+        public void PreKeyDown(KeyEventArgs args)
         {
             if (args.Key == Keyboard.Key.Quote)
             {
                 DebugConsole.Toggle();
+                _sceneTreeHolder.SceneTree.SetInputAsHandled();
             }
+        }
+
+        public void PreKeyUp(KeyEventArgs args)
+        {
+
+        }
+
+        public void UnhandledKeyDown(KeyEventArgs args)
+        {
+            // Nothing
         }
 
         public void UnhandledKeyUp(KeyEventArgs args)
         {
-            //throw new System.NotImplementedException();
+            // Nothing
         }
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)
@@ -85,6 +98,21 @@ namespace SS14.Client.UserInterface
         public void UnhandledMouseUp(MouseButtonEventArgs args)
         {
             //throw new System.NotImplementedException();
+        }
+
+        public void FocusEntered(Control control)
+        {
+            Logger.Debug($"New focus: {control.Name}");
+            Focused = control;
+        }
+
+        public void FocusExited(Control control)
+        {
+            Logger.Debug($"Removing focus");
+            if (Focused == control)
+            {
+                Focused = null;
+            }
         }
     }
 }

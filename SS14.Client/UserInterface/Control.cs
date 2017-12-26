@@ -317,6 +317,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusEntered()
         {
+            UserInterfaceManager.FocusEntered(this);
         }
 
         /// <summary>
@@ -324,6 +325,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         protected virtual void FocusExited()
         {
+            UserInterfaceManager.FocusExited(this);
         }
 
         public bool HasFocus()

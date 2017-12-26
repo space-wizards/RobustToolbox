@@ -1,5 +1,5 @@
-﻿using SS14.Shared.Console;
-using SS14.Shared.Interfaces.Network;
+﻿using SS14.Server.Interfaces.Player;
+using SS14.Shared.Console;
 
 namespace SS14.Server.Interfaces.ClientConsoleHost
 {
@@ -8,6 +8,6 @@ namespace SS14.Server.Interfaces.ClientConsoleHost
     /// </summary>
     public interface IClientCommand : ICommand
     {
-        void Execute(IClientConsoleHost host, INetChannel client, params string[] args);
+        void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args);
     }
 }

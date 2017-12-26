@@ -148,6 +148,11 @@ namespace SS14.Client.State.States
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
 
+            //UI
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _gameChat.TextSubmitted += console.ParseChatMessage;
+            console.AddString += _gameChat.AddLine;
+            
             UserInterfaceManager.AddComponent(_uiScreen);
 
             //Init serializer
@@ -275,7 +280,6 @@ namespace SS14.Client.State.States
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
-            _gameChat.TextSubmitted += IoCManager.Resolve<IClientChatConsole>().ParseChatMessage;
             _uiScreen.AddControl(_gameChat);
         }
 
@@ -481,6 +485,11 @@ namespace SS14.Client.State.States
         /// <inheritdoc />
         public override void Shutdown()
         {
+            //UI
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _gameChat.TextSubmitted -= console.ParseChatMessage;
+            console.AddString -= _gameChat.AddLine;
+
             UserInterfaceManager.RemoveComponent(_uiScreen);
 
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.DetachEntity();

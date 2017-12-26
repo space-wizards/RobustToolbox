@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SS14.Server.Interfaces.ClientConsoleHost;
+using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
@@ -14,6 +15,11 @@ namespace SS14.Server.ClientConsoleHost
     {
         [Dependency]
         private readonly IReflectionManager reflectionManager;
+        [Dependency]
+        private readonly IPlayerManager _players;
+        [Dependency]
+        private readonly IServerNetManager _net;
+
 
         private readonly Dictionary<string, IClientCommand> availableCommands = new Dictionary<string, IClientCommand>();
         public IDictionary<string, IClientCommand> AvailableCommands => availableCommands;
@@ -48,6 +54,10 @@ namespace SS14.Server.ClientConsoleHost
 
                 AvailableCommands[instance.Command] = instance;
             }
+
+            _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, message => ProcessCommand((MsgConCmd)message));
+            _net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID);
+            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, message => HandleRegistrationRequest(message.MsgChannel));
         }
 
         public void ProcessCommand(MsgConCmd message)
@@ -64,21 +74,21 @@ namespace SS14.Server.ClientConsoleHost
 
             try
             {
-                var command = AvailableCommands[cmd];
-                args.RemoveAt(0);
-                command.Execute(this, sender, args.ToArray());
-            }
-            catch (KeyNotFoundException)
-            {
-                SendConsoleReply($"Unknown command: '{cmd}'", sender);
+                if (availableCommands.TryGetValue(cmd, out var command))
+                {
+                    args.RemoveAt(0);
+                    command.Execute(this, _players.GetSessionByChannel(sender), args.ToArray());
+                }
+                else
+                    SendConsoleReply(sender, $"Unknown command: '{cmd}'");
             }
             catch (Exception e)
             {
-                SendConsoleReply($"There was an error while executing the command: {e.Message}", sender);
+                SendConsoleReply(sender, $"There was an error while executing the command: {e.Message}");
             }
         }
 
-        public void SendConsoleReply(string text, INetChannel target)
+        public void SendConsoleReply(INetChannel target, string text)
         {
             var netMgr = IoCManager.Resolve<IServerNetManager>();
             var replyMsg = netMgr.CreateNetMessage<MsgConCmdAck>();

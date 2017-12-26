@@ -39,7 +39,7 @@ namespace SS14.Client.State.States
             var scene = (Godot.PackedScene)Godot.ResourceLoader.Load("res://Scenes/MainMenu/MainMenu.tscn");
             MainMenuControl = Control.InstanceScene(scene);
 
-            userInterfaceManager.RootControl.AddChild(MainMenuControl);
+            userInterfaceManager.StateRoot.AddChild(MainMenuControl);
 
             var VBox = MainMenuControl.GetChild("VBoxContainer");
             VBox.GetChild<Button>("ExitButton").OnPressed += ExitButtonPressed;
@@ -59,7 +59,7 @@ namespace SS14.Client.State.States
         {
             _client.RunLevelChanged -= RunLevelChanged;
 
-            userInterfaceManager.RootControl.RemoveChild(MainMenuControl);
+            userInterfaceManager.StateRoot.RemoveChild(MainMenuControl);
             MainMenuControl.Dispose();
         }
 

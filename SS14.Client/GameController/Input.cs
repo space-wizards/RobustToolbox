@@ -10,6 +10,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyDown(KeyEventArgs keyEvent)
         {
+            _userInterfaceManager.UnhandledKeyDown(keyEvent);
             _stateManager.KeyDown(keyEvent);
         }
 
@@ -18,6 +19,7 @@ namespace SS14.Client
         /// </summary>
         private void KeyUp(KeyEventArgs keyEvent)
         {
+            _userInterfaceManager.UnhandledKeyUp(keyEvent);
             _stateManager.KeyUp(keyEvent);
         }
 
@@ -34,6 +36,7 @@ namespace SS14.Client
         /// </summary>
         private void MouseDown(MouseButtonEventArgs mouseEvent)
         {
+            _userInterfaceManager.UnhandledMouseDown(mouseEvent);
             _stateManager.MouseDown(mouseEvent);
         }
 
@@ -42,6 +45,7 @@ namespace SS14.Client
         /// </summary>
         private void MouseUp(MouseButtonEventArgs mouseButtonEventArgs)
         {
+            _userInterfaceManager.UnhandledMouseUp(mouseButtonEventArgs);
             _stateManager.MouseUp(mouseButtonEventArgs);
         }
 

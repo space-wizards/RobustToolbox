@@ -99,7 +99,6 @@ namespace SS14.Client.GameObjects
 
         public virtual void KeyDown(object sender, BoundKeyEventArgs e)
         {
-            Logger.Debug($"comp: Got a keydown! {e.Function}!");
             if (!_enabled || GetKeyState(e.Function))
                 return; //Don't repeat keys that are already down.
 
@@ -110,7 +109,6 @@ namespace SS14.Client.GameObjects
 
         public virtual void KeyUp(object sender, BoundKeyEventArgs e)
         {
-            Logger.Debug($"comp: Got a keyup! {e.Function}!");
             if (!_enabled)
                 return;
             Owner.SendComponentNetworkMessage(this, NetDeliveryMethod.ReliableUnordered, e.Function, e.FunctionState);

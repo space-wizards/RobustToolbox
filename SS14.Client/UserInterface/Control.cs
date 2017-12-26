@@ -123,6 +123,12 @@ namespace SS14.Client.UserInterface
             set => SceneControl.MarginBottom = value;
         }
 
+        public bool Visible
+        {
+            get => SceneControl.Visible;
+            set => SceneControl.Visible = value;
+        }
+
         private readonly Dictionary<string, Control> _children = new Dictionary<string, Control>();
 
         /// <summary>
@@ -134,6 +140,7 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             SetupSceneControl();
             Name = GetType().Name;
+            Initialize();
         }
 
         /// <param name="name">The name the component will have.</param>
@@ -146,6 +153,7 @@ namespace SS14.Client.UserInterface
             UserInterfaceManager = IoCManager.Resolve<IUserInterfaceManager>();
             SetupSceneControl();
             Name = name;
+            Initialize();
         }
 
         /// <summary>
@@ -159,6 +167,11 @@ namespace SS14.Client.UserInterface
             _name = control.GetName();
             SetupSignalHooks();
             Logger.Debug($"Wrapping control {Name} ({GetType()} -> {control.GetType()})");
+            Initialize();
+        }
+
+        protected virtual void Initialize()
+        {
         }
 
         private void SetupSceneControl()
@@ -313,6 +326,27 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        public bool HasFocus()
+        {
+            return SceneControl.HasFocus();
+        }
+
+        public void GrabFocus()
+        {
+            SceneControl.GrabFocus();
+        }
+
+        public void ReleaseFocus()
+        {
+            SceneControl.ReleaseFocus();
+        }
+
+        public static Control InstanceScene(string resourcePath)
+        {
+            var res = (Godot.PackedScene)Godot.ResourceLoader.Load(resourcePath);
+            return InstanceScene(res);
+        }
+
         /// <summary>
         ///     Instance a packed Godot scene as a child of this one, wrapping all the nodes in SS14 controls.
         ///     This makes it possible to use Godot's GUI editor relatively comfortably,
@@ -423,6 +457,31 @@ namespace SS14.Client.UserInterface
                 GodotTranslationCache = null;
                 throw new InvalidOperationException("We don't even have the base Godot Control in the translation cache. We can't use scene instancing like this!");
             }
+        }
+
+        public void SetAnchorPreset(AnchorPreset preset, bool keepMargin=false)
+        {
+            SceneControl.SetAnchorsPreset((int)preset, keepMargin);
+        }
+
+        public enum AnchorPreset : byte
+        {
+            TopLeft = Godot.Control.PRESET_TOP_LEFT,
+            TopRight = Godot.Control.PRESET_TOP_RIGHT,
+            BottomLeft = Godot.Control.PRESET_BOTTOM_LEFT,
+            BottomRight = Godot.Control.PRESET_BOTTOM_RIGHT,
+            CenterLeft = Godot.Control.PRESET_CENTER_LEFT,
+            CenterTop = Godot.Control.PRESET_CENTER_TOP,
+            CenterRight = Godot.Control.PRESET_CENTER_RIGHT,
+            CenterBottom = Godot.Control.PRESET_CENTER_BOTTOM,
+            Center = Godot.Control.PRESET_CENTER,
+            LeftWide = Godot.Control.PRESET_LEFT_WIDE,
+            TopWide = Godot.Control.PRESET_TOP_WIDE,
+            RightWide = Godot.Control.PRESET_RIGHT_WIDE,
+            BottomWide = Godot.Control.PRESET_BOTTOM_WIDE,
+            VerticalCenterWide = Godot.Control.PRESET_VCENTER_WIDE,
+            HorizontalCenterWide = Godot.Control.PRESET_HCENTER_WIDE,
+            Wide = Godot.Control.PRESET_WIDE,
         }
     }
 }

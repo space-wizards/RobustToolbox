@@ -18,6 +18,9 @@ namespace SS14.Client.GodotGlue
         public override void _Ready()
         {
             CallDeferred(nameof(AnnounceMain));
+
+            GD.Print($"{IsProcessingInput()}");
+            GD.Print($"{IsProcessingUnhandledInput()}");
         }
 
         public void AnnounceMain()

@@ -27,8 +27,10 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        public event Action<GUIKeyEventArgs> OnKeyDown;
         protected virtual void KeyDown(GUIKeyEventArgs args)
         {
+            OnKeyDown?.Invoke(args);
         }
 
         protected virtual void KeyUp(GUIKeyEventArgs args)
@@ -45,7 +47,7 @@ namespace SS14.Client.UserInterface
             switch (input)
             {
                 case Godot.InputEventKey keyEvent:
-                    var keyEventArgs = new GUIKeyEventArgs(SceneControl,
+                    var keyEventArgs = new GUIKeyEventArgs(this,
                                                            (Keyboard.Key)keyEvent.Scancode,
                                                            (UInt32)keyEvent.Unicode,
                                                            keyEvent.Alt,
@@ -71,7 +73,7 @@ namespace SS14.Client.UserInterface
                     {
                         // Mouse wheel event.
                         var mouseWheelEventArgs = new GUIMouseWheelEventArgs((Mouse.Wheel)buttonEvent.ButtonIndex,
-                                                                             SceneControl,
+                                                                             this,
                                                                              (Mouse.ButtonMask)buttonEvent.ButtonMask,
                                                                              buttonEvent.GlobalPosition.Convert(),
                                                                              buttonEvent.Position.Convert(),
@@ -86,7 +88,7 @@ namespace SS14.Client.UserInterface
                         // Mouse button event.
                         var mouseButtonEventArgs = new GUIMouseButtonEventArgs((Mouse.Button)buttonEvent.ButtonIndex,
                                                                                buttonEvent.Doubleclick,
-                                                                               SceneControl,
+                                                                               this,
                                                                                (Mouse.ButtonMask)buttonEvent.ButtonMask,
                                                                                buttonEvent.GlobalPosition.Convert(),
                                                                                buttonEvent.Position.Convert(),
@@ -111,9 +113,9 @@ namespace SS14.Client.UserInterface
     public class GUIKeyEventArgs : KeyEventArgs
     {
         /// <summary>
-        ///     The Godot control spawning this event.
+        ///     The control spawning this event.
         /// </summary>
-        public Godot.Control SourceControl { get; }
+        public Control SourceControl { get; }
 
         /// <summary>
         ///     Mark this event as "handled",
@@ -121,10 +123,10 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Handle()
         {
-            SourceControl.AcceptEvent();
+            SourceControl.SceneControl.AcceptEvent();
         }
 
-        public GUIKeyEventArgs(Godot.Control sourceControl,
+        public GUIKeyEventArgs(Control sourceControl,
                                Keyboard.Key key,
                                uint unicode,
                                bool alt,
@@ -140,9 +142,9 @@ namespace SS14.Client.UserInterface
     public abstract class GUIMouseEventArgs : ModifierInputEventArgs
     {
         /// <summary>
-        ///     The Godot control spawning this event.
+        ///     The control spawning this event.
         /// </summary>
-        public Godot.Control SourceControl { get; }
+        public Control SourceControl { get; }
 
         /// <summary>
         ///     <c>InputEventMouse.button_mask</c> in Godot.
@@ -166,10 +168,10 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void Handle()
         {
-            SourceControl.AcceptEvent();
+            SourceControl.SceneControl.AcceptEvent();
         }
 
-        protected GUIMouseEventArgs(Godot.Control sourceControl,
+        protected GUIMouseEventArgs(Control sourceControl,
                                     Mouse.ButtonMask buttonMask,
                                     Vector2 globalPosition,
                                     Vector2 relativePosition,
@@ -201,7 +203,7 @@ namespace SS14.Client.UserInterface
 
         public GUIMouseButtonEventArgs(Mouse.Button button,
                                        bool doubleClick,
-                                       Godot.Control sourceControl,
+                                       Control sourceControl,
                                        Mouse.ButtonMask buttonMask,
                                        Vector2 globalPosition,
                                        Vector2 relativePosition,
@@ -233,7 +235,7 @@ namespace SS14.Client.UserInterface
         // ALL the parameters!
         public GUIMouseMoveEventArgs(Vector2 relative,
                                      Vector2 speed,
-                                     Godot.Control sourceControl,
+                                     Control sourceControl,
                                      Mouse.ButtonMask buttonMask,
                                      Vector2 globalPosition,
                                      Vector2 relativePosition,
@@ -257,7 +259,7 @@ namespace SS14.Client.UserInterface
         public Mouse.Wheel WheelDirection { get; }
 
         public GUIMouseWheelEventArgs(Mouse.Wheel wheelDirection,
-                                         Godot.Control sourceControl,
+                                         Control sourceControl,
                                          Mouse.ButtonMask buttonMask,
                                          Shared.Maths.Vector2 globalPosition,
                                          Shared.Maths.Vector2 relativePosition,

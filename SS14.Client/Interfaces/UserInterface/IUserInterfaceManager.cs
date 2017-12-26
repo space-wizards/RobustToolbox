@@ -1,3 +1,4 @@
+using SS14.Client.Input;
 using SS14.Client.UserInterface;
 
 namespace SS14.Client.Interfaces.UserInterface
@@ -10,6 +11,8 @@ namespace SS14.Client.Interfaces.UserInterface
         /// </summary>
         void DisposeAllComponents();
 
+        Control StateRoot { get; }
+
         /// <summary>
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.
@@ -19,5 +22,13 @@ namespace SS14.Client.Interfaces.UserInterface
         void Initialize();
 
         void Popup(string contents, string title="Alert!");
+
+        void UnhandledKeyDown(KeyEventArgs args);
+
+        void UnhandledKeyUp(KeyEventArgs args);
+
+        void UnhandledMouseDown(MouseButtonEventArgs args);
+
+        void UnhandledMouseUp(MouseButtonEventArgs args);
     }
 }

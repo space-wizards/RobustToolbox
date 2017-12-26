@@ -29,7 +29,6 @@ namespace SS14.Client.Input
 
         public void KeyDown(KeyEventArgs e)
         {
-            Logger.Debug($"M: Got a keydown: {e.Key}");
             //If the key is bound, fire the BoundKeyDown event.
             if (Enabled && _boundKeys.Keys.Contains(e.Key))
                 BoundKeyDown?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Down, _boundKeys[e.Key]));
@@ -37,7 +36,6 @@ namespace SS14.Client.Input
 
         public void KeyUp(KeyEventArgs e)
         {
-            Logger.Debug($"M: Got a keyup: {e.Key}");
             //If the key is bound, fire the BoundKeyUp event.
             if (Enabled && _boundKeys.Keys.Contains(e.Key))
                 BoundKeyUp?.Invoke(this, new BoundKeyEventArgs(BoundKeyState.Up, _boundKeys[e.Key]));

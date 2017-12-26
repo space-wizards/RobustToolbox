@@ -18,8 +18,11 @@ namespace SS14.Client.UserInterface
         [Dependency]
         readonly ISceneTreeHolder _sceneTreeHolder;
 
+        private Godot.CanvasLayer CanvasLayer;
+        public Control StateRoot { get; private set; }
         public Control RootControl { get; private set; }
         public AcceptDialog PopupControl { get; private set; }
+        public DebugConsole DebugConsole { get; private set; }
 
         public void PostInject()
         {
@@ -28,20 +31,25 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            RootControl = new Control("UIRoot")
-            {
-                AnchorLeft = 0,
-                AnchorRight = 1,
-                AnchorTop = 0,
-                AnchorBottom = 1,
-                MarginBottom = 0,
-                MarginTop = 0,
-                MarginRight = 0,
-                MarginLeft = 0,
-            };
-            _sceneTreeHolder.SceneTree.GetRoot().AddChild(RootControl.SceneControl);
+            CanvasLayer = new Godot.CanvasLayer();
+            CanvasLayer.SetName("UILayer");
+
+            _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
+
+            RootControl = new Control("UIRoot");
+            RootControl.SetAnchorPreset(Control.AnchorPreset.Wide);
+
+            CanvasLayer.AddChild(RootControl.SceneControl);
+
+            StateRoot = new Control("StateRoot");
+            StateRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
+            RootControl.AddChild(StateRoot);
+
             PopupControl = new AcceptDialog("RootPopup");
             RootControl.AddChild(PopupControl);
+
+            DebugConsole = new DebugConsole();
+            RootControl.AddChild(DebugConsole);
         }
 
         public void DisposeAllComponents()
@@ -54,6 +62,29 @@ namespace SS14.Client.UserInterface
             PopupControl.DialogText = contents;
             PopupControl.Title = title;
             PopupControl.OpenMinimum();
+        }
+
+        public void UnhandledKeyDown(KeyEventArgs args)
+        {
+            if (args.Key == Keyboard.Key.Quote)
+            {
+                DebugConsole.Toggle();
+            }
+        }
+
+        public void UnhandledKeyUp(KeyEventArgs args)
+        {
+            //throw new System.NotImplementedException();
+        }
+
+        public void UnhandledMouseDown(MouseButtonEventArgs args)
+        {
+            //throw new System.NotImplementedException();
+        }
+
+        public void UnhandledMouseUp(MouseButtonEventArgs args)
+        {
+            //throw new System.NotImplementedException();
         }
     }
 }

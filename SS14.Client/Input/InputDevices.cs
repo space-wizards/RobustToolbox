@@ -123,7 +123,9 @@ namespace SS14.Client.Input
             SemiColon = GD.KEY_SEMICOLON,
             Comma = GD.KEY_COMMA,
             Period = GD.KEY_PERIOD,
+            /// Seems to be grave (under tilde).
             Quote = GD.KEY_QUOTELEFT,
+            Apostrophe = GD.KEY_APOSTROPHE,
             Slash = GD.KEY_SLASH,
             BackSlash = GD.KEY_BACKSLASH,
             Tilde = GD.KEY_ASCIITILDE,

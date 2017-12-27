@@ -19,7 +19,7 @@ namespace SS14.Client.Log
             // causes color setting on the console to break on MacOS (and probably Linux).
             // So don't do that!
             string name = LogLevelToName(level);
-            Console.WriteLine($"{name}: {message}");
+            System.Console.WriteLine($"{name}: {message}");
 #endif
         }
     }

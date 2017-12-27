@@ -20,8 +20,7 @@ namespace SS14.Client.UserInterface
     public class DebugConsole : Control, IDebugConsole
     {
         private LineEdit CommandBar;
-        private Control LogContainer;
-        private VScrollBar ScrollBar;
+        private RichTextLabel Contents;
 
         readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
@@ -38,8 +37,8 @@ namespace SS14.Client.UserInterface
         protected override void Initialize()
         {
             CommandBar = GetChild<LineEdit>("CommandBar");
-            LogContainer = GetChild("ScrollContents").GetChild("VBoxContainer");
-            ScrollBar = GetChild("ScrollContents").GetChild<VScrollBar>("_v_scroll");
+            Contents = GetChild<RichTextLabel>("Contents");
+            Contents.ScrollFollowing = true;
 
             CommandBar.OnTextEntered += CommandEntered;
 
@@ -123,23 +122,15 @@ namespace SS14.Client.UserInterface
 
         public void AddLine(string text, Color color)
         {
-            var atBottom = ScrollBar.IsAtBottom;
-            var newtext = new Label
-            {
-                Text = text,
-                //AutoWrap = true,
-            };
-            newtext.AddColorOverride("font_color", color);
-            LogContainer.AddChild(newtext);
-            if (atBottom)
-            {
-                ScrollBar.Value = ScrollBar.MaxValue - ScrollBar.Page;
-            }
+            Contents.NewLine();
+            Contents.PushColor(color);
+            Contents.AddText(text);
+            Contents.Pop(); // Pop the color off.
         }
 
         public void Clear()
         {
-            LogContainer.DisposeAllChildren();
+            Contents.Clear();
         }
 
         private void InitializeCommands()

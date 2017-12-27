@@ -181,6 +181,7 @@
     <Compile Include="UserInterface\Controls\DebugConsole.cs" />
     <Compile Include="UserInterface\Controls\WindowDialog.cs" />
     <Compile Include="UserInterface\Controls\AcceptDialog.cs" />
+    <Compile Include="UserInterface\Controls\RichTextLabel.cs" />
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameController.cs" />

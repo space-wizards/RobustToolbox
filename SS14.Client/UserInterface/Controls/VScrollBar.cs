@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Godot;
+using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface
 {
@@ -24,6 +24,8 @@ namespace SS14.Client.UserInterface
             return new Godot.VScrollBar();
         }
 
-        public bool IsAtBottom => Page + Value == MaxValue;
+        // The Value of a scrollbar is the position where the "bar" begins,
+        //  so since Page is the "size" of the bar, page + value is the max.
+        public bool IsAtBottom => Value + Page == MaxValue;
     }
 }

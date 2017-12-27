@@ -7,6 +7,8 @@ using SS14.Shared.Log;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.ContentPack;
 using System.Reflection;
+using SS14.Shared.Maths;
+using SS14.Client.Utility;
 
 namespace SS14.Client.UserInterface
 {
@@ -394,7 +396,6 @@ namespace SS14.Client.UserInterface
                     WrapGodotControl(this, childControl);
                 }
             }
-
         }
 
         private static Dictionary<Type, Type> GodotTranslationCache;
@@ -461,7 +462,7 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        public void SetAnchorPreset(AnchorPreset preset, bool keepMargin=false)
+        public void SetAnchorPreset(AnchorPreset preset, bool keepMargin = false)
         {
             SceneControl.SetAnchorsPreset((int)preset, keepMargin);
         }
@@ -484,6 +485,11 @@ namespace SS14.Client.UserInterface
             VerticalCenterWide = Godot.Control.PRESET_VCENTER_WIDE,
             HorizontalCenterWide = Godot.Control.PRESET_HCENTER_WIDE,
             Wide = Godot.Control.PRESET_WIDE,
+        }
+
+        public void AddColorOverride(string name, Color color)
+        {
+            SceneControl.AddColorOverride(name, color.Convert());
         }
     }
 }

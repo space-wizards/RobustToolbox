@@ -95,6 +95,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseClient.cs" />
+    <Compile Include="Console\ConsoleCommands.cs" />
+    <Compile Include="Console\Debug.cs" />
+    <Compile Include="Console\HelpCommands.cs" />
+    <Compile Include="Console\QuitCommand.cs" />
     <Compile Include="GameController.cs" />
     <Compile Include="GameController\FrameEventArgs.cs" />
     <Compile Include="GameController\Input.cs" />
@@ -117,6 +121,8 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\Components\Rendering\SpriteComponent.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
+    <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientTransformComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IClickTargetComponent.cs" />

@@ -57,11 +57,7 @@ mouse_filter = 0
 size_flags_horizontal = 1
 size_flags_vertical = 1
 bbcode_enabled = true
-bbcode_text = "WOO
-
-BBCODE
-
-MY [color color=#ffff0000]FAVORITE[/color]"
+bbcode_text = ""
 visible_characters = -1
 percent_visible = 1.0
 override_selected_font_color = false

@@ -95,7 +95,7 @@ placeholder_text = "ip Address"
 placeholder_alpha = 0.6
 caret_blink = true
 caret_blink_speed = 0.65
-context_menu_enabled = true
+context_menu_enabled = false
 _sections_unfolded = [ "Caret", "Placeholder", "Theme", "custom_fonts" ]
 
 [node name="ConnectButton" type="Button" parent="VBoxContainer" index="2"]

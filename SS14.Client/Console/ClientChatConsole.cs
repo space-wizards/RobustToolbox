@@ -1,11 +1,10 @@
-﻿using System;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Client.Console
 {
@@ -20,7 +19,7 @@ namespace SS14.Client.Console
 
         [Dependency]
         private IClientEntityManager _entityManager;
-        
+
         /// <summary>
         ///     Initializes the console into a useable state.
         /// </summary>
@@ -28,7 +27,7 @@ namespace SS14.Client.Console
         {
             base.Initialize();
 
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, msg => HandleChatMsg((MsgChat)msg));
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, msg => HandleChatMsg((MsgChat) msg));
         }
 
         /// <inheritdoc />
@@ -40,11 +39,11 @@ namespace SS14.Client.Console
         /// <inheritdoc />
         public void ParseChatMessage(string text, string defaultFormat = null)
         {
-            if(string.IsNullOrWhiteSpace(text) || text.Length < 2)
+            if (string.IsNullOrWhiteSpace(text) || text.Length < 2)
                 return;
-
-            // detect '/' concmd
-            switch (text[0]) {
+            
+            switch (text[0])
+            {
                 case ConCmdSlash:
                 {
                     // run locally
@@ -88,12 +87,11 @@ namespace SS14.Client.Console
                     text = "[" + channel + "] " + text;
                     break;
             }
-            
+
             AddLine(text, channel, GetChannelColor(channel));
+
             if (entityId.HasValue && _entityManager.TryGetEntity(entityId.Value, out var a))
-            {
                 a.SendMessage(this, ComponentMessageType.EntitySaidSomething, channel, text);
-            }
         }
 
         private Color GetChannelColor(ChatChannel channel)

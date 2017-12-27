@@ -4,13 +4,16 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.Console;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.ClientConsoleHost.Commands
 {
-    class SayCommand : IClientCommand
+    internal class SayCommand : IClientCommand
     {
-        private const char RadioChar = ':';
+        private const char RadioChar = ':'; // first char of first argument to designate radio messages
+        private const int VoiceRange = 7; // how far voice goes in world units
 
         public string Command => "say";
         public string Description => "Send chat messages to the local channel or a specified radio channel.";
@@ -18,44 +21,69 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if(player.Status != SessionStatus.InGame)
+            if(player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
 
+            if(args.Length < 1)
+                return;
+
+            var sessions = IoCManager.Resolve<IPlayerManager>();
+            var ents = IoCManager.Resolve<IEntityManager>();
             var chat = IoCManager.Resolve<IChatManager>();
+
             var message = args[0];
 
+            string text;
             if (message[0] == RadioChar)
             {
+                // all they sent was the channel
+                if(args.Length < 2)
+                    return;
+
+                var channel = args[0];
+                var listArgs = args.ToList();
+                listArgs.RemoveAt(0);
+                text = string.Concat(listArgs);
+
                 //TODO: Parse channel and broadcast over radio.
             }
+            else
+            {
+                text = string.Concat(args);
+            }
+            
+            var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
+            var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
-            //TODO: 7m FindInSphere clients
-            chat.DispatchMessage(ChatChannel.Local, args[0], player.Index);
+            chat.DispatchMessage(clients.ToList(), ChatChannel.Local, text, player.Index);
         }
     }
 
-    class WhisperCommand : IClientCommand
+    internal class WhisperCommand : IClientCommand
     {
+        private const int WhisperRange = 1; // how far voice goes in world units
+
         public string Command => "whisper";
         public string Description => "Send chat messages to the local channel in a 1 meter radius.";
         public string Help => "whisper <text>";
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if (player.Status != SessionStatus.InGame)
+            if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
 
             var sessions = IoCManager.Resolve<IPlayerManager>();
+            var ents = IoCManager.Resolve<IEntityManager>();
             var chat = IoCManager.Resolve<IChatManager>();
 
-            //TODO: 1m FindInSphere clients
-            var clients = sessions.GetAllPlayers().Select(p => p.ConnectedClient);
+            var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
+            var clients = sessions.GetPlayersInRange(pos, WhisperRange).Select(p => p.ConnectedClient);
 
             chat.DispatchMessage(clients.ToList(), ChatChannel.Local, args[0], player.Index);
         }
     }
 
-    class MeCommand : IClientCommand
+    internal class MeCommand : IClientCommand
     {
         public string Command => "me";
         public string Description => "Send third person chat messages to the local channel.";
@@ -63,16 +91,16 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if (player.Status != SessionStatus.InGame)
+            if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
 
-            // clients format the i/they
+            // clients format the first/third person
             var chat = IoCManager.Resolve<IChatManager>();
             chat.DispatchMessage(ChatChannel.Emote, args[0], player.Index);
         }
     }
 
-    class OocCommand : IClientCommand
+    internal class OocCommand : IClientCommand
     {
         public string Command => "ooc";
         public string Description => "Send Out of Character chat messages.";

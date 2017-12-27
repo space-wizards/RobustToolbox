@@ -280,6 +280,7 @@ namespace SS14.Client.State.States
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
+            _gameChat.DefaultChatFormat = @"say {0}";
             _uiScreen.AddControl(_gameChat);
         }
 
@@ -557,9 +558,7 @@ namespace SS14.Client.State.States
             }
             if (e.Key == Keyboard.Key.F8)
             {
-                NetOutgoingMessage message = NetworkManager.CreateMessage();
-                message.Write((byte)NetMessages.ForceRestart);
-                NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+                IoCManager.Resolve<IClientConsole>().ProcessCommand("restart");
             }
             if (e.Key == Keyboard.Key.Escape)
             {

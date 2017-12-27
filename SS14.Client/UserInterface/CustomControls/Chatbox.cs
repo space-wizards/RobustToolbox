@@ -40,6 +40,11 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly ScrollableContainer _historyBox;
         private readonly ListPanel _chatHistoryList;
 
+        /// <summary>
+        ///     Default formatting string for the ClientChatConsole. 
+        /// </summary>
+        public string DefaultChatFormat { get; set; }
+
         public override bool Focus
         {
             get => _input.Focus;
@@ -75,8 +80,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 [ChatChannel.Radio] = new Color4(0, 100, 0, 255),
                 [ChatChannel.Server] = Color4.Blue,
                 [ChatChannel.Player] = new Color4(0, 128, 0, 255),
-                [ChatChannel.Lobby] = Color4.White,
-                [ChatChannel.Ingame] = new Color4(0, 200, 0, 255),
+                [ChatChannel.Local] = new Color4(0, 200, 0, 255),
                 [ChatChannel.OOC] = Color4.White,
                 [ChatChannel.Emote] = Color4.Cyan,
                 [ChatChannel.Visual] = Color4.Yellow,

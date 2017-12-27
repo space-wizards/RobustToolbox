@@ -137,7 +137,7 @@ namespace SS14.Client.GameObjects
                     {
                         string text = list[1].ToString();
 
-                        if (channel == ChatChannel.Ingame || channel == ChatChannel.Player ||
+                        if (channel == ChatChannel.Local || channel == ChatChannel.Player ||
                             channel == ChatChannel.Radio)
                         {
                             (_speechBubble ?? (_speechBubble = new SpeechBubble(Owner.Name + Owner.Uid))).SetText(text);

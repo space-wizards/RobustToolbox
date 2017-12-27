@@ -12,12 +12,12 @@ namespace SS14.Client.Console
         ///     Parses a raw chat message the player has submitted.
         /// </summary>
         /// <param name="text">Raw unsanitized string the player submitted.</param>
-        void ParseChatMessage(string text);
+        /// <param name="defaultFormat"></param>
+        void ParseChatMessage(string text, string defaultFormat = null);
 
         /// <summary>
         ///     Parses a raw chat message the player has submitted.
         /// </summary>
-        [Obsolete("Use ParseChatMessage(string text)")]
         void ParseChatMessage(Chatbox chatBox, string text);
     }
 }

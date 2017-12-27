@@ -107,6 +107,9 @@ namespace SS14.Client.Console
         /// <param name="text">input text</param>
         public void ProcessCommand(string text)
         {
+            if(string.IsNullOrWhiteSpace(text))
+                return;
+
             // echo the command locally
             AddLine("> " + text, ChatChannel.Default, new Color4(255, 250, 240, 255));
 

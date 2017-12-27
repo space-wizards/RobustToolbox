@@ -55,14 +55,12 @@ namespace SS14.Server.Round
 
         public virtual void PlayerLeft(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player left!", null,
-                                                               player.AttachedEntityUid);
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", player.Index);
         }
 
         public virtual void PlayerDied(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player died!", null,
-                                                               player.AttachedEntityUid);
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player died!", player.Index);
         }
 
         public virtual void Begin()

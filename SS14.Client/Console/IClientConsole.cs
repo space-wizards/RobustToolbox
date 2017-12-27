@@ -22,6 +22,10 @@ namespace SS14.Client.Console
 
         IReadOnlyDictionary<string, IConsoleCommand> Commands { get; }
 
+        /// <summary>
+        ///     Parses console commands (verbs).
+        /// </summary>
+        /// <param name="text"></param>
         void ProcessCommand(string text);
 
         void SendServerCommandRequest();

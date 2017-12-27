@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -11,7 +10,6 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
@@ -36,7 +34,7 @@ namespace SS14.Server.Chat
         /// <inheritdoc />
         public void Initialize()
         {
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, message => HandleNetMessage((MsgChat) message));
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID);
 
             LoadEmotes();
         }
@@ -62,65 +60,6 @@ namespace SS14.Server.Chat
             _network.ServerSendToAll(msg);
         }
 
-        /// <inheritdoc />
-        public void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)
-        {
-            var message = MakeNetChatMessage(channel, text, name, entityId);
-
-            switch (channel)
-            {
-                case ChatChannel.Server:
-                case ChatChannel.OOC:
-                case ChatChannel.Radio:
-                case ChatChannel.Player:
-                case ChatChannel.Default:
-                    _network.ServerSendToAll(message);
-                    break;
-
-                case ChatChannel.Damage:
-                case ChatChannel.Ingame:
-                case ChatChannel.Visual:
-                case ChatChannel.Emote:
-                    SendToPlayersInRange(message, entityId);
-                    break;
-
-                case ChatChannel.Lobby:
-                    SendToLobby(message);
-                    break;
-            }
-        }
-        
-        public void SendPrivateMessage(INetChannel client, ChatChannel channel, string text, string name, int? entityId)
-        {
-            var message = MakeNetChatMessage(channel, text, name, entityId);
-            _network.ServerSendMessage(message, client);
-        }
-
-        private void HandleNetMessage(MsgChat message)
-        {
-            var channel = message.Channel;
-            var text = message.Text;
-
-            var session = _players.GetSessionByChannel(message.MsgChannel);
-            var playerName = session.Name;
-
-            Logger.Debug("CHAT:: Channel: {0} :: Player: {1} :: Message: {2}", channel, playerName, text);
-
-            var entityId = session.AttachedEntityUid;
-
-            var hasChannelIdentifier = false;
-            if (channel != ChatChannel.Lobby)
-                channel = DetectChannel(text, out hasChannelIdentifier);
-            if (hasChannelIdentifier)
-                text = text.Substring(1);
-            text = text.Trim(); // Remove whitespace
-
-            if (text[0] == '*')
-                ProcessEmote(text, playerName, channel, entityId, message.MsgChannel);
-            else
-                SendChatMessage(channel, text, playerName, entityId);
-        }
-
         private MsgChat BuildChatMessage(ChatChannel channel, string text, PlayerIndex? index, int? entityUid)
         {
             var message = _network.CreateNetMessage<MsgChat>();
@@ -133,13 +72,31 @@ namespace SS14.Server.Chat
             return message;
         }
 
+        private void SendChatMessage(ChatChannel channel, string text, string name, int? entityId)
+        {
+            var message = MakeNetChatMessage(channel, text, name, entityId);
+
+            switch (channel)
+            {
+                case ChatChannel.Damage:
+                case ChatChannel.Local:
+                case ChatChannel.Visual:
+                case ChatChannel.Emote:
+                    SendToPlayersInRange(message, entityId);
+                    break;
+
+                default:
+                    _network.ServerSendToAll(message);
+                    break;
+            }
+        }
+
         private MsgChat MakeNetChatMessage(ChatChannel channel, string text, string name, int? entityId)
         {
             var fullmsg = text;
             if (!string.IsNullOrEmpty(name) && channel == ChatChannel.Emote)
                 fullmsg = text; //Emote already has name in it probably...
-            else if (channel == ChatChannel.Ingame || channel == ChatChannel.OOC || channel == ChatChannel.Radio ||
-                     channel == ChatChannel.Lobby)
+            else if (channel == ChatChannel.Local || channel == ChatChannel.OOC || channel == ChatChannel.Radio)
                 fullmsg = name + ": " + text;
 
             var message = _network.CreateNetMessage<MsgChat>();
@@ -149,30 +106,6 @@ namespace SS14.Server.Chat
             message.EntityId = entityId;
 
             return message;
-        }
-
-        private ChatChannel DetectChannel(string message, out bool hasChannelIdentifier)
-        {
-            hasChannelIdentifier = false;
-            var channel = ChatChannel.Ingame;
-            switch (message[0])
-            {
-                case '[':
-                    channel = ChatChannel.OOC;
-                    hasChannelIdentifier = true;
-                    break;
-
-                case ':':
-                    channel = ChatChannel.Radio;
-                    hasChannelIdentifier = true;
-                    break;
-
-                case '@':
-                    channel = ChatChannel.Emote;
-                    hasChannelIdentifier = true;
-                    break;
-            }
-            return channel;
         }
 
         private void LoadEmotes()
@@ -219,13 +152,6 @@ namespace SS14.Server.Chat
             _network.ServerSendToMany(message, recipients);
         }
 
-        private void SendToLobby(NetMessage message)
-        {
-            //TODO: Move this to the Content Assembly.
-            var recipients = _players.GetPlayersInLobby().Select(p => p.ConnectedClient).ToList();
-            _network.ServerSendToMany(message, recipients);
-        }
-
         private void ProcessEmote(string text, string name, ChatChannel channel, int? entityId, INetChannel client)
         {
             if (entityId == null)
@@ -241,12 +167,13 @@ namespace SS14.Server.Chat
                 SendChatMessage(ChatChannel.Emote, otherText, name, entityId);
             }
         }
-    }
 
-    public struct Emote
-    {
-        public string Command { get; set; }
-        public string SelfText { get; set; }
-        public string OtherText { get; set; }
+        // xml serializer requires this to be public
+        public struct Emote
+        {
+            public string Command { get; set; }
+            public string SelfText { get; set; }
+            public string OtherText { get; set; }
+        }
     }
 }

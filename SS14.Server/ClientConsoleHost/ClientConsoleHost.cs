@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.IoC.Exceptions;
+using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Utility;
 
@@ -64,7 +65,10 @@ namespace SS14.Server.ClientConsoleHost
         {
             var text = message.Text;
             var sender = message.MsgChannel;
+            var session = _players.GetSessionByChannel(sender);
             var args = new List<string>();
+
+            Logger.Info($"[{(int)session.Index}]{session.Name}:{text}");
 
             CommandParsing.ParseArguments(text, args);
 
@@ -77,7 +81,7 @@ namespace SS14.Server.ClientConsoleHost
                 if (availableCommands.TryGetValue(cmd, out var command))
                 {
                     args.RemoveAt(0);
-                    command.Execute(this, _players.GetSessionByChannel(sender), args.ToArray());
+                    command.Execute(this, session, args.ToArray());
                 }
                 else
                     SendConsoleReply(sender, $"Unknown command: '{cmd}'");

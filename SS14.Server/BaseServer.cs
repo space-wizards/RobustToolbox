@@ -200,8 +200,6 @@ namespace SS14.Server
 
             netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int)MsgJoinGame.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int)MsgRestartReq.ID, message => Restart());
 
             netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
             netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
@@ -535,9 +533,8 @@ namespace SS14.Server
                     if (_lastAnnounced != countdown.Seconds)
                     {
                         _lastAnnounced = countdown.Seconds;
-                        IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server,
-                            "Starting in " + _lastAnnounced + " seconds...",
-                            "", 0);
+                        IoCManager.Resolve<IChatManager>()
+                            .DispatchMessage(ChatChannel.Server, $"Starting in {_lastAnnounced} seconds...");
                     }
                     if (countdown.Seconds <= 0)
                         StartGame();

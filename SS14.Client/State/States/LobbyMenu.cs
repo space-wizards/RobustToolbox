@@ -125,6 +125,7 @@ namespace SS14.Client.State.States
 
             _lobbyChat = new Chatbox(new Vector2i(780, 225));
             _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
+            _lobbyChat.DefaultChatFormat = @"ooc {0}";
             imgChatBg.AddControl(_lobbyChat);
 
             var btnReady = new ImageButton();

@@ -179,11 +179,7 @@ namespace SS14.Server.Player
         {
             if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
                 return;
-
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgJoinGame>();
-            net.ServerSendMessage(message, ConnectedClient);
-
+            
             Status = SessionStatus.InGame;
             UpdatePlayerState();
         }

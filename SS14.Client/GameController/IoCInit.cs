@@ -31,7 +31,6 @@ using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Map;
 using SS14.Shared.Network;
 using SS14.Shared.Physics;
 using SS14.Shared.Prototypes;

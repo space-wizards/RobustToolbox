@@ -179,6 +179,7 @@ namespace SS14.Client.UserInterface
         private void SetupSceneControl()
         {
             SetSceneControl(SpawnSceneControl());
+            SetupSignalHooks();
             // Certain controls (LineEdit, WindowDialog, etc...) create sub controls automatically,
             // handle these.
             WrapChildControls();
@@ -234,6 +235,7 @@ namespace SS14.Client.UserInterface
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
 
+            child.Parent = this;
             child.Parented(this);
             SceneControl.AddChild(child.SceneControl, LegibleUniqueName);
             // Godot changes the name automtically if you would cause a naming conflict.

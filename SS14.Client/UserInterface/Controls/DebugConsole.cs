@@ -1,18 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Console;
+using SS14.Shared;
+using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
-using SS14.Shared.Reflection;
-using SS14.Client.Utility;
-using System;
-using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Utility;
-using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared;
-using Lidgren.Network;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
+using SS14.Shared.Reflection;
+using SS14.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.UserInterface
 {
@@ -22,6 +21,7 @@ namespace SS14.Client.UserInterface
     {
         private LineEdit CommandBar;
         private Control LogContainer;
+        private VScrollBar ScrollBar;
 
         readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
@@ -39,6 +39,7 @@ namespace SS14.Client.UserInterface
         {
             CommandBar = GetChild<LineEdit>("CommandBar");
             LogContainer = GetChild("ScrollContents").GetChild("VBoxContainer");
+            ScrollBar = GetChild("ScrollContents").GetChild<VScrollBar>("_v_scroll");
 
             CommandBar.OnTextEntered += CommandEntered;
 
@@ -100,26 +101,40 @@ namespace SS14.Client.UserInterface
             {
                 var command = _commands[commandname];
                 args.RemoveAt(0);
-                forward = command.Execute(this, args.ToArray());
+                try
+                {
+                    forward = command.Execute(this, args.ToArray());
+                }
+                catch (Exception e)
+                {
+                    AddLine($"There was an exception while executing the command:\n{e}", Color.Red);
+                    forward = false;
+                }
             }
-            else // if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
+            else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
                 AddLine($"Unknown command: '{commandname}'", Color.Red);
                 return;
             }
 
-            //if (forward)
-            //    SendServerConsoleCommand(text);
+            if (forward)
+                SendServerConsoleCommand(text);
         }
 
         public void AddLine(string text, Color color)
         {
+            var atBottom = ScrollBar.IsAtBottom;
             var newtext = new Label
             {
-                Text = text
+                Text = text,
+                //AutoWrap = true,
             };
             newtext.AddColorOverride("font_color", color);
             LogContainer.AddChild(newtext);
+            if (atBottom)
+            {
+                ScrollBar.Value = ScrollBar.MaxValue - ScrollBar.Page;
+            }
         }
 
         public void Clear()

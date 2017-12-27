@@ -23,6 +23,12 @@ namespace SS14.Client.UserInterface
             set => SceneControl.Text = value;
         }
 
+        public bool AutoWrap
+        {
+            get => SceneControl.Autowrap;
+            set => SceneControl.Autowrap = value;
+        }
+
         new private Godot.Label SceneControl;
 
         protected override Godot.Control SpawnSceneControl()

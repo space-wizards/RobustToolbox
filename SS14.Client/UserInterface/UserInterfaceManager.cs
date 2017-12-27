@@ -59,7 +59,7 @@ namespace SS14.Client.UserInterface
             RootControl.DisposeAllChildren();
         }
 
-        public void Popup(string contents, string title="Alert!")
+        public void Popup(string contents, string title = "Alert!")
         {
             PopupControl.DialogText = contents;
             PopupControl.Title = title;
@@ -77,7 +77,6 @@ namespace SS14.Client.UserInterface
 
         public void PreKeyUp(KeyEventArgs args)
         {
-
         }
 
         public void UnhandledKeyDown(KeyEventArgs args)
@@ -102,13 +101,11 @@ namespace SS14.Client.UserInterface
 
         public void FocusEntered(Control control)
         {
-            Logger.Debug($"New focus: {control.Name}");
             Focused = control;
         }
 
         public void FocusExited(Control control)
         {
-            Logger.Debug($"Removing focus");
             if (Focused == control)
             {
                 Focused = null;

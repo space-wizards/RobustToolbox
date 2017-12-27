@@ -153,6 +153,9 @@
     <Compile Include="TODO.cs" />
     <Compile Include="UserInterface\Controls\BaseButton.cs" />
     <Compile Include="UserInterface\Controls\Button.cs" />
+    <Compile Include="UserInterface\Controls\Range.cs" />
+    <Compile Include="UserInterface\Controls\ScrollBar.cs" />
+    <Compile Include="UserInterface\Controls\VScrollBar.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />

@@ -107,4 +107,16 @@ namespace SS14.Client.Console
             return false;
         }
     }
+
+    class ExceptionCommand : IConsoleCommand
+    {
+        public string Command => "fuck";
+        public string Help => "Throws an exception";
+        public string Description => "Throws an exception";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            throw new InvalidOperationException("Fuck");
+        }
+    }
 }

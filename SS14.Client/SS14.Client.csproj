@@ -189,6 +189,8 @@
     <Compile Include="Input\KeyBindingManager.cs" />
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
+    <Compile Include="Rendering\GodotTextureSource.cs" />
+    <Compile Include="Interfaces\Rendering\ITextureSource.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

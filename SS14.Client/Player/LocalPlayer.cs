@@ -73,7 +73,11 @@ namespace SS14.Client.Player
             if (!ControlledEntity.HasComponent<CollidableComponent>())
                 ControlledEntity.AddComponent(factory.GetComponent<CollidableComponent>());
 
-            var camera = new Godot.Camera2D();
+            var camera = new Godot.Camera2D()
+            {
+                DragMarginHEnabled = false,
+                DragMarginVEnabled = false,
+            };
             camera.SetName("Camera");
             camera.MakeCurrent();
             var transform = ControlledEntity.GetComponent<IClientTransformComponent>();

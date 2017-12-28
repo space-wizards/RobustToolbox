@@ -43,8 +43,33 @@ namespace SS14.Client.ResourceManagement
 
         public T GetResource<T>(string path) where T : BaseResource, new()
         {
-            TryGetResource(path, out T res);
-            return res;
+            if (CachedResources.TryGetValue((path, typeof(T)), out var cached))
+            {
+                return (T)cached;
+            }
+
+            var _resource = new T();
+            try
+            {
+                _resource.Load(this, Path.Combine(BaseResourceDir, path));
+                CachedResources[(path, typeof(T))] = _resource;
+                return _resource;
+            }
+            catch (Exception e)
+            {
+                if (_resource.Fallback != null)
+                {
+                    // TODO: This totally infinite loops if the fallback throws an exception too.
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.");
+                    return GetResource<T>(_resource.Fallback);
+                }
+                else
+                {
+                    // No exception logs because of how insanely spammy it gets.
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available\n{Environment.StackTrace}");
+                    return null;
+                }
+            }
         }
 
         public bool TryGetResource<T>(string path, out T resource) where T : BaseResource, new()
@@ -62,22 +87,16 @@ namespace SS14.Client.ResourceManagement
                 CachedResources[(path, typeof(T))] = resource;
                 return true;
             }
-            catch (Exception e)
+            catch
             {
-                if (_resource.Fallback != null)
-                {
-                    // TODO: This totally infinite loops if the fallback throws an exception too.
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback:\n{e}");
-                    return TryGetResource(_resource.Fallback, out resource);
-                }
-                else
-                {
-                    // No exception logs because of how insanely spammy it gets.
-                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available");
-                    resource = null;
-                    return false;
-                }
+                resource = null;
+                return false;
             }
+        }
+
+        public bool HasResource<T>(string path) where T : BaseResource, new()
+        {
+            return TryGetResource<T>(path, out var _);
         }
 
         public void CacheResource<T>(string path, T resource) where T : BaseResource, new()

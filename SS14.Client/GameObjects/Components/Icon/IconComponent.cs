@@ -22,7 +22,7 @@ namespace SS14.Client.GameObjects
 
         public void SetIcon(string name)
         {
-            Icon = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(name);
+            Icon = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>($@"./Textures/{name}");
         }
     }
 }

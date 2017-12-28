@@ -9,14 +9,8 @@ namespace SS14.Client.Interfaces.GameObjects
     {
         DrawDepth DrawDepth { get; set; }
         float Bottom { get; }
-        void Render(Vector2 topLeft, Vector2 bottomRight);
         Box2 LocalAABB { get; }
         Box2 AverageAABB { get; }
-        bool IsSlaved();
-        void SetMaster(IEntity m);
-        void UnsetMaster();
-        void AddSlave(IRenderableComponent slavecompo);
-        void RemoveSlave(IRenderableComponent slavecompo);
         int MapID { get; }
     }
 }

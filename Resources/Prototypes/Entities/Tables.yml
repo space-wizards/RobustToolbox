@@ -6,11 +6,11 @@
   - type: Clickable
   - type: Sprite
     sprites:
-    - worktop_single
+    - Objects/worktop_single.png
     drawdepth: Tables
 
   - type: Icon
-    icon: worktop_single
+    icon: Objects/worktop_single.png
 
   - type: BoundingBox
     sizeX: 2

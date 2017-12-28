@@ -7,11 +7,11 @@
   - type: Sprite
     drawdepth: FloorPlaceable
     sprites:
-    - door_ew
-    - door_ewo
+    - Objects/door_ew.png
+    - Objects/door_ewo.png
 
   - type: Icon
-    icon: door_ew
+    icon: Objects/door_ew.png
 
   - type: BoundingBox
   - type: Collidable

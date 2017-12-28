@@ -6,7 +6,7 @@
   - type: Clickable
   - type: Sprite
     sprites:
-    - fire_extinguisher
+    - Objects/fire_extinguisher.png
 
   placement:
     mode: AlignWall
@@ -26,10 +26,10 @@
   - type: Clickable
   - type: Sprite
     sprites:
-    - fire_alarm_off
+    - Objects/fire_alarm_off.png
 
   - type: Icon
-    icon: fire_alarm_off
+    icon: Objects/fire_alarm_off.png
 
   placement:
     mode: AlignWall
@@ -49,10 +49,10 @@
   - type: Clickable
   - type: Sprite
     sprites:
-    - med_cabinet
+    - Objects/med_cabinet.png
 
   - type: Icon
-    icon: med_cabinet
+    icon: Objects/med_cabinet.png
 
   placement:
     mode: AlignWall

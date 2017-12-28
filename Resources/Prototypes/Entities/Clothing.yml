@@ -9,7 +9,7 @@
     notWornSprite: janitorsuit
 
   - type: Icon
-    icon: janitorsuit
+    icon: Items/janitorsuit.png
 
   - type: BoundingBox
   - type: Physics
@@ -26,7 +26,7 @@
     notWornSprite: shoes
 
   - type: Icon
-    icon: shoes
+    icon: Items/shoes.png
 
   - type: BoundingBox
   - type: Physics

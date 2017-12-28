@@ -9,7 +9,7 @@
     notWornSprite: toolbox_r
 
   - type: Icon
-    icon: toolbox_r
+    icon: Items/toolbox_r.png
 
   - type: BoundingBox
   - type: Physics

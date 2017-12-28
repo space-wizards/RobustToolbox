@@ -9,7 +9,7 @@
     notWornSprite: mop
 
   - type: Icon
-    icon: mop
+    icon: Items/mop.png
 
   - type: BoundingBox
   - type: Physics

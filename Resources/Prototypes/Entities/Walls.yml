@@ -7,11 +7,10 @@
   - type: Sprite
     drawdepth: FloorPlaceable
     sprites:
-    - wall_texture
-    sprite: Tiles/wall_texture
+    - Tiles/wall_texture.png
 
   - type: Icon
-    icon: wall_texture
+    icon: Tiles/wall_texture.png
 
   - type: BoundingBox
   - type: Collidable

@@ -6,10 +6,10 @@
   - type: Clickable
   - type: Sprite
     sprites:
-    - wall_light
+    - Objects/wall_light.png
 
   - type: Icon
-    icon: wall_light
+    icon: Objects/wall_light.png
 
   - type: PointLight
     radius: 1024

@@ -5,6 +5,7 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
+using SS14.Client.Utility;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
@@ -67,6 +68,10 @@ namespace SS14.Client.GameObjects
                        (CurrentSprite.Height / 2);
             }
         }
+
+        public bool Cardinal { get; private set; } = true;
+
+        public Vector2 Scale { get; private set; } = Vector2.One;
 
         #region ISpriteComponent Members
 
@@ -178,11 +183,16 @@ namespace SS14.Client.GameObjects
             base.Initialize();
             transform = Owner.GetComponent<IClientTransformComponent>();
             transform.OnMove += OnMove;
+            transform.OnRotate += OnRotate;
             MapID = transform.MapID;
 
-            SceneSprite = new Godot.Sprite();
+            SceneSprite = new Godot.Sprite()
+            {
+                Z = (int)DrawDepth,
+                Scale = Scale.Convert(),
+            };
             SceneSprite.SetName("SpriteComponent");
-            SceneSprite.Z = (int)DrawDepth;
+
             transform.SceneNode.AddChild(SceneSprite);
 
             UpdateCurrentSprite();
@@ -190,6 +200,7 @@ namespace SS14.Client.GameObjects
 
         public override void Shutdown()
         {
+            transform.OnRotate -= OnRotate;
             transform.OnMove -= OnMove;
             transform = null;
             base.Shutdown();
@@ -198,6 +209,11 @@ namespace SS14.Client.GameObjects
         public void OnMove(object sender, MoveEventArgs args)
         {
             MapID = args.NewPosition.MapID;
+        }
+
+        private void OnRotate(Angle newAngle)
+        {
+            UpdateCurrentSprite();
         }
 
         public void ClearSprites()
@@ -223,7 +239,18 @@ namespace SS14.Client.GameObjects
 
             var ext = Path.GetExtension(currentBaseSpriteKey);
             var withoutExt = Path.ChangeExtension(currentBaseSpriteKey, null);
-            string name = $"{withoutExt}_{transform.Rotation.GetDir().ToString().ToLowerInvariant()}{ext}";
+            Direction dir;
+            // Oh hey look Y is STILL FLIPPED.
+            var angle = new Angle(-transform.Rotation);
+            if (Cardinal)
+            {
+                dir = angle.GetCardinalDir();
+            }
+            else
+            {
+                dir = angle.GetDir();
+            }
+            string name = $"{withoutExt}_{dir.ToString().ToLowerInvariant()}{ext}";
 
             if (dirSprites.ContainsKey(name))
                 sprite = dirSprites[name];
@@ -278,6 +305,16 @@ namespace SS14.Client.GameObjects
             if (mapping.TryGetNode("sprite", out node))
             {
                 AddSprite(node.AsString());
+            }
+
+            if (mapping.TryGetNode("cardinal", out node))
+            {
+                Cardinal = node.AsBool();
+            }
+
+            if (mapping.TryGetNode("scale", out node))
+            {
+                Scale = node.AsVector2();
             }
         }
 

@@ -5,18 +5,18 @@
   components:
   - type: Transform
   - type: Clickable
-  - type: AnimatedSprite
-    sprite: player
+  - type: Sprite
+    sprite: Mob/greyshirt.png
+    scale: 2, 2
 
   - type: Icon
-    icon: player
+    icon: Mob/greyshirt.png
 
   - type: BoundingBox
     sizeX: 0.9
     sizeY: 0.9
     offsetY: 0.6
 
-  - type: ParticleSystem
   - type: Physics
     mass: 5
 

@@ -30,12 +30,7 @@ namespace SS14.Shared.Maths
         /// <returns></returns>
         public static Direction GetDir(this Vector2 vec)
         {
-            var ang = vec.ToAngle();
-
-            if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float)Math.PI;
-
-            return (Direction)Math.Floor((ang + Offset) / Segment);
+            return vec.ToAngle().GetDir();
         }
 
         /// <summary>

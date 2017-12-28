@@ -9,9 +9,6 @@ namespace SS14.Shared.Maths
     [Serializable]
     public struct Angle
     {
-        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
-        private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
-
         public static Angle Zero { get; set; } = new Angle();
 
         public readonly double Theta;
@@ -37,6 +34,9 @@ namespace SS14.Shared.Maths
             return new Vector2((float) x, (float) y);
         }
 
+        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
+        private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
+
         public Direction GetDir()
         {
             var ang = Theta % (2 * Math.PI);
@@ -44,7 +44,20 @@ namespace SS14.Shared.Maths
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
                 ang += 2 * (float) Math.PI;
 
-            return (Direction) Math.Floor((ang + Offset) / Segment);
+            return (Direction)(Math.Floor((ang + Offset) / Segment) % 8);
+        }
+
+        private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
+        private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
+
+        public Direction GetCardinalDir()
+        {
+            var ang = Theta % (2 * Math.PI);
+
+            if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
+                ang += 2 * (float) Math.PI;
+
+            return (Direction)((Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2) % 8);
         }
 
         /// <summary>

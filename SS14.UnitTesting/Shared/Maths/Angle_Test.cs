@@ -23,6 +23,14 @@ namespace SS14.UnitTesting.Shared.Maths
             (1, -1, Direction.SouthEast, -System.Math.PI / 4.0)
         };
 
+        private static IEnumerable<(float, float, Direction)> CardinalSources => new(float, float, Direction)[]
+        {
+            (1, 0, Direction.East),
+            (0, 1, Direction.North),
+            (-1, 0, Direction.West),
+            (0, -1, Direction.South),
+        };
+
         [Test]
         [Sequential]
         public void TestAngleToVector2([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
@@ -40,6 +48,15 @@ namespace SS14.UnitTesting.Shared.Maths
             var target = new Angle(test.Item4);
 
             Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
+        }
+
+        [Test]
+        [Sequential]
+        public void TestAngleToCardinal([ValueSource(nameof(CardinalSources))] (float, float, Direction) test)
+        {
+            var target = new Vector2(test.Item1, test.Item2).ToAngle();
+
+            Assert.That(target.GetCardinalDir(), Is.EqualTo(test.Item3));
         }
     }
 }

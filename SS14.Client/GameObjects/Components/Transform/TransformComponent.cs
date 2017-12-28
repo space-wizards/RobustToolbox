@@ -37,8 +37,11 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public override Type StateType => typeof(TransformComponentState);
 
-        /// <inheritdoc />1
+        /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
+
+        /// <inheritdoc />
+        public event Action<Angle> OnRotate;
 
         public LocalCoordinates LocalPosition => new LocalCoordinates(_position, GridID, MapID);
 
@@ -61,8 +64,11 @@ namespace SS14.Client.GameObjects
         public override void HandleComponentState(ComponentState state)
         {
             var newState = (TransformComponentState)state;
-            Rotation = newState.Rotation;
-            //SceneNode.SetRotation((float)Rotation);
+            if (Rotation != newState.Rotation)
+            {
+                Rotation = newState.Rotation;
+                OnRotate?.Invoke(newState.Rotation);
+            }
 
             if (_position != newState.Position || MapID != newState.MapID || GridID != newState.GridID)
             {

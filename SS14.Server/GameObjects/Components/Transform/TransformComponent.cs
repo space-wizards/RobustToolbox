@@ -28,7 +28,16 @@ namespace SS14.Server.GameObjects
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        public Angle Rotation { get; set; }
+        public Angle Rotation
+        {
+            get => rotation;
+            set
+            {
+                rotation = value;
+                OnRotate?.Invoke(value);
+            }
+        }
+        private Angle rotation;
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -38,6 +47,9 @@ namespace SS14.Server.GameObjects
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
+
+        /// <inheritdoc />
+        public event Action<Angle> OnRotate;
 
         /// <inheritdoc />
         public LocalCoordinates LocalPosition

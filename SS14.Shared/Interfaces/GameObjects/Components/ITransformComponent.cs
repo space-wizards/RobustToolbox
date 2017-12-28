@@ -19,6 +19,8 @@ namespace SS14.Shared.Interfaces.GameObjects.Components
         /// </summary>
         Vector2 WorldPosition { get; }
 
+        event Action<Angle> OnRotate;
+
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>

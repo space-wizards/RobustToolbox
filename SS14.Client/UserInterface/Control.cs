@@ -493,5 +493,24 @@ namespace SS14.Client.UserInterface
         {
             SceneControl.AddColorOverride(name, color.Convert());
         }
+
+        public void AddConstantOverride(string name, int constant)
+        {
+            SceneControl.AddConstantOverride(name, constant);
+        }
+
+        public void DoUpdate(FrameEventArgs args)
+        {
+            Update(args);
+            foreach (var child in Children)
+            {
+                child.DoUpdate(args);
+            }
+        }
+
+        protected virtual void Update(FrameEventArgs args)
+        {
+
+        }
     }
 }

@@ -25,6 +25,13 @@ namespace SS14.Client.UserInterface
         public Control RootControl { get; private set; }
         public AcceptDialog PopupControl { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
+        public FPSCounter FPSCounter { get; private set; }
+
+        public bool ShowFPS
+        {
+            get => FPSCounter.Visible;
+            set => FPSCounter.Visible = value;
+        }
 
         public void PostInject()
         {
@@ -52,6 +59,14 @@ namespace SS14.Client.UserInterface
 
             DebugConsole = new DebugConsole();
             RootControl.AddChild(DebugConsole);
+
+            FPSCounter = new FPSCounter();
+            RootControl.AddChild(FPSCounter);
+        }
+
+        public void Update(FrameEventArgs args)
+        {
+            RootControl.DoUpdate(args);
         }
 
         public void DisposeAllComponents()

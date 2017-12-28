@@ -5,6 +5,9 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Text;
+using System.Collections.Generic;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.UserInterface;
 
 namespace SS14.Client.Console
 {
@@ -37,14 +40,12 @@ namespace SS14.Client.Console
         {
             var componentManager = IoCManager.Resolve<IComponentManager>();
 
-            //IEnumerable<IComponent> components = componentManager.GetComponents<ISpriteRenderableComponent>()
-            //                              .Cast<IComponent>()
-            //                              .Union(componentManager.GetComponents<ParticleSystemComponent>());
+            IEnumerable<IComponent> components = componentManager.GetComponents<ISpriteRenderableComponent>();
 
-            //foreach (var component in components)
-            //{
-            //    console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color4.White);
-            //}
+            foreach (var component in components)
+            {
+                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color4.White);
+            }
             return false;
         }
     }
@@ -99,11 +100,12 @@ namespace SS14.Client.Console
     {
         public string Command => "fps";
         public string Help => "Toggles showing FPS.";
-        public string Description => "";
+        public string Description => "Toggles the FPS counter.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            //CluwneLib.Debug.ToggleFPSDebug();
+            var mgr = IoCManager.Resolve<IUserInterfaceManager>();
+            mgr.ShowFPS = !mgr.ShowFPS;
             return false;
         }
     }

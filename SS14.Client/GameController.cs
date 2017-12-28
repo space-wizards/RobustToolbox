@@ -122,6 +122,7 @@ namespace SS14.Client
             _networkManager.ProcessPackets();
             var eventArgs = new FrameEventArgs(delta);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
+            _userInterfaceManager?.Update(eventArgs);
             _stateManager?.Update(eventArgs);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, eventArgs.Elapsed);
         }

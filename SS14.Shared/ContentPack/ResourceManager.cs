@@ -67,7 +67,13 @@ namespace SS14.Shared.ContentPack
 
             var loader = new DirLoader(pathInfo);
             if (loader.Mount())
+            {
                 _contentRoots.Add(loader);
+            }
+            else
+            {
+                Logger.Error($"Unable to mount content directory: {path}");
+            }
         }
 
         /// <inheritdoc />

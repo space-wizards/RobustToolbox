@@ -231,5 +231,5 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
-  <Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />
+  <!--<Target Name="AfterBuild" DependsOnTargets="CopyResourcesFromShared" />-->
 </Project>

@@ -220,7 +220,13 @@ namespace SS14.Server
             // Set up the VFS
             _resources.Initialize();
 
+#if RELEASE
             _resources.MountContentDirectory(@"./Resources/");
+#else
+            // Load from the resources dir in the repo root instead.
+            // It's a debug build so this is fine.
+            _resources.MountContentDirectory(@"../../Resources/");
+#endif
 
             //mount the engine content pack
             // _resources.MountContentPack(@"EngineContentPack.zip");

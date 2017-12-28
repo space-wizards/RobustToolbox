@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SS14.Shared.Log;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SS14.Shared.ContentPack

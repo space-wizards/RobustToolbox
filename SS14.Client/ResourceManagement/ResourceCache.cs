@@ -18,7 +18,7 @@ namespace SS14.Client.ResourceManagement
         [Dependency]
         readonly IResourceManager _resources;
 
-        private static readonly string BaseResourceDir = PathHelpers.ExecutableRelativeFile(@"./Resources/");
+        private static readonly string BaseResourceDir = PathHelpers.ExecutableRelativeFile(@"../../Resources/");
         private Dictionary<(string, Type), BaseResource> CachedResources = new Dictionary<(string, Type), BaseResource>();
 
         public void LoadBaseResources()
@@ -28,7 +28,11 @@ namespace SS14.Client.ResourceManagement
             // TODO: Right now the resource cache doesn't use the VFS,
             //   so that we always have on-disk locations of files.
             //   Godot doesn't make it easy to load resources without them being on-disk.
+#if RELEASE
             _resources.MountContentDirectory(@"./Resources/");
+#else
+            _resources.MountContentDirectory(@"../../Resources/");
+#endif
             //_resources.MountContentPack(@"./EngineContentPack.zip");
         }
 
@@ -68,6 +72,8 @@ namespace SS14.Client.ResourceManagement
                 }
                 else
                 {
+                    // No exception logs because of how insanely spammy it gets.
+                    Logger.Error($"Exception while loading resource {typeof(T)} at '{path}', no fallback available");
                     resource = null;
                     return false;
                 }

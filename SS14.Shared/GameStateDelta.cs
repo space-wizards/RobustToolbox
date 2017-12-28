@@ -1,4 +1,4 @@
-﻿using BsDiffLib;
+﻿using SS14.Shared.Bsdiff;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
@@ -11,14 +11,13 @@ namespace SS14.Shared
     [Serializable, NetSerializable]
     public class GameStateDelta
     {
-        public readonly MemoryStream deltaBytes = new MemoryStream();
+        public byte[] deltaBytes;
         public uint FromSequence { get; set; }
         public uint Sequence { get; set; }
 
         public GameStateDelta(byte[] bytes)
         {
-            deltaBytes = new MemoryStream(bytes);
-            deltaBytes.Seek(0, SeekOrigin.Begin);
+            deltaBytes = bytes;
         }
 
         public GameStateDelta()
@@ -29,12 +28,15 @@ namespace SS14.Shared
         {
             get { return deltaBytes.Length; }
         }
-        
+
         public void Create(GameState fromState, GameState toState)
         {
             Sequence = toState.Sequence;
             FromSequence = fromState.Sequence;
-            BinaryPatchUtility.Create(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer(), deltaBytes);
+            using (var stream = Bsdiff.Bsdiff.GenerateBzip2Diff(fromState.GetSerializedDataBuffer(), toState.GetSerializedDataBuffer()))
+            {
+                deltaBytes = stream.ToArray();
+            }
         }
 
         public GameState Apply(GameState fromState)
@@ -42,12 +44,11 @@ namespace SS14.Shared
             if (fromState.Sequence != FromSequence)
                 throw new Exception("Cannot apply GameStateDelta. Sequence incorrect.");
             byte[] fromBuffer = fromState.GetSerializedDataStream().ToArray();
-            var toStream = new MemoryStream();
-            BinaryPatchUtility.Apply(new MemoryStream(fromBuffer), () => new MemoryStream(deltaBytes.ToArray()),
-                                     toStream);
-            toStream.Seek(0, SeekOrigin.Begin);
-            var serializer = IoCManager.Resolve<ISS14Serializer>();
-            return serializer.Deserialize<GameState>(toStream);
+            using (var newBytes = Bsdiff.Bsdiff.ApplyBzip2Patch(fromBuffer, deltaBytes))
+            {
+                var serializer = IoCManager.Resolve<ISS14Serializer>();
+                return serializer.Deserialize<GameState>(newBytes);
+            }
         }
     }
 }

@@ -67,10 +67,6 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\SS14.DefineConstants.targets" />
   <ItemGroup>
-    <Reference Include="BsDiffLib">
-      <Name>BsDiffLib</Name>
-      <HintPath>..\Third-Party\BsDiffLib.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>$(PackageDir)SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
@@ -124,6 +120,10 @@
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff\SS14.Shared.Bsdiff.csproj">
+      <Project>{0e0723e8-d785-4f61-81f4-182a12bcaa52}</Project>
+      <Name>SS14.Shared.Bsdiff</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

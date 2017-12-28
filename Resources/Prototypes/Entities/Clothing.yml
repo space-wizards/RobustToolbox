@@ -4,9 +4,8 @@
   components:
   - type: Transform
   - type: Clickable
-  - type: WearableAnimatedSprite
-    sprite: player_jumpsuit_gray
-    notWornSprite: janitorsuit
+  - type: Sprite
+    sprite: Items/janitorsuit.png
 
   - type: Icon
     icon: Items/janitorsuit.png
@@ -21,9 +20,8 @@
   components:
   - type: Transform
   - type: Clickable
-  - type: WearableAnimatedSprite
-    sprite: player_shoes
-    notWornSprite: shoes
+  - type: Sprite
+    sprite: Items/janitorsuit.png
 
   - type: Icon
     icon: Items/shoes.png

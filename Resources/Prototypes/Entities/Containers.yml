@@ -4,9 +4,8 @@
   components:
   - type: Transform
   - type: Clickable
-  - type: WearableAnimatedSprite
-    sprite: player_toolbox
-    notWornSprite: toolbox_r
+  - type: Sprite
+    sprite: Items/toolbox_r.png
 
   - type: Icon
     icon: Items/toolbox_r.png

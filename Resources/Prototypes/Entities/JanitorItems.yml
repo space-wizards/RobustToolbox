@@ -4,9 +4,8 @@
   components:
   - type: Transform
   - type: Clickable
-  - type: WearableAnimatedSprite
-    sprite: player_mop
-    notWornSprite: mop
+  - type: Sprite
+    sprite: mop
 
   - type: Icon
     icon: Items/mop.png

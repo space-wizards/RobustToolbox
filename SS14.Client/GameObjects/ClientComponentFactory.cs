@@ -30,30 +30,9 @@ namespace SS14.Client.GameObjects
 
             Register<BoundingBoxComponent>();
 
-            //Register<AnimatedSpriteComponent>();
-            //RegisterReference<AnimatedSpriteComponent, IClickTargetComponent>();
-            //RegisterReference<AnimatedSpriteComponent, ISpriteRenderableComponent>();
-
-            //Register<WearableAnimatedSpriteComponent>();
-            //RegisterReference<WearableAnimatedSpriteComponent, IClickTargetComponent>();
-            //RegisterReference<WearableAnimatedSpriteComponent, ISpriteRenderableComponent>();
-
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-
-            //Register<ItemSpriteComponent>();
-            //RegisterReference<ItemSpriteComponent, ISpriteComponent>();
-            //RegisterReference<ItemSpriteComponent, IClickTargetComponent>();
-            //RegisterReference<ItemSpriteComponent, ISpriteRenderableComponent>();
-
-            //Register<MobSpriteComponent>();
-            //RegisterReference<MobSpriteComponent, ISpriteComponent>();
-            //RegisterReference<MobSpriteComponent, IClickTargetComponent>();
-            //RegisterReference<MobSpriteComponent, ISpriteRenderableComponent>();
-
-            //Register<ParticleSystemComponent>();
-            //RegisterReference<ParticleSystemComponent, IParticleSystemComponent>();
 
             Register<ClickableComponent>();
             RegisterReference<ClickableComponent, IClientClickableComponent>();

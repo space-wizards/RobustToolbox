@@ -45,7 +45,6 @@ namespace SS14.Client.State.States
         public override void Startup()
         {
             IoCManager.InjectDependencies(this);
-            Logger.Debug("Oh no.");
 
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 

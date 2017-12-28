@@ -234,7 +234,7 @@ namespace SS14.Client.GameObjects
         public void UpdateCurrentSprite()
         {
             CurrentSprite = GetActiveDirectionalSprite();
-            if (SceneSprite != null)
+            if (SceneSprite != null && CurrentSprite != null)
             {
                 SceneSprite.Texture = CurrentSprite.Texture;
             }
@@ -273,6 +273,11 @@ namespace SS14.Client.GameObjects
                 {
                     AddSprite(spriteNode.AsString());
                 }
+            }
+
+            if (mapping.TryGetNode("sprite", out node))
+            {
+                AddSprite(node.AsString());
             }
         }
 

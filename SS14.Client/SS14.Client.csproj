@@ -120,13 +120,7 @@
     <Compile Include="GameObjects\Components\Transform\TransformComponent.cs" />
     <Compile Include="GameObjects\ContextMenuEntry.cs" />
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
-    <Compile Include="GameObjects\Components\Renderable\AnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ParticleSystem.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ParticleSystemComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
-    <Compile Include="GameObjects\Components\Renderable\WearableAnimatedSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\ItemSpriteComponent.cs" />
-    <Compile Include="GameObjects\Components\Renderable\MobSpriteComponent.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />

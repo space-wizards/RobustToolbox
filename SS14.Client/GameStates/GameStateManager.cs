@@ -37,7 +37,7 @@ namespace SS14.Client.GameStates
 
         public void HandleFullStateMessage(MsgFullState message)
         {
-            if (!GameStates.Keys.Contains(message.State.Sequence))
+            if (!GameStates.ContainsKey(message.State.Sequence))
             {
                 AckGameState(message.State.Sequence);
 

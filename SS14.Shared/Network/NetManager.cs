@@ -223,7 +223,7 @@ namespace SS14.Shared.Network
         {
             Debug.Assert(IsClient, "Should never be called on the server.");
 
-            if(_netPeer == null)
+            if (_netPeer == null)
                 return;
 
             // Client should never have more than one connection.
@@ -271,7 +271,7 @@ namespace SS14.Shared.Network
                 case NetConnectionStatus.Disconnected:
                     if (_channels.ContainsKey(sender))
                         HandleDisconnect(msg);
-                    else if(sender.RemoteUniqueIdentifier == 0) // is this the best way to detect an unsuccessful connect?
+                    else if (sender.RemoteUniqueIdentifier == 0) // is this the best way to detect an unsuccessful connect?
                     {
                         Logger.Info($"[NET] {sender.RemoteEndPoint}: Failed to connect");
                         OnConnectFailed();
@@ -308,7 +308,7 @@ namespace SS14.Shared.Network
             Logger.Info($"[NET] {channel.RemoteAddress}: Connected");
 
             // client is connected after string packet get received
-            if(IsServer)
+            if (IsServer)
                 OnConnected(channel);
         }
 
@@ -366,7 +366,7 @@ namespace SS14.Shared.Network
                     return;
                 }
 
-                Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages) id}.");
+                Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages)id}.");
                 return;
             }
 
@@ -386,7 +386,7 @@ namespace SS14.Shared.Network
             }
 
             var channel = GetChannel(msg.SenderConnection);
-            var instance = (NetMessage) Activator.CreateInstance(packetType, channel);
+            var instance = (NetMessage)Activator.CreateInstance(packetType, channel);
             instance.MsgChannel = channel;
 
             try
@@ -395,7 +395,7 @@ namespace SS14.Shared.Network
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
+                Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet:\n{e}");
             }
 
             DebugIn(instance);
@@ -415,7 +415,7 @@ namespace SS14.Shared.Network
 
         public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
         {
-            if(_netPeer.Connections.Count > 0)
+            if (_netPeer.Connections.Count > 0)
                 _netPeer.SendMessage(message, _netPeer.Connections, method, 0);
         }
 
@@ -444,17 +444,17 @@ namespace SS14.Shared.Network
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            return (T) Activator.CreateInstance(typeof(T), (INetChannel) null);
+            return (T)Activator.CreateInstance(typeof(T), (INetChannel)null);
         }
 
         private NetOutgoingMessage BuildMessage(NetMessage message)
         {
             var packet = _netPeer.CreateMessage(4);
 
-            if (! _strings.TryFindStringId(message.MsgName, out int msgId))
+            if (!_strings.TryFindStringId(message.MsgName, out int msgId))
                 throw new NetManagerException($"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
-            packet.Write((byte) msgId);
+            packet.Write((byte)msgId);
             message.WriteToBuffer(packet);
             return packet;
         }
@@ -462,7 +462,7 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToAll(NetMessage message)
         {
-            if(_netPeer == null)
+            if (_netPeer == null)
                 return;
 
             var packet = BuildMessage(message);

@@ -25,6 +25,7 @@ namespace SS14.Shared.Map
 
         public void Initialize()
         {
+            new SpaceTileDefinition().Register(this);
             new FloorTileDefinition().Register(this);
         }
 

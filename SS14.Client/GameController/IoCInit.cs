@@ -1,7 +1,9 @@
-﻿using SS14.Client.GameObjects;
+﻿using SS14.Client.Debugging;
+using SS14.Client.GameObjects;
 using SS14.Client.GameStates;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
+using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Input;
@@ -89,6 +91,7 @@ namespace SS14.Client
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IGameControllerProxy, GameControllerProxy>();
             IoCManager.Register<IKeyBindingManager, KeyBindingManager>();
+            IoCManager.Register<IDebugDrawing, DebugDrawing>();
 
             IoCManager.BuildGraph();
         }

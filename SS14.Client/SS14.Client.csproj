@@ -193,6 +193,8 @@
     <Compile Include="State\States\LobbyMenu.cs" />
     <Compile Include="State\States\GameScreen.cs" />
     <Compile Include="Graphics\TextureSource.cs" />
+    <Compile Include="Debugging\DebugDrawing.cs" />
+    <Compile Include="Interfaces\Debugging\IDebugDrawing.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="client_config.toml">

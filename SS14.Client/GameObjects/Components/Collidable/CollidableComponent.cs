@@ -1,5 +1,7 @@
 ﻿using System;
 using OpenTK;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Utility;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
@@ -37,6 +39,26 @@ namespace SS14.Client.GameObjects
         /// <inheritdoc />
         public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
+        private bool _debugDraw = false;
+        public bool DebugDraw
+        {
+            get => _debugDraw;
+            set
+            {
+                if (value == _debugDraw)
+                {
+                    return;
+                }
+
+                _debugDraw = value;
+                debugNode.Update();
+            }
+        }
+
+        private Godot.Node2D debugNode;
+        private IClientTransformComponent transform;
+        private GodotGlue.GodotSignalSubscriber0 debugDrawSubscriber;
+
         /// <summary>
         ///     Called when the collidable is bumped into by someone/something
         /// </summary>
@@ -63,6 +85,14 @@ namespace SS14.Client.GameObjects
                 var cm = IoCManager.Resolve<ICollisionManager>();
                 cm.AddCollidable(this);
             }
+
+            transform = Owner.GetComponent<IClientTransformComponent>();
+            debugNode = new Godot.Node2D();
+            debugNode.SetName("Collidable debug");
+            debugDrawSubscriber = new GodotGlue.GodotSignalSubscriber0();
+            debugDrawSubscriber.Connect(debugNode, "draw");
+            debugDrawSubscriber.Signal += DrawDebugRect;
+            transform.SceneNode.AddChild(debugNode);
         }
 
         /// <summary>
@@ -158,6 +188,23 @@ namespace SS14.Client.GameObjects
             {
                 DebugColor = node.AsHexColor();
             }
+        }
+
+        private void DrawDebugRect()
+        {
+            if (!DebugDraw)
+            {
+                return;
+            }
+            var colorEdge = DebugColor.WithAlpha(0.50f).Convert();
+            var colorFill = DebugColor.WithAlpha(0.25f).Convert();
+            var aabb = Owner.GetComponent<BoundingBoxComponent>().AABB;
+
+            var rect = new Godot.Rect2(aabb.Left * 32, aabb.Top * 32, aabb.Width * 32, aabb.Height * 32);
+            debugNode.DrawRect(rect, colorEdge, filled: false);
+            rect.Position += new Godot.Vector2(1, 1);
+            rect.Size -= new Godot.Vector2(2, 2);
+            debugNode.DrawRect(rect, colorFill, filled: true);
         }
     }
 }

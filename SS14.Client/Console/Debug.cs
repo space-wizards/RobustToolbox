@@ -1,13 +1,14 @@
 ﻿using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.Debugging;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System;
 using System.Text;
 using System.Collections.Generic;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.UserInterface;
 
 namespace SS14.Client.Console
 {
@@ -119,6 +120,20 @@ namespace SS14.Client.Console
         public bool Execute(IDebugConsole console, params string[] args)
         {
             throw new InvalidOperationException("Fuck");
+        }
+    }
+
+    class DebugCollidersCommand : IConsoleCommand
+    {
+        public string Command => "debugcolliders";
+        public string Help => "";
+        public string Description => "Enables debug drawing over all collidables in the game.";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<IDebugDrawing>();
+            mgr.DebugColliders = !mgr.DebugColliders;
+            return false;
         }
     }
 }

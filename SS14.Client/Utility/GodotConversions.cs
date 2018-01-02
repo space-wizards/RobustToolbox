@@ -23,5 +23,15 @@ namespace SS14.Client.Utility
         {
             return new Godot.Color(color.R, color.G, color.B, color.A);
         }
+
+        public static Godot.Rect2 Convert(this OpenTK.Box2 box)
+        {
+            return new Godot.Rect2(box.Left, box.Top, box.Width, box.Height);
+        }
+
+        public static OpenTK.Box2 Convert(this Godot.Rect2 rect)
+        {
+            return new OpenTK.Box2(rect.Position.x, rect.Position.y, rect.End.x, rect.End.y);
+        }
     }
 }

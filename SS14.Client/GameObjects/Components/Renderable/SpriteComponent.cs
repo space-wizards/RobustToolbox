@@ -203,6 +203,10 @@ namespace SS14.Client.GameObjects
             transform.OnRotate -= OnRotate;
             transform.OnMove -= OnMove;
             transform = null;
+
+            SceneSprite.QueueFree();
+            SceneSprite.Dispose();
+
             base.Shutdown();
         }
 

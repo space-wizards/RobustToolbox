@@ -136,4 +136,20 @@ namespace SS14.Client.Console
             return false;
         }
     }
+
+    class SpawnWindowCommand : IConsoleCommand
+    {
+        public string Command => "spawnwindow";
+        public string Help => "";
+        public string Description => "";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
+
+            var window = new UserInterface.SS14Window();
+            uiMgr.RootControl.AddChild(window);
+            return false;
+        }
+    }
 }

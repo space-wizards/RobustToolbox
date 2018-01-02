@@ -1,20 +1,22 @@
+using Lidgren.Network;
+using SS14.Client.Input;
+using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.Input;
+using SS14.Client.UserInterface;
+using SS14.Shared;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Configuration;
+using SS14.Shared.Interfaces.Configuration;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
-using SS14.Shared.Configuration;
-using SS14.Shared.Interfaces.Configuration;
-using SS14.Client.Interfaces.GameObjects;
-using SS14.Client.Interfaces.Input;
-using SS14.Shared.Interfaces.GameObjects;
-using Lidgren.Network;
-using SS14.Shared;
-using SS14.Client.Input;
 
 namespace SS14.Client.State.States
 {
     // OH GOD.
+    // Ok actually it's fine.
     public sealed partial class GameScreen : State
     {
         [Dependency]
@@ -28,13 +30,17 @@ namespace SS14.Client.State.States
         [Dependency]
         readonly IKeyBindingManager keyBindingManager;
 
+        private EscapeMenu escapeMenu;
+
         public GameScreen(IDictionary<Type, object> managers) : base(managers)
         {
         }
 
         public override void InitializeGUI()
         {
-            //throw new System.NotImplementedException();
+            escapeMenu = new EscapeMenu();
+            escapeMenu.Visible = false;
+            escapeMenu.AddToScreen();
         }
 
         public override void Shutdown()
@@ -69,6 +75,30 @@ namespace SS14.Client.State.States
 
         public override void KeyDown(KeyEventArgs e)
         {
+            Logger.Debug($"KeyDown! {e.Key}");
+            if (e.Key == Keyboard.Key.Escape)
+            {
+                if (escapeMenu.Visible)
+                {
+                    if (escapeMenu.IsAtFront())
+                    {
+                        escapeMenu.Visible = false;
+                    }
+                    else
+                    {
+                        escapeMenu.MoveToFront();
+                    }
+                }
+                else
+                {
+                    Logger.Debug("Opening!");
+                    escapeMenu.OpenCentered();
+                }
+
+                e.Handle();
+                return;
+            }
+
             keyBindingManager.KeyDown(e);
         }
 

@@ -183,7 +183,10 @@
     <Compile Include="UserInterface\Controls\WindowDialog.cs" />
     <Compile Include="UserInterface\Controls\AcceptDialog.cs" />
     <Compile Include="UserInterface\Controls\RichTextLabel.cs" />
+    <Compile Include="UserInterface\Controls\TextureButton.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
+    <Compile Include="UserInterface\CustomControls\SS14Window.cs" />
+    <Compile Include="UserInterface\CustomControls\EscapeMenu.cs" />
     <Compile Include="UserInterface\CustomControls\FPSCounter.cs" />
     <Compile Include="GameController\GameControllerProxy.cs" />
     <Compile Include="Interfaces\IGameControllerProxy.cs" />

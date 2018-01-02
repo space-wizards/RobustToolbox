@@ -24,5 +24,11 @@ namespace SS14.Client.UserInterface
             get => SceneControl.WindowTitle;
             set => SceneControl.WindowTitle = value;
         }
+
+        public bool Resizable
+        {
+            get => SceneControl.Resizable;
+            set => SceneControl.Resizable = value;
+        }
     }
 }

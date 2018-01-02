@@ -131,6 +131,33 @@ namespace SS14.Client.UserInterface
             set => SceneControl.Visible = value;
         }
 
+        public Vector2 Size
+        {
+            get => SceneControl.GetSize().Convert();
+            set => SceneControl.SetSize(value.Convert());
+        }
+
+        public Vector2 Position
+        {
+            get => SceneControl.GetPosition().Convert();
+            set => SceneControl.SetPosition(value.Convert());
+        }
+
+        public OpenTK.Box2 Rect
+        {
+            get => SceneControl.GetRect().Convert();
+        }
+
+        public Vector2 MinimumSize
+        {
+            get => SceneControl.GetMinimumSize().Convert();
+        }
+
+        public Vector2 GlobalMousePosition
+        {
+            get => SceneControl.GetGlobalMousePosition().Convert();
+        }
+
         private readonly Dictionary<string, Control> _children = new Dictionary<string, Control>();
 
         /// <summary>
@@ -207,6 +234,7 @@ namespace SS14.Client.UserInterface
             Parent?.RemoveChild(this);
 
             SceneControl.QueueFree();
+            SceneControl.Dispose();
             SceneControl = null;
         }
 
@@ -511,6 +539,46 @@ namespace SS14.Client.UserInterface
         protected virtual void Update(FrameEventArgs args)
         {
 
+        }
+
+        public enum CursorShape
+        {
+            Arrow = Godot.Control.CURSOR_ARROW,
+            IBeam = Godot.Control.CURSOR_IBEAM,
+            PointingHand = Godot.Control.CURSOR_POINTING_HAND,
+            Cross = Godot.Control.CURSOR_CROSS,
+            Wait = Godot.Control.CURSOR_WAIT,
+            Busy = Godot.Control.CURSOR_BUSY,
+            Drag = Godot.Control.CURSOR_DRAG,
+            CanDrop = Godot.Control.CURSOR_CAN_DROP,
+            Forbidden = Godot.Control.CURSOR_FORBIDDEN,
+            VSize = Godot.Control.CURSOR_VSIZE,
+            HSize = Godot.Control.CURSOR_HSIZE,
+            BDiagSize = Godot.Control.CURSOR_BDIAGSIZE,
+            FDiagSize = Godot.Control.CURSOR_FDIAGSIZE,
+            Move = Godot.Control.CURSOR_MOVE,
+            VSplit = Godot.Control.CURSOR_VSPLIT,
+            HSplit = Godot.Control.CURSOR_HSPLIT,
+            Help = Godot.Control.CURSOR_HELP,
+        }
+
+        public CursorShape DefaultCursorShape
+        {
+            get => (CursorShape)SceneControl.GetDefaultCursorShape();
+            set => SceneControl.SetDefaultCursorShape((int)value);
+        }
+
+        public enum MouseFilterMode
+        {
+            Ignore = Godot.Control.MOUSE_FILTER_IGNORE,
+            Pass = Godot.Control.MOUSE_FILTER_PASS,
+            Stop = Godot.Control.MOUSE_FILTER_STOP,
+        }
+
+        public MouseFilterMode MouseFilter
+        {
+            get => (MouseFilterMode)SceneControl.MouseFilter;
+            set => SceneControl.MouseFilter = (int)value;
         }
     }
 }

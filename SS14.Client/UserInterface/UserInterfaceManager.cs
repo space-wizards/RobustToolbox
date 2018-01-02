@@ -23,6 +23,7 @@ namespace SS14.Client.UserInterface
         private Godot.CanvasLayer CanvasLayer;
         public Control StateRoot { get; private set; }
         public Control RootControl { get; private set; }
+        public Control WindowRoot { get; private set; }
         public AcceptDialog PopupControl { get; private set; }
         public DebugConsole DebugConsole { get; private set; }
         public FPSCounter FPSCounter { get; private set; }
@@ -54,7 +55,13 @@ namespace SS14.Client.UserInterface
             StateRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
             RootControl.AddChild(StateRoot);
 
+            WindowRoot = new Control("WindowRoot");
+            WindowRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
+            WindowRoot.MouseFilter = Control.MouseFilterMode.Ignore;
+            RootControl.AddChild(WindowRoot);
+
             PopupControl = new AcceptDialog("RootPopup");
+            PopupControl.Resizable = true;
             RootControl.AddChild(PopupControl);
 
             DebugConsole = new DebugConsole();

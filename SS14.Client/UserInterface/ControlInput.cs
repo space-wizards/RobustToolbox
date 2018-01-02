@@ -27,6 +27,10 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        protected virtual void MouseMove(GUIMouseMoveEventArgs args)
+        {
+        }
+
         public event Action<GUIKeyEventArgs> OnKeyDown;
         protected virtual void KeyDown(GUIKeyEventArgs args)
         {
@@ -106,6 +110,20 @@ namespace SS14.Client.UserInterface
                         }
                     }
                     break;
+
+                case Godot.InputEventMouseMotion motionEvent:
+                    var mouseMoveEventArgs = new GUIMouseMoveEventArgs(motionEvent.Relative.Convert(),
+                                                                       motionEvent.Speed.Convert(),
+                                                                       this,
+                                                                       (Mouse.ButtonMask)motionEvent.ButtonMask,
+                                                                       motionEvent.GlobalPosition.Convert(),
+                                                                       motionEvent.Position.Convert(),
+                                                                       motionEvent.Alt,
+                                                                       motionEvent.Control,
+                                                                       motionEvent.Shift,
+                                                                       motionEvent.Command);
+                    MouseMove(mouseMoveEventArgs);
+                    break;
             }
         }
     }
@@ -121,7 +139,7 @@ namespace SS14.Client.UserInterface
         ///     Mark this event as "handled",
         ///     so it stops propagating to other controls or entities.
         /// </summary>
-        public void Handle()
+        public new void Handle()
         {
             SourceControl.SceneControl.AcceptEvent();
         }
@@ -166,7 +184,7 @@ namespace SS14.Client.UserInterface
         ///     Mark this event as "handled",
         ///     so it stops propagating to other controls or entities.
         /// </summary>
-        public void Handle()
+        public new void Handle()
         {
             SourceControl.SceneControl.AcceptEvent();
         }

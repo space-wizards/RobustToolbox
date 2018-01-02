@@ -15,6 +15,8 @@ namespace SS14.Client.Interfaces.UserInterface
 
         Control StateRoot { get; }
 
+        Control WindowRoot { get; }
+
         /// <summary>
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.

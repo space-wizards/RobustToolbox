@@ -1,5 +1,7 @@
 ﻿using System;
+using SS14.Client.Interfaces;
 using SS14.Client.Utility;
+using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Input
@@ -35,6 +37,15 @@ namespace SS14.Client.Input
             Control = control;
             Shift = shift;
             System = system;
+        }
+
+        /// <summary>
+        ///     Mark this event as handled.
+        /// </summary>
+        public void Handle()
+        {
+            var tree = IoCManager.Resolve<ISceneTreeHolder>();
+            tree.SceneTree.SetInputAsHandled();
         }
     }
 

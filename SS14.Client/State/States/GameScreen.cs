@@ -280,7 +280,7 @@ namespace SS14.Client.State.States
             _gameChat.Alignment = Align.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
-            _gameChat.DefaultChatFormat = @"say {0}";
+            _gameChat.DefaultChatFormat = "say \"{0}\"";
             _uiScreen.AddControl(_gameChat);
         }
 

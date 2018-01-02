@@ -27,9 +27,9 @@ namespace SS14.Shared.Network.Messages
 
             var index = buffer.ReadInt32();
             if (index == -1)
-                EntityId = null;
+                Index = null;
             else
-                EntityId = index;
+                Index = new PlayerIndex(index);
 
             var id = buffer.ReadInt32();
             if (id == -1)

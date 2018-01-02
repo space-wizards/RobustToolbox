@@ -373,6 +373,10 @@
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>
+    <Resources Include="..\Resources\emotes.xml">
+      <ResourceRoot />
+      <Visible>False</Visible>
+    </Resources>
   </ItemGroup>
   <Target Name="AfterBuild">
     <RemoveDir Directories="$(OutputPath)Resources" />

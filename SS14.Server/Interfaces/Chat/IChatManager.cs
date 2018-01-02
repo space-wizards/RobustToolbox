@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
@@ -40,5 +41,15 @@ namespace SS14.Server.Interfaces.Chat
         /// <param name="index">Optional PlayerIndex of the client that the message is bound to.</param>
         /// <param name="entityUid">Optional entity Uid that the message is bound to.</param>
         void DispatchMessage(ChatChannel channel, string text, PlayerIndex? index = null, int? entityUid = null);
+
+        /// <summary>
+        ///     Checks a string to see if it is an emote, and expands it to self/other chat.
+        /// </summary>
+        /// <param name="input">String to check.</param>
+        /// <param name="session">Player that the emote is acting on.</param>
+        /// <param name="self">First person emote text.</param>
+        /// <param name="other">Third person emote text.</param>
+        /// <returns>If the string was a valid emote.</returns>
+        bool ExpandEmote(string input, IPlayerSession session, out string self, out string other);
     }
 }

@@ -42,6 +42,11 @@ namespace SS14.Client.UserInterface.CustomControls
         /// </summary>
         public string DefaultChatFormat { get; set; }
 
+        /// <summary>
+        ///     Blacklists channels from being displayed.
+        /// </summary>
+        public List<ChatChannel> ChannelBlacklist { get; set; }
+
         public override bool Focus
         {
             get => _input.Focus;
@@ -69,6 +74,11 @@ namespace SS14.Client.UserInterface.CustomControls
                 ForegroundColor = new Color4(255, 250, 240, 255)
             };
             _input.OnSubmit += (sender, text) => input_OnSubmit(sender, text);
+
+            ChannelBlacklist = new List<ChatChannel>()
+            {
+                ChatChannel.Default,
+            };
         }
 
         public override bool MouseDown(MouseButtonEventArgs e)
@@ -249,6 +259,9 @@ namespace SS14.Client.UserInterface.CustomControls
         public void AddLine(string message, ChatChannel channel, Color color)
         {
             if (Disposed) return;
+
+            if(ChannelBlacklist.Contains(channel))
+                return;
 
             //TODO: LineHeight should be from the Font, not hard coded.
             const int lineHeight = 12;

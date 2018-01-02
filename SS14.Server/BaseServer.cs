@@ -207,10 +207,6 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
 
-            IoCManager.Resolve<IChatManager>().Initialize();
-            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
-            IoCManager.Resolve<IMapManager>().Initialize();
-
             // Set up the VFS
             _resources.Initialize();
 
@@ -229,6 +225,11 @@ namespace SS14.Server
             // Else the content types won't be included.
             // TODO: solve this properly.
             Serializer.Initialize();
+
+            // Initialize Tier 2 services
+            IoCManager.Resolve<IChatManager>().Initialize();
+            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
+            IoCManager.Resolve<IMapManager>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);

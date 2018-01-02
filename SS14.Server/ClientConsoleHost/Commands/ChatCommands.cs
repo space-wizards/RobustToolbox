@@ -21,10 +21,10 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
         public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
         {
-            if(player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
+            if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
 
-            if(args.Length < 1)
+            if (args.Length < 1)
                 return;
 
             var sessions = IoCManager.Resolve<IPlayerManager>();
@@ -37,7 +37,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
             if (message[0] == RadioChar)
             {
                 // all they sent was the channel
-                if(args.Length < 2)
+                if (args.Length < 2)
                     return;
 
                 var channel = args[0];
@@ -51,7 +51,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
             {
                 text = string.Concat(args);
             }
-            
+
             var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
             var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
 
@@ -85,6 +85,8 @@ namespace SS14.Server.ClientConsoleHost.Commands
 
     internal class MeCommand : IClientCommand
     {
+        private const int VoiceRange = 7;
+
         public string Command => "me";
         public string Description => "Send third person chat messages to the local channel.";
         public string Help => "me <text>";
@@ -94,9 +96,27 @@ namespace SS14.Server.ClientConsoleHost.Commands
             if (player.Status != SessionStatus.InGame || !player.AttachedEntityUid.HasValue)
                 return;
 
-            // clients format the first/third person
+            var sessions = IoCManager.Resolve<IPlayerManager>();
+            var ents = IoCManager.Resolve<IEntityManager>();
             var chat = IoCManager.Resolve<IChatManager>();
-            chat.DispatchMessage(ChatChannel.Emote, args[0], player.Index);
+
+            if (chat.ExpandEmote(args[0], player, out var self, out var other))
+            {
+                //TODO: Dispatch in PVS range instead
+                var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
+                var clients = sessions.GetPlayersInRange(pos, VoiceRange).Where(p => p != player).Select(p => p.ConnectedClient);
+
+                chat.DispatchMessage(player.ConnectedClient, ChatChannel.Emote, self, player.Index);
+                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, other, player.Index);
+            }
+            else
+            {
+                //TODO: Dispatch in PVS range instead
+                var pos = ents.GetEntity(player.AttachedEntityUid.Value).GetComponent<ITransformComponent>().LocalPosition;
+                var clients = sessions.GetPlayersInRange(pos, VoiceRange).Select(p => p.ConnectedClient);
+
+                chat.DispatchMessage(clients.ToList(), ChatChannel.Emote, $"{player.Name} {args[0]}", player.Index);
+            }
         }
     }
 

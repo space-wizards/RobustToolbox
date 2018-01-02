@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using OpenTK.Graphics;
 using SS14.Client.Interfaces.GameObjects;
+using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
@@ -22,8 +23,14 @@ namespace SS14.Client.Console
         private readonly Dictionary<ChatChannel, Color4> _chatColors;
 
         [Dependency]
-        private IClientEntityManager _entityManager;
+        private readonly IClientEntityManager _entityManager;
 
+        [Dependency]
+        private readonly IPlayerManager _players;
+
+        /// <summary>
+        ///     Default Constructor.
+        /// </summary>
         public ClientChatConsole()
         {
             _chatColors = new Dictionary<ChatChannel, Color4>
@@ -59,7 +66,7 @@ namespace SS14.Client.Console
         /// <inheritdoc />
         public void ParseChatMessage(string text, string defaultFormat = null)
         {
-            if (string.IsNullOrWhiteSpace(text) || text.Length < 2)
+            if (string.IsNullOrWhiteSpace(text))
                 return;
 
             switch (text[0])
@@ -74,13 +81,13 @@ namespace SS14.Client.Console
                 case OocAlias:
                 {
                     var conInput = text.Substring(2);
-                    ProcessCommand($"ooc {conInput}");
+                    ProcessCommand($"ooc \"{conInput}\"");
                     break;
                 }
                 case MeAlias:
                 {
                     var conInput = text.Substring(2);
-                    ProcessCommand($"me {conInput}");
+                    ProcessCommand($"me \"{conInput}\"");
                     break;
                 }
                 default:
@@ -96,6 +103,7 @@ namespace SS14.Client.Console
         {
             var channel = msg.Channel;
             var text = msg.Text;
+            var index = msg.Index;
             var entityId = msg.EntityId;
 
             switch (channel)
@@ -104,8 +112,25 @@ namespace SS14.Client.Console
                 case ChatChannel.Server:
                 case ChatChannel.OOC:
                 case ChatChannel.Radio:
-                    text = "[" + channel + "] " + text;
+                {
+                    string name;
+                    if (index.HasValue && _players.SessionsDict.TryGetValue(index.Value, out var session))
+                    {
+                        name = session.Name;
+                    }
+                    else if (entityId.HasValue)
+                    {
+                        var ent = _entityManager.GetEntity(entityId.Value);
+                        name = ent.Name ?? ent.ToString();
+                    }
+                    else
+                    {
+                        name = "<TERU-SAMA>";
+                    }
+
+                    text = $"[{channel}] {name}: {text}";
                     break;
+                }
             }
 
             AddLine(text, channel, GetChannelColor(channel));

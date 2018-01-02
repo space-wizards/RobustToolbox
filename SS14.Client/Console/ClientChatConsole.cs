@@ -1,4 +1,6 @@
-﻿using SS14.Client.Interfaces.GameObjects;
+﻿using System.Collections.Generic;
+using OpenTK.Graphics;
+using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
@@ -17,8 +19,26 @@ namespace SS14.Client.Console
         private const char OocAlias = '[';
         private const char MeAlias = '@';
 
+        private readonly Dictionary<ChatChannel, Color4> _chatColors;
+
         [Dependency]
         private IClientEntityManager _entityManager;
+
+        public ClientChatConsole()
+        {
+            _chatColors = new Dictionary<ChatChannel, Color4>
+            {
+                [ChatChannel.Default] = Color4.Gray,
+                [ChatChannel.Damage] = Color4.Red,
+                [ChatChannel.Radio] = new Color4(0, 100, 0, 255),
+                [ChatChannel.Server] = Color4.Blue,
+                [ChatChannel.Player] = new Color4(0, 128, 0, 255),
+                [ChatChannel.Local] = new Color4(0, 200, 0, 255),
+                [ChatChannel.OOC] = Color4.White,
+                [ChatChannel.Emote] = Color4.Cyan,
+                [ChatChannel.Visual] = Color4.Yellow,
+            };
+        }
 
         /// <summary>
         ///     Initializes the console into a useable state.
@@ -41,7 +61,7 @@ namespace SS14.Client.Console
         {
             if (string.IsNullOrWhiteSpace(text) || text.Length < 2)
                 return;
-            
+
             switch (text[0])
             {
                 case ConCmdSlash:
@@ -96,8 +116,10 @@ namespace SS14.Client.Console
 
         private Color GetChannelColor(ChatChannel channel)
         {
-            //TODO: Actually implement this.
-            return Color.Yellow;
+            if (_chatColors.TryGetValue(channel, out var color))
+                return color;
+
+            return Color.White;
         }
     }
 }

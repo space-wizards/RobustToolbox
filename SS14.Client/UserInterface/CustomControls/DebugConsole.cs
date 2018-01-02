@@ -4,7 +4,6 @@ using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.IoC;
 using Vector2i = SS14.Shared.Maths.Vector2i;
@@ -18,17 +17,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly ListPanel _historyList;
 
         private int _lastY;
-
-        public override bool Visible
-        {
-            get => base.Visible;
-            set
-            {
-                base.Visible = value;
-                _console.SendServerCommandRequest();
-            }
-        }
-
+        
         public DebugConsole(Vector2i size)
             : base(size)
         {

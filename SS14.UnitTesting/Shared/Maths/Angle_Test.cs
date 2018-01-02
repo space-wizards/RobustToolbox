@@ -22,7 +22,7 @@ namespace SS14.UnitTesting.Shared.Maths
             (0, -1, Direction.South, -System.Math.PI / 2.0),
             (1, -1, Direction.SouthEast, -System.Math.PI / 4.0),
 
-            (1, 0, Direction.East, -System.Math.PI / 8.0)
+            (0.92387953251128674f, -0.38268343236508978f, Direction.East, -System.Math.PI / 8.0)
         };
 
         [Test]

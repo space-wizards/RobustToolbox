@@ -34,11 +34,9 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
-            Font.Free();
             Font.Dispose();
             Font = null;
 
-            FontData.Free();
             FontData.Dispose();
             FontData = null;
         }

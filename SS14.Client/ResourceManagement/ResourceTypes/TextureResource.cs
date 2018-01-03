@@ -32,7 +32,6 @@ namespace SS14.Client.ResourceManagement
 
         public override void Dispose()
         {
-            texture.Free();
             texture.Dispose();
             texture = null;
         }

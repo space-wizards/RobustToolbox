@@ -124,24 +124,7 @@ namespace SS14.Client.Player
 
             UpdatePlayerList(list);
         }
-
-        /// <summary>
-        ///     Verb sender
-        ///     If UID is 0, it means its a global verb.
-        /// </summary>
-        /// <param name="verb">the verb</param>
-        /// <param name="uid">a target entity's Uid</param>
-        public void SendVerb(string verb, int uid)
-        {
-            //TODO: Convert this to the ConCmd system.
-
-            var message = _network.CreateNetMessage<MsgSession>();
-            message.MsgType = PlayerSessionMessage.Verb;
-            message.Uid = uid;
-            message.Verb = verb;
-            _network.ClientSendMessage(message, NetDeliveryMethod.ReliableOrdered);
-        }
-
+        
         /// <summary>
         ///     Handles an incoming session NetMsg from the server.
         /// </summary>

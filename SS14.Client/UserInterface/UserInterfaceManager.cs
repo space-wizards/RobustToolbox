@@ -52,7 +52,7 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            _console = new DebugConsole("dbgConsole", new Vector2i((int) CluwneLib.Window.Viewport.Size.X, 400));
+            _console = new DebugConsole(new Vector2i((int) CluwneLib.Window.Viewport.Size.X, 400));
             _console.Visible = false;
         }
         

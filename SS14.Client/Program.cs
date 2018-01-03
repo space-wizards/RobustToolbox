@@ -1,4 +1,5 @@
-﻿using SS14.Client.GameObjects;
+﻿using SS14.Client.Console;
+using SS14.Client.GameObjects;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.GameObjects;
@@ -105,6 +106,8 @@ namespace SS14.Client
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<IGameStateManager, GameStateManager>();
             IoCManager.Register<IBaseClient, BaseClient>();
+            IoCManager.Register<IClientConsole, ClientChatConsole>();
+            IoCManager.Register<IClientChatConsole, ClientChatConsole>();
 
             IoCManager.BuildGraph();
         }

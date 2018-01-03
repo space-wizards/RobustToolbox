@@ -2,9 +2,10 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics;
+using SS14.Client.Console;
 using SS14.Client.Graphics.Input;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared;
+using SS14.Shared.Console;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
@@ -15,9 +16,11 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private const int MaxLinePixelLength = 500;
 
-        private readonly Dictionary<ChatChannel, Color4> _chatColors;
-
         private readonly IList<string> _inputHistory = new List<string>();
+
+        private readonly Textbox _input;
+        private readonly ScrollableContainer _historyBox;
+        private readonly ListPanel _chatHistoryList;
 
         /// <summary>
         ///     To prevent the TextEntered from the key toggling chat being registered.
@@ -34,9 +37,15 @@ namespace SS14.Client.UserInterface.CustomControls
         /// </summary>
         private string _inputTemp;
 
-        private readonly Textbox _input;
-        private readonly ScrollableContainer _historyBox;
-        private readonly ListPanel _chatHistoryList;
+        /// <summary>
+        ///     Default formatting string for the ClientChatConsole.
+        /// </summary>
+        public string DefaultChatFormat { get; set; }
+
+        /// <summary>
+        ///     Blacklists channels from being displayed.
+        /// </summary>
+        public List<ChatChannel> ChannelBlacklist { get; set; }
 
         public override bool Focus
         {
@@ -66,18 +75,9 @@ namespace SS14.Client.UserInterface.CustomControls
             };
             _input.OnSubmit += (sender, text) => input_OnSubmit(sender, text);
 
-            _chatColors = new Dictionary<ChatChannel, Color4>
+            ChannelBlacklist = new List<ChatChannel>()
             {
-                [ChatChannel.Default] = Color4.Gray,
-                [ChatChannel.Damage] = Color4.Red,
-                [ChatChannel.Radio] = new Color4(0, 100, 0, 255),
-                [ChatChannel.Server] = Color4.Blue,
-                [ChatChannel.Player] = new Color4(0, 128, 0, 255),
-                [ChatChannel.Lobby] = Color4.White,
-                [ChatChannel.Ingame] = new Color4(0, 200, 0, 255),
-                [ChatChannel.OOC] = Color4.White,
-                [ChatChannel.Emote] = Color4.Cyan,
-                [ChatChannel.Visual] = Color4.Yellow,
+                ChatChannel.Default,
             };
         }
 
@@ -164,7 +164,6 @@ namespace SS14.Client.UserInterface.CustomControls
 
             TextSubmitted = null;
             _input.Dispose();
-            _chatColors.Clear();
         }
 
         public override void DoLayout()
@@ -257,9 +256,12 @@ namespace SS14.Client.UserInterface.CustomControls
             return lineList;
         }
 
-        public void AddLine(string message, ChatChannel channel)
+        public void AddLine(string message, ChatChannel channel, Color color)
         {
             if (Disposed) return;
+
+            if(ChannelBlacklist.Contains(channel))
+                return;
 
             //TODO: LineHeight should be from the Font, not hard coded.
             const int lineHeight = 12;
@@ -272,7 +274,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 _chatHistoryList.AddControl(new Label(content, "CALIBRI")
                 {
                     Size = new Vector2i(ClientArea.Width - 10, lineHeight),
-                    ForegroundColor = _chatColors[channel],
+                    ForegroundColor = color,
                 });
             }
 
@@ -311,6 +313,11 @@ namespace SS14.Client.UserInterface.CustomControls
             _inputIndex = -1;
 
             Focus = false;
+        }
+
+        public void AddLine(object sender, AddStringArgs e)
+        {
+            AddLine(e.Text, e.Channel, e.Color);
         }
     }
 }

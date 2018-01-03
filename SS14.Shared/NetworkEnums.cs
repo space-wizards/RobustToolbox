@@ -16,7 +16,6 @@
         StringTableEntry,       // S>C An entry into the string table.
 
         // Console Commands
-        LobbyChat,              // C>S Does nothing atm, Obsolete?
         ChatMessage,            // C<>S Contains all of the chat messages.
         PlayerSessionMessage,   // C>S Tells (lol.) the server about state changes.
         ConsoleCommand,         // C>S Sends the server a console command.
@@ -30,8 +29,6 @@
         // misc stuff that will prob be removed
         PlacementManagerMessage,// S<>C Contains all placement messages.
         PlayerUiMessage,        // S>C Sends a user interface message.
-        JoinGame,               // S>C Tells the client to join the game.
-        ForceRestart,           // C>S Tells (lol.) the server to restart.
 
         // entity stuff
         EntityMessage,          // S<>C Contains all entity messages.
@@ -120,7 +117,6 @@
     public enum PlayerSessionMessage
     {
         AttachToEntity,
-        Verb,
         JoinLobby,
         AddPostProcessingEffect
     }

@@ -19,6 +19,7 @@ namespace SS14.Server.Interfaces.Player
         PlayerIndex Index { get; }
 
         void JoinLobby();
+        void JoinGame();
 
         void SetName(string name);
 

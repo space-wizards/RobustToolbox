@@ -1,5 +1,4 @@
-﻿using SS14.Shared.Command;
-using SS14.Shared.IoC;
+﻿using SS14.Shared.Console;
 
 namespace SS14.Client.Interfaces.Console
 {

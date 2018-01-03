@@ -44,7 +44,7 @@ namespace SS14.Shared.Maths
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
                 ang += 2 * (float) Math.PI;
 
-            return (Direction) Math.Floor((ang + Offset) / Segment);
+            return (Direction) (Math.Floor((ang + Offset) / Segment) % 8);
         }
 
         /// <summary>

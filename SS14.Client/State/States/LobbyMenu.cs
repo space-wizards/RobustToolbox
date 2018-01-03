@@ -10,6 +10,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using SS14.Client.Console;
 
 namespace SS14.Client.State.States
 {
@@ -124,6 +125,7 @@ namespace SS14.Client.State.States
 
             _lobbyChat = new Chatbox(new Vector2i(780, 225));
             _lobbyChat.Alignment = Align.HCenter | Align.VCenter;
+            _lobbyChat.DefaultChatFormat = "ooc \"{0}\"";
             imgChatBg.AddControl(_lobbyChat);
 
             var btnReady = new ImageButton();
@@ -147,6 +149,10 @@ namespace SS14.Client.State.States
             _plyrMan = IoCManager.Resolve<IPlayerManager>();
             _plyrMan.PlayerListUpdated += HandlePlayerList;
 
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _lobbyChat.TextSubmitted += console.ParseChatMessage;
+            console.AddString += _lobbyChat.AddLine;
+
             UserInterfaceManager.AddComponent(_uiScreen);
 
             UpdateInfo();
@@ -157,6 +163,10 @@ namespace SS14.Client.State.States
         {
             _plyrMan = IoCManager.Resolve<IPlayerManager>();
             _plyrMan.PlayerListUpdated -= HandlePlayerList;
+
+            var console = IoCManager.Resolve<IClientChatConsole>();
+            _lobbyChat.TextSubmitted -= console.ParseChatMessage;
+            console.AddString -= _lobbyChat.AddLine;
 
             UserInterfaceManager.RemoveComponent(_uiScreen);
         }
@@ -271,7 +281,7 @@ namespace SS14.Client.State.States
 
         private void _btnReady_Clicked(ImageButton sender)
         {
-            IoCManager.Resolve<IPlayerManager>().SendVerb("joingame", 0);
+            IoCManager.Resolve<IClientConsole>().ProcessCommand("joingame");
         }
 
         private void _btnBack_Clicked(ImageButton sender)

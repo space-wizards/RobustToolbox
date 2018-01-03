@@ -1,4 +1,4 @@
-using SS14.Client.Utility;
+﻿using SS14.Client.Utility;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
@@ -41,6 +41,7 @@ namespace SS14.Client.UserInterface
 
         new private Godot.Control SceneControl;
 
+        public Control Contents { get; private set; }
         private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
@@ -67,6 +68,8 @@ namespace SS14.Client.UserInterface
 
             CloseButton = GetChild("Header").GetChild<TextureButton>("CloseButton");
             CloseButton.OnPressed += CloseButtonPressed;
+
+            Contents = GetChild("Contents");
         }
 
         public override void Dispose()
@@ -157,7 +160,6 @@ namespace SS14.Client.UserInterface
 
                 DefaultCursorShape = cursor;
             }
-
             else
             {
                 var rect = Rect;
@@ -189,7 +191,7 @@ namespace SS14.Client.UserInterface
 
         protected override void MouseExited()
         {
-            if (Resizable && CurrentDrag  == DragMode.None)
+            if (Resizable && CurrentDrag == DragMode.None)
             {
                 DefaultCursorShape = CursorShape.Arrow;
             }
@@ -247,7 +249,7 @@ namespace SS14.Client.UserInterface
             }
             var siblings = Parent.SceneControl.GetChildren();
             var ourPos = SceneControl.GetPositionInParent();
-            for (var i = ourPos+1; i < siblings.Length; i++)
+            for (var i = ourPos + 1; i < siblings.Length; i++)
             {
                 if (siblings[i] is Godot.Control control)
                 {

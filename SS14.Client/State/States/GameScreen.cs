@@ -1,4 +1,4 @@
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
@@ -38,14 +38,16 @@ namespace SS14.Client.State.States
 
         public override void InitializeGUI()
         {
-            escapeMenu = new EscapeMenu();
-            escapeMenu.Visible = false;
+            escapeMenu = new EscapeMenu
+            {
+                Visible = false
+            };
             escapeMenu.AddToScreen();
         }
 
         public override void Shutdown()
         {
-            //throw new System.NotImplementedException();
+            escapeMenu.Dispose();
         }
 
         public override void Startup()
@@ -75,7 +77,6 @@ namespace SS14.Client.State.States
 
         public override void KeyDown(KeyEventArgs e)
         {
-            Logger.Debug($"KeyDown! {e.Key}");
             if (e.Key == Keyboard.Key.Escape)
             {
                 if (escapeMenu.Visible)

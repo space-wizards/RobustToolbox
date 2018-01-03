@@ -3,6 +3,7 @@ using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Player;
+using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 using SS14.Shared;
 using SS14.Shared.Configuration;
@@ -11,6 +12,8 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Network;
+using System;
 
 namespace SS14.Client.State.States
 {
@@ -30,12 +33,21 @@ namespace SS14.Client.State.States
         readonly IClientNetManager networkManager;
         [Dependency]
         readonly IPlayerManager playerManager;
+        [Dependency]
+        readonly IUserInterfaceManager userInterfaceManager;
 
         private EscapeMenu escapeMenu;
 
         public override void Shutdown()
         {
             escapeMenu.Dispose();
+
+            playerManager.LocalPlayer.DetachEntity();
+
+            _entityManager.Shutdown();
+            userInterfaceManager.StateRoot.DisposeAllChildren();
+            networkManager.MessageArrived -= NetworkManagerMessageArrived;
+            GC.Collect();
         }
 
         public override void Startup()
@@ -59,6 +71,8 @@ namespace SS14.Client.State.States
             message1.Write((byte)NetMessages.ClientName);
             message1.Write(_config.GetCVar<string>("player.name"));
             networkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
+
+            networkManager.MessageArrived += NetworkManagerMessageArrived;
         }
 
         public override void Update(FrameEventArgs e)
@@ -86,7 +100,6 @@ namespace SS14.Client.State.States
                 }
                 else
                 {
-                    Logger.Debug("Opening!");
                     escapeMenu.OpenCentered();
                 }
 
@@ -100,6 +113,41 @@ namespace SS14.Client.State.States
         public override void KeyUp(KeyEventArgs e)
         {
             keyBindingManager.KeyUp(e);
+        }
+
+        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
+        {
+            NetIncomingMessage message = args.RawMessage;
+            if (message == null)
+            {
+                return;
+            }
+            switch (message.MessageType)
+            {
+                case NetIncomingMessageType.StatusChanged:
+                    var statMsg = (NetConnectionStatus)message.ReadByte();
+                    if (statMsg == NetConnectionStatus.Disconnected)
+                    {
+                        string disconnectMessage = message.ReadString();
+                        //UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
+                        //                                                                UserInterfaceManager,
+                        //                                                                ResourceCache,
+                        //                                                                disconnectMessage));
+                    }
+                    break;
+                case NetIncomingMessageType.Data:
+                    var messageType = (NetMessages)message.ReadByte();
+                    switch (messageType)
+                    {
+                        case NetMessages.PlacementManagerMessage:
+                            //PlacementManager.HandleNetMessage(message);
+                            break;
+                        case NetMessages.ChatMessage:
+                            //HandleChatMessage(message);
+                            break;
+                    }
+                    break;
+            }
         }
     }
 }

@@ -226,16 +226,38 @@ namespace SS14.Client.UserInterface
             SceneControl = control;
         }
 
-        public virtual void Dispose()
-        {
-            DisposeSignalHooks();
+        private bool disposed = false;
 
-            DisposeAllChildren();
-            Parent?.RemoveChild(this);
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            disposed = true;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DisposeAllChildren();
+                Parent?.RemoveChild(this);
+            }
+
+            DisposeSignalHooks();
 
             SceneControl.QueueFree();
             SceneControl.Dispose();
             SceneControl = null;
+        }
+
+        ~Control()
+        {
+            Dispose(false);
         }
 
         public void DisposeAllChildren()
@@ -538,7 +560,6 @@ namespace SS14.Client.UserInterface
 
         protected virtual void Update(FrameEventArgs args)
         {
-
         }
 
         public enum CursorShape

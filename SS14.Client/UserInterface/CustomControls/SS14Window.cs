@@ -45,7 +45,7 @@ namespace SS14.Client.UserInterface
         private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
-        private const int HEADER_SIZE_Y = 25;
+        private float HeaderSizeY = 25;
         private static readonly Vector2 MinSize = new Vector2(50, 50);
 
         private DragMode CurrentDrag = DragMode.None;
@@ -66,19 +66,27 @@ namespace SS14.Client.UserInterface
         {
             base.Initialize();
 
-            CloseButton = GetChild("Header").GetChild<TextureButton>("CloseButton");
+            var header = GetChild("Header");
+            CloseButton = header.GetChild<TextureButton>("CloseButton");
             CloseButton.OnPressed += CloseButtonPressed;
+
+            HeaderSizeY = header.Size.Y;
 
             Contents = GetChild("Contents");
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            base.Dispose();
+            base.Dispose(disposing);
 
-            CloseButton.OnPressed -= CloseButtonPressed;
-            CloseButton = null;
-            SceneControl = null;
+            if (disposing)
+            {
+                CloseButton.OnPressed -= CloseButtonPressed;
+                CloseButton = null;
+                SceneControl = null;
+                Contents = null;
+                CloseButton = null;
+            }
         }
 
         private void CloseButtonPressed(BaseButton.ButtonEventArgs args)
@@ -222,7 +230,7 @@ namespace SS14.Client.UserInterface
                 }
             }
 
-            if (mode == DragMode.None && relativeMousePos.Y < HEADER_SIZE_Y)
+            if (mode == DragMode.None && relativeMousePos.Y < HeaderSizeY)
             {
                 mode = DragMode.Move;
             }

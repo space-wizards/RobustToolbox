@@ -1,19 +1,15 @@
 ﻿using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SS14.Shared.ContentPack;
 using System.IO;
-using SS14.Shared.Log;
 
 namespace SS14.Client.ResourceManagement
 {
-    public class ResourceCache : IResourceCache
+    public class ResourceCache : IResourceCache, IDisposable
     {
         [Dependency]
         readonly IResourceManager _resources;
@@ -55,7 +51,7 @@ namespace SS14.Client.ResourceManagement
                 CachedResources[(path, typeof(T))] = _resource;
                 return _resource;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (_resource.Fallback != null)
                 {
@@ -103,5 +99,40 @@ namespace SS14.Client.ResourceManagement
         {
             CachedResources[(path, typeof(T))] = resource;
         }
+
+        #region IDisposable Members
+
+        private bool disposed = false;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                foreach (var res in CachedResources.Values)
+                {
+                    res.Dispose();
+                }
+            }
+
+            disposed = true;
+        }
+
+        ~ResourceCache()
+        {
+            Dispose(false);
+        }
+
+        #endregion IDisposable Members
     }
 }

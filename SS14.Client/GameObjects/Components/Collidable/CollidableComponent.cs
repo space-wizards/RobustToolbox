@@ -95,6 +95,19 @@ namespace SS14.Client.GameObjects
             transform.SceneNode.AddChild(debugNode);
         }
 
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            debugDrawSubscriber.Disconnect(debugNode, "draw");
+            debugDrawSubscriber.Dispose();
+            debugDrawSubscriber = null;
+
+            debugNode.QueueFree();
+            debugNode.Dispose();
+            debugNode = null;
+        }
+
         /// <summary>
         ///     removes the AABB from the CollisionManager.
         /// </summary>

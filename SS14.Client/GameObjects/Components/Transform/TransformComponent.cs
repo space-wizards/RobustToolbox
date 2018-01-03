@@ -159,7 +159,9 @@ namespace SS14.Client.GameObjects
         public override void OnRemove()
         {
             base.OnRemove();
+
             SceneNode.QueueFree();
+            SceneNode.Dispose();
             SceneNode = null;
         }
     }

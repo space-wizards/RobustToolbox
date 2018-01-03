@@ -206,6 +206,7 @@ namespace SS14.Client.GameObjects
 
             SceneSprite.QueueFree();
             SceneSprite.Dispose();
+            SceneSprite = null;
 
             base.Shutdown();
         }

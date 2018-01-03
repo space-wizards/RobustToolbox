@@ -1,5 +1,7 @@
 ﻿using OpenTK.Graphics;
 using System.Collections.Generic;
+using SS14.Shared;
+using SS14.Shared.Console;
 
 namespace SS14.Client.Interfaces.Console
 {
@@ -10,7 +12,7 @@ namespace SS14.Client.Interfaces.Console
         /// <summary>
         /// Write a line with a specific color to the console window.
         /// </summary>
-        void AddLine(string text, Color4 color);
+        void AddLine(string text, ChatChannel channel, Color4 color);
 
         void Clear();
     }

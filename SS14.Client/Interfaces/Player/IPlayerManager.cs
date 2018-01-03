@@ -23,10 +23,7 @@ namespace SS14.Client.Interfaces.Player
         void Update(float frameTime);
         void Shutdown();
         void Destroy();
-
-        //TODO: Move to console system
-        void SendVerb(string verb, int uid);
-
+        
         void ApplyEffects(RenderImage image);
         void ApplyPlayerStates(List<PlayerState> list);
     }

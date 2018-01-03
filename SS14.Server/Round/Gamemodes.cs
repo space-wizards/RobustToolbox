@@ -1,8 +1,8 @@
-using SS14.Server.Interfaces;
+﻿using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.GameMode;
 using SS14.Server.Interfaces.Player;
-using SS14.Shared;
+using SS14.Shared.Console;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.Round
@@ -55,14 +55,12 @@ namespace SS14.Server.Round
 
         public virtual void PlayerLeft(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player left!", null,
-                                                               player.AttachedEntityUid);
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", player.Index);
         }
 
         public virtual void PlayerDied(IPlayerSession player)
         {
-            IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server, "Gamemode: Player died!", null,
-                                                               player.AttachedEntityUid);
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player died!", player.Index);
         }
 
         public virtual void Begin()

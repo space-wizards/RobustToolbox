@@ -1,65 +1,52 @@
-﻿//using SS14.Client.Interfaces.Input;
-using SS14.Shared.Interfaces.Map;
-//using SS14.Client.Interfaces.Placement;
-using SS14.Client.Interfaces.Player;
-//using SS14.Client.Interfaces.Resource;
+﻿using SS14.Client.Input;
 using SS14.Client.Interfaces.State;
-//using SS14.Client.Interfaces.UserInterface;
-using SS14.Shared;
-using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.Configuration;
-using System;
-using System.Collections.Generic;
-using SS14.Shared.Interfaces.Network;
-using SS14.Client.Input;
-using SS14.Client.Player;
-using SS14.Client.State.States;
-using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Shared.Log;
+using System;
 
 namespace SS14.Client.State
 {
-    public class StateManager : IStateManager, IPostInjectInit
+    public class StateManager : IStateManager
     {
-        [Dependency]
-        private readonly IConfigurationManager configurationManager;
-        [Dependency]
-        private readonly IClientNetManager networkManager;
-        //[Dependency]
-        //private readonly IUserInterfaceManager userInterfaceManager;
-        [Dependency]
-        private readonly IResourceCache resourceCache;
-        [Dependency]
-        private readonly IMapManager mapManager;
-        [Dependency]
-        private readonly IPlayerManager playerManager;
-        //[Dependency]
-        //private readonly IPlacementManager placementManager;
-        //[Dependency]
-        //private readonly IKeyBindingManager keyBindingManager;
-
-        private readonly Dictionary<Type, State> _loadedStates = new Dictionary<Type, State>();
-        private readonly Dictionary<Type, object> _managers = new Dictionary<Type, object>();
-
-        #region IStateManager Members
-
         public State CurrentState { get; private set; } = null;
 
-        #endregion IStateManager Members
+        #region Updates & Statechanges
 
-        public void PostInject()
+        public void Update(FrameEventArgs e)
         {
-            _managers[typeof(IClientNetManager)] = networkManager;
-            //_managers[typeof(IUserInterfaceManager)] = userInterfaceManager;
-            _managers[typeof(IResourceCache)] = resourceCache;
-            _managers[typeof(IMapManager)] = mapManager;
-            _managers[typeof(IPlayerManager)] = playerManager;
-            //_managers[typeof(IPlacementManager)] = placementManager;
-            //_managers[typeof(IKeyBindingManager)] = keyBindingManager;
-            _managers[typeof(IConfigurationManager)] = configurationManager;
-            _managers[typeof(IStateManager)] = this;
+            CurrentState?.Update(e);
         }
 
+        public void FormResize()
+        {
+            CurrentState?.FormResize();
+        }
+
+        public void RequestStateChange<T>() where T : State, new()
+        {
+            RequestStateChange(typeof(T));
+        }
+
+        private void RequestStateChange(Type type)
+        {
+            if (CurrentState?.GetType() != type)
+            {
+                SwitchToState(type);
+            }
+        }
+
+        private void SwitchToState(Type type)
+        {
+            Logger.Debug($"Switching to state {type}");
+
+            State newState = (State)Activator.CreateInstance(type);
+
+            CurrentState?.Shutdown();
+
+            CurrentState = newState;
+            CurrentState.Startup();
+        }
+
+        #endregion Updates & Statechanges
         #region Input
 
         public void KeyDown(KeyEventArgs e)
@@ -108,77 +95,5 @@ namespace SS14.Client.State
         }
 
         #endregion Input
-
-        #region Updates & Statechanges
-
-        public void Update(FrameEventArgs e)
-        {
-            CurrentState?.Update(e);
-        }
-
-        public void RequestStateChange<T>() where T : State
-        {
-            if (CurrentState?.GetType() != typeof(T))
-                SwitchToState<T>();
-        }
-
-        public void FormResize()
-        {
-            CurrentState?.FormResize();
-        }
-
-        private void SwitchToState<T>() where T : State
-        {
-            Logger.Debug($"Switching to state {typeof(T)}");
-            State newState;
-
-            if (_loadedStates.ContainsKey(typeof(T)))
-            {
-                newState = (T)_loadedStates[typeof(T)];
-            }
-            else
-            {
-                var parameters = new object[] { _managers };
-                newState = (T)Activator.CreateInstance(typeof(T), parameters);
-                _loadedStates.Add(typeof(T), newState);
-                newState.InitializeGUI();
-            }
-
-            if (CurrentState != null) CurrentState.Shutdown();
-
-            CurrentState = newState;
-            CurrentState.Startup();
-        }
-
-        private void RequestStateChange(Type type)
-        {
-            if (CurrentState?.GetType() != type)
-            {
-                SwitchToState(type);
-            }
-        }
-
-        private void SwitchToState(Type type)
-        {
-            State newState;
-
-            if (_loadedStates.ContainsKey(type))
-            {
-                newState = _loadedStates[type];
-            }
-            else
-            {
-                var parameters = new object[] { _managers };
-                newState = (State)Activator.CreateInstance(type, parameters);
-                _loadedStates.Add(type, newState);
-            }
-
-            if (CurrentState != null) CurrentState.Shutdown();
-
-            CurrentState = newState;
-            CurrentState.Startup();
-        }
-
-        #endregion Updates & Statechanges
     }
 }

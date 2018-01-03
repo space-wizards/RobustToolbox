@@ -9,6 +9,7 @@ using SS14.Client.UserInterface;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Log;
+using SS14.Client.Interfaces.State;
 
 namespace SS14.Client.State.States
 {
@@ -22,17 +23,13 @@ namespace SS14.Client.State.States
         readonly IBaseClient _client;
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        readonly IStateManager stateManager;
 
         private Control MainMenuControl;
 
-        /// <summary>
-        ///     Constructs an instance of this object.
-        /// </summary>
-        /// <param name="managers">A dictionary of common managers from the IOC system, so you don't have to resolve them yourself.</param>
-        public MainScreen(IDictionary<Type, object> managers) : base(managers) { }
-
         /// <inheritdoc />
-        public override void InitializeGUI()
+        public override void Startup()
         {
             IoCManager.InjectDependencies(this);
 
@@ -46,11 +43,7 @@ namespace SS14.Client.State.States
             VBox.GetChild<Button>("OptionsButton").OnPressed += OptionsButtonPressed;
             VBox.GetChild<Button>("ConnectButton").OnPressed += ConnectButtonPressed;
             VBox.GetChild<LineEdit>("IPBox").OnTextEntered += IPBoxEntered;
-        }
 
-        /// <inheritdoc />
-        public override void Startup()
-        {
             _client.RunLevelChanged += RunLevelChanged;
         }
 
@@ -101,7 +94,7 @@ namespace SS14.Client.State.States
         {
             if (args.NewLevel == ClientRunLevel.Lobby)
             {
-                StateManager.RequestStateChange<Lobby>();
+                stateManager.RequestStateChange<Lobby>();
             }
         }
 

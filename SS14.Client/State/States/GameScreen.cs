@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
@@ -46,7 +47,7 @@ namespace SS14.Client.State.States
 
         private EscapeMenu escapeMenu;
 
-        private ChatBox _gameChat;
+        private Chatbox _gameChat;
 
         public override void Startup()
         {
@@ -58,6 +59,8 @@ namespace SS14.Client.State.States
             };
             escapeMenu.AddToScreen();
 
+            _gameChat = new Chatbox();
+            userInterfaceManager.StateRoot.AddChild(_gameChat);
             _gameChat.TextSubmitted += console.ParseChatMessage;
             console.AddString += _gameChat.AddLine;
 

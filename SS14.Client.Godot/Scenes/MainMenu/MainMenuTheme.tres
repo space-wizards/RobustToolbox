@@ -1,6 +1,7 @@
 [gd_resource type="Theme" load_steps=3 format=2]
 
-[ext_resource path="res://Art/Animal Silence.otf" type="DynamicFontData" id=1]
+[ext_resource path="res://Fonts/Animal Silence.otf" type="DynamicFontData" id=1]
+
 
 [sub_resource type="DynamicFont" id=1]
 

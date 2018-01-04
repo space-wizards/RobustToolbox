@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using OpenTK.Graphics;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.UserInterface.CustomControls;
@@ -20,7 +19,7 @@ namespace SS14.Client.Console
         private const char OocAlias = '[';
         private const char MeAlias = '@';
 
-        private readonly Dictionary<ChatChannel, Color4> _chatColors;
+        private readonly Dictionary<ChatChannel, Color> _chatColors;
 
         [Dependency]
         private readonly IClientEntityManager _entityManager;
@@ -33,17 +32,17 @@ namespace SS14.Client.Console
         /// </summary>
         public ClientChatConsole()
         {
-            _chatColors = new Dictionary<ChatChannel, Color4>
+            _chatColors = new Dictionary<ChatChannel, Color>
             {
-                [ChatChannel.Default] = Color4.Gray,
-                [ChatChannel.Damage] = Color4.Red,
-                [ChatChannel.Radio] = new Color4(0, 100, 0, 255),
-                [ChatChannel.Server] = Color4.Blue,
-                [ChatChannel.Player] = new Color4(0, 128, 0, 255),
-                [ChatChannel.Local] = new Color4(0, 200, 0, 255),
-                [ChatChannel.OOC] = Color4.White,
-                [ChatChannel.Emote] = Color4.Cyan,
-                [ChatChannel.Visual] = Color4.Yellow,
+                [ChatChannel.Default] = Color.Gray,
+                [ChatChannel.Damage] = Color.Red,
+                [ChatChannel.Radio] = new Color(0, 100, 0),
+                [ChatChannel.Server] = Color.Blue,
+                [ChatChannel.Player] = new Color(0, 128, 0),
+                [ChatChannel.Local] = new Color(0, 200, 0),
+                [ChatChannel.OOC] = Color.White,
+                [ChatChannel.Emote] = Color.Cyan,
+                [ChatChannel.Visual] = Color.Yellow,
             };
         }
 

@@ -14,6 +14,10 @@ namespace SS14.Client.Interfaces.Console
         /// </summary>
         void AddLine(string text, ChatChannel channel, Color color);
 
+        void AddLine(string text, Color color);
+
+        void AddLine(string text);
+
         void Clear();
     }
 }

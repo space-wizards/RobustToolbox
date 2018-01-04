@@ -226,18 +226,18 @@ namespace SS14.Client.UserInterface
             SceneControl = control;
         }
 
-        private bool disposed = false;
+        protected bool Disposed { get; private set; } = false;
 
         public void Dispose()
         {
-            if (disposed)
+            if (Disposed)
             {
                 return;
             }
 
             Dispose(true);
             GC.SuppressFinalize(this);
-            disposed = true;
+            Disposed = true;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -246,6 +246,8 @@ namespace SS14.Client.UserInterface
             {
                 DisposeAllChildren();
                 Parent?.RemoveChild(this);
+
+                OnKeyDown = null;
             }
 
             DisposeSignalHooks();

@@ -44,13 +44,13 @@ namespace SS14.Client
         [Dependency]
         readonly IClientTileDefinitionManager _tileDefinitionManager;
         [Dependency]
-        readonly private IClientNetManager _networkManager;
+        readonly IClientNetManager _networkManager;
         [Dependency]
-        private readonly IMapManager _mapManager;
+        readonly IMapManager _mapManager;
         [Dependency]
-        readonly private IStateManager _stateManager;
+        readonly IStateManager _stateManager;
         [Dependency]
-        readonly private IUserInterfaceManager _userInterfaceManager;
+        readonly IUserInterfaceManager _userInterfaceManager;
         [Dependency]
         readonly IBaseClient _client;
         [Dependency]
@@ -80,10 +80,10 @@ namespace SS14.Client
 
             keyBindingManager.Initialize();
             _serializer.Initialize();
-            _console.Initialize();
             _userInterfaceManager.Initialize();
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);
+            _console.Initialize();
             _prototypeManager.LoadDirectory(@"./Prototypes/");
             _prototypeManager.Resync();
             _mapManager.Initialize();

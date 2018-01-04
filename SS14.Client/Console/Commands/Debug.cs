@@ -1,14 +1,17 @@
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Console;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Text;
 
 namespace SS14.Client.Console.Commands
 {
@@ -24,7 +27,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (IEntity e in entitymanager.GetEntities(new ComponentEntityQuery()))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", ChatChannel.Default, Color4.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype.Name}.", ChatChannel.Default, Color.White);
             }
 
             return false;
@@ -45,7 +48,7 @@ namespace SS14.Client.Console.Commands
 
             foreach (var component in components)
             {
-                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", ChatChannel.Default, Color4.White);
+                console.AddLine($"{component.Owner.Uid}: {component.GetType()}", Color.White);
             }
             return false;
         }
@@ -61,7 +64,7 @@ namespace SS14.Client.Console.Commands
         {
             if (args.Length < 1)
             {
-                console.AddLine($"Not enough arguments.", ChatChannel.Default, Color4.Red);
+                console.AddLine($"Not enough arguments.", Color4.Red);
                 return false;
             }
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
@@ -81,16 +84,16 @@ namespace SS14.Client.Console.Commands
                 }
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                console.AddLine(message.ToString(), ChatChannel.Default, Color4.White);
+                console.AddLine(message.ToString(), Color.White);
 
                 foreach (Type type in registration.References)
                 {
-                    console.AddLine($"  {type}", ChatChannel.Default, Color4.White);
+                    console.AddLine($"  {type}", Color.White);
                 }
             }
             catch (UnknownComponentException)
             {
-                console.AddLine($"No registration found for '{args[0]}'", ChatChannel.Default, Color4.Red);
+                console.AddLine($"No registration found for '{args[0]}'", Color.Red);
             }
 
             return false;
@@ -147,7 +150,7 @@ namespace SS14.Client.Console.Commands
         {
             var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
 
-            var window = new UserInterface.SS14Window();
+            var window = new SS14Window();
             uiMgr.RootControl.AddChild(window);
             return false;
         }

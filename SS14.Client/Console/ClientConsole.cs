@@ -1,27 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using Lidgren.Network;
-using OpenTK.Graphics;
+﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.Console;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Maths;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Reflection;
 using SS14.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.Console
 {
     public class AddStringArgs : EventArgs
     {
         public string Text { get; }
-        public Color4 Color { get; }
+        public Color Color { get; }
         public ChatChannel Channel { get; }
 
-        public AddStringArgs(string text, Color4 color, ChatChannel channel)
+        public AddStringArgs(string text, Color color, ChatChannel channel)
         {
             Text = text;
             Color = color;
@@ -31,7 +31,7 @@ namespace SS14.Client.Console
 
     public class ClientConsole : IClientConsole, IDebugConsole
     {
-        private static readonly Color4 MsgColor = new Color4(65, 105, 225, 255);
+        private static readonly Color MsgColor = new Color(65, 105, 225);
 
         [Dependency]
         protected readonly IClientNetManager _network;
@@ -70,9 +70,19 @@ namespace SS14.Client.Console
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
 
-        public void AddLine(string text, ChatChannel channel, Color4 color)
+        public void AddLine(string text, ChatChannel channel, Color color)
         {
             AddString?.Invoke(this, new AddStringArgs(text, color, channel));
+        }
+
+        public void AddLine(string text, Color color)
+        {
+            AddLine(text, ChatChannel.Default, color);
+        }
+
+        public void AddLine(string text)
+        {
+            AddLine(text, ChatChannel.Default, Color.White);
         }
 
         public void Clear()
@@ -85,14 +95,14 @@ namespace SS14.Client.Console
 
         private void HandleConCmdAck(NetMessage message)
         {
-            var msg = (MsgConCmdAck) message;
+            var msg = (MsgConCmdAck)message;
 
             AddLine("< " + msg.Text, ChatChannel.Default, MsgColor);
         }
 
         private void HandleConCmdReg(NetMessage message)
         {
-            var msg = (MsgConCmdReg) message;
+            var msg = (MsgConCmdReg)message;
 
             foreach (var cmd in msg.Commands)
             {
@@ -116,11 +126,11 @@ namespace SS14.Client.Console
         /// <param name="text">input text</param>
         public void ProcessCommand(string text)
         {
-            if(string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return;
 
             // echo the command locally
-            AddLine("> " + text, ChatChannel.Default, new Color4(255, 250, 240, 255));
+            AddLine("> " + text, ChatChannel.Default, new Color(255, 250, 240));
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -138,7 +148,7 @@ namespace SS14.Client.Console
             }
             else if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
             {
-                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color4.Red);
+                AddLine("Unknown command: " + commandname, ChatChannel.Default, Color.Red);
                 return;
             }
 
@@ -154,7 +164,7 @@ namespace SS14.Client.Console
             var manager = IoCManager.Resolve<IReflectionManager>();
             foreach (var t in manager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand) Activator.CreateInstance(t, null);
+                var instance = (IConsoleCommand)Activator.CreateInstance(t, null);
                 if (_commands.ContainsKey(instance.Command))
                     throw new Exception($"Command already registered: {instance.Command}");
 

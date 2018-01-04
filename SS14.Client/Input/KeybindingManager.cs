@@ -1,4 +1,4 @@
-using SS14.Client.Interfaces.Input;
+﻿using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
 using SS14.Shared;
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Xml;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Log;
+using SS14.Client.UserInterface.Controls;
 
 namespace SS14.Client.Input
 {
@@ -57,9 +58,9 @@ namespace SS14.Client.Input
                 foreach (XmlNode node in resources.Cast<XmlNode>().Where(node => node.Attributes != null))
                 {
                     _boundKeys.Add(
-                        (Keyboard.Key) Enum.Parse(typeof (Keyboard.Key), node.Attributes["Key"].Value, false),
+                        (Keyboard.Key)Enum.Parse(typeof(Keyboard.Key), node.Attributes["Key"].Value, false),
                         (BoundKeyFunctions)
-                        Enum.Parse(typeof (BoundKeyFunctions), node.Attributes["Function"].Value, false));
+                        Enum.Parse(typeof(BoundKeyFunctions), node.Attributes["Function"].Value, false));
                 }
         }
 

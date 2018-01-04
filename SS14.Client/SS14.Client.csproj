@@ -162,6 +162,7 @@
     <Compile Include="UserInterface\Controls\Range.cs" />
     <Compile Include="UserInterface\Controls\ScrollBar.cs" />
     <Compile Include="UserInterface\Controls\VScrollBar.cs" />
+    <Compile Include="UserInterface\CustomControls\Chatbox.cs" />
     <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\GodotConversions.cs" />
     <Compile Include="State\State.cs" />
@@ -177,8 +178,8 @@
     <Compile Include="Player\PostProcessing\PostProcessingEffect.cs" />
     <Compile Include="Interfaces\UserInterface\IUserInterfaceManager.cs" />
     <Compile Include="UserInterface\Control.cs" />
-    <Compile Include="UserInterface\ControlSignalHandling.cs" />
-    <Compile Include="UserInterface\ControlInput.cs" />
+    <Compile Include="UserInterface\Control.Signals.cs" />
+    <Compile Include="UserInterface\Control.Input.cs" />
     <Compile Include="UserInterface\UserInterfaceManager.cs" />
     <Compile Include="UserInterface\Controls\Label.cs" />
     <Compile Include="UserInterface\Controls\Panel.cs" />

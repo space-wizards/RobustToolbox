@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces.Player;
+﻿using SS14.Client.Console;
+using SS14.Client.Interfaces.Player;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.State.States

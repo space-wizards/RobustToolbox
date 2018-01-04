@@ -1,4 +1,5 @@
-﻿using SS14.Client.UserInterface.CustomControls;
+﻿using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Client.Utility;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;

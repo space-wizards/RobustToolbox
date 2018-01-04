@@ -395,7 +395,7 @@ namespace SS14.Client.UserInterface
 
         public void ReleaseFocus()
         {
-            SceneControl.ReleaseFocus();
+            SceneControl?.ReleaseFocus();
         }
 
         public static Control InstanceScene(string resourcePath)

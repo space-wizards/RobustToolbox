@@ -1,15 +1,11 @@
 ﻿using OpenTK.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.IoC;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.IoC;
 
-namespace SS14.Client.Console
+namespace SS14.Client.Console.Commands
 {
     class HelpCommand : IConsoleCommand
     {
@@ -22,7 +18,7 @@ namespace SS14.Client.Console
             switch (args.Length)
             {
                 case 0:
-                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.", Color4.White);
+                    console.AddLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.", ChatChannel.Default, Color4.White);
                     break;
 
                 case 1:
@@ -32,19 +28,19 @@ namespace SS14.Client.Console
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            console.AddLine("Unknown command: " + commandname, Color4.Red);
+                            console.AddLine("Unknown command: " + commandname, ChatChannel.Default, Color4.Red);
                             return false;
                         }
                         // TODO: Maybe have a server side help?
                         return false;
                     }
                     IConsoleCommand command = console.Commands[commandname];
-                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), Color4.White);
-                    console.AddLine(command.Help, Color4.White);
+                    console.AddLine(string.Format("{0} - {1}", command.Command, command.Description), ChatChannel.Default, Color4.White);
+                    console.AddLine(command.Help, ChatChannel.Default, Color4.White);
                     break;
 
                 default:
-                    console.AddLine("Invalid amount of arguments.", Color4.Red);
+                    console.AddLine("Invalid amount of arguments.", ChatChannel.Default, Color4.Red);
                     break;
             }
             return false;
@@ -61,7 +57,7 @@ namespace SS14.Client.Console
         {
             foreach (IConsoleCommand command in console.Commands.Values)
             {
-                console.AddLine(command.Command + ": " + command.Description, Color4.White);
+                console.AddLine(command.Command + ": " + command.Description, ChatChannel.Default, Color4.White);
             }
 
             return false;

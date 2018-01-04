@@ -141,7 +141,7 @@
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
-    <Compile Include="ConsoleCommand.cs" />
+    <Compile Include="Console\ICommand.cs" />
     <Compile Include="EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
@@ -219,13 +219,11 @@
     <Compile Include="Network\Messages\MsgConCmdAck.cs" />
     <Compile Include="Network\Messages\MsgConCmdReg.cs" />
     <Compile Include="Network\Messages\MsgEntity.cs" />
-    <Compile Include="Network\Messages\MsgJoinGame.cs" />
     <Compile Include="Network\Messages\MsgMap.cs" />
     <Compile Include="Network\Messages\MsgMapReq.cs" />
     <Compile Include="Network\Messages\MsgPlacement.cs" />
     <Compile Include="Network\Messages\MsgPlayerList.cs" />
     <Compile Include="Network\Messages\MsgPlayerListReq.cs" />
-    <Compile Include="Network\Messages\MsgRestartReq.cs" />
     <Compile Include="Network\Messages\MsgServerInfo.cs" />
     <Compile Include="Network\Messages\MsgServerInfoReq.cs" />
     <Compile Include="Network\Messages\MsgSession.cs" />
@@ -268,7 +266,7 @@
     <Compile Include="Utility\CollectionExtensions.cs" />
     <Compile Include="NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ChatConfig.cs" />
+    <Compile Include="Console\ChatChannel.cs" />
     <Compile Include="UIComponents.cs" />
     <Compile Include="VectorEventArgs.cs" />
     <Compile Include="IoC\IoCManager.cs" />
@@ -377,6 +375,10 @@
       <Visible>False</Visible>
     </Resources>
     <Resources Include="..\Resources\SavedEntities.xml">
+      <ResourceRoot />
+      <Visible>False</Visible>
+    </Resources>
+    <Resources Include="..\Resources\emotes.xml">
       <ResourceRoot />
       <Visible>False</Visible>
     </Resources>

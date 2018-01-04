@@ -15,14 +15,26 @@ namespace SS14.Shared.ContentPack
     /// </summary>
     public class ResourceManager : IResourceManager
     {
-        [Dependency] private readonly IConfigurationManager _config;
+        private const string DataFolderName = "Space Station 14";
 
+        [Dependency]
+        private readonly IConfigurationManager _config;
+
+        private DirectoryInfo _configRoot;
         private readonly List<IContentRoot> _contentRoots = new List<IContentRoot>();
+
+        /// <inheritdoc />
+        public string ConfigDirectory => _configRoot.FullName;
 
         /// <inheritdoc />
         public void Initialize()
         {
             _config.RegisterCVar("resource.pack", "ResourcePack.zip", CVar.ARCHIVE);
+
+            var configRoot = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            configRoot = Path.Combine(configRoot, DataFolderName);
+            configRoot = Path.GetFullPath(configRoot);
+            _configRoot = Directory.CreateDirectory(configRoot);
         }
 
         /// <inheritdoc />
@@ -109,7 +121,7 @@ namespace SS14.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public IEnumerable<string> FindFiles(string path)
+        public IEnumerable<string> ContentFindFiles(string path)
         {
             // some LINQ magic
             return _contentRoots

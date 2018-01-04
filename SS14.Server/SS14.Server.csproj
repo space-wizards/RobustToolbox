@@ -134,6 +134,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\JoinGameCommand.cs" />
+    <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerTransformComponent.cs" />
@@ -153,15 +156,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="app.config" />
-    <Content Include="emotes.xml">
-      <SubType>Code</SubType>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
     <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Chat\ChatManager.cs" />
-    <Compile Include="Chat\Commands\ListCommands.cs" />
-    <Compile Include="Chat\Commands\Test.cs" />
+    <Compile Include="ClientConsoleHost\Commands\ListCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\Test.cs" />
     <Compile Include="ClientConsoleHost\ClientConsoleHost.cs" />
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="GameObjects\ServerComponentFactory.cs" />

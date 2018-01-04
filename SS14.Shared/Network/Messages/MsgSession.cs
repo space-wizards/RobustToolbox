@@ -16,7 +16,6 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public PlayerSessionMessage MsgType { get; set; }
-        public string Verb { get; set; }
         public int Uid { get; set; }
         public PostProcessingEffectType PpType { get; set; }
         public float PpDuration { get; set; }
@@ -27,10 +26,6 @@ namespace SS14.Shared.Network.Messages
 
             switch (MsgType)
             {
-                case PlayerSessionMessage.Verb:
-                    Verb = buffer.ReadString();
-                    Uid = buffer.ReadInt32();
-                    break;
                 case PlayerSessionMessage.AttachToEntity:
                     Uid = buffer.ReadInt32();
                     break;
@@ -46,10 +41,6 @@ namespace SS14.Shared.Network.Messages
             buffer.Write((byte)MsgType);
             switch (MsgType)
             {
-                case PlayerSessionMessage.Verb:
-                    buffer.Write(Verb);
-                    buffer.Write(Uid);
-                    break;
                 case PlayerSessionMessage.AttachToEntity:
                     buffer.Write(Uid);
                     break;

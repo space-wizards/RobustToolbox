@@ -1,5 +1,9 @@
 using SS14.Client.Input;
 using SS14.Client.UserInterface;
+using SS14.Client.Graphics;
+using SS14.Client.UserInterface.Controls;
+using System;
+using System.Collections.Generic;
 
 namespace SS14.Client.Interfaces.UserInterface
 {

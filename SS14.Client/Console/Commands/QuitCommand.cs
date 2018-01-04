@@ -1,7 +1,7 @@
-﻿using SS14.Client.Interfaces.Console;
+using SS14.Client.Interfaces.Console;
 using System;
 
-namespace SS14.Client.Console
+namespace SS14.Client.Console.Commands
 {
     class QuitCommand : IConsoleCommand
     {

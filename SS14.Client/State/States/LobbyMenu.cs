@@ -12,7 +12,7 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
-            IoCManager.Resolve<IPlayerManager>().SendVerb("joingame", 0);
+            IoCManager.Resolve<IClientConsole>().ProcessCommand("joingame");
         }
     }
 }

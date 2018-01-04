@@ -22,6 +22,7 @@ using SS14.Shared.Prototypes;
 using System;
 using System.IO;
 using SS14.Client.Interfaces.Input;
+using SS14.Client.Console;
 
 namespace SS14.Client
 {
@@ -54,14 +55,8 @@ namespace SS14.Client
         readonly IBaseClient _client;
         [Dependency]
         readonly IKeyBindingManager keyBindingManager;
-        //[Dependency]
-        //private readonly IPlacementManager _placementManager;
-        /*
         [Dependency]
-        readonly private INetworkGrapher _netGrapher;
-        [Dependency]
-        private readonly IGameTiming _time;
-        */
+        readonly IClientChatConsole _console;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -85,6 +80,7 @@ namespace SS14.Client
 
             keyBindingManager.Initialize();
             _serializer.Initialize();
+            _console.Initialize();
             _userInterfaceManager.Initialize();
             _tileDefinitionManager.Initialize();
             _networkManager.Initialize(false);

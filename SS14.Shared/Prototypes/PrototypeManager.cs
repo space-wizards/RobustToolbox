@@ -176,7 +176,7 @@ namespace SS14.Shared.Prototypes
         /// <inheritdoc />
         public void LoadDirectory(string path)
         {
-            foreach (var filePath in _resources.FindFiles(path))
+            foreach (var filePath in _resources.ContentFindFiles(path))
             {
                 using (var reader = new StreamReader(_resources.ContentFileRead(filePath), Encoding.UTF8))
                 {

@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Client.Console;
 using SS14.Client.Input;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.Input;
@@ -40,8 +41,12 @@ namespace SS14.Client.State.States
         readonly IUserInterfaceManager userInterfaceManager;
         [Dependency]
         readonly IMapManager mapManager;
+        [Dependency]
+        readonly IClientChatConsole console;
 
         private EscapeMenu escapeMenu;
+
+        private ChatBox _gameChat;
 
         public override void Startup()
         {
@@ -52,6 +57,9 @@ namespace SS14.Client.State.States
                 Visible = false
             };
             escapeMenu.AddToScreen();
+
+            _gameChat.TextSubmitted += console.ParseChatMessage;
+            console.AddString += _gameChat.AddLine;
 
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
@@ -71,6 +79,8 @@ namespace SS14.Client.State.States
         public override void Shutdown()
         {
             escapeMenu.Dispose();
+            _gameChat.TextSubmitted -= console.ParseChatMessage;
+            console.AddString -= _gameChat.AddLine;
 
             playerManager.LocalPlayer.DetachEntity();
 
@@ -150,14 +160,9 @@ namespace SS14.Client.State.States
                     break;
                 case NetIncomingMessageType.Data:
                     var messageType = (NetMessages)message.ReadByte();
-                    switch (messageType)
+                    if (messageType == NetMessages.PlacementManagerMessage)
                     {
-                        case NetMessages.PlacementManagerMessage:
-                            //PlacementManager.HandleNetMessage(message);
-                            break;
-                        case NetMessages.ChatMessage:
-                            //HandleChatMessage(message);
-                            break;
+                        // PlacementManager.HandleNetMessage(message);
                     }
                     break;
             }

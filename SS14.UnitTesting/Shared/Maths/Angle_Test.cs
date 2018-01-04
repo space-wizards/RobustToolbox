@@ -20,7 +20,9 @@ namespace SS14.UnitTesting.Shared.Maths
             (-1, 0, Direction.West, System.Math.PI),
             (-1, -1, Direction.SouthWest, -3 * System.Math.PI / 4.0),
             (0, -1, Direction.South, -System.Math.PI / 2.0),
-            (1, -1, Direction.SouthEast, -System.Math.PI / 4.0)
+            (1, -1, Direction.SouthEast, -System.Math.PI / 4.0),
+
+            (0.92387953251128674f, -0.38268343236508978f, Direction.East, -System.Math.PI / 8.0)
         };
 
         private static IEnumerable<(float, float, Direction)> CardinalSources => new(float, float, Direction)[]

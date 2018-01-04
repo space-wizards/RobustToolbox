@@ -96,9 +96,6 @@ namespace SS14.Server.Player
             var messageType = message.MsgType;
             switch (messageType)
             {
-                case PlayerSessionMessage.Verb:
-                    HandleVerb(message);
-                    break;
                 case PlayerSessionMessage.JoinLobby:
                     JoinLobby();
                     break;
@@ -153,33 +150,7 @@ namespace SS14.Server.Player
 
             net.ServerSendMessage(message, ConnectedClient);
         }
-
-        private void HandleVerb(MsgSession message)
-        {
-            DispatchVerb(message.Verb, message.Uid);
-        }
-
-        private void DispatchVerb(string verb, int uid)
-        {
-            //Handle global verbs
-            Logger.Log("Verb: " + verb + " from " + uid, LogLevel.Debug);
-
-            if (uid == 0)
-            {
-                switch (verb)
-                {
-                    case "joingame":
-                        JoinGame();
-                        break;
-                    case "toxins":
-                    //Need debugging function to add more gas
-                    case "save":
-                        _playerManager.Server.SaveGame();
-                        break;
-                }
-            }
-        }
-
+        
         private void SetAttachedEntityName()
         {
             if (Name != null && attachedEntity != null)
@@ -208,11 +179,7 @@ namespace SS14.Server.Player
         {
             if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
                 return;
-
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgJoinGame>();
-            net.ServerSendMessage(message, ConnectedClient);
-
+            
             Status = SessionStatus.InGame;
             UpdatePlayerState();
         }

@@ -35,6 +35,7 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.ServerEnums;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Shared.Console;
 
 namespace SS14.Server
 {
@@ -193,29 +194,18 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
             netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleErrorMessage);
 
-            // Unused: NetMessages.LobbyChat
-            netMan.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int)MsgChat.ID, message => IoCManager.Resolve<IChatManager>().HandleNetMessage((MsgChat)message));
             netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID, message => IoCManager.Resolve<IPlayerManager>().HandleNetworkMessage((MsgSession)message));
-            netMan.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID, message => IoCManager.Resolve<IClientConsoleHost>().ProcessCommand((MsgConCmd)message));
-            netMan.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, message => IoCManager.Resolve<IClientConsoleHost>().HandleRegistrationRequest(message.MsgChannel));
 
             netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, message => SendMap(message.MsgChannel));
 
             netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgJoinGame>(MsgJoinGame.NAME, (int)MsgJoinGame.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgRestartReq>(MsgRestartReq.NAME, (int)MsgRestartReq.ID, message => Restart());
 
             netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
             netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
             netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
-
-            IoCManager.Resolve<IChatManager>().Initialize();
-            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
-            IoCManager.Resolve<IMapManager>().Initialize();
 
             // Set up the VFS
             _resources.Initialize();
@@ -241,6 +231,11 @@ namespace SS14.Server
             // Else the content types won't be included.
             // TODO: solve this properly.
             Serializer.Initialize();
+
+            // Initialize Tier 2 services
+            IoCManager.Resolve<IChatManager>().Initialize();
+            IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
+            IoCManager.Resolve<IMapManager>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
@@ -548,9 +543,8 @@ namespace SS14.Server
                     if (_lastAnnounced != countdown.Seconds)
                     {
                         _lastAnnounced = countdown.Seconds;
-                        IoCManager.Resolve<IChatManager>().SendChatMessage(ChatChannel.Server,
-                            "Starting in " + _lastAnnounced + " seconds...",
-                            "", 0);
+                        IoCManager.Resolve<IChatManager>()
+                            .DispatchMessage(ChatChannel.Server, $"Starting in {_lastAnnounced} seconds...");
                     }
                     if (countdown.Seconds <= 0)
                         StartGame();

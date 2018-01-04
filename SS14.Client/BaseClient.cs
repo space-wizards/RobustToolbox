@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Lidgren.Network;
+using SS14.Client.Console;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -24,7 +25,7 @@ namespace SS14.Client
 
         [Dependency]
         private readonly IPlayerManager _playMan;
-
+        
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
 

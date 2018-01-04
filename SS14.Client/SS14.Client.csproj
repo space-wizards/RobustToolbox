@@ -96,10 +96,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseClient.cs" />
-    <Compile Include="Console\ConsoleCommands.cs" />
-    <Compile Include="Console\Debug.cs" />
-    <Compile Include="Console\HelpCommands.cs" />
-    <Compile Include="Console\QuitCommand.cs" />
+    <Compile Include="Console\ClientChatConsole.cs" />
+    <Compile Include="Console\ClientConsole.cs" />
+    <Compile Include="Console\IClientChatConsole.cs" />
+    <Compile Include="Console\IClientConsole.cs" />
     <Compile Include="GameController.cs" />
     <Compile Include="GameController\FrameEventArgs.cs" />
     <Compile Include="GameController\Input.cs" />
@@ -122,6 +122,14 @@
     <Compile Include="GameObjects\EntitySystems\InputSystem.cs" />
     <Compile Include="GameObjects\Components\Renderable\Speechbubble.cs" />
     <Compile Include="GameObjects\Components\Renderable\SpriteComponent.cs" />
+    <Compile Include="Console\Commands\ConsoleCommands.cs" />
+    <Compile Include="Console\Commands\HelpCommands.cs" />
+    <Compile Include="Console\Commands\QuitCommand.cs" />
+    <Compile Include="Console\Commands\Debug.cs" />
+    <Compile Include="Console\Commands\ConsoleCommands.cs" />
+    <Compile Include="Console\Commands\HelpCommands.cs" />
+    <Compile Include="Console\Commands\QuitCommand.cs" />
+    <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
@@ -220,9 +228,6 @@
       <Project>{0529f740-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Shared</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GameObjects\Components\Velocity\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -54,7 +54,7 @@ namespace SS14.Client.Console
         {
             base.Initialize();
 
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID, msg => HandleChatMsg((MsgChat) msg));
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int)MsgChat.ID, msg => HandleChatMsg((MsgChat)msg));
         }
 
         /// <inheritdoc />
@@ -72,30 +72,30 @@ namespace SS14.Client.Console
             switch (text[0])
             {
                 case ConCmdSlash:
-                {
-                    // run locally
-                    var conInput = text.Substring(1);
-                    ProcessCommand(conInput);
-                    break;
-                }
+                    {
+                        // run locally
+                        var conInput = text.Substring(1);
+                        ProcessCommand(conInput);
+                        break;
+                    }
                 case OocAlias:
-                {
-                    var conInput = text.Substring(2);
-                    ProcessCommand($"ooc \"{conInput}\"");
-                    break;
-                }
+                    {
+                        var conInput = text.Substring(2);
+                        ProcessCommand($"ooc \"{conInput}\"");
+                        break;
+                    }
                 case MeAlias:
-                {
-                    var conInput = text.Substring(2);
-                    ProcessCommand($"me \"{conInput}\"");
-                    break;
-                }
+                    {
+                        var conInput = text.Substring(2);
+                        ProcessCommand($"me \"{conInput}\"");
+                        break;
+                    }
                 default:
-                {
-                    var conInput = defaultFormat != null ? string.Format(defaultFormat, text) : text;
-                    ProcessCommand(conInput);
-                    break;
-                }
+                    {
+                        var conInput = defaultFormat != null ? string.Format(defaultFormat, text) : text;
+                        ProcessCommand(conInput);
+                        break;
+                    }
             }
         }
 
@@ -112,25 +112,25 @@ namespace SS14.Client.Console
                 case ChatChannel.Server:
                 case ChatChannel.OOC:
                 case ChatChannel.Radio:
-                {
-                    string name;
-                    if (index.HasValue && _players.SessionsDict.TryGetValue(index.Value, out var session))
                     {
-                        name = session.Name;
-                    }
-                    else if (entityId.HasValue)
-                    {
-                        var ent = _entityManager.GetEntity(entityId.Value);
-                        name = ent.Name ?? ent.ToString();
-                    }
-                    else
-                    {
-                        name = "<TERU-SAMA>";
-                    }
+                        string name;
+                        if (index.HasValue && _players.SessionsDict.TryGetValue(index.Value, out var session))
+                        {
+                            name = session.Name;
+                        }
+                        else if (entityId.HasValue)
+                        {
+                            var ent = _entityManager.GetEntity(entityId.Value);
+                            name = ent.Name ?? ent.ToString();
+                        }
+                        else
+                        {
+                            name = "<TERU-SAMA>";
+                        }
 
-                    text = $"[{channel}] {name}: {text}";
-                    break;
-                }
+                        text = $"[{channel}] {name}: {text}";
+                        break;
+                    }
             }
 
             AddLine(text, channel, GetChannelColor(channel));

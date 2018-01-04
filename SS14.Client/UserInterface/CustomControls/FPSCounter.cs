@@ -1,7 +1,8 @@
+﻿using SS14.Client.UserInterface.Controls;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.CustomControls
 {
     [Reflect(false)]
     public class FPSCounter : Label

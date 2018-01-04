@@ -1,10 +1,11 @@
-﻿using SS14.Client.Utility;
+﻿using SS14.Client.UserInterface.CustomControls;
+using SS14.Client.Utility;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using SS14.Shared.Reflection;
 using System;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.CustomControls
 {
     [Reflect(false)]
     public class SS14Window : Control

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Godot;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public abstract class Range : Control
     {

@@ -1,7 +1,7 @@
-using SS14.Client.Utility;
+﻿using SS14.Client.Utility;
 using SS14.Shared.Maths;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public class RichTextLabel : Control
     {

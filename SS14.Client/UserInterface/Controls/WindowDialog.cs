@@ -1,10 +1,16 @@
-namespace SS14.Client.UserInterface
+﻿namespace SS14.Client.UserInterface.Controls
 {
     public class WindowDialog : Popup
     {
-        public WindowDialog() : base() {}
-        public WindowDialog(string name) : base(name) {}
-        public WindowDialog(Godot.WindowDialog control) : base(control) {}
+        public WindowDialog() : base()
+        {
+        }
+        public WindowDialog(string name) : base(name)
+        {
+        }
+        public WindowDialog(Godot.WindowDialog control) : base(control)
+        {
+        }
 
         new private Godot.WindowDialog SceneControl;
 

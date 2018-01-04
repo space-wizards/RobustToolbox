@@ -1,4 +1,4 @@
-namespace SS14.Client.UserInterface
+﻿namespace SS14.Client.UserInterface.Controls
 {
     public class TextureButton : BaseButton
     {

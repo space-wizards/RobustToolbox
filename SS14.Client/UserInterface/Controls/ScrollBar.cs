@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public abstract class ScrollBar : Range
     {

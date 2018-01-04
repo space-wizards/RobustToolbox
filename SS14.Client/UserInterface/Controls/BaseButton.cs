@@ -1,7 +1,7 @@
 ﻿using SS14.Client.GodotGlue;
 using System;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public abstract class BaseButton : Control
     {

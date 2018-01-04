@@ -1,10 +1,11 @@
 ﻿using SS14.Client.Interfaces.State;
 using SS14.Client.Interfaces.UserInterface;
+using SS14.Client.UserInterface.Controls;
 using SS14.Client.State.States;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.CustomControls
 {
     public class EscapeMenu : SS14Window
     {

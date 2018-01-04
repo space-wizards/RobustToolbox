@@ -1,13 +1,11 @@
 ﻿using SS14.Client.Input;
 using SS14.Client.Interfaces;
-using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.Interfaces.UserInterface;
-using SS14.Client.ResourceManagement;
+using SS14.Client.UserInterface.Controls;
+using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using System.Collections.Generic;
 
 namespace SS14.Client.UserInterface
 {

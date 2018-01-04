@@ -1,5 +1,6 @@
 ﻿using Lidgren.Network;
 using SS14.Client.Interfaces.Console;
+using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Reflection;
@@ -13,7 +14,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.CustomControls
 {
     // Disable reflection so that we won't be looked at for scene translation.
     [Reflect(false)]

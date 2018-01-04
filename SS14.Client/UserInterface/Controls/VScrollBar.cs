@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SS14.Shared.Log;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public class VScrollBar : ScrollBar
     {

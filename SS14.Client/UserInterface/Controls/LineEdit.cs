@@ -1,13 +1,19 @@
-using System;
+﻿using System;
 using SS14.Client.GodotGlue;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     public class LineEdit : Control
     {
-        public LineEdit() : base() {}
-        public LineEdit(string name) : base(name) {}
-        public LineEdit(Godot.LineEdit control) : base(control) {}
+        public LineEdit() : base()
+        {
+        }
+        public LineEdit(string name) : base(name)
+        {
+        }
+        public LineEdit(Godot.LineEdit control) : base(control)
+        {
+        }
 
         new private Godot.LineEdit SceneControl;
 
@@ -60,7 +66,7 @@ namespace SS14.Client.UserInterface
             SceneControl.MenuOption((int)option);
         }
 
-        public void Select(int from=0, int to = -1)
+        public void Select(int from = 0, int to = -1)
         {
             SceneControl.Select(from, to);
         }
@@ -118,7 +124,6 @@ namespace SS14.Client.UserInterface
             __textEnteredSubscriber = new GodotSignalSubscriber1();
             __textEnteredSubscriber.Connect(SceneControl, "text_entered");
             __textEnteredSubscriber.Signal += __textEnteredHook;
-
         }
 
         protected override void DisposeSignalHooks()

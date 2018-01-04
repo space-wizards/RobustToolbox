@@ -1,10 +1,16 @@
-namespace SS14.Client.UserInterface
+﻿namespace SS14.Client.UserInterface.Controls
 {
     public class Popup : Control
     {
-        public Popup() : base() {}
-        public Popup(string name) : base() {}
-        public Popup(Godot.Popup control) : base(control) {}
+        public Popup() : base()
+        {
+        }
+        public Popup(string name) : base()
+        {
+        }
+        public Popup(Godot.Popup control) : base(control)
+        {
+        }
 
         new private Godot.Popup SceneControl;
 

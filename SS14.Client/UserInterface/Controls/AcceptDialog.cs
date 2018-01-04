@@ -1,10 +1,16 @@
-namespace SS14.Client.UserInterface
+﻿namespace SS14.Client.UserInterface.Controls
 {
     public class AcceptDialog : WindowDialog
     {
-        public AcceptDialog() : base() {}
-        public AcceptDialog(string name) : base(name) {}
-        public AcceptDialog(Godot.AcceptDialog control) : base(control) {}
+        public AcceptDialog() : base()
+        {
+        }
+        public AcceptDialog(string name) : base(name)
+        {
+        }
+        public AcceptDialog(Godot.AcceptDialog control) : base(control)
+        {
+        }
 
         new private Godot.AcceptDialog SceneControl;
 

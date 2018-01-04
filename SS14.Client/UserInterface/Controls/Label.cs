@@ -1,6 +1,6 @@
 ﻿using Godot;
 
-namespace SS14.Client.UserInterface
+namespace SS14.Client.UserInterface.Controls
 {
     /// <summary>
     ///     A label is a GUI control that displays simple text.

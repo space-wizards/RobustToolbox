@@ -38,7 +38,6 @@
             IsCollidable = false;
             IsGasVolume = true;
             IsVentedIntoSpace = true;
-            SpriteName = "space_texture";
         }
     }
 }

@@ -25,9 +25,12 @@ namespace SS14.Client.Map
             var ret = base.Register(tileDef);
 
             TileSet.CreateTile(ret);
-            var texture = resourceCache.GetResource<TextureResource>($@"./Textures/Tiles/{tileDef.SpriteName}.png");
-            TileSet.TileSetTexture(ret, texture.Texture.Texture);
-            Textures[ret] = texture;
+            if (!string.IsNullOrEmpty(tileDef.SpriteName))
+            {
+                var texture = resourceCache.GetResource<TextureResource>($@"./Textures/Tiles/{tileDef.SpriteName}.png");
+                TileSet.TileSetTexture(ret, texture.Texture.Texture);
+                Textures[ret] = texture;
+            }
 
             return ret;
         }

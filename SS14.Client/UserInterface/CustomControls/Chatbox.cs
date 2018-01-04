@@ -17,7 +17,7 @@ namespace SS14.Client.UserInterface.CustomControls
         private readonly IList<string> _inputHistory = new List<string>();
 
         private bool firstLine = true;
-        private LineEdit input;
+        public LineEdit Input { get; private set; }
         private RichTextLabel contents;
 
         /// <summary>
@@ -57,9 +57,9 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.Initialize();
 
-            input = GetChild<LineEdit>("Input");
-            input.OnKeyDown += InputKeyDown;
-            input.OnTextEntered += Input_OnTextEntered;
+            Input = GetChild<LineEdit>("Input");
+            Input.OnKeyDown += InputKeyDown;
+            Input.OnTextEntered += Input_OnTextEntered;
             contents = GetChild<RichTextLabel>("Contents");
         }
 
@@ -67,14 +67,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             base.MouseDown(e);
 
-            input.GrabFocus();
+            Input.GrabFocus();
         }
 
         private void InputKeyDown(GUIKeyEventArgs e)
         {
             if (e.Key == Keyboard.Key.Escape)
             {
-                input.ReleaseFocus();
+                Input.ReleaseFocus();
                 e.Handle();
                 return;
             }
@@ -83,7 +83,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 if (_inputIndex == -1 && _inputHistory.Count != 0)
                 {
-                    _inputTemp = input.Text;
+                    _inputTemp = Input.Text;
                     _inputIndex++;
                 }
                 else if (_inputIndex + 1 < _inputHistory.Count)
@@ -93,7 +93,7 @@ namespace SS14.Client.UserInterface.CustomControls
 
                 if (_inputIndex != -1)
                 {
-                    input.Text = _inputHistory[_inputIndex];
+                    Input.Text = _inputHistory[_inputIndex];
                 }
 
                 e.Handle();
@@ -104,14 +104,14 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 if (_inputIndex == 0)
                 {
-                    input.Text = _inputTemp;
+                    Input.Text = _inputTemp;
                     _inputTemp = "";
                     _inputIndex--;
                 }
                 else if (_inputIndex != -1)
                 {
                     _inputIndex--;
-                    input.Text = _inputHistory[_inputIndex];
+                    Input.Text = _inputHistory[_inputIndex];
                 }
 
                 e.Handle();
@@ -126,7 +126,7 @@ namespace SS14.Client.UserInterface.CustomControls
             if (disposing)
             {
                 TextSubmitted = null;
-                input = null;
+                Input = null;
                 contents = null;
             }
         }
@@ -143,9 +143,12 @@ namespace SS14.Client.UserInterface.CustomControls
             if (ChannelBlacklist.Contains(channel))
                 return;
 
-            if (firstLine)
+            if (!firstLine)
             {
                 contents.NewLine();
+            }
+            else
+            {
                 firstLine = false;
             }
             contents.PushColor(color);
@@ -168,7 +171,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
             _inputIndex = -1;
 
-            ReleaseFocus();
+            Input.Clear();
+            Input.ReleaseFocus();
         }
 
         public void AddLine(object sender, AddStringArgs e)

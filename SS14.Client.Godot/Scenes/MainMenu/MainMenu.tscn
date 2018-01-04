@@ -5,7 +5,6 @@
 [ext_resource path="res://Art/bootsplash.png" type="Texture" id=3]
 [ext_resource path="res://Fonts/Animal Silence.otf" type="DynamicFontData" id=4]
 
-
 [sub_resource type="DynamicFont" id=1]
 
 size = 32
@@ -14,7 +13,7 @@ use_filter = false
 font_data = ExtResource( 4 )
 _sections_unfolded = [ "Font", "Settings" ]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" index="0"]
 
 anchor_left = 0.0
 anchor_top = 0.0

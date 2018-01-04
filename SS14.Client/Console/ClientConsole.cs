@@ -180,13 +180,12 @@ namespace SS14.Client.Console
             if (_requestedCommands)
                 return;
 
-            var netMgr = IoCManager.Resolve<IClientNetManager>();
-            if (!netMgr.IsConnected)
+            if (!_network.IsConnected)
                 return;
 
-            var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
+            var msg = _network.CreateNetMessage<MsgConCmdReg>();
             // empty message to request commands
-            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            _network.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
 
             _requestedCommands = true;
         }
@@ -196,14 +195,14 @@ namespace SS14.Client.Console
         /// </summary>
         private void SendServerConsoleCommand(string text)
         {
-            var netMgr = IoCManager.Resolve<IClientNetManager>();
-
-            if (netMgr == null || !netMgr.IsConnected)
+            if (!_network.IsConnected)
                 return;
 
-            var msg = netMgr.CreateNetMessage<MsgConCmd>();
+            Logger.Debug($"Sending! {text}");
+
+            var msg = _network.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
-            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            _network.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
     }
 

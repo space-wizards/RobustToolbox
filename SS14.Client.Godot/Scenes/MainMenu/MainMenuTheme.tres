@@ -2,7 +2,6 @@
 
 [ext_resource path="res://Fonts/Animal Silence.otf" type="DynamicFontData" id=1]
 
-
 [sub_resource type="DynamicFont" id=1]
 
 size = 48

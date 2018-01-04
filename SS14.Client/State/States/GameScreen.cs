@@ -63,6 +63,7 @@ namespace SS14.Client.State.States
             userInterfaceManager.StateRoot.AddChild(_gameChat);
             _gameChat.TextSubmitted += console.ParseChatMessage;
             console.AddString += _gameChat.AddLine;
+            _gameChat.DefaultChatFormat = "say \"{0}\"";
 
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
@@ -131,6 +132,11 @@ namespace SS14.Client.State.States
 
                 e.Handle();
                 return;
+            }
+
+            if (e.Key == Keyboard.Key.T && !_gameChat.Input.HasFocus())
+            {
+                _gameChat.Input.GrabFocus();
             }
 
             keyBindingManager.KeyDown(e);

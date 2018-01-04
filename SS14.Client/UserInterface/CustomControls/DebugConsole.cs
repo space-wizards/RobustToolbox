@@ -65,14 +65,18 @@ namespace SS14.Client.UserInterface.CustomControls
             if (!string.IsNullOrWhiteSpace(args.Text))
             {
                 console.ProcessCommand(args.Text);
+                CommandBar.Clear();
             }
         }
 
         public void AddLine(string text, ChatChannel channel, Color color)
         {
-            if (firstLine)
+            if (!firstLine)
             {
                 Contents.NewLine();
+            }
+            else
+            {
                 firstLine = false;
             }
             Contents.PushColor(color);

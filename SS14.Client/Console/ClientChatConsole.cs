@@ -7,6 +7,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
+using SS14.Shared.Log;
 
 namespace SS14.Client.Console
 {
@@ -92,6 +93,7 @@ namespace SS14.Client.Console
                 default:
                     {
                         var conInput = defaultFormat != null ? string.Format(defaultFormat, text) : text;
+                        Logger.Debug(conInput);
                         ProcessCommand(conInput);
                         break;
                     }
@@ -100,6 +102,7 @@ namespace SS14.Client.Console
 
         private void HandleChatMsg(MsgChat msg)
         {
+            Logger.Debug($"Got it! {msg.Text}");
             var channel = msg.Channel;
             var text = msg.Text;
             var index = msg.Index;

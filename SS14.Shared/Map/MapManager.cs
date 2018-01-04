@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using System.Linq;
 
 namespace SS14.Shared.Map
 {
@@ -20,11 +21,15 @@ namespace SS14.Shared.Map
         public void Initialize()
         {
             NetSetup();
-            CreateMap(MapManager.NULLSPACE);
+            CreateMap(NULLSPACE);
         }
 
         /// <inheritdoc />
         public event TileChangedEventHandler OnTileChanged;
+
+        public event GridEventHandler OnGridCreated;
+
+        public event GridEventHandler OnGridRemoved;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -35,20 +40,25 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     Raises the OnTileChanged event.
         /// </summary>
-        /// <param name="gridId">The ID of the grid that was modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile that got replaced.</param>
-        public void RaiseOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile)
         {
             if (SuppressOnTileChanged)
                 return;
 
-            OnTileChanged?.Invoke(gridId, tileRef, oldTile);
+            OnTileChanged?.Invoke(tileRef, oldTile);
         }
 
-        #region Networking
+        public void RaiseOnGridCreated(int mapId, int gridId)
+        {
+            OnGridCreated?.Invoke(mapId, gridId);
+        }
 
-        #endregion Networking
+        public void RaiseOnGridRemoved(int mapId, int gridId)
+        {
+            OnGridRemoved?.Invoke(mapId, gridId);
+        }
 
         #region MapAccess
 
@@ -59,17 +69,23 @@ namespace SS14.Shared.Map
 
         public virtual void UnregisterMap(int mapID)
         {
-            if (_Maps.ContainsKey(mapID))
+            if (!_Maps.TryGetValue(mapID, out var map))
             {
-                _Maps.Remove(mapID);
+                Logger.Warning($"Attempted to unregister nonexistent map {mapID}.");
             }
             else
             {
-                Logger.Warning("Attempted to unregister nonexistent map");
+                // Unregister grids so that RaiseOnGridRemoved gets raised.
+                var grids = map.GetAllGrids().ToArray();
+                foreach (var grid in grids)
+                {
+                    map.RemoveGrid(grid.Index);
+                }
+                _Maps.Remove(mapID);
             }
         }
 
-        public virtual IMap CreateMap(int mapID)
+        public IMap CreateMap(int mapID)
         {
             var newMap = new Map(this, mapID);
             _Maps.Add(mapID, newMap);
@@ -94,7 +110,7 @@ namespace SS14.Shared.Map
 
         public IEnumerable<IMap> GetAllMaps()
         {
-            foreach(var kmap in _Maps)
+            foreach (var kmap in _Maps)
             {
                 yield return kmap.Value;
             }

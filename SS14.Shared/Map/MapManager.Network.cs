@@ -20,7 +20,6 @@ namespace SS14.Shared.Map
         [Dependency]
         private readonly ITileDefinitionManager _defManager;
 
-
         /// <summary>
         ///     The accepted version of the NetworkMessage map format.
         /// </summary>
@@ -35,7 +34,7 @@ namespace SS14.Shared.Map
         {
             _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, message => HandleNetworkMessage((MsgMap)message));
 
-            if(_netManager.IsServer)
+            if (_netManager.IsServer)
                 _mapManager.OnTileChanged += MapMgrOnTileChanged;
         }
 
@@ -79,9 +78,9 @@ namespace SS14.Shared.Map
 
             int QuantityGridsSent = 0;
 
-            foreach(Map Map in GetAllMaps())
+            foreach (Map Map in GetAllMaps())
             {
-                foreach(IMapGrid Grid in Map.GetAllGrids())
+                foreach (IMapGrid Grid in Map.GetAllGrids())
                 {
                     QuantityGridsSent++;
                     var message = _netManager.CreateNetMessage<MsgMap>();
@@ -139,7 +138,7 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The id of the grid being modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile being modified.</param>
-        private void MapMgrOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        private void MapMgrOnTileChanged(TileRef tileRef, Tile oldTile)
         {
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
@@ -150,7 +149,7 @@ namespace SS14.Shared.Map
             {
                 X = tileRef.X,
                 Y = tileRef.Y,
-                Tile = (uint) tileRef.Tile
+                Tile = (uint)tileRef.Tile
             };
 
             _netManager.ServerSendToAll(message);
@@ -229,7 +228,7 @@ namespace SS14.Shared.Map
                 }
             }
 
-            if(GridsReceived == GridsToReceive)
+            if (GridsReceived == GridsToReceive)
             {
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
             }
@@ -245,7 +244,7 @@ namespace SS14.Shared.Map
 
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
-            var tile = (Tile) message.SingleTurf.Tile;
+            var tile = (Tile)message.SingleTurf.Tile;
 
             LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
             coords.Grid.SetTile(coords, tile); //TODO: Fix this

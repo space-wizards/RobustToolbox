@@ -69,7 +69,7 @@ namespace SS14.Shared.Map
             // array out of bounds
             if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
                 throw new ArgumentOutOfRangeException("Tile indices out of bounds.");
-            
+
             return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[indices.X, indices.Y]);
         }
 
@@ -78,14 +78,14 @@ namespace SS14.Shared.Map
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             for (var x = 0; x < ChunkSize; x++)
-            for (var y = 0; y < ChunkSize; y++)
-            {
-                if (_tiles[x, y].IsEmpty)
-                    continue;
+                for (var y = 0; y < ChunkSize; y++)
+                {
+                    if (_tiles[x, y].IsEmpty)
+                        continue;
 
-                var indices = ChunkTileToGridTile(new MapGrid.Indices(x, y));
-                yield return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
-            }
+                    var indices = ChunkTileToGridTile(new MapGrid.Indices(x, y));
+                    yield return new TileRef(_grid.MapID, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                }
         }
 
         /// <inheritdoc />
@@ -98,7 +98,7 @@ namespace SS14.Shared.Map
 
             var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
             var oldTile = _tiles[xChunkTile, yChunkTile];
-            _mapManager.RaiseOnTileChanged(_grid.Index, newTileRef, oldTile);
+            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
             _grid.UpdateAABB(gridTile);
 
             _tiles[xChunkTile, yChunkTile] = tile;
@@ -111,11 +111,11 @@ namespace SS14.Shared.Map
         public IEnumerator<TileRef> GetEnumerator()
         {
             for (var x = 0; x < ChunkSize; x++)
-            for (var y = 0; y < ChunkSize; y++)
-            {
-                var gridTile = ChunkTileToGridTile(new MapGrid.Indices(x, y));
-                yield return new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
-            }
+                for (var y = 0; y < ChunkSize; y++)
+                {
+                    var gridTile = ChunkTileToGridTile(new MapGrid.Indices(x, y));
+                    yield return new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -164,7 +164,7 @@ namespace SS14.Shared.Map
         [DebuggerStepThrough]
         private static int Mod(double n, int d)
         {
-            return (int) (n - (int) Math.Floor(n / d) * d);
+            return (int)(n - (int)Math.Floor(n / d) * d);
         }
     }
 }

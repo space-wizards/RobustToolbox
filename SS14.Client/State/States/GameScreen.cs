@@ -9,11 +9,14 @@ using SS14.Shared;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
+using SS14.Shared.Map;
 using SS14.Shared.Network;
 using System;
+using System.Linq;
 
 namespace SS14.Client.State.States
 {
@@ -35,20 +38,10 @@ namespace SS14.Client.State.States
         readonly IPlayerManager playerManager;
         [Dependency]
         readonly IUserInterfaceManager userInterfaceManager;
+        [Dependency]
+        readonly IMapManager mapManager;
 
         private EscapeMenu escapeMenu;
-
-        public override void Shutdown()
-        {
-            escapeMenu.Dispose();
-
-            playerManager.LocalPlayer.DetachEntity();
-
-            _entityManager.Shutdown();
-            userInterfaceManager.StateRoot.DisposeAllChildren();
-            networkManager.MessageArrived -= NetworkManagerMessageArrived;
-            GC.Collect();
-        }
 
         public override void Startup()
         {
@@ -73,6 +66,26 @@ namespace SS14.Client.State.States
             networkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             networkManager.MessageArrived += NetworkManagerMessageArrived;
+        }
+
+        public override void Shutdown()
+        {
+            escapeMenu.Dispose();
+
+            playerManager.LocalPlayer.DetachEntity();
+
+            _entityManager.Shutdown();
+            userInterfaceManager.StateRoot.DisposeAllChildren();
+            networkManager.MessageArrived -= NetworkManagerMessageArrived;
+
+            var maps = mapManager.GetAllMaps().ToArray();
+            foreach (var map in maps)
+            {
+                if (map.Index != MapManager.NULLSPACE)
+                {
+                    mapManager.UnregisterMap(map.Index);
+                }
+            }
         }
 
         public override void Update(FrameEventArgs e)

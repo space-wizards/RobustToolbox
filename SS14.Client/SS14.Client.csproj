@@ -126,10 +126,6 @@
     <Compile Include="Console\Commands\HelpCommands.cs" />
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
-    <Compile Include="Console\Commands\ConsoleCommands.cs" />
-    <Compile Include="Console\Commands\HelpCommands.cs" />
-    <Compile Include="Console\Commands\QuitCommand.cs" />
-    <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />

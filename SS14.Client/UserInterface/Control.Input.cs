@@ -1,4 +1,4 @@
-using SS14.Client.Input;
+﻿using SS14.Client.Input;
 using SS14.Client.Utility;
 using SS14.Shared.Maths;
 using System;
@@ -19,8 +19,10 @@ namespace SS14.Client.UserInterface
         {
         }
 
+        public event Action<GUIMouseButtonEventArgs> OnMouseDown;
         protected virtual void MouseDown(GUIMouseButtonEventArgs args)
         {
+            OnMouseDown?.Invoke(args);
         }
 
         protected virtual void MouseUp(GUIMouseButtonEventArgs args)
@@ -44,7 +46,6 @@ namespace SS14.Client.UserInterface
         protected virtual void KeyHeld(GUIKeyEventArgs args)
         {
         }
-
 
         private void HandleGuiInput(Godot.InputEvent input)
         {
@@ -266,7 +267,6 @@ namespace SS14.Client.UserInterface
             Relative = relative;
             Speed = speed;
         }
-
     }
 
     public class GUIMouseWheelEventArgs : GUIMouseEventArgs
@@ -290,5 +290,4 @@ namespace SS14.Client.UserInterface
             WheelDirection = wheelDirection;
         }
     }
-
 }

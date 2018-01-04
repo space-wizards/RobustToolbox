@@ -18,7 +18,6 @@ namespace SS14.Client.UserInterface
         ///     The name of this control.
         ///     Names must be unique between the control's siblings.
         /// </summary>
-        // TODO: Allow changing the name at any point, probably.
         public string Name
         {
             get => _name;
@@ -591,10 +590,25 @@ namespace SS14.Client.UserInterface
             set => SceneControl.SetDefaultCursorShape((int)value);
         }
 
+        /// <summary>
+        ///     Mode that will be tested when testing controls to invoke mouse button events on.
+        /// </summary>
         public enum MouseFilterMode
         {
+            /// <summary>
+            ///     The control will not be considered at all, and will not have any effects.
+            /// </summary>
             Ignore = Godot.Control.MOUSE_FILTER_IGNORE,
+            /// <summary>
+            ///     The control will be able to receive mouse buttons events.
+            ///     Furthermore, if a control with this mode does get clicked,
+            ///     the event automatically gets marked as handled.
+            /// </summary>
             Pass = Godot.Control.MOUSE_FILTER_PASS,
+            /// <summary>
+            ///     The control will be able to receive mouse button events like <see cref="Pass"/>,
+            ///     but the event will be stopped and handled even if the relevant events do not handle it.
+            /// </summary>
             Stop = Godot.Control.MOUSE_FILTER_STOP,
         }
 

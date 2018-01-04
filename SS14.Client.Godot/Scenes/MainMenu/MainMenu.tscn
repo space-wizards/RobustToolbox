@@ -20,10 +20,10 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 rect_pivot_offset = Vector2( 0, 0 )
-mouse_filter = 0
+mouse_filter = 2
 size_flags_horizontal = 1
 size_flags_vertical = 1
-_sections_unfolded = [ "Anchor", "Theme" ]
+_sections_unfolded = [ "Anchor", "Mouse", "Theme" ]
 
 [node name="Background" type="TextureRect" parent="." index="0"]
 
@@ -34,12 +34,12 @@ anchor_bottom = 1.0
 margin_right = 896.0
 margin_bottom = 600.0
 rect_pivot_offset = Vector2( 0, 0 )
-mouse_filter = 1
+mouse_filter = 2
 size_flags_horizontal = 1
 size_flags_vertical = 1
 texture = ExtResource( 1 )
 stretch_mode = 2
-_sections_unfolded = [ "Anchor", "Margin", "Rect" ]
+_sections_unfolded = [ "Anchor", "Margin", "Mouse", "Rect" ]
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." index="1"]
 
@@ -58,7 +58,7 @@ size_flags_horizontal = 1
 size_flags_vertical = 1
 theme = ExtResource( 2 )
 alignment = 0
-_sections_unfolded = [ "Anchor", "Margin", "Theme" ]
+_sections_unfolded = [ "Anchor", "Margin", "Mouse", "Theme" ]
 
 [node name="Logo" type="TextureRect" parent="VBoxContainer" index="0"]
 

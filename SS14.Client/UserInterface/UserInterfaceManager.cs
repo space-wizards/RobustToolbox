@@ -6,6 +6,7 @@ using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared.Configuration;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface
 {
@@ -44,12 +45,18 @@ namespace SS14.Client.UserInterface
 
             _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
 
-            RootControl = new Control("UIRoot");
+            RootControl = new Control("UIRoot")
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore
+            };
             RootControl.SetAnchorPreset(Control.AnchorPreset.Wide);
 
             CanvasLayer.AddChild(RootControl.SceneControl);
 
-            StateRoot = new Control("StateRoot");
+            StateRoot = new Control("StateRoot")
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore
+            };
             StateRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
             RootControl.AddChild(StateRoot);
 
@@ -111,7 +118,8 @@ namespace SS14.Client.UserInterface
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)
         {
-            //throw new System.NotImplementedException();
+            Logger.Debug("Hrm.");
+            Focused?.ReleaseFocus();
         }
 
         public void UnhandledMouseUp(MouseButtonEventArgs args)

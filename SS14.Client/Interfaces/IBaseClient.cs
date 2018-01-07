@@ -2,6 +2,9 @@
 
 namespace SS14.Client.Interfaces
 {
+    /// <summary>
+    ///     Top level class that controls the game logic of the client.
+    /// </summary>
     public interface IBaseClient : IDisposable
     {
         /// <summary>
@@ -24,6 +27,26 @@ namespace SS14.Client.Interfaces
         ///     Raised when the client RunLevel is changed.
         /// </summary>
         event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
+
+        /// <summary>
+        ///     Raised when the player successfully joins the server.
+        /// </summary>
+        event EventHandler<PlayerEventArgs> PlayerJoinedServer;
+
+        /// <summary>
+        ///     Raised when the player switches to the lobby.
+        /// </summary>
+        event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
+
+        /// <summary>
+        ///     Raised when the player switches to the game.
+        /// </summary>
+        event EventHandler<PlayerEventArgs> PlayerJoinedGame;
+
+        /// <summary>
+        ///     Raised right before the player leaves the server.
+        /// </summary>
+        event EventHandler<PlayerEventArgs> PlayerLeaveServer;
 
         /// <summary>
         ///     Call this after BaseClient has been created. This sets up the object to its initial state. Only call this once.

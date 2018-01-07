@@ -125,7 +125,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
-    <Compile Include="ClientConsoleHost\Commands\JoinGameCommand.cs" />
+    <Compile Include="ClientConsoleHost\Commands\RoundCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\StartRoundCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />
@@ -189,7 +190,6 @@
     <Compile Include="Interfaces\Chat\IChatManager.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientCommand.cs" />
     <Compile Include="Interfaces\ClientConsoleHost\IClientConsoleHost.cs" />
-    <Compile Include="Interfaces\GameMode\IGameMode.cs" />
     <Compile Include="Interfaces\GameObjects\IActorComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IMoverComponent.cs" />
     <Compile Include="Interfaces\GameObjects\IServerEntityManager.cs" />
@@ -200,14 +200,11 @@
     <Compile Include="Interfaces\Placement\IPlacementManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerManager.cs" />
     <Compile Include="Interfaces\Player\IPlayerSession.cs" />
-    <Compile Include="Interfaces\Round\IRoundManager.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleCommand.cs" />
     <Compile Include="Interfaces\ServerConsole\IConsoleManager.cs" />
     <Compile Include="Placement\PlacementManager.cs" />
     <Compile Include="Player\PlayerManager.cs" />
     <Compile Include="Player\PlayerSession.cs" />
-    <Compile Include="Round\Gamemodes.cs" />
-    <Compile Include="Round\RoundManager.cs" />
     <Compile Include="ServerConsole\ConsoleManager.cs" />
     <Compile Include="ServerConsole\Commands\HelpCommand.cs" />
     <Compile Include="ServerConsole\Commands\ListCommands.cs" />

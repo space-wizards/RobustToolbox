@@ -1,7 +1,6 @@
 ﻿using SS14.Server.Interfaces;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.ServerEnums;
 using System;
 using System.Reflection;
 using System.Threading;

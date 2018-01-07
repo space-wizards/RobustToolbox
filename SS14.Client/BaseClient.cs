@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using Lidgren.Network;
-using SS14.Client.Console;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -34,7 +33,7 @@ namespace SS14.Client
 
         /// <inheritdoc />
         public ServerInfo GameInfo { get; private set; }
-
+        
         /// <inheritdoc />
         public void Initialize()
         {
@@ -84,6 +83,11 @@ namespace SS14.Client
         /// <inheritdoc />
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
 
+        public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
+        public event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
+        public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
+        public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
+
         private void OnConnected(object sender, NetChannelArgs args)
         {
             // request base info about the server
@@ -97,36 +101,36 @@ namespace SS14.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedServer(PlayerSession session)
+        private void OnPlayerJoinedServer(PlayerSession session)
         {
             Debug.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
 
-            //TODO: Notify Content
+            PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
         }
 
         /// <summary>
         ///     Player is joining the lobby for whatever reason.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedLobby(PlayerSession session)
+        private void OnPlayerJoinedLobby(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Lobby);
 
-            //TODO: Notify Content
+            PlayerJoinedLobby?.Invoke(this, new PlayerEventArgs(session));
         }
 
         /// <summary>
         ///     Player is joining the game (usually from lobby.)
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void PlayerJoinedGame(PlayerSession session)
+        private void OnPlayerJoinedGame(PlayerSession session)
         {
             Debug.Assert(RunLevel >= ClientRunLevel.Lobby);
             OnRunLevelChanged(ClientRunLevel.Ingame);
 
-            //TODO: Notify Content
+            PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
 
         private void Reset()
@@ -144,8 +148,9 @@ namespace SS14.Client
         {
             Debug.Assert(RunLevel > ClientRunLevel.Initialize);
 
-            _playMan.Shutdown();
+            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
 
+            _playMan.Shutdown();
             Reset();
         }
 
@@ -178,20 +183,20 @@ namespace SS14.Client
         {
             // player finished fully connecting to the server.
             if (eventArgs.OldStatus == SessionStatus.Connected)
-                PlayerJoinedServer(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
 
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<Lobby>();
-                PlayerJoinedLobby(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
             if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();
-                PlayerJoinedGame(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
             }
         }
 
@@ -216,6 +221,25 @@ namespace SS14.Client
         Lobby,
         Ingame,
         ChangeMap
+    }
+
+    /// <summary>
+    ///     Event arguments for when something changed with the player.
+    /// </summary>
+    public class PlayerEventArgs : EventArgs
+    {
+        /// <summary>
+        ///     The session that triggered the event.
+        /// </summary>
+        private PlayerSession Session { get; }
+
+        /// <summary>
+        ///     Constructs a new instance of the class.
+        /// </summary>
+        public PlayerEventArgs(PlayerSession session)
+        {
+            Session = session;
+        }
     }
 
     /// <summary>

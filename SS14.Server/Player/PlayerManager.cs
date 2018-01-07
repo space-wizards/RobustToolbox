@@ -1,28 +1,21 @@
 ﻿using System;
-using OpenTK;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
-using SS14.Shared.GameObjects;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using SS14.Shared.Prototypes;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.ServerEnums;
-using SS14.Shared.Utility;
 using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Shared.Players;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.Player
 {
@@ -34,7 +27,7 @@ namespace SS14.Server.Player
         /// <summary>
         /// The server that instantiated this manager.
         /// </summary>
-        public IBaseServer Server { get; set; }
+        private IBaseServer _server;
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
@@ -52,16 +45,12 @@ namespace SS14.Server.Player
         [Dependency]
         private readonly IServerEntityManager _entityManager;
 
-        [Dependency]
-        private readonly IPrototypeManager _prototypeManager;
-        
         public int PlayerCount => _sessionCount;
         public int MaxPlayers => _sessions.Length;
 
         public void Initialize(BaseServer server, int maxPlayers)
         {
-            Server = server;
-            Server.OnRunLevelChanged += RunLevelChanged;
+            _server = server;
             
             _sessions = new PlayerSession[maxPlayers];
 
@@ -72,16 +61,9 @@ namespace SS14.Server.Player
             netMan.Disconnect += EndSession;
         }
 
-        private void RunLevelChanged(RunLevel oldLevel, RunLevel newLevel)
-        {
-            RunLevel = newLevel;
-        }
-
-        #region IPlayerManager Members
-
         private void OnConnecting(object sender, NetConnectingArgs args)
         {
-            if (PlayerCount >= Server.MaxPlayers)
+            if (PlayerCount >= _server.MaxPlayers)
                 args.Deny = true;
         }
 
@@ -131,9 +113,7 @@ namespace SS14.Server.Player
             Debug.Assert(0 <= index && index <= MaxPlayers);
             return _sessions[index];
         }
-
-        public RunLevel RunLevel { get; set; }
-
+        
         /// <summary>
         /// Processes an incoming network message.
         /// </summary>
@@ -263,7 +243,5 @@ namespace SS14.Server.Player
             Debug.Assert(true, "Why was a slot not found? There should be one.");
             return -1;
         }
-
-        #endregion IPlayerManager Members
     }
 }

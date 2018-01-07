@@ -4,7 +4,6 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
-using SS14.Shared.ServerEnums;
 
 namespace SS14.Server.Interfaces.Player
 {
@@ -13,9 +12,6 @@ namespace SS14.Server.Interfaces.Player
     /// </summary>
     public interface IPlayerManager
     {
-        //TODO: What is this? Should it be in BaseServer?
-        RunLevel RunLevel { get; set; }
-
         /// <summary>
         ///     Number of players currently connected to this server.
         /// </summary>
@@ -39,8 +35,7 @@ namespace SS14.Server.Interfaces.Player
 
         //TODO: Move to IPlayerSession
         void SpawnPlayerMob(IPlayerSession session);
-
-        //TODO: These go in BaseServer
+        
         void SendJoinGameToAll();
         void SendJoinLobbyToAll();
 

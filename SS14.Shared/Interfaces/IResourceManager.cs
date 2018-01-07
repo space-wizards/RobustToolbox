@@ -59,6 +59,12 @@ namespace SS14.Shared.Interfaces
         /// </summary>
         /// <param name="path">Directory to search inside of.</param>
         /// <returns>Enumeration of all relative file paths of the files found.</returns>
-        IEnumerable<string> FindFiles(string path);
+        IEnumerable<string> ContentFindFiles(string path);
+
+        /// <summary>
+        ///     Absolute path to the configuration directory for the game. If you are writing any files,
+        ///     they need to be inside of this directory.
+        /// </summary>
+        string ConfigDirectory { get; }
     }
 }

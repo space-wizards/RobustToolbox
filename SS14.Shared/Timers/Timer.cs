@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SS14.Shared.Timers
 {
@@ -31,13 +27,14 @@ namespace SS14.Shared.Timers
         /// <summary>
         /// Called when the timer is fired.
         /// </summary>
-        public event EventHandler Fired;
+        public Action OnFired;
 
-        public Timer(int time, bool isRepeating)
+        public Timer(int time, bool isRepeating, Action onFired)
         {
             Time = time;
             IsRepeating = isRepeating;
             _timeCounter = Time;
+            OnFired = onFired;
             IsActive = true;
         }
 
@@ -45,11 +42,11 @@ namespace SS14.Shared.Timers
         {
             if (IsActive)
             {
-                _timeCounter -= (int)Math.Floor(frameTime * 1000);
+                _timeCounter -= (int)(frameTime * 1000);
 
                 if (_timeCounter <= 0)
                 {
-                    Fired(this, new EventArgs());
+                    OnFired();
 
                     if (IsRepeating)
                     {

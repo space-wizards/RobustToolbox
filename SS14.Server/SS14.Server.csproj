@@ -126,7 +126,6 @@
   <ItemGroup>
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\RoundCommands.cs" />
-    <Compile Include="ClientConsoleHost\Commands\StartRoundCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />
     <Compile Include="GameObjects\Components\Container\Container.cs" />
     <Compile Include="GameObjects\Components\Container\ContainerManagerComponent.cs" />

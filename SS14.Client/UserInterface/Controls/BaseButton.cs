@@ -26,7 +26,7 @@ namespace SS14.Client.UserInterface.Controls
         public ActionMode Mode
         {
             get => (ActionMode)SceneControl.ActionMode;
-            set => SceneControl.ActionMode = (int)value;
+            set => SceneControl.ActionMode = (Godot.BaseButton.ActionModeEnum)value;
         }
 
         public bool Disabled
@@ -49,8 +49,8 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum ActionMode
         {
-            Press = Godot.BaseButton.ACTION_MODE_BUTTON_PRESS,
-            Release = Godot.BaseButton.ACTION_MODE_BUTTON_RELEASE,
+            Press = Godot.BaseButton.ActionModeEnum.Press,
+            Release = Godot.BaseButton.ActionModeEnum.Release,
         }
 
         public bool IsHovered => SceneControl.IsHovered();
@@ -63,10 +63,10 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum Draw
         {
-            Normal = Godot.BaseButton.DRAW_NORMAL,
-            Pressed = Godot.BaseButton.DRAW_PRESSED,
-            Hover = Godot.BaseButton.DRAW_HOVER,
-            Disabled = Godot.BaseButton.DRAW_DISABLED,
+            Normal = Godot.BaseButton.DrawMode.Normal,
+            Pressed = Godot.BaseButton.DrawMode.Pressed,
+            Hover = Godot.BaseButton.DrawMode.Hover,
+            Disabled = Godot.BaseButton.DrawMode.Disabled,
         }
 
         public class ButtonEventArgs : EventArgs

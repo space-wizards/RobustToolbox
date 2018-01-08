@@ -32,11 +32,14 @@ namespace SS14.Client.Map
 
         private void UpdateOnGridCreated(int mapId, int gridId)
         {
-            var tilemap = new Godot.TileMap();
+            var tilemap = new Godot.TileMap
+            {
+                TileSet = tileDefinitionManager.TileSet,
+                // TODO: Unhardcode this cell size.
+                CellSize = new Godot.Vector2(32, 32),
+                ZIndex = -10,
+            };
             tilemap.SetName($"Grid {mapId}.{gridId}");
-            tilemap.TileSet = tileDefinitionManager.TileSet;
-            tilemap.CellSize = new Godot.Vector2(32, 32);
-            tilemap.Z = -10;
             sceneTree.WorldRoot.AddChild(tilemap);
             RenderTileMaps[(mapId, gridId)] = tilemap;
         }

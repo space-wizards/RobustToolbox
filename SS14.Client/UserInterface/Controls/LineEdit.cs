@@ -31,7 +31,7 @@ namespace SS14.Client.UserInterface.Controls
         public AlignMode TextAlign
         {
             get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (int)value;
+            set => SceneControl.Align = (Godot.LineEdit.AlignEnum)value;
         }
 
         public string Text
@@ -81,21 +81,21 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum AlignMode
         {
-            Left = Godot.LineEdit.ALIGN_LEFT,
-            Center = Godot.LineEdit.ALIGN_CENTER,
-            Right = Godot.LineEdit.ALIGN_RIGHT,
-            Fill = Godot.LineEdit.ALIGN_FILL,
+            Left = Godot.LineEdit.AlignEnum.Left,
+            Center = Godot.LineEdit.AlignEnum.Center,
+            Right = Godot.LineEdit.AlignEnum.Right,
+            Fill = Godot.LineEdit.AlignEnum.Fill,
         }
 
         public enum MenuOption
         {
-            Cut = Godot.LineEdit.MENU_CUT,
-            Copy = Godot.LineEdit.MENU_COPY,
-            Paste = Godot.LineEdit.MENU_PASTE,
-            Clear = Godot.LineEdit.MENU_CLEAR,
-            SelectAll = Godot.LineEdit.MENU_SELECT_ALL,
-            Undo = Godot.LineEdit.MENU_UNDO,
-            Redo = Godot.LineEdit.MENU_REDO,
+            Cut = Godot.LineEdit.MenuItems.Cut,
+            Copy = Godot.LineEdit.MenuItems.Copy,
+            Paste = Godot.LineEdit.MenuItems.Paste,
+            Clear = Godot.LineEdit.MenuItems.Clear,
+            SelectAll = Godot.LineEdit.MenuItems.SelectAll,
+            Undo = Godot.LineEdit.MenuItems.Undo,
+            Redo = Godot.LineEdit.MenuItems.Redo,
         }
 
         public class LineEditEventArgs : EventArgs

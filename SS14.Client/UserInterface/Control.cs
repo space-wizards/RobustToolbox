@@ -515,29 +515,29 @@ namespace SS14.Client.UserInterface
             }
         }
 
-        public void SetAnchorPreset(AnchorPreset preset, bool keepMargin = false)
+        public void SetAnchorPreset(LayoutPreset preset, bool keepMargin = false)
         {
-            SceneControl.SetAnchorsPreset((int)preset, keepMargin);
+            SceneControl.SetAnchorsPreset((Godot.Control.LayoutPreset)preset, keepMargin);
         }
 
-        public enum AnchorPreset : byte
+        public enum LayoutPreset : byte
         {
-            TopLeft = Godot.Control.PRESET_TOP_LEFT,
-            TopRight = Godot.Control.PRESET_TOP_RIGHT,
-            BottomLeft = Godot.Control.PRESET_BOTTOM_LEFT,
-            BottomRight = Godot.Control.PRESET_BOTTOM_RIGHT,
-            CenterLeft = Godot.Control.PRESET_CENTER_LEFT,
-            CenterTop = Godot.Control.PRESET_CENTER_TOP,
-            CenterRight = Godot.Control.PRESET_CENTER_RIGHT,
-            CenterBottom = Godot.Control.PRESET_CENTER_BOTTOM,
-            Center = Godot.Control.PRESET_CENTER,
-            LeftWide = Godot.Control.PRESET_LEFT_WIDE,
-            TopWide = Godot.Control.PRESET_TOP_WIDE,
-            RightWide = Godot.Control.PRESET_RIGHT_WIDE,
-            BottomWide = Godot.Control.PRESET_BOTTOM_WIDE,
-            VerticalCenterWide = Godot.Control.PRESET_VCENTER_WIDE,
-            HorizontalCenterWide = Godot.Control.PRESET_HCENTER_WIDE,
-            Wide = Godot.Control.PRESET_WIDE,
+            TopLeft = Godot.Control.LayoutPreset.TopLeft,
+            TopRight = Godot.Control.LayoutPreset.TopRight,
+            BottomLeft = Godot.Control.LayoutPreset.BottomLeft,
+            BottomRight = Godot.Control.LayoutPreset.BottomRight,
+            CenterLeft = Godot.Control.LayoutPreset.CenterLeft,
+            CenterTop = Godot.Control.LayoutPreset.CenterTop,
+            CenterRight = Godot.Control.LayoutPreset.CenterRight,
+            CenterBottom = Godot.Control.LayoutPreset.CenterBottom,
+            Center = Godot.Control.LayoutPreset.Center,
+            LeftWide = Godot.Control.LayoutPreset.LeftWide,
+            TopWide = Godot.Control.LayoutPreset.TopWide,
+            RightWide = Godot.Control.LayoutPreset.RightWide,
+            BottomWide = Godot.Control.LayoutPreset.BottomWide,
+            VerticalCenterWide = Godot.Control.LayoutPreset.VcenterWide,
+            HorizontalCenterWide = Godot.Control.LayoutPreset.VcenterWide,
+            Wide = Godot.Control.LayoutPreset.Wide,
         }
 
         public void AddColorOverride(string name, Color color)
@@ -565,29 +565,29 @@ namespace SS14.Client.UserInterface
 
         public enum CursorShape
         {
-            Arrow = Godot.Control.CURSOR_ARROW,
-            IBeam = Godot.Control.CURSOR_IBEAM,
-            PointingHand = Godot.Control.CURSOR_POINTING_HAND,
-            Cross = Godot.Control.CURSOR_CROSS,
-            Wait = Godot.Control.CURSOR_WAIT,
-            Busy = Godot.Control.CURSOR_BUSY,
-            Drag = Godot.Control.CURSOR_DRAG,
-            CanDrop = Godot.Control.CURSOR_CAN_DROP,
-            Forbidden = Godot.Control.CURSOR_FORBIDDEN,
-            VSize = Godot.Control.CURSOR_VSIZE,
-            HSize = Godot.Control.CURSOR_HSIZE,
-            BDiagSize = Godot.Control.CURSOR_BDIAGSIZE,
-            FDiagSize = Godot.Control.CURSOR_FDIAGSIZE,
-            Move = Godot.Control.CURSOR_MOVE,
-            VSplit = Godot.Control.CURSOR_VSPLIT,
-            HSplit = Godot.Control.CURSOR_HSPLIT,
-            Help = Godot.Control.CURSOR_HELP,
+            Arrow = Godot.Control.CursorShape.Arrow,
+            IBeam = Godot.Control.CursorShape.Ibeam,
+            PointingHand = Godot.Control.CursorShape.PointingHand,
+            Cross = Godot.Control.CursorShape.Cross,
+            Wait = Godot.Control.CursorShape.Wait,
+            Busy = Godot.Control.CursorShape.Busy,
+            Drag = Godot.Control.CursorShape.Drag,
+            CanDrop = Godot.Control.CursorShape.CanDrop,
+            Forbidden = Godot.Control.CursorShape.Forbidden,
+            VSize = Godot.Control.CursorShape.Vsize,
+            HSize = Godot.Control.CursorShape.Hsize,
+            BDiagSize = Godot.Control.CursorShape.Bdiagsize,
+            FDiagSize = Godot.Control.CursorShape.Fdiagsize,
+            Move = Godot.Control.CursorShape.Move,
+            VSplit = Godot.Control.CursorShape.Vsplit,
+            HSplit = Godot.Control.CursorShape.Hsplit,
+            Help = Godot.Control.CursorShape.Help,
         }
 
         public CursorShape DefaultCursorShape
         {
             get => (CursorShape)SceneControl.GetDefaultCursorShape();
-            set => SceneControl.SetDefaultCursorShape((int)value);
+            set => SceneControl.SetDefaultCursorShape((Godot.Control.CursorShape)value);
         }
 
         /// <summary>
@@ -598,24 +598,24 @@ namespace SS14.Client.UserInterface
             /// <summary>
             ///     The control will not be considered at all, and will not have any effects.
             /// </summary>
-            Ignore = Godot.Control.MOUSE_FILTER_IGNORE,
+            Ignore = Godot.Control.MouseFilterEnum.Ignore,
             /// <summary>
             ///     The control will be able to receive mouse buttons events.
             ///     Furthermore, if a control with this mode does get clicked,
             ///     the event automatically gets marked as handled.
             /// </summary>
-            Pass = Godot.Control.MOUSE_FILTER_PASS,
+            Pass = Godot.Control.MouseFilterEnum.Pass,
             /// <summary>
             ///     The control will be able to receive mouse button events like <see cref="Pass"/>,
             ///     but the event will be stopped and handled even if the relevant events do not handle it.
             /// </summary>
-            Stop = Godot.Control.MOUSE_FILTER_STOP,
+            Stop = Godot.Control.MouseFilterEnum.Stop,
         }
 
         public MouseFilterMode MouseFilter
         {
             get => (MouseFilterMode)SceneControl.MouseFilter;
-            set => SceneControl.MouseFilter = (int)value;
+            set => SceneControl.MouseFilter = (Godot.Control.MouseFilterEnum)value;
         }
     }
 }

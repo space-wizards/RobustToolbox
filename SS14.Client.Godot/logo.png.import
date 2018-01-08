@@ -6,7 +6,11 @@ path="res://.import/logo.png-cca8726399059c8d4f806e28e356b14d.stex"
 
 [deps]
 
+source_file="res://logo.png"
 source_md5="96bd1811d42defda49196cf6d14961d4"
+
+dest_files=[ "res://.import/logo.png-cca8726399059c8d4f806e28e356b14d.stex" ]
+dest_md5="34277a92cc7d4c3da9ae790b21686544"
 
 [params]
 

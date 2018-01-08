@@ -40,7 +40,7 @@ namespace SS14.Client.UserInterface.Controls
             SceneControl.Clear();
         }
 
-        public int AppendBBCode(string code)
+        public Godot.Error AppendBBCode(string code)
         {
             return SceneControl.AppendBbcode(code);
         }

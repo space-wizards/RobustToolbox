@@ -93,7 +93,7 @@ namespace SS14.Client
                     break;
 
                 case InputEventMouseButton mouseButtonEvent:
-                    if (mouseButtonEvent.ButtonIndex >= GD.BUTTON_WHEEL_UP && mouseButtonEvent.ButtonIndex <= GD.BUTTON_WHEEL_RIGHT)
+                    if (mouseButtonEvent.ButtonIndex >= (int)ButtonList.WheelUp && mouseButtonEvent.ButtonIndex <= (int)ButtonList.WheelRight)
                     {
                         // Mouse wheel event.
                         var mouseWheelEventArgs = (MouseWheelEventArgs)mouseButtonEvent;

@@ -48,7 +48,7 @@ namespace SS14.Client.GameObjects
                 drawDepth = value;
                 if (SceneSprite != null)
                 {
-                    SceneSprite.Z = (int)value;
+                    SceneSprite.ZIndex = (int)value;
                 }
             }
         }
@@ -188,7 +188,7 @@ namespace SS14.Client.GameObjects
 
             SceneSprite = new Godot.Sprite()
             {
-                Z = (int)DrawDepth,
+                ZIndex = (int)DrawDepth,
                 Scale = Scale.Convert(),
             };
             SceneSprite.SetName("SpriteComponent");

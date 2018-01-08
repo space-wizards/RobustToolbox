@@ -24,7 +24,7 @@ namespace SS14.Client.ResourceManagement
                 throw new InvalidDataException();
             }
             // Disable filter by default because pixel art.
-            texture.SetFlags(texture.GetFlags() & ~Godot.Texture.FLAG_FILTER);
+            texture.SetFlags(texture.GetFlags() & ~(int)Godot.Texture.Flags.Filter);
             Texture = new GodotTextureSource(texture);
             // Primarily for tracking down iCCP sRGB errors in the image files.
             Logger.Debug($"Loaded texture {Path.GetFullPath(diskPath)}");

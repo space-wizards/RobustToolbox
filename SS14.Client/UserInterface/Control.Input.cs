@@ -74,7 +74,7 @@ namespace SS14.Client.UserInterface
                     break;
 
                 case Godot.InputEventMouseButton buttonEvent:
-                    if (buttonEvent.ButtonIndex >= Godot.GD.BUTTON_WHEEL_UP && buttonEvent.ButtonIndex <= Godot.GD.BUTTON_WHEEL_RIGHT)
+                    if (buttonEvent.ButtonIndex >= (int)Godot.ButtonList.WheelUp && buttonEvent.ButtonIndex <= (int)Godot.ButtonList.WheelRight)
                     {
                         // Mouse wheel event.
                         var mouseWheelEventArgs = new GUIMouseWheelEventArgs((Mouse.Wheel)buttonEvent.ButtonIndex,

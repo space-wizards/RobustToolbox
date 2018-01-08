@@ -49,7 +49,7 @@ namespace SS14.Client.UserInterface
             {
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
-            RootControl.SetAnchorPreset(Control.AnchorPreset.Wide);
+            RootControl.SetAnchorPreset(Control.LayoutPreset.Wide);
 
             CanvasLayer.AddChild(RootControl.SceneControl);
 
@@ -57,11 +57,11 @@ namespace SS14.Client.UserInterface
             {
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
-            StateRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
+            StateRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             RootControl.AddChild(StateRoot);
 
             WindowRoot = new Control("WindowRoot");
-            WindowRoot.SetAnchorPreset(Control.AnchorPreset.Wide);
+            WindowRoot.SetAnchorPreset(Control.LayoutPreset.Wide);
             WindowRoot.MouseFilter = Control.MouseFilterMode.Ignore;
             RootControl.AddChild(WindowRoot);
 

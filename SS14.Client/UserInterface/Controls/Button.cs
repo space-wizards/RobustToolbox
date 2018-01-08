@@ -35,7 +35,7 @@ namespace SS14.Client.UserInterface.Controls
         public AlignMode TextAlign
         {
             get => (AlignMode)SceneControl.Align;
-            set => SceneControl.Align = (int)value;
+            set => SceneControl.Align = (Godot.Button.TextAlign)value;
         }
 
         public bool ClipText
@@ -58,9 +58,9 @@ namespace SS14.Client.UserInterface.Controls
 
         public enum AlignMode
         {
-            Left = Godot.Button.ALIGN_LEFT,
-            Center = Godot.Button.ALIGN_CENTER,
-            Right = Godot.Button.ALIGN_RIGHT,
+            Left = Godot.Button.TextAlign.Left,
+            Center = Godot.Button.TextAlign.Center,
+            Right = Godot.Button.TextAlign.Right,
         }
     }
 }

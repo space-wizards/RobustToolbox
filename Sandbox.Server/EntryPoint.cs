@@ -61,14 +61,15 @@ namespace Sandbox.Server
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.Index);
         }
 
-        private void HandlePlayerJoinedLobby(object sender, PlayerEventArgs playerEventArgs)
+        private void HandlePlayerJoinedLobby(object sender, PlayerEventArgs args)
         {
-
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
         }
 
         private void HandlePlayerJoinedGame(object sender, PlayerEventArgs args)
         {
             IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
+            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
         }
 
         private void HandlePlayerLeaveServer(object sender, PlayerEventArgs args)

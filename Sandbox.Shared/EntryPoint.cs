@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using SS14.Shared.ContentPack;
 
-namespace Sandbox.Client
+namespace Sandbox.Shared
 {
-    public class EntryPoint : GameClient
+    class EntryPoint : GameShared
     {
     }
 }

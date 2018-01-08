@@ -20,6 +20,11 @@ namespace SS14.Shared.Interfaces.Map
     /// </summary>
     public interface IMapManager
     {
+        /// <summary>
+        ///     The default <see cref="IMap"/> that is always available. Equivalent to SS13 Null space.
+        /// </summary>
+        IMap DefaultMap { get; }
+
         void UnregisterMap(int mapID);
 
         IMap CreateMap(int mapID);

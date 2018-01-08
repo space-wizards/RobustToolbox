@@ -64,11 +64,16 @@ namespace SS14.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, int argMap)
+        public IEntity ForceSpawnEntityAt(string entityType, Vector2 position, int argMap)
         {
-            var mapmanager = IoCManager.Resolve<IMapManager>();
-            var coordinates = new LocalCoordinates(position, mapmanager.GetMap(argMap).FindGridAt(position));
-            return ForceSpawnEntityAt(EntityType, coordinates);
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (!mapManager.TryGetMap(argMap, out var map))
+            {
+                map = mapManager.DefaultMap;
+            }
+
+            return ForceSpawnEntityAt(entityType, new LocalCoordinates(position, map.FindGridAt(position)));
         }
 
         public List<EntityState> GetEntityStates()

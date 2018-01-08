@@ -17,10 +17,13 @@ namespace SS14.Shared.Map
         private const ushort DefaultTileSize = 1;
 
         /// <inheritdoc />
+        public IMap DefaultMap => GetMap(NULLSPACE);
+
+        /// <inheritdoc />
         public void Initialize()
         {
             NetSetup();
-            CreateMap(MapManager.NULLSPACE);
+            CreateMap(NULLSPACE);
         }
 
         /// <inheritdoc />
@@ -45,10 +48,6 @@ namespace SS14.Shared.Map
 
             OnTileChanged?.Invoke(gridId, tileRef, oldTile);
         }
-
-        #region Networking
-
-        #endregion Networking
 
         #region MapAccess
 

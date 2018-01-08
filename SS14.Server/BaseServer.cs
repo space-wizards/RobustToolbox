@@ -389,11 +389,13 @@ namespace SS14.Server
             var args = new RunLevelChangedEventArgs(_runLevel, level);
             _runLevel = level;
             RunLevelChanged?.Invoke(this, args);
-            
-            if (level >= ServerRunLevel.PreGame)
-            {
-                LoadMap(MapName);
-                _entities.Initialize();
+
+            // positive edge triggers
+            switch (level) {
+                case ServerRunLevel.PreGame:
+                    //LoadMap(MapName);
+                    _entities.Initialize();
+                    break;
             }
         }
 

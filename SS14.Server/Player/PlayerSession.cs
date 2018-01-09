@@ -49,7 +49,7 @@ namespace SS14.Server.Player
         /// <inheritdoc />
         public string Name
         {
-            get => string.IsNullOrWhiteSpace(_name) ? "Unknown" : _name;
+            get => string.IsNullOrWhiteSpace(_name) ? "<TERU-SAMA>" : _name;
             set => _name = value;
         }
 
@@ -214,6 +214,12 @@ namespace SS14.Server.Player
                 PlayerState.ControlledEntity = null;
             else
                 PlayerState.ControlledEntity = attachedEntity.Uid;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"[{Index}]{Name}";
         }
     }
 }

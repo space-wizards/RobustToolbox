@@ -3,6 +3,7 @@ using System.Diagnostics;
 using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
+using SS14.Server.Interfaces.Maps;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
@@ -50,11 +51,12 @@ namespace Sandbox.Server
         {
             if (args.NewLevel == ServerRunLevel.PreGame)
             {
-                
+                IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round loaded!");
             }
             else if (args.NewLevel == ServerRunLevel.Game)
             {
                 IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
+                IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round started!");
             }
             else if (args.NewLevel == ServerRunLevel.PostGame)
             {
@@ -96,7 +98,7 @@ namespace Sandbox.Server
             }
             else
             {
-                _mapLoader.Load(MapName, mapMgr.GetMap(1));
+                IoCManager.Resolve<IMapLoader>().Load(_server.MapName, mapMgr.GetMap(1));
             }
         }
 

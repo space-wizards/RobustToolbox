@@ -47,7 +47,8 @@ namespace SS14.Client.UserInterface.CustomControls
         private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
-        private float HeaderSizeY = 25;
+        // TODO: Unhardcode this header size.
+        private const float HEADER_SIZE_Y = 25;
         private static readonly Vector2 MinSize = new Vector2(50, 50);
 
         private DragMode CurrentDrag = DragMode.None;
@@ -71,8 +72,6 @@ namespace SS14.Client.UserInterface.CustomControls
             var header = GetChild("Header");
             CloseButton = header.GetChild<TextureButton>("CloseButton");
             CloseButton.OnPressed += CloseButtonPressed;
-
-            HeaderSizeY = header.Size.Y;
 
             Contents = GetChild("Contents");
         }
@@ -232,7 +231,7 @@ namespace SS14.Client.UserInterface.CustomControls
                 }
             }
 
-            if (mode == DragMode.None && relativeMousePos.Y < HeaderSizeY)
+            if (mode == DragMode.None && relativeMousePos.Y < HEADER_SIZE_Y)
             {
                 mode = DragMode.Move;
             }

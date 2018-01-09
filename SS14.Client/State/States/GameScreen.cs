@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface;
+using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
 using SS14.Shared;
 using SS14.Shared.Configuration;
@@ -134,7 +135,7 @@ namespace SS14.Client.State.States
                 return;
             }
 
-            if (e.Key == Keyboard.Key.T && !_gameChat.Input.HasFocus())
+            if (e.Key == Keyboard.Key.T && !_gameChat.Input.HasFocus() && !(userInterfaceManager.Focused is LineEdit))
             {
                 _gameChat.Input.GrabFocus();
             }

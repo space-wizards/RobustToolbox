@@ -380,6 +380,9 @@ namespace SS14.Server
             Logger.Info($"[SRV] Welcome message: {Motd}");
         }
 
+        /// <summary>
+        ///     Switches the run level of the BaseServer to the desired value.
+        /// </summary>
         private void OnRunLevelChanged(ServerRunLevel level)
         {
             if (level == _runLevel)
@@ -393,61 +396,11 @@ namespace SS14.Server
             // positive edge triggers
             switch (level) {
                 case ServerRunLevel.PreGame:
-                    //LoadMap(MapName);
                     _entities.Initialize();
                     break;
             }
         }
-
-        #region File Operations
-
-        public bool LoadMap(string mapName)
-        {
-            var defManager = IoCManager.Resolve<ITileDefinitionManager>();
-            var mapMgr = IoCManager.Resolve<IMapManager>();
-
-            NewDefaultMap(mapMgr, defManager, 1);
-            _mapLoader.Load(MapName, mapMgr.GetMap(1));
-
-            return true;
-        }
-
-        //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
-        /// <summary>
-        ///     Generates 'Demo' grid and inserts it into the map manager.
-        /// </summary>
-        /// <param name="mapManager">The map manager to work with.</param>
-        /// <param name="defManager">The definition manager to work with.</param>
-        /// <param name="gridID">The ID of the grid to generate and insert into the map manager.</param>
-        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridID)
-        {
-            mapManager.SuppressOnTileChanged = true;
-            try
-            {
-                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
-                var floor = defManager["Floor"].TileId;
-
-                Debug.Assert(floor > 0);
-
-                var map = mapManager.CreateMap(1); //TODO: default map
-                var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
-
-                for (var y = -32; y <= 32; ++y)
-                {
-                    for (var x = -32; x <= 32; ++x)
-                    {
-                        grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
-                    }
-                }
-            }
-            finally
-            {
-                mapManager.SuppressOnTileChanged = false;
-            }
-        }
-
-        #endregion File Operations
-
+        
         private void DisposeForRestart()
         {
             IoCManager.Resolve<IPlayerManager>().DetachAll();

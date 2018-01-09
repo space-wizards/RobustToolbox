@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Log;
+using SS14.Shared.Map;
 
 namespace Sandbox.Server
 {
@@ -44,7 +48,11 @@ namespace Sandbox.Server
 
         private void HandleRunLevelChanged(object sender, RunLevelChangedEventArgs args)
         {
-            if (args.NewLevel == ServerRunLevel.Game)
+            if (args.NewLevel == ServerRunLevel.PreGame)
+            {
+                
+            }
+            else if (args.NewLevel == ServerRunLevel.Game)
             {
                 IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
             }
@@ -75,6 +83,55 @@ namespace Sandbox.Server
         private void HandlePlayerLeaveServer(object sender, PlayerEventArgs args)
         {
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
+        }
+
+        private void LoadVerse(string versePath)
+        {
+            var defManager = IoCManager.Resolve<ITileDefinitionManager>();
+            var mapMgr = IoCManager.Resolve<IMapManager>();
+
+            if(string.IsNullOrWhiteSpace(versePath))
+            {
+                NewDefaultMap(mapMgr, defManager, 1);
+            }
+            else
+            {
+                _mapLoader.Load(MapName, mapMgr.GetMap(1));
+            }
+        }
+
+        //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
+        /// <summary>
+        ///     Generates 'Demo' grid and inserts it into the map manager.
+        /// </summary>
+        /// <param name="mapManager">The map manager to work with.</param>
+        /// <param name="defManager">The definition manager to work with.</param>
+        /// <param name="gridID">The ID of the grid to generate and insert into the map manager.</param>
+        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridID)
+        {
+            mapManager.SuppressOnTileChanged = true;
+            try
+            {
+                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
+                var floor = defManager["Floor"].TileId;
+
+                Debug.Assert(floor > 0);
+
+                var map = mapManager.CreateMap(1); //TODO: default map
+                var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
+
+                for (var y = -32; y <= 32; ++y)
+                {
+                    for (var x = -32; x <= 32; ++x)
+                    {
+                        grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
+                    }
+                }
+            }
+            finally
+            {
+                mapManager.SuppressOnTileChanged = false;
+            }
         }
     }
 }

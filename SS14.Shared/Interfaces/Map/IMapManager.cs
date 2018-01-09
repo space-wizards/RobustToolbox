@@ -31,6 +31,8 @@ namespace SS14.Shared.Interfaces.Map
 
         IMap GetMap(int mapID);
 
+        bool MapExists(int mapID);
+
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.

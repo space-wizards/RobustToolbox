@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
+    <Compile Include="ClientConsoleHost\Commands\MapCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\PlayerCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\RoundCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />

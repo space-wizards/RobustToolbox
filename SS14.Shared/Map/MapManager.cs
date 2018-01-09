@@ -80,6 +80,11 @@ namespace SS14.Shared.Map
             return _Maps[mapID];
         }
 
+        public bool MapExists(int mapID)
+        {
+            return _Maps.ContainsKey(mapID);
+        }
+
         public bool TryGetMap(int mapID, out IMap map)
         {
             if (_Maps.ContainsKey(mapID))

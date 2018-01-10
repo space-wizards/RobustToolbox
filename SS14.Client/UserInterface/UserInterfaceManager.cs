@@ -1,4 +1,5 @@
-﻿using SS14.Client.Input;
+﻿using System;
+using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.UserInterface;
 using SS14.Client.UserInterface.Controls;
@@ -10,7 +11,7 @@ using SS14.Shared.Log;
 
 namespace SS14.Client.UserInterface
 {
-    public sealed class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit
+    public sealed class UserInterfaceManager : IUserInterfaceManager, IPostInjectInit, IDisposable
     {
         [Dependency]
         readonly IConfigurationManager _config;
@@ -74,6 +75,11 @@ namespace SS14.Client.UserInterface
 
             FPSCounter = new FPSCounter();
             RootControl.AddChild(FPSCounter);
+        }
+
+        public void Dispose()
+        {
+            RootControl.Dispose();
         }
 
         public void Update(FrameEventArgs args)

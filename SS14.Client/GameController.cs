@@ -98,6 +98,11 @@ namespace SS14.Client
             _stateManager.RequestStateChange<MainScreen>();
         }
 
+        public override void QuitRequest()
+        {
+            Shutdown("OS quit request");
+        }
+
         public void Shutdown(string reason = null)
         {
             if (reason != null)

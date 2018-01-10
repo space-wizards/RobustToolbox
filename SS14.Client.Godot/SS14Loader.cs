@@ -73,6 +73,19 @@ namespace SS14.Client.GodotGlue
                 entrypoint.PreInput(inputEvent);
             }
         }
+
+        public override void _Notification(int what)
+        {
+            switch (what)
+            {
+                case MainLoop.NotificationWmQuitRequest:
+                    foreach (var entrypoint in EntryPoints)
+                    {
+                        entrypoint.QuitRequest();
+                    }
+                    break;
+            }
+        }
     }
 
     /// <summary>
@@ -115,7 +128,17 @@ namespace SS14.Client.GodotGlue
         {
         }
 
+        /// <summary>
+        ///     Called before all other input events. This is before the UI system.
+        /// </summary>
         public virtual void PreInput(InputEvent inputEvent)
+        {
+        }
+
+        /// <summary>
+        ///     Called when the OS sends a quit request, such as the user clicking the window's close button.
+        /// </summary>
+        public virtual void QuitRequest()
         {
         }
     }

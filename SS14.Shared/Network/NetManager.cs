@@ -20,7 +20,7 @@ namespace SS14.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public class NetManager : IClientNetManager, IServerNetManager
+    public class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -132,6 +132,14 @@ namespace SS14.Shared.Network
             _netPeer = new NetPeer(netConfig);
 
             _netPeer.Start();
+        }
+
+        public void Dispose()
+        {
+            if (_netPeer != null)
+            {
+                Shutdown("Network manager getting disposed.");
+            }
         }
 
         /// <inheritdoc />

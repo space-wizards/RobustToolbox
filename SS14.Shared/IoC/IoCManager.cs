@@ -84,7 +84,15 @@ namespace SS14.Shared.IoC
         {
             foreach (var service in Services.Values.OfType<IDisposable>().Distinct())
             {
-                service.Dispose();
+                try
+                {
+                    service.Dispose();
+                }
+                catch (Exception e)
+                {
+                    // DON'T use the logger since it might be dead already.
+                    System.Console.WriteLine($"Caught exception inside {service.GetType()} dispose! {e}");
+                }
             }
             Services.Clear();
             ResolveTypes.Clear();

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
@@ -33,7 +32,7 @@ namespace Sandbox.Server
             _server.PlayerJoinedGame += HandlePlayerJoinedGame;
             _server.PlayerLeaveServer += HandlePlayerLeaveServer;
         }
-        
+
         /// <inheritdoc />
         public override void Dispose()
         {
@@ -51,6 +50,7 @@ namespace Sandbox.Server
         {
             if (args.NewLevel == ServerRunLevel.PreGame)
             {
+                LoadVerse(string.Empty);
                 IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round loaded!");
             }
             else if (args.NewLevel == ServerRunLevel.Game)
@@ -62,7 +62,6 @@ namespace Sandbox.Server
             {
                 IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round over!");
             }
-            
         }
 
         private void HandlePlayerJoinedServer(object sender, PlayerEventArgs args)
@@ -92,14 +91,10 @@ namespace Sandbox.Server
             var defManager = IoCManager.Resolve<ITileDefinitionManager>();
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
-            if(string.IsNullOrWhiteSpace(versePath))
-            {
-                NewDefaultMap(mapMgr, defManager, 1);
-            }
+            if (string.IsNullOrWhiteSpace(versePath))
+                NewDefaultGrid(mapMgr, defManager, new GridId(1));
             else
-            {
-                IoCManager.Resolve<IMapLoader>().Load(_server.MapName, mapMgr.GetMap(1));
-            }
+                IoCManager.Resolve<IMapLoader>().Load(_server.MapName, mapMgr.GetMap(new MapId(1)));
         }
 
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
@@ -109,7 +104,7 @@ namespace Sandbox.Server
         /// <param name="mapManager">The map manager to work with.</param>
         /// <param name="defManager">The definition manager to work with.</param>
         /// <param name="gridID">The ID of the grid to generate and insert into the map manager.</param>
-        private static void NewDefaultMap(IMapManager mapManager, ITileDefinitionManager defManager, int gridID)
+        private static void NewDefaultGrid(IMapManager mapManager, ITileDefinitionManager defManager, GridId gridID)
         {
             mapManager.SuppressOnTileChanged = true;
             try
@@ -119,14 +114,15 @@ namespace Sandbox.Server
 
                 Debug.Assert(floor > 0);
 
-                var map = mapManager.CreateMap(1); //TODO: default map
-                var grid = map.CreateGrid(1); //TODO: huh wha maybe? check grid ID
+                var mapId = new MapId(1);
+                var map = mapManager.CreateMap(mapId); //TODO: default map
+                var grid = map.CreateGrid(new GridId(1)); //TODO: huh wha maybe? check grid ID
 
                 for (var y = -32; y <= 32; ++y)
                 {
                     for (var x = -32; x <= 32; ++x)
                     {
-                        grid.SetTile(new LocalCoordinates(x, y, gridID, 1), new Tile(floor)); //TODO: Fix this
+                        grid.SetTile(new LocalCoordinates(x, y, gridID, mapId), new Tile(floor)); //TODO: Fix this
                     }
                 }
             }

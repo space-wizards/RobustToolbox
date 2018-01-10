@@ -158,7 +158,6 @@
     <Compile Include="CommandLineArgs.cs" />
     <Compile Include="Chat\ChatManager.cs" />
     <Compile Include="ClientConsoleHost\Commands\ListCommands.cs" />
-    <Compile Include="ClientConsoleHost\Commands\Test.cs" />
     <Compile Include="ClientConsoleHost\ClientConsoleHost.cs" />
     <Compile Include="ClientConsoleHost\Commands\DrugsCommand.cs" />
     <Compile Include="GameObjects\ServerComponentFactory.cs" />

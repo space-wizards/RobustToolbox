@@ -1,29 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using OpenTK;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Map
 {
     public partial class MapManager : IMapManager
     {
-        public const int NULLSPACE = 0;
-        public const int DEFAULTGRID = 0;
         private const ushort DefaultTileSize = 1;
 
         /// <inheritdoc />
-        public IMap DefaultMap => GetMap(NULLSPACE);
+        public IMap DefaultMap => GetMap(MapId.Nullspace);
 
         /// <inheritdoc />
         public void Initialize()
         {
             NetSetup();
-            CreateMap(NULLSPACE);
+            CreateMap(MapId.Nullspace);
         }
 
         /// <inheritdoc />
@@ -44,7 +37,7 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The ID of the grid that was modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile that got replaced.</param>
-        public void RaiseOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        public void RaiseOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
         {
             if (SuppressOnTileChanged)
                 return;
@@ -57,15 +50,15 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     Holds an indexed collection of map grids.
         /// </summary>
-        private readonly Dictionary<int, Map> _Maps = new Dictionary<int, Map>();
+        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
 
-        public void UnregisterMap(int mapID)
+        public void UnregisterMap(MapId mapID)
         {
-            if (_Maps.ContainsKey(mapID))
+            if (_maps.ContainsKey(mapID))
             {
                 BroadcastUnregisterMap(mapID);
-                MapDestroyed?.Invoke(this, new MapEventArgs(_Maps[mapID]));
-                _Maps.Remove(mapID);
+                MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
+                _maps.Remove(mapID);
             }
             else
             {
@@ -73,16 +66,16 @@ namespace SS14.Shared.Map
             }
         }
         
-        public IMap CreateMap(int mapID, bool overwrite = false)
+        public IMap CreateMap(MapId mapID, bool overwrite = false)
         {
-            if(!overwrite && _Maps.ContainsKey(mapID))
+            if(!overwrite && _maps.ContainsKey(mapID))
             {
                 Logger.Warning("[MAP] Attempted to overwrite existing map.");
                 return null;
             }
 
             var newMap = new Map(this, mapID);
-            _Maps.Add(mapID, newMap);
+            _maps.Add(mapID, newMap);
             MapCreated?.Invoke(this, new MapEventArgs(newMap));
 
             BroadcastCreateMap(newMap);
@@ -90,21 +83,21 @@ namespace SS14.Shared.Map
             return newMap;
         }
 
-        public IMap GetMap(int mapID)
+        public IMap GetMap(MapId mapID)
         {
-            return _Maps[mapID];
+            return _maps[mapID];
         }
 
-        public bool MapExists(int mapID)
+        public bool MapExists(MapId mapID)
         {
-            return _Maps.ContainsKey(mapID);
+            return _maps.ContainsKey(mapID);
         }
 
-        public bool TryGetMap(int mapID, out IMap map)
+        public bool TryGetMap(MapId mapID, out IMap map)
         {
-            if (_Maps.ContainsKey(mapID))
+            if (_maps.ContainsKey(mapID))
             {
-                map = _Maps[mapID];
+                map = _maps[mapID];
                 return true;
             }
             map = null;
@@ -113,7 +106,7 @@ namespace SS14.Shared.Map
 
         public IEnumerable<IMap> GetAllMaps()
         {
-            foreach(var kmap in _Maps)
+            foreach(var kmap in _maps)
             {
                 yield return kmap.Value;
             }

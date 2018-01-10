@@ -68,8 +68,8 @@ namespace SS14.Client.State.States
         private SpriteBatch _decalBatch;
 
         #region Mouse/Camera stuff
-        public ScreenCoordinates MousePosScreen { get; set; } = new ScreenCoordinates(0, 0, 0);
-        public LocalCoordinates MousePosWorld { get; set; } = new LocalCoordinates(0, 0, 0, 0);
+        public ScreenCoordinates MousePosScreen { get; set; }
+        public LocalCoordinates MousePosWorld { get; set; }
         private View view;
         #endregion Mouse/Camera stuff
 
@@ -160,7 +160,7 @@ namespace SS14.Client.State.States
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
-            IoCManager.Resolve<IMapManager>().OnTileChanged += OnTileChanged;
+            IoCManager.Resolve<IMapManager>().OnTileChanged += (gridId, tileRef, oldTile) => OnTileChanged(gridId, tileRef, oldTile);
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -323,7 +323,7 @@ namespace SS14.Client.State.States
             playerVision = lightManager.CreateLight();
             playerVision.Color = Color.Blue;
             playerVision.Radius = 1024;
-            playerVision.Coordinates = new LocalCoordinates(0, 0, 0, 0);
+            playerVision.Coordinates = new LocalCoordinates();
 
             OccluderDebugTarget = new RenderImage("debug", width, height);
         }
@@ -398,7 +398,7 @@ namespace SS14.Client.State.States
             // vp is the rectangle in which we can render in world space.
             var vp = CluwneLib.WorldViewport;
 
-            int map = 0;
+            var map = MapId.Nullspace;
             if(PlayerManager.LocalPlayer.ControlledEntity != null)
                 map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
 
@@ -689,7 +689,7 @@ namespace SS14.Client.State.States
             }
             else
             {
-                MousePosScreen = new ScreenCoordinates(e.NewPosition, Shared.Map.MapManager.NULLSPACE);
+                MousePosScreen = new ScreenCoordinates(e.NewPosition, MapId.Nullspace);
             }
             MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
@@ -768,7 +768,7 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        public void OnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        public void OnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
         {
             IoCManager.Resolve<ILightManager>().RecalculateLightsInView(Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
             // Recalculate the scene batches.
@@ -1093,7 +1093,7 @@ namespace SS14.Client.State.States
             foreach (var grid in grids)
             {
                 //We've already drawn the default grid
-                if (grid.Index == SS14.Shared.Map.MapManager.DEFAULTGRID)
+                if (grid.Index == GridId.DefaultGrid)
                     continue;
 
                 //Collects all tiles from grids in vision, gathering empty tiles only from the default grid
@@ -1105,8 +1105,11 @@ namespace SS14.Client.State.States
         /// <summary>
         /// Render the renderables
         /// </summary>
+        /// <param name="frameTime"></param>
+        /// <param name="viewPort"></param>
+        /// <param name="argMapLevel"></param>
         /// <param name="frametime">time since the last frame was rendered.</param>
-        private void RenderComponents(float frameTime, Box2 viewPort, int argMapLevel)
+        private void RenderComponents(float frameTime, Box2 viewPort, MapId argMapLevel)
         {
             IEnumerable<IComponent> components = _componentManager.GetComponents<ISpriteRenderableComponent>()
                                           .Cast<IComponent>()
@@ -1345,7 +1348,7 @@ namespace SS14.Client.State.States
                 };
             }
 
-            public void RenderDebug(Box2 viewport, int argMap)
+            public void RenderDebug(Box2 viewport, MapId argMap)
             {
                 if (CluwneLib.Debug.DebugColliders)
                 {

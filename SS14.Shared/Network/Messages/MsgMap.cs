@@ -1,6 +1,6 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
+using SS14.Shared.Map;
 
 namespace SS14.Shared.Network.Messages
 {
@@ -15,8 +15,8 @@ namespace SS14.Shared.Network.Messages
         #endregion
 
         public MapMessage MessageType { get; set; }
-        public int MapIndex { get; set; }
-        public int GridIndex { get; set; }
+        public MapId MapIndex { get; set; }
+        public GridId GridIndex { get; set; }
 
         public Turf SingleTurf { get; set; }
 
@@ -62,8 +62,8 @@ namespace SS14.Shared.Network.Messages
                     };
                     break;
                 case MapMessage.SendTileMap:
-                    GridIndex = buffer.ReadInt32();
-                    MapIndex = buffer.ReadInt32();
+                    GridIndex = new GridId(buffer.ReadInt32());
+                    MapIndex = new MapId(buffer.ReadInt32());
 
                     //tile defs
                     var numTileDefs = buffer.ReadInt32();
@@ -105,7 +105,7 @@ namespace SS14.Shared.Network.Messages
                     break;
                 case MapMessage.CreateMap:
                 case MapMessage.UnregisterMap:
-                    MapIndex = buffer.ReadInt32();
+                    MapIndex = new MapId(buffer.ReadInt32());
                     break;
             }
         }
@@ -121,8 +121,8 @@ namespace SS14.Shared.Network.Messages
                     buffer.Write(SingleTurf.Tile);
                     break;
                 case MapMessage.SendTileMap:
-                    buffer.Write(GridIndex);
-                    buffer.Write(MapIndex);
+                    buffer.Write((int)GridIndex);
+                    buffer.Write((int)MapIndex);
 
                     // Tile defs, ordered list
                     buffer.Write(TileDefs.Length);
@@ -148,7 +148,7 @@ namespace SS14.Shared.Network.Messages
                     break;
                 case MapMessage.CreateMap:
                 case MapMessage.UnregisterMap:
-                    buffer.Write(MapIndex);
+                    buffer.Write((int)MapIndex);
                     break;
             }
         }

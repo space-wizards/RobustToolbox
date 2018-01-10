@@ -24,7 +24,7 @@ namespace SS14.Client.GameObjects
         private Dictionary<string, ParticleSystem> _emitters = new Dictionary<string, ParticleSystem>(); // List of particle emitters.
         protected IRenderableComponent master;
         protected List<IRenderableComponent> slaves = new List<IRenderableComponent>();
-        public int MapID { get; private set; }
+        public MapId MapID { get; private set; }
 
         public DrawDepth DrawDepth { get; set; } = DrawDepth.ItemsOnTables;
         #endregion Variables.

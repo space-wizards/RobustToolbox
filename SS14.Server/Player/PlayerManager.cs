@@ -31,6 +31,8 @@ namespace SS14.Server.Player
 
         public string PlayerPrototypeName { get; set; } = "__engine_human";
 
+        public LocalCoordinates FallbackSpawnPoint { get; set; }
+
         /// <summary>
         ///     Number of active sessions.
         ///     This is the cached value of _sessions.Count(s => s != null);
@@ -93,7 +95,7 @@ namespace SS14.Server.Player
         /// <param name="session"></param>
         public void SpawnPlayerMob(IPlayerSession session)
         {
-            IEntity entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, new Vector2(0, 0), 1); //TODO: Fix this
+            IEntity entity = _entityManager.ForceSpawnEntityAt(PlayerPrototypeName, FallbackSpawnPoint);
             session.AttachToEntity(entity);
         }
 
@@ -106,7 +108,7 @@ namespace SS14.Server.Player
         /// <summary>
         /// Returns the client session of the networkId.
         /// </summary>
-        /// <param name="networkId">The network id of the client.</param>
+        /// <param name="index">The id of the client.</param>
         /// <returns></returns>
         public IPlayerSession GetSessionById(PlayerIndex index)
         {

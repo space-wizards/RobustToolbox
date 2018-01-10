@@ -23,6 +23,11 @@ namespace SS14.Server.Interfaces.Player
         int MaxPlayers { get; }
 
         /// <summary>
+        ///     Fallback spawn point if map does not provide it.
+        /// </summary>
+        LocalCoordinates FallbackSpawnPoint { get; set; }
+
+        /// <summary>
         ///     Initializes the manager.
         /// </summary>
         /// <param name="baseServer">The server that instantiated this manager.</param>

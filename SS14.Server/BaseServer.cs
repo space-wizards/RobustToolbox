@@ -121,7 +121,7 @@ namespace SS14.Server
         /// <inheritdoc />
         public void SaveGame()
         {
-            _mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), _mapManager.GetMap(1));
+            _mapLoader.Save(PathHelpers.ExecutableRelativeFile(Path.Combine("Resources", MapName)), _mapManager.GetMap(new MapId(1)));
         }
 
         /// <inheritdoc />
@@ -408,7 +408,8 @@ namespace SS14.Server
             {
                 var mapMgr = IoCManager.Resolve<IMapManager>();
 
-                mapMgr.UnregisterMap(1);
+                // TODO: Unregister all maps.
+                mapMgr.UnregisterMap(new MapId(1));
             }
             _entities.Shutdown();
             GC.Collect();

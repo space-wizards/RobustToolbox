@@ -1,13 +1,9 @@
 ﻿using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
-using SS14.Client.Graphics.Utility;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Placement
@@ -21,10 +17,7 @@ namespace SS14.Client.Placement
         public Sprite SpriteToDraw { get; set; }
         public Color ValidPlaceColor { get; set; } = new Color(34, 139, 34); //Default valid color is green
         public Color InvalidPlaceColor { get; set; } = new Color(34, 34, 139); //Default invalid placement is red
-
         
-        
-
         public virtual bool rangerequired => false;
 
         public PlacementMode(PlacementManager pMan)

@@ -14,9 +14,9 @@ namespace SS14.Shared.Interfaces.Map
         /// <summary>
         ///     The integer ID of the map this grid is located within
         /// </summary>
-        int MapID { get; }
+        MapId MapID { get; }
 
-        int Index { get; }
+        GridId Index { get; }
 
         /// <summary>
         ///     The length of the side of a square tile in world units.

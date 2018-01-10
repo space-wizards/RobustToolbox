@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using SS14.Shared.Maths;
-using OpenTK;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -14,7 +10,7 @@ namespace SS14.Shared.Interfaces.Map
     /// <param name="gridId">The ID of the grid being changed.</param>
     /// <param name="tileRef">A reference to the new tile being inserted.</param>
     /// <param name="oldTile">The old tile that is being replaced.</param>
-    public delegate void TileChangedEventHandler(int gridId, TileRef tileRef, Tile oldTile);
+    public delegate void TileChangedEventHandler(GridId gridId, TileRef tileRef, Tile oldTile);
 
     /// <summary>
     ///     This manages all of the grids in the world.
@@ -26,13 +22,13 @@ namespace SS14.Shared.Interfaces.Map
         /// </summary>
         IMap DefaultMap { get; }
 
-        void UnregisterMap(int mapID);
+        void UnregisterMap(MapId mapID);
 
-        IMap CreateMap(int mapID, bool overwrite = false);
+        IMap CreateMap(MapId mapID, bool overwrite = false);
 
-        IMap GetMap(int mapID);
+        IMap GetMap(MapId mapID);
 
-        bool MapExists(int mapID);
+        bool MapExists(MapId mapID);
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -62,6 +58,6 @@ namespace SS14.Shared.Interfaces.Map
 
         void SendMap(INetChannel channel);
 
-        bool TryGetMap(int mapID, out IMap map);
+        bool TryGetMap(MapId mapID, out IMap map);
     }
 }

@@ -3,6 +3,7 @@ using SS14.Server.Interfaces.Player;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 
 namespace SS14.Server.ClientConsoleHost.Commands
 {
@@ -17,7 +18,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
             if (args.Length < 1)
                 return;
 
-            var mapId = int.Parse(args[0]);
+            var mapId = new MapId(int.Parse(args[0]));
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
 

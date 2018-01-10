@@ -1,12 +1,8 @@
 ﻿using Lidgren.Network;
-using OpenTK;
 using OpenTK.Graphics;
-using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
-using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
-using SS14.Client.Interfaces.Network;
 using SS14.Client.Interfaces.Placement;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
@@ -21,13 +17,10 @@ using SS14.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
-using SS14.Shared.Utility;
-using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Interfaces.Reflection;
 
@@ -176,7 +169,7 @@ namespace SS14.Client.Placement
 
         public void Update(ScreenCoordinates mouseScreen)
         {
-            if (mouseScreen.MapID == MapManager.NULLSPACE || CurrentPermission == null || CurrentMode == null) return;
+            if (mouseScreen.MapID == MapId.Nullspace || CurrentPermission == null || CurrentMode == null) return;
 
             ValidPosition = CurrentMode.Update(mouseScreen);
         }

@@ -44,7 +44,7 @@ namespace SS14.Client.GameObjects
         protected bool visible = true;
         public DrawDepth DrawDepth { get; set; }
         public Color Color { get; set; } = Color.White;
-        public int MapID { get; private set; }
+        public MapId MapID { get; private set; }
 
         public override Type StateType => typeof(SpriteComponentState);
 

@@ -16,8 +16,8 @@ namespace SS14.Client.GameObjects
     public class TransformComponent : Component, ITransformComponent
     {
         private Vector2 _position;
-        public int MapID { get; private set; }
-        public int GridID { get; private set; }
+        public MapId MapID { get; private set; }
+        public GridId GridID { get; private set; }
         public Angle Rotation { get; private set; }
         public ITransformComponent Parent { get; private set; }
         //TODO: Make parenting actually work.

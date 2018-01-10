@@ -32,7 +32,7 @@ namespace SS14.Server.ClientConsoleHost.Commands
             transform.DetachParent();
 
             IMapGrid grid;
-            if (args.Length == 3 && int.TryParse(args[2], out var mapId) && mapMgr.TryGetMap(mapId, out var map))
+            if (args.Length == 3 && int.TryParse(args[2], out var mapId) && mapMgr.TryGetMap(new MapId(mapId), out var map))
                 grid = map.FindGridAt(position);
             else
                 grid = transform.LocalPosition.Map.FindGridAt(position);

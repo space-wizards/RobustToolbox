@@ -5,6 +5,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -35,7 +36,7 @@ namespace SS14.Client.GameObjects
         Box2 ICollidable.AABB => Owner.GetComponent<BoundingBoxComponent>().AABB;
 
         /// <inheritdoc />
-        public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
+        public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
         /// <summary>
         ///     Called when the collidable is bumped into by someone/something

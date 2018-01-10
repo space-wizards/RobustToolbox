@@ -149,7 +149,7 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The id of the grid being modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile being modified.</param>
-        private void MapMgrOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        private void MapMgrOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
         {
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
@@ -292,7 +292,7 @@ namespace SS14.Shared.Map
         /// <summary>
         ///     Notifies all connected clients that an existing map has been destroyed.
         /// </summary>
-        private void BroadcastUnregisterMap(int mapID)
+        private void BroadcastUnregisterMap(MapId mapID)
         {
             if(_netManager.IsClient)
                 return;

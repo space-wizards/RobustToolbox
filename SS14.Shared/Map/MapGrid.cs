@@ -9,7 +9,7 @@ namespace SS14.Shared.Map
 {
     public class MapGrid : IMapGrid
     {
-        public int MapID { get; private set; } = 0;
+        public MapId MapID { get; private set; }
         private readonly MapManager _mapManager;
         private readonly Dictionary<Indices, Chunk> _chunks = new Dictionary<Indices, Chunk>();
 
@@ -56,7 +56,7 @@ namespace SS14.Shared.Map
             }
         }
 
-        internal MapGrid(MapManager mapManager, int gridIndex, ushort chunkSize, float snapsize, int mapID)
+        internal MapGrid(MapManager mapManager, GridId gridIndex, ushort chunkSize, float snapsize, MapId mapID)
         {
             _mapManager = mapManager;
             Index = gridIndex;
@@ -82,7 +82,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public float SnapSize { get; }
 
-        public int Index { get; }
+        public GridId Index { get; }
 
         /// <summary>
         ///     The length of the side of a square tile in world units.
@@ -272,7 +272,7 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public LocalCoordinates LocalToWorld(LocalCoordinates local)
         {
-            return new LocalCoordinates(local.Position + WorldPosition, 0, local.MapID);
+            return new LocalCoordinates(local.Position + WorldPosition, GridId.DefaultGrid, local.MapID);
         }
 
         public Vector2 ConvertToWorld(Vector2 localpos)

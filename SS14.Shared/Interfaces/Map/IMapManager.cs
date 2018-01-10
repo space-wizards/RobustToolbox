@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -27,7 +28,7 @@ namespace SS14.Shared.Interfaces.Map
 
         void UnregisterMap(int mapID);
 
-        IMap CreateMap(int mapID);
+        IMap CreateMap(int mapID, bool overwrite = false);
 
         IMap GetMap(int mapID);
 
@@ -43,6 +44,16 @@ namespace SS14.Shared.Interfaces.Map
         ///     A tile is being modified.
         /// </summary>
         event TileChangedEventHandler OnTileChanged;
+
+        /// <summary>
+        ///     A new map has been created.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapCreated;
+
+        /// <summary>
+        ///     An existing map has been destroyed.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapDestroyed;
 
         /// <summary>
         ///     Starts up the map system.

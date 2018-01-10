@@ -93,7 +93,10 @@
         //TurfRemoveDecal,
         //SendTileIndex,
         SendTileMap,
-        SendMapInfo
+        SendMapInfo,
+
+        CreateMap,
+        UnregisterMap,
     }
 
     public enum MobHand

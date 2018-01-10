@@ -1,11 +1,12 @@
 ﻿using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
+using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.ClientConsoleHost.Commands
 {
-    class AddMap : IClientCommand
+    class AddMapCommand : IClientCommand
     {
         public string Command => "addmap";
         public string Description => "Adds a new map to the round. If the mapID already exists, this command does nothing.";
@@ -28,6 +29,23 @@ namespace SS14.Server.ClientConsoleHost.Commands
             }
 
             host.SendConsoleReply(player.ConnectedClient, $"Map with ID {mapId} already exists!");
+        }
+    }
+
+    class LocationCommand : IClientCommand
+    {
+        public string Command => "loc";
+        public string Description => "Prints the absolute location of the player's entity to console.";
+        public string Help => "loc";
+
+        public void Execute(IClientConsoleHost host, IPlayerSession player, params string[] args)
+        {
+            if(player.attachedEntity == null)
+                return;
+
+            var pos = player.attachedEntity.GetComponent<ITransformComponent>().LocalPosition;
+
+            host.SendConsoleReply(player.ConnectedClient, $"MapID:{pos.MapID} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 }

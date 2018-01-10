@@ -29,6 +29,9 @@ namespace SS14.Shared.Map
         /// <inheritdoc />
         public event TileChangedEventHandler OnTileChanged;
 
+        public event EventHandler<MapEventArgs> MapCreated;
+        public event EventHandler<MapEventArgs> MapDestroyed;
+
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
@@ -60,18 +63,30 @@ namespace SS14.Shared.Map
         {
             if (_Maps.ContainsKey(mapID))
             {
+                BroadcastUnregisterMap(mapID);
+                MapDestroyed?.Invoke(this, new MapEventArgs(_Maps[mapID]));
                 _Maps.Remove(mapID);
             }
             else
             {
-                Logger.Warning("Attempted to unregister nonexistent map");
+                Logger.Warning("[MAP] Attempted to unregister nonexistent map.");
             }
         }
-
-        public IMap CreateMap(int mapID)
+        
+        public IMap CreateMap(int mapID, bool overwrite = false)
         {
+            if(!overwrite && _Maps.ContainsKey(mapID))
+            {
+                Logger.Warning("[MAP] Attempted to overwrite existing map.");
+                return null;
+            }
+
             var newMap = new Map(this, mapID);
             _Maps.Add(mapID, newMap);
+            MapCreated?.Invoke(this, new MapEventArgs(newMap));
+
+            BroadcastCreateMap(newMap);
+
             return newMap;
         }
 
@@ -105,5 +120,15 @@ namespace SS14.Shared.Map
         }
 
         #endregion MapAccess
+    }
+
+    public class MapEventArgs : EventArgs
+    {
+        public IMap Map { get; }
+
+        public MapEventArgs(IMap map)
+        {
+            Map = map;
+        }
     }
 }

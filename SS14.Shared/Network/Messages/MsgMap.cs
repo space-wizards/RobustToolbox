@@ -103,6 +103,10 @@ namespace SS14.Shared.Network.Messages
                 case MapMessage.SendMapInfo:
                     MapGridsToSend = buffer.ReadInt32();
                     break;
+                case MapMessage.CreateMap:
+                case MapMessage.UnregisterMap:
+                    MapIndex = buffer.ReadInt32();
+                    break;
             }
         }
 
@@ -141,6 +145,10 @@ namespace SS14.Shared.Network.Messages
                     break;
                 case MapMessage.SendMapInfo:
                     buffer.Write(MapGridsToSend);
+                    break;
+                case MapMessage.CreateMap:
+                case MapMessage.UnregisterMap:
+                    buffer.Write(MapIndex);
                     break;
             }
         }

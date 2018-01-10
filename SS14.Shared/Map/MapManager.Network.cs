@@ -49,7 +49,7 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public void HandleNetworkMessage(MsgMap message)
+        private void HandleNetworkMessage(MsgMap message)
         {
             switch (message.MessageType)
             {
@@ -64,6 +64,16 @@ namespace SS14.Shared.Map
                     break;
                 case MapMessage.SendMapInfo:
                     CollectMapInfo(message);
+                    break;
+                case MapMessage.CreateMap:
+                {
+                    CreateMap(message.MapIndex);
+                }
+                    break;
+                case MapMessage.UnregisterMap:
+                {
+                    UnregisterMap(message.MapIndex);
+                }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(message));
@@ -261,6 +271,38 @@ namespace SS14.Shared.Map
             {
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
             }
+        }
+
+        /// <summary>
+        ///     Notifies all connected clients that a new map has been created.
+        /// </summary>
+        private void BroadcastCreateMap(Map map)
+        {
+            if(_netManager.IsClient)
+                return;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.CreateMap;
+            msg.MapIndex = map.Index;
+
+            _netManager.ServerSendToAll(msg);
+        }
+
+        /// <summary>
+        ///     Notifies all connected clients that an existing map has been destroyed.
+        /// </summary>
+        private void BroadcastUnregisterMap(int mapID)
+        {
+            if(_netManager.IsClient)
+                return;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.UnregisterMap;
+            msg.MapIndex = mapID;
+
+            _netManager.ServerSendToAll(msg);
         }
     }
 }

@@ -11,6 +11,7 @@ namespace SS14.Client.GodotGlue
     /// </summary>
     public class SS14Loader : Node
     {
+        public bool ShuttingDown { get; private set; } = false;
         public Assembly SS14Assembly { get; private set; }
         public IReadOnlyList<ClientEntryPoint> EntryPoints => entryPoints;
         private List<ClientEntryPoint> entryPoints = new List<ClientEntryPoint>();
@@ -44,46 +45,62 @@ namespace SS14.Client.GodotGlue
 
         public override void _PhysicsProcess(float delta)
         {
-            foreach (var entrypoint in EntryPoints)
+            if (!ShuttingDown)
             {
-                entrypoint.PhysicsProcess(delta);
+                foreach (var entrypoint in EntryPoints)
+                {
+                    entrypoint.PhysicsProcess(delta);
+                }
             }
         }
 
         public override void _Process(float delta)
         {
-            foreach (var entrypoint in EntryPoints)
+            if (!ShuttingDown)
             {
-                entrypoint.FrameProcess(delta);
+                foreach (var entrypoint in EntryPoints)
+                {
+                    entrypoint.FrameProcess(delta);
+                }
             }
         }
 
         public override void _UnhandledInput(InputEvent inputEvent)
         {
-            foreach (var entrypoint in EntryPoints)
+            if (!ShuttingDown)
             {
-                entrypoint.Input(inputEvent);
+                foreach (var entrypoint in EntryPoints)
+                {
+                    entrypoint.Input(inputEvent);
+                }
             }
         }
 
         public override void _Input(InputEvent inputEvent)
         {
-            foreach (var entrypoint in EntryPoints)
+            if (!ShuttingDown)
             {
-                entrypoint.PreInput(inputEvent);
+                foreach (var entrypoint in EntryPoints)
+                {
+                    entrypoint.PreInput(inputEvent);
+                }
             }
         }
 
         public override void _Notification(int what)
         {
-            switch (what)
+            if (!ShuttingDown)
             {
-                case MainLoop.NotificationWmQuitRequest:
-                    foreach (var entrypoint in EntryPoints)
-                    {
-                        entrypoint.QuitRequest();
-                    }
-                    break;
+                switch (what)
+                {
+                    case MainLoop.NotificationWmQuitRequest:
+                        ShuttingDown = true;
+                        foreach (var entrypoint in EntryPoints)
+                        {
+                            entrypoint.QuitRequest();
+                        }
+                        break;
+                }
             }
         }
     }

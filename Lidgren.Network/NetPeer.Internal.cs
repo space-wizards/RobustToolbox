@@ -252,9 +252,20 @@ namespace Lidgren.Network
 					}
 					if (m_messageReceivedEvent != null)
 					{
-						m_messageReceivedEvent.Set();
-						m_messageReceivedEvent.Close();
-						m_messageReceivedEvent = null;
+						try
+						{
+							m_messageReceivedEvent.Set();
+							m_messageReceivedEvent.Close();
+						}
+						catch (ObjectDisposedException)
+						{
+							// For some reason, inside Godot this seems to throw ObjectDisposedExceptions on client shutdown.
+							// If it's already disposed then I guess this is fine?
+						}
+						finally
+						{
+							m_messageReceivedEvent = null;
+						}
 					}
 				}
 				finally

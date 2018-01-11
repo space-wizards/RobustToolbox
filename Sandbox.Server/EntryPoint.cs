@@ -10,9 +10,11 @@ using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Map;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
+using SS14.Shared.Timers;
 
 namespace Sandbox.Server
 {
@@ -21,6 +23,8 @@ namespace Sandbox.Server
     {
         private IBaseServer _server;
         private IPlayerManager _players;
+
+        private bool _countdownStarted;
 
         /// <inheritdoc />
         public override void Init()
@@ -34,11 +38,9 @@ namespace Sandbox.Server
             _players.PlayerStatusChanged += HandlePlayerStatusChanged;
 
             _server.PlayerJoinedServer += HandlePlayerJoinedServer;
-            _server.PlayerJoinedLobby += HandlePlayerJoinedLobby;
             _server.PlayerJoinedGame += HandlePlayerJoinedGame;
             _server.PlayerLeaveServer += HandlePlayerLeaveServer;
         }
-
 
         /// <inheritdoc />
         public override void Dispose()
@@ -47,7 +49,6 @@ namespace Sandbox.Server
             _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
 
             _server.PlayerJoinedServer -= HandlePlayerJoinedServer;
-            _server.PlayerJoinedLobby -= HandlePlayerJoinedLobby;
             _server.PlayerJoinedGame -= HandlePlayerJoinedGame;
             _server.PlayerLeaveServer -= HandlePlayerLeaveServer;
 
@@ -56,21 +57,21 @@ namespace Sandbox.Server
 
         private void HandleRunLevelChanged(object sender, RunLevelChangedEventArgs args)
         {
-            if (args.NewLevel == ServerRunLevel.PreGame)
+            switch (args.NewLevel)
             {
-                IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(1));
-                NewDemoGrid(new GridId(1), new MapId(1));
+                case ServerRunLevel.PreGame:
+                    IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(1));
+                    NewDemoGrid(new GridId(1), new MapId(1));
 
-                IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round loaded!");
-            }
-            else if (args.NewLevel == ServerRunLevel.Game)
-            {
-                IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
-                IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round started!");
-            }
-            else if (args.NewLevel == ServerRunLevel.PostGame)
-            {
-                IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round over!");
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round loaded!");
+                    break;
+                case ServerRunLevel.Game:
+                    IoCManager.Resolve<IPlayerManager>().SendJoinGameToAll();
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round started!");
+                    break;
+                case ServerRunLevel.PostGame:
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round over!");
+                    break;
             }
         }
 
@@ -81,8 +82,15 @@ namespace Sandbox.Server
                 case SessionStatus.InLobby:
                 {
                     // auto start game when first player joins
-                    if (_server.RunLevel == ServerRunLevel.PreGame)
-                        _server.RunLevel = ServerRunLevel.Game;
+                    if (_server.RunLevel == ServerRunLevel.PreGame && !_countdownStarted)
+                    {
+                        _countdownStarted = true;
+                        IoCManager.Resolve<ITimerManager>().AddTimer(new Timer(2000, false, () =>
+                        {
+                            _server.RunLevel = ServerRunLevel.Game;
+                            _countdownStarted = false;
+                        }));
+                    }
 
                     IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
                 }
@@ -94,15 +102,6 @@ namespace Sandbox.Server
         {
             args.Session.JoinLobby();
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.Index);
-        }
-
-        private void HandlePlayerJoinedLobby(object sender, PlayerEventArgs args)
-        {
-            // auto start game when first player joins
-            if (_server.RunLevel == ServerRunLevel.PreGame)
-                _server.RunLevel = ServerRunLevel.Game;
-
-            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
         }
 
         private void HandlePlayerJoinedGame(object sender, PlayerEventArgs args)

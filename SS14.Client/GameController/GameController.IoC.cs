@@ -1,12 +1,14 @@
-using SS14.Client.Console;
+﻿using SS14.Client.Console;
 using SS14.Client.Debugging;
 using SS14.Client.GameObjects;
 using SS14.Client.GameStates;
+using SS14.Client.Graphics;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Debugging;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
+using SS14.Client.Interfaces.Graphics;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Interfaces.Map;
 using SS14.Client.Interfaces.Player;
@@ -95,6 +97,7 @@ namespace SS14.Client
             IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<IClientConsole, ClientChatConsole>();
             IoCManager.Register<IClientChatConsole, ClientChatConsole>();
+            IoCManager.Register<ILightManager, LightManager>();
 
             IoCManager.BuildGraph();
         }

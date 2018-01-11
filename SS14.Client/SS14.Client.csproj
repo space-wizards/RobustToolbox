@@ -102,8 +102,8 @@
     <Compile Include="Console\IClientConsole.cs" />
     <Compile Include="GameController.cs" />
     <Compile Include="GameController\FrameEventArgs.cs" />
-    <Compile Include="GameController\Input.cs" />
-    <Compile Include="GameController\IoCInit.cs" />
+    <Compile Include="GameController\GameController.Input.cs" />
+    <Compile Include="GameController\GameController.IoC.cs" />
     <Compile Include="GameObjects\ClientComponentFactory.cs" />
     <Compile Include="GameObjects\ClientEntityManager.cs" />
     <Compile Include="GameObjects\ClientEntityNetworkManager.cs" />
@@ -113,7 +113,7 @@
     <Compile Include="GameObjects\Components\Input\ClickableComponent.cs" />
     <Compile Include="GameObjects\Components\Input\ContextMenuComponent.cs" />
     <Compile Include="GameObjects\Components\Input\KeybindingInputComponent.cs" />
-    <Compile Include="GameObjects\Components\Light\Light.cs" />
+    <Compile Include="GameObjects\Components\Light\PointLightComponent.cs" />
     <Compile Include="GameObjects\Components\Mover\PlayerInputMoverComponent.cs" />
     <Compile Include="GameObjects\Components\Occluder\OccluderComponent.cs" />
     <Compile Include="GameObjects\Components\Physics\PhysicsComponent.cs" />
@@ -127,6 +127,7 @@
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
+    <Compile Include="Graphics\LightManager.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
@@ -139,6 +140,8 @@
     <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
+    <Compile Include="Interfaces\Graphics\ILightEmitter.cs" />
+    <Compile Include="Interfaces\Graphics\ILightManager.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />

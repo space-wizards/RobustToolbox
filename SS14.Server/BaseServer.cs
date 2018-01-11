@@ -25,6 +25,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network;
@@ -61,6 +62,8 @@ namespace SS14.Server
         private readonly IMapLoader _mapLoader;
         [Dependency]
         private readonly IMapManager _mapManager;
+        [Dependency]
+        private readonly ITimerManager timerManager;
 
         private bool _active;
         private ServerRunLevel _runLevel;
@@ -444,7 +447,7 @@ namespace SS14.Server
                 _components.Update(frameTime);
                 _entities.Update(frameTime);
             }
-            
+            timerManager.UpdateTimers(frameTime);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             SendGameStateUpdate();

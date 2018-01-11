@@ -43,6 +43,7 @@ using SS14.Shared.Interfaces.Log;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Map;
@@ -63,6 +64,7 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.Network;
 using SS14.Shared.Physics;
 using SS14.Shared.Timing;
+using SS14.Shared.Timers;
 using SS14.Server.Interfaces.Maps;
 using SS14.Server.Maps;
 using FrameEventArgs = SS14.Client.Graphics.FrameEventArgs;
@@ -194,6 +196,7 @@ namespace SS14.UnitTesting
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.Register<ITimerManager, TimerManager>();
 
             switch (Project)
             {

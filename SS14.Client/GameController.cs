@@ -25,6 +25,7 @@ using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Timing;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.Network.Messages;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
@@ -69,6 +70,8 @@ namespace SS14.Client
         private readonly IBaseClient _client;
         [Dependency]
         private readonly IClientChatConsole _console;
+        [Dependency]
+        private readonly ITimerManager _timerManager;
 
         #endregion Fields
 
@@ -257,6 +260,7 @@ namespace SS14.Client
             CluwneLib.RunIdle(this, e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, e.Elapsed);
             _stateManager.Update(e);
+            _timerManager.UpdateTimers(e.Elapsed);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, e.Elapsed);
         }
 

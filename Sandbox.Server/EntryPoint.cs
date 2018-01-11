@@ -3,7 +3,9 @@ using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Maps;
+using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
+using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
 using SS14.Shared.Interfaces.Map;
@@ -50,7 +52,9 @@ namespace Sandbox.Server
         {
             if (args.NewLevel == ServerRunLevel.PreGame)
             {
-                LoadVerse(string.Empty);
+                IoCManager.Resolve<IPlayerManager>().FallbackSpawnPoint = new LocalCoordinates(0, 0, GridId.DefaultGrid, new MapId(1));
+                NewDemoGrid(new GridId(1), new MapId(1));
+
                 IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Round loaded!");
             }
             else if (args.NewLevel == ServerRunLevel.Game)
@@ -77,7 +81,9 @@ namespace Sandbox.Server
 
         private void HandlePlayerJoinedGame(object sender, PlayerEventArgs args)
         {
+            //TODO: Check for existing mob and re-attach
             IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
+            
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
         }
 
@@ -85,51 +91,38 @@ namespace Sandbox.Server
         {
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
         }
-
-        private void LoadVerse(string versePath)
-        {
-            var defManager = IoCManager.Resolve<ITileDefinitionManager>();
-            var mapMgr = IoCManager.Resolve<IMapManager>();
-
-            if (string.IsNullOrWhiteSpace(versePath))
-                NewDefaultGrid(mapMgr, defManager, new GridId(1));
-            else
-                IoCManager.Resolve<IMapLoader>().Load(_server.MapName, mapMgr.GetMap(new MapId(1)));
-        }
-
+        
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
         /// <summary>
         ///     Generates 'Demo' grid and inserts it into the map manager.
         /// </summary>
-        /// <param name="mapManager">The map manager to work with.</param>
-        /// <param name="defManager">The definition manager to work with.</param>
-        /// <param name="gridID">The ID of the grid to generate and insert into the map manager.</param>
-        private static void NewDefaultGrid(IMapManager mapManager, ITileDefinitionManager defManager, GridId gridID)
+        private void NewDemoGrid(GridId gridId, MapId mapId)
         {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            var defManager = IoCManager.Resolve<ITileDefinitionManager>();
+
             mapManager.SuppressOnTileChanged = true;
-            try
+
+            Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
+            var floor = defManager["Floor"].TileId;
+
+            Debug.Assert(floor > 0);
+
+            var map = mapManager.CreateMap(mapId);
+            var grid = map.CreateGrid(gridId);
+
+            for (var y = -32; y <= 32; ++y)
             {
-                Logger.Log("Cannot find map. Generating blank map.", LogLevel.Warning);
-                var floor = defManager["Floor"].TileId;
-
-                Debug.Assert(floor > 0);
-
-                var mapId = new MapId(1);
-                var map = mapManager.CreateMap(mapId); //TODO: default map
-                var grid = map.CreateGrid(new GridId(1)); //TODO: huh wha maybe? check grid ID
-
-                for (var y = -32; y <= 32; ++y)
+                for (var x = -32; x <= 32; ++x)
                 {
-                    for (var x = -32; x <= 32; ++x)
-                    {
-                        grid.SetTile(new LocalCoordinates(x, y, gridID, mapId), new Tile(floor)); //TODO: Fix this
-                    }
+                    grid.SetTile(new LocalCoordinates(x, y, gridId, mapId), new Tile(floor));
                 }
             }
-            finally
-            {
-                mapManager.SuppressOnTileChanged = false;
-            }
+
+            // load entities
+            IoCManager.Resolve<IMapLoader>().Load(_server.MapName, map);
+
+            mapManager.SuppressOnTileChanged = false;
         }
     }
 }

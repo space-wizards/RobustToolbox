@@ -54,6 +54,8 @@ namespace SS14.Shared.Network.Messages
             switch (MessageType)
             {
                 case MapMessage.TurfUpdate:
+                    MapIndex = new MapId(buffer.ReadInt32());
+                    GridIndex = new GridId(buffer.ReadInt32());
                     SingleTurf = new Turf()
                     {
                         X = buffer.ReadInt32(),
@@ -116,6 +118,8 @@ namespace SS14.Shared.Network.Messages
             switch (MessageType)
             {
                 case MapMessage.TurfUpdate:
+                    buffer.Write((int)MapIndex);
+                    buffer.Write((int)GridIndex);
                     buffer.Write(SingleTurf.X);
                     buffer.Write(SingleTurf.Y);
                     buffer.Write(SingleTurf.Tile);

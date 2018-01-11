@@ -162,6 +162,8 @@ namespace SS14.Shared.Map
                 Y = tileRef.Y,
                 Tile = (uint) tileRef.Tile
             };
+            message.GridIndex = tileRef.LocalPos.GridID;
+            message.MapIndex = tileRef.LocalPos.MapID;
 
             _netManager.ServerSendToAll(message);
         }
@@ -258,7 +260,7 @@ namespace SS14.Shared.Map
             var tile = (Tile) message.SingleTurf.Tile;
             
             LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
-            coords.Grid.SetTile(coords, tile); //TODO: Fix this
+            coords.Grid.SetTile(coords, tile);
         }
 
         private void CollectMapInfo(MsgMap message)

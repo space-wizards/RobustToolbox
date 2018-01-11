@@ -67,8 +67,8 @@ namespace SS14.Server.Placement
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobody
 
+            /* TODO: Redesign permission system, or document what this is supposed to be doing
             var permission = GetPermission(session.attachedEntity.Uid, alignRcv);
-
             if (permission == null)
                 return;
 
@@ -87,7 +87,7 @@ namespace SS14.Server.Placement
                 SendPlacementCancel(session.attachedEntity);
                 return;
             }
-
+            */
             if (!isTile)
             {
                 var manager = IoCManager.Resolve<IServerEntityManager>();

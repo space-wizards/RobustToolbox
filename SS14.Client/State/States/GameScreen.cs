@@ -40,7 +40,6 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
-using SS14.Shared.ContentPack;
 
 namespace SS14.Client.State.States
 {
@@ -1400,8 +1399,8 @@ Mouse Pos:
     Pixel: {mouseWorldOffset.X} / {mouseWorldOffset.Y}
     World: {mouseTile.X} / {mouseTile.Y}
     Screen: {mouseScreenPos.X} / {mouseScreenPos.Y}
-    Grid: {mousepos.GridID}
-    Map: {mousepos.MapID}";
+    Grid: {(int)mousepos.GridID}
+    Map: {(int)mousepos.MapID}";
 
                     PositionDebugText.Draw();
                 }

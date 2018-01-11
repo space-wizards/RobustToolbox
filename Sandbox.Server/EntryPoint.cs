@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.Maps;
-using SS14.Server.Interfaces.Placement;
 using SS14.Server.Interfaces.Player;
+using SS14.Server.Player;
 using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
@@ -19,6 +20,7 @@ namespace Sandbox.Server
     public class EntryPoint : GameServer
     {
         private IBaseServer _server;
+        private IPlayerManager _players;
 
         /// <inheritdoc />
         public override void Init()
@@ -26,8 +28,10 @@ namespace Sandbox.Server
             base.Init();
 
             _server = IoCManager.Resolve<IBaseServer>();
+            _players = IoCManager.Resolve<IPlayerManager>();
 
             _server.RunLevelChanged += HandleRunLevelChanged;
+            _players.PlayerStatusChanged += HandlePlayerStatusChanged;
 
             _server.PlayerJoinedServer += HandlePlayerJoinedServer;
             _server.PlayerJoinedLobby += HandlePlayerJoinedLobby;
@@ -35,10 +39,12 @@ namespace Sandbox.Server
             _server.PlayerLeaveServer += HandlePlayerLeaveServer;
         }
 
+
         /// <inheritdoc />
         public override void Dispose()
         {
             _server.RunLevelChanged -= HandleRunLevelChanged;
+            _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
 
             _server.PlayerJoinedServer -= HandlePlayerJoinedServer;
             _server.PlayerJoinedLobby -= HandlePlayerJoinedLobby;
@@ -68,6 +74,22 @@ namespace Sandbox.Server
             }
         }
 
+        private void HandlePlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        {
+            switch (args.NewStatus)
+            {
+                case SessionStatus.InLobby:
+                {
+                    // auto start game when first player joins
+                    if (_server.RunLevel == ServerRunLevel.PreGame)
+                        _server.RunLevel = ServerRunLevel.Game;
+
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
+                }
+                    break;
+            }
+        }
+
         private void HandlePlayerJoinedServer(object sender, PlayerEventArgs args)
         {
             args.Session.JoinLobby();
@@ -76,6 +98,10 @@ namespace Sandbox.Server
 
         private void HandlePlayerJoinedLobby(object sender, PlayerEventArgs args)
         {
+            // auto start game when first player joins
+            if (_server.RunLevel == ServerRunLevel.PreGame)
+                _server.RunLevel = ServerRunLevel.Game;
+
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
         }
 
@@ -83,7 +109,7 @@ namespace Sandbox.Server
         {
             //TODO: Check for existing mob and re-attach
             IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
-            
+
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
         }
 
@@ -91,7 +117,7 @@ namespace Sandbox.Server
         {
             IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
         }
-        
+
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.
         /// <summary>
         ///     Generates 'Demo' grid and inserts it into the map manager.

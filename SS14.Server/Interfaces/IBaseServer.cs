@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Server.Player;
 
 namespace SS14.Server.Interfaces
 {
@@ -68,7 +69,7 @@ namespace SS14.Server.Interfaces
         ///     Raised when the server RunLevel is changed.
         /// </summary>
         event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
-
+        
         /// <summary>
         ///     Raised when a player successfully joins the server.
         /// </summary>

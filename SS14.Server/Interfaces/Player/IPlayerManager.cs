@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using SS14.Server.Player;
+using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
 namespace SS14.Server.Interfaces.Player
@@ -23,9 +25,14 @@ namespace SS14.Server.Interfaces.Player
         int MaxPlayers { get; }
 
         /// <summary>
-        ///     Fallback spawn point if map does not provide it.
+        ///     Fallback spawn point to use if map does not provide it.
         /// </summary>
         LocalCoordinates FallbackSpawnPoint { get; set; }
+
+        /// <summary>
+        ///     Raised when the <see cref="SessionStatus"/> of a <see cref="IPlayerSession"/> is changed.
+        /// </summary>
+        event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         /// <summary>
         ///     Initializes the manager.
@@ -43,10 +50,7 @@ namespace SS14.Server.Interfaces.Player
         
         void SendJoinGameToAll();
         void SendJoinLobbyToAll();
-
-        //TODO: Use new networking system.
-        void HandleNetworkMessage(MsgSession msg);
-
+        
         void DetachAll();
         List<IPlayerSession> GetPlayersInLobby();
         List<IPlayerSession> GetPlayersInRange(LocalCoordinates worldPos, int range);

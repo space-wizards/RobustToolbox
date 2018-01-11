@@ -45,6 +45,7 @@ namespace SS14.Server.Player
         public int? AttachedEntityUid => attachedEntity?.Uid;
 
         private string _name;
+        private SessionStatus _status;
 
         /// <inheritdoc />
         public string Name
@@ -54,13 +55,29 @@ namespace SS14.Server.Player
         }
 
         /// <inheritdoc />
-        public SessionStatus Status { get; set; }
+        public SessionStatus Status
+        {
+            get => _status;
+            set => OnPlayerStatusChanged(_status, value);
+        }
 
         /// <inheritdoc />
         public DateTime ConnectedTime { get; private set; }
 
         /// <inheritdoc />
         public PlayerIndex Index { get; }
+
+        /// <inheritdoc />
+        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+
+        private void OnPlayerStatusChanged(SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            if(oldStatus == newStatus)
+                return;
+
+            _status = newStatus;
+            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, oldStatus, newStatus));
+        }
 
         /// <inheritdoc />
         public void AttachToEntity(IEntity a)
@@ -97,19 +114,7 @@ namespace SS14.Server.Player
             attachedEntity = null;
             UpdatePlayerState();
         }
-
-        /// <inheritdoc />
-        public void HandleNetworkMessage(MsgSession message)
-        {
-            var messageType = message.MsgType;
-            switch (messageType)
-            {
-                case PlayerSessionMessage.JoinLobby:
-                    JoinLobby();
-                    break;
-            }
-        }
-
+        
         /// <inheritdoc />
         public void SetName(string name)
         {

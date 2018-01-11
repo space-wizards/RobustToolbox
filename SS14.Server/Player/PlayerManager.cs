@@ -47,9 +47,16 @@ namespace SS14.Server.Player
         [Dependency]
         private readonly IServerEntityManager _entityManager;
 
+        /// <inheritdoc />
         public int PlayerCount => _sessionCount;
+
+        /// <inheritdoc />
         public int MaxPlayers => _sessions.Length;
 
+        /// <inheritdoc />
+        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+
+        /// <inheritdoc />
         public void Initialize(BaseServer server, int maxPlayers)
         {
             _server = server;
@@ -84,9 +91,16 @@ namespace SS14.Server.Player
             var index = new PlayerIndex(pos);
             var session = new PlayerSession(this, args.Channel, index);
 
+            session.PlayerStatusChanged += (obj, sessionArgs) => OnPlayerStatusChanged(session, sessionArgs.OldStatus, sessionArgs.NewStatus);
+
             Debug.Assert(_sessions[pos] == null);
             _sessionCount++;
             _sessions[pos] = session;
+        }
+
+        private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, oldStatus, newStatus));
         }
 
         /// <summary>
@@ -116,15 +130,6 @@ namespace SS14.Server.Player
             return _sessions[index];
         }
         
-        /// <summary>
-        /// Processes an incoming network message.
-        /// </summary>
-        /// <param name="msg">Incoming message.</param>
-        public void HandleNetworkMessage(MsgSession msg)
-        {
-            GetSessionByChannel(msg.MsgChannel)?.HandleNetworkMessage(msg);
-        }
-
         /// <summary>
         ///     Ends a clients session, and disconnects them.
         /// </summary>
@@ -244,6 +249,20 @@ namespace SS14.Server.Player
 
             Debug.Assert(true, "Why was a slot not found? There should be one.");
             return -1;
+        }
+    }
+
+    public class SessionStatusEventArgs : EventArgs
+    {
+        public IPlayerSession Session { get; }
+        public SessionStatus OldStatus { get; }
+        public SessionStatus NewStatus { get; }
+
+        public SessionStatusEventArgs(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            Session = session;
+            OldStatus = oldStatus;
+            NewStatus = newStatus;
         }
     }
 }

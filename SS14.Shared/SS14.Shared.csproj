@@ -162,6 +162,7 @@
     <Compile Include="Interfaces\Map\IMapManager.cs" />
     <Compile Include="Interfaces\Map\ITileDefinition.cs" />
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
+    <Compile Include="Interfaces\Timers\ITimerManager.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
     <Compile Include="InventoryLocEnum.cs" />
     <Compile Include="GameStateDelta.cs" />
@@ -234,6 +235,8 @@
     <Compile Include="Serialization\SS14Serializer.cs" />
     <Compile Include="ServerEnums\RunLevel.cs" />
     <Compile Include="SessionStatusEnum.cs" />
+    <Compile Include="Timers\Timer.cs" />
+    <Compile Include="Timers\TimerManager.cs" />
     <Compile Include="Timing\GameTiming.cs" />
     <Compile Include="TypeEventArgs.cs" />
     <!--

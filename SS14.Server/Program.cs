@@ -31,6 +31,7 @@ using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Interfaces.Reflection;
 using SS14.Shared.Interfaces.Serialization;
+using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -39,6 +40,7 @@ using SS14.Shared.Network;
 using SS14.Shared.Physics;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Serialization;
+using SS14.Shared.Timers;
 using SS14.Shared.Timing;
 using System;
 using System.Collections.Generic;
@@ -104,6 +106,7 @@ namespace SS14.Server
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<ITimerManager, TimerManager>();
 
             // Server stuff.
             IoCManager.Register<IEntityManager, ServerEntityManager>();

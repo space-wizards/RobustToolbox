@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -34,7 +33,6 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
-using SS14.Server.Player;
 
 namespace SS14.Server
 {
@@ -97,12 +95,7 @@ namespace SS14.Server
 
         /// <inheritdoc />
         public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
-
-        public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
-        public event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
-        public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
-        public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
-
+        
         /// <inheritdoc />
         public void Restart()
         {
@@ -545,17 +538,6 @@ namespace SS14.Server
             message.MsgChannel.SendMessage(netMsg);
         }
 
-        /// <summary>
-        ///     Player session is fully built, player is an active member of the server. Player is prepared to start
-        ///     receiving states when they join the lobby.
-        /// </summary>
-        /// <param name="session">Fully built session</param>
-        [Obsolete("Subscribe to IPlayerManager.PlayerStatusChanged")]
-        private void OnPlayerJoinedServer(IPlayerSession session)
-        {
-            PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
-        }
-
         private void HandleAdminMessage(MsgAdmin msg)
         {
             if (msg.MsgId == NetMessages.RequestEntityDeletion)
@@ -605,7 +587,6 @@ namespace SS14.Server
             // client session is complete
             var session = plyMgr.GetSessionByChannel(channel);
             session.Status = SessionStatus.Connected;
-            OnPlayerJoinedServer(session);
         }
 
         private static void HandleClientGreet(MsgClGreet msg)
@@ -624,22 +605,11 @@ namespace SS14.Server
             IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
         }
 
-        // The size of the map being sent is almost exactly 1 byte per tile.
-        // The default 30x30 map is 900 bytes, a 100x100 one is 10,000 bytes (10kb).
+        //TODO: Chunk requests need to be handled in MapManager
         private void SendMap(INetChannel client)
         {
             // Send Tiles
             IoCManager.Resolve<IMapManager>().SendMap(client);
-
-            // TODO: Lets also send them all the items and mobs.
-
-            // TODO: Send atmos state to player
-
-            // Todo: Preempt this with the lobby.
-
-            // TODO: Find a better place to call this
-            var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(client);
-            PlayerJoinedGame?.Invoke(this, new PlayerEventArgs(session));
         }
 
         #endregion MessageProcessing

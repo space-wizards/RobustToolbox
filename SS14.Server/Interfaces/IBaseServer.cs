@@ -69,25 +69,5 @@ namespace SS14.Server.Interfaces
         ///     Raised when the server RunLevel is changed.
         /// </summary>
         event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
-        
-        /// <summary>
-        ///     Raised when a player successfully joins the server.
-        /// </summary>
-        event EventHandler<PlayerEventArgs> PlayerJoinedServer;
-
-        /// <summary>
-        ///     Raised when a player switches to the lobby.
-        /// </summary>
-        event EventHandler<PlayerEventArgs> PlayerJoinedLobby;
-
-        /// <summary>
-        ///     Raised when a player switches to the game.
-        /// </summary>
-        event EventHandler<PlayerEventArgs> PlayerJoinedGame;
-
-        /// <summary>
-        ///     Raised right before a player leaves the server.
-        /// </summary>
-        event EventHandler<PlayerEventArgs> PlayerLeaveServer;
     }
 }

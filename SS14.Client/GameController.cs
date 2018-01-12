@@ -259,8 +259,8 @@ namespace SS14.Client
             _networkManager.ProcessPackets();
             CluwneLib.RunIdle(this, e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, e.Elapsed);
-            _stateManager.Update(e);
             _timerManager.UpdateTimers(e.Elapsed);
+            _stateManager.Update(e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, e.Elapsed);
         }
 

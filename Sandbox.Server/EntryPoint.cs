@@ -36,10 +36,6 @@ namespace Sandbox.Server
 
             _server.RunLevelChanged += HandleRunLevelChanged;
             _players.PlayerStatusChanged += HandlePlayerStatusChanged;
-
-            _server.PlayerJoinedServer += HandlePlayerJoinedServer;
-            _server.PlayerJoinedGame += HandlePlayerJoinedGame;
-            _server.PlayerLeaveServer += HandlePlayerLeaveServer;
         }
 
         /// <inheritdoc />
@@ -47,11 +43,7 @@ namespace Sandbox.Server
         {
             _server.RunLevelChanged -= HandleRunLevelChanged;
             _players.PlayerStatusChanged -= HandlePlayerStatusChanged;
-
-            _server.PlayerJoinedServer -= HandlePlayerJoinedServer;
-            _server.PlayerJoinedGame -= HandlePlayerJoinedGame;
-            _server.PlayerLeaveServer -= HandlePlayerLeaveServer;
-
+            
             base.Dispose();
         }
 
@@ -79,6 +71,17 @@ namespace Sandbox.Server
         {
             switch (args.NewStatus)
             {
+                case SessionStatus.Connected:
+                {
+                    // timer time must be > tick length
+                    IoCManager.Resolve<ITimerManager>().AddTimer(new Timer(250, false, () =>
+                    {
+                        args.Session.JoinLobby();
+                    }));
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.Index);
+                }
+                    break;
+
                 case SessionStatus.InLobby:
                 {
                     // auto start game when first player joins
@@ -95,26 +98,22 @@ namespace Sandbox.Server
                     IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Lobby!", args.Session.Index);
                 }
                     break;
+
+                case SessionStatus.InGame:
+                {
+                    //TODO: Check for existing mob and re-attach
+                    IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
+
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
+                }
+                    break;
+
+                case SessionStatus.Disconnected:
+                {
+                    IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
+                }
+                    break;
             }
-        }
-
-        private void HandlePlayerJoinedServer(object sender, PlayerEventArgs args)
-        {
-            args.Session.JoinLobby();
-            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined server!", args.Session.Index);
-        }
-
-        private void HandlePlayerJoinedGame(object sender, PlayerEventArgs args)
-        {
-            //TODO: Check for existing mob and re-attach
-            IoCManager.Resolve<IPlayerManager>().SpawnPlayerMob(args.Session);
-
-            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player joined Game!", args.Session.Index);
-        }
-
-        private void HandlePlayerLeaveServer(object sender, PlayerEventArgs args)
-        {
-            IoCManager.Resolve<IChatManager>().DispatchMessage(ChatChannel.Server, "Gamemode: Player left!", args.Session.Index);
         }
 
         //TODO: This whole method should be removed once file loading/saving works, and replaced with a 'Demo' map.

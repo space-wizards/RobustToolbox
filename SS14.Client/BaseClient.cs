@@ -182,7 +182,7 @@ namespace SS14.Client
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
         {
             // player finished fully connecting to the server.
-            if (eventArgs.OldStatus == SessionStatus.Connected)
+            if (eventArgs.OldStatus == SessionStatus.Connecting)
                 OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
 
             if (eventArgs.NewStatus == SessionStatus.InLobby)
@@ -192,7 +192,7 @@ namespace SS14.Client
                 OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
-            if (eventArgs.NewStatus == SessionStatus.InGame)
+            else if (eventArgs.NewStatus == SessionStatus.InGame)
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();

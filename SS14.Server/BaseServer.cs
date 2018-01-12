@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -442,12 +443,12 @@ namespace SS14.Server
 
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, frameTime);
 
+            timerManager.UpdateTimers(frameTime);
             if (_runLevel >= ServerRunLevel.PreGame)
             {
                 _components.Update(frameTime);
                 _entities.Update(frameTime);
             }
-            timerManager.UpdateTimers(frameTime);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, frameTime);
 
             SendGameStateUpdate();
@@ -549,6 +550,7 @@ namespace SS14.Server
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Fully built session</param>
+        [Obsolete("Subscribe to IPlayerManager.PlayerStatusChanged")]
         private void OnPlayerJoinedServer(IPlayerSession session)
         {
             PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
@@ -602,6 +604,7 @@ namespace SS14.Server
 
             // client session is complete
             var session = plyMgr.GetSessionByChannel(channel);
+            session.Status = SessionStatus.Connected;
             OnPlayerJoinedServer(session);
         }
 

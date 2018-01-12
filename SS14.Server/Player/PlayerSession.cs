@@ -34,7 +34,6 @@ namespace SS14.Server.Player
             };
 
             ConnectedClient = client;
-            OnConnect();
 
             UpdatePlayerState();
         }
@@ -44,14 +43,19 @@ namespace SS14.Server.Player
         public IEntity attachedEntity { get; set; }
         public int? AttachedEntityUid => attachedEntity?.Uid;
 
-        private string _name;
-        private SessionStatus _status;
+        private string _name = "<TERU-SAMA>";
+        private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
         public string Name
         {
-            get => string.IsNullOrWhiteSpace(_name) ? "<TERU-SAMA>" : _name;
-            set => _name = value;
+            get => _name;
+            set 
+            {
+                if(string.IsNullOrWhiteSpace(value))
+                    return;
+                _name = value;
+            }
         }
 
         /// <inheritdoc />
@@ -76,6 +80,8 @@ namespace SS14.Server.Player
                 return;
 
             _status = newStatus;
+            UpdatePlayerState();
+
             PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, oldStatus, newStatus));
         }
 

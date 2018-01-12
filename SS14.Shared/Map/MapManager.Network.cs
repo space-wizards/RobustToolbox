@@ -11,15 +11,11 @@ namespace SS14.Shared.Map
 {
     public partial class MapManager
     {
-        [Dependency] //TODO: kill self
-        private readonly IMapManager _mapManager;
-
         [Dependency]
         private readonly INetManager _netManager;
 
         [Dependency]
         private readonly ITileDefinitionManager _defManager;
-
 
         /// <summary>
         ///     The accepted version of the NetworkMessage map format.
@@ -34,20 +30,8 @@ namespace SS14.Shared.Map
         public void NetSetup()
         {
             _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, message => HandleNetworkMessage((MsgMap)message));
-
-            if(_netManager.IsServer)
-                _mapManager.OnTileChanged += MapMgrOnTileChanged;
         }
-
-        /// <summary>
-        ///     Default finalizer.
-        /// </summary>
-        ~MapManager()
-        {
-            if (_netManager.IsServer)
-                _mapManager.OnTileChanged -= MapMgrOnTileChanged;
-        }
-
+        
         /// <inheritdoc />
         private void HandleNetworkMessage(MsgMap message)
         {
@@ -110,7 +94,7 @@ namespace SS14.Shared.Map
                     }
 
                     // Map chunks
-                    var grid = _mapManager.GetMap(Map.Index).GetGrid(Grid.Index);
+                    var grid = GetMap(Map.Index).GetGrid(Grid.Index);
                     var gridSize = grid.ChunkSize;
                     message.ChunkSize = gridSize;
                     message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
@@ -141,31 +125,6 @@ namespace SS14.Shared.Map
             mapmessage.MessageType = MapMessage.SendMapInfo;
             mapmessage.MapGridsToSend = QuantityGridsSent;
             _netManager.ServerSendMessage(mapmessage, channel);
-        }
-
-        /// <summary>
-        ///     Event handler for when a tile is modified in the MapManager.
-        /// </summary>
-        /// <param name="gridId">The id of the grid being modified.</param>
-        /// <param name="tileRef">A reference to the new tile.</param>
-        /// <param name="oldTile">The old tile being modified.</param>
-        private void MapMgrOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
-        {
-            Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
-
-            var message = _netManager.CreateNetMessage<MsgMap>();
-
-            message.MessageType = MapMessage.TurfUpdate;
-            message.SingleTurf = new MsgMap.Turf
-            {
-                X = tileRef.X,
-                Y = tileRef.Y,
-                Tile = (uint) tileRef.Tile
-            };
-            message.GridIndex = tileRef.LocalPos.GridID;
-            message.MapIndex = tileRef.LocalPos.MapID;
-
-            _netManager.ServerSendToAll(message);
         }
 
         private void HandleTurfClick(MsgMap message)
@@ -219,11 +178,11 @@ namespace SS14.Shared.Map
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;
 
-            if (!_mapManager.TryGetMap(mapIndex, out IMap map))
-                map = _mapManager.CreateMap(mapIndex);
+            if (!TryGetMap(mapIndex, out var map))
+                map = CreateMap(mapIndex);
             if (!map.GridExists(gridIndex))
-                _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
-            IMapGrid grid = _mapManager.GetMap(mapIndex).GetGrid(gridIndex);
+                GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
+            var grid = GetMap(mapIndex).GetGrid(gridIndex);
 
             for (var i = 0; i < chunkCount; ++i)
             {
@@ -235,16 +194,14 @@ namespace SS14.Shared.Map
                 {
                     for (ushort y = 0; y < chunk.ChunkSize; y++)
                     {
-                        chunk.SetTile(x, y, (Tile)message.ChunkDefs[i].Tiles[counter]);
+                        chunk.SetTile(x, y, (Tile) message.ChunkDefs[i].Tiles[counter]);
                         counter++;
                     }
                 }
             }
 
-            if(GridsReceived == GridsToReceive)
-            {
+            if (GridsReceived == GridsToReceive)
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
-            }
         }
 
         /// <summary>

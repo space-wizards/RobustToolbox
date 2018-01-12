@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Log;
+using SS14.Shared.Network.Messages;
 
 namespace SS14.Shared.Map
 {
@@ -43,6 +44,23 @@ namespace SS14.Shared.Map
                 return;
 
             OnTileChanged?.Invoke(gridId, tileRef, oldTile);
+
+            if(_netManager.IsClient)
+                return;
+
+            var message = _netManager.CreateNetMessage<MsgMap>();
+
+            message.MessageType = MapMessage.TurfUpdate;
+            message.SingleTurf = new MsgMap.Turf
+            {
+                X = tileRef.X,
+                Y = tileRef.Y,
+                Tile = (uint)tileRef.Tile
+            };
+            message.GridIndex = tileRef.LocalPos.GridID;
+            message.MapIndex = tileRef.LocalPos.MapID;
+
+            _netManager.ServerSendToAll(message);
         }
 
         #region MapAccess

@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Render;
+﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared;
 using SS14.Shared.Map;
@@ -11,7 +10,6 @@ namespace SS14.Client.Graphics.Lighting
     {
         int Radius { get; set; }
         Color Color { get; set; }
-        Vector4 ColorVec { get; }
         Sprite Mask { get; set; }
         LocalCoordinates Coordinates { get; set; }
         RenderImage RenderTarget { get; }

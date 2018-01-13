@@ -1,10 +1,8 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Render;
+﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -17,14 +15,13 @@ namespace SS14.Client.Graphics.Lighting
         private GridId _gridID;
 
         private int _radius;
-        private bool _RegenLightMapRt;
+        private bool _regenLightMap;
 
         public Sprite Mask { get; set; }
 
         public RenderImage RenderTarget { get; private set; }
 
         public Color Color { get; set; }
-        public Vector4 ColorVec => new Vector4(Color.R, Color.G, Color.B, Color.A);
 
         public LocalCoordinates Coordinates
         {
@@ -64,7 +61,7 @@ namespace SS14.Client.Graphics.Lighting
                 if (_radius != value)
                 {
                     _radius = value;
-                    _RegenLightMapRt = true;
+                    _regenLightMap = true;
                 }
             }
         }
@@ -88,10 +85,10 @@ namespace SS14.Client.Graphics.Lighting
 
         public void Update(float frametime)
         {
-            if (_RegenLightMapRt)
+            if (_regenLightMap)
             {
                 GenLightMapRt();
-                _RegenLightMapRt = false;
+                _regenLightMap = false;
             }
 
             LightMode?.Update(this, frametime);
@@ -127,7 +124,7 @@ namespace SS14.Client.Graphics.Lighting
             RenderTarget = new RenderImage("LightArea" + shadowmapSize, (uint) baseSize, (uint) baseSize);
         }
 
-        public static ShadowmapSize RadiusToMapSize(int radius)
+        private static ShadowmapSize RadiusToMapSize(int radius)
         {
             if (radius <= 128)
                 return ShadowmapSize.Size128;

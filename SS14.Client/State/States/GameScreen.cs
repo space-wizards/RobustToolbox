@@ -627,7 +627,7 @@ namespace SS14.Client.State.States
 
             // Find all the entities intersecting our click
             IEnumerable<IEntity> entities =
-                _entityManager.GetEntitiesIntersecting(MousePosWorld.Position);
+                _entityManager.GetEntitiesIntersecting(MousePosWorld.MapID, MousePosWorld.Position);
 
             // Check the entities against whether or not we can click them
             var clickedEntities = new List<ClickData>();
@@ -673,13 +673,25 @@ namespace SS14.Client.State.States
                     clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, MouseClickType.Right);
                     break;
                 case Mouse.Button.Middle:
-                    UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                    UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
-                                                                            entToClick));
+                    OpenEntityEditWindow(entToClick);
                     return;
             }
 
             #endregion Object clicking
+        }
+
+        private void OpenEntityEditWindow(IEntity entity)
+        {
+            foreach (var child in _uiScreen.Children.ToList())
+            {
+                if (child is PropEditWindow)
+                    _uiScreen.RemoveControl(child);
+            }
+
+            var window = new PropEditWindow(new Vector2i(400, 400), entity);
+            window.Alignment = Align.HCenter | Align.VCenter;
+            _uiScreen.AddControl(window);
+            _uiScreen.DoLayout();
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
@@ -862,7 +874,7 @@ namespace SS14.Client.State.States
                                                     (float)ScreenShadows.Width / area.RenderTarget.Width,
                                                     (float)ScreenShadows.Height / area.RenderTarget.Height);
                 lightTextures.Add(area.RenderTarget.Texture);
-                colors.Add(Light.ColorVec);
+                colors.Add(new Vector4(Light.Color.R, Light.Color.G, Light.Color.B, Light.Color.A));
                 positions.Add(LightPositionData);
             }
             int i = 0;
@@ -1050,14 +1062,14 @@ namespace SS14.Client.State.States
         }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
-        private void DrawWallsRelativeToLight(ILightArea area)
+        private void DrawWallsRelativeToLight(ILight area)
         {
             Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightMapSize) / 2;
             var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightMapSize));
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
 
-            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea))
+            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(area.Coordinates.MapID, lightArea))
             {
                 if (!t.TryGetComponent<OccluderComponent>(out var occluder))
                 {
@@ -1322,30 +1334,50 @@ namespace SS14.Client.State.States
             {
                 if (CluwneLib.Debug.DebugColliders)
                 {
-                    Color lastColor = default(Color);
-                    foreach (var component in Parent._componentManager.GetComponents<CollidableComponent>())
+                    var lastColor = default(Color);
+
+                    // loop over every BoundingBoxComponent on any entity
+                    foreach (var boundingBox in Parent._componentManager.GetComponents<BoundingBoxComponent>())
                     {
-                        if (component.MapID != argMap)
-                        {
+                        // all entities have a TransformComponent
+                        var transform = boundingBox.Owner.GetComponent<ITransformComponent>();
+
+                        // if not on the same map, continue
+                        if(transform.MapID != argMap)
                             continue;
-                        }
-                        var bounds = component.Owner.GetComponent<BoundingBoxComponent>();
-                        if (bounds.WorldAABB.IsEmpty() || !bounds.WorldAABB.Intersects(viewport))
+
+                        Color boxColor;
+                        Box2 worldBox;
+                        if (boundingBox.Owner.TryGetComponent<ICollidableComponent>(out var collision))
                         {
+                            boxColor = Color.Red.WithAlpha(128);
+                            worldBox = collision.WorldAABB;
+                        }
+                        else
+                        {
+                            boxColor = Color.Green.WithAlpha(128);
+                            worldBox = boundingBox.WorldAABB;
+                        }
+
+                        // if not on screen, or too small, continue
+                        if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
                             continue;
-                        }
-                        var box = CluwneLib.WorldToScreen(bounds.WorldAABB);
-                        ColliderDebug.Position = new Vector2(box.Left, box.Top);
-                        ColliderDebug.Size = new Vector2(box.Width, box.Height);
-                        if (lastColor != component.DebugColor)
+
+                        var screenBox = CluwneLib.WorldToScreen(worldBox);
+                        ColliderDebug.Position = new Vector2(screenBox.Left, screenBox.Top);
+                        ColliderDebug.Size = new Vector2(screenBox.Width, screenBox.Height);
+                        
+                        if (lastColor != boxColor)
                         {
-                            lastColor = component.DebugColor;
-                            ColliderDebug.FillColor = lastColor.WithAlpha(64);
-                            ColliderDebug.OutlineColor = lastColor.WithAlpha(128);
+                            lastColor = boxColor;
+                            ColliderDebug.FillColor = lastColor;
+                            ColliderDebug.OutlineColor = lastColor;
                         }
+
                         ColliderDebug.Draw();
                     }
                 }
+
                 if (CluwneLib.Debug.DebugGridDisplay)
                 {
                     DebugDisplayBackground.Draw();

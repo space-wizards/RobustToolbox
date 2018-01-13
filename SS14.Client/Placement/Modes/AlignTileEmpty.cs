@@ -27,7 +27,7 @@ namespace SS14.Client.Placement.Modes
                 return false;
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
-            var failtoplace = !entitymanager.AnyEntitiesIntersecting(new Box2(new Vector2(CurrentTile.X, CurrentTile.Y), new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f)));
+            var failtoplace = !entitymanager.AnyEntitiesIntersecting(MouseCoords.MapID, new Box2(new Vector2(CurrentTile.X, CurrentTile.Y), new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f)));
 
             if (pManager.CurrentPermission.IsTile)
             {

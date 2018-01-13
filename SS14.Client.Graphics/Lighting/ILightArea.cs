@@ -1,5 +1,4 @@
-﻿using SS14.Client.Graphics.Sprites;
-using SS14.Shared.Maths;
+﻿using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Lighting
 {

@@ -82,7 +82,7 @@ namespace SS14.Client.Graphics.Lighting
 
             return _lights
                 .FindAll(l => l.Coordinates.MapID == mapId &&
-                Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
+                Box2.FromDimensions(l.LightPosition - l.LightMapSize / 2, l.LightMapSize).Intersects(rect))
                 .ToArray();
         }
 
@@ -95,7 +95,7 @@ namespace SS14.Client.Graphics.Lighting
         {
             foreach (var l in _lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
 
@@ -104,7 +104,7 @@ namespace SS14.Client.Graphics.Lighting
             var lights = LightsIntersectingRect(mapId, rect);
             foreach (var l in lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
 
@@ -116,7 +116,7 @@ namespace SS14.Client.Graphics.Lighting
         public ILight[] LightsIntersectingPoint(Vector2 point)
         {
             return _lights
-                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Contains(point))
+                .FindAll(l => Box2.FromDimensions(l.LightPosition - l.LightMapSize / 2, l.LightMapSize).Contains(point))
                 .ToArray();
         }
 
@@ -125,7 +125,7 @@ namespace SS14.Client.Graphics.Lighting
             var lights = LightsIntersectingPoint(point);
             foreach (var l in lights)
             {
-                l.LightArea.Calculated = false;
+                l.Calculated = false;
             }
         }
     }

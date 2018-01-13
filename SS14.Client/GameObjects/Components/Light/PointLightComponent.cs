@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
                 mask = value;
 
                 var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
-                Light.SetMask(sprMask);
+                Light.Mask = sprMask;
             }
         }
 

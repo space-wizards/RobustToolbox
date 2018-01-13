@@ -1,10 +1,10 @@
 ﻿using OpenTK;
-using SS14.Shared;
-using SS14.Shared.IoC;
-using SS14.Shared.Map;
-using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
+using SS14.Shared;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
+using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -17,11 +17,14 @@ namespace SS14.Client.Graphics.Lighting
         private GridId _gridID;
 
         private int _radius;
+        private bool _RegenLightMapRt;
 
-        public Light()
-        {
-            Radius = 256;
-        }
+        public Sprite Mask { get; set; }
+
+        public RenderImage RenderTarget { get; private set; }
+
+        public Color Color { get; set; }
+        public Vector4 ColorVec => new Vector4(Color.R, Color.G, Color.B, Color.A);
 
         public LocalCoordinates Coordinates
         {
@@ -34,27 +37,11 @@ namespace SS14.Client.Graphics.Lighting
                 _position = value.Position;
                 _mapID = value.MapID;
                 _gridID = value.GridID;
-                LightArea.Calculated = false;
+                Calculated = false;
             }
         }
-
-        public Color Color { get; set; }
-        public Vector4 ColorVec => new Vector4(Color.R, Color.G, Color.B, Color.A);
-
-        public int Radius
-        {
-            get => _radius;
-            set
-            {
-                if (_radius != value)
-                {
-                    _radius = value;
-                    LightArea = new LightArea(RadiusToShadowMapSize(_radius), IoCManager.Resolve<ILightManager>().LightMask);
-                }
-            }
-        }
-
-        public ILightArea LightArea { get; private set; }
+        
+        public LightMode LightMode { get; set; }
 
         public LightState LightState
         {
@@ -64,32 +51,91 @@ namespace SS14.Client.Graphics.Lighting
                 if (_lightState != value)
                 {
                     _lightState = value;
-                    LightArea.Calculated = false;
+                    Calculated = false;
                 }
             }
         }
 
-        public LightMode LightMode { get; set; }
-
-        public void SetMask(Sprite mask)
+        public int Radius
         {
-            LightArea.SetMask(mask);
+            get => _radius;
+            set
+            {
+                if (_radius != value)
+                {
+                    _radius = value;
+                    _RegenLightMapRt = true;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Have the shadows been calculated for this light.
+        /// </summary>
+        public bool Calculated { get; set; }
+
+        public Vector2 LightMapSize { get; set; }
+
+        /// <summary>
+        ///     World position coordinates of the light's center
+        /// </summary>
+        public Vector2 LightPosition { get; set; }
+
+        public Light(int radius = 128)
+        {
+            Radius = radius;
         }
 
         public void Update(float frametime)
         {
-            LightMode?.Update(this);
+            if (_RegenLightMapRt)
+            {
+                GenLightMapRt();
+                _RegenLightMapRt = false;
+            }
+
+            LightMode?.Update(this, frametime);
         }
 
-        public static ShadowmapSize RadiusToShadowMapSize(int Radius)
+        public void BeginDrawingShadowCasters()
         {
-            if (Radius <= 128)
+            RenderTarget.BeginDrawing();
+
+            RenderTarget.Clear(new Color(0, 0, 0, 0));
+        }
+
+        public void EndDrawingShadowCasters()
+        {
+            RenderTarget.EndDrawing();
+        }
+
+        public Vector2 ToRelativePosition(Vector2 worldPosition)
+        {
+            return worldPosition - (CluwneLib.WorldToScreen(LightPosition) - LightMapSize * 0.5f);
+        }
+
+        /// <summary>
+        ///     Generates the Render Target of the light map.
+        /// </summary>
+        private void GenLightMapRt()
+        {
+            var shadowmapSize = RadiusToMapSize(_radius);
+            var baseSize = 2 << (int) shadowmapSize;
+            LightMapSize = new Vector2(baseSize, baseSize);
+
+            RenderTarget?.Dispose();
+            RenderTarget = new RenderImage("LightArea" + shadowmapSize, (uint) baseSize, (uint) baseSize);
+        }
+
+        public static ShadowmapSize RadiusToMapSize(int radius)
+        {
+            if (radius <= 128)
                 return ShadowmapSize.Size128;
 
-            if (Radius <= 256)
+            if (radius <= 256)
                 return ShadowmapSize.Size256;
 
-            if (Radius <= 512)
+            if (radius <= 512)
                 return ShadowmapSize.Size512;
 
             return ShadowmapSize.Size1024;

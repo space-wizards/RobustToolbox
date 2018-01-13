@@ -99,12 +99,7 @@ namespace SS14.Client.State.States
 
         private TechniqueList LightblendTechnique;
         private GLSLShader Lightmap;
-
-        private LightArea lightArea1024;
-        private LightArea lightArea128;
-        private LightArea lightArea256;
-        private LightArea lightArea512;
-
+        
         private ILight playerVision;
         private ISS14Serializer serializer;
 
@@ -305,10 +300,6 @@ namespace SS14.Client.State.States
             shadowMapResolver.LoadContent(reductionEffectTechnique, resolveShadowsEffectTechnique);
 
             lightManager.LightMask = resourceCache.GetSprite("whitemask");
-            lightArea128 = new LightArea(ShadowmapSize.Size128, lightManager.LightMask);
-            lightArea256 = new LightArea(ShadowmapSize.Size256, lightManager.LightMask);
-            lightArea512 = new LightArea(ShadowmapSize.Size512, lightManager.LightMask);
-            lightArea1024 = new LightArea(ShadowmapSize.Size1024, lightManager.LightMask);
 
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
@@ -804,7 +795,7 @@ namespace SS14.Client.State.States
                 return;
             }
             foreach
-            (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.LightArea.Calculated == false))
+            (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.Calculated == false))
             {
                 CalculateLightArea(l);
             }
@@ -818,7 +809,7 @@ namespace SS14.Client.State.States
         private void RenderLightsIntoMap(IEnumerable<ILight> lights)
         {
             //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
-            foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
+            foreach (ILight l in lights.Where(l => l.Calculated == false))
             {
                 if (l.LightState != LightState.On)
                     continue;
@@ -860,10 +851,10 @@ namespace SS14.Client.State.States
                     continue;
 
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
-                var area = (LightArea)Light.LightArea;
+                var area = (Light)Light;
 
                 //Set the drawing position.
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightMapSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X / ScreenShadows.Width,
@@ -995,60 +986,60 @@ namespace SS14.Client.State.States
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
+                var light = playerVision;
                 PlayerOcclusionTarget.Clear(Color.Black);
-                var playerposition = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
-                playerVision.Coordinates = playerposition;
+                var playerPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+                light.Coordinates = playerPos;
 
-                LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
-                area.LightPosition = playerVision.Coordinates.Position; // Set the light position
+                light.LightPosition = light.Coordinates.Position; // Set the light position
 
-                TileRef TileReference = playerposition.Grid.GetTile(playerposition);
-
-                if (TileReference.TileDef.IsOpaque)
+                //TODO: Lights should not have to be on the same grid
+                var tileRef = playerPos.Grid.GetTile(playerPos);
+                if (tileRef.TileDef.IsOpaque)
                 {
-                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + playerposition.Grid.TileSize + 1);
+                    light.LightPosition = new Vector2(light.LightPosition.X, tileRef.Y + playerPos.Grid.TileSize + 1);
                 }
 
-                area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
-                DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
-                area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+                light.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                DrawWallsRelativeToLight(light); // Draw all shadowcasting stuff here in black
+                light.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
-                var tmpBlitPos = CluwneLib.WorldToScreen(area.LightPosition) -
-                                 new Vector2(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(light.LightPosition) - light.LightMapSize * 0.5f;
+                var tmpBlitPos = CluwneLib.WorldToScreen(light.LightPosition) -
+                                 new Vector2(light.RenderTarget.Width, light.RenderTarget.Height) * 0.5f;
 
                 if (debugWallOccluders)
                 {
                     OccluderDebugTarget.BeginDrawing();
                     OccluderDebugTarget.Clear(Color.White);
-                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
+                    light.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
                     OccluderDebugTarget.EndDrawing();
                 }
 
-                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceCache>().GetSprite("whitemask").Texture); // Calc shadows
+                shadowMapResolver.ResolveShadows(light, false); // Calc shadows
 
                 if (debugPlayerShadowMap)
                 {
                     OccluderDebugTarget.BeginDrawing();
                     OccluderDebugTarget.Clear(Color.White);
-                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
+                    light.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
                     OccluderDebugTarget.EndDrawing();
                 }
 
                 PlayerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 
-                BlendMode blendSettings = area.RenderTarget.BlendSettings;
+                BlendMode blendSettings = light.RenderTarget.BlendSettings;
 
                 blendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 blendSettings.ColorDstFactor = BlendMode.Factor.Zero;
-                area.RenderTarget.BlendSettings = blendSettings;
+                light.RenderTarget.BlendSettings = blendSettings;
 
-                area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
+                light.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 blendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-                area.RenderTarget.BlendSettings = blendSettings;
+                light.RenderTarget.BlendSettings = blendSettings;
 
                 PlayerOcclusionTarget.EndDrawing();
             }
@@ -1061,8 +1052,8 @@ namespace SS14.Client.State.States
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
         private void DrawWallsRelativeToLight(ILightArea area)
         {
-            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
-            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightMapSize) / 2;
+            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightMapSize));
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
 
@@ -1228,7 +1219,7 @@ namespace SS14.Client.State.States
 
         private void CalculateLightArea(ILight light)
         {
-            var area = light.LightArea;
+            var area = light;
 
             // no need to do anything, texture is already updated.
             if (area.Calculated)
@@ -1246,44 +1237,10 @@ namespace SS14.Client.State.States
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-            shadowMapResolver.ResolveShadows((LightArea)area, true); // Calc shadows
+            shadowMapResolver.ResolveShadows(area, true); // Calc shadows
             area.Calculated = true;
         }
-
-        private ShadowmapSize RadiusToShadowMapSize(int Radius)
-        {
-            switch (Radius)
-            {
-                case 128:
-                    return ShadowmapSize.Size128;
-                case 256:
-                    return ShadowmapSize.Size256;
-                case 512:
-                    return ShadowmapSize.Size512;
-                case 1024:
-                    return ShadowmapSize.Size1024;
-                default:
-                    return ShadowmapSize.Size1024;
-            }
-        }
-
-        private LightArea GetLightArea(ShadowmapSize size)
-        {
-            switch (size)
-            {
-                case ShadowmapSize.Size128:
-                    return lightArea128;
-                case ShadowmapSize.Size256:
-                    return lightArea256;
-                case ShadowmapSize.Size512:
-                    return lightArea512;
-                case ShadowmapSize.Size1024:
-                    return lightArea1024;
-                default:
-                    return lightArea1024;
-            }
-        }
-
+        
         private void RecalculateScene()
         {
             _recalculateScene = true;

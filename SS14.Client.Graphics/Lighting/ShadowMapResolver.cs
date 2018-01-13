@@ -73,7 +73,7 @@ namespace SS14.Client.Graphics.Lighting
                 ImageBufferFormats.BufferRGB888A8);
         }
 
-        public void ResolveShadows(LightArea Area, bool attenuateShadows, Texture mask = null)
+        public void ResolveShadows(ILight Area, bool attenuateShadows, Texture mask = null)
         {
             var Result = Area.RenderTarget;
             var MaskTexture = mask ?? Area.Mask.Texture;

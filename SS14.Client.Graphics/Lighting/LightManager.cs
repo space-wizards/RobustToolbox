@@ -10,6 +10,7 @@ using System.Reflection;
 using SS14.Shared.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Map;
 
 namespace SS14.Client.Graphics.Lighting
 {
@@ -74,10 +75,14 @@ namespace SS14.Client.Graphics.Lighting
             return _lights.ToArray();
         }
 
-        public ILight[] LightsIntersectingRect(Box2 rect)
+        public ILight[] LightsIntersectingRect(MapId mapId, Box2 rect)
         {
+            if(rect.IsEmpty())
+                return new ILight[0];
+
             return _lights
-                .FindAll(l => Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
+                .FindAll(l => l.Coordinates.MapID == mapId &&
+                Box2.FromDimensions(l.LightArea.LightPosition - l.LightArea.LightAreaSize / 2, l.LightArea.LightAreaSize).Intersects(rect))
                 .ToArray();
         }
 
@@ -94,9 +99,9 @@ namespace SS14.Client.Graphics.Lighting
             }
         }
 
-        public void RecalculateLightsInView(Box2 rect)
+        public void RecalculateLightsInView(MapId mapId, Box2 rect)
         {
-            var lights = LightsIntersectingRect(rect);
+            var lights = LightsIntersectingRect(mapId, rect);
             foreach (var l in lights)
             {
                 l.LightArea.Calculated = false;

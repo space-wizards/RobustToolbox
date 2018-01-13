@@ -1,5 +1,4 @@
-﻿using System;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -60,7 +59,7 @@ namespace SS14.Client.GameObjects
         private void RedrawRelevantLights(Vector2 position)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.RecalculateLightsInView(BoundingBox.Translated(position));
+            mgr.RecalculateLightsInView(transform.MapID, BoundingBox.Translated(position));
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

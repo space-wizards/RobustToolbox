@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
@@ -11,13 +10,13 @@ namespace SS14.Client.Graphics.Lighting
 {
     public class Light : ILight
     {
-        private LightState lightState = LightState.On;
+        private LightState _lightState = LightState.On;
 
-        private Vector2 position;
-        private MapId MapID;
-        private GridId GridID;
+        private Vector2 _position;
+        private MapId _mapID;
+        private GridId _gridID;
 
-        private int radius;
+        private int _radius;
 
         public Light()
         {
@@ -26,16 +25,16 @@ namespace SS14.Client.Graphics.Lighting
 
         public LocalCoordinates Coordinates
         {
-            get => new LocalCoordinates(position, GridID, MapID);
+            get => new LocalCoordinates(_position, _gridID, _mapID);
             set
             {
-                if (position != value.Position || MapID != value.MapID || GridID != value.GridID)
-                {
-                    position = value.Position;
-                    MapID = value.MapID;
-                    GridID = value.GridID;
-                    LightArea.Calculated = false;
-                }
+                if (_position == value.Position && _mapID == value.MapID && _gridID == value.GridID)
+                    return;
+
+                _position = value.Position;
+                _mapID = value.MapID;
+                _gridID = value.GridID;
+                LightArea.Calculated = false;
             }
         }
 
@@ -44,13 +43,13 @@ namespace SS14.Client.Graphics.Lighting
 
         public int Radius
         {
-            get => radius;
+            get => _radius;
             set
             {
-                if (radius != value)
+                if (_radius != value)
                 {
-                    radius = value;
-                    LightArea = new LightArea(RadiusToShadowMapSize(radius), IoCManager.Resolve<ILightManager>().LightMask);
+                    _radius = value;
+                    LightArea = new LightArea(RadiusToShadowMapSize(_radius), IoCManager.Resolve<ILightManager>().LightMask);
                 }
             }
         }
@@ -59,12 +58,12 @@ namespace SS14.Client.Graphics.Lighting
 
         public LightState LightState
         {
-            get => lightState;
+            get => _lightState;
             set
             {
-                if (lightState != value)
+                if (_lightState != value)
                 {
-                    lightState = value;
+                    _lightState = value;
                     LightArea.Calculated = false;
                 }
             }

@@ -1,16 +1,13 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using Lidgren.Network;
+﻿using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Map;
@@ -75,18 +72,11 @@ namespace SS14.Client.GameObjects
             set => Light.LightState = value;
         }
 
-        public override void Initialize()
-        {
-            base.Initialize();
-            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
-            UpdateLightPosition();
-        }
-
+        /// <inheritdoc />
         public override void LoadParameters(YamlMappingNode mapping)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             Light = mgr.CreateLight();
-            mgr.AddLight(Light);
 
             YamlNode node;
             if (mapping.TryGetNode("offset", out node))
@@ -140,6 +130,18 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        public override void Startup()
+        {
+            base.Startup();
+            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
+            UpdateLightPosition();
+
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.AddLight(Light);
+        }
+
+        /// <inheritdoc />
         public override void Shutdown()
         {
             Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
@@ -152,9 +154,10 @@ namespace SS14.Client.GameObjects
             UpdateLightPosition(args.NewPosition);
         }
 
-        protected void UpdateLightPosition(LocalCoordinates NewPosition)
+        protected void UpdateLightPosition(LocalCoordinates newPosition)
         {
-            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
+            Light.Coordinates = new LocalCoordinates(newPosition.Position + Offset, newPosition.Grid);
+            Logger.Debug($"Light: {Owner.Uid} Pos: {newPosition}");
         }
 
         protected void UpdateLightPosition()

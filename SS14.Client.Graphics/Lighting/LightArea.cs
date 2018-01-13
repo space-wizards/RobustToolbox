@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using SS14.Client.Graphics.Sprites;
+﻿using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.Render;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Color = SS14.Shared.Maths.Color;
@@ -18,31 +17,6 @@ namespace SS14.Client.Graphics.Lighting
 
         public RenderImage RenderTarget { get; }
         public Sprite Mask { get; set; }
-        public bool MaskFlipX { get; set; }
-        public bool MaskFlipY { get; set; }
-        public bool Rot90 { get; set; }
-
-        public Vector4 MaskProps
-        {
-            get
-            {
-                if (Rot90 && MaskFlipX && MaskFlipY)
-                    return maskPropsVec(false, false, false);
-                if (Rot90 && MaskFlipX && !MaskFlipY)
-                    return maskPropsVec(true, false, true);
-                if (Rot90 && !MaskFlipX && MaskFlipY)
-                    return maskPropsVec(true, true, false);
-                if (Rot90 && !MaskFlipX && !MaskFlipY)
-                    return maskPropsVec(true, false, false);
-                if (!Rot90 && MaskFlipX && MaskFlipY)
-                    return maskPropsVec(false, true, true);
-                if (!Rot90 && MaskFlipX && !MaskFlipY)
-                    return maskPropsVec(false, true, false);
-                if (!Rot90 && !MaskFlipX && MaskFlipY)
-                    return maskPropsVec(false, false, true);
-                return maskPropsVec(false, false, false);
-            }
-        }
 
         /// <summary>
         ///     World position coordinates of the light's center
@@ -72,11 +46,6 @@ namespace SS14.Client.Graphics.Lighting
         public void SetMask(Sprite mask)
         {
             Mask = mask;
-        }
-
-        private Vector4 maskPropsVec(bool rot, bool flipx, bool flipy)
-        {
-            return new Vector4(rot ? 1 : 0, flipx ? 1 : 0, flipy ? 1 : 0, 0);
         }
     }
 }

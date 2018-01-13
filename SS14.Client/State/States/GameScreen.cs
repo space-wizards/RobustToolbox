@@ -159,7 +159,8 @@ namespace SS14.Client.State.States
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
-            IoCManager.Resolve<IMapManager>().OnTileChanged += (gridId, tileRef, oldTile) => OnTileChanged(gridId, tileRef, oldTile);
+            IoCManager.Resolve<IMapManager>().TileChanged += (sender, args) => HandleTileChanged(args.NewTile);
+            IoCManager.Resolve<IMapManager>().GridChanged += HandleGridChanged;
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -183,6 +184,15 @@ namespace SS14.Client.State.States
 
             DebugManager = new GameScreenDebug(this);
             FormResizeUI();
+        }
+
+        private void HandleGridChanged(object obj, GridChangedEventArgs args)
+        {
+            var box = args.Grid.AABBWorld;
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(args.Grid.MapID, box);
+
+            // Recalculate the scene batches.
+            RecalculateScene();
         }
 
         private void InitializeRenderTargets()
@@ -398,12 +408,13 @@ namespace SS14.Client.State.States
             var vp = CluwneLib.WorldViewport;
 
             var map = MapId.Nullspace;
-            if(PlayerManager.LocalPlayer.ControlledEntity != null)
-                map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+            var entity = PlayerManager.LocalPlayer.ControlledEntity;
+            if(entity != null)
+                map = entity.GetComponent<ITransformComponent>().MapID;
 
             if (!bFullVision)
             {
-                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(map, vp);
 
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
@@ -767,9 +778,10 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        public void OnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
+        private void HandleTileChanged(TileRef tileRef)
         {
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(tileRef.LocalPos.MapID, Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
+
             // Recalculate the scene batches.
             RecalculateScene();
         }
@@ -1216,19 +1228,21 @@ namespace SS14.Client.State.States
 
         private void CalculateLightArea(ILight light)
         {
-            ILightArea area = light.LightArea;
+            var area = light.LightArea;
+
+            // no need to do anything, texture is already updated.
             if (area.Calculated)
                 return;
-            area.LightPosition = light.Coordinates.Position; //mousePosWorld; // Set the light position
-            TileRef t = light.Coordinates.Grid.GetTile(light.Coordinates);
-            if (t.Tile.IsEmpty)
-                return;
-            if (t.TileDef.IsOpaque)
+
+            area.LightPosition = light.Coordinates.Position;
+
+            // move light up one meter if on top of an opaque tile.
+            var tileRef = light.Coordinates.Map.FindGridAt(light.Coordinates).GetTile(light.Coordinates);
+            if (tileRef.TileDef.IsOpaque)
             {
-                area.LightPosition = new Vector2(area.LightPosition.X,
-                                                  t.Y +
-                                                  light.Coordinates.Grid.TileSize + 1);
+                area.LightPosition = new Vector2(area.LightPosition.X, tileRef.Y + light.Coordinates.Grid.TileSize + 1);
             }
+
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget

@@ -38,6 +38,9 @@ namespace SS14.Client.Map
                 // TODO: Unhardcode this cell size.
                 CellSize = new Godot.Vector2(32, 32),
                 ZIndex = -10,
+                // Fiddle with this some more maybe. Increases lighting performance a TON.
+                CellQuadrantSize = 4,
+                //Visible = false,
             };
             tilemap.SetName($"Grid {mapId}.{gridId}");
             sceneTree.WorldRoot.AddChild(tilemap);

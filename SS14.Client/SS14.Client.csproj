@@ -127,7 +127,9 @@
     <Compile Include="Console\Commands\QuitCommand.cs" />
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
-    <Compile Include="Graphics\LightManager.cs" />
+    <Compile Include="Graphics\Lighting\Light.cs" />
+    <Compile Include="Graphics\Lighting\LightManager.cs" />
+    <Compile Include="Graphics\Lighting\LightMode\LightModeConstant.cs" />
     <Compile Include="Interfaces\Console\IConsoleCommand.cs" />
     <Compile Include="Interfaces\Console\IDebugConsole.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClientClickableComponent.cs" />
@@ -140,8 +142,9 @@
     <Compile Include="Interfaces\GameObjects\ISpriteComponent.cs" />
     <Compile Include="Interfaces\GameObjects\ISpriteRenderableComponent.cs" />
     <Compile Include="Interfaces\GameStates\IGameStateManager.cs" />
-    <Compile Include="Interfaces\Graphics\ILightEmitter.cs" />
-    <Compile Include="Interfaces\Graphics\ILightManager.cs" />
+    <Compile Include="Interfaces\Graphics\Lighting\ILight.cs" />
+    <Compile Include="Interfaces\Graphics\Lighting\ILightManager.cs" />
+    <Compile Include="Interfaces\Graphics\Lighting\ILightMode.cs" />
     <Compile Include="Interfaces\IBaseClient.cs" />
     <Compile Include="Interfaces\ISceneTreeHolder.cs" />
     <Compile Include="Interfaces\Map\IClientTileDefinitionManager.cs" />

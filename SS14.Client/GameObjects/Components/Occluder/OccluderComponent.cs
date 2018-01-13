@@ -1,12 +1,11 @@
-﻿/*
-TODO: Godot
-using System;
+﻿using System;
 using OpenTK;
+using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using SS14.Shared.IoC;
-using SS14.Shared.Interfaces.GameObjects.Components;
 
 namespace SS14.Client.GameObjects
 {
@@ -27,41 +26,42 @@ namespace SS14.Client.GameObjects
                 }
 
                 enabled = value;
-                RedrawRelevantLights();
+                occluder.Visible = value;
             }
         }
 
-        private ITransformComponent transform;
+        private IClientTransformComponent transform;
+        private Godot.LightOccluder2D occluder;
 
         public override void Initialize()
         {
             base.Initialize();
-            transform = Owner.GetComponent<ITransformComponent>();
-            transform.OnMove += Transform_OnMove;
-        }
+            transform = Owner.GetComponent<IClientTransformComponent>();
 
-        private void Transform_OnMove(object sender, Shared.MoveEventArgs e)
-        {
-            var oldpos = e.OldPosition.Grid.ConvertToWorld(e.OldPosition.Position);
-            var newpos = e.NewPosition.Grid.ConvertToWorld(e.NewPosition.Position);
-            RedrawRelevantLights(newpos);
-            RedrawRelevantLights(oldpos);
+            occluder = new Godot.LightOccluder2D();
+            occluder.SetName("OccluderComponent");
+            transform.SceneNode.AddChild(occluder);
+
+            var poly = new Godot.OccluderPolygon2D();
+            occluder.Occluder = poly;
+            poly.Polygon = new Godot.Vector2[4]
+            {
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Top),
+                new Godot.Vector2(BoundingBox.Right, BoundingBox.Bottom),
+                new Godot.Vector2(BoundingBox.Left, BoundingBox.Bottom),
+            };
+            occluder.Occluder = poly;
         }
 
         public override void OnRemove()
         {
-            base.OnRemove();
-            // Tell lights to update for our deletion.
-            Enabled = false;
-            transform.OnMove -= Transform_OnMove;
+            occluder.QueueFree();
+            occluder.Dispose();
+            occluder = null;
             transform = null;
-        }
 
-        private void RedrawRelevantLights() => RedrawRelevantLights(transform.WorldPosition);
-        private void RedrawRelevantLights(Vector2 position)
-        {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.RecalculateLightsInView(BoundingBox.Translated(position));
+            base.OnRemove();
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -100,4 +100,3 @@ namespace SS14.Client.GameObjects
         }
     }
 }
-*/

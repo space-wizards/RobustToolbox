@@ -12,7 +12,9 @@
     icon: Objects/wall_light.png
 
   - type: PointLight
-    radius: 1024
+    radius: 8
+    energy: 1.2
+    offset: "0, -16"
     color: "#DCDCC6"
 
   placement:

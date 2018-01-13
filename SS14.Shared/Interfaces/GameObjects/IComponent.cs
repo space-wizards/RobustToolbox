@@ -67,6 +67,11 @@ namespace SS14.Shared.Interfaces.GameObjects
         void OnAdd(IEntity owner);
 
         /// <summary>
+        ///     Called just after the component has been created to be added to an entity.
+        /// </summary>
+        void Spawned();
+
+        /// <summary>
         ///     Called when all of the entity's other components have been added and are available,
         ///     But are not necessarily initialized yet.
         /// </summary>

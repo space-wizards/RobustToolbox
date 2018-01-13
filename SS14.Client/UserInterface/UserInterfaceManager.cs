@@ -124,7 +124,6 @@ namespace SS14.Client.UserInterface
 
         public void UnhandledMouseDown(MouseButtonEventArgs args)
         {
-            Logger.Debug("Hrm.");
             Focused?.ReleaseFocus();
         }
 

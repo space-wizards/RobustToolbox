@@ -23,6 +23,7 @@ using System;
 using System.IO;
 using SS14.Client.Interfaces.Input;
 using SS14.Client.Console;
+using SS14.Client.Interfaces.Graphics.Lighting;
 
 namespace SS14.Client
 {
@@ -57,6 +58,8 @@ namespace SS14.Client
         readonly IKeyBindingManager keyBindingManager;
         [Dependency]
         readonly IClientChatConsole _console;
+        [Dependency]
+        readonly ILightManager lightManager;
 
         public override void Main(Godot.SceneTree tree)
         {
@@ -88,6 +91,7 @@ namespace SS14.Client
             _prototypeManager.Resync();
             _mapManager.Initialize();
             //_placementManager.Initialize();
+            lightManager.Initialize();
 
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));

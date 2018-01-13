@@ -19,7 +19,7 @@ namespace SS14.Client.GameObjects
             Register<IconComponent>();
             Register<ContextMenuComponent>();
             Register<KeyBindingInputComponent>();
-            //Register<PointLightComponent>();
+            Register<PointLightComponent>();
             Register<PhysicsComponent>();
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
@@ -38,7 +38,7 @@ namespace SS14.Client.GameObjects
             RegisterReference<ClickableComponent, IClientClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
 
-            //Register<OccluderComponent>();
+            Register<OccluderComponent>();
         }
     }
 }

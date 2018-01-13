@@ -1,20 +1,26 @@
-﻿/*
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using Lidgren.Network;
+using SS14.Client.Interfaces.GameObjects.Components;
+using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.ResourceManagement;
+using SS14.Client.ResourceManagement;
+using SS14.Client.Utility;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using SS14.Client.Graphics.Lighting;
-using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Shared.Map;
+using SS14.Client.Interfaces.Graphics.Lighting;
+using SS14.Client.Graphics.Lighting;
+using SS14.Shared.Log;
 
 namespace SS14.Client.GameObjects
 {
@@ -24,71 +30,76 @@ namespace SS14.Client.GameObjects
         public override uint? NetID => NetIDs.POINT_LIGHT;
         public override Type StateType => typeof(PointLightComponentState);
 
-        public ILight Light { get; private set; }
+        private ILight Light;
 
-        public Color4 Color
+        public Color Color
         {
             get => Light.Color;
             set => Light.Color = value;
         }
 
-        private Vector2 offset = Vector2.Zero;
         public Vector2 Offset
         {
-            get => offset;
-            set
-            {
-                offset = value;
-                UpdateLightPosition();
-            }
+            get => Light.Offset;
+            set => Light.Offset = value;
         }
 
-        public int Radius
-        {
-            get => Light.Radius;
-            set => Light.Radius = value;
-        }
-
-        private string mask;
-        protected string Mask
-        {
-            get => mask;
-            set
-            {
-                mask = value;
-
-                var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
-                Light.SetMask(sprMask);
-            }
-        }
-
-        public LightModeClass ModeClass
-        {
-            get => Light.LightMode.LightModeClass;
-            set => IoCManager.Resolve<ILightManager>().SetLightMode(value, Light);
-        }
-
-        public LightMode Mode => Light.LightMode;
-
+        private LightState state = LightState.On;
         public LightState State
         {
-            get => Light.LightState;
-            set => Light.LightState = value;
+            get => state;
+            set
+            {
+                state = value;
+                Light.Enabled = state == LightState.On;
+            }
+        }
+
+        public float Energy
+        {
+            get => Light.Energy;
+            set => Light.Energy = value;
+        }
+
+        //private float texRadius;
+        private float radius = 5;
+        /// <summary>
+        ///     Radius, in meters.
+        /// </summary>
+        public float Radius
+        {
+            get => radius;
+            set
+            {
+                radius = FloatMath.Clamp(value, 2, 10);
+                var mgr = IoCManager.Resolve<IResourceCache>();
+                var tex = mgr.GetResource<TextureResource>($"Textures/Effects/Light/lighting_falloff_{(int)radius}.png");
+                // TODO: Maybe editing the global texture resource is not a good idea.
+                tex.Texture.Texture.SetFlags(tex.Texture.Texture.GetFlags() | (int)Godot.Texture.Flags.Filter);
+                Light.Texture = tex.Texture;
+            }
+        }
+
+        public override void Spawned()
+        {
+            // TODO: move this pixels per meter somewhere else like a centralized camera system.
+            //const float PixelsPerMeter = 32;
+            // Yes, this only cares about X axis. I know and don't care.
+            //texRadius = res.Texture.Texture.GetWidth() / PixelsPerMeter;
+
+            Light = new Light();
         }
 
         public override void Initialize()
         {
             base.Initialize();
-            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
-            UpdateLightPosition();
+
+            var transform = Owner.GetComponent<IClientTransformComponent>();
+            Light.ParentTo(transform.SceneNode);
         }
 
         public override void LoadParameters(YamlMappingNode mapping)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            Light = mgr.CreateLight();
-            mgr.AddLight(Light);
-
             YamlNode node;
             if (mapping.TryGetNode("offset", out node))
             {
@@ -97,77 +108,31 @@ namespace SS14.Client.GameObjects
 
             if (mapping.TryGetNode("radius", out node))
             {
-                Radius = node.AsInt();
-            }
-            else
-            {
-                Radius = 512;
+                Radius = node.AsFloat();
             }
 
             if (mapping.TryGetNode("color", out node))
             {
                 Color = node.AsHexColor();
             }
-            else
-            {
-                Color = new Color4(200, 200, 200, 255);
-            }
-
-            if (mapping.TryGetNode("mask", out node))
-            {
-                Mask = node.AsString();
-            }
-            else
-            {
-                Mask = "whitemask";
-            }
 
             if (mapping.TryGetNode("state", out node))
             {
                 State = node.AsEnum<LightState>();
             }
-            else
-            {
-                State = LightState.On;
-            }
 
-            if (mapping.TryGetNode("mode", out node))
+            if (mapping.TryGetNode("energy", out node))
             {
-                ModeClass = node.AsEnum<LightModeClass>();
-            }
-            else
-            {
-                ModeClass = LightModeClass.Constant;
+                Energy = node.AsFloat();
             }
         }
 
-        public override void Shutdown()
+        public override void OnRemove()
         {
-            Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
-            IoCManager.Resolve<ILightManager>().RemoveLight(Light);
-            base.Shutdown();
-        }
+            Light.Dispose();
+            Light = null;
 
-        private void OnMove(object sender, MoveEventArgs args)
-        {
-            UpdateLightPosition(args.NewPosition);
-        }
-
-        protected void UpdateLightPosition(LocalCoordinates NewPosition)
-        {
-            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
-        }
-
-        protected void UpdateLightPosition()
-        {
-            var transform = Owner.GetComponent<ITransformComponent>();
-            UpdateLightPosition(transform.LocalPosition);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-            Light.Update(frameTime);
+            base.OnRemove();
         }
 
         /// <inheritdoc />
@@ -176,8 +141,8 @@ namespace SS14.Client.GameObjects
             var newState = (PointLightComponentState)state;
             State = newState.State;
             Color = newState.Color;
-            ModeClass = newState.Mode;
+            Light.ModeClass = newState.Mode;
         }
     }
 }
-*/
+

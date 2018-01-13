@@ -311,6 +311,7 @@ namespace SS14.Shared.GameObjects
             foreach (KeyValuePair<string, YamlMappingNode> componentData in Components)
             {
                 IComponent component = componentFactory.GetComponent(componentData.Key);
+                component.Spawned();
                 component.LoadParameters(componentData.Value);
                 entity.AddComponent(component);
             }

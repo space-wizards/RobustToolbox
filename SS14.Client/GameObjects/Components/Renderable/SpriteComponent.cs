@@ -21,6 +21,7 @@ using System.Linq;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Log;
 
 // Warning: Shitcode ahead!
 namespace SS14.Client.GameObjects

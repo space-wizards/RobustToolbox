@@ -9,6 +9,11 @@ namespace SS14.Client.Graphics
         public int Width => Texture.GetWidth();
         public int Height => Texture.GetHeight();
         public Vector2i Size => new Vector2i(Width, Height);
+
+        public static implicit operator Godot.Texture(TextureSource src)
+        {
+            return src.Texture;
+        }
     }
 
     public class GodotTextureSource : TextureSource

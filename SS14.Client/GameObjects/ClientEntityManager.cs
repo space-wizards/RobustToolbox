@@ -141,16 +141,5 @@ namespace SS14.Client.GameObjects
                 Initialize();
             }
         }
-
-        public void SpawnDummy()
-        {
-            Initialize();
-            IEntity ent = SpawnEntity("__engine_toolbox");
-            var transform = ent.GetComponent<IClientTransformComponent>();
-            ent.Name = "TOOLBOX!";
-            transform.SceneNode.Position = new Godot.Vector2(400, 400);
-            transform.SceneNode.Rotate(4);
-            transform.SceneNode.Scale = new Godot.Vector2(5, 5);
-        }
     }
 }

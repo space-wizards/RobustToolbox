@@ -36,7 +36,7 @@ namespace SS14.Client.GodotGlue
                     }
                     catch (Exception e)
                     {
-                        GD.Print($"Caught exception inside ClientEntryPoint Main:\n{e}");
+                        GD.Print($"Caught exception inside Main:\n{e}");
                     }
                     entryPoints.Add(instance);
                 }
@@ -49,7 +49,14 @@ namespace SS14.Client.GodotGlue
             {
                 foreach (var entrypoint in EntryPoints)
                 {
-                    entrypoint.PhysicsProcess(delta);
+                    try
+                    {
+                        entrypoint.PhysicsProcess(delta);
+                    }
+                    catch (Exception e)
+                    {
+                        GD.Print($"Caught exception inside PhysicsProcess:\n{e}");
+                    }
                 }
             }
         }

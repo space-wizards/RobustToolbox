@@ -134,6 +134,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientConsoleHost\Commands\SpawnCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\ChatCommands.cs" />
     <Compile Include="ClientConsoleHost\Commands\JoinGameCommand.cs" />
     <Compile Include="ClientConsoleHost\Commands\SysCommands.cs" />

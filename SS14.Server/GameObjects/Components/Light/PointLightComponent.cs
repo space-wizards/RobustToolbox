@@ -1,9 +1,8 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using SS14.Server.Interfaces.Chat;
+﻿using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.IoC;
+using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -16,10 +15,10 @@ namespace SS14.Server.GameObjects
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
-        public Color4 Color { get; set; } = new Color4(200, 200, 200, 255);
+        public Color Color { get; set; } = Color.White;
         public LightModeClass Mode { get; set; } = LightModeClass.Constant;
         public LightState State { get; set; } = LightState.On;
-        public int Radius { get; set; } = 512;
+        public float Radius { get; set; } = 5;
         public Vector2 Offset { get; set; } = Vector2.Zero;
 
         public override void LoadParameters(YamlMappingNode mapping)
@@ -32,7 +31,7 @@ namespace SS14.Server.GameObjects
 
             if (mapping.TryGetNode("radius", out node))
             {
-                Radius = node.AsInt();
+                Radius = node.AsFloat();
             }
 
             if (mapping.TryGetNode("color", out node))

@@ -53,6 +53,11 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public virtual void Spawned()
+        {
+        }
+
+        /// <inheritdoc />
         public virtual void Initialize()
         {
 

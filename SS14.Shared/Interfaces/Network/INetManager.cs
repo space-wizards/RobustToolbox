@@ -31,9 +31,9 @@ namespace SS14.Shared.Interfaces.Network
         bool IsConnected { get; }
 
         /// <summary>
-        ///     The statistics of the raw NetPeer.
+        ///     Network traffic statistics for the locl NetChannel.
         /// </summary>
-        NetPeerStatistics Statistics { get; }
+        NetworkStats Statistics { get; }
 
         /// <summary>
         ///     All of the current connected NetChannels on this peer.
@@ -135,12 +135,6 @@ namespace SS14.Shared.Interfaces.Network
         #endregion
 
         #region Obsolete
-
-        /// <summary>
-        ///     The raw NetPeer. This is only available for legacy code, you should be using NetChannels.
-        /// </summary>
-        [Obsolete("You should be using the INetManager interface.")]
-        NetPeer Peer { get; }
 
         /// <summary>
         ///     Gets a new NetOutgoingMessage from the NetPeer.

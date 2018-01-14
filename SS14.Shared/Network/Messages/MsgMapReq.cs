@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -19,8 +14,6 @@ namespace SS14.Shared.Network.Messages
             : base(NAME, GROUP, ID)
         { }
         #endregion
-
-        public int MapGridsToSend { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

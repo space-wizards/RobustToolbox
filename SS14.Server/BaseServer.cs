@@ -170,7 +170,6 @@ namespace SS14.Server
             }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
             netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
             netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
             netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
@@ -184,7 +183,7 @@ namespace SS14.Server
             netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
 
             netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
-            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
+
             netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
             netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
             netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
@@ -541,20 +540,7 @@ namespace SS14.Server
 
             message.MsgChannel.SendMessage(netMsg);
         }
-
-        private void HandleAdminMessage(MsgAdmin msg)
-        {
-            if (msg.MsgId == NetMessages.RequestEntityDeletion)
-            {
-                //TODO: Admin Permissions, requires admin system.
-                //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
-                //        adminPermissions.isAdmin || true)
-
-                var delEnt = _entities.GetEntity(msg.EntityId);
-                if (delEnt != null) _entities.DeleteEntity(delEnt);
-            }
-        }
-
+        
         private static void HandleErrorMessage(NetMessage msg)
         {
             Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
@@ -591,17 +577,6 @@ namespace SS14.Server
             // client session is complete
             var session = plyMgr.GetSessionByChannel(channel);
             session.Status = SessionStatus.Connected;
-        }
-
-        private static void HandleClientGreet(MsgClGreet msg)
-        {
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
-
-            var fixedName = msg.PlyName.Trim();
-            if (fixedName.Length < 3)
-                fixedName = $"Player {p.Index}";
-
-            p.SetName(fixedName);
         }
 
         private static void HandleStateAck(MsgStateAck msg)

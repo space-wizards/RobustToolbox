@@ -1,5 +1,4 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -25,7 +24,7 @@ namespace SS14.Shared.Network.Messages
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            throw new NotImplementedException();
+            buffer.Write(Sequence);
         }
     }
 }

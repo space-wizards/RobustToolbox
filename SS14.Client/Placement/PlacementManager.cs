@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK.Graphics;
+﻿using OpenTK.Graphics;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Interfaces.Map;
@@ -23,6 +22,7 @@ using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Interfaces.Reflection;
+using SS14.Shared.Network;
 
 namespace SS14.Client.Placement
 {
@@ -59,6 +59,9 @@ namespace SS14.Client.Placement
 
         public void Initialize()
         {
+            NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, HandlePlacementMessage);
+            
+
             _modeDictionary.Clear();
             foreach (var type in ReflectionManager.GetAllChildren<PlacementMode>())
             {
@@ -66,15 +69,10 @@ namespace SS14.Client.Placement
             }
         }
 
-
-
-        public event EventHandler PlacementCanceled;
-
-        public void HandleNetMessage(NetIncomingMessage msg)
+        private void HandlePlacementMessage(NetMessage netMessage)
         {
-            var messageType = (PlacementManagerMessage)msg.ReadByte();
-
-            switch (messageType)
+            var msg = (MsgPlacement) netMessage;
+            switch (msg.PlaceType)
             {
                 case PlacementManagerMessage.StartPlacement:
                     HandleStartPlacement(msg);
@@ -82,11 +80,10 @@ namespace SS14.Client.Placement
                 case PlacementManagerMessage.CancelPlacement:
                     Clear();
                     break;
-                case PlacementManagerMessage.PlacementFailed:
-                    //Sad trombone here.
-                    break;
             }
         }
+        
+        public event EventHandler PlacementCanceled;
 
         public void Clear()
         {
@@ -128,10 +125,10 @@ namespace SS14.Client.Placement
         {
             if (!IsActive || !Eraser) return;
 
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.RequestEntityDeletion);
-            message.Write(entity.Uid);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
+            msg.EntityUid = entity.Uid;
+            NetworkManager.ClientSendMessage(msg);
         }
 
         public void ToggleEraser()
@@ -194,17 +191,16 @@ namespace SS14.Client.Placement
 
         #endregion IPlacementManager Members
 
-        private void HandleStartPlacement(NetIncomingMessage msg)
+        private void HandleStartPlacement(MsgPlacement msg)
         {
             CurrentPermission = new PlacementInformation
             {
-                Range = msg.ReadInt32(),
-                IsTile = msg.ReadBoolean()
+                Range = msg.Range,
+                IsTile = msg.IsTile,
             };
-
-            if (CurrentPermission.IsTile) CurrentPermission.TileType = msg.ReadUInt16();
-            else CurrentPermission.EntityType = msg.ReadString();
-            CurrentPermission.PlacementOption = msg.ReadString();
+            
+            CurrentPermission.EntityType = msg.ObjType; // tile or ent type
+            CurrentPermission.PlacementOption = msg.AlignOption;
 
             BeginPlacing(CurrentPermission);
         }
@@ -258,7 +254,7 @@ namespace SS14.Client.Placement
 
             message.DirRcv = Direction;
 
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
+            NetworkManager.ClientSendMessage(message);
         }
 
         public Sprite GetDirectionalSprite()

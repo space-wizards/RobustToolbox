@@ -1,8 +1,6 @@
-﻿using Lidgren.Network;
-using SS14.Server.GameObjects.Events;
+﻿using SS14.Server.GameObjects.Events;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 using System.Collections.Generic;
 
 namespace SS14.Server.GameObjects
@@ -14,7 +12,8 @@ namespace SS14.Server.GameObjects
     {
         public override string Name => "KeyBindingInput";
         public override uint? NetID => NetIDs.KEY_BINDING_INPUT;
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
+
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];

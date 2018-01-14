@@ -1,11 +1,8 @@
-﻿using OpenTK;
-using Lidgren.Network;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameObjects.Components;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
 using System;
 using SS14.Shared.Map;
 
@@ -32,8 +29,6 @@ namespace SS14.Client.GameObjects
             OnClick?.Invoke(this, new ClickEventArgs(user, Owner, clickType));
 
             Owner.SendComponentNetworkMessage(this,
-                                              NetDeliveryMethod.ReliableOrdered,
-                                              clickType,
                                               user.Uid);
         }
     }

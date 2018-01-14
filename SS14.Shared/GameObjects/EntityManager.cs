@@ -1,6 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;
@@ -25,24 +23,22 @@ namespace SS14.Shared.GameObjects
         protected readonly IEntitySystemManager EntitySystemManager;
         [Dependency]
         protected readonly IComponentFactory ComponentFactory;
-        [Dependency]
-        protected readonly IComponentManager ComponentManager;
         # endregion Dependencies
 
-        protected readonly Dictionary<int, IEntity> _entities = new Dictionary<int, IEntity>();
+        protected readonly Dictionary<int, IEntity> Entities = new Dictionary<int, IEntity>();
         /// <summary>
         /// List of all entities, used for iteration.
         /// </summary>
         private readonly List<IEntity> _allEntities = new List<IEntity>();
-        protected Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
-        protected int NextUid = 0;
+        protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
+        protected int NextUid;
 
-        private Dictionary<Type, List<Delegate>> _eventSubscriptions
+        private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
             = new Dictionary<Type, List<Delegate>>();
-        private Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
+        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
             = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
 
-        private Queue<Tuple<object, EntityEventArgs>> _eventQueue
+        private readonly Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
         public bool Initialized { get; protected set; }
@@ -97,7 +93,7 @@ namespace SS14.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(int eid, out IEntity entity)
         {
-            if (_entities.TryGetValue(eid, out entity) && !entity.Deleted)
+            if (Entities.TryGetValue(eid, out entity) && !entity.Deleted)
             {
                 return true;
             }
@@ -165,33 +161,29 @@ namespace SS14.Shared.GameObjects
             {
                 e.Shutdown();
             }
-            _entities.Clear();
+            Entities.Clear();
         }
 
         /// <summary>
         /// Creates an entity and adds it to the entity dictionary
         /// </summary>
         /// <param name="prototypeName">name of entity template to execute</param>
+        /// <param name="uid">UID to give to the new entity.</param>
         /// <returns>spawned entity</returns>
-        public IEntity SpawnEntity(string prototypeName, int? _uid = null)
+        public IEntity SpawnEntity(string prototypeName, int? uid = null)
         {
-            int uid;
-            if (_uid == null)
+            if (uid == null)
             {
                 uid = NextUid++;
             }
-            else
-            {
-                uid = _uid.Value;
-            }
-            if (EntityExists(uid))
+            if (EntityExists(uid.Value))
             {
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            IEntity entity = prototype.CreateEntity(uid, this, EntityNetworkManager, ComponentFactory);
-            _entities[uid] = entity;
+            IEntity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
+            Entities[uid.Value] = entity;
             _allEntities.Add(entity);
 
             // We batch the first set of initializations together.
@@ -333,14 +325,14 @@ namespace SS14.Shared.GameObjects
             while (MessageBuffer.Any())
             {
                 IncomingEntityMessage incomingEntity = MessageBuffer.Dequeue();
-                if (!_entities.ContainsKey(incomingEntity.Message.EntityId))
+                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     incomingEntity.LastProcessingAttempt = DateTime.Now;
                     if ((incomingEntity.LastProcessingAttempt - incomingEntity.ReceivedTime).TotalSeconds > incomingEntity.Expires)
                         misses.Add(incomingEntity);
                 }
                 else
-                    _entities[incomingEntity.Message.EntityId].HandleNetworkMessage(incomingEntity);
+                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
             }
 
             foreach (IncomingEntityMessage miss in misses)
@@ -364,19 +356,19 @@ namespace SS14.Shared.GameObjects
             if (!Initialized)
             {
                 IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
-                if (incomingEntity.Message.Type != EntityMessage.Null)
+                if (incomingEntity.Message.Type != EntityMessageType.Error)
                     MessageBuffer.Enqueue(incomingEntity);
             }
             else
             {
                 ProcessMsgBuffer();
                 IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
-                if (!_entities.ContainsKey(incomingEntity.Message.EntityId))
+                if (!Entities.ContainsKey(incomingEntity.Message.EntityUid))
                 {
                     MessageBuffer.Enqueue(incomingEntity);
                 }
                 else
-                    _entities[incomingEntity.Message.EntityId].HandleNetworkMessage(incomingEntity);
+                    Entities[incomingEntity.Message.EntityUid].HandleNetworkMessage(incomingEntity);
             }
         }
 
@@ -396,11 +388,18 @@ namespace SS14.Shared.GameObjects
                 }
 
                 _allEntities.RemoveSwap(i);
-                _entities.Remove(entity.Uid);
+                Entities.Remove(entity.Uid);
 
                 // Process the one we just swapped next.
                 i--;
             }
         }
+    }
+
+    public enum EntityMessageType
+    {
+        Error = 0,
+        ComponentMessage,
+        SystemMessage
     }
 }

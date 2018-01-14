@@ -46,7 +46,12 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    return IoCManager.Resolve<IMapManager>().GetMap(MapID).GetGrid(GridID).ConvertToWorld(_position);
+                    var maps = IoCManager.Resolve<IMapManager>();
+                    if (maps.TryGetMap(MapID, out var map) && map.GridExists(GridID))
+                    {
+                        return map.GetGrid(GridID).ConvertToWorld(_position);
+                    }
+                    return new Vector2();
                 }
             }
         }

@@ -1,16 +1,18 @@
-﻿using SS14.Shared.GameObjects;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared
 {
     public struct IncomingEntityComponentMessage
     {
-        public uint NetID { get; set; }
-        public List<object> MessageParameters { get; set; }
+        public uint NetId { get; }
+        public INetChannel NetChannel { get; }
+        public List<object> MessageParameters { get; }
 
-        public IncomingEntityComponentMessage(uint netID, List<object> messageParameters) : this()
+        public IncomingEntityComponentMessage(uint netId, INetChannel netChannel, List<object> messageParameters) : this()
         {
-            NetID = netID;
+            NetId = netId;
+            NetChannel = netChannel;
             MessageParameters = messageParameters;
         }
     }

@@ -202,7 +202,6 @@
     <Compile Include="Network\Messages\MsgStateUpdate.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
-    <Compile Include="Network\Messages\MsgAdmin.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
     <Compile Include="Network\Messages\MsgClGreet.cs" />
     <Compile Include="Network\Messages\MsgConCmd.cs" />

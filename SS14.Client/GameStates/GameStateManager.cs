@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using SS14.Client.Interfaces.GameObjects;
+﻿using SS14.Client.Interfaces.GameObjects;
 using SS14.Client.Interfaces.GameStates;
 using SS14.Client.Interfaces.Player;
 using SS14.Shared;
@@ -73,10 +72,9 @@ namespace SS14.Client.GameStates
 
         private void AckGameState(uint sequence)
         {
-            NetOutgoingMessage ack = networkManager.CreateMessage();
-            ack.Write((byte)NetMessages.StateAck);
-            ack.Write(sequence);
-            networkManager.ClientSendMessage(ack, NetDeliveryMethod.ReliableUnordered);
+            var msg = networkManager.CreateNetMessage<MsgStateAck>();
+            msg.Sequence = sequence;
+            networkManager.ClientSendMessage(msg);
         }
 
         private void ApplyGameState(GameState gameState)

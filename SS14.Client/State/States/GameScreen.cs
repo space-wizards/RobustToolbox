@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
@@ -16,11 +15,8 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
-using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -29,7 +25,6 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,9 +136,6 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
-            var manager = IoCManager.Resolve<IConfigurationManager>();
-            manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
-
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
 
@@ -161,18 +153,6 @@ namespace SS14.Client.State.States
             _componentManager = IoCManager.Resolve<IComponentManager>();
             IoCManager.Resolve<IMapManager>().OnTileChanged += (gridId, tileRef, oldTile) => OnTileChanged(gridId, tileRef, oldTile);
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
-
-            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.RequestMap);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
-
-            // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message1 = NetworkManager.CreateMessage();
-            message1.Write((byte)NetMessages.ClientName);
-            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
-            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceCache);
@@ -503,7 +483,6 @@ namespace SS14.Client.State.States
             shadowMapResolver.Dispose();
             _entityManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents();
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
             _decalBatch.Dispose();
             _floorBatch.Dispose();
             _gasBatch.Dispose();
@@ -724,42 +703,6 @@ namespace SS14.Client.State.States
 #endregion Input
 
 #region Event Handlers
-
-#region Messages
-
-        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
-        {
-            NetIncomingMessage message = args.RawMessage;
-            if (message == null)
-            {
-                return;
-            }
-            switch (message.MessageType)
-            {
-                case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
-                    if (statMsg == NetConnectionStatus.Disconnected)
-                    {
-                        string disconnectMessage = message.ReadString();
-                        UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                                                                                        UserInterfaceManager,
-                                                                                        ResourceCache,
-                                                                                        disconnectMessage));
-                    }
-                    break;
-                case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
-                    switch (messageType)
-                    {
-                        case NetMessages.PlacementManagerMessage:
-                            PlacementManager.HandleNetMessage(message);
-                            break;
-                    }
-                    break;
-            }
-        }
-
-#endregion Messages
 
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {

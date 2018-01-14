@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Lidgren.Network;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
@@ -93,7 +92,7 @@ namespace SS14.Client
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
             msgInfo.PlayerName = "Joe Hello";
-            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
+            _net.ClientSendMessage(msgInfo);
         }
 
         /// <summary>
@@ -196,7 +195,12 @@ namespace SS14.Client
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();
+
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
+
+                // request entire map be sent to us
+                var mapMsg = _net.CreateNetMessage<MsgMapReq>();
+                _net.ClientSendMessage(mapMsg);
             }
         }
 

@@ -26,6 +26,7 @@ namespace SS14.Shared.Network.Messages
         public GridId GridIndex { get; set; }
         public MapId MapIndex { get; set; }
         public Direction DirRcv { get; set; }
+        public int EntityUid { get; set; }
 
         public int Range { get; set; }
         public string ObjType { get; set; }
@@ -34,32 +35,34 @@ namespace SS14.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             PlaceType = (PlacementManagerMessage) buffer.ReadByte();
-            if(PlaceType == PlacementManagerMessage.RequestPlacement)
+            switch (PlaceType)
             {
-                Align = buffer.ReadString();
-                IsTile = buffer.ReadBoolean();
+                case PlacementManagerMessage.RequestPlacement:
+                    Align = buffer.ReadString();
+                    IsTile = buffer.ReadBoolean();
 
-                if (IsTile) TileType = buffer.ReadUInt16();
-                else EntityTemplateName = buffer.ReadString();
+                    if (IsTile) TileType = buffer.ReadUInt16();
+                    else EntityTemplateName = buffer.ReadString();
 
-                XValue = buffer.ReadFloat();
-                YValue = buffer.ReadFloat();
-                GridIndex = new GridId(buffer.ReadInt32());
-                MapIndex = new MapId(buffer.ReadInt32());
-                DirRcv = (Direction)buffer.ReadByte();
+                    XValue = buffer.ReadFloat();
+                    YValue = buffer.ReadFloat();
+                	GridIndex = new GridId(buffer.ReadInt32());
+                	MapIndex = new MapId(buffer.ReadInt32());
+                    DirRcv = (Direction)buffer.ReadByte();
+                    break;
+                case PlacementManagerMessage.StartPlacement:
+                    Range = buffer.ReadInt32();
+                    IsTile = buffer.ReadBoolean();
+                    ObjType = buffer.ReadString();
+                    AlignOption = buffer.ReadString();
+                    break;
+                case PlacementManagerMessage.CancelPlacement:
+                case PlacementManagerMessage.PlacementFailed:
+                    throw new NotImplementedException();
+                case PlacementManagerMessage.RequestEntRemove:
+                    EntityUid = buffer.ReadInt32();
+                    break;
             }
-            else if (PlaceType == PlacementManagerMessage.StartPlacement)
-            {
-                Range = buffer.ReadInt32();
-                IsTile = buffer.ReadBoolean();
-                ObjType = buffer.ReadString();
-                AlignOption = buffer.ReadString();
-            } 
-            else if (PlaceType == PlacementManagerMessage.CancelPlacement)
-                throw new NotImplementedException();
-            else if(PlaceType == PlacementManagerMessage.PlacementFailed)
-                throw new NotImplementedException();
-
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -88,6 +91,9 @@ namespace SS14.Shared.Network.Messages
                     break;
                 case PlacementManagerMessage.CancelPlacement:
                 case PlacementManagerMessage.PlacementFailed:
+                    throw new NotImplementedException();
+                case PlacementManagerMessage.RequestEntRemove:
+                    buffer.Write(EntityUid);
                     break;
             }
         }

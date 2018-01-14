@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using OpenTK.Graphics;
 using SS14.Client.Interfaces.Console;
 using SS14.Shared.Console;
@@ -176,7 +175,7 @@ namespace SS14.Client.Console
 
             var msg = netMgr.CreateNetMessage<MsgConCmdReg>();
             // empty message to request commands
-            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            netMgr.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
@@ -193,7 +192,7 @@ namespace SS14.Client.Console
 
             var msg = netMgr.CreateNetMessage<MsgConCmd>();
             msg.Text = text;
-            netMgr.ClientSendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+            netMgr.ClientSendMessage(msg);
         }
     }
 

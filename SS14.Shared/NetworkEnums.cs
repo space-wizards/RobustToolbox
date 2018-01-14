@@ -67,7 +67,8 @@
         StartPlacement,
         CancelPlacement,
         PlacementFailed,
-        RequestPlacement
+        RequestPlacement,
+        RequestEntRemove,
     }
 
     public enum MobMessage
@@ -166,18 +167,6 @@
         Ears,
         Belt,
         Back
-    }
-
-    public enum EntityMessage
-    {
-        ComponentMessage,
-        SystemMessage,
-        PositionMessage,
-        Null,
-        SetDirection,
-        NameUpdate,
-        SetCVar,
-        GetCVars
     }
 
     public enum EntityManagerMessage

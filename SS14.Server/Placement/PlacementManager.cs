@@ -41,6 +41,9 @@ namespace SS14.Server.Placement
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
                     break;
+                case PlacementManagerMessage.RequestEntRemove:
+                    HandleEntRemoveReq(msg.EntityUid);
+                    break;
             }
         }
 
@@ -102,6 +105,14 @@ namespace SS14.Server.Placement
             {
                 coordinates.Grid.SetTile(coordinates, new Tile(tileType));
             }
+        }
+
+        private static void HandleEntRemoveReq(int entityUid)
+        {
+            //TODO: Some form of admin check
+            var entities = IoCManager.Resolve<IServerEntityManager>();
+            if(entities.TryGetEntity(entityUid, out var entity))
+                entities.DeleteEntity(entity);
         }
 
         /// <summary>

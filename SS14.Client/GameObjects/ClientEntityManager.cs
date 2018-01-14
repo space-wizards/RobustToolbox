@@ -3,12 +3,10 @@ using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SS14.Shared.Utility;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
@@ -19,15 +17,15 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float range)
         {
-            Range *= Range; // Square it here to avoid Sqrt
+            range *= range; // Square it here to avoid Sqrt
 
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
                 var relativePosition = worldPos.Position - transform.WorldPosition;
-                if (relativePosition.LengthSquared <= Range)
+                if (relativePosition.LengthSquared <= range)
                 {
                     yield return entity;
                 }
@@ -115,7 +113,7 @@ namespace SS14.Client.GameObjects
                 es.ReceivedTime = serverTime;
                 entityKeys.Add(es.StateData.Uid);
                 //Known entities
-                if (_entities.TryGetValue(es.StateData.Uid, out var entity))
+                if (Entities.TryGetValue(es.StateData.Uid, out var entity))
                 {
                     entity.HandleEntityState(es);
                 }
@@ -128,7 +126,7 @@ namespace SS14.Client.GameObjects
             }
 
             //Delete entities that exist here but don't exist in the entity states
-            int[] toDelete = _entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
+            int[] toDelete = Entities.Keys.Where(k => !entityKeys.Contains(k)).ToArray();
             foreach (int k in toDelete)
             {
                 DeleteEntity(k);

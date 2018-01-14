@@ -133,12 +133,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Name>Lidgren.Network</Name>
-      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
       <Project>{302b877e-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Client.Graphics</Name>
@@ -240,7 +234,6 @@
     <Compile Include="Console\Commands\Debug.cs" />
     <Compile Include="GameStates\GameStateManager.cs" />
     <Compile Include="Helpers\GaussianBlur.cs" />
-    <Compile Include="Helpers\InterpolationPacket.cs" />
     <Compile Include="Helpers\StarScroller.cs" />
     <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Input\KeyBindingManager.cs" />
@@ -293,7 +286,6 @@
     <Compile Include="UserInterface\Controls\Checkbox.cs" />
     <Compile Include="UserInterface\Controls\ContextMenu.cs" />
     <Compile Include="UserInterface\CustomControls\DebugConsole.cs" />
-    <Compile Include="UserInterface\Controls\DisconnectedScreenBlocker.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnWindow.cs" />
     <Compile Include="UserInterface\CustomControls\EntitySpawnSelectButton.cs" />
     <Compile Include="UserInterface\Controls\ExamineWindow.cs" />

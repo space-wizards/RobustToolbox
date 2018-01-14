@@ -1,5 +1,4 @@
 ﻿using System;
-using Lidgren.Network;
 using OpenTK;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
@@ -8,7 +7,6 @@ using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
-using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Server.GameObjects
@@ -29,7 +27,7 @@ namespace SS14.Server.GameObjects
         public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
         /// <inheritdoc />
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             switch ((ComponentMessageType)message.MessageParameters[0])
             {
@@ -60,7 +58,7 @@ namespace SS14.Server.GameObjects
         /// <inheritdoc />
         void ICollidable.Bump(IEntity ent)
         {
-            OnBump?.Invoke(this, new BumpEventArgs(this.Owner, ent));
+            OnBump?.Invoke(this, new BumpEventArgs(Owner, ent));
         }
 
         /// <summary>

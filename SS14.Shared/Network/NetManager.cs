@@ -61,13 +61,7 @@ namespace SS14.Shared.Network
 
         public bool IsRunning => _netPeer != null;
 
-        /// <inheritdoc />
-        [Obsolete("You should be using NetPeer.")]
-        public NetPeer Peer => _netPeer;
-
-        /// <inheritdoc />
-        [Obsolete]
-        public NetPeerStatistics Statistics => _netPeer.Statistics;
+        public NetworkStats Statistics => new NetworkStats(_netPeer.Statistics);
 
         /// <inheritdoc />
         public List<INetChannel> Channels => _channels.Values.Cast<INetChannel>().ToList();
@@ -493,17 +487,7 @@ namespace SS14.Shared.Network
         }
 
         /// <inheritdoc />
-        public void ClientSendMessage(NetMessage message, NetDeliveryMethod deliveryMethod)
-        {
-            if (_netPeer == null)
-                return;
-
-            var packet = BuildMessage(message);
-            ClientSendMessage(packet, deliveryMethod);
-        }
-
-        /// <inheritdoc />
-        public void ClientSendMessage(NetOutgoingMessage message, NetDeliveryMethod deliveryMethod)
+        public void ClientSendMessage(NetMessage message)
         {
             if (_netPeer == null)
                 return;
@@ -511,9 +495,12 @@ namespace SS14.Shared.Network
             // not connected to a server, so a message cannot be sent to it.
             if (ServerChannel == null)
                 return;
-            
-            _netPeer.SendMessage(message, ServerChannel.Connection, deliveryMethod);
+
+            var packet = BuildMessage(message);
+            var method = GetMethod(message.MsgGroup);
+            _netPeer.SendMessage(packet, ServerChannel.Connection, method);
         }
+
         #endregion NetMessages
 
         #region NetDebug
@@ -578,6 +565,21 @@ namespace SS14.Shared.Network
         public event EventHandler<NetMessageArgs> MessageArrived;
 
         #endregion Events
+
+        private static NetDeliveryMethod GetMethod(MsgGroups group)
+        {
+            switch (group)
+            {
+                case MsgGroups.Entity:
+                    return NetDeliveryMethod.Unreliable;
+                case MsgGroups.Core:
+                case MsgGroups.String:
+                case MsgGroups.Command:
+                    return NetDeliveryMethod.ReliableUnordered;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(@group), @group, null);
+            }
+        }
     }
 
     /// <summary>
@@ -597,6 +599,43 @@ namespace SS14.Shared.Network
         public NetManagerException(string message, Exception inner)
             : base(message, inner)
         {
+        }
+    }
+
+    /// <summary>
+    ///     Traffic statistics for a NetChannel.
+    /// </summary>
+    public struct NetworkStats
+    {
+        /// <summary>
+        ///     Total sent bytes.
+        /// </summary>
+        public readonly int SentBytes;
+
+        /// <summary>
+        ///     Total received bytes.
+        /// </summary>
+        public readonly int ReceivedBytes;
+
+        /// <summary>
+        ///     Total sent packets.
+        /// </summary>
+        public readonly int SentPackets;
+
+        /// <summary>
+        ///     Total received packets.
+        /// </summary>
+        public readonly int ReceivedPackets;
+
+        /// <summary>
+        ///     Creates an instance of this object.
+        /// </summary>
+        public NetworkStats(NetPeerStatistics statistics)
+        {
+            SentBytes = statistics.SentBytes;
+            ReceivedBytes = statistics.ReceivedBytes;
+            SentPackets = statistics.SentPackets;
+            ReceivedPackets = statistics.ReceivedPackets;
         }
     }
 }

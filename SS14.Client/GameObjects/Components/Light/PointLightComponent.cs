@@ -1,14 +1,10 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using Lidgren.Network;
+﻿using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
 using YamlDotNet.RepresentationModel;
@@ -23,7 +19,7 @@ namespace SS14.Client.GameObjects
         public override uint? NetID => NetIDs.POINT_LIGHT;
         public override Type StateType => typeof(PointLightComponentState);
 
-        public ILight Light { get; private set; }
+        private ILight Light { get; set; }
 
         public Color4 Color
         {
@@ -31,13 +27,13 @@ namespace SS14.Client.GameObjects
             set => Light.Color = value;
         }
 
-        private Vector2 offset = Vector2.Zero;
+        private Vector2 _offset = Vector2.Zero;
         public Vector2 Offset
         {
-            get => offset;
+            get => _offset;
             set
             {
-                offset = value;
+                _offset = value;
                 UpdateLightPosition();
             }
         }
@@ -48,13 +44,13 @@ namespace SS14.Client.GameObjects
             set => Light.Radius = value;
         }
 
-        private string mask;
+        private string _mask;
         protected string Mask
         {
-            get => mask;
+            get => _mask;
             set
             {
-                mask = value;
+                _mask = value;
 
                 var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
                 Light.SetMask(sprMask);
@@ -152,9 +148,9 @@ namespace SS14.Client.GameObjects
             UpdateLightPosition(args.NewPosition);
         }
 
-        protected void UpdateLightPosition(LocalCoordinates NewPosition)
+        protected void UpdateLightPosition(LocalCoordinates newPosition)
         {
-            Light.Coordinates = new LocalCoordinates(NewPosition.Position + Offset, NewPosition.Grid);
+            Light.Coordinates = new LocalCoordinates(newPosition.Position + Offset, newPosition.Grid);
         }
 
         protected void UpdateLightPosition()

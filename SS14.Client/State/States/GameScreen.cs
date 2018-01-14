@@ -299,8 +299,6 @@ namespace SS14.Client.State.States
             var resolveShadowsEffectTechnique = resourceCache.GetTechnique("resolveShadowsEffect");
             shadowMapResolver.LoadContent(reductionEffectTechnique, resolveShadowsEffectTechnique);
 
-            lightManager.LightMask = resourceCache.GetSprite("whitemask");
-
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
             ScreenShadows = new RenderImage("screenShadows", width, height, ImageBufferFormats.BufferRGB888A8);

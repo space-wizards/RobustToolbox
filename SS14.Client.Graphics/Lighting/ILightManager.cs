@@ -1,13 +1,11 @@
 ﻿using OpenTK;
 using SS14.Shared;
-using SS14.Client.Graphics.Sprites;
 using SS14.Shared.Map;
 
 namespace SS14.Client.Graphics.Lighting
 {
     public interface ILightManager
     {
-        Sprite LightMask { get; set; }
         ILight CreateLight();
         void AddLight(ILight light);
         void RemoveLight(ILight light);

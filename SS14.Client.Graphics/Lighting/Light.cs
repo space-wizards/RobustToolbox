@@ -1,5 +1,6 @@
 ﻿using SS14.Client.Graphics.Render;
 using SS14.Client.Graphics.Sprites;
+using SS14.Client.Graphics.Textures;
 using SS14.Shared;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -17,7 +18,11 @@ namespace SS14.Client.Graphics.Lighting
         private int _radius;
         private bool _regenLightMap;
 
-        public Sprite Mask { get; set; }
+        public Texture Mask
+        {
+            get;
+            set;
+        }
 
         public RenderImage RenderTarget { get; private set; }
 
@@ -81,6 +86,8 @@ namespace SS14.Client.Graphics.Lighting
         public Light(int radius = 128)
         {
             Radius = radius;
+            Color = Color.White;
+            _lightState = LightState.On;
         }
 
         public void Update(float frametime)

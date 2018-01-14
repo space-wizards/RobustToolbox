@@ -54,7 +54,7 @@ namespace SS14.Client.GameObjects
                 mask = value;
 
                 var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
-                Light.Mask = sprMask;
+                Light.Mask = sprMask.Texture;
             }
         }
 
@@ -88,36 +88,20 @@ namespace SS14.Client.GameObjects
             {
                 Radius = node.AsInt();
             }
-            else
-            {
-                Radius = 512;
-            }
 
             if (mapping.TryGetNode("color", out node))
             {
                 Color = node.AsHexColor();
-            }
-            else
-            {
-                Color = new Color4(200, 200, 200, 255);
             }
 
             if (mapping.TryGetNode("mask", out node))
             {
                 Mask = node.AsString();
             }
-            else
-            {
-                Mask = "whitemask";
-            }
 
             if (mapping.TryGetNode("state", out node))
             {
                 State = node.AsEnum<LightState>();
-            }
-            else
-            {
-                State = LightState.On;
             }
 
             if (mapping.TryGetNode("mode", out node))

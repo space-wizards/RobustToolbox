@@ -351,30 +351,12 @@ namespace SS14.Shared.Network
 
             if (!_strings.TryGetString(id, out string name))
             {
-                //If the message was not registered, fallback to the old broadcast event on the client.
-                //TODO: Convert client code to the new net message system, then remove this.
-                if (IsClient)
-                {
-                    msg.Position = 0;
-                    OnMessageArrived(msg);
-                    return;
-                }
-
                 Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages) id}.");
                 return;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
-                //If the message was not registered, fallback to the old broadcast event on the client.
-                //TODO: Convert client code to the new net message system, then remove this.
-                if (IsClient)
-                {
-                    msg.Position = 0;
-                    OnMessageArrived(msg);
-                    return;
-                }
-
                 Logger.Warning($"[NET] {address}: No message with Name {name}.");
                 return;
             }
@@ -399,26 +381,6 @@ namespace SS14.Shared.Network
 
             callback?.Invoke(instance);
         }
-
-        #region Packets
-
-        public NetOutgoingMessage CreateMessage()
-        {
-            return _netPeer.CreateMessage();
-        }
-
-        public void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method)
-        {
-            if(_netPeer.Connections.Count > 0)
-                _netPeer.SendMessage(message, _netPeer.Connections, method, 0);
-        }
-
-        public void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method = NetDeliveryMethod.ReliableOrdered)
-        {
-            _netPeer.SendMessage(message, client, method);
-        }
-
-        #endregion Packets
 
         #region NetMessages
 
@@ -456,11 +418,12 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public void ServerSendToAll(NetMessage message)
         {
-            if(_netPeer == null)
+            if(_netPeer == null || _netPeer.ConnectionsCount == 0)
                 return;
 
             var packet = BuildMessage(message);
-            ServerSendToAll(packet, NetDeliveryMethod.ReliableOrdered);
+            var method = GetMethod(message.MsgGroup);
+            _netPeer.SendMessage(packet, _netPeer.Connections, method, 0);
         }
 
         /// <inheritdoc />
@@ -471,7 +434,13 @@ namespace SS14.Shared.Network
 
             DebugOut(message);
             var packet = BuildMessage(message);
-            ServerSendMessage(packet, recipient.Connection);
+            var connection = ChanToCon(recipient);
+            _netPeer.SendMessage(packet, connection, NetDeliveryMethod.ReliableOrdered);
+        }
+
+        private NetConnection ChanToCon(INetChannel channel)
+        {
+            return _channels.FirstOrDefault(x => x.Value == channel).Key;
         }
 
         /// <inheritdoc />
@@ -491,14 +460,14 @@ namespace SS14.Shared.Network
         {
             if (_netPeer == null)
                 return;
-
+            
             // not connected to a server, so a message cannot be sent to it.
-            if (ServerChannel == null)
+            if (!IsConnected)
                 return;
 
             var packet = BuildMessage(message);
             var method = GetMethod(message.MsgGroup);
-            _netPeer.SendMessage(packet, ServerChannel.Connection, method);
+            _netPeer.SendMessage(packet, _netPeer.Connections[0], method);
         }
 
         #endregion NetMessages
@@ -544,11 +513,6 @@ namespace SS14.Shared.Network
             Disconnect?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnMessageArrived(NetIncomingMessage message)
-        {
-            MessageArrived?.Invoke(this, new NetMessageArgs(null, message));
-        }
-
         /// <inheritdoc />
         public event EventHandler<NetConnectingArgs> Connecting;
 
@@ -560,9 +524,6 @@ namespace SS14.Shared.Network
 
         /// <inheritdoc />
         public event EventHandler<NetChannelArgs> Disconnect;
-
-        /// <inheritdoc />
-        public event EventHandler<NetMessageArgs> MessageArrived;
 
         #endregion Events
 
@@ -577,7 +538,7 @@ namespace SS14.Shared.Network
                 case MsgGroups.Command:
                     return NetDeliveryMethod.ReliableUnordered;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(@group), @group, null);
+                    throw new ArgumentOutOfRangeException(nameof(group), group, null);
             }
         }
     }

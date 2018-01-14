@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using SS14.Shared.Network;
 
 namespace SS14.Shared.Interfaces.Network
@@ -131,34 +130,6 @@ namespace SS14.Shared.Interfaces.Network
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;
-
-        #endregion
-
-        #region Obsolete
-
-        /// <summary>
-        ///     Gets a new NetOutgoingMessage from the NetPeer.
-        /// </summary>
-        /// <returns>A new Outgoing message.</returns>
-        [Obsolete("You should be using NetMessages.")]
-        NetOutgoingMessage CreateMessage();
-
-        /// <summary>
-        /// Legacy function for sending a raw packet to a NetConnection. This will be removed.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="client"></param>
-        /// <param name="method"></param>
-        [Obsolete("You should be using NetMessages.")]
-        void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method);
-
-        /// <summary>
-        /// Legacy function for sending a raw packet to all connected NetConnectionss on the peer. This will be removed.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="method"></param>
-        [Obsolete("You should be using NetMessages.")]
-        void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method);
 
         #endregion
     }

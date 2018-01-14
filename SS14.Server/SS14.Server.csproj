@@ -110,12 +110,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Name>Lidgren.Network</Name>
-      <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Shared\SS14.Shared.csproj">
       <Name>SS14.Shared</Name>
       <Project>{0529F740-0000-0000-0000-000000000000}</Project>

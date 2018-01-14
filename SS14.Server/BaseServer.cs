@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -481,11 +480,6 @@ namespace SS14.Server
         private void SendConnectionGameStateUpdate(INetChannel c, GameState state)
         {
             var netMan = IoCManager.Resolve<IServerNetManager>();
-            if (c.Connection.Status != NetConnectionStatus.Connected)
-            {
-                return;
-            }
-
             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
             {

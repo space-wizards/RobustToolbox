@@ -110,7 +110,7 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Name>Lidgren.Network</Name>
       <Project>{59250BAF-0000-0000-0000-000000000000}</Project>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -318,14 +318,6 @@
     </PreBuildEvent>
     <PostBuildEvent>
     </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>false</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>
-    </NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- Can't just include everything inside Resources because of build tools and intermediate files. -->

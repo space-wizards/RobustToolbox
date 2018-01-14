@@ -194,14 +194,18 @@ namespace SS14.Server
 
             _resources.MountContentDirectory(@"./Resources/");
 
-            //mount the engine content pack
+            // mount the engine content pack
             _resources.MountContentPack(@"EngineContentPack.zip");
 
-            //mount the default game ContentPack defined in config
+            // mount the default game ContentPack defined in config
             _resources.MountDefaultContentPack();
 
-            LoadContentAssembly<GameShared>("Shared");
-            LoadContentAssembly<GameServer>("Server");
+            // load the content dlls into the game
+            _config.RegisterCVar("content.dllprefix", "Sandbox", CVar.ARCHIVE);
+            var prefix = _config.GetCVar<string>("content.dllprefix");
+
+            LoadContentAssembly<GameShared>($"{prefix}.Shared");
+            LoadContentAssembly<GameServer>($"{prefix}.Server");
 
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.
@@ -236,12 +240,12 @@ namespace SS14.Server
         private void LoadContentAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
-            if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            if (_resources.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
             {
                 Logger.Debug($"[SRV] Loading {name} Content DLL");
 
                 // see if debug info is present
-                if (_resources.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                if (_resources.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
                 {
                     try
                     {
@@ -250,7 +254,7 @@ namespace SS14.Server
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
                     }
                 }
                 else
@@ -262,13 +266,13 @@ namespace SS14.Server
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
                     }
                 }
             }
             else
             {
-                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+                Logger.Warning($"[ENG] Could not find {name} Content DLL.");
             }
         }
 

@@ -10,18 +10,16 @@ namespace SS14.Shared.Map
 {
     public class Map : IMap
     {
-        public int Index { get; private set; } = 0;
+        public MapId Index { get; }
         private readonly MapManager _mapManager;
-        private readonly Dictionary<int, MapGrid> _grids = new Dictionary<int, MapGrid>();
+        private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
 
-        public Map(MapManager mapManager, int mapID)
+        public Map(MapManager mapManager, MapId mapID)
         {
             Index = mapID;
             _mapManager = mapManager;
-            CreateGrid(MapManager.DEFAULTGRID);
+            CreateGrid(GridId.DefaultGrid);
         }
-
-        #region GridAccess
 
         /// <summary>
         ///     Creates a new empty grid with the given ID and optional chunk size. If a grid already
@@ -31,7 +29,7 @@ namespace SS14.Shared.Map
         /// <param name="chunkSize">Optional chunk size of the new grid.</param>
         /// <param name="snapSize">Optional size of the snap grid</param>
         /// <returns></returns>
-        public IMapGrid CreateGrid(int gridId, ushort chunkSize = 32, float snapSize = 1)
+        public IMapGrid CreateGrid(GridId gridId, ushort chunkSize = 16, float snapSize = 1)
         {
             var newGrid = new MapGrid(_mapManager, gridId, chunkSize, snapSize, Index);
             _grids.Add(gridId, newGrid);
@@ -43,7 +41,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="gridId">The ID of the grid to check.</param>
         /// <returns></returns>
-        public bool GridExists(int gridId)
+        public bool GridExists(GridId gridId)
         {
             return _grids.ContainsKey(gridId);
         }
@@ -53,7 +51,7 @@ namespace SS14.Shared.Map
         /// </summary>
         /// <param name="gridId">The id of the grid to get.</param>
         /// <returns></returns>
-        public IMapGrid GetGrid(int gridId)
+        public IMapGrid GetGrid(GridId gridId)
         {
             MapGrid output;
             _grids.TryGetValue(gridId, out output);
@@ -66,7 +64,7 @@ namespace SS14.Shared.Map
         /// <returns></returns>
         public IMapGrid GetDefaultGrid()
         {
-            return GetGrid(MapManager.DEFAULTGRID);
+            return GetGrid(GridId.DefaultGrid);
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -81,7 +79,7 @@ namespace SS14.Shared.Map
         ///     Deletes the grid associated with the given grid ID.
         /// </summary>
         /// <param name="gridId">The grid to remove.</param>
-        public void RemoveGrid(int gridId)
+        public void RemoveGrid(GridId gridId)
         {
             MapGrid output;
             if (!_grids.TryGetValue(gridId, out output))
@@ -97,7 +95,7 @@ namespace SS14.Shared.Map
             var pos = worldPos.ToWorld().Position;
             IMapGrid grid = GetDefaultGrid();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(pos) && kvGrid.Value.Index != MapManager.DEFAULTGRID)
+                if (kvGrid.Value.AABBWorld.Contains(pos) && kvGrid.Value.Index != GridId.DefaultGrid)
                     grid = kvGrid.Value;
             return grid;
         }
@@ -107,7 +105,7 @@ namespace SS14.Shared.Map
         {
             IMapGrid grid = GetDefaultGrid();
             foreach (var kvGrid in _grids)
-                if (kvGrid.Value.AABBWorld.Contains(worldPos) && kvGrid.Value.Index != MapManager.DEFAULTGRID)
+                if (kvGrid.Value.AABBWorld.Contains(worldPos) && kvGrid.Value.Index != GridId.DefaultGrid)
                     grid = kvGrid.Value;
             return grid;
         }
@@ -125,7 +123,5 @@ namespace SS14.Shared.Map
                     gridList.Add(kvGrid.Value);
             return gridList;
         }
-
-        #endregion GridAccess
     }
 }

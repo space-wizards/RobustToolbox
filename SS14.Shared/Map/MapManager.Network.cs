@@ -49,7 +49,7 @@ namespace SS14.Shared.Map
         }
 
         /// <inheritdoc />
-        public void HandleNetworkMessage(MsgMap message)
+        private void HandleNetworkMessage(MsgMap message)
         {
             switch (message.MessageType)
             {
@@ -64,6 +64,16 @@ namespace SS14.Shared.Map
                     break;
                 case MapMessage.SendMapInfo:
                     CollectMapInfo(message);
+                    break;
+                case MapMessage.CreateMap:
+                {
+                    CreateMap(message.MapIndex);
+                }
+                    break;
+                case MapMessage.UnregisterMap:
+                {
+                    UnregisterMap(message.MapIndex);
+                }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(message));
@@ -139,7 +149,7 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The id of the grid being modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile being modified.</param>
-        private void MapMgrOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        private void MapMgrOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
         {
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
@@ -152,6 +162,8 @@ namespace SS14.Shared.Map
                 Y = tileRef.Y,
                 Tile = (uint) tileRef.Tile
             };
+            message.GridIndex = tileRef.LocalPos.GridID;
+            message.MapIndex = tileRef.LocalPos.MapID;
 
             _netManager.ServerSendToAll(message);
         }
@@ -248,7 +260,7 @@ namespace SS14.Shared.Map
             var tile = (Tile) message.SingleTurf.Tile;
             
             LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
-            coords.Grid.SetTile(coords, tile); //TODO: Fix this
+            coords.Grid.SetTile(coords, tile);
         }
 
         private void CollectMapInfo(MsgMap message)
@@ -261,6 +273,38 @@ namespace SS14.Shared.Map
             {
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
             }
+        }
+
+        /// <summary>
+        ///     Notifies all connected clients that a new map has been created.
+        /// </summary>
+        private void BroadcastCreateMap(Map map)
+        {
+            if(_netManager.IsClient)
+                return;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.CreateMap;
+            msg.MapIndex = map.Index;
+
+            _netManager.ServerSendToAll(msg);
+        }
+
+        /// <summary>
+        ///     Notifies all connected clients that an existing map has been destroyed.
+        /// </summary>
+        private void BroadcastUnregisterMap(MapId mapID)
+        {
+            if(_netManager.IsClient)
+                return;
+
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+
+            msg.MessageType = MapMessage.UnregisterMap;
+            msg.MapIndex = mapID;
+
+            _netManager.ServerSendToAll(msg);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace SS14.Shared.Timers
 
         public void UpdateTimers(float frameTime)
         {
-            _timers.ForEach(timer => timer.Update(frameTime));
+            new List<Timer>(_timers).ForEach(timer => timer.Update(frameTime));
             _timers.RemoveAll(timer => !timer.IsActive);
         }
     }

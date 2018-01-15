@@ -455,7 +455,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Transforms a point from the screen (pixel) space, to world (tile) space.
         /// </summary>
-        public static LocalCoordinates ScreenToWorld(Vector2i point, int argMap)
+        public static LocalCoordinates ScreenToWorld(Vector2i point, MapId argMap)
         {
             var pos = ((Vector2)point - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
             var grid = IoCManager.Resolve<IMapManager>().GetMap(argMap).FindGridAt(pos);
@@ -465,7 +465,7 @@ namespace SS14.Client.Graphics
         /// <summary>
         /// Scales a vector from pixel coordinates to tile coordinates.
         /// </summary>
-        /// <param name="size"></param>
+        /// <param name="vec"></param>
         /// <returns></returns>
         public static Vector2 PixelToTile(Vector2 vec)
         {

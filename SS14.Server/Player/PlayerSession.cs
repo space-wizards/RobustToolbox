@@ -1,14 +1,13 @@
 ﻿using SS14.Server.Interfaces.GameObjects;
 using SS14.Server.Interfaces.Player;
-using SS14.Server.Interfaces.Round;
 using SS14.Shared;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.ServerEnums;
 using SS14.Server.GameObjects;
 using System;
+using SS14.Server.Interfaces;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
@@ -22,41 +21,71 @@ namespace SS14.Server.Player
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
+
         public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerIndex index)
         {
             _playerManager = playerManager;
             Index = index;
 
-            PlayerState = new PlayerState()
+            PlayerState = new PlayerState
             {
                 Uuid = client.ConnectionId,
                 Index = index,
             };
 
             ConnectedClient = client;
-            OnConnect();
 
             UpdatePlayerState();
         }
-        
+
         public INetChannel ConnectedClient { get; }
 
         public IEntity attachedEntity { get; set; }
         public int? AttachedEntityUid => attachedEntity?.Uid;
 
-        private string _name;
+        private string _name = "<TERU-SAMA>";
+        private SessionStatus _status = SessionStatus.Connecting;
+
+        /// <inheritdoc />
         public string Name
         {
-            get => string.IsNullOrWhiteSpace(_name) ? "Unknown" : _name;
-            set => _name = value;
+            get => _name;
+            set 
+            {
+                if(string.IsNullOrWhiteSpace(value))
+                    return;
+                _name = value;
+            }
         }
 
-        public SessionStatus Status { get; set; }
+        /// <inheritdoc />
+        public SessionStatus Status
+        {
+            get => _status;
+            set => OnPlayerStatusChanged(_status, value);
+        }
 
+        /// <inheritdoc />
         public DateTime ConnectedTime { get; private set; }
 
+        /// <inheritdoc />
         public PlayerIndex Index { get; }
 
+        /// <inheritdoc />
+        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+
+        private void OnPlayerStatusChanged(SessionStatus oldStatus, SessionStatus newStatus)
+        {
+            if(oldStatus == newStatus)
+                return;
+
+            _status = newStatus;
+            UpdatePlayerState();
+
+            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, oldStatus, newStatus));
+        }
+
+        /// <inheritdoc />
         public void AttachToEntity(IEntity a)
         {
             DetachFromEntity();
@@ -80,6 +109,7 @@ namespace SS14.Server.Player
             UpdatePlayerState();
         }
 
+        /// <inheritdoc />
         public void DetachFromEntity()
         {
             if (attachedEntity == null) return;
@@ -90,18 +120,8 @@ namespace SS14.Server.Player
             attachedEntity = null;
             UpdatePlayerState();
         }
-
-        public void HandleNetworkMessage(MsgSession message)
-        {
-            var messageType = message.MsgType;
-            switch (messageType)
-            {
-                case PlayerSessionMessage.JoinLobby:
-                    JoinLobby();
-                    break;
-            }
-        }
-
+        
+        /// <inheritdoc />
         public void SetName(string name)
         {
             Name = name;
@@ -110,6 +130,7 @@ namespace SS14.Server.Player
             UpdatePlayerState();
         }
 
+        /// <inheritdoc />
         public void OnConnect()
         {
             ConnectedTime = DateTime.Now;
@@ -117,14 +138,18 @@ namespace SS14.Server.Player
             UpdatePlayerState();
         }
 
+        /// <inheritdoc />
         public void OnDisconnect()
         {
             Status = SessionStatus.Disconnected;
-            IoCManager.Resolve<IRoundManager>().CurrentGameMode.PlayerLeft(this);
+
+            // TODO: PlayerLeaveServer event
+
             DetachFromEntity();
             UpdatePlayerState();
         }
 
+        /// <inheritdoc />
         public void AddPostProcessingEffect(PostProcessingEffectType type, float duration)
         {
             var net = IoCManager.Resolve<IServerNetManager>();
@@ -159,12 +184,7 @@ namespace SS14.Server.Player
             }
         }
 
-        private void ResetAttachedEntityName()
-        {
-            if (attachedEntity != null)
-                attachedEntity.Name = attachedEntity.Prototype.ID;
-        }
-
+        /// <inheritdoc />
         public void JoinLobby()
         {
             DetachFromEntity();
@@ -177,7 +197,9 @@ namespace SS14.Server.Player
         /// </summary>
         public void JoinGame()
         {
-            if (ConnectedClient == null || Status == SessionStatus.InGame || _playerManager.RunLevel != RunLevel.Game)
+            var baseServer = IoCManager.Resolve<IBaseServer>();
+
+            if (ConnectedClient == null || Status == SessionStatus.InGame || baseServer.RunLevel != ServerRunLevel.Game)
                 return;
             
             Status = SessionStatus.InGame;
@@ -203,6 +225,12 @@ namespace SS14.Server.Player
                 PlayerState.ControlledEntity = null;
             else
                 PlayerState.ControlledEntity = attachedEntity.Uid;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"[{Index}]{Name}";
         }
     }
 }

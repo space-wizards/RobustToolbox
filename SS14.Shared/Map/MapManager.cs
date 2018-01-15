@@ -1,30 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using OpenTK;
 using SS14.Shared.Interfaces.Map;
-using SS14.Shared.IoC;
 using SS14.Shared.Log;
-using SS14.Shared.Maths;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Map
 {
     public partial class MapManager : IMapManager
     {
-        public const int NULLSPACE = 0;
-        public const int DEFAULTGRID = 0;
         private const ushort DefaultTileSize = 1;
+
+        /// <inheritdoc />
+        public IMap DefaultMap => GetMap(MapId.Nullspace);
 
         /// <inheritdoc />
         public void Initialize()
         {
             NetSetup();
-            CreateMap(MapManager.NULLSPACE);
+            CreateMap(MapId.Nullspace);
         }
 
         /// <inheritdoc />
         public event TileChangedEventHandler OnTileChanged;
+
+        public event EventHandler<MapEventArgs> MapCreated;
+        public event EventHandler<MapEventArgs> MapDestroyed;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -38,7 +37,7 @@ namespace SS14.Shared.Map
         /// <param name="gridId">The ID of the grid that was modified.</param>
         /// <param name="tileRef">A reference to the new tile.</param>
         /// <param name="oldTile">The old tile that got replaced.</param>
-        public void RaiseOnTileChanged(int gridId, TileRef tileRef, Tile oldTile)
+        public void RaiseOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
         {
             if (SuppressOnTileChanged)
                 return;
@@ -46,46 +45,59 @@ namespace SS14.Shared.Map
             OnTileChanged?.Invoke(gridId, tileRef, oldTile);
         }
 
-        #region Networking
-
-        #endregion Networking
-
         #region MapAccess
 
         /// <summary>
         ///     Holds an indexed collection of map grids.
         /// </summary>
-        private readonly Dictionary<int, Map> _Maps = new Dictionary<int, Map>();
+        private readonly Dictionary<MapId, Map> _maps = new Dictionary<MapId, Map>();
 
-        public void UnregisterMap(int mapID)
+        public void UnregisterMap(MapId mapID)
         {
-            if (_Maps.ContainsKey(mapID))
+            if (_maps.ContainsKey(mapID))
             {
-                _Maps.Remove(mapID);
+                BroadcastUnregisterMap(mapID);
+                MapDestroyed?.Invoke(this, new MapEventArgs(_maps[mapID]));
+                _maps.Remove(mapID);
             }
             else
             {
-                Logger.Warning("Attempted to unregister nonexistent map");
+                Logger.Warning("[MAP] Attempted to unregister nonexistent map.");
             }
         }
-
-        public IMap CreateMap(int mapID)
+        
+        public IMap CreateMap(MapId mapID, bool overwrite = false)
         {
+            if(!overwrite && _maps.ContainsKey(mapID))
+            {
+                Logger.Warning("[MAP] Attempted to overwrite existing map.");
+                return null;
+            }
+
             var newMap = new Map(this, mapID);
-            _Maps.Add(mapID, newMap);
+            _maps.Add(mapID, newMap);
+            MapCreated?.Invoke(this, new MapEventArgs(newMap));
+
+            BroadcastCreateMap(newMap);
+
             return newMap;
         }
 
-        public IMap GetMap(int mapID)
+        public IMap GetMap(MapId mapID)
         {
-            return _Maps[mapID];
+            return _maps[mapID];
         }
 
-        public bool TryGetMap(int mapID, out IMap map)
+        public bool MapExists(MapId mapID)
         {
-            if (_Maps.ContainsKey(mapID))
+            return _maps.ContainsKey(mapID);
+        }
+
+        public bool TryGetMap(MapId mapID, out IMap map)
+        {
+            if (_maps.ContainsKey(mapID))
             {
-                map = _Maps[mapID];
+                map = _maps[mapID];
                 return true;
             }
             map = null;
@@ -94,12 +106,22 @@ namespace SS14.Shared.Map
 
         public IEnumerable<IMap> GetAllMaps()
         {
-            foreach(var kmap in _Maps)
+            foreach(var kmap in _maps)
             {
                 yield return kmap.Value;
             }
         }
 
         #endregion MapAccess
+    }
+
+    public class MapEventArgs : EventArgs
+    {
+        public IMap Map { get; }
+
+        public MapEventArgs(IMap map)
+        {
+            Map = map;
+        }
     }
 }

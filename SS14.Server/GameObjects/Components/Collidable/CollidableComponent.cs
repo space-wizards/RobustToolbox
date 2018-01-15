@@ -7,6 +7,7 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.IoC;
+using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
@@ -25,7 +26,7 @@ namespace SS14.Server.GameObjects
         public override uint? NetID => NetIDs.COLLIDABLE;
 
         /// <inheritdoc />
-        public int MapID => Owner.GetComponent<ITransformComponent>().MapID;
+        public MapId MapID => Owner.GetComponent<ITransformComponent>().MapID;
 
         /// <inheritdoc />
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection client)

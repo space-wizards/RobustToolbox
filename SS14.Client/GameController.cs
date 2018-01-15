@@ -95,8 +95,12 @@ namespace SS14.Client
 
             _resourceCache.LoadLocalResources();
 
-            LoadContentAssembly<GameShared>("Shared");
-            LoadContentAssembly<GameClient>("Client");
+            // load the content dlls into the game
+            _configurationManager.RegisterCVar("content.dllprefix", "Sandbox", CVar.ARCHIVE);
+            var prefix = _configurationManager.GetCVar<string>("content.dllprefix");
+
+            LoadContentAssembly<GameShared>($"{prefix}.Shared");
+            LoadContentAssembly<GameClient>($"{prefix}.Client");
 
             IoCManager.Resolve<ILightManager>().Initialize();
 
@@ -206,12 +210,12 @@ namespace SS14.Client
         private void LoadContentAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
-            if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.dll", out MemoryStream gameDll))
+            if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
             {
                 Logger.Debug($"[SRV] Loading {name} Content DLL");
 
                 // see if debug info is present
-                if (_resourceManager.TryContentFileRead($@"Assemblies/Content.{name}.pdb", out MemoryStream gamePdb))
+                if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
                 {
                     try
                     {
@@ -220,7 +224,7 @@ namespace SS14.Client
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
                     }
                 }
                 else
@@ -232,13 +236,13 @@ namespace SS14.Client
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"[SRV] Exception loading DLL Content.{name}.dll: {e}");
+                        Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
                     }
                 }
             }
             else
             {
-                Logger.Warning($"[ENG] Could not find {name} Content DLL");
+                Logger.Warning($"[ENG] Could not find {name} Content DLL.");
             }
         }
 
@@ -259,8 +263,8 @@ namespace SS14.Client
             _networkManager.ProcessPackets();
             CluwneLib.RunIdle(this, e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PreEngine, e.Elapsed);
-            _stateManager.Update(e);
             _timerManager.UpdateTimers(e.Elapsed);
+            _stateManager.Update(e);
             AssemblyLoader.BroadcastUpdate(AssemblyLoader.UpdateLevel.PostEngine, e.Elapsed);
         }
 

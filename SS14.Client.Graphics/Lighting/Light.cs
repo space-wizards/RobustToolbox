@@ -14,8 +14,8 @@ namespace SS14.Client.Graphics.Lighting
         private LightState lightState = LightState.On;
 
         private Vector2 position;
-        private int MapID;
-        private int GridID;
+        private MapId MapID;
+        private GridId GridID;
 
         private int radius;
 

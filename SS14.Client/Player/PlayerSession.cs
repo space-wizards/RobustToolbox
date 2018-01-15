@@ -11,7 +11,7 @@ namespace SS14.Client.Player
         /// <summary>
         ///     Status of the session.
         /// </summary>
-        public SessionStatus Status { get; set; } = SessionStatus.Zombie;
+        public SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
         /// <summary>
         ///     Index of the session.

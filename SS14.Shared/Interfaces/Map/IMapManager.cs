@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
-using SS14.Shared.Maths;
-using OpenTK;
-using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.Interfaces.Map
 {
@@ -13,18 +10,25 @@ namespace SS14.Shared.Interfaces.Map
     /// <param name="gridId">The ID of the grid being changed.</param>
     /// <param name="tileRef">A reference to the new tile being inserted.</param>
     /// <param name="oldTile">The old tile that is being replaced.</param>
-    public delegate void TileChangedEventHandler(int gridId, TileRef tileRef, Tile oldTile);
+    public delegate void TileChangedEventHandler(GridId gridId, TileRef tileRef, Tile oldTile);
 
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
     public interface IMapManager
     {
-        void UnregisterMap(int mapID);
+        /// <summary>
+        ///     The default <see cref="IMap"/> that is always available. Equivalent to SS13 Null space.
+        /// </summary>
+        IMap DefaultMap { get; }
 
-        IMap CreateMap(int mapID);
+        void UnregisterMap(MapId mapID);
 
-        IMap GetMap(int mapID);
+        IMap CreateMap(MapId mapID, bool overwrite = false);
+
+        IMap GetMap(MapId mapID);
+
+        bool MapExists(MapId mapID);
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -38,12 +42,22 @@ namespace SS14.Shared.Interfaces.Map
         event TileChangedEventHandler OnTileChanged;
 
         /// <summary>
+        ///     A new map has been created.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapCreated;
+
+        /// <summary>
+        ///     An existing map has been destroyed.
+        /// </summary>
+        event EventHandler<MapEventArgs> MapDestroyed;
+
+        /// <summary>
         ///     Starts up the map system.
         /// </summary>
         void Initialize();
 
         void SendMap(INetChannel channel);
 
-        bool TryGetMap(int mapID, out IMap map);
+        bool TryGetMap(MapId mapID, out IMap map);
     }
 }

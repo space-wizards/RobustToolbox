@@ -21,8 +21,9 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
         /// <param name="argMap"></param>
+        /// <param name="entity"></param>
         /// <returns></returns>
-        bool TrySpawnEntityAt(string EntityType, Vector2 position, int argMap, out IEntity entity);
+        bool TrySpawnEntityAt(string EntityType, Vector2 position, MapId argMap, out IEntity entity);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -45,8 +46,9 @@ namespace SS14.Server.Interfaces.GameObjects
         /// </summary>
         /// <param name="EntityType"></param>
         /// <param name="position"></param>
+        /// <param name="argMap"></param>
         /// <returns></returns>
-        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, int argMap);
+        IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, MapId argMap);
 
         List<EntityState> GetEntityStates();
     }

@@ -6,6 +6,7 @@ using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using System;
 using System.IO;
+using SS14.Shared.Map;
 
 namespace SS14.Server.ServerConsole.Commands
 {
@@ -48,7 +49,7 @@ namespace SS14.Server.ServerConsole.Commands
                 mapName = args[0];
             }
             var mapManager = IoCManager.Resolve<IMapManager>();
-            IoCManager.Resolve<IMapLoader>().Save(mapName, mapManager.GetMap(1));
+            IoCManager.Resolve<IMapLoader>().Save(mapName, mapManager.GetMap(new MapId(1)));
         }
     }
 }

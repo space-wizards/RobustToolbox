@@ -23,14 +23,16 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
   </Choose>
   <PropertyGroup>
     <ProjectGuid>{D0DA124B-5580-4345-A02B-9F051F78915F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " />
-
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <Target Name="Build">
     <Exec Command="$(Python) git_helper.py" CustomErrorRegularExpression="^Error" />
   </Target>

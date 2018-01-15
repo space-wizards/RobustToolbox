@@ -3,7 +3,7 @@
 
 # These owners will be the default owners for everything in the repo.
 # * @defunkt
-* @PJB3005 @Silvertorch5
+* @Acruid @PJB3005 @Silvertorch5
 
 # Order is important. The last matching pattern has the most precedence.
 # So if a pull request only touches javascript files, only these owners

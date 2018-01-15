@@ -373,9 +373,7 @@ namespace SS14.Shared.Network
             {
                 Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
-
-            DebugIn(instance);
-
+            
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
                 return;
 
@@ -431,8 +429,7 @@ namespace SS14.Shared.Network
         {
             if (_netPeer == null)
                 return;
-
-            DebugOut(message);
+            
             var packet = BuildMessage(message);
             var connection = ChanToCon(recipient);
             _netPeer.SendMessage(packet, connection, NetDeliveryMethod.ReliableOrdered);
@@ -471,22 +468,6 @@ namespace SS14.Shared.Network
         }
 
         #endregion NetMessages
-
-        #region NetDebug
-
-        [Conditional("DEBUG")]
-        private void DebugOut(NetMessage msg)
-        {
-            //Logger.Debug($"[NET] OUT: {msg.MsgName}");
-        }
-
-        [Conditional("DEBUG")]
-        private void DebugIn(NetMessage msg)
-        {
-            //Logger.Debug($"[NET]  IN: {msg.MsgName}");
-        }
-
-        #endregion NetDebug
 
         #region Events
 
@@ -548,17 +529,8 @@ namespace SS14.Shared.Network
     /// </summary>
     public class NetManagerException : Exception
     {
-        public NetManagerException()
-        {
-        }
-
         public NetManagerException(string message)
             : base(message)
-        {
-        }
-
-        public NetManagerException(string message, Exception inner)
-            : base(message, inner)
         {
         }
     }

@@ -15,6 +15,9 @@ namespace SS14.Server.GameObjects
 
         public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
+            if(message.MessageParameters.Count != 2)
+                return;
+
             var keyFunction = (BoundKeyFunctions) message.MessageParameters[0];
             var keyState = (BoundKeyState) message.MessageParameters[1];
 

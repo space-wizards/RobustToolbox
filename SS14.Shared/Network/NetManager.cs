@@ -69,6 +69,8 @@ namespace SS14.Shared.Network
         /// <inheritdoc />
         public int ChannelCount => _channels.Count;
 
+        public IReadOnlyDictionary<Type, ProcessMessage> CallbackAudit => _callbacks;
+
         /// <inheritdoc />
         public void Initialize(bool isServer)
         {
@@ -371,7 +373,7 @@ namespace SS14.Shared.Network
             {
                 Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
-            
+
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
             {
                 Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received packet {id}:{name}, but callback was not registered.");

@@ -72,6 +72,8 @@ namespace SS14.Client
         private readonly IClientChatConsole _console;
         [Dependency]
         private readonly ITimerManager _timerManager;
+        [Dependency]
+        private readonly IClientEntityManager _entityManager;
 
         #endregion Fields
 
@@ -124,10 +126,10 @@ namespace SS14.Client
             _userInterfaceManager.Initialize();
             _mapManager.Initialize();
             _placementManager.Initialize();
+            _entityManager.Initialize();
 
             _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
             _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _client.Initialize();
 

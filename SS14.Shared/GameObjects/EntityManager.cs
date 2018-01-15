@@ -8,6 +8,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Interfaces.Network;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Shared.GameObjects
@@ -23,6 +24,8 @@ namespace SS14.Shared.GameObjects
         protected readonly IEntitySystemManager EntitySystemManager;
         [Dependency]
         protected readonly IComponentFactory ComponentFactory;
+        [Dependency]
+        private readonly INetManager _network;
         # endregion Dependencies
 
         protected readonly Dictionary<int, IEntity> Entities = new Dictionary<int, IEntity>();
@@ -45,6 +48,11 @@ namespace SS14.Shared.GameObjects
         public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
+
+        public virtual void Initialize()
+        {
+            _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => HandleEntityNetworkMessage((MsgEntity)message));
+        }
 
         public virtual void Shutdown()
         {

@@ -26,6 +26,11 @@ namespace SS14.Server.Placement
 
         #region IPlacementManager Members
 
+        public void Initialize()
+        {
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
+        }
 
         /// <summary>
         ///  Handles placement related client messages.

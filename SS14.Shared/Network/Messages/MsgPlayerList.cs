@@ -9,16 +9,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgPlayerList : NetMessage
     {
         #region REQUIRED
-
-        public static readonly string NAME = "PlayerList";
         public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly NetMessages ID = NetMessages.PlayerList;
-
-        public MsgPlayerList(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        {
-        }
-
+        public static readonly string NAME = nameof(MsgPlayerList);
+        public MsgPlayerList(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public byte PlyCount { get; set; }

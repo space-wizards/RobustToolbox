@@ -13,7 +13,6 @@ using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 
@@ -67,12 +66,11 @@ namespace SS14.Client.Player
             
             _config.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int) MsgPlayerListReq.ID, message =>
-                Logger.Error($"[PLY] Unhandled NetMessage type: {message.MsgId}"));
+            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
 
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int) MsgPlayerList.ID, HandlePlayerList);
+            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
 
-            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int) MsgSession.ID, HandleSessionMessage);
+            _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
         }
 
         /// <inheritdoc />

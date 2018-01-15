@@ -65,7 +65,7 @@ namespace SS14.Client.Player
         public LocalPlayer()
         {
             var network = IoCManager.Resolve<IClientNetManager>();
-            network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID);
+            network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME);
         }
 
         /// <summary>

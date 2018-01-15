@@ -59,7 +59,7 @@ namespace SS14.Client.Placement
 
         public void Initialize()
         {
-            NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int) MsgPlacement.ID, HandlePlacementMessage);
+            NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
             
 
             _modeDictionary.Clear();

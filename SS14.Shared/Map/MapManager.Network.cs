@@ -33,7 +33,7 @@ namespace SS14.Shared.Map
         /// </summary>
         public void NetSetup()
         {
-            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, (int)MsgMap.ID, message => HandleNetworkMessage((MsgMap)message));
+            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, message => HandleNetworkMessage((MsgMap)message));
 
             if(_netManager.IsServer)
                 _mapManager.OnTileChanged += MapMgrOnTileChanged;

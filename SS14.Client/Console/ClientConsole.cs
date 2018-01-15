@@ -41,9 +41,9 @@ namespace SS14.Client.Console
         /// <inheritdoc />
         public virtual void Initialize()
         {
-            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, (int)MsgConCmdReg.ID, HandleConCmdReg);
-            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, (int)MsgConCmdAck.ID, HandleConCmdAck);
-            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, (int)MsgConCmd.ID);
+            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
+            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
+            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
 
             Reset();
         }

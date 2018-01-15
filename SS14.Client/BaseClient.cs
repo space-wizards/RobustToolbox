@@ -36,7 +36,7 @@ namespace SS14.Client
         /// <inheritdoc />
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
+            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
 
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;

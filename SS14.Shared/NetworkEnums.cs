@@ -1,43 +1,5 @@
 ﻿namespace SS14.Shared
 {
-    //TODO: This will be removed once the Client gets migrated to the new network system.
-    /// <summary>
-    /// Contains all NetMessage IDs.
-    /// </summary>
-    public enum NetMessages
-    {
-        // Base engine messages
-        Error = 0,
-        ClientName,             // C>S Sends the server its client info.
-        WelcomeMessageReq,      // C>S Requests the server info.
-        WelcomeMessage,         // S>C Server info.
-        PlayerListReq,          // C>S Requests a full list of players.
-        PlayerList,             // S>C A full list of players.
-        StringTableEntry,       // S>C An entry into the string table.
-
-        // Console Commands
-        ChatMessage,            // C<>S Contains all of the chat messages.
-        PlayerSessionMessage,   // C>S Tells (lol.) the server about state changes.
-        ConsoleCommand,         // C>S Sends the server a console command.
-        ConsoleCommandReply,    // S>C Acknowledges a received console command.
-        ConsoleCommandRegister, // S>C Registers all console commands.
-
-        // Map Messages
-        RequestMap,             // C>S Requests a full copy of the map.
-        MapMessage,             // S>C Sends a full copy of the map.
-
-        // misc stuff that will prob be removed
-        PlacementManagerMessage,// S<>C Contains all placement messages.
-        PlayerUiMessage,        // S>C Sends a user interface message.
-
-        // entity stuff
-        EntityMessage,          // S<>C Contains all entity messages.
-        RequestEntityDeletion,  // C>S Client asks to delete entity.
-        StateUpdate,            // S>C Delta state update.
-        StateAck,               // C>S Acknowledges a state update.
-        FullState,              // S>C Full state of the game.
-    }
-
     public enum ItemMessage
     {
         CreateItem = 0,

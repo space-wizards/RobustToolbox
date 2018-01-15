@@ -29,7 +29,7 @@ namespace SS14.Server.Chat
         /// <inheritdoc />
         public void Initialize()
         {
-            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME, (int) MsgChat.ID);
+            _network.RegisterNetMessage<MsgChat>(MsgChat.NAME);
             LoadEmotes();
         }
 

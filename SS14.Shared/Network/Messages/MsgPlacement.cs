@@ -9,11 +9,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgPlacement : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.PlacementManagerMessage;
         public static readonly MsgGroups GROUP = MsgGroups.Command;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgPlacement(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgPlacement);
+        public MsgPlacement(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public PlacementManagerMessage PlaceType { get; set; }

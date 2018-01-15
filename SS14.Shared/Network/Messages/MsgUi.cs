@@ -6,11 +6,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgUi : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.PlayerUiMessage;
         public static readonly MsgGroups GROUP = MsgGroups.Command;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgUi(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgUi);
+        public MsgUi(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public UiManagerMessage UiType { get; set; }

@@ -125,9 +125,9 @@ namespace SS14.Client
             _mapManager.Initialize();
             _placementManager.Initialize();
 
-            _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
-            _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
+            _networkManager.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleFullStateMessage((MsgFullState)message));
+            _networkManager.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, message => IoCManager.Resolve<IGameStateManager>().HandleStateUpdateMessage((MsgStateUpdate)message));
+            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => IoCManager.Resolve<IClientEntityManager>().HandleEntityNetworkMessage((MsgEntity)message));
 
             _client.Initialize();
 

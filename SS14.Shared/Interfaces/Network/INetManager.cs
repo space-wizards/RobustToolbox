@@ -119,9 +119,8 @@ namespace SS14.Shared.Interfaces.Network
         /// </summary>
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
-        /// <param name="id">Legacy ID of this message. Will be removed.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
+        void RegisterNetMessage<T>(string name, ProcessMessage rxCallback = null)
             where T : NetMessage;
 
         /// <summary>

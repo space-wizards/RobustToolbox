@@ -339,11 +339,10 @@ namespace SS14.Shared.Network
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-            string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
 
             if (msg.LengthBytes < 1)
             {
-                Logger.Warning($"[NET] {address}: Received empty packet.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");
                 return;
             }
             
@@ -351,13 +350,13 @@ namespace SS14.Shared.Network
 
             if (!_strings.TryGetString(id, out string name))
             {
-                Logger.Warning($"[NET] {address}:  No string in table with ID {(NetMessages) id}.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}:  No string in table with ID {id}.");
                 return;
             }
 
             if (!_messages.TryGetValue(name, out Type packetType))
             {
-                Logger.Warning($"[NET] {address}: No message with Name {name}.");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: No message with Name {name}.");
                 return;
             }
 
@@ -371,7 +370,7 @@ namespace SS14.Shared.Network
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.Warning($"[NET] {address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Failed to deserialize {packetType.Name} packet: {e.Message}");
             }
             
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
@@ -383,10 +382,10 @@ namespace SS14.Shared.Network
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage rxCallback = null)
             where T : NetMessage
         {
-            _strings.AddStringFixed(id, name);
+            _strings.AddString(name);
 
             _messages.Add(name, typeof(T));
 

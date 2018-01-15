@@ -7,11 +7,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgMap : NetMessage
     {
         #region REQUIRED
-        public const NetMessages ID = NetMessages.MapMessage;
         public const MsgGroups Group = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgMap(INetChannel channel) : base(NAME, Group, ID) { }
+        public static readonly string NAME = nameof(MsgMap);
+        public MsgMap(INetChannel channel) : base(NAME, Group) { }
         #endregion
 
         public MapMessage MessageType { get; set; }

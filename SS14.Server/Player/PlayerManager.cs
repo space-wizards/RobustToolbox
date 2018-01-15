@@ -66,7 +66,7 @@ namespace SS14.Server.Player
             
             _sessions = new PlayerSession[maxPlayers];
 
-            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;

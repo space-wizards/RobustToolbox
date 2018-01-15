@@ -12,13 +12,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgEntity : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.EntityMessage;
         public static readonly MsgGroups GROUP = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgEntity(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
+        public static readonly string NAME = nameof(MsgEntity);
+        public MsgEntity(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public EntityMessageType Type { get; set; }

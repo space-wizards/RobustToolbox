@@ -339,7 +339,6 @@ namespace SS14.Shared.Network
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
-
             if (msg.LengthBytes < 1)
             {
                 Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");
@@ -374,7 +373,10 @@ namespace SS14.Shared.Network
             }
             
             if (!_callbacks.TryGetValue(packetType, out ProcessMessage callback))
+            {
+                Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received packet {id}:{name}, but callback was not registered.");
                 return;
+            }
 
             callback?.Invoke(instance);
         }

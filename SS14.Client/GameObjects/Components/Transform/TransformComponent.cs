@@ -6,6 +6,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Enums;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
 namespace SS14.Client.GameObjects

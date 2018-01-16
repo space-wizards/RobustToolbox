@@ -10,6 +10,7 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Network;
@@ -66,7 +67,6 @@ namespace SS14.Server.Player
             _sessions = new PlayerSession[maxPlayers];
 
             _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));
-            _network.RegisterNetMessage<MsgUi>(MsgUi.NAME);
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;

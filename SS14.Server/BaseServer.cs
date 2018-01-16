@@ -32,6 +32,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Shared.Enums;
 
 namespace SS14.Server
 {
@@ -596,6 +597,15 @@ namespace SS14.Server
         Game,
         PostGame,
         MapChange,
+    }
+
+    /// <summary>
+    ///     Type of game currently running.
+    /// </summary>
+    public enum GameType
+    {
+        MapEditor = 0,
+        Game,
     }
 
     /// <summary>

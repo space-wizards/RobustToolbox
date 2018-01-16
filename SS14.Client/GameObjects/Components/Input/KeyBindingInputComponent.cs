@@ -5,6 +5,8 @@ using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Client.Input;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.GameObjects
 {

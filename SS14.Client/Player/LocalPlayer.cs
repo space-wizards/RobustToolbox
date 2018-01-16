@@ -2,6 +2,7 @@
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;

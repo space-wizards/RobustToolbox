@@ -217,4 +217,14 @@ namespace SS14.Client.GameObjects
             LoadSprites();
         }
     }
+
+    public enum InventoryLocation
+    {
+        Any = 0,
+        Inventory,
+        Equipment,
+        HandLeft,
+        HandRight,
+        None
+    }
 }

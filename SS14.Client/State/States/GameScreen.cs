@@ -35,6 +35,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.State.States
 {

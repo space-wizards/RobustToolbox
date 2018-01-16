@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects

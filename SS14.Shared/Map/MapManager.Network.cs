@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;

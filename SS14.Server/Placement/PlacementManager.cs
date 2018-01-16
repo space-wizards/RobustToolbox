@@ -9,6 +9,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;

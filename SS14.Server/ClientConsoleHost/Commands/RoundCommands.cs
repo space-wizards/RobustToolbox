@@ -3,6 +3,7 @@ using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.IoC;
 
 namespace SS14.Server.ClientConsoleHost.Commands

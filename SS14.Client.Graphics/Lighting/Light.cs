@@ -5,6 +5,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Sprites;
+using SS14.Shared.Enums;
 using SS14.Shared.Maths;
 
 namespace SS14.Client.Graphics.Lighting

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using SS14.Shared.Interfaces.Network;
 
-namespace SS14.Shared
+namespace SS14.Shared.GameObjects
 {
     public struct IncomingEntityComponentMessage
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using Lidgren.Network;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;

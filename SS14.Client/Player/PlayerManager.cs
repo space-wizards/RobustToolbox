@@ -8,6 +8,7 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Player.PostProcessing;
 using SS14.Shared;
 using SS14.Shared.Configuration;
+using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;

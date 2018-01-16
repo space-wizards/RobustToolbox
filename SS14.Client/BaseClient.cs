@@ -6,6 +6,7 @@ using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;

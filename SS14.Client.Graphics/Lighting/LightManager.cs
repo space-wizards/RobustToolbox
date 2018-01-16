@@ -7,6 +7,7 @@ using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Sprites;
 using System.Reflection;
+using SS14.Shared.Enums;
 using SS14.Shared.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Reflection;

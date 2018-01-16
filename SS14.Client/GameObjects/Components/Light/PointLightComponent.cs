@@ -7,6 +7,7 @@ using SS14.Shared.Utility;
 using System;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
+using SS14.Shared.Enums;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Map;

@@ -6,6 +6,7 @@ using System.IO;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 
 namespace SS14.Shared.Network.Messages
 {

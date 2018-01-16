@@ -3,6 +3,7 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using SS14.Client.Graphics.Lighting;
+using SS14.Shared.Enums;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -39,7 +40,7 @@ namespace SS14.Client.GameObjects
             transform.OnMove += Transform_OnMove;
         }
 
-        private void Transform_OnMove(object sender, Shared.MoveEventArgs e)
+        private void Transform_OnMove(object sender, MoveEventArgs e)
         {
             // if the old or new positions are invalid, then lights will be updated by map changes later
             if (e.OldPosition.IsValidLocation())

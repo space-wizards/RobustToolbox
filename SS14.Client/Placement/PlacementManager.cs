@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SS14.Client.ResourceManagement;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Interfaces.Physics;
 using SS14.Shared.Maths;

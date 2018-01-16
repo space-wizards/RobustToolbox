@@ -1,8 +1,7 @@
-﻿using Lidgren.Network;
+﻿using System;
 using SS14.Shared.Network.Messages;
-using System;
 
-namespace SS14.Shared
+namespace SS14.Shared.GameObjects
 {
     public class IncomingEntityMessage
     {

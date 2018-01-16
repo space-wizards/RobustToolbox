@@ -1,6 +1,7 @@
 ﻿using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
 using System;
+using SS14.Shared.Enums;
 using SS14.Shared.Map;
 
 namespace SS14.Client.Interfaces.Placement

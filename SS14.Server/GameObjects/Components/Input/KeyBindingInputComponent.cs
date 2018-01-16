@@ -2,6 +2,7 @@
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using System.Collections.Generic;
+using SS14.Shared.Enums;
 
 namespace SS14.Server.GameObjects
 {

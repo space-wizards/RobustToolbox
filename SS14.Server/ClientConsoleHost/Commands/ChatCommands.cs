@@ -4,6 +4,7 @@ using SS14.Server.Interfaces.ClientConsoleHost;
 using SS14.Server.Interfaces.Player;
 using SS14.Shared;
 using SS14.Shared.Console;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;

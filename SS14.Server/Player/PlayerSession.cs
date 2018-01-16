@@ -8,6 +8,7 @@ using SS14.Shared.Log;
 using SS14.Server.GameObjects;
 using System;
 using SS14.Server.Interfaces;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
@@ -143,8 +144,6 @@ namespace SS14.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
-            // TODO: PlayerLeaveServer event
-
             DetachFromEntity();
             UpdatePlayerState();
         }
@@ -205,18 +204,7 @@ namespace SS14.Server.Player
             Status = SessionStatus.InGame;
             UpdatePlayerState();
         }
-
-        public void CreateGuiMessage(GuiComponentType gui)
-        {
-            var net = IoCManager.Resolve<IServerNetManager>();
-            var message = net.CreateNetMessage<MsgUi>();
-
-            message.UiType = UiManagerMessage.ComponentMessage;
-            message.CompType = gui;
-
-            net.ServerSendMessage(message, ConnectedClient);
-        }
-
+        
         private void UpdatePlayerState()
         {
             PlayerState.Status = Status;

@@ -78,10 +78,11 @@ namespace SS14.Server.GameObjects
 
         #endregion IEntityManager Members
 
-        public void Initialize()
+        public override void Startup()
         {
+            base.Startup();
             EntitySystemManager.Initialize();
-            Initialized = true;
+            Started = true;
             InitializeEntities();
         }
     }

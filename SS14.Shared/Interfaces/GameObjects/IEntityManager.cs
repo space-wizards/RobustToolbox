@@ -8,6 +8,7 @@ namespace SS14.Shared.Interfaces.GameObjects
     public interface IEntityManager
     {
         void Initialize();
+        void Startup();
         void Shutdown();
         void Update(float frameTime);
         bool MapsInitialized { get; set; }

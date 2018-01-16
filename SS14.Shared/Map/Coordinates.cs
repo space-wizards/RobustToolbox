@@ -49,6 +49,12 @@ namespace SS14.Shared.Map
             MapID = argMap;
         }
 
+        public bool IsValidLocation()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            return mapMan.TryGetMap(MapID, out var map) && map.GridExists(GridID);
+        }
+
         public LocalCoordinates ConvertToGrid(IMapGrid argGrid)
         {
             return new LocalCoordinates(Position + Grid.WorldPosition - argGrid.WorldPosition, argGrid);

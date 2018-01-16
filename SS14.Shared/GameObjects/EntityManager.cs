@@ -44,7 +44,7 @@ namespace SS14.Shared.GameObjects
         private readonly Queue<Tuple<object, EntityEventArgs>> _eventQueue
             = new Queue<Tuple<object, EntityEventArgs>>();
 
-        public bool Initialized { get; protected set; }
+        public bool Started { get; protected set; }
         public bool MapsInitialized { get; set; } = false;
 
         #region IEntityManager Members
@@ -54,11 +54,13 @@ namespace SS14.Shared.GameObjects
             _network.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, message => HandleEntityNetworkMessage((MsgEntity)message));
         }
 
+        public virtual void Startup() { }
+
         public virtual void Shutdown()
         {
             FlushEntities();
             EntitySystemManager.Shutdown();
-            Initialized = false;
+            Started = false;
             var componentmanager = IoCManager.Resolve<IComponentManager>();
             componentmanager.Cull();
         }
@@ -89,8 +91,7 @@ namespace SS14.Shared.GameObjects
         /// <returns>Entity or null if entity id doesn't exist</returns>
         public IEntity GetEntity(int eid)
         {
-            TryGetEntity(eid, out var entity);
-            return entity;
+            return Entities[eid];
         }
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace SS14.Shared.GameObjects
             _allEntities.Add(entity);
 
             // We batch the first set of initializations together.
-            if (Initialized)
+            if (Started)
             {
                 InitializeEntity(entity);
             }
@@ -325,7 +326,7 @@ namespace SS14.Shared.GameObjects
 
         protected void ProcessMsgBuffer()
         {
-            if (!Initialized)
+            if (!Started)
                 return;
             if (!MessageBuffer.Any()) return;
             var misses = new List<IncomingEntityMessage>();
@@ -361,7 +362,7 @@ namespace SS14.Shared.GameObjects
         /// <param name="msg">Incoming raw network message</param>
         public void HandleEntityNetworkMessage(MsgEntity msg)
         {
-            if (!Initialized)
+            if (!Started)
             {
                 IncomingEntityMessage incomingEntity = ProcessNetMessage(msg);
                 if (incomingEntity.Message.Type != EntityMessageType.Error)

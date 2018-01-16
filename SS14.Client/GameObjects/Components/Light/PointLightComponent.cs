@@ -145,7 +145,8 @@ namespace SS14.Client.GameObjects
 
         private void OnMove(object sender, MoveEventArgs args)
         {
-            UpdateLightPosition(args.NewPosition);
+            if(args.NewPosition.IsValidLocation())
+                UpdateLightPosition(args.NewPosition);
         }
 
         protected void UpdateLightPosition(LocalCoordinates newPosition)

@@ -48,7 +48,6 @@ namespace SS14.Shared.Map
                 _mapManager.OnTileChanged -= MapMgrOnTileChanged;
         }
 
-        /// <inheritdoc />
         private void HandleNetworkMessage(MsgMap message)
         {
             switch (message.MessageType)

@@ -393,7 +393,7 @@ namespace SS14.Server
             // positive edge triggers
             switch (level) {
                 case ServerRunLevel.PreGame:
-                    _entities.Initialize();
+                    _entities.Startup();
                     break;
             }
         }

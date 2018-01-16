@@ -11,8 +11,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
@@ -45,7 +45,6 @@ namespace SS14.Server.Player
         
         [Dependency]
         private readonly IServerEntityManager _entityManager;
-
 
         [Dependency]
         private readonly IServerNetManager _network;

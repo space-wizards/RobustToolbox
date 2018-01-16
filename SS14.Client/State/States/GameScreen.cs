@@ -340,12 +340,18 @@ namespace SS14.Client.State.States
             if (PlayerManager.LocalPlayer != null)
             {
                 var newPos = Vector2.Zero;
+                var newMap = MapId.Nullspace;
                 if(PlayerManager.LocalPlayer.ControlledEntity != null)
-                    newPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                {
+                    var transform = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>();
+                    newPos = transform.WorldPosition;
+                    newMap = transform.MapID;
+                }
 
-                if (CluwneLib.Camera.Position != newPos)
+                if (CluwneLib.Camera.Position != newPos || CluwneLib.Camera.CurrentMap != newMap)
                 {
                     CluwneLib.Camera.Position = newPos;
+                    CluwneLib.Camera.CurrentMap = newMap;
                     MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
                     UpdateView();
                 }
@@ -661,14 +667,7 @@ namespace SS14.Client.State.States
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (PlayerManager.LocalPlayer.ControlledEntity != null && PlayerManager.LocalPlayer.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
-            {
-                MousePosScreen = new ScreenCoordinates(e.NewPosition, transform.MapID);
-            }
-            else
-            {
-                MousePosScreen = new ScreenCoordinates(e.NewPosition, MapId.Nullspace);
-            }
+            MousePosScreen = new ScreenCoordinates(e.NewPosition, CluwneLib.Camera.CurrentMap);
             MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
         }
@@ -1025,6 +1024,9 @@ namespace SS14.Client.State.States
             LocalCoordinates position = new LocalCoordinates();
             if(PlayerManager.LocalPlayer.ControlledEntity != null)
                 position = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+
+            if(!position.IsValidLocation())
+                return;
 
             var grids = position.Map.FindGridsIntersecting(vision); //Collect all grids in vision range
 

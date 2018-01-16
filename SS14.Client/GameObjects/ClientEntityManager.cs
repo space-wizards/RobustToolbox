@@ -93,15 +93,17 @@ namespace SS14.Client.GameObjects
             return false;
         }
 
-        public void Initialize()
+        public override void Startup()
         {
-            if (Initialized)
+            base.Startup();
+
+            if (Started)
             {
                 throw new InvalidOperationException("InitializeEntities() called multiple times");
             }
             InitializeEntities();
             EntitySystemManager.Initialize();
-            Initialized = true;
+            Started = true;
         }
 
         public void ApplyEntityStates(IEnumerable<EntityState> entityStates, float serverTime)
@@ -132,10 +134,10 @@ namespace SS14.Client.GameObjects
                 DeleteEntity(k);
             }
 
-            // After the first set of states comes in we do the initialization.
-            if (!Initialized && MapsInitialized)
+            // After the first set of states comes in we do the startup.
+            if (!Started && MapsInitialized)
             {
-                Initialize();
+                Startup();
             }
         }
     }

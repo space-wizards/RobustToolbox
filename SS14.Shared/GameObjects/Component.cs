@@ -31,6 +31,8 @@ namespace SS14.Shared.GameObjects
         /// <inheritdoc />
         public event Action<ComponentShutdownEventArgs> OnShutdown;
 
+        public bool Running { get; private set; }
+
         /// <inheritdoc />
         public bool Deleted { get; private set; } = false;
 
@@ -53,14 +55,18 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void Initialize()
-        {
+        public virtual void Initialize() { }
 
+        /// <inheritdoc />
+        public virtual void Startup()
+        {
+            Running = true;
         }
 
         /// <inheritdoc />
         public virtual void Shutdown()
         {
+            Running = false;
             OnShutdown?.Invoke(new ComponentShutdownEventArgs(this));
             OnShutdown = null;
         }

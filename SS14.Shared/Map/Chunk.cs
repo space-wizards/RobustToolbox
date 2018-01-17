@@ -98,7 +98,7 @@ namespace SS14.Shared.Map
 
             var newTileRef = new TileRef(_grid.MapID, _grid.Index, gridTile.X, gridTile.Y, tile);
             var oldTile = _tiles[xChunkTile, yChunkTile];
-            _mapManager.RaiseOnTileChanged(_grid.Index, newTileRef, oldTile);
+            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
             _grid.UpdateAABB(gridTile);
 
             _tiles[xChunkTile, yChunkTile] = tile;

@@ -4,12 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using OpenTK.Graphics;
-using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Interfaces.GameObjects;
+using SS14.Shared.Maths;
 
 namespace SS14.Client.UserInterface.CustomControls
 {
@@ -26,31 +24,34 @@ namespace SS14.Client.UserInterface.CustomControls
     {
         private readonly List<PropWindowStruct> ObjPropList = new List<PropWindowStruct>();
         private readonly Textbox search;
-        private Object assigned;
+        private object _entity;
         private FieldInfo[] fields;
 
-        public PropEditWindow(Vector2i size, IResourceCache resourceCache, Object obj)
-            : base("Object Properties : " + obj, size)
+        private readonly ListPanel _fieldList;
+
+        public PropEditWindow(Vector2i size, IEntity entity)
+            : base($"Entity Properties: [{entity.Uid}]{entity.Name}", size)
         {
-            Position = new Vector2i((int) (CluwneLib.CurrentRenderTarget.Size.X/2f) - (int) (ClientArea.Width/2f),
-                                 (int) (CluwneLib.CurrentRenderTarget.Size.Y/2f) - (int) (ClientArea.Height/2f));
+            _entity = entity;
 
             search = new Textbox(150);
-            search.Position = new Vector2i(5, 5);
+            search.LocalPosition = new Vector2i(5, 5);
             search.OnSubmit += search_OnSubmit;
             search.ClearOnSubmit = true;
             search.ClearFocusOnSubmit = false;
-            Components.Add(search);
+            Container.AddControl(search);
 
-            assigned = obj;
-            BuildPropList();
+            _fieldList = new ListPanel();
+            _fieldList.LocalPosition = new Vector2i(5, 0);
+            _fieldList.Alignment = Align.Bottom;
+            search.AddControl(_fieldList);
 
-            Update(0);
+            BuildPropList(_fieldList);
         }
 
         private void search_OnSubmit(Textbox sender, string text)
         {
-            foreach (PropWindowStruct struc in ObjPropList)
+            foreach (var struc in ObjPropList)
             {
                 if (struc.VarName.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
                     struc.LabelName.BackgroundColor = new Color4(255, 228, 196, 255);
@@ -59,56 +60,61 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        private void RebuildPropList(object newObj)
+        private void RebuildPropList(object obj)
         {
             if (ScrollbarH.Visible) ScrollbarH.Value = 0;
             if (ScrollbarV.Visible) ScrollbarV.Value = 0;
 
-            Components.Clear();
-            Components.Add(search);
+            foreach (var control in _fieldList.Children.ToList())
+            {
+                _fieldList.RemoveControl(control);
+            }
 
             ObjPropList.Clear();
-            assigned = newObj;
-            title.Text = "Object Properties : " + assigned;
-            BuildPropList();
+            _entity = obj;
+            title.Text = $"Entity Properties: {_entity}";
+            BuildPropList(_fieldList);
+            Container.DoLayout();
         }
 
-        private Control CreateEditField(object o, FieldInfo field)
+        private Control CreateEditField(object obj, FieldInfo field)
         {
-            if (o is String || o is string)
+            switch (obj)
             {
-                var editStr = new Textbox(100);
-                editStr.ClearOnSubmit = false;
-                editStr.UserData = field;
-                editStr.Text = ((string) o);
-                editStr.OnSubmit += editStr_OnSubmit;
-                return editStr;
-            }
-            else if (o is Enum)
-            {
-                var editEnum = new Listbox(100, 100, Enum.GetNames(o.GetType()).ToList());
-                editEnum.UserData = field;
-                editEnum.SelectItem(o.ToString());
-                editEnum.ItemSelected += editEnum_ItemSelected;
-                return editEnum;
-            }
-            else if (o is float || o is int || o is Int16 || o is Int32 || o is Int64 || o is double || o is Double ||
-                     o is decimal || o is Decimal || o is Single)
-            {
-                var editNum = new Textbox(100);
-                editNum.ClearOnSubmit = false;
-                editNum.UserData = field;
-                editNum.Text = o.ToString();
-                editNum.OnSubmit += editNum_OnSubmit;
-                return editNum;
-            }
-            else if (o is bool || o is Boolean)
-            {
-                var editBool = new Checkbox();
-                editBool.UserData = field;
-                editBool.Value = ((Boolean) o);
-                editBool.ValueChanged += editBool_ValueChanged;
-                return editBool;
+                case string s:
+                    var editStr = new Textbox(100);
+                    editStr.ClearOnSubmit = false;
+                    editStr.UserData = field;
+                    editStr.Text = s;
+                    editStr.OnSubmit += editStr_OnSubmit;
+                    return editStr;
+
+                case Enum _:
+                    var editEnum = new Listbox(100, 100, Enum.GetNames(obj.GetType()).ToList());
+                    editEnum.UserData = field;
+                    editEnum.SelectItem(obj.ToString());
+                    editEnum.ItemSelected += editEnum_ItemSelected;
+                    return editEnum;
+
+                default:
+                    if (obj is float || obj is int || obj is short || obj is long || obj is double || obj is decimal)
+                    {
+                        var editNum = new Textbox(100);
+                        editNum.ClearOnSubmit = false;
+                        editNum.UserData = field;
+                        editNum.Text = obj.ToString();
+                        editNum.OnSubmit += editNum_OnSubmit;
+                        return editNum;
+                    }
+                    else if (obj is bool)
+                    {
+                        var editBool = new Checkbox();
+                        editBool.UserData = field;
+                        editBool.Value = (bool) obj;
+                        editBool.ValueChanged += editBool_ValueChanged;
+                        return editBool;
+                    }
+                    break;
             }
             return null;
         }
@@ -119,7 +125,7 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             var field = (FieldInfo) sender.UserData;
             if (field.IsInitOnly || field.IsLiteral) return;
-            field.SetValue(assigned, newValue);
+            field.SetValue(_entity, newValue);
         }
 
         private void editNum_OnSubmit(Textbox sender, string text)
@@ -127,52 +133,52 @@ namespace SS14.Client.UserInterface.CustomControls
             var field = (FieldInfo) sender.UserData;
             object set = null;
 
-            if (field.GetValue(assigned) is float)
+            if (field.GetValue(_entity) is float)
                 set = float.Parse(text);
-            else if (field.GetValue(assigned) is int || field.GetValue(assigned) is Int32)
-                set = Int32.Parse(text);
-            else if (field.GetValue(assigned) is Int16)
-                set = Int16.Parse(text);
-            else if (field.GetValue(assigned) is Int64)
-                set = Int64.Parse(text);
-            else if (field.GetValue(assigned) is double || field.GetValue(assigned) is Double)
-                set = Double.Parse(text);
-            else if (field.GetValue(assigned) is decimal || field.GetValue(assigned) is Decimal)
-                set = Decimal.Parse(text);
-            else if (field.GetValue(assigned) is Single)
-                set = Single.Parse(text);
+            else if (field.GetValue(_entity) is int || field.GetValue(_entity) is int)
+                set = int.Parse(text);
+            else if (field.GetValue(_entity) is short)
+                set = short.Parse(text);
+            else if (field.GetValue(_entity) is long)
+                set = long.Parse(text);
+            else if (field.GetValue(_entity) is double || field.GetValue(_entity) is double)
+                set = double.Parse(text);
+            else if (field.GetValue(_entity) is decimal || field.GetValue(_entity) is decimal)
+                set = decimal.Parse(text);
+            else if (field.GetValue(_entity) is float)
+                set = float.Parse(text);
 
             if (field.IsInitOnly || field.IsLiteral) return;
-            field.SetValue(assigned, set);
+            field.SetValue(_entity, set);
         }
 
         private void editEnum_ItemSelected(Label item, Listbox sender)
         {
             var field = (FieldInfo) sender.UserData;
-            object state = Enum.Parse(field.FieldType, item.Text, true);
+            var state = Enum.Parse(field.FieldType, item.Text, true);
             if (field.IsInitOnly || field.IsLiteral) return;
-            field.SetValue(assigned, state);
+            field.SetValue(_entity, state);
         }
 
         private void editStr_OnSubmit(Textbox sender, string text)
         {
             var field = (FieldInfo) sender.UserData;
             if (field.IsInitOnly || field.IsLiteral) return;
-            field.SetValue(assigned, text);
+            field.SetValue(_entity, text);
         }
 
-        private void BuildPropList()
+        private void BuildPropList(ListPanel parent)
         {
-            Type entType = assigned.GetType();
+            var entType = _entity.GetType();
             fields =
                 entType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                   BindingFlags.Static);
-            int pos = 25;
+            var pos = 25;
 
-            foreach (FieldInfo field in fields)
+            foreach (var field in fields)
             {
                 var newEntry = new PropWindowStruct();
-                object fieldVal = field.GetValue(assigned);
+                var fieldVal = field.GetValue(_entity);
 
                 if (fieldVal != null && fieldVal is ICollection)
                 {
@@ -190,12 +196,12 @@ namespace SS14.Client.UserInterface.CustomControls
 
                     pos += 5 + newEntry.LabelName.ClientArea.Height;
 
-                    Components.Add(newEntry.LabelName);
+                    parent.AddControl(newEntry.LabelName);
                     ObjPropList.Add(newEntry);
 
                     newEntry = new PropWindowStruct();
 
-                    foreach (object item in (ICollection) fieldVal)
+                    foreach (var item in (ICollection) fieldVal)
                     {
                         newEntry.VarName = item.ToString();
 
@@ -216,7 +222,7 @@ namespace SS14.Client.UserInterface.CustomControls
                         newEntry.LabelName.Update(0);
                         pos += 5 + newEntry.LabelName.ClientArea.Height;
 
-                        Components.Add(newEntry.LabelName);
+                        parent.AddControl(newEntry.LabelName);
                         ObjPropList.Add(newEntry);
                     }
                 }
@@ -236,26 +242,26 @@ namespace SS14.Client.UserInterface.CustomControls
                     newEntry.LabelName.Clicked += LabelName_Clicked;
                     newEntry.LabelName.Update(0);
 
-                    Control edit = CreateEditField(fieldVal, field);
+                    var edit = CreateEditField(fieldVal, field);
                     if (edit != null && newEntry.CanEdit)
                     {
                         edit.Position = new Vector2i(newEntry.LabelName.ClientArea.Right + 5,
-                                                  newEntry.LabelName.ClientArea.Top);
-                        Components.Add(edit);
+                            newEntry.LabelName.ClientArea.Top);
+                        parent.AddControl(edit);
                         edit.Update(0);
                         pos += newEntry.LabelName.ClientArea.Height > edit.ClientArea.Height
-                                   ? 5 + newEntry.LabelName.ClientArea.Height
-                                   : 5 + edit.ClientArea.Height;
+                            ? 5 + newEntry.LabelName.ClientArea.Height
+                            : 5 + edit.ClientArea.Height;
                     }
                     else
                     {
                         newEntry.LabelName.Text = field.Name + " = " +
-                                                       (fieldVal == null ? "null" : fieldVal.ToString());
+                                                  (fieldVal == null ? "null" : fieldVal.ToString());
                         newEntry.LabelName.Update(0);
                         pos += 5 + newEntry.LabelName.ClientArea.Height;
                     }
 
-                    Components.Add(newEntry.LabelName);
+                    parent.AddControl(newEntry.LabelName);
                     ObjPropList.Add(newEntry);
                 }
             }
@@ -266,30 +272,28 @@ namespace SS14.Client.UserInterface.CustomControls
             switch (e.Button)
             {
                 case Mouse.Button.Left:
-                    {
-                        PropWindowStruct? selected = null;
+                {
+                    PropWindowStruct? selected = null;
 
-                        if (ObjPropList.Any(x => x.LabelName == sender))
-                            selected = ObjPropList.First(x => x.LabelName == sender);
+                    if (ObjPropList.Any(x => x.LabelName == sender))
+                        selected = ObjPropList.First(x => x.LabelName == sender);
 
-                        if (selected.HasValue)
+                    if (selected.HasValue)
+                        if (selected.Value.IsListItem)
                         {
-                            if (selected.Value.IsListItem)
-                            {
-                                if (selected.Value.ListItem != null)
-                                    RebuildPropList(selected.Value.ListItem);
-                            }
-                            else if (fields.First(x => x.Name == selected.Value.VarName) != null)
-                            {
-                                FieldInfo field = fields.First(x => x.Name == selected.Value.VarName);
-                                object fieldVar = field.GetValue(assigned);
-                                if (fieldVar == null) return;
-
-                                RebuildPropList(fieldVar);
-                            }
+                            if (selected.Value.ListItem != null)
+                                RebuildPropList(selected.Value.ListItem);
                         }
-                        break;
-                    }
+                        else if (fields.First(x => x.Name == selected.Value.VarName) != null)
+                        {
+                            var field = fields.First(x => x.Name == selected.Value.VarName);
+                            var fieldVar = field.GetValue(_entity);
+                            if (fieldVar == null) return;
+
+                            RebuildPropList(fieldVar);
+                        }
+                    break;
+                }
             }
         }
     }

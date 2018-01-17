@@ -47,5 +47,10 @@ namespace SS14.Shared.Map
         {
             return self._value;
         }
+
+        public override string ToString()
+        {
+            return _value.ToString();
+        }
     }
 }

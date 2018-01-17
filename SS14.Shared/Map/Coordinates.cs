@@ -6,7 +6,7 @@ using System;
 namespace SS14.Shared.Map
 {
     [Serializable]
-    public struct LocalCoordinates
+    public struct LocalCoordinates : IEquatable<LocalCoordinates>
     {
         public readonly GridId GridID;
         public readonly MapId MapID;
@@ -73,6 +73,50 @@ namespace SS14.Shared.Map
         public bool InRange(LocalCoordinates localpos, int range)
         {
             return InRange(localpos, (float)range);
+        }
+
+        public override string ToString()
+        {
+            return $"Map={MapID}, Grid={Grid.Index}, X={Position.X:N2}, Y={Position.Y:N2}";
+        }
+
+        public bool Equals(LocalCoordinates other)
+        {
+            return GridID.Equals(other.GridID) && MapID.Equals(other.MapID) && Position.Equals(other.Position);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is LocalCoordinates && Equals((LocalCoordinates) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = GridID.GetHashCode();
+                hashCode = (hashCode * 397) ^ MapID.GetHashCode();
+                hashCode = (hashCode * 397) ^ Position.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        /// <summary>
+        ///     Tests for value equality between two LocalCoordinates.
+        /// </summary>
+        public static bool operator ==(LocalCoordinates self, LocalCoordinates other)
+        {
+            const float epsilon = 1.0E-8f;
+            return self.InRange(other, epsilon);
+        }
+
+        /// <summary>
+        ///     Tests for value inequality between two LocalCoordinates.
+        /// </summary>
+        public static bool operator !=(LocalCoordinates self, LocalCoordinates other)
+        {
+            return !(self == other);
         }
     }
 

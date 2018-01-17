@@ -96,7 +96,7 @@
         SendMapInfo,
 
         CreateMap,
-        UnregisterMap,
+        DeleteMap,
     }
 
     public enum MobHand

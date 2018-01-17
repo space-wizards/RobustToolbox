@@ -83,7 +83,6 @@
     <Compile Include="Lighting\ILight.cs" />
     <Compile Include="Lighting\ILightArea.cs" />
     <Compile Include="Lighting\ILightManager.cs" />
-    <Compile Include="Lighting\LightArea.cs" />
     <Compile Include="Lighting\LightManager.cs" />
     <Compile Include="Lighting\LightMode.cs" />
     <Compile Include="Lighting\Light.cs" />

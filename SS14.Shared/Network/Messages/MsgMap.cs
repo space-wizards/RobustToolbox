@@ -106,7 +106,7 @@ namespace SS14.Shared.Network.Messages
                     MapGridsToSend = buffer.ReadInt32();
                     break;
                 case MapMessage.CreateMap:
-                case MapMessage.UnregisterMap:
+                case MapMessage.DeleteMap:
                     MapIndex = new MapId(buffer.ReadInt32());
                     break;
             }
@@ -151,7 +151,7 @@ namespace SS14.Shared.Network.Messages
                     buffer.Write(MapGridsToSend);
                     break;
                 case MapMessage.CreateMap:
-                case MapMessage.UnregisterMap:
+                case MapMessage.DeleteMap:
                     buffer.Write((int)MapIndex);
                     break;
             }

@@ -28,10 +28,10 @@ namespace SS14.Client.GameObjects.Light.LightModes
         public void OnRemove(ILight owner)
         {
             owner.Color = _lightColorOriginal;
-            owner.LightArea.Calculated = false;
+            owner.Calculated = false;
         }
 
-        public void Update(ILight owner)
+        public void Update(ILight owner, float deltaTime)
         {
             if (flickering)
             {
@@ -42,7 +42,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                         flickerCount++;
                         lightOn = true;
                         owner.Color = _lightColorOriginal;
-                        owner.LightArea.Calculated = false;
+                        owner.Calculated = false;
                         timer.Reset();
                         if (flickerCount >= 2 && IoCManager.Resolve<IRand>().Next(1, 6) == 2)
                             flickering = false;
@@ -52,7 +52,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                 {
                     owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
                         _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
-                    owner.LightArea.Calculated = false;
+                    owner.Calculated = false;
                     lightOn = false;
                     timer.Reset();
                 }
@@ -66,7 +66,7 @@ namespace SS14.Client.GameObjects.Light.LightModes
                     lightOn = false;
                     owner.Color = new Color4(_lightColorOriginal.R / 2, _lightColorOriginal.G / 2,
                         _lightColorOriginal.B / 2, _lightColorOriginal.A / 2);
-                    owner.LightArea.Calculated = false;
+                    owner.Calculated = false;
                     timer.Reset();
                 }
             }

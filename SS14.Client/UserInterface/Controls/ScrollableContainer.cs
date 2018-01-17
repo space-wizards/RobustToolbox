@@ -76,10 +76,10 @@ namespace SS14.Client.UserInterface.Controls
 
         protected override void OnCalcPosition()
         {
+            base.OnCalcPosition();
+
             ScrollbarH.Position = Position + new Vector2i(ClientArea.Left, ClientArea.Bottom - ScrollbarH.ClientArea.Height);
             ScrollbarV.Position = Position + new Vector2i(ClientArea.Right - ScrollbarV.ClientArea.Width, ClientArea.Top);
-
-            base.OnCalcPosition();
 
             /*
             _maxX = 0;

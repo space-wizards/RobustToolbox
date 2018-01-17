@@ -99,12 +99,7 @@ namespace SS14.Client.State.States
 
         private TechniqueList LightblendTechnique;
         private GLSLShader Lightmap;
-
-        private LightArea lightArea1024;
-        private LightArea lightArea128;
-        private LightArea lightArea256;
-        private LightArea lightArea512;
-
+        
         private ILight playerVision;
         private ISS14Serializer serializer;
 
@@ -159,7 +154,8 @@ namespace SS14.Client.State.States
 
             _entityManager = IoCManager.Resolve<IClientEntityManager>();
             _componentManager = IoCManager.Resolve<IComponentManager>();
-            IoCManager.Resolve<IMapManager>().OnTileChanged += (gridId, tileRef, oldTile) => OnTileChanged(gridId, tileRef, oldTile);
+            IoCManager.Resolve<IMapManager>().TileChanged += (sender, args) => HandleTileChanged(args.NewTile);
+            IoCManager.Resolve<IMapManager>().GridChanged += HandleGridChanged;
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
 
             NetworkManager.MessageArrived += NetworkManagerMessageArrived;
@@ -183,6 +179,15 @@ namespace SS14.Client.State.States
 
             DebugManager = new GameScreenDebug(this);
             FormResizeUI();
+        }
+
+        private void HandleGridChanged(object obj, GridChangedEventArgs args)
+        {
+            var box = args.Grid.AABBWorld;
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(args.Grid.MapID, box);
+
+            // Recalculate the scene batches.
+            RecalculateScene();
         }
 
         private void InitializeRenderTargets()
@@ -294,12 +299,6 @@ namespace SS14.Client.State.States
             var resolveShadowsEffectTechnique = resourceCache.GetTechnique("resolveShadowsEffect");
             shadowMapResolver.LoadContent(reductionEffectTechnique, resolveShadowsEffectTechnique);
 
-            lightManager.LightMask = resourceCache.GetSprite("whitemask");
-            lightArea128 = new LightArea(ShadowmapSize.Size128, lightManager.LightMask);
-            lightArea256 = new LightArea(ShadowmapSize.Size256, lightManager.LightMask);
-            lightArea512 = new LightArea(ShadowmapSize.Size512, lightManager.LightMask);
-            lightArea1024 = new LightArea(ShadowmapSize.Size1024, lightManager.LightMask);
-
             var width = CluwneLib.Window.Viewport.Size.X;
             var height = CluwneLib.Window.Viewport.Size.Y;
             ScreenShadows = new RenderImage("screenShadows", width, height, ImageBufferFormats.BufferRGB888A8);
@@ -398,12 +397,13 @@ namespace SS14.Client.State.States
             var vp = CluwneLib.WorldViewport;
 
             var map = MapId.Nullspace;
-            if(PlayerManager.LocalPlayer.ControlledEntity != null)
-                map = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().MapID;
+            var entity = PlayerManager.LocalPlayer.ControlledEntity;
+            if(entity != null)
+                map = entity.GetComponent<ITransformComponent>().MapID;
 
             if (!bFullVision)
             {
-                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(vp);
+                ILight[] lights = IoCManager.Resolve<ILightManager>().LightsIntersectingRect(map, vp);
 
                 // Render the lightmap
                 RenderLightsIntoMap(lights);
@@ -625,7 +625,7 @@ namespace SS14.Client.State.States
 
             // Find all the entities intersecting our click
             IEnumerable<IEntity> entities =
-                _entityManager.GetEntitiesIntersecting(MousePosWorld.Position);
+                _entityManager.GetEntitiesIntersecting(MousePosWorld.MapID, MousePosWorld.Position);
 
             // Check the entities against whether or not we can click them
             var clickedEntities = new List<ClickData>();
@@ -671,13 +671,25 @@ namespace SS14.Client.State.States
                     clickable.DispatchClick(PlayerManager.LocalPlayer.ControlledEntity, MouseClickType.Right);
                     break;
                 case Mouse.Button.Middle:
-                    UserInterfaceManager.DisposeAllComponents<PropEditWindow>();
-                    UserInterfaceManager.AddComponent(new PropEditWindow(new Vector2i(400, 400), ResourceCache,
-                                                                            entToClick));
+                    OpenEntityEditWindow(entToClick);
                     return;
             }
 
             #endregion Object clicking
+        }
+
+        private void OpenEntityEditWindow(IEntity entity)
+        {
+            foreach (var child in _uiScreen.Children.ToList())
+            {
+                if (child is PropEditWindow)
+                    _uiScreen.RemoveControl(child);
+            }
+
+            var window = new PropEditWindow(new Vector2i(400, 400), entity);
+            window.Alignment = Align.HCenter | Align.VCenter;
+            _uiScreen.AddControl(window);
+            _uiScreen.DoLayout();
         }
 
         public override void MouseMove(MouseMoveEventArgs e)
@@ -767,9 +779,10 @@ namespace SS14.Client.State.States
             RecalculateScene();
         }
 
-        public void OnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
+        private void HandleTileChanged(TileRef tileRef)
         {
-            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
+            IoCManager.Resolve<ILightManager>().RecalculateLightsInView(tileRef.LocalPos.MapID, Box2.FromDimensions(tileRef.X, tileRef.Y, 1, 1));
+
             // Recalculate the scene batches.
             RecalculateScene();
         }
@@ -792,7 +805,7 @@ namespace SS14.Client.State.States
                 return;
             }
             foreach
-            (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.LightArea.Calculated == false))
+            (ILight l in IoCManager.Resolve<ILightManager>().GetLights().Where(l => l.Calculated == false))
             {
                 CalculateLightArea(l);
             }
@@ -806,7 +819,7 @@ namespace SS14.Client.State.States
         private void RenderLightsIntoMap(IEnumerable<ILight> lights)
         {
             //Step 1 - Calculate lights that haven't been calculated yet or need refreshing
-            foreach (ILight l in lights.Where(l => l.LightArea.Calculated == false))
+            foreach (ILight l in lights.Where(l => l.Calculated == false))
             {
                 if (l.LightState != LightState.On)
                     continue;
@@ -848,10 +861,10 @@ namespace SS14.Client.State.States
                     continue;
 
                 // LIGHT BLEND STAGE 1 - SIZING -- copys the light texture to a full screen rendertarget
-                var area = (LightArea)Light.LightArea;
+                var area = (Light)Light;
 
                 //Set the drawing position.
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightMapSize * 0.5f;
 
                 //Set shader parameters
                 var LightPositionData = new Vector4(blitPos.X / ScreenShadows.Width,
@@ -859,7 +872,7 @@ namespace SS14.Client.State.States
                                                     (float)ScreenShadows.Width / area.RenderTarget.Width,
                                                     (float)ScreenShadows.Height / area.RenderTarget.Height);
                 lightTextures.Add(area.RenderTarget.Texture);
-                colors.Add(Light.ColorVec);
+                colors.Add(new Vector4(Light.Color.R, Light.Color.G, Light.Color.B, Light.Color.A));
                 positions.Add(LightPositionData);
             }
             int i = 0;
@@ -983,60 +996,60 @@ namespace SS14.Client.State.States
             {
                 // I think this should be transparent? Maybe it should be black for the player occlusion...
                 // I don't remember. --volundr
+                var light = playerVision;
                 PlayerOcclusionTarget.Clear(Color.Black);
-                var playerposition = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
-                playerVision.Coordinates = playerposition;
+                var playerPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+                light.Coordinates = playerPos;
 
-                LightArea area = GetLightArea(RadiusToShadowMapSize(playerVision.Radius));
-                area.LightPosition = playerVision.Coordinates.Position; // Set the light position
+                light.LightPosition = light.Coordinates.Position; // Set the light position
 
-                TileRef TileReference = playerposition.Grid.GetTile(playerposition);
-
-                if (TileReference.TileDef.IsOpaque)
+                //TODO: Lights should not have to be on the same grid
+                var tileRef = playerPos.Grid.GetTile(playerPos);
+                if (tileRef.TileDef.IsOpaque)
                 {
-                    area.LightPosition = new Vector2(area.LightPosition.X, TileReference.Y + playerposition.Grid.TileSize + 1);
+                    light.LightPosition = new Vector2(light.LightPosition.X, tileRef.Y + playerPos.Grid.TileSize + 1);
                 }
 
-                area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
-                DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
-                area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
+                light.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
+                DrawWallsRelativeToLight(light); // Draw all shadowcasting stuff here in black
+                light.EndDrawingShadowCasters(); // End drawing to the light rendertarget
 
-                Vector2 blitPos = CluwneLib.WorldToScreen(area.LightPosition) - area.LightAreaSize * 0.5f;
-                var tmpBlitPos = CluwneLib.WorldToScreen(area.LightPosition) -
-                                 new Vector2(area.RenderTarget.Width, area.RenderTarget.Height) * 0.5f;
+                Vector2 blitPos = CluwneLib.WorldToScreen(light.LightPosition) - light.LightMapSize * 0.5f;
+                var tmpBlitPos = CluwneLib.WorldToScreen(light.LightPosition) -
+                                 new Vector2(light.RenderTarget.Width, light.RenderTarget.Height) * 0.5f;
 
                 if (debugWallOccluders)
                 {
                     OccluderDebugTarget.BeginDrawing();
                     OccluderDebugTarget.Clear(Color.White);
-                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height,
+                    light.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height,
                         Color.White, BlitterSizeMode.Crop);
                     OccluderDebugTarget.EndDrawing();
                 }
 
-                shadowMapResolver.ResolveShadows(area, false, IoCManager.Resolve<IResourceCache>().GetSprite("whitemask").Texture); // Calc shadows
+                shadowMapResolver.ResolveShadows(light, false); // Calc shadows
 
                 if (debugPlayerShadowMap)
                 {
                     OccluderDebugTarget.BeginDrawing();
                     OccluderDebugTarget.Clear(Color.White);
-                    area.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
+                    light.RenderTarget.Blit((int)tmpBlitPos.X, (int)tmpBlitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
                     OccluderDebugTarget.EndDrawing();
                 }
 
                 PlayerOcclusionTarget.BeginDrawing(); // Set to shadow rendertarget
 
-                BlendMode blendSettings = area.RenderTarget.BlendSettings;
+                BlendMode blendSettings = light.RenderTarget.BlendSettings;
 
                 blendSettings.ColorSrcFactor = BlendMode.Factor.One;
                 blendSettings.ColorDstFactor = BlendMode.Factor.Zero;
-                area.RenderTarget.BlendSettings = blendSettings;
+                light.RenderTarget.BlendSettings = blendSettings;
 
-                area.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, area.RenderTarget.Width, area.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
+                light.RenderTarget.Blit((int)blitPos.X, (int)blitPos.Y, light.RenderTarget.Width, light.RenderTarget.Height, Color.White, BlitterSizeMode.Crop);
 
                 blendSettings.ColorDstFactor = BlendMode.Factor.SrcAlpha;
                 blendSettings.ColorDstFactor = BlendMode.Factor.OneMinusSrcAlpha;
-                area.RenderTarget.BlendSettings = blendSettings;
+                light.RenderTarget.BlendSettings = blendSettings;
 
                 PlayerOcclusionTarget.EndDrawing();
             }
@@ -1047,14 +1060,14 @@ namespace SS14.Client.State.States
         }
 
         // Draws all walls in the area around the light relative to it, and in black (test code, not pretty)
-        private void DrawWallsRelativeToLight(ILightArea area)
+        private void DrawWallsRelativeToLight(ILight area)
         {
-            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightAreaSize) / 2;
-            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightAreaSize));
+            Vector2 lightAreaSize = CluwneLib.PixelToTile(area.LightMapSize) / 2;
+            var lightArea = Box2.FromDimensions(area.LightPosition - lightAreaSize, CluwneLib.PixelToTile(area.LightMapSize));
 
             var entitymanager = IoCManager.Resolve<IClientEntityManager>();
 
-            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(lightArea))
+            foreach (IEntity t in entitymanager.GetEntitiesIntersecting(area.Coordinates.MapID, lightArea))
             {
                 if (!t.TryGetComponent<OccluderComponent>(out var occluder))
                 {
@@ -1216,60 +1229,28 @@ namespace SS14.Client.State.States
 
         private void CalculateLightArea(ILight light)
         {
-            ILightArea area = light.LightArea;
+            var area = light;
+
+            // no need to do anything, texture is already updated.
             if (area.Calculated)
                 return;
-            area.LightPosition = light.Coordinates.Position; //mousePosWorld; // Set the light position
-            TileRef t = light.Coordinates.Grid.GetTile(light.Coordinates);
-            if (t.Tile.IsEmpty)
-                return;
-            if (t.TileDef.IsOpaque)
+
+            area.LightPosition = light.Coordinates.Position;
+
+            // move light up one meter if on top of an opaque tile.
+            var tileRef = light.Coordinates.Map.FindGridAt(light.Coordinates).GetTile(light.Coordinates);
+            if (tileRef.TileDef.IsOpaque)
             {
-                area.LightPosition = new Vector2(area.LightPosition.X,
-                                                  t.Y +
-                                                  light.Coordinates.Grid.TileSize + 1);
+                area.LightPosition = new Vector2(area.LightPosition.X, tileRef.Y + light.Coordinates.Grid.TileSize + 1);
             }
+
             area.BeginDrawingShadowCasters(); // Start drawing to the light rendertarget
             DrawWallsRelativeToLight(area); // Draw all shadowcasting stuff here in black
             area.EndDrawingShadowCasters(); // End drawing to the light rendertarget
-            shadowMapResolver.ResolveShadows((LightArea)area, true); // Calc shadows
+            shadowMapResolver.ResolveShadows(area, true); // Calc shadows
             area.Calculated = true;
         }
-
-        private ShadowmapSize RadiusToShadowMapSize(int Radius)
-        {
-            switch (Radius)
-            {
-                case 128:
-                    return ShadowmapSize.Size128;
-                case 256:
-                    return ShadowmapSize.Size256;
-                case 512:
-                    return ShadowmapSize.Size512;
-                case 1024:
-                    return ShadowmapSize.Size1024;
-                default:
-                    return ShadowmapSize.Size1024;
-            }
-        }
-
-        private LightArea GetLightArea(ShadowmapSize size)
-        {
-            switch (size)
-            {
-                case ShadowmapSize.Size128:
-                    return lightArea128;
-                case ShadowmapSize.Size256:
-                    return lightArea256;
-                case ShadowmapSize.Size512:
-                    return lightArea512;
-                case ShadowmapSize.Size1024:
-                    return lightArea1024;
-                default:
-                    return lightArea1024;
-            }
-        }
-
+        
         private void RecalculateScene()
         {
             _recalculateScene = true;
@@ -1351,30 +1332,50 @@ namespace SS14.Client.State.States
             {
                 if (CluwneLib.Debug.DebugColliders)
                 {
-                    Color lastColor = default(Color);
-                    foreach (var component in Parent._componentManager.GetComponents<CollidableComponent>())
+                    var lastColor = default(Color);
+
+                    // loop over every BoundingBoxComponent on any entity
+                    foreach (var boundingBox in Parent._componentManager.GetComponents<BoundingBoxComponent>())
                     {
-                        if (component.MapID != argMap)
-                        {
+                        // all entities have a TransformComponent
+                        var transform = boundingBox.Owner.GetComponent<ITransformComponent>();
+
+                        // if not on the same map, continue
+                        if(transform.MapID != argMap)
                             continue;
-                        }
-                        var bounds = component.Owner.GetComponent<BoundingBoxComponent>();
-                        if (bounds.WorldAABB.IsEmpty() || !bounds.WorldAABB.Intersects(viewport))
+
+                        Color boxColor;
+                        Box2 worldBox;
+                        if (boundingBox.Owner.TryGetComponent<ICollidableComponent>(out var collision))
                         {
+                            boxColor = Color.Red.WithAlpha(128);
+                            worldBox = collision.WorldAABB;
+                        }
+                        else
+                        {
+                            boxColor = Color.Green.WithAlpha(128);
+                            worldBox = boundingBox.WorldAABB;
+                        }
+
+                        // if not on screen, or too small, continue
+                        if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
                             continue;
-                        }
-                        var box = CluwneLib.WorldToScreen(bounds.WorldAABB);
-                        ColliderDebug.Position = new Vector2(box.Left, box.Top);
-                        ColliderDebug.Size = new Vector2(box.Width, box.Height);
-                        if (lastColor != component.DebugColor)
+
+                        var screenBox = CluwneLib.WorldToScreen(worldBox);
+                        ColliderDebug.Position = new Vector2(screenBox.Left, screenBox.Top);
+                        ColliderDebug.Size = new Vector2(screenBox.Width, screenBox.Height);
+                        
+                        if (lastColor != boxColor)
                         {
-                            lastColor = component.DebugColor;
-                            ColliderDebug.FillColor = lastColor.WithAlpha(64);
-                            ColliderDebug.OutlineColor = lastColor.WithAlpha(128);
+                            lastColor = boxColor;
+                            ColliderDebug.FillColor = lastColor;
+                            ColliderDebug.OutlineColor = lastColor;
                         }
+
                         ColliderDebug.Draw();
                     }
                 }
+
                 if (CluwneLib.Debug.DebugGridDisplay)
                 {
                     DebugDisplayBackground.Draw();

@@ -8,7 +8,9 @@ namespace SS14.Client.Interfaces
 {
     public interface ISceneTreeHolder
     {
-        Godot.SceneTree SceneTree { get; set; }
+        void Initialize(Godot.SceneTree tree);
+
+        Godot.SceneTree SceneTree { get; }
         Godot.Node2D WorldRoot { get; }
     }
 }

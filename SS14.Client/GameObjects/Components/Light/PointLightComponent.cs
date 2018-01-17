@@ -1,26 +1,16 @@
-﻿using OpenTK;
-using OpenTK.Graphics;
-using Lidgren.Network;
+﻿using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.GameObjects.Components;
-using SS14.Client.Interfaces.Graphics;
+using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Interfaces.ResourceManagement;
 using SS14.Client.ResourceManagement;
-using SS14.Client.Utility;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.IoC;
-using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using SS14.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.Interfaces.Graphics.Lighting;
-using SS14.Client.Graphics.Lighting;
-using SS14.Shared.Log;
 
 namespace SS14.Client.GameObjects
 {

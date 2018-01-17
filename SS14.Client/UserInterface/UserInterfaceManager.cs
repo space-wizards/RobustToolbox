@@ -1,4 +1,5 @@
 ﻿using System;
+using SS14.Client.Graphics;
 using SS14.Client.Input;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.UserInterface;
@@ -41,8 +42,11 @@ namespace SS14.Client.UserInterface
 
         public void Initialize()
         {
-            CanvasLayer = new Godot.CanvasLayer();
-            CanvasLayer.SetName("UILayer");
+            CanvasLayer = new Godot.CanvasLayer
+            {
+                Name = "UILayer",
+                Layer = CanvasLayers.LAYER_GUI
+            };
 
             _sceneTreeHolder.SceneTree.GetRoot().AddChild(CanvasLayer);
 

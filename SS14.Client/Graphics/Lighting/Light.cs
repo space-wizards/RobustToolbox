@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SS14.Client.Interfaces.Graphics.Lighting;
 using SS14.Client.Utility;
 using SS14.Shared;
@@ -11,8 +11,8 @@ namespace SS14.Client.Graphics.Lighting
     {
         public Vector2 Offset
         {
-            get => Light2D.Position.Convert();
-            set => Light2D.Position = value.Convert();
+            get => Light2D.Offset.Convert();
+            set => Light2D.Offset = value.Convert();
         }
 
         public Angle Rotation
@@ -127,6 +127,7 @@ namespace SS14.Client.Graphics.Lighting
                 ShadowEnabled = true,
             };
             LightManager = IoCManager.Resolve<ILightManager>();
+            LightManager.AddLight(this);
             Mode = new LightModeConstant();
             Mode.Start(this);
         }
@@ -148,6 +149,9 @@ namespace SS14.Client.Graphics.Lighting
             {
                 return;
             }
+
+            LightManager.RemoveLight(this);
+            LightManager = null;
 
             Light2D.QueueFree();
             Light2D.Dispose();

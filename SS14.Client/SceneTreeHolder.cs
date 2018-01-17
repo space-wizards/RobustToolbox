@@ -1,4 +1,5 @@
-﻿using SS14.Client.Interfaces;
+﻿using SS14.Client.Graphics;
+using SS14.Client.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,25 +10,26 @@ namespace SS14.Client
 {
     public class SceneTreeHolder : ISceneTreeHolder
     {
-        public Godot.SceneTree SceneTree
+        public Godot.SceneTree SceneTree { get; private set; }
+
+        public void Initialize(Godot.SceneTree tree)
         {
-            get => sceneTree;
-            set
+            SceneTree = tree ?? throw new ArgumentNullException(nameof(tree));
+
+            WorldLayer = new Godot.CanvasLayer()
             {
-                if (sceneTree != null)
-                {
-                    throw new InvalidOperationException("Scene tree has already been set;");
-                }
-
-                sceneTree = value ?? throw new ArgumentNullException(nameof(value));
-
-                WorldRoot = new Godot.Node2D();
-                WorldRoot.SetName("WorldRoot");
-                sceneTree.GetRoot().AddChild(WorldRoot);
-            }
+                Name = "WorldLayer",
+                Layer = CanvasLayers.LAYER_WORLD
+            };
+            WorldRoot = new Godot.Node2D
+            {
+                Name = "WorldRoot"
+            };
+            SceneTree.GetRoot().AddChild(WorldLayer);
+            WorldLayer.AddChild(WorldRoot);
         }
-        private Godot.SceneTree sceneTree;
 
+        private Godot.CanvasLayer WorldLayer;
         public Godot.Node2D WorldRoot { get; private set; }
     }
 }

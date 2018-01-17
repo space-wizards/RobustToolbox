@@ -13,6 +13,7 @@ height = 720
 fullscreen = false
 refresh = 60
 vsync = false
+deferred_lighting = false
 
 [net]
 server = "127.0.0.1"

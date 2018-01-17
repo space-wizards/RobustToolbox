@@ -75,7 +75,7 @@ namespace SS14.Client.GameObjects
                 var mgr = IoCManager.Resolve<IResourceCache>();
                 var tex = mgr.GetResource<TextureResource>($"Textures/Effects/Light/lighting_falloff_{(int)radius}.png");
                 // TODO: Maybe editing the global texture resource is not a good idea.
-                tex.Texture.Texture.SetFlags(tex.Texture.Texture.GetFlags() | (int)Godot.Texture.Flags.Filter);
+                tex.Texture.Texture.SetFlags(tex.Texture.Texture.GetFlags() | (int)Godot.Texture.FlagsEnum.Filter);
                 Light.Texture = tex.Texture;
             }
         }
@@ -145,4 +145,3 @@ namespace SS14.Client.GameObjects
         }
     }
 }
-

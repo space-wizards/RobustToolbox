@@ -8,6 +8,7 @@ using System;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Resource;
 using SS14.Shared.Enums;
+using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Shared.Map;
@@ -54,7 +55,7 @@ namespace SS14.Client.GameObjects
                 _mask = value;
 
                 var sprMask = IoCManager.Resolve<IResourceCache>().GetSprite(value);
-                Light.SetMask(sprMask);
+                Light.Mask = sprMask.Texture;
             }
         }
 
@@ -72,18 +73,11 @@ namespace SS14.Client.GameObjects
             set => Light.LightState = value;
         }
 
-        public override void Initialize()
-        {
-            base.Initialize();
-            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
-            UpdateLightPosition();
-        }
-
+        /// <inheritdoc />
         public override void LoadParameters(YamlMappingNode mapping)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             Light = mgr.CreateLight();
-            mgr.AddLight(Light);
 
             YamlNode node;
             if (mapping.TryGetNode("offset", out node))
@@ -95,36 +89,20 @@ namespace SS14.Client.GameObjects
             {
                 Radius = node.AsInt();
             }
-            else
-            {
-                Radius = 512;
-            }
 
             if (mapping.TryGetNode("color", out node))
             {
                 Color = node.AsHexColor();
-            }
-            else
-            {
-                Color = new Color4(200, 200, 200, 255);
             }
 
             if (mapping.TryGetNode("mask", out node))
             {
                 Mask = node.AsString();
             }
-            else
-            {
-                Mask = "whitemask";
-            }
 
             if (mapping.TryGetNode("state", out node))
             {
                 State = node.AsEnum<LightState>();
-            }
-            else
-            {
-                State = LightState.On;
             }
 
             if (mapping.TryGetNode("mode", out node))
@@ -137,6 +115,18 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        public override void Startup()
+        {
+            base.Startup();
+            Owner.GetComponent<ITransformComponent>().OnMove += OnMove;
+            UpdateLightPosition();
+
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.AddLight(Light);
+        }
+
+        /// <inheritdoc />
         public override void Shutdown()
         {
             Owner.GetComponent<ITransformComponent>().OnMove -= OnMove;
@@ -153,6 +143,7 @@ namespace SS14.Client.GameObjects
         protected void UpdateLightPosition(LocalCoordinates newPosition)
         {
             Light.Coordinates = new LocalCoordinates(newPosition.Position + Offset, newPosition.Grid);
+            Logger.Debug($"Light: {Owner.Uid} Pos: {newPosition}");
         }
 
         protected void UpdateLightPosition()

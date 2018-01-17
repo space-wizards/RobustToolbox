@@ -211,7 +211,13 @@ namespace SS14.Shared.GameObjects
             {
                 component.Initialize();
             }
+
             entity.Initialize();
+
+            foreach (var component in entity.GetComponents())
+            {
+                component.Startup();
+            }
         }
 
         /// <summary>

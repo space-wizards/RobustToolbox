@@ -24,6 +24,9 @@ namespace SS14.Client.GameObjects
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != worldPos.MapID)
+                    continue;
+
                 var relativePosition = worldPos.Position - transform.WorldPosition;
                 if (relativePosition.LengthSquared <= range)
                 {
@@ -32,10 +35,14 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesIntersecting(Box2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
         {
             foreach (var entity in GetEntities())
             {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != mapId)
+                    continue;
+
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
                     if (position.Intersects(component.WorldAABB))
@@ -43,7 +50,6 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
                     if (position.Contains(transform.WorldPosition))
                     {
                         yield return entity;
@@ -52,10 +58,14 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesIntersecting(Vector2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
         {
             foreach (var entity in GetEntities())
             {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if(transform.MapID != mapId)
+                    continue;
+
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
                     if (component.WorldAABB.Contains(position))
@@ -63,7 +73,6 @@ namespace SS14.Client.GameObjects
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
                     if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
                     {
                         yield return entity;
@@ -72,19 +81,22 @@ namespace SS14.Client.GameObjects
             }
         }
 
-        public bool AnyEntitiesIntersecting(Box2 position)
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box)
         {
             foreach (var entity in GetEntities())
             {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != mapId)
+                    continue;
+
                 if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
                 {
-                    if (position.Intersects(component.WorldAABB))
+                    if (box.Intersects(component.WorldAABB))
                         return true;
                 }
                 else
                 {
-                    var transform = entity.GetComponent<ITransformComponent>();
-                    if (position.Contains(transform.WorldPosition))
+                    if (box.Contains(transform.WorldPosition))
                     {
                         return true;
                     }

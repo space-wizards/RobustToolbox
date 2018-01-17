@@ -17,7 +17,7 @@
         SendMapInfo,
 
         CreateMap,
-        UnregisterMap,
+        DeleteMap
     }
 
     public enum PlayerSessionMessage

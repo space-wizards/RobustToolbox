@@ -72,6 +72,10 @@ namespace SS14.Server.Placement
 
             var dirRcv = msg.DirRcv;
 
+            // no building in null space!
+            if(mapIndex == MapId.Nullspace)
+                return;
+
             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
             if (session.attachedEntity == null)
                 return; //Don't accept placement requests from nobody

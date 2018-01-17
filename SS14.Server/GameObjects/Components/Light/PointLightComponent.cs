@@ -1,12 +1,8 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
-using SS14.Server.Interfaces.Chat;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
 using SS14.Shared.Utility;
-using System;
-using System.Collections.Generic;
 using SS14.Shared.Enums;
 using YamlDotNet.RepresentationModel;
 

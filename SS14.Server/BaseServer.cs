@@ -407,7 +407,7 @@ namespace SS14.Server
                 var mapMgr = IoCManager.Resolve<IMapManager>();
 
                 // TODO: Unregister all maps.
-                mapMgr.UnregisterMap(new MapId(1));
+                mapMgr.DeleteMap(new MapId(1));
             }
             _entities.Shutdown();
             GC.Collect();

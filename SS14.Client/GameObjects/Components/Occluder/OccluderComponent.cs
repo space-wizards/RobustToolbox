@@ -69,7 +69,7 @@ namespace SS14.Client.GameObjects
         private void RedrawRelevantLights(Vector2 position)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.RecalculateLightsInView(BoundingBox.Translated(position));
+            mgr.RecalculateLightsInView(transform.MapID, BoundingBox.Translated(position));
         }
 
         public override void LoadParameters(YamlMappingNode mapping)

@@ -1,52 +1,85 @@
 ﻿using System;
 using System.Diagnostics;
 using SS14.Shared.Enums;
+using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
 using SS14.Shared.Network.Messages;
-using SS14.Shared.Interfaces.GameObjects;
 
 namespace SS14.Shared.Map
 {
     public partial class MapManager
     {
-        [Dependency] //TODO: kill self
-        private readonly IMapManager _mapManager;
-
         [Dependency]
         private readonly INetManager _netManager;
 
         [Dependency]
         private readonly ITileDefinitionManager _defManager;
 
-
-        /// <summary>
-        ///     The accepted version of the NetworkMessage map format.
-        /// </summary>
-        private const int MapVersion = 1;
-        private int GridsToReceive = -1;
-        private int GridsReceived = 0;
-
-        /// <summary>
-        ///     Default constructor.
-        /// </summary>
-        public void NetSetup()
+        private int _gridsToReceive = -1;
+        private int _gridsReceived;
+        
+        public void SendMap(INetChannel channel)
         {
-            _netManager.RegisterNetMessage<MsgMap>(MsgMap.NAME, message => HandleNetworkMessage((MsgMap)message));
+            Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
 
-            if(_netManager.IsServer)
-                _mapManager.OnTileChanged += MapMgrOnTileChanged;
-        }
+            Logger.Log(channel.RemoteAddress + ": Sending map");
 
-        /// <summary>
-        ///     Default finalizer.
-        /// </summary>
-        ~MapManager()
-        {
-            if (_netManager.IsServer)
-                _mapManager.OnTileChanged -= MapMgrOnTileChanged;
+            var quantityGridsSent = 0;
+
+            foreach (var map in GetAllMaps())
+            {
+                foreach (var grid in map.GetAllGrids())
+                {
+                    quantityGridsSent++;
+                    var message = _netManager.CreateNetMessage<MsgMap>();
+                    message.MessageType = MapMessage.SendTileMap;
+                    message.MapIndex = map.Index;
+                    message.GridIndex = grid.Index;
+                    // Tile definition mapping
+                    message.TileDefs = new MsgMap.TileDef[_defManager.Count];
+
+                    for (var i = 0; i < _defManager.Count; i++)
+                    {
+                        message.TileDefs[i] = new MsgMap.TileDef
+                        {
+                            Name = _defManager[i].Name
+                        };
+                    }
+
+                    // Map chunks
+                    var gridSize = grid.ChunkSize;
+                    message.ChunkSize = gridSize;
+                    message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
+                    var defCounter = 0;
+                    foreach (var chunk in grid.GetMapChunks())
+                    {
+                        var newChunk = new MsgMap.ChunkDef
+                        {
+                            X = chunk.X,
+                            Y = chunk.Y
+                        };
+
+                        newChunk.Tiles = new uint[gridSize * gridSize];
+                        var counter = 0;
+                        foreach (var tile in chunk)
+                        {
+                            newChunk.Tiles[counter] = (uint) tile.Tile;
+                            counter++;
+                        }
+
+                        message.ChunkDefs[defCounter++] = newChunk;
+                    }
+
+                    _netManager.ServerSendMessage(message, channel);
+                }
+            }
+            var msg = _netManager.CreateNetMessage<MsgMap>();
+            msg.MessageType = MapMessage.SendMapInfo;
+            msg.MapGridsToSend = quantityGridsSent;
+            _netManager.ServerSendMessage(msg, channel);
         }
 
         private void HandleNetworkMessage(MsgMap message)
@@ -66,106 +99,14 @@ namespace SS14.Shared.Map
                     CollectMapInfo(message);
                     break;
                 case MapMessage.CreateMap:
-                {
                     CreateMap(message.MapIndex);
-                }
                     break;
-                case MapMessage.UnregisterMap:
-                {
-                    UnregisterMap(message.MapIndex);
-                }
+                case MapMessage.DeleteMap:
+                    DeleteMap(message.MapIndex);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(message));
             }
-        }
-
-        /// <inheritdoc />
-        public void SendMap(INetChannel channel)
-        {
-            Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
-
-            Logger.Log(channel.RemoteAddress + ": Sending map");
-
-            int QuantityGridsSent = 0;
-
-            foreach(Map Map in GetAllMaps())
-            {
-                foreach(IMapGrid Grid in Map.GetAllGrids())
-                {
-                    QuantityGridsSent++;
-                    var message = _netManager.CreateNetMessage<MsgMap>();
-                    message.MessageType = MapMessage.SendTileMap;
-                    message.MapIndex = Map.Index;
-                    message.GridIndex = Grid.Index;
-                    // Tile definition mapping
-                    message.TileDefs = new MsgMap.TileDef[_defManager.Count];
-
-                    for (var i = 0; i < _defManager.Count; i++)
-                    {
-                        message.TileDefs[i] = new MsgMap.TileDef()
-                        {
-                            Name = _defManager[i].Name
-                        };
-                    }
-
-                    // Map chunks
-                    var grid = _mapManager.GetMap(Map.Index).GetGrid(Grid.Index);
-                    var gridSize = grid.ChunkSize;
-                    message.ChunkSize = gridSize;
-                    message.ChunkDefs = new MsgMap.ChunkDef[grid.ChunkCount];
-                    var defCounter = 0;
-                    foreach (var chunk in grid.GetMapChunks())
-                    {
-                        var newChunk = new MsgMap.ChunkDef()
-                        {
-                            X = chunk.X,
-                            Y = chunk.Y
-                        };
-
-                        newChunk.Tiles = new uint[gridSize * gridSize];
-                        var counter = 0;
-                        foreach (var tile in chunk)
-                        {
-                            newChunk.Tiles[counter] = (uint)tile.Tile;
-                            counter++;
-                        }
-
-                        message.ChunkDefs[defCounter++] = newChunk;
-                    }
-
-                    _netManager.ServerSendMessage(message, channel);
-                }
-            }
-            var mapmessage = _netManager.CreateNetMessage<MsgMap>();
-            mapmessage.MessageType = MapMessage.SendMapInfo;
-            mapmessage.MapGridsToSend = QuantityGridsSent;
-            _netManager.ServerSendMessage(mapmessage, channel);
-        }
-
-        /// <summary>
-        ///     Event handler for when a tile is modified in the MapManager.
-        /// </summary>
-        /// <param name="gridId">The id of the grid being modified.</param>
-        /// <param name="tileRef">A reference to the new tile.</param>
-        /// <param name="oldTile">The old tile being modified.</param>
-        private void MapMgrOnTileChanged(GridId gridId, TileRef tileRef, Tile oldTile)
-        {
-            Debug.Assert(_netManager.IsServer, "Why is the client calling this?");
-
-            var message = _netManager.CreateNetMessage<MsgMap>();
-
-            message.MessageType = MapMessage.TurfUpdate;
-            message.SingleTurf = new MsgMap.Turf
-            {
-                X = tileRef.X,
-                Y = tileRef.Y,
-                Tile = (uint) tileRef.Tile
-            };
-            message.GridIndex = tileRef.LocalPos.GridID;
-            message.MapIndex = tileRef.LocalPos.MapID;
-
-            _netManager.ServerSendToAll(message);
         }
 
         private void HandleTurfClick(MsgMap message)
@@ -209,7 +150,7 @@ namespace SS14.Shared.Map
         {
             Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
-            GridsReceived++;
+            _gridsReceived++;
 
             var mapIndex = message.MapIndex;
             var gridIndex = message.GridIndex;
@@ -219,11 +160,15 @@ namespace SS14.Shared.Map
             var chunkSize = message.ChunkSize;
             var chunkCount = message.ChunkDefs.Length;
 
-            if (!_mapManager.TryGetMap(mapIndex, out IMap map))
-                map = _mapManager.CreateMap(mapIndex);
+            if (!TryGetMap(mapIndex, out var map))
+                map = CreateMap(mapIndex);
+
             if (!map.GridExists(gridIndex))
-                _mapManager.GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
-            IMapGrid grid = _mapManager.GetMap(mapIndex).GetGrid(gridIndex);
+                GetMap(mapIndex).CreateGrid(gridIndex, chunkSize);
+
+            var grid = GetMap(mapIndex).GetGrid(gridIndex);
+
+            SuppressOnTileChanged = true;
 
             for (var i = 0; i < chunkCount; ++i)
             {
@@ -235,16 +180,17 @@ namespace SS14.Shared.Map
                 {
                     for (ushort y = 0; y < chunk.ChunkSize; y++)
                     {
-                        chunk.SetTile(x, y, (Tile)message.ChunkDefs[i].Tiles[counter]);
+                        chunk.SetTile(x, y, (Tile) message.ChunkDefs[i].Tiles[counter]);
                         counter++;
                     }
                 }
             }
 
-            if(GridsReceived == GridsToReceive)
-            {
+            SuppressOnTileChanged = false;
+            GridChanged?.Invoke(this, new GridChangedEventArgs(grid));
+
+            if (_gridsReceived == _gridsToReceive)
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
-            }
         }
 
         /// <summary>
@@ -258,53 +204,19 @@ namespace SS14.Shared.Map
             var x = message.SingleTurf.X;
             var y = message.SingleTurf.Y;
             var tile = (Tile) message.SingleTurf.Tile;
-            
-            LocalCoordinates coords = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
-            coords.Grid.SetTile(coords, tile);
+
+            var pos = new LocalCoordinates(x, y, message.GridIndex, message.MapIndex);
+            pos.Grid.SetTile(pos, tile);
         }
 
         private void CollectMapInfo(MsgMap message)
         {
             Debug.Assert(_netManager.IsClient, "Why is the server calling this?");
 
-            GridsToReceive = message.MapGridsToSend;
+            _gridsToReceive = message.MapGridsToSend;
 
-            if (GridsReceived == GridsToReceive)
-            {
+            if (_gridsReceived == _gridsToReceive)
                 IoCManager.Resolve<IEntityManager>().MapsInitialized = true;
-            }
-        }
-
-        /// <summary>
-        ///     Notifies all connected clients that a new map has been created.
-        /// </summary>
-        private void BroadcastCreateMap(Map map)
-        {
-            if(_netManager.IsClient)
-                return;
-
-            var msg = _netManager.CreateNetMessage<MsgMap>();
-
-            msg.MessageType = MapMessage.CreateMap;
-            msg.MapIndex = map.Index;
-
-            _netManager.ServerSendToAll(msg);
-        }
-
-        /// <summary>
-        ///     Notifies all connected clients that an existing map has been destroyed.
-        /// </summary>
-        private void BroadcastUnregisterMap(MapId mapID)
-        {
-            if(_netManager.IsClient)
-                return;
-
-            var msg = _netManager.CreateNetMessage<MsgMap>();
-
-            msg.MessageType = MapMessage.UnregisterMap;
-            msg.MapIndex = mapID;
-
-            _netManager.ServerSendToAll(msg);
         }
     }
 }

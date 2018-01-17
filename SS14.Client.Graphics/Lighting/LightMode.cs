@@ -8,6 +8,6 @@ namespace SS14.Client.Graphics.Lighting
         LightModeClass LightModeClass { get; }
         void OnAdd(ILight owner);
         void OnRemove(ILight owner);
-        void Update(ILight owner);
+        void Update(ILight owner, float deltaTime);
     }
 }

@@ -236,6 +236,7 @@ namespace SS14.Client.Placement
 
         private void RequestPlacement()
         {
+            if(CurrentMode.MouseCoords.MapID == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!ValidPosition) return;
 

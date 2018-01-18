@@ -39,14 +39,16 @@ namespace SS14.Client.UserInterface.Controls
             _listboxMain = _resourceCache.GetSprite("button_middle");
             _listboxRight = _resourceCache.GetSprite("button_right");
 
-            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
-            _selectedLabel.FillColor = Color4.Black;
+            _selectedLabel = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font)
+            { FillColor = Color4.Black };
 
-            _dropDown = new ScrollableContainer(new Vector2i(width, dropDownLength));
-            _dropDown.Visible = false;
-            _dropDown.Alignment = Align.Bottom;
-            _dropDown.LocalPosition = new Vector2i();
-            _dropDown.Parent = this;
+            _dropDown = new ScrollableContainer(new Vector2i(width, dropDownLength))
+            {
+                Visible = false,
+                Alignment = Align.Bottom,
+                LocalPosition = new Vector2i(),
+                Parent = this
+            };
 
             if (initialOptions != null)
             {
@@ -200,8 +202,8 @@ namespace SS14.Client.UserInterface.Controls
             CurrentlySelected = null;
             _dropDown.Container.DisposeAllChildren();
 
-            _listPanel = new ListPanel();
-            _listPanel.DrawBackground = false;
+            _listPanel = new ListPanel()
+            { DrawBackground = false };
             _dropDown.Container.AddControl(_listPanel);
 
             foreach (var newEntry in _contentStrings.Select(str => new ListboxItem(str, _width)))

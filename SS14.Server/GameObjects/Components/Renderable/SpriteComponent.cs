@@ -4,7 +4,12 @@ using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using System.Collections.Generic;
-using System; //TODO: Remove this when all NotImplementedExceptions are dealt with
+using System;
+using SS14.Shared.Maths;
+using SS14.Shared.Utility;
+using YamlDotNet.RepresentationModel;
+
+//TODO: Remove this when all NotImplementedExceptions are dealt with
 
 namespace SS14.Server.GameObjects
 {
@@ -50,6 +55,11 @@ namespace SS14.Server.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        public Vector2 Offset { get; set; }
+
         private void SendVisible(NetConnection connection)
         {
             throw new NotImplementedException();
@@ -85,10 +95,20 @@ namespace SS14.Server.GameObjects
 
             return reply;
         }
+        
+        public override void LoadParameters(YamlMappingNode mapping)
+        {
+            base.LoadParameters(mapping);
+            
+            if (mapping.TryGetNode("offset", out var node))
+            {
+                Offset = node.AsVector2();
+            }
+        }
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName);
+            return new SpriteComponentState(Visible, drawDepth, _currentSpriteKey, _currentBaseName, Offset);
         }
 
         public bool IsSlaved()

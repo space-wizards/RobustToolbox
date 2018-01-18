@@ -324,7 +324,7 @@ namespace SS14.Shared.Network
             var conn = message.SenderConnection;
             var channel = _channels[conn];
 
-            Logger.Info($"[NET] {channel.RemoteAddress}:{channel.Connection.RemoteEndPoint.Port}: Disconnected ({reason})");
+            Logger.Info($"[NET] {channel.RemoteAddress}:{conn.RemoteEndPoint.Port}: Disconnected ({reason})");
 
             OnDisconnected(channel);
             _channels.Remove(conn);
@@ -332,10 +332,11 @@ namespace SS14.Shared.Network
             if (IsClient)
                 _strings.Reset();
         }
-        
+
+        /// <inheritdoc />
         public void DisconnectChannel(INetChannel channel, string reason)
         {
-            channel.Connection.Disconnect(reason);
+            channel.Disconnect(reason);
         }
 
         private void DispatchNetMessage(NetIncomingMessage msg)
@@ -348,8 +349,6 @@ namespace SS14.Shared.Network
 
             if(!IsConnected)
                 return;
-
-            string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
 
             if (msg.LengthBytes < 1)
             {

@@ -10,8 +10,19 @@ namespace SS14.Shared.Network
     internal class NetChannel : INetChannel
     {
         private readonly NetManager _manager;
+        private readonly NetConnection _connection;
 
+        /// <inheritdoc />
+        public long ConnectionId => _connection.RemoteUniqueIdentifier;
+
+        /// <inheritdoc />
         public INetManager NetPeer => _manager;
+
+        /// <inheritdoc />
+        public short Ping => (short) Math.Round(_connection.AverageRoundtripTime * 1000);
+
+        /// <inheritdoc />
+        public string RemoteAddress => _connection.RemoteEndPoint.Address.ToString();
 
         /// <summary>
         ///     Creates a new instance of a NetChannel.
@@ -21,20 +32,8 @@ namespace SS14.Shared.Network
         internal NetChannel(NetManager manager, NetConnection connection)
         {
             _manager = manager;
-            Connection = connection;
+            _connection = connection;
         }
-
-        /// <inheritdoc />
-        public NetConnection Connection { get; }
-        
-        /// <inheritdoc />
-        public long ConnectionId => Connection.RemoteUniqueIdentifier;
-
-        /// <inheritdoc />
-        public string RemoteAddress => Connection.RemoteEndPoint.Address.ToString();
-
-        /// <inheritdoc />
-        public short Ping => (short) Math.Round(Connection.AverageRoundtripTime * 1000);
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
@@ -47,6 +46,13 @@ namespace SS14.Shared.Network
         public void SendMessage(NetMessage message)
         {
             _manager.ServerSendMessage(message, this);
+        }
+
+        /// <inheritdoc />
+        public void Disconnect(string reason)
+        {
+            if (_connection.Status == NetConnectionStatus.Connected)
+                _connection.Disconnect(reason);
         }
     }
 }

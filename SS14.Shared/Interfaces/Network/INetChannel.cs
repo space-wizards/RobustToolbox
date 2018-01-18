@@ -40,5 +40,11 @@ namespace SS14.Shared.Interfaces.Network
         /// </summary>
         /// <param name="message">The NetMessage to send.</param>
         void SendMessage(NetMessage message);
+
+        /// <summary>
+        ///     Disconnects this channel from the remote peer.
+        /// </summary>
+        /// <param name="reason">Reason why it was disconnected.</param>
+        void Disconnect(string reason);
     }
 }

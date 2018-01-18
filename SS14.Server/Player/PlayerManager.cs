@@ -119,7 +119,7 @@ namespace SS14.Server.Player
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             // Should only be one session per client. Returns that session, in theory.
-            return _sessions.FirstOrDefault(s => s.ConnectedClient == client);
+            return _sessions.FirstOrDefault(s => s?.ConnectedClient == client);
         }
 
         /// <summary>

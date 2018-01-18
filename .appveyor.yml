@@ -22,7 +22,7 @@ before_build:
 
 build:
   project: SpaceStation14.sln
-  parallel: true
+  parallel: false
   verbosity: minimal
 
 after_build:

@@ -98,9 +98,8 @@ namespace SS14.Shared.GameObjects
         public void LoadFrom(YamlMappingNode mapping)
         {
             ID = mapping.GetNode("id").AsString();
-
-            YamlNode node;
-            if (mapping.TryGetNode("name", out node))
+            
+            if (mapping.TryGetNode("name", out YamlNode node))
             {
                 Name = node.AsString();
             }
@@ -148,8 +147,7 @@ namespace SS14.Shared.GameObjects
 
         private void ReadPlacementProperties(YamlMappingNode mapping)
         {
-            YamlNode node;
-            if (mapping.TryGetNode("mode", out node))
+            if (mapping.TryGetNode("mode", out YamlNode node))
             {
                 PlacementMode = node.AsString();
                 placementmodeoverriden = true;

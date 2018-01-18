@@ -99,8 +99,14 @@ namespace SS14.Client
             _configurationManager.RegisterCVar("content.dllprefix", "Sandbox", CVar.ARCHIVE);
             var prefix = _configurationManager.GetCVar<string>("content.dllprefix");
 
-            LoadContentAssembly<GameShared>($"{prefix}.Shared");
-            LoadContentAssembly<GameClient>($"{prefix}.Client");
+            //identical code for server in baseserver
+            if (!TryLoadAssembly<GameShared>($"Content.Shared"))
+                if (!TryLoadAssembly<GameShared>($"Sandbox.Shared"))
+                    Logger.Warning($"[ENG] Could not load any Shared DLL.");
+
+            if (!TryLoadAssembly<GameClient>($"Content.Client"))
+                if (!TryLoadAssembly<GameClient>($"Sandbox.Client"))
+                    Logger.Warning($"[ENG] Could not load any Client DLL.");
 
             IoCManager.Resolve<ILightManager>().Initialize();
 
@@ -207,12 +213,13 @@ namespace SS14.Client
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
 
-        private void LoadContentAssembly<T>(string name) where T : GameShared
+        //identical code for server in baseserver
+        private bool TryLoadAssembly<T>(string name) where T : GameShared
         {
             // get the assembly from the file system
             if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.dll", out MemoryStream gameDll))
             {
-                Logger.Debug($"[SRV] Loading {name} Content DLL");
+                Logger.Debug($"[SRV] Loading {name} DLL");
 
                 // see if debug info is present
                 if (_resourceManager.TryContentFileRead($@"Assemblies/{name}.pdb", out MemoryStream gamePdb))
@@ -221,10 +228,12 @@ namespace SS14.Client
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
                         AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray(), gamePdb.ToArray());
+                        return true;
                     }
                     catch (Exception e)
                     {
                         Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
+                        return false;
                     }
                 }
                 else
@@ -233,16 +242,19 @@ namespace SS14.Client
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
                         AssemblyLoader.LoadGameAssembly<T>(gameDll.ToArray());
+                        return true;
                     }
                     catch (Exception e)
                     {
                         Logger.Error($"[SRV] Exception loading DLL {name}.dll: {e}");
+                        return false;
                     }
                 }
             }
             else
             {
-                Logger.Warning($"[ENG] Could not find {name} Content DLL.");
+                Logger.Warning($"[ENG] Could not load {name} DLL.");
+                return false;
             }
         }
 

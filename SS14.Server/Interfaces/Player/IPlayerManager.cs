@@ -19,6 +19,8 @@ namespace SS14.Server.Interfaces.Player
         /// </summary>
         int PlayerCount { get; }
 
+        string PlayerPrototypeName { get; set; }
+
         /// <summary>
         ///     Maximum number of players that can connect to this server at one time.
         /// </summary>

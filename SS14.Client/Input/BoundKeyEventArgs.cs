@@ -1,6 +1,8 @@
 using System;
+using SS14.Shared;
+using SS14.Shared.Enums;
 
-namespace SS14.Shared
+namespace SS14.Client.Input
 {
     public class BoundKeyEventArgs : EventArgs
     {

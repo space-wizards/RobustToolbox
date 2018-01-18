@@ -7,6 +7,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
 using System;
+using SS14.Shared.Enums;
 
 namespace SS14.Server.GameObjects
 {

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Lidgren.Network;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
 using SS14.Server.Interfaces.ClientConsoleHost;
@@ -33,6 +32,7 @@ using SS14.Shared.Network.Messages;
 using SS14.Shared.Prototypes;
 using SS14.Shared.Map;
 using SS14.Server.Interfaces.Maps;
+using SS14.Shared.Enums;
 
 namespace SS14.Server
 {
@@ -170,24 +170,18 @@ namespace SS14.Server
             }
 
             //TODO: After the client gets migrated to new net system, hardcoded IDs will be removed, and these need to be put in their respective modules.
-            netMan.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, (int)MsgClGreet.ID, message => HandleClientGreet((MsgClGreet)message));
-            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, (int)MsgServerInfoReq.ID, HandleWelcomeMessageReq);
-            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int)MsgServerInfo.ID, HandleErrorMessage);
-            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, (int)MsgPlayerListReq.ID, HandlePlayerListReq);
-            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, (int)MsgPlayerList.ID, HandleErrorMessage);
+            netMan.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
+            netMan.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
+            netMan.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
+            netMan.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
 
-            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME, (int)MsgSession.ID);
+            netMan.RegisterNetMessage<MsgSession>(MsgSession.NAME);
 
-            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, (int)MsgMapReq.ID, message => SendMap(message.MsgChannel));
+            netMan.RegisterNetMessage<MsgMapReq>(MsgMapReq.NAME, message => SendMap(message.MsgChannel));
 
-            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, (int)MsgPlacement.ID, message => IoCManager.Resolve<IPlacementManager>().HandleNetMessage((MsgPlacement)message));
-            netMan.RegisterNetMessage<MsgUi>(MsgUi.NAME, (int)MsgUi.ID, HandleErrorMessage);
-
-            netMan.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, (int)MsgEntity.ID, message => _entities.HandleEntityNetworkMessage((MsgEntity)message));
-            netMan.RegisterNetMessage<MsgAdmin>(MsgAdmin.NAME, (int)MsgAdmin.ID, message => HandleAdminMessage((MsgAdmin)message));
-            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME, (int)MsgStateUpdate.ID, message => HandleErrorMessage(message));
-            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, (int)MsgStateAck.ID, message => HandleStateAck((MsgStateAck)message));
-            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME, (int)MsgFullState.ID, message => HandleErrorMessage(message));
+            netMan.RegisterNetMessage<MsgStateUpdate>(MsgStateUpdate.NAME);
+            netMan.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, message => HandleStateAck((MsgStateAck)message));
+            netMan.RegisterNetMessage<MsgFullState>(MsgFullState.NAME);
 
             // Set up the VFS
             _resources.Initialize();
@@ -213,9 +207,11 @@ namespace SS14.Server
             _serializer.Initialize();
 
             // Initialize Tier 2 services
+            IoCManager.Resolve<IEntityManager>().Initialize();
             IoCManager.Resolve<IChatManager>().Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(this, MaxPlayers);
             IoCManager.Resolve<IMapManager>().Initialize();
+            IoCManager.Resolve<IPlacementManager>().Initialize();
 
             // Call Init in game assemblies.
             AssemblyLoader.BroadcastRunLevel(AssemblyLoader.RunLevel.Init);
@@ -398,7 +394,7 @@ namespace SS14.Server
             // positive edge triggers
             switch (level) {
                 case ServerRunLevel.PreGame:
-                    _entities.Initialize();
+                    _entities.Startup();
                     break;
             }
         }
@@ -482,11 +478,6 @@ namespace SS14.Server
         private void SendConnectionGameStateUpdate(INetChannel c, GameState state)
         {
             var netMan = IoCManager.Resolve<IServerNetManager>();
-            if (c.Connection.Status != NetConnectionStatus.Connected)
-            {
-                return;
-            }
-
             var session = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(c);
             if (session == null || session.Status != SessionStatus.InGame && session.Status != SessionStatus.InLobby)
             {
@@ -541,23 +532,10 @@ namespace SS14.Server
 
             message.MsgChannel.SendMessage(netMsg);
         }
-
-        private void HandleAdminMessage(MsgAdmin msg)
-        {
-            if (msg.MsgId == NetMessages.RequestEntityDeletion)
-            {
-                //TODO: Admin Permissions, requires admin system.
-                //    IoCManager.Resolve<IPlayerManager>().GetSessionByConnection(msg.SenderConnection).
-                //        adminPermissions.isAdmin || true)
-
-                var delEnt = _entities.GetEntity(msg.EntityId);
-                if (delEnt != null) _entities.DeleteEntity(delEnt);
-            }
-        }
-
+        
         private static void HandleErrorMessage(NetMessage msg)
         {
-            Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgId}");
+            Logger.Error($"[SRV] Unhandled NetMessage type: {msg.MsgName}");
         }
 
         private void HandlePlayerListReq(NetMessage message)
@@ -593,17 +571,6 @@ namespace SS14.Server
             session.Status = SessionStatus.Connected;
         }
 
-        private static void HandleClientGreet(MsgClGreet msg)
-        {
-            var p = IoCManager.Resolve<IPlayerManager>().GetSessionByChannel(msg.MsgChannel);
-
-            var fixedName = msg.PlyName.Trim();
-            if (fixedName.Length < 3)
-                fixedName = $"Player {p.Index}";
-
-            p.SetName(fixedName);
-        }
-
         private static void HandleStateAck(MsgStateAck msg)
         {
             IoCManager.Resolve<IGameStateManager>().Ack(msg.MsgChannel.ConnectionId, msg.Sequence);
@@ -630,6 +597,15 @@ namespace SS14.Server
         Game,
         PostGame,
         MapChange,
+    }
+
+    /// <summary>
+    ///     Type of game currently running.
+    /// </summary>
+    public enum GameType
+    {
+        MapEditor = 0,
+        Game,
     }
 
     /// <summary>

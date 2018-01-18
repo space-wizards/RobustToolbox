@@ -3,6 +3,7 @@ using OpenTK.Graphics;
 using SS14.Client.Graphics.Lighting;
 using SS14.Client.Interfaces.Utility;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.IoC;
 
 namespace SS14.Client.GameObjects.Light.LightModes

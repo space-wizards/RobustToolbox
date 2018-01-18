@@ -1,12 +1,9 @@
-﻿using Lidgren.Network;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
-using SS14.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Shared.GameObjects
@@ -95,6 +92,7 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         /// <param name="sender">the component doing the sending</param>
         /// <param name="type">the type of message</param>
+        /// <param name="replies"></param>
         /// <param name="args">message parameters</param>
         public void SendMessage(object sender, ComponentMessageType type, List<ComponentReplyMessage> replies,
                                 params object[] args)
@@ -116,11 +114,11 @@ namespace SS14.Shared.GameObjects
             }
         }
 
-        protected void HandleComponentMessage(IncomingEntityComponentMessage message, NetConnection client)
+        protected void HandleComponentMessage(IncomingEntityComponentMessage message)
         {
-            if (_netIDs.TryGetValue(message.NetID, out IComponent component))
+            if (_netIDs.TryGetValue(message.NetId, out IComponent component))
             {
-                component.HandleNetworkMessage(message, client);
+                component.HandleNetworkMessage(message);
             }
         }
 
@@ -132,16 +130,14 @@ namespace SS14.Shared.GameObjects
         /// Sends a message to the counterpart component on the server side
         /// </summary>
         /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
-                                                params object[] messageParams)
+        public void SendComponentNetworkMessage(IComponent component, params object[] messageParams)
         {
             if (component.NetID == null)
             {
                 throw new ArgumentException("Component has no Net ID and cannot be used across the network.");
             }
-            EntityNetworkManager.SendComponentNetworkMessage(this, component.NetID.Value, NetDeliveryMethod.ReliableUnordered,
+            EntityNetworkManager.SendComponentNetworkMessage(this, component.NetID.Value,
                                                              messageParams);
         }
 
@@ -149,11 +145,9 @@ namespace SS14.Shared.GameObjects
         /// Sends a message to the counterpart component on the server side
         /// </summary>
         /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        public void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
-                                                        INetChannel recipient, params object[] messageParams)
+        public void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams)
         {
             if (component.NetID == null)
             {
@@ -165,8 +159,7 @@ namespace SS14.Shared.GameObjects
                 return;
             }
 
-            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.NetID.Value,
-                                                                     method, recipient,
+            EntityNetworkManager.SendDirectedComponentNetworkMessage(this, component.NetID.Value, recipient,
                                                                      messageParams);
         }
 
@@ -178,8 +171,8 @@ namespace SS14.Shared.GameObjects
         {
             switch (message.Message.Type)
             {
-                case EntityMessage.ComponentMessage:
-                    HandleComponentMessage(new IncomingEntityComponentMessage(message.Message.NetId, message.Message.Parameters), message.Message.Sender);
+                case EntityMessageType.ComponentMessage:
+                    HandleComponentMessage(new IncomingEntityComponentMessage(message.Message.NetId, message.Message.MsgChannel, message.Message.Parameters));
                     break;
             }
         }
@@ -301,7 +294,7 @@ namespace SS14.Shared.GameObjects
         /// Calls the onRemove method of the component, which handles removing it
         /// from the component manager and shutting down the component.
         /// </summary>
-        /// <param name="family"></param>
+        /// <param name="component">Component to remove.</param>
         public void RemoveComponent(IComponent component)
         {
             if (component.Owner != this)
@@ -358,9 +351,9 @@ namespace SS14.Shared.GameObjects
             return _componentReferences.ContainsKey(type);
         }
 
-        public bool HasComponent(uint netID)
+        public bool HasComponent(uint netId)
         {
-            return _netIDs.ContainsKey(netID);
+            return _netIDs.ContainsKey(netId);
         }
 
         public T GetComponent<T>()
@@ -373,9 +366,9 @@ namespace SS14.Shared.GameObjects
             return _componentReferences[type];
         }
 
-        public IComponent GetComponent(uint netID)
+        public IComponent GetComponent(uint netId)
         {
-            return _netIDs[netID];
+            return _netIDs[netId];
         }
 
         public bool TryGetComponent<T>(out T component) where T : class
@@ -394,9 +387,9 @@ namespace SS14.Shared.GameObjects
             return _componentReferences.TryGetValue(type, out component);
         }
 
-        public bool TryGetComponent(uint netID, out IComponent component)
+        public bool TryGetComponent(uint netId, out IComponent component)
         {
-            return _netIDs.TryGetValue(netID, out component);
+            return _netIDs.TryGetValue(netId, out component);
         }
 
         /// <inheritdoc />
@@ -428,15 +421,7 @@ namespace SS14.Shared.GameObjects
 
         public IEnumerable<IComponent> GetComponents()
         {
-            for (var i = 0; i < _components.Count; i++)
-            {
-                var component = _components[i];
-                if (component.Deleted)
-                {
-                    continue;
-                }
-                yield return component;
-            }
+            return _components.Where(component => !component.Deleted);
         }
 
         public IEnumerable<T> GetComponents<T>()

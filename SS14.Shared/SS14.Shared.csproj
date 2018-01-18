@@ -114,7 +114,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BoundKeyEventArgs.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\CVar.cs" />
     <Compile Include="ContentPack\AssemblyLoader.cs" />
@@ -127,9 +126,11 @@
     <Compile Include="ContentPack\PathHelpers.cs" />
     <Compile Include="ContentPack\ResourceManager.cs" />
     <Compile Include="ContentPack\AssemblyTypeChecker.cs" />
+    <Compile Include="GameObjects\IncomingEntityComponentMessage.cs" />
+    <Compile Include="GameObjects\IncomingEntityMessage.cs" />
     <Compile Include="Interfaces\Configuration\IConfigurationManager.cs" />
     <Compile Include="Console\ICommand.cs" />
-    <Compile Include="EntityEvents.cs" />
+    <Compile Include="GameObjects\EntityEvents.cs" />
     <Compile Include="Exceptions\TypeArgumentException.cs" />
     <Compile Include="GameObjects\Entity.cs" />
     <Compile Include="Interfaces\GameObjects\Components\IClickableComponent.cs" />
@@ -164,12 +165,11 @@
     <Compile Include="Interfaces\Map\ITileDefinitionManager.cs" />
     <Compile Include="Interfaces\Timers\ITimerManager.cs" />
     <Compile Include="Interfaces\Timing\IGameTiming.cs" />
-    <Compile Include="InventoryLocEnum.cs" />
-    <Compile Include="GameStateDelta.cs" />
+    <Compile Include="GameStates\GameStateDelta.cs" />
     <Compile Include="GameStates\GameState.cs" />
     <Compile Include="GameStates\PlayerState.cs" />
     <Compile Include="IoC\Exceptions\ImplementationConstructorException.cs" />
-    <Compile Include="Lighting.cs" />
+    <Compile Include="Enums\Lighting.cs" />
     <Compile Include="Log\LogLevel.cs" />
     <Compile Include="Log\Logger.cs" />
     <Compile Include="Log\LogManager.cs" />
@@ -196,14 +196,10 @@
     <Compile Include="Maths\Vector2.cs" />
     <Compile Include="Maths\Vector2i.cs" />
     <Compile Include="Maths\Vector2u.cs" />
-    <Compile Include="EntityBaseClass.cs" />
-    <Compile Include="IncomingEntityComponentMessage.cs" />
-    <Compile Include="IncomingEntityMessage.cs" />
     <Compile Include="Network\Messages\MsgFullState.cs" />
     <Compile Include="Network\Messages\MsgStateUpdate.cs" />
     <Compile Include="Network\NetChannelArgs.cs" />
     <Compile Include="Network\NetMessageArgs.cs" />
-    <Compile Include="Network\Messages\MsgAdmin.cs" />
     <Compile Include="Network\Messages\MsgChat.cs" />
     <Compile Include="Network\Messages\MsgClGreet.cs" />
     <Compile Include="Network\Messages\MsgConCmd.cs" />
@@ -219,7 +215,6 @@
     <Compile Include="Network\Messages\MsgServerInfoReq.cs" />
     <Compile Include="Network\Messages\MsgSession.cs" />
     <Compile Include="Network\Messages\MsgStateAck.cs" />
-    <Compile Include="Network\Messages\MsgUi.cs" />
     <Compile Include="Network\NetChannel.cs" />
     <Compile Include="Network\NetMessage.cs" />
     <Compile Include="Network\NetManager.cs" />
@@ -228,19 +223,16 @@
     <Compile Include="Physics\CollidableBucket.cs" />
     <Compile Include="Physics\CollidablePoint.cs" />
     <Compile Include="Physics\CollisionManager.cs" />
-    <Compile Include="PlacementInformation.cs" />
-    <Compile Include="KeyFunctions.cs" />
+    <Compile Include="Enums\PlacementInformation.cs" />
+    <Compile Include="Enums\KeyFunctions.cs" />
     <Compile Include="Players\PlayerIndex.cs" />
-    <Compile Include="PostProcessingEffects.cs" />
-    <Compile Include="QuadTree.cs" />
+    <Compile Include="Utility\QuadTree.cs" />
     <Compile Include="Reflection\ReflectAttribute.cs" />
     <Compile Include="Serialization\NetSerializableAttribute.cs" />
     <Compile Include="Serialization\SS14Serializer.cs" />
-    <Compile Include="SessionStatusEnum.cs" />
     <Compile Include="Timers\Timer.cs" />
     <Compile Include="Timers\TimerManager.cs" />
     <Compile Include="Timing\GameTiming.cs" />
-    <Compile Include="TypeEventArgs.cs" />
     <!--
     <Compile Include="Utility\BitS>tream.cs" />
     <EmbeddedResource Include="Utility\BitStream.resx">
@@ -256,11 +248,10 @@
     <Compile Include="Utility\unZipString.cs" />
     <Compile Include="Utility\YamlHelpers.cs" />
     <Compile Include="Utility\CollectionExtensions.cs" />
-    <Compile Include="NetworkEnums.cs" />
+    <Compile Include="Enums\NetworkEnums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Console\ChatChannel.cs" />
-    <Compile Include="UIComponents.cs" />
-    <Compile Include="VectorEventArgs.cs" />
+    <Compile Include="Enums\VectorEventArgs.cs" />
     <Compile Include="IoC\IoCManager.cs" />
     <Compile Include="IoC\IPostInjectInit.cs" />
     <Compile Include="IoC\DependencyAttribute.cs" />

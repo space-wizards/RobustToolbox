@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SS14.Shared
+﻿namespace SS14.Shared.Enums
 {
     public class PlacementInformation
     {

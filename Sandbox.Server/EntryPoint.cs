@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using SS14.Server;
 using SS14.Server.Interfaces;
 using SS14.Server.Interfaces.Chat;
@@ -9,6 +8,7 @@ using SS14.Server.Player;
 using SS14.Shared;
 using SS14.Shared.Console;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Timers;
 using SS14.Shared.IoC;

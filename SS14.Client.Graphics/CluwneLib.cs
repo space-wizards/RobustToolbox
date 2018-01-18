@@ -435,9 +435,11 @@ namespace SS14.Client.Graphics
         /// </summary>
         public static LocalCoordinates ScreenToCoordinates(ScreenCoordinates point)
         {
+            // world pos in current map
             var pos = (point.Position - Window.Viewport.Size / 2) / Camera.PixelsPerMeter + Camera.Position;
-            var grid = IoCManager.Resolve<IMapManager>().GetMap(point.MapID).FindGridAt(pos);
-            return new LocalCoordinates(pos, grid);
+
+            // world coords on map
+            return new LocalCoordinates(pos, GridId.DefaultGrid, point.MapID);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Lidgren.Network;
+using SS14.Shared.Enums;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;
@@ -9,16 +10,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgPlayerList : NetMessage
     {
         #region REQUIRED
-
-        public static readonly string NAME = "PlayerList";
         public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly NetMessages ID = NetMessages.PlayerList;
-
-        public MsgPlayerList(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        {
-        }
-
+        public static readonly string NAME = nameof(MsgPlayerList);
+        public MsgPlayerList(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public byte PlyCount { get; set; }

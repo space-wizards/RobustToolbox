@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Interfaces.Network;
@@ -19,8 +20,7 @@ namespace SS14.Shared.Map
 
         private int _gridsToReceive = -1;
         private int _gridsReceived;
-
-        /// <inheritdoc />
+        
         public void SendMap(INetChannel channel)
         {
             Debug.Assert(_netManager.IsServer, "Why is the client calling this?");

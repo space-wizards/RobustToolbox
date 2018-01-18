@@ -1,6 +1,4 @@
-﻿using System;
-using Lidgren.Network;
-using SS14.Shared.Network;
+﻿using SS14.Shared.Network;
 
 namespace SS14.Shared.Interfaces.Network
 {
@@ -9,12 +7,6 @@ namespace SS14.Shared.Interfaces.Network
     /// </summary>
     public interface INetChannel
     {
-        /// <summary>
-        ///     The raw connection of this channel.
-        /// </summary>
-        [Obsolete("Use a NetChannel/PlayerSession instead.")]
-        NetConnection Connection { get; }
-
         /// <summary>
         ///     The NetPeer this belongs to.
         /// </summary>

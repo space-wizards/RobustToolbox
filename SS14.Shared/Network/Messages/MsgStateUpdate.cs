@@ -1,23 +1,15 @@
 ﻿using Lidgren.Network;
 using SS14.Shared.GameStates;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Interfaces.Serialization;
-using SS14.Shared.IoC;
-using System.IO;
-using System.IO.Compression;
 
 namespace SS14.Shared.Network.Messages
 {
     public class MsgStateUpdate : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.StateUpdate;
         public static readonly MsgGroups GROUP = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgStateUpdate(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
+        public static readonly string NAME = nameof(MsgStateUpdate);
+        public MsgStateUpdate(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public GameStateDelta StateDelta { get; set; }

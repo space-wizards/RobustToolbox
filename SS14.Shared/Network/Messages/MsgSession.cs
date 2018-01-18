@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -6,13 +7,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgSession : NetMessage
     {
         #region REQUIRED
-        public static readonly string NAME = "PlayerSessionMessage";
         public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly NetMessages ID = NetMessages.PlayerSessionMessage;
-
-        public MsgSession(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
+        public static readonly string NAME = nameof(MsgSession);
+        public MsgSession(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public PlayerSessionMessage MsgType { get; set; }

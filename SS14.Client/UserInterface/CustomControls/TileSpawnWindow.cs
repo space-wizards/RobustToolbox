@@ -7,6 +7,7 @@ using SS14.Client.Interfaces.Placement;
 using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.IoC;
 using SS14.Shared.Maths;

@@ -1,12 +1,11 @@
-﻿using BsDiffLib;
-using SS14.Shared.GameStates;
+﻿using System;
+using System.IO;
+using BsDiffLib;
 using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Serialization;
-using System;
-using System.IO;
 
-namespace SS14.Shared
+namespace SS14.Shared.GameStates
 {
     [Serializable, NetSerializable]
     public class GameStateDelta

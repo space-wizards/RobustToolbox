@@ -1,14 +1,14 @@
 ﻿// From http://csharpquadtree.codeplex.com/
 
-using OpenTK;
-using SS14.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using OpenTK;
+using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
 
-namespace SS14.Shared
+namespace SS14.Shared.Utility
 {
     public class QuadTree<T> where T : class, IQuadObject
     {

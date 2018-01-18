@@ -9,6 +9,7 @@ using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Maths;
 using SS14.Shared.Network.Messages;
@@ -26,6 +27,11 @@ namespace SS14.Server.Placement
 
         #region IPlacementManager Members
 
+        public void Initialize()
+        {
+            var netMan = IoCManager.Resolve<IServerNetManager>();
+            netMan.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, message => HandleNetMessage((MsgPlacement)message));
+        }
 
         /// <summary>
         ///  Handles placement related client messages.
@@ -40,6 +46,9 @@ namespace SS14.Server.Placement
                     break;
                 case PlacementManagerMessage.RequestPlacement:
                     HandlePlacementRequest(msg);
+                    break;
+                case PlacementManagerMessage.RequestEntRemove:
+                    HandleEntRemoveReq(msg.EntityUid);
                     break;
             }
         }
@@ -106,6 +115,14 @@ namespace SS14.Server.Placement
             {
                 coordinates.Grid.SetTile(coordinates, new Tile(tileType));
             }
+        }
+
+        private static void HandleEntRemoveReq(int entityUid)
+        {
+            //TODO: Some form of admin check
+            var entities = IoCManager.Resolve<IServerEntityManager>();
+            if(entities.TryGetEntity(entityUid, out var entity))
+                entities.DeleteEntity(entity);
         }
 
         /// <summary>

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using SS14.Shared.Interfaces.Network;
 
 namespace SS14.Shared.Network.Messages
@@ -11,16 +6,10 @@ namespace SS14.Shared.Network.Messages
     public class MsgMapReq : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.RequestMap;
         public static readonly MsgGroups GROUP = MsgGroups.Entity;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgMapReq(INetChannel channel)
-            : base(NAME, GROUP, ID)
-        { }
+        public static readonly string NAME = nameof(MsgMapReq);
+        public MsgMapReq(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
-
-        public int MapGridsToSend { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

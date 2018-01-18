@@ -1,4 +1,5 @@
 ﻿using SS14.Shared;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.Graphics.Lighting
 {

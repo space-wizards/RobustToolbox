@@ -1,12 +1,8 @@
-﻿using Lidgren.Network;
-using SS14.Shared;
-using SS14.Shared.GameObjects;
-using SS14.Shared.IoC;
+﻿using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Xml.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Client.GameObjects

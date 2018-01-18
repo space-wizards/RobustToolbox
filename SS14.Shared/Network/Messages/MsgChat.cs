@@ -8,11 +8,9 @@ namespace SS14.Shared.Network.Messages
     public class MsgChat : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.ChatMessage;
         public static readonly MsgGroups GROUP = MsgGroups.String;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgChat(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgChat);
+        public MsgChat(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
         public ChatChannel Channel { get; set; }

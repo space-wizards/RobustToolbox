@@ -1,6 +1,7 @@
 ﻿using System;
 using SS14.Server.Player;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Players;

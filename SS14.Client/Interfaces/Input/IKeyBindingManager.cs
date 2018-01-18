@@ -2,6 +2,7 @@
 using SS14.Shared.IoC;
 using System;
 using SS14.Client.Graphics.Input;
+using SS14.Client.Input;
 
 namespace SS14.Client.Interfaces.Input
 {

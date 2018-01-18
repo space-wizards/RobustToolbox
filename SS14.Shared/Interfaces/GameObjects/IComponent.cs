@@ -1,5 +1,4 @@
 ﻿using System;
-using Lidgren.Network;
 using SS14.Shared.GameObjects;
 using YamlDotNet.RepresentationModel;
 
@@ -128,8 +127,7 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Handles an incoming input message from counterpart server/client components.
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="sender"></param>
-        void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender);
+        void HandleNetworkMessage(IncomingEntityComponentMessage message);
 
         /// <summary>
         ///     Handles an incoming component state from the server.

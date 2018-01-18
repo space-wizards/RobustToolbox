@@ -16,6 +16,12 @@ namespace SS14.Shared.Network
     /// </summary>
     public class StringTable
     {
+        /// <summary>
+        ///     The ID of the <see cref="MsgStringTableEntries"/> packet.
+        ///     This packet must have a fixed ID so the system can bootstrap itself.
+        /// </summary>
+        private const int StringTablePacketId = 0;
+
         private bool _initialized = false;
         private INetManager _network;
         private readonly Dictionary<int, string> _strings;
@@ -44,7 +50,7 @@ namespace SS14.Shared.Network
 
             _callback = callback;
             _network = network;
-            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, (int)MsgStringTableEntries.ID, message =>
+            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, message =>
             {
                 if (_network.IsServer) // Server does not receive entries from clients.
                     return;
@@ -98,7 +104,7 @@ namespace SS14.Shared.Network
             // manually register the id on the client so it can bootstrap itself with incoming table entries
             if (!TryFindStringId(MsgStringTableEntries.NAME, out int msgId))
             {
-                _strings.Add((int)MsgStringTableEntries.ID, MsgStringTableEntries.NAME);
+                _strings.Add(StringTablePacketId, MsgStringTableEntries.NAME);
             }
         }
 
@@ -250,11 +256,9 @@ namespace SS14.Shared.Network
     public class MsgStringTableEntries : NetMessage
     {
         #region REQUIRED
-        public static readonly NetMessages ID = NetMessages.StringTableEntry;
         public static readonly MsgGroups GROUP = MsgGroups.String;
-
-        public static readonly string NAME = ID.ToString();
-        public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP, ID) { }
+        public static readonly string NAME = nameof(MsgStringTableEntries);
+        public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
         
         public Entry[] Entries { get; set; }

@@ -1,5 +1,4 @@
 ﻿using System;
-using Lidgren.Network;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.IoC;
 using SS14.Shared.Reflection;
@@ -34,7 +33,7 @@ namespace SS14.Shared.GameObjects
         public bool Running { get; private set; }
 
         /// <inheritdoc />
-        public bool Deleted { get; private set; } = false;
+        public bool Deleted { get; private set; }
 
         /// <inheritdoc />
         public virtual void OnRemove()
@@ -107,7 +106,7 @@ namespace SS14.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
+        public virtual void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
         }
     }

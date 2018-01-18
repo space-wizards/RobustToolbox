@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using Lidgren.Network;
 using SS14.Client.Interfaces;
 using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.State;
 using SS14.Client.Player;
 using SS14.Client.State.States;
 using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.IoC;
 using SS14.Shared.Log;
@@ -37,7 +37,7 @@ namespace SS14.Client
         /// <inheritdoc />
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, (int) MsgServerInfo.ID, HandleServerInfo);
+            _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
 
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
@@ -93,7 +93,7 @@ namespace SS14.Client
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
             msgInfo.PlayerName = "Joe Hello";
-            _net.ClientSendMessage(msgInfo, NetDeliveryMethod.ReliableOrdered);
+            _net.ClientSendMessage(msgInfo);
         }
 
         /// <summary>
@@ -196,7 +196,12 @@ namespace SS14.Client
             {
                 var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();
+
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
+
+                // request entire map be sent to us
+                var mapMsg = _net.CreateNetMessage<MsgMapReq>();
+                _net.ClientSendMessage(mapMsg);
             }
         }
 

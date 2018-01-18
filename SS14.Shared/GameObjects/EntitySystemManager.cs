@@ -1,13 +1,10 @@
-﻿using Lidgren.Network;
-using SS14.Shared.Interfaces.GameObjects;
+﻿using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.System;
 using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.Interfaces.Serialization;
 using SS14.Shared.IoC;
 using SS14.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace SS14.Shared.GameObjects

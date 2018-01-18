@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK;
-using SS14.Shared;
 using SS14.Shared.Maths;
 using Vector2 = SS14.Shared.Maths.Vector2;
 using SS14.Client.Graphics.Textures;
 using SS14.Shared.Interfaces;
+using SS14.Shared.Enums;
+using SS14.Shared.Log;
 using SS14.Shared.IoC;
 using SS14.Shared.Interfaces.Reflection;
-using SS14.Shared.Log;
 using SS14.Shared.Map;
 
 namespace SS14.Client.Graphics.Lighting

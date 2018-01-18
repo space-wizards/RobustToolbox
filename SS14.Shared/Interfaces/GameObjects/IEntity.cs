@@ -1,9 +1,5 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SS14.Shared.GameObjects;
 using YamlDotNet.RepresentationModel;
 using SS14.Shared.Interfaces.Network;
@@ -232,19 +228,16 @@ namespace SS14.Shared.Interfaces.GameObjects
         ///     Sends a message to the counterpart component on the server side
         /// </summary>
         /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
         /// <param name="messageParams">Parameters</param>
-        void SendComponentNetworkMessage(IComponent component, NetDeliveryMethod method, params object[] messageParams);
+        void SendComponentNetworkMessage(IComponent component, params object[] messageParams);
 
         /// <summary>
         ///     Sends a message to the counterpart component on the server side
         /// </summary>
         /// <param name="component">Sending component</param>
-        /// <param name="method">Net Delivery Method</param>
         /// <param name="recipient">The intended recipient netconnection (if null send to all)</param>
         /// <param name="messageParams">Parameters</param>
-        void SendDirectedComponentNetworkMessage(IComponent component, NetDeliveryMethod method,
-                                                 INetChannel recipient, params object[] messageParams);
+        void SendDirectedComponentNetworkMessage(IComponent component, INetChannel recipient, params object[] messageParams);
 
         /// <summary>
         ///     Called when the entity has all components initialized.

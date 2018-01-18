@@ -97,10 +97,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{59250baf-0000-0000-0000-000000000000}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SS14.Client.Graphics\SS14.Client.Graphics.csproj">
       <Project>{302b877e-0000-0000-0000-000000000000}</Project>
       <Name>SS14.Client.Graphics</Name>

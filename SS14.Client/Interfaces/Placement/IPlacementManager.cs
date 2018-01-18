@@ -1,10 +1,7 @@
-﻿using Lidgren.Network;
-using SS14.Shared.Interfaces.Map;
-using SS14.Shared;
+﻿using SS14.Shared;
 using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
 using System;
-using Vector2i = SS14.Shared.Maths.Vector2i;
+using SS14.Shared.Enums;
 using SS14.Shared.Map;
 
 namespace SS14.Client.Interfaces.Placement
@@ -26,6 +23,5 @@ namespace SS14.Client.Interfaces.Placement
         void Rotate();
 
         void Update(ScreenCoordinates mouseScreen);
-        void HandleNetMessage(NetIncomingMessage msg);
     }
 }

@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK;
+﻿using OpenTK;
 using SS14.Client.GameObjects;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Input;
@@ -16,11 +15,8 @@ using SS14.Client.Interfaces.Player;
 using SS14.Client.Interfaces.Resource;
 using SS14.Client.Map;
 using SS14.Client.ResourceManagement;
-using SS14.Client.UserInterface.Components;
 using SS14.Shared;
-using SS14.Shared.Configuration;
 using SS14.Shared.GameObjects;
-using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
 using SS14.Shared.Interfaces.GameObjects.Components;
 using SS14.Shared.Interfaces.Map;
@@ -29,7 +25,6 @@ using SS14.Shared.Interfaces.Timing;
 using SS14.Shared.IoC;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
-using SS14.Shared.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +35,7 @@ using Vector2i = SS14.Shared.Maths.Vector2i;
 using SS14.Client.UserInterface;
 using SS14.Client.UserInterface.Controls;
 using SS14.Client.UserInterface.CustomControls;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.State.States
 {
@@ -136,9 +132,6 @@ namespace SS14.Client.State.States
 
         public override void Startup()
         {
-            var manager = IoCManager.Resolve<IConfigurationManager>();
-            manager.RegisterCVar("player.name", "Joe Genero", CVar.ARCHIVE);
-
             _cleanupList = new List<RenderImage>();
             _cleanupSpriteList = new List<Sprite>();
 
@@ -157,18 +150,6 @@ namespace SS14.Client.State.States
             IoCManager.Resolve<IMapManager>().TileChanged += (sender, args) => HandleTileChanged(args.NewTile);
             IoCManager.Resolve<IMapManager>().GridChanged += HandleGridChanged;
             IoCManager.Resolve<IPlayerManager>().LocalPlayer.EntityMoved += OnPlayerMove;
-
-            NetworkManager.MessageArrived += NetworkManagerMessageArrived;
-
-            NetOutgoingMessage message = NetworkManager.CreateMessage();
-            message.Write((byte)NetMessages.RequestMap);
-            NetworkManager.ClientSendMessage(message, NetDeliveryMethod.ReliableUnordered);
-
-            // TODO This should go somewhere else, there should be explicit session setup and teardown at some point.
-            var message1 = NetworkManager.CreateMessage();
-            message1.Write((byte)NetMessages.ClientName);
-            message1.Write(ConfigurationManager.GetCVar<string>("player.name"));
-            NetworkManager.ClientSendMessage(message1, NetDeliveryMethod.ReliableOrdered);
 
             // Create new
             _gaussianBlur = new GaussianBlur(ResourceCache);
@@ -359,12 +340,18 @@ namespace SS14.Client.State.States
             if (PlayerManager.LocalPlayer != null)
             {
                 var newPos = Vector2.Zero;
+                var newMap = MapId.Nullspace;
                 if(PlayerManager.LocalPlayer.ControlledEntity != null)
-                    newPos = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().WorldPosition;
+                {
+                    var transform = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>();
+                    newPos = transform.WorldPosition;
+                    newMap = transform.MapID;
+                }
 
-                if (CluwneLib.Camera.Position != newPos)
+                if (CluwneLib.Camera.Position != newPos || CluwneLib.Camera.CurrentMap != newMap)
                 {
                     CluwneLib.Camera.Position = newPos;
+                    CluwneLib.Camera.CurrentMap = newMap;
                     MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen); // Use WorldCenter to calculate, so we need to update again
                     UpdateView();
                 }
@@ -503,7 +490,6 @@ namespace SS14.Client.State.States
             shadowMapResolver.Dispose();
             _entityManager.Shutdown();
             UserInterfaceManager.DisposeAllComponents();
-            NetworkManager.MessageArrived -= NetworkManagerMessageArrived;
             _decalBatch.Dispose();
             _floorBatch.Dispose();
             _gasBatch.Dispose();
@@ -694,14 +680,7 @@ namespace SS14.Client.State.States
 
         public override void MouseMove(MouseMoveEventArgs e)
         {
-            if (PlayerManager.LocalPlayer.ControlledEntity != null && PlayerManager.LocalPlayer.ControlledEntity.TryGetComponent<ITransformComponent>(out var transform))
-            {
-                MousePosScreen = new ScreenCoordinates(e.NewPosition, transform.MapID);
-            }
-            else
-            {
-                MousePosScreen = new ScreenCoordinates(e.NewPosition, MapId.Nullspace);
-            }
+            MousePosScreen = new ScreenCoordinates(e.NewPosition, CluwneLib.Camera.CurrentMap);
             MousePosWorld = CluwneLib.ScreenToCoordinates(MousePosScreen);
             UserInterfaceManager.MouseMove(e);
         }
@@ -736,42 +715,6 @@ namespace SS14.Client.State.States
 #endregion Input
 
 #region Event Handlers
-
-#region Messages
-
-        private void NetworkManagerMessageArrived(object sender, NetMessageArgs args)
-        {
-            NetIncomingMessage message = args.RawMessage;
-            if (message == null)
-            {
-                return;
-            }
-            switch (message.MessageType)
-            {
-                case NetIncomingMessageType.StatusChanged:
-                    var statMsg = (NetConnectionStatus)message.ReadByte();
-                    if (statMsg == NetConnectionStatus.Disconnected)
-                    {
-                        string disconnectMessage = message.ReadString();
-                        UserInterfaceManager.AddComponent(new DisconnectedScreenBlocker(StateManager,
-                                                                                        UserInterfaceManager,
-                                                                                        ResourceCache,
-                                                                                        disconnectMessage));
-                    }
-                    break;
-                case NetIncomingMessageType.Data:
-                    var messageType = (NetMessages)message.ReadByte();
-                    switch (messageType)
-                    {
-                        case NetMessages.PlacementManagerMessage:
-                            PlacementManager.HandleNetMessage(message);
-                            break;
-                    }
-                    break;
-            }
-        }
-
-#endregion Messages
 
         private void OnPlayerMove(object sender, MoveEventArgs args)
         {
@@ -1095,6 +1038,9 @@ namespace SS14.Client.State.States
             LocalCoordinates position = new LocalCoordinates();
             if(PlayerManager.LocalPlayer.ControlledEntity != null)
                 position = PlayerManager.LocalPlayer.ControlledEntity.GetComponent<ITransformComponent>().LocalPosition;
+
+            if(!position.IsValidLocation())
+                return;
 
             var grids = position.Map.FindGridsIntersecting(vision); //Collect all grids in vision range
 

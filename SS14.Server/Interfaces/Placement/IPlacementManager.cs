@@ -1,12 +1,14 @@
 ﻿using SS14.Shared.Interfaces.GameObjects;
-using SS14.Shared.IoC;
-using SS14.Shared.Network;
 using SS14.Shared.Network.Messages;
 
 namespace SS14.Server.Interfaces.Placement
 {
     public interface IPlacementManager
     {
+        /// <summary>
+        ///     Initializes this manager into a usable state.
+        /// </summary>
+        void Initialize();
 
         /// <summary>
         ///  Handles placement related client messages.

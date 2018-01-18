@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using SS14.Shared.ContentPack;
+using SS14.Shared.Enums;
 
 namespace SS14.Client.Input
 {

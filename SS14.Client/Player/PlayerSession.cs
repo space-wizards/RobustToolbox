@@ -1,4 +1,5 @@
 ﻿using SS14.Shared;
+using SS14.Shared.Enums;
 using SS14.Shared.Players;
 
 namespace SS14.Client.Player

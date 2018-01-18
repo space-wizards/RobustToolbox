@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Lidgren.Network;
 using SS14.Shared.Network;
 
 namespace SS14.Shared.Interfaces.Network
@@ -31,9 +30,9 @@ namespace SS14.Shared.Interfaces.Network
         bool IsConnected { get; }
 
         /// <summary>
-        ///     The statistics of the raw NetPeer.
+        ///     Network traffic statistics for the locl NetChannel.
         /// </summary>
-        NetPeerStatistics Statistics { get; }
+        NetworkStats Statistics { get; }
 
         /// <summary>
         ///     All of the current connected NetChannels on this peer.
@@ -120,9 +119,8 @@ namespace SS14.Shared.Interfaces.Network
         /// </summary>
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
-        /// <param name="id">Legacy ID of this message. Will be removed.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, int id, ProcessMessage rxCallback = null)
+        void RegisterNetMessage<T>(string name, ProcessMessage rxCallback = null)
             where T : NetMessage;
 
         /// <summary>
@@ -131,40 +129,6 @@ namespace SS14.Shared.Interfaces.Network
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;
-
-        #endregion
-
-        #region Obsolete
-
-        /// <summary>
-        ///     The raw NetPeer. This is only available for legacy code, you should be using NetChannels.
-        /// </summary>
-        [Obsolete("You should be using the INetManager interface.")]
-        NetPeer Peer { get; }
-
-        /// <summary>
-        ///     Gets a new NetOutgoingMessage from the NetPeer.
-        /// </summary>
-        /// <returns>A new Outgoing message.</returns>
-        [Obsolete("You should be using NetMessages.")]
-        NetOutgoingMessage CreateMessage();
-
-        /// <summary>
-        /// Legacy function for sending a raw packet to a NetConnection. This will be removed.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="client"></param>
-        /// <param name="method"></param>
-        [Obsolete("You should be using NetMessages.")]
-        void ServerSendMessage(NetOutgoingMessage message, NetConnection client, NetDeliveryMethod method);
-
-        /// <summary>
-        /// Legacy function for sending a raw packet to all connected NetConnectionss on the peer. This will be removed.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="method"></param>
-        [Obsolete("You should be using NetMessages.")]
-        void ServerSendToAll(NetOutgoingMessage message, NetDeliveryMethod method);
 
         #endregion
     }

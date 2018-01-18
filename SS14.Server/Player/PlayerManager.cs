@@ -10,9 +10,11 @@ using SS14.Shared.IoC;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Network;
-using SS14.Shared.Network;
 using SS14.Shared.Map;
+using SS14.Shared.Network;
+using SS14.Shared.Network.Messages;
 using SS14.Shared.Players;
 
 namespace SS14.Server.Player
@@ -45,6 +47,9 @@ namespace SS14.Server.Player
         [Dependency]
         private readonly IServerEntityManager _entityManager;
 
+        [Dependency]
+        private readonly IServerNetManager _network;
+        
         /// <inheritdoc />
         public int PlayerCount => _sessionCount;
 
@@ -61,11 +66,11 @@ namespace SS14.Server.Player
             
             _sessions = new PlayerSession[maxPlayers];
 
-            var netMan = IoCManager.Resolve<IServerNetManager>();
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME, message => HandleClientGreet((MsgClGreet)message));
 
-            netMan.Connecting += OnConnecting;
-            netMan.Connected += NewSession;
-            netMan.Disconnect += EndSession;
+            _network.Connecting += OnConnecting;
+            _network.Connected += NewSession;
+            _network.Disconnect += EndSession;
         }
 
         private void OnConnecting(object sender, NetConnectingArgs args)
@@ -248,8 +253,18 @@ namespace SS14.Server.Player
             Debug.Assert(true, "Why was a slot not found? There should be one.");
             return -1;
         }
-    }
 
+        private void HandleClientGreet(MsgClGreet msg)
+        {
+            var p = GetSessionByChannel(msg.MsgChannel);
+
+            var fixedName = msg.PlyName.Trim();
+            if (fixedName.Length < 3)
+                fixedName = $"Player {p.Index}";
+
+            p.SetName(fixedName);
+        }
+    }
     public class SessionStatusEventArgs : EventArgs
     {
         public IPlayerSession Session { get; }

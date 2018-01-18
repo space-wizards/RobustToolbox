@@ -1,6 +1,4 @@
-﻿using Lidgren.Network;
-using OpenTK;
-using OpenTK.Graphics;
+﻿using OpenTK;
 using SS14.Client.Graphics;
 using SS14.Client.Graphics.Sprites;
 using SS14.Client.Graphics.TexHelpers;
@@ -15,13 +13,12 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Enums;
 using SS14.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
-using SS14.Client.Graphics.Utility;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
-using SS14.Client.Graphics.Render;
 
 namespace SS14.Client.GameObjects
 {
@@ -195,7 +192,7 @@ namespace SS14.Client.GameObjects
             sprites.Clear();
         }
 
-        public override void HandleNetworkMessage(IncomingEntityComponentMessage message, NetConnection sender)
+        public override void HandleNetworkMessage(IncomingEntityComponentMessage message)
         {
             switch ((ComponentMessageType)message.MessageParameters[0])
             {
@@ -385,7 +382,7 @@ namespace SS14.Client.GameObjects
                 return;
 
             spriteToRender.Scale = new Vector2(HorizontalFlip ? -1 : 1, 1);
-            spriteToRender.Color = this.Color;
+            spriteToRender.Color = Color;
             spriteToRender.Draw();
             spriteToRender.Color = Color.White;
 

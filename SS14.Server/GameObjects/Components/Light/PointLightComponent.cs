@@ -3,6 +3,7 @@ using OpenTK.Graphics;
 using SS14.Shared;
 using SS14.Shared.GameObjects;
 using SS14.Shared.Utility;
+using SS14.Shared.Enums;
 using YamlDotNet.RepresentationModel;
 
 namespace SS14.Server.GameObjects

@@ -73,6 +73,11 @@ namespace SS14.Client.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        public Vector2 Offset { get; set; }
+
         public Sprite GetCurrentSprite()
         {
             return GetActiveDirectionalSprite();
@@ -369,7 +374,7 @@ namespace SS14.Client.GameObjects
 
             Sprite spriteToRender = GetActiveDirectionalSprite();
 
-            var renderPos = transform.WorldPosition * CluwneLib.Camera.PixelsPerMeter;
+            var renderPos = (transform.WorldPosition + Offset) * CluwneLib.Camera.PixelsPerMeter;
             var bounds = spriteToRender.LocalBounds;
             SetSpriteCenter(spriteToRender, renderPos);
 
@@ -456,6 +461,7 @@ namespace SS14.Client.GameObjects
         {
             var newState = (SpriteComponentState)state;
             DrawDepth = newState.DrawDepth;
+            Offset = newState.Offset;
 
             if (newState.SpriteKey != null && sprites.ContainsKey(newState.SpriteKey) &&
                 currentBaseSprite != sprites[newState.SpriteKey])

@@ -24,7 +24,11 @@ namespace SS14.Server.GameObjects
             _slaves = new List<IRenderableComponent>();
         }
 
-
+        /// <summary>
+        ///     Offsets the sprite from the entity origin by this many meters.
+        /// </summary>
+        public Vector2 Offset { get; set; }
+        
         public DrawDepth DrawDepth { get; set; } = DrawDepth.FloorTiles;
 
         public bool Visible { get; set; } = true;
@@ -67,7 +71,7 @@ namespace SS14.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName);
+            return new SpriteComponentState(Visible, DrawDepth, _currentSpriteKey, _currentBaseName, Offset);
         }
 
         public bool IsSlaved()

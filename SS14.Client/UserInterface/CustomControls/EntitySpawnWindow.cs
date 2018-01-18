@@ -71,8 +71,8 @@ namespace SS14.Client.UserInterface.CustomControls
             });
 
             _lstOverride = new Listbox(140, 125, initOpts);
-            _lstOverride.SelectItem("PlaceFree");
             _lstOverride.ItemSelected += _lstOverride_ItemSelected;
+            _lstOverride.SelectItem("PlaceFree");
             _lstOverride.LocalPosition = new Vector2i(0, 0);
             _lstOverride.Alignment = Align.Bottom;
             overLabel.AddControl(_lstOverride);
@@ -224,10 +224,9 @@ namespace SS14.Client.UserInterface.CustomControls
                 ((EntitySpawnSelectButton) curr).Selected = false;
             }
 
-            var overrideMode = "";
+            var overrideMode = "PlaceFree";
             if (_lstOverride.CurrentlySelected != null)
-                if (_lstOverride.CurrentlySelected.Text != "None")
-                    overrideMode = _lstOverride.CurrentlySelected.Text;
+                overrideMode = _lstOverride.CurrentlySelected.Text;
 
             var newObjInfo = new PlacementInformation
             {

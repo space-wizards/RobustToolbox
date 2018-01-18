@@ -184,7 +184,7 @@ namespace SS14.Client.UserInterface.Controls
         {
             str = str ?? "str";
 
-            var selLabel = _dropDown.Components
+            var selLabel = _listPanel.Children
                 .Where(a => a.GetType() == typeof(ListboxItem))
                 .Select(a => new { a, b = (ListboxItem)a })
                 .Where(t => string.Equals(t.b.Text, str, StringComparison.InvariantCultureIgnoreCase))

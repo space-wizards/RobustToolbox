@@ -7,6 +7,9 @@ using SS14.Shared.Prototypes;
 using SS14.Shared.Interfaces.Map;
 using SS14.Shared.Map;
 using Vector2 = SS14.Shared.Maths.Vector2;
+using SS14.Shared.Interfaces.GameObjects.Components;
+using SS14.Shared.Maths;
+using OpenTK;
 
 namespace SS14.Server.GameObjects
 {
@@ -77,6 +80,80 @@ namespace SS14.Server.GameObjects
         }
 
         #endregion IEntityManager Members
+
+        #region LocationGetters
+
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
+        {
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != mapId)
+                    continue;
+
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (position.Intersects(component.WorldAABB))
+                        yield return entity;
+                }
+                else
+                {
+                    if (position.Contains(transform.WorldPosition))
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
+        {
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != mapId)
+                    continue;
+
+                if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+                {
+                    if (component.WorldAABB.Contains(position))
+                        yield return entity;
+                }
+                else
+                {
+                    if (FloatMath.CloseTo(transform.LocalPosition.X, position.X) && FloatMath.CloseTo(transform.LocalPosition.Y, position.Y))
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
+        {
+            Range *= Range; // Square it here to avoid Sqrt
+
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.GetComponent<ITransformComponent>();
+                if (transform.MapID != worldPos.MapID)
+                    continue;
+
+                var relativePosition = worldPos.Position - transform.WorldPosition;
+                if (relativePosition.LengthSquared <= Range)
+                {
+                    yield return entity;
+                }
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range)
+        {
+            LocalCoordinates coords = entity.GetComponent<ITransformComponent>().LocalPosition;
+            return GetEntitiesInRange(coords, Range);
+        }
+
+        #endregion LocationGetters
 
         public override void Startup()
         {

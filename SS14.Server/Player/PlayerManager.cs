@@ -132,7 +132,12 @@ namespace SS14.Server.Player
             Debug.Assert(0 <= index && index <= MaxPlayers);
             return _sessions[index];
         }
-        
+
+        public bool ValidSessionId(PlayerIndex index)
+        {
+            return _sessions[index] != null;
+        }
+
         /// <summary>
         ///     Ends a clients session, and disconnects them.
         /// </summary>

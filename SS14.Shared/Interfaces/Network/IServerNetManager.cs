@@ -6,5 +6,6 @@ namespace SS14.Shared.Interfaces.Network
     /// </summary>
     public interface IServerNetManager : INetManager
     {
+        void DisconnectChannel(INetChannel channel, string reason);
     }
 }

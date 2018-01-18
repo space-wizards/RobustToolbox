@@ -332,15 +332,25 @@ namespace SS14.Shared.Network
             if (IsClient)
                 _strings.Reset();
         }
-
-        // server-side disconnect
-        private void DisconnectChannel(NetChannel channel, string reason)
+        
+        public void DisconnectChannel(INetChannel channel, string reason)
         {
             channel.Connection.Disconnect(reason);
         }
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
+            if(_netPeer.Status == NetPeerStatus.ShutdownRequested)
+                return;
+
+            if(_netPeer.Status == NetPeerStatus.NotRunning)
+                return;
+
+            if(!IsConnected)
+                return;
+
+            string address = msg.SenderConnection.RemoteEndPoint.Address.ToString();
+
             if (msg.LengthBytes < 1)
             {
                 Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");

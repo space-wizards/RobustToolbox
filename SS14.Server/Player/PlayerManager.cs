@@ -119,7 +119,7 @@ namespace SS14.Server.Player
         public IPlayerSession GetSessionByChannel(INetChannel client)
         {
             // Should only be one session per client. Returns that session, in theory.
-            return _sessions.FirstOrDefault(s => s.ConnectedClient == client);
+            return _sessions.FirstOrDefault(s => s?.ConnectedClient == client);
         }
 
         /// <summary>
@@ -132,7 +132,12 @@ namespace SS14.Server.Player
             Debug.Assert(0 <= index && index <= MaxPlayers);
             return _sessions[index];
         }
-        
+
+        public bool ValidSessionId(PlayerIndex index)
+        {
+            return _sessions[index] != null;
+        }
+
         /// <summary>
         ///     Ends a clients session, and disconnects them.
         /// </summary>

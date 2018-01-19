@@ -63,12 +63,6 @@ namespace SS14.Client.Player
         /// </summary>
         public event EventHandler<StatusEventArgs> StatusChanged;
 
-        public LocalPlayer()
-        {
-            var network = IoCManager.Resolve<IClientNetManager>();
-            network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME);
-        }
-
         /// <summary>
         ///     Attaches a client to an entity.
         /// </summary>

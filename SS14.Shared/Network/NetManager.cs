@@ -324,7 +324,7 @@ namespace SS14.Shared.Network
             var conn = message.SenderConnection;
             var channel = _channels[conn];
 
-            Logger.Info($"[NET] {channel.RemoteAddress}:{channel.Connection.RemoteEndPoint.Port}: Disconnected ({reason})");
+            Logger.Info($"[NET] {channel.RemoteAddress}:{conn.RemoteEndPoint.Port}: Disconnected ({reason})");
 
             OnDisconnected(channel);
             _channels.Remove(conn);
@@ -333,14 +333,23 @@ namespace SS14.Shared.Network
                 _strings.Reset();
         }
 
-        // server-side disconnect
-        private void DisconnectChannel(NetChannel channel, string reason)
+        /// <inheritdoc />
+        public void DisconnectChannel(INetChannel channel, string reason)
         {
-            channel.Connection.Disconnect(reason);
+            channel.Disconnect(reason);
         }
 
         private void DispatchNetMessage(NetIncomingMessage msg)
         {
+            if(_netPeer.Status == NetPeerStatus.ShutdownRequested)
+                return;
+
+            if(_netPeer.Status == NetPeerStatus.NotRunning)
+                return;
+
+            if(!IsConnected)
+                return;
+
             if (msg.LengthBytes < 1)
             {
                 Logger.Warning($"[NET] {msg.SenderConnection.RemoteEndPoint.Address}: Received empty packet.");

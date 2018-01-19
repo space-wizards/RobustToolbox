@@ -81,7 +81,7 @@ namespace SS14.Server.GameObjects
 
         #endregion IEntityManager Members
 
-        #region LocationGetters
+        #region EntityGetters
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
         {
@@ -129,17 +129,34 @@ namespace SS14.Server.GameObjects
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float Range)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(LocalCoordinates position)
+        {
+            return GetEntitiesIntersecting(position.MapID, position.ToWorld().Position);
+        }
+
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
+        {
+            if (entity.TryGetComponent<BoundingBoxComponent>(out var component))
+            {
+                return GetEntitiesIntersecting(entity.GetComponent<ITransformComponent>().MapID, component.WorldAABB);
+            }
+            else
+            {
+                return GetEntitiesIntersecting(entity.GetComponent<ITransformComponent>().LocalPosition);
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
         {
             Range *= Range; // Square it here to avoid Sqrt
 
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                if (transform.MapID != worldPos.MapID)
+                if (transform.MapID != position.MapID)
                     continue;
 
-                var relativePosition = worldPos.Position - transform.WorldPosition;
+                var relativePosition = position.ToWorld().Position - transform.WorldPosition;
                 if (relativePosition.LengthSquared <= Range)
                 {
                     yield return entity;

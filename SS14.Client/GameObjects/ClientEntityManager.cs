@@ -17,17 +17,17 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float range)
         {
             range *= range; // Square it here to avoid Sqrt
 
             foreach (var entity in GetEntities())
             {
                 var transform = entity.GetComponent<ITransformComponent>();
-                if (transform.MapID != worldPos.MapID)
+                if (transform.MapID != position.MapID)
                     continue;
 
-                var relativePosition = worldPos.Position - transform.WorldPosition;
+                var relativePosition = position.ToWorld().Position - transform.WorldPosition;
                 if (relativePosition.LengthSquared <= range)
                 {
                     yield return entity;

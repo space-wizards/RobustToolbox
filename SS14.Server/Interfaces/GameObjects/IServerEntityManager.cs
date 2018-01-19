@@ -50,6 +50,46 @@ namespace SS14.Server.Interfaces.GameObjects
         /// <returns></returns>
         IEntity ForceSpawnEntityAt(string EntityType, Vector2 position, MapId argMap);
 
+        /// <summary>
+        /// Gets entities with a bounding box that intersects this box
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="position"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position);
+
+        /// <summary>
+        /// Gets entities with a bounding box that intersects this point
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="position"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position);
+
+        /// <summary>
+        /// Gets entities with a bounding box that intersects this point in coordinate form
+        /// </summary>
+        /// <param name="position"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(LocalCoordinates position);
+
+        /// <summary>
+        /// Gets entities that intersect with this entity
+        /// </summary>
+        /// <param name="position"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity);
+
+        /// <summary>
+        /// Gets entities within a certain range of this local coordinate
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="Range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range);
+
+        /// <summary>
+        /// Gets entities within a certain range of this entity
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="Range"></param>
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float Range);
+
         List<EntityState> GetEntityStates();
     }
 }

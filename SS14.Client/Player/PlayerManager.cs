@@ -72,6 +72,8 @@ namespace SS14.Client.Player
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
 
             _network.RegisterNetMessage<MsgSession>(MsgSession.NAME, HandleSessionMessage);
+            
+            _network.RegisterNetMessage<MsgClGreet>(MsgClGreet.NAME);
         }
 
         /// <inheritdoc />
@@ -115,7 +117,7 @@ namespace SS14.Client.Player
         /// <inheritdoc />
         public void ApplyPlayerStates(List<PlayerState> list)
         {
-            Debug.Assert(_network.IsConnected, "Received player state before fully connected");
+            Debug.Assert(_network.IsConnected, "Received player state without being connected?");
             Debug.Assert(LocalPlayer != null, "Call Startup()");
             Debug.Assert(LocalPlayer.Session != null, "Received player state before Session finished setup.");
 

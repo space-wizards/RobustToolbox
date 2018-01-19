@@ -48,6 +48,11 @@ namespace SS14.Server.Interfaces.Player
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
+        /// <summary>
+        ///     Checks to see if a PlayerIndex is a valid session.
+        /// </summary>
+        bool ValidSessionId(PlayerIndex index);
+
         //TODO: Move to IPlayerSession
         void SpawnPlayerMob(IPlayerSession session);
         

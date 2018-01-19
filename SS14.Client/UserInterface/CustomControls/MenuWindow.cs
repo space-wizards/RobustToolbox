@@ -57,8 +57,8 @@ namespace SS14.Client.UserInterface.CustomControls
 
         private void button_quit_Clicked(Button sender)
         {
+            // request disconnect
             _netMgr.ClientDisconnect("Client disconnected from game.");
-            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
             Destroy();
         }
 

@@ -8,6 +8,7 @@ using SS14.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SS14.Shared.Log;
 using YamlDotNet.RepresentationModel;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 
@@ -44,8 +45,6 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         public string PlacementMode { get; protected set; } = "PlaceNearby";
 
-        private bool placementmodeoverriden = false;
-
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
@@ -55,14 +54,14 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
         /// </summary>
-        public readonly HashSet<string> SnapFlags = new HashSet<string>();
-        private bool snapoverriden = false;
+        private readonly HashSet<string> _snapFlags = new HashSet<string>();
+        private bool _snapOverriden = false;
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
         public Vector2i PlacementOffset { get; protected set; }
-        private bool placementoverriden = false;
+        private bool _placementOverriden = false;
 
         /// <summary>
         /// True if this entity will be saved by the map loader.
@@ -89,11 +88,11 @@ namespace SS14.Shared.GameObjects
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
         public Dictionary<string, YamlMappingNode> Components { get; private set; } = new Dictionary<string, YamlMappingNode>();
-        public YamlMappingNode DataNode { get; set; }
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
         /// </summary>
+        public YamlMappingNode DataNode { get; set; }
 
         public void LoadFrom(YamlMappingNode mapping)
         {
@@ -108,7 +107,9 @@ namespace SS14.Shared.GameObjects
             {
                 var manager = IoCManager.Resolve<IReflectionManager>();
                 ClassType = manager.GetType(node.AsString());
-                // TODO: logging of when the ClassType doesn't exist: Safety for typos.
+
+                if(ClassType == null)
+                    Logger.Error($"[ENG] Prototype \"{ID}\" - Cannot find class type \"{node.AsString()}\"!");
             }
 
             if (mapping.TryGetNode("parent", out node))
@@ -150,13 +151,12 @@ namespace SS14.Shared.GameObjects
             if (mapping.TryGetNode("mode", out YamlNode node))
             {
                 PlacementMode = node.AsString();
-                placementmodeoverriden = true;
             }
 
             if (mapping.TryGetNode("offset", out node))
             {
                 PlacementOffset = node.AsVector2i();
-                placementoverriden = true;
+                _placementOverriden = true;
             }
 
             if (mapping.TryGetNode<YamlSequenceNode>("nodes", out var sequence))
@@ -170,14 +170,14 @@ namespace SS14.Shared.GameObjects
             }
 
             // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
-            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapsequence))
+            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapSequence))
             {
-                var flagslist = snapsequence.Select(p => p.AsString());
-                foreach (var flag in flagslist)
+                var flagsList = snapSequence.Select(p => p.AsString());
+                foreach (var flag in flagsList)
                 {
-                    SnapFlags.Add(flag);
+                    _snapFlags.Add(flag);
                 }
-                snapoverriden = true;
+                _snapOverriden = true;
             }
         }
 
@@ -242,12 +242,12 @@ namespace SS14.Shared.GameObjects
                 }
             }
 
-            if (!target.placementoverriden)
+            if (!target._placementOverriden)
             {
                 target.PlacementMode = source.PlacementMode;
             }
 
-            if (!target.placementoverriden)
+            if (!target._placementOverriden)
             {
                 target.PlacementOffset = source.PlacementOffset;
             }
@@ -262,11 +262,11 @@ namespace SS14.Shared.GameObjects
                 target.PlacementRange = source.PlacementRange;
             }
 
-            if (!target.snapoverriden)
+            if (!target._snapOverriden)
             {
-                foreach (var flag in source.SnapFlags)
+                foreach (var flag in source._snapFlags)
                 {
-                    target.SnapFlags.Add(flag);
+                    target._snapFlags.Add(flag);
                 }
             }
 
@@ -332,20 +332,19 @@ namespace SS14.Shared.GameObjects
             }
             var entitymanager = IoCManager.Resolve<IEntityManager>();
             var entities = entitymanager.GetEntitiesAt(position);
-            return !entities.SelectMany(e => e.Prototype.SnapFlags).Any(f => SnapFlags.Contains(f));
+            return !entities.SelectMany(e => e.Prototype._snapFlags).Any(f => _snapFlags.Contains(f));
         }
 
         // 100% completely refined & distilled cancer.
-        public IEnumerable<ComponentParameter> GetBaseSpriteParamaters()
+        public IEnumerable<ComponentParameter> GetBaseSpriteParameters()
         {
             // Emotional programming.
-            if (Components.TryGetValue("Icon", out YamlMappingNode ಠ_ಠ))
+            if (Components.TryGetValue("Icon", out var ಠ_ಠ) &&
+                ಠ_ಠ.TryGetNode("icon", out var ಥ_ಥ))
             {
-                if (ಠ_ಠ.TryGetNode("icon", out YamlNode ಥ_ಥ))
-                {
-                    return new ComponentParameter[] { new ComponentParameter("icon", ಥ_ಥ.AsString()) };
-                }
+                return new[] {new ComponentParameter("icon", ಥ_ಥ.AsString())};
             }
+
             return new ComponentParameter[0];
         }
 

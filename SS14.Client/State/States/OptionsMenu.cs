@@ -124,7 +124,7 @@ namespace SS14.Client.State.States
             _bgPanel = new Panel();
             _bgPanel.BackgroundImage = ResourceCache.GetResource<SpriteResource>(@"Textures/UserInterface/TicketOverlay.png");
             _bgPanel.BackgroundColor = new Color(128, 128, 128, 128);
-            _bgPanel.Alignment = Align.HCenter | Align.VCenter;
+            _bgPanel.Alignment = ControlAlignments.HCenter | ControlAlignments.VCenter;
             _bgPanel.Layout += (sender, args) =>
             {
                 _bgPanel.Width = (int)(_uiScreen.Width * 0.85f);
@@ -137,7 +137,7 @@ namespace SS14.Client.State.States
             _bgPanel.AddControl(_lblTitle);
 
             _lstResolution = new Listbox(250, 150);
-            _lstResolution.Alignment = Align.Bottom;
+            _lstResolution.Alignment = ControlAlignments.Bottom;
             _lstResolution.LocalPosition = new Vector2i(50, 50);
             _lstResolution.ItemSelected += _lstResolution_ItemSelected;
             PopulateAvailableVideoModes(_lstResolution);
@@ -146,30 +146,30 @@ namespace SS14.Client.State.States
             _chkFullScreen = new Checkbox();
             _chkFullScreen.Value = ConfigurationManager.GetCVar<bool>("display.fullscreen");
             _chkFullScreen.ValueChanged += _chkFullScreen_ValueChanged;
-            _chkFullScreen.Alignment = Align.Bottom;
+            _chkFullScreen.Alignment = ControlAlignments.Bottom;
             _chkFullScreen.LocalPosition = new Vector2i(0, 50);
             _lstResolution.AddControl(_chkFullScreen);
 
             _lblFullScreen = new Label("Fullscreen", "CALIBRI");
-            _lblFullScreen.Alignment = Align.Right;
+            _lblFullScreen.Alignment = ControlAlignments.Right;
             _lblFullScreen.LocalPosition = new Vector2i(3, 0);
             _chkFullScreen.AddControl(_lblFullScreen);
 
             _chkVSync = new Checkbox();
             _chkVSync.Value = ConfigurationManager.GetCVar<bool>("display.vsync");
             _chkVSync.ValueChanged += _chkVSync_ValueChanged;
-            _chkVSync.Alignment = Align.Bottom;
+            _chkVSync.Alignment = ControlAlignments.Bottom;
             _chkVSync.LocalPosition = new Vector2i(0, 3);
             _chkFullScreen.AddControl(_chkVSync);
 
             _lblVSync = new Label("Vsync", "CALIBRI");
-            _lblVSync.Alignment = Align.Right;
+            _lblVSync.Alignment = ControlAlignments.Right;
             _lblVSync.LocalPosition = new Vector2i(3, 0);
             _chkVSync.AddControl(_lblVSync);
 
             _btnApply = new Button("Apply Settings");
             _btnApply.Clicked += _btnApply_Clicked;
-            _btnApply.Alignment = Align.Bottom | Align.Right;
+            _btnApply.Alignment = ControlAlignments.Bottom | ControlAlignments.Right;
             _btnApply.Resize += (sender, args) => { _btnApply.LocalPosition = new Vector2i(-10 + -_btnApply.ClientArea.Width, -10 + -_btnApply.ClientArea.Height); };
             _bgPanel.AddControl(_btnApply);
 

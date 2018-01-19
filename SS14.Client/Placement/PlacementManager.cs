@@ -211,7 +211,7 @@ namespace SS14.Client.Placement
             EntityPrototype prototype =
                 IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(templateName);
 
-            ComponentParameter spriteParam = prototype.GetBaseSpriteParamaters().FirstOrDefault();
+            ComponentParameter spriteParam = prototype.GetBaseSpriteParameters().FirstOrDefault();
             //Will break if states not ordered correctly.
 
             var spriteName = spriteParam == null ? "" : spriteParam.GetValue<string>();

@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics;
 using SS14.Client.Graphics;
-using SS14.Client.Interfaces.Resource;
 using SS14.Client.ResourceManagement;
 using SS14.Shared.Maths;
 using System;
@@ -14,9 +13,6 @@ namespace SS14.Client.UserInterface.Components
 {
     internal class Progress_Bar : Control
     {
-        private readonly IResourceCache _resourceCache;
-        protected Vector2i Size;
-
         public Color4 backgroundColor = new Color4(70, 130, 180, 255);
         public Color4 barColor = new Color4(176, 196, 222, 255);
         public Color4 borderColor = Color4.Black;
@@ -27,9 +23,8 @@ namespace SS14.Client.UserInterface.Components
         protected float percent = 0;
         protected float val = 0;
 
-        public Progress_Bar(Vector2i size, IResourceCache resourceCache)
+        public Progress_Bar(Vector2i size)
         {
-            _resourceCache = resourceCache;
             Text = new TextSprite("", _resourceCache.GetResource<FontResource>(@"Fonts/CALIBRI.TTF").Font);
             Text.FillColor = Color4.Black;
             Text.ShadowColor = new Color4(105, 105, 105, 255);
@@ -76,10 +71,10 @@ namespace SS14.Client.UserInterface.Components
             Text.Draw();
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             Text = null;
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 

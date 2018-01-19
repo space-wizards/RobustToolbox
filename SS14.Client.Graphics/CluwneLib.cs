@@ -130,16 +130,7 @@ namespace SS14.Client.Graphics
             Window.Graphics.SetFramerateLimit(300);
 
             renderTargetArray = new IRenderTarget[5];
-            //Window.Viewport = new Viewport(0, 0, 800, 600);
             IsInitialized = true;
-
-            //Hook OpenTK into SFMLs Opengl
-            OpenTK.Toolkit.Init(new OpenTK.ToolkitOptions
-            {
-                // Non-Native backend doesn't have a default GetAddress method
-                Backend = OpenTK.PlatformBackend.PreferNative
-            });
-            new GraphicsContext(OpenTK.ContextHandle.Zero, null);
         }
 
         public static void ClearCurrentRendertarget(Color color)
@@ -155,7 +146,7 @@ namespace SS14.Client.Graphics
 
         public static void RunIdle(object sender, FrameEventArgs e)
         {
-            FrameEvent?.Invoke(sender, e);
+            FrameEvent?.Invoke(null, e);
         }
 
         public static void Stop()

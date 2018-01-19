@@ -139,7 +139,7 @@ namespace SS14.Client.UserInterface.Controls
         }
 
         /// <inheritdoc />
-        public override void Dispose()
+        public override void Destroy()
         {
             _textSprite = null;
             _textboxLeft = null;
@@ -147,7 +147,7 @@ namespace SS14.Client.UserInterface.Controls
             _textboxRight = null;
             OnSubmit = null;
 
-            base.Dispose();
+            base.Destroy();
         }
 
         /// <inheritdoc />

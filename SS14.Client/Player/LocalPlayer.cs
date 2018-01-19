@@ -1,7 +1,6 @@
 ﻿using System;
 using SS14.Client.GameObjects;
 using SS14.Client.Interfaces.GameObjects;
-using SS14.Shared;
 using SS14.Shared.Enums;
 using SS14.Shared.Interfaces.Configuration;
 using SS14.Shared.Interfaces.GameObjects;
@@ -21,12 +20,12 @@ namespace SS14.Client.Player
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
-        public EventHandler EntityAttached;
+        public event EventHandler EntityAttached;
 
         /// <summary>
         ///     An entity has been detached from the local player.
         /// </summary>
-        public EventHandler EntityDetached;
+        public event EventHandler EntityDetached;
 
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player

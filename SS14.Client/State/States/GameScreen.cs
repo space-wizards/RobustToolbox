@@ -256,13 +256,13 @@ namespace SS14.Client.State.States
 
             // Setup the ESC Menu
             _menu = new MenuWindow();
-            _menu.Alignment = Align.HCenter | Align.VCenter;
+            _menu.Alignment = ControlAlignments.HCenter | ControlAlignments.VCenter;
             _menu.Visible = false;
             _uiScreen.AddControl(_menu);
 
             //Init GUI components
             _gameChat = new Chatbox(_gameChatSize);
-            _gameChat.Alignment = Align.Right;
+            _gameChat.Alignment = ControlAlignments.Right;
             _gameChat.Size = new Vector2i(475, 175);
             _gameChat.Resize += (sender, args) => { _gameChat.LocalPosition = new Vector2i(-10 + -_gameChat.Size.X, 10); };
             _gameChat.DefaultChatFormat = "say \"{0}\"";
@@ -673,7 +673,7 @@ namespace SS14.Client.State.States
             }
 
             var window = new PropEditWindow(new Vector2i(400, 400), entity);
-            window.Alignment = Align.HCenter | Align.VCenter;
+            window.Alignment = ControlAlignments.HCenter | ControlAlignments.VCenter;
             _uiScreen.AddControl(window);
             _uiScreen.DoLayout();
         }

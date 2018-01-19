@@ -77,7 +77,7 @@ namespace SS14.Client.UserInterface
         {
             foreach (var x in _components.ToList())
             {
-                x.Dispose();
+                x.Destroy();
             }
             _components.Clear();
         }
@@ -93,7 +93,7 @@ namespace SS14.Client.UserInterface
 
             foreach (var current in componentsOfType)
             {
-                current.Dispose();
+                current.Destroy();
                 _components.Remove(current);
             }
         }
@@ -123,7 +123,7 @@ namespace SS14.Client.UserInterface
         /// </summary>
         public void SetFocus(Control newFocus)
         {
-            if(!newFocus.Visible || newFocus.Disposed /* || newFocus.Disabled */ )
+            if(!newFocus.Visible || newFocus.Destroyed /* || newFocus.Disabled */ )
                 return;
             
             RemoveFocus();

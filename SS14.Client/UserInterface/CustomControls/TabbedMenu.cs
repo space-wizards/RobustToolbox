@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using SS14.Client.Graphics.Input;
 using SS14.Client.Graphics.Sprites;
-using SS14.Client.Interfaces.Resource;
-using SS14.Client.UserInterface.Components;
 using SS14.Client.UserInterface.Controls;
-using SS14.Shared.IoC;
 using SS14.Shared.Maths;
 using Vector2i = SS14.Shared.Maths.Vector2i;
 using Vector2 = SS14.Shared.Maths.Vector2;
@@ -19,33 +16,17 @@ namespace SS14.Client.UserInterface.CustomControls
 
         public Vector2i TabOffset = new Vector2i(0, 0);
         private TabContainer _activeTab;
-        private string botSprite;
-        private string midSprite;
-        private string topSprite;
 
         public TabbedMenu()
         {
-            _resourceCache = IoCManager.Resolve<IResourceCache>();
             Update(0);
         }
 
-        public string TopSprite
-        {
-            get { return topSprite; }
-            set { topSprite = value; }
-        }
+        public string TopSprite { get; set; }
 
-        public string MidSprite
-        {
-            get { return midSprite; }
-            set { midSprite = value; }
-        }
+        public string MidSprite { get; set; }
 
-        public string BotSprite
-        {
-            get { return botSprite; }
-            set { botSprite = value; }
-        }
+        public string BotSprite { get; set; }
 
         public void SelectTab(TabContainer tab)
         {
@@ -59,7 +40,7 @@ namespace SS14.Client.UserInterface.CustomControls
         public void RemoveTab(TabContainer remTab)
         {
             _tabs.RemoveAll(x => x.Value == remTab);
-            rebuildButtonIcons();
+            RebuildButtonIcons();
         }
 
         public void AddTab(TabContainer newTab)
@@ -68,7 +49,7 @@ namespace SS14.Client.UserInterface.CustomControls
             newButton.Clicked += tabButton_Clicked;
 
             _tabs.Add(new KeyValuePair<ImageButton, TabContainer>(newButton, newTab));
-            rebuildButtonIcons();
+            RebuildButtonIcons();
         }
 
         private void tabButton_Clicked(ImageButton sender)
@@ -80,7 +61,7 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        private void rebuildButtonIcons()
+        private void RebuildButtonIcons()
         {
             for (int i = _tabs.Count - 1; i >= 0; i--)
             {
@@ -157,13 +138,13 @@ namespace SS14.Client.UserInterface.CustomControls
             }
         }
 
-        public override void Dispose()
+        public override void Destroy()
         {
             _tabs.ForEach(b => b.Key.Clicked -= tabButton_Clicked);
-            _tabs.ForEach(b => b.Key.Dispose());
-            _tabs.ForEach(t => t.Value.Dispose());
+            _tabs.ForEach(b => b.Key.Destroy());
+            _tabs.ForEach(t => t.Value.Destroy());
             _tabs.Clear();
-            base.Dispose();
+            base.Destroy();
             GC.SuppressFinalize(this);
         }
 
@@ -171,10 +152,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (var curr in _tabs)
             {
-                if (curr.Key.KeyDown(e)) return true;
+                if (curr.Key.KeyDown(e))
+                    return true;
 
-                if (_activeTab != null)
-                    if (_activeTab.KeyDown(e)) return true;
+                if (_activeTab == null)
+                    continue;
+
+                if (_activeTab.KeyDown(e))
+                    return true;
             }
             return base.KeyDown(e);
         }
@@ -183,10 +168,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (var curr in _tabs)
             {
-                if (curr.Key.MouseWheelMove(e)) return true;
+                if (curr.Key.MouseWheelMove(e))
+                    return true;
 
-                if (_activeTab != null)
-                    if (_activeTab.MouseWheelMove(e)) return true;
+                if (_activeTab == null)
+                    continue;
+
+                if (_activeTab.MouseWheelMove(e))
+                    return true;
             }
             return base.MouseWheelMove(e);
         }
@@ -197,8 +186,7 @@ namespace SS14.Client.UserInterface.CustomControls
             {
                 curr.Key.MouseMove(e);
 
-                if (_activeTab != null)
-                    _activeTab.MouseMove(e);
+                _activeTab?.MouseMove(e);
             }
             base.MouseMove(e);
         }
@@ -207,10 +195,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (var curr in _tabs)
             {
-                if (curr.Key.MouseDown(e)) return true;
+                if (curr.Key.MouseDown(e))
+                    return true;
 
-                if (_activeTab != null)
-                    if (_activeTab.MouseDown(e)) return true;
+                if (_activeTab == null)
+                    continue;
+
+                if (_activeTab.MouseDown(e))
+                    return true;
             }
             return base.MouseDown(e);
         }
@@ -219,10 +211,14 @@ namespace SS14.Client.UserInterface.CustomControls
         {
             foreach (var curr in _tabs)
             {
-                if (curr.Key.MouseUp(e)) return true;
+                if (curr.Key.MouseUp(e))
+                    return true;
 
-                if (_activeTab != null)
-                    if (_activeTab.MouseUp(e)) return true;
+                if (_activeTab == null)
+                    continue;
+
+                if (_activeTab.MouseUp(e))
+                    return true;
             }
             return base.MouseUp(e);
         }

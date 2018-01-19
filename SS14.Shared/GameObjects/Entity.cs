@@ -57,12 +57,38 @@ namespace SS14.Shared.GameObjects
             Uid = uid;
         }
 
-        public virtual void PreInitialize()
+        /// <inheritdoc />
+        public virtual void PreInitialize() { }
+
+        /// <summary>
+        ///     Calls Initialize() on all registered components.
+        /// </summary>
+        public void InitializeComponents()
         {
+            // Initialize() can modify _components.
+            // TODO: This code can only handle additions to the list. Is there a better way?
+            for (int i = 0; i < _components.Count; i++)
+            {
+                _components[i].Initialize();
+            }
+        }
+
+        /// <summary>
+        ///     Calls Startup() on all registered components.
+        /// </summary>
+        public void StartAllComponents()
+        {
+            // Startup() can modify _components
+            // TODO: This code can only handle additions to the list. Is there a better way?
+            for (int i = 0; i < _components.Count; i++)
+            {
+                _components[i].Startup();
+            }
         }
 
         public virtual void LoadData(YamlMappingNode parameters)
         {
+            // Override me.
         }
 
         /// <summary>

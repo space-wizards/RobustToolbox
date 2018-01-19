@@ -32,7 +32,7 @@ namespace SS14.Shared.GameObjects
         /// <summary>
         /// List of all entities, used for iteration.
         /// </summary>
-        private readonly List<IEntity> _allEntities = new List<IEntity>();
+        private readonly List<Entity> _allEntities = new List<Entity>();
         protected readonly Queue<IncomingEntityMessage> MessageBuffer = new Queue<IncomingEntityMessage>();
         protected int NextUid;
 
@@ -191,7 +191,7 @@ namespace SS14.Shared.GameObjects
             }
 
             EntityPrototype prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            IEntity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
+            Entity entity = prototype.CreateEntity(uid.Value, this, EntityNetworkManager, ComponentFactory);
             Entities[uid.Value] = entity;
             _allEntities.Add(entity);
 
@@ -204,20 +204,13 @@ namespace SS14.Shared.GameObjects
             return entity;
         }
 
-        private void InitializeEntity(IEntity entity)
+        private void InitializeEntity(Entity entity)
         {
             entity.PreInitialize();
-            foreach (var component in entity.GetComponents())
-            {
-                component.Initialize();
-            }
-
+            entity.InitializeComponents();
             entity.Initialize();
 
-            foreach (var component in entity.GetComponents())
-            {
-                component.Startup();
-            }
+            entity.StartAllComponents();
         }
 
         /// <summary>
@@ -225,9 +218,14 @@ namespace SS14.Shared.GameObjects
         /// </summary>
         protected void InitializeEntities()
         {
-            foreach (var entity in GetEntities().Where(e => !e.Initialized))
+            for (var i = 0; i < _allEntities.Count; i++)
             {
-                InitializeEntity(entity);
+                var ent = _allEntities[i];
+
+                if(ent.Deleted || ent.Initialized)
+                    continue;
+
+                InitializeEntity(ent);
             }
         }
 

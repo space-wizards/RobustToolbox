@@ -150,6 +150,8 @@ namespace SS14.Client
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
 
+            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
+
             _playMan.Shutdown();
             Reset();
         }
@@ -184,17 +186,16 @@ namespace SS14.Client
             // player finished fully connecting to the server.
             if (eventArgs.OldStatus == SessionStatus.Connecting)
                 OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
-
+            
+            var stateMan = IoCManager.Resolve<IStateManager>();
             if (eventArgs.NewStatus == SessionStatus.InLobby)
             {
-                var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<Lobby>();
                 OnPlayerJoinedLobby(_playMan.LocalPlayer.Session);
             }
 
             else if (eventArgs.NewStatus == SessionStatus.InGame)
             {
-                var stateMan = IoCManager.Resolve<IStateManager>();
                 stateMan.RequestStateChange<GameScreen>();
 
                 OnPlayerJoinedGame(_playMan.LocalPlayer.Session);

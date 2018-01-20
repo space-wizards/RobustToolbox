@@ -74,7 +74,7 @@ namespace SS14.Client.GameObjects
             if (Parent?.Owner?.Uid != newState.ParentID)
             {
                 DetachParent();
-                if (!(newState.ParentID is int parentID))
+                if (!(newState.ParentID is EntityUid parentID))
                 {
                     return;
                 }

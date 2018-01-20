@@ -1,6 +1,7 @@
 ﻿using System;
 using Lidgren.Network;
 using SS14.Shared.Enums;
+using SS14.Shared.GameObjects;
 using SS14.Shared.Interfaces.Network;
 using SS14.Shared.Map;
 using SS14.Shared.Maths;
@@ -25,7 +26,7 @@ namespace SS14.Shared.Network.Messages
         public GridId GridIndex { get; set; }
         public MapId MapIndex { get; set; }
         public Direction DirRcv { get; set; }
-        public int EntityUid { get; set; }
+        public EntityUid EntityUid { get; set; }
 
         public int Range { get; set; }
         public string ObjType { get; set; }
@@ -59,7 +60,7 @@ namespace SS14.Shared.Network.Messages
                 case PlacementManagerMessage.PlacementFailed:
                     throw new NotImplementedException();
                 case PlacementManagerMessage.RequestEntRemove:
-                    EntityUid = buffer.ReadInt32();
+                    EntityUid = new EntityUid(buffer.ReadInt32());
                     break;
             }
         }
@@ -92,7 +93,7 @@ namespace SS14.Shared.Network.Messages
                 case PlacementManagerMessage.PlacementFailed:
                     throw new NotImplementedException();
                 case PlacementManagerMessage.RequestEntRemove:
-                    buffer.Write(EntityUid);
+                    buffer.Write((int)EntityUid);
                     break;
             }
         }

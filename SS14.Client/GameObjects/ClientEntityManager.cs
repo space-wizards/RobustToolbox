@@ -17,22 +17,10 @@ namespace SS14.Client.GameObjects
     /// </summary>
     public class ClientEntityManager : EntityManager, IClientEntityManager
     {
-        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates worldPos, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(LocalCoordinates position, float Range)
         {
-            range *= range; // Square it here to avoid Sqrt
-
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.GetComponent<ITransformComponent>();
-                if (transform.MapID != worldPos.MapID)
-                    continue;
-
-                var relativePosition = worldPos.Position - transform.WorldPosition;
-                if (relativePosition.LengthSquared <= range)
-                {
-                    yield return entity;
-                }
-            }
+            var AABB = new Box2(position.Position - new Vector2(Range / 2, Range / 2), position.Position + new Vector2(Range / 2, Range / 2));
+            return GetEntitiesIntersecting(position.MapID, AABB);
         }
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
